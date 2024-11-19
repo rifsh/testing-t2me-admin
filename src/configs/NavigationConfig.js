@@ -60,6 +60,14 @@ const dashBoardNavTree = [
       breadcrumb: false,
       submenu: []
     },
+    {
+      key: 'venue.list',
+      path: `${APP_PREFIX_PATH}/venue/list`,
+      title: 'sidenav.venue.list',
+      icon: OrderedListOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
   ]
 }
 ]
