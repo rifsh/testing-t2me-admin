@@ -2,7 +2,7 @@
 import React, {useState} from 'react'
 import { Card, Table, Select, Input, Button, Badge, Menu, Tag } from 'antd';
 import OrderListData from "assets/data/order-list.data.json"
-import { EyeOutlined, FileExcelOutlined, SearchOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { EyeOutlined, FormOutlined, SearchOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import AvatarStatus from 'components/shared-components/AvatarStatus';
 import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
 import Flex from 'components/shared-components/Flex'
@@ -10,9 +10,9 @@ import NumberFormat from 'react-number-format';
 import dayjs from 'dayjs'; 
 import { DATE_FORMAT_DD_MM_YYYY } from 'constants/DateConstant'
 import utils from 'utils'
-
+import { useNavigate } from 'react-router-dom';
+import {APP_PREFIX_PATH } from "configs/AppConfig";
 const { Option } = Select
-
 const getPaymentStatus = status => {
 	if(status === 'Paid') {
 		return 'success'
@@ -77,7 +77,7 @@ const EventsList = () => {
 			dataIndex: 'id'
 		},
 		{
-			title: 'Product',
+			title: 'Event',
 			dataIndex: 'name',
 			render: (_, record) => (
 				<div className="d-flex">
@@ -150,6 +150,7 @@ const EventsList = () => {
 		setList(data)
 		setSelectedRowKeys([])
 	}
+	const navigate = useNavigate();
 
 	return (
 		<Card>
@@ -172,7 +173,7 @@ const EventsList = () => {
 					</div>
 				</Flex>
 				<div>
-					<Button type="primary" icon={<FileExcelOutlined />} block>Export All</Button>
+					<Button type="primary" icon={<FormOutlined />} block onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}>Add Event</Button>
 				</div>
 			</Flex>
 			<div className="table-responsive">

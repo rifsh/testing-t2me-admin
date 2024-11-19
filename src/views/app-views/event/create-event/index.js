@@ -1,5 +1,5 @@
 import React from 'react';
-import EventForm from '../CreateForm';
+import EventForm from '../components';
 
 const AddEvent = () => {
 	return (

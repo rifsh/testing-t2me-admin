@@ -42,8 +42,8 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/app-views/dashboards/sales")),
   },
   {
-    key: "event.create",
-    path: `${APP_PREFIX_PATH}/event/create`,
+    key: "event.add",
+    path: `${APP_PREFIX_PATH}/event/add`,
     component: React.lazy(() => import("views/app-views/event/create-event")),
   },
   {
@@ -55,5 +55,15 @@ export const protectedRoutes = [
     key: "event.list",
     path: `${APP_PREFIX_PATH}/event/list`,
     component: React.lazy(() => import("views/app-views/event/event-list")),
+  },
+  {
+    key: "country.list",
+    path: `${APP_PREFIX_PATH}/country/list`,
+    component: React.lazy(() => import("views/place/country/list-country")),
+  },
+  {
+    key: "country.add",
+    path: `${APP_PREFIX_PATH}/country/add`,
+    component: React.lazy(() => import("views/place/country/add-country")),
   },
 ];

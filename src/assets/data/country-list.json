@@ -1,0 +1,26 @@
+[
+  {
+    "countryName": "United States",
+    "countryCode": "US",
+    "timezone": "GMT-5",
+    "createdDate": 1625097600,
+    "place": "North America",
+    "status": "Active"
+  },
+  {
+    "countryName": "Germany",
+    "countryCode": "DE",
+    "timezone": "GMT+1",
+    "createdDate": 1625097600,
+    "place": "Europe",
+    "status": "Inactive"
+  },
+  {
+    "countryName": "India",
+    "countryCode": "IN",
+    "timezone": "GMT+5:30",
+    "createdDate": 1625097600,
+    "place": "Asia",
+    "status": "Active"
+  }
+]
