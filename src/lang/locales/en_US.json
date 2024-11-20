@@ -6,8 +6,16 @@
 	"sidenav.dashboard.analytic": "Analytic",
 	"sidenav.dashboard.sales": "Sales",
 	"sidenav.event": "Event",
-	"sidenav.event.create": "Create",
+	"sidenav.event.add": "add",
 	"sidenav.event.list": "Event",
+	"sidenav.forms": "Forms",
+	"sidenav.country.add": "Create",
+	"sidenav.country.list": "Country",
+	"sidenav.venue.list": "Venue",
+	"sidenav.category": "Category",
+	"sidenav.subCategory": "Sub Category",
+	"sidenav.offer": "Offer",
+	"sidenav.coupon": "Coupon",
 	
 
 	"sidenav.apps": "Apps",

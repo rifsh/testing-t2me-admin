@@ -1,0 +1,43 @@
+[
+    {
+      "place": "New York",
+      "venue": "Conference Hall A",
+      "address": "123 Main Street, Cityville",
+      "isIndoor": true,
+      "capacity": 200,
+      "status": "active"
+    },
+    {
+      "place": "Greenfield",
+      "venue": "Outdoor Stadium",
+      "address": "456 Park Avenue, Greenfield",
+      "isIndoor": false,
+      "capacity": 5000,
+      "status": "inactive"
+    },
+    {
+      "place": "Tech City",
+      "venue": "Meeting Room 2",
+      "address": "789 Business Rd, Tech City",
+      "isIndoor": true,
+      "capacity": 50,
+      "status": "active"
+    },
+    {
+      "place": "Downtown",
+      "venue": "Lobby Area",
+      "address": "101 Central Blvd, Downtown",
+      "isIndoor": true,
+      "capacity": 150,
+      "status": "active"
+    },
+    {
+      "place": "Sportstown",
+      "venue": "Sports Complex",
+      "address": "102 Stadium Rd, Sportstown",
+      "isIndoor": false,
+      "capacity": 3000,
+      "status": "inactive"
+    }
+  ]
+  

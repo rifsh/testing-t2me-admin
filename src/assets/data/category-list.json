@@ -1,0 +1,39 @@
+[
+    {
+      "category": "Technology",
+      "description": "Includes advancements in software, hardware, and IT services.",
+      "createdDate": "2024-11-20",
+      "subCategory": [
+        {
+          "subcategoryName": "Artificial Intelligence",
+          "category": "Technology",
+          "description": "Focuses on machine learning, deep learning, and AI technologies."
+        },
+        {
+          "subcategoryName": "Cybersecurity",
+          "category": "Technology",
+          "description": "Covers data protection, encryption, and security solutions."
+        }
+      ]
+    },
+    {
+      "category": "Health",
+      "description": "Covers medical research, healthcare services, and wellness programs.",
+      "createdDate": "2024-11-19",
+      "subCategory": [
+        {
+          "subcategoryName": "Nutrition",
+          "category": "Health",
+          "description": "Focuses on dietary health, supplements, and balanced eating habits."
+          
+        },
+        {
+          "subcategoryName": "Mental Health",
+          "category": "Health",
+          "description": "Highlights therapy, mindfulness, and mental well-being practices."
+        
+        }
+      ]
+    }
+  ]
+  

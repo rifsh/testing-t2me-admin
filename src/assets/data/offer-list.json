@@ -1,0 +1,34 @@
+[
+  {
+    "offerName": "Summer Sale",
+    "DiscountPercentage": "20%",
+    "StartDate": "2024-06-01",
+    "EndDate": "2024-06-30",
+    "MaxUsers": 5000,
+    "status": "active"
+  },
+  {
+    "offerName": "Black Friday Deal",
+    "DiscountPercentage": "50%",
+    "StartDate": "2024-11-25",
+    "EndDate": "2024-11-30",
+    "MaxUsers": 10000,
+    "status": "upcoming"
+  },
+  {
+    "offerName": "New Year Offer",
+    "DiscountPercentage": "30%",
+    "StartDate": "2024-12-25",
+    "EndDate": "2025-01-05",
+    "MaxUsers": 3000,
+    "status": "upcoming"
+  },
+  {
+    "offerName": "Loyalty Program",
+    "DiscountPercentage": "15%",
+    "StartDate": "2024-01-01",
+    "EndDate": "2024-12-31",
+    "MaxUsers": 2000,
+    "status": "active"
+  }
+]
