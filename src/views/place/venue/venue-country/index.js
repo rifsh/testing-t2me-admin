@@ -4,7 +4,7 @@ import { Tabs, Form, Button, message } from 'antd';
 import Flex from 'components/shared-components/Flex'
 
 import ProductListData from "assets/data/product-list.data.json"
-import CountryFormFields from '../components/CountryFormFields';
+import VenueFormFields from '../components/VenueFormFields';
 
 const getBase64 = (img, callback) => {
   const reader = new FileReader();
@@ -15,7 +15,7 @@ const getBase64 = (img, callback) => {
 const ADD = 'ADD'
 const EDIT = 'EDIT'
 
-const CountryForm = props => {
+const VenueForm = props => {
 
 	const { mode = ADD, param } = props
 
@@ -111,7 +111,7 @@ const CountryForm = props => {
 							{
 								label: 'General',
 								key: '1',
-								children: <CountryFormFields
+								children: <VenueFormFields
 									uploadedImg={uploadedImg} 
 									uploadLoading={uploadLoading} 
 									handleUploadChange={handleUploadChange}
@@ -125,4 +125,4 @@ const CountryForm = props => {
 	)
 }
 
-export default CountryForm
+export default VenueForm

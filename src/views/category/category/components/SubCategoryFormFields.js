@@ -1,5 +1,5 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker, Select } from "antd";
+import { Input, Row, Col, Card, Form, Button, Select } from "antd";
 const { Option } = Select;
 
 const rules = {
@@ -126,12 +126,12 @@ const places = [
   "Bangalore",
 ];
 
-const CountryFormFields = (props) => (
+const SubCategoryFormFields = (props) => (
   <Row gutter={16}>
     <Col xs={24} sm={24} md={17}>
       <Card title="Basic Info">
-        <Form.Item name="country" label="Country name" rules={rules.country}>
-          <Select className="w-100" placeholder="Choose a Country">
+        <Form.Item name="category" label="Category name" rules={rules.country}>
+          <Select className="w-100" placeholder="Choose a Category">
             {countries.map((elm) => (
               <Option key={elm} value={elm}>
                 {elm}
@@ -139,10 +139,21 @@ const CountryFormFields = (props) => (
             ))}
           </Select>
         </Form.Item>
-        <Form.Item name="Place" label="Place" rules={rules.name}>
-          <Input placeholder="Place Name" />
-        </Form.Item>
        
+        <Form.Item name="subCategory" label="Sub Category" rules={rules.name}>
+          <Input placeholder="Sub Category" />
+        </Form.Item>
+        <Form.Item
+          name="description"
+          label="Description"
+          rules={rules.description}
+        >
+          <Input.TextArea rows={4} />
+        </Form.Item>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+          <Button style={{ marginRight: 10 }}>Discard</Button>
+          <Button type="primary">Add</Button>
+        </div>
       </Card>
       
     </Col>
@@ -150,4 +161,4 @@ const CountryFormFields = (props) => (
   </Row>
 );
 
-export default CountryFormFields;
+export default SubCategoryFormFields;

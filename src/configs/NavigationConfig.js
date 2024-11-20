@@ -68,6 +68,14 @@ const dashBoardNavTree = [
       breadcrumb: false,
       submenu: []
     },
+    {
+      key: 'category.list',
+      path: `${APP_PREFIX_PATH}/category/list`,
+      title: 'sidenav.category',
+      icon: OrderedListOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
   ]
 }
 ]
