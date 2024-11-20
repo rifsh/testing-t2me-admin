@@ -76,6 +76,22 @@ const dashBoardNavTree = [
       breadcrumb: false,
       submenu: []
     },
+    {
+      key: 'offer.list',
+      path: `${APP_PREFIX_PATH}/offer/list`,
+      title: 'sidenav.offer',
+      icon: OrderedListOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
+    {
+      key: 'coupon.list',
+      path: `${APP_PREFIX_PATH}/coupon/list`,
+      title: 'sidenav.coupon',
+      icon: OrderedListOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
   ]
 }
 ]
