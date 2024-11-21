@@ -47,7 +47,7 @@ const OfferList = () => {
   );
 
   const dropdownMenu = (row) => (
-    
+
     <Menu>
       <Menu.Item>
         <Flex alignItems="center">
@@ -149,13 +149,13 @@ const OfferList = () => {
           </div>
         </Flex>
         <div>
-        <Button
+          <Button
             type="primary"
             icon={<FormOutlined />}
             block
             onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add`)}
           >
-            Add Country
+            Add Offer
           </Button>
         </div>
       </Flex>

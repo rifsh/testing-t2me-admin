@@ -1,0 +1,112 @@
+[
+    {
+        "id": "#5331",
+        "name": "Travis Scott Concert",
+        "category": "Music",
+        "subCategory": "Concert",
+        "country": "India",
+        "place": "Calicut",
+        "venue": "Calicut Beach",
+        "status": "Scheduled"
+    },
+    {
+        "id": "#5332",
+        "name": "International Film Festival",
+        "category": "Entertainment",
+        "subCategory": "Film",
+        "country": "India",
+        "place": "Chennai",
+        "venue": "Nehru Indoor Stadium",
+        "status": "Scheduled"
+    },
+    {
+        "id": "#5333",
+        "name": "Startup Pitch Fest",
+        "category": "Business",
+        "subCategory": "Conference",
+        "country": "India",
+        "place": "Bangalore",
+        "venue": "Bangalore International Convention Centre",
+        "status": "Ongoing"
+    },
+    {
+        "id": "#5334",
+        "name": "Yoga and Wellness Retreat",
+        "category": "Health",
+        "subCategory": "Workshop",
+        "country": "India",
+        "place": "Rishikesh",
+        "venue": "Ananda Spa",
+        "status": "Scheduled"
+    },
+    {
+        "id": "#5335",
+        "name": "India vs Australia Cricket Match",
+        "category": "Sports",
+        "subCategory": "Cricket",
+        "country": "India",
+        "place": "Mumbai",
+        "venue": "Wankhede Stadium",
+        "status": "Scheduled"
+    },
+    {
+        "id": "#5336",
+        "name": "Coding Hackathon",
+        "category": "Technology",
+        "subCategory": "Hackathon",
+        "country": "India",
+        "place": "Hyderabad",
+        "venue": "T-Hub",
+        "status": "Ongoing"
+    },
+    {
+        "id": "#5337",
+        "name": "Art Exhibition: Modern Horizons",
+        "category": "Art",
+        "subCategory": "Exhibition",
+        "country": "India",
+        "place": "Kochi",
+        "venue": "Kochi-Muziris Biennale Pavilion",
+        "status": "Scheduled"
+    },
+    {
+        "id": "#5338",
+        "name": "Food Carnival",
+        "category": "Food",
+        "subCategory": "Festival",
+        "country": "India",
+        "place": "Delhi",
+        "venue": "India Gate Lawns",
+        "status": "Ongoing"
+    },
+    {
+        "id": "#5339",
+        "name": "Photography Masterclass",
+        "category": "Education",
+        "subCategory": "Workshop",
+        "country": "India",
+        "place": "Pune",
+        "venue": "Symbiosis University Campus",
+        "status": "Scheduled"
+    },
+    {
+        "id": "#5340",
+        "name": "Stand-Up Comedy Night",
+        "category": "Entertainment",
+        "subCategory": "Comedy",
+        "country": "India",
+        "place": "Goa",
+        "venue": "Baga Beach Amphitheatre",
+        "status": "Scheduled"
+    },
+    {
+        "id": "#5341",
+        "name": "International Marathon",
+        "category": "Sports",
+        "subCategory": "Running",
+        "country": "India",
+        "place": "Jaipur",
+        "venue": "City Palace Start Point",
+        "status": "Scheduled"
+    }
+]

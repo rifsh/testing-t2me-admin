@@ -150,7 +150,7 @@ const CountryList = () => {
             block
             onClick={() => navigate(`${APP_PREFIX_PATH}/category/add`)}
           >
-            Add Country
+            Add Category
           </Button>
         </div>
       </Flex>
