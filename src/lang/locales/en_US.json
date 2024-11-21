@@ -1,6 +1,5 @@
 {
 	"home": "Home",
-	
 	"sidenav.dashboard": "Dashboard",
 	"sidenav.dashboard.default": "Default",
 	"sidenav.dashboard.analytic": "Analytic",
@@ -16,8 +15,7 @@
 	"sidenav.subCategory": "Sub Category",
 	"sidenav.offer": "Offer",
 	"sidenav.coupon": "Coupon",
-	
-
+	"sidenav.user": "User",
 	"sidenav.apps": "Apps",
 	"sidenav.apps.mail": "Mail",
 	"sidenav.apps.chat": "Chat",
@@ -31,7 +29,6 @@
 	"sidenav.apps.ecommerce.addProduct": "Add Product",
 	"sidenav.apps.ecommerce.productList": "Product List",
 	"sidenav.apps.ecommerce.orders": "Orders",
-
 	"sidenav.components": "Components",
 	"sidenav.components.general": "General",
 	"sidenav.components.general.button": "Button",
@@ -40,7 +37,6 @@
 	"sidenav.components.layout": "Layout",
 	"sidenav.components.layout.grid": "Grid",
 	"sidenav.components.layout.layout": "Layout",
-
 	"sidenav.components.navigation": "Navigation",
 	"sidenav.components.navigation.affix": "Affix",
 	"sidenav.components.navigation.breadcrumb": "Breadcrumb",
@@ -49,7 +45,6 @@
 	"sidenav.components.navigation.pagination": "Pagination",
 	"sidenav.components.navigation.pageHeader": "Page Header",
 	"sidenav.components.navigation.steps": "Steps",
-
 	"sidenav.components.dataEntry": "Data Entry",
 	"sidenav.components.dataEntry.autoComplete": "Auto Complete",
 	"sidenav.components.dataEntry.checkbox": "Checkbox",
@@ -68,7 +63,6 @@
 	"sidenav.components.dataEntry.transfer": "Transfer",
 	"sidenav.components.dataEntry.timePicker": "Time Picker",
 	"sidenav.components.dataEntry.upload": "Upload",
-
 	"sidenav.components.dataDisplay": "Data Display",
 	"sidenav.components.dataDisplay.avatar": "Avatar",
 	"sidenav.components.dataDisplay.badge": "Badge",
@@ -88,7 +82,6 @@
 	"sidenav.components.dataDisplay.tag": "Tag",
 	"sidenav.components.dataDisplay.tabs": "Tabs",
 	"sidenav.components.dataDisplay.table": "Table",
-
 	"sidenav.components.feedback": "Feedback",
 	"sidenav.components.feedback.alert": "Alert",
 	"sidenav.components.feedback.drawer": "Drawer",
@@ -100,21 +93,17 @@
 	"sidenav.components.feedback.result": "Result",
 	"sidenav.components.feedback.spin": "Spin",
 	"sidenav.components.feedback.skeleton": "Skeleton",
-	
 	"sidenav.components.other": "Other",
 	"sidenav.components.other.anchor": "Anchor",
 	"sidenav.components.other.backtop": "BackTop",
 	"sidenav.components.other.configProvider": "Config Provider",
 	"sidenav.components.other.divider": "Divider",
-	
 	"sidenav.charts": "Charts",
 	"sidenav.charts.apex": "Apex Charts",
 	"sidenav.charts.chartjs": "ChartJs",
-
 	"sidenav.maps": "Maps",
 	"sidenav.maps.google": "Google Maps",
 	"sidenav.maps.simple": "Simple Maps",
-	
 	"sidenav.pages": "Pages",
 	"sidenav.pages.profile": "Profile",
 	"sidenav.pages.invoice": "Invoice",
@@ -122,18 +111,15 @@
 	"sidenav.pages.faq": "FAQ",
 	"sidenav.pages.setting": "Setting",
 	"sidenav.pages.userlist": "User list",
-
 	"sidenav.authentication": "Authentication",
 	"sidenav.authentication.login.1": "Login 1",
 	"sidenav.authentication.login.2": "Login 2",
 	"sidenav.authentication.register.1": "Register 1",
 	"sidenav.authentication.register.2": "Register 2",
 	"sidenav.authentication.forgetPassword": "Forget Password",
-
 	"sidenav.errors": "Errors",
 	"sidenav.errors.error.1": "Error Page 1",
 	"sidenav.errors.error.2": "Error Page 2",
-
 	"sidenav.docs": "Docs",
 	"sidenav.docs.documentation": "Documentation",
 	"sidenav.docs.changelog": "Changelog"
