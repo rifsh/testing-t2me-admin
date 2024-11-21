@@ -100,6 +100,14 @@ const dashBoardNavTree = [
       breadcrumb: false,
       submenu: []
     },
+    {
+      key: 'schedule.list',
+      path: `${APP_PREFIX_PATH}/schedule/list`,
+      title: 'sidenav.schedule',
+      icon: OrderedListOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
   ]
 }
 ]

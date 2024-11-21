@@ -4,7 +4,7 @@ import { Card, Table, Select, Input, Button, Tag, Menu, } from 'antd';
 import { EyeOutlined, PlusCircleOutlined, SearchOutlined, FormOutlined } from '@ant-design/icons';
 import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
 import Flex from 'components/shared-components/Flex';
-import utils from 'utils';
+  import utils from 'utils';
 import { debounce } from 'lodash';
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
