@@ -106,4 +106,24 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/coupon/add`,
     component: React.lazy(() => import("views/coupon/add-coupon")),
   },
+  {
+    key: "seat.list",
+    path: `${APP_PREFIX_PATH}/seat/list`,
+    component: React.lazy(() => import("views/seat/list-seat")),
+  },
+  {
+    key: "seat.add",
+    path: `${APP_PREFIX_PATH}/seat/add`,
+    component: React.lazy(() => import("views/seat/add-seat")),
+  },
+  {
+    key: "schedule.list",
+    path: `${APP_PREFIX_PATH}/schedule/list`,
+    component: React.lazy(() => import("views/schedule/list-schedule")),
+  },
+  {
+    key: "schedule.add",
+    path: `${APP_PREFIX_PATH}/schedule/add`,
+    component: React.lazy(() => import("views/schedule/add-schedule")),
+  },
 ];

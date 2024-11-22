@@ -1,4 +1,4 @@
-import { DashboardOutlined , DotChartOutlined,FundOutlined,  FormOutlined, OrderedListOutlined} from '@ant-design/icons';
+import { DashboardOutlined , DotChartOutlined,FundOutlined,   OrderedListOutlined} from '@ant-design/icons';
 import { APP_PREFIX_PATH } from 'configs/AppConfig'
 
 
@@ -88,6 +88,22 @@ const dashBoardNavTree = [
       key: 'coupon.list',
       path: `${APP_PREFIX_PATH}/coupon/list`,
       title: 'sidenav.coupon',
+      icon: OrderedListOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
+    {
+      key: 'seat.list',
+      path: `${APP_PREFIX_PATH}/seat/list`,
+      title: 'sidenav.seat',
+      icon: OrderedListOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
+    {
+      key: 'schedule.list',
+      path: `${APP_PREFIX_PATH}/schedule/list`,
+      title: 'sidenav.schedule',
       icon: OrderedListOutlined,
       breadcrumb: false,
       submenu: []
