@@ -1,0 +1,129 @@
+import { Button, Card, Form, message } from "antd";
+import React, { useState } from "react";
+import { FaCheckCircle } from "react-icons/fa";
+import EventDetailsField from "./EventDetailsField";
+import { BLUE_BASE, GRAY_LIGHTER } from "constants/ThemeConstant";
+import LocationDetailsField from "./LocationDetailsField";
+import CategoryField from "./CategoryField";
+import OfferField from "./OfferField";
+const ADD = "ADD";
+const EDIT = "EDIT";
+const MultyStepForm = (props) => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [form] = Form.useForm();
+  const steps = ["Event Details", "Location", "Category", "Offers"];
+
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const { mode = ADD, param } = props;
+
+  const nextStep = () => {
+    setSubmitLoading(true);
+    form
+      .validateFields()
+      .then((value) => {
+        if (currentStep < steps.length) {
+          setCurrentStep(currentStep + 1);
+        }
+      })
+      .catch((info) => {
+        setSubmitLoading(false);
+        console.log("info", info);
+        message.error("Please enter all required field ");
+      });
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return <EventDetailsField />;
+      case 2:
+        return <LocationDetailsField />;
+      case 3:
+        return <CategoryField/>;
+      default:
+        return <OfferField/>;
+    }
+  };
+
+  return (
+    <div>
+      <h2>Create Event</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          margin: "50px",
+        }}
+      >
+        {steps.map((step, index) => (
+          <div key={index} style={{ textAlign: "center" }}>
+            <div
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                backgroundColor: currentStep > index ? BLUE_BASE : GRAY_LIGHTER,
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto",
+                position: "relative",
+              }}
+            >
+              {currentStep > index + 1 ? <FaCheckCircle /> : index + 1}
+              {index < steps.length - 1 && (
+                <div
+                  style={{
+                    width: "80px",
+                    height: "2px",
+                    backgroundColor:
+                      currentStep > index + 1 ? "#4CAF50" : "#ccc",
+                    position: "absolute",
+                    left: "50%",
+                    top: "20px",
+                    transform: "translateX(50%)",
+                    zIndex: -1,
+                  }}
+                ></div>
+              )}
+            </div>
+            <p style={{ marginTop: "8px" }}>{step}</p>
+          </div>
+        ))}
+      </div>
+      <div  style={{marginLeft:'50px' , marginRight:'50px'}}>
+
+      <Form form={form}>{renderStepContent()}</Form>
+      </div>
+
+      <div
+        style={{
+          marginTop: "20px",
+          display: "flex",
+          justifyContent: "right ",
+          gap: "10px",
+        }}
+      >
+        <Button type="default"  onClick={prevStep} disabled={currentStep === 1}>
+          Previous
+        </Button>
+        <Button
+          type="primary"
+          onClick={nextStep}
+     
+        >
+          {currentStep === steps.length ? "Finish" : "Next"}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default MultyStepForm;

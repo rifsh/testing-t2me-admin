@@ -131,7 +131,7 @@ const places = [
 const GeneralField = (props) => (
   <Row gutter={16}>
     <Col xs={24} sm={24} md={17}>
-      <Card title="Basic Info">
+      <Card title="Event Info">
         <Form.Item name="name" label="Event name" rules={rules.name}>
           <Input placeholder="Event Name" />
         </Form.Item>

@@ -37,6 +37,15 @@ const rules = {
 };
 
 const statuses = ["Active", "Inactive"];
+const children = [];
+for (let i = 10; i < 36; i++) {
+  children.push(<Option key={i.toString(36) + i}>{i.toString(36) + i}</Option>);
+}
+
+function handleChange(value) {
+  console.log(`selected ${value}`);
+}
+
 
 function ScheduleFormFields() {
   return (
@@ -75,7 +84,15 @@ function ScheduleFormFields() {
               ))}
             </Select>
           </Form.Item>
-
+          <Select
+    mode="multiple"
+    style={{ width: '100%' }}
+    placeholder="Please select"
+    defaultValue={['a10', 'c12']}
+    onChange={handleChange}
+  >
+    {children}
+  </Select>,
          
         </Card>
       </Col>
