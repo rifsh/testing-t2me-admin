@@ -1,5 +1,4 @@
 import React from 'react';
-import EventForm from '../components';
 import MultyStepForm from '../components/MultyStepForm';
 
 const AddEvent = () => {

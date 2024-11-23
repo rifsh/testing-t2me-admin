@@ -6,12 +6,13 @@ import { BLUE_BASE, GRAY_LIGHTER } from "constants/ThemeConstant";
 import LocationDetailsField from "./LocationDetailsField";
 import CategoryField from "./CategoryField";
 import OfferField from "./OfferField";
+import TicketField from "./TicketsField";
 const ADD = "ADD";
 const EDIT = "EDIT";
 const MultyStepForm = (props) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [form] = Form.useForm();
-  const steps = ["Event Details", "Location", "Ticket", "Category", "Offers"];
+  const steps = ["Event Details", "Category","Location", "Ticket",  "Offers"];
 
   const [submitLoading, setSubmitLoading] = useState(false);
   const { mode = ADD, param } = props;
@@ -43,13 +44,13 @@ const MultyStepForm = (props) => {
       case 1:
         return <EventDetailsField />;
       case 2:
-        return <LocationDetailsField />;
+        return <CategoryField />;
       case 3:
-        return <CategoryField/>;
+        return <LocationDetailsField />;
       case 4:
-        return <OfferField/>;
-      case 5:
-        return <OfferField/>;
+        return <TicketField />;
+        case 5:
+        return <OfferField />;
     }
   };
 
@@ -100,27 +101,23 @@ const MultyStepForm = (props) => {
           </div>
         ))}
       </div>
-      <div  style={{marginLeft:'50px' , marginRight:'50px'}}>
-
-      <Form form={form}>{renderStepContent()}</Form>
+      <div style={{ marginLeft: "50px", marginRight: "50px" }}>
+        <Form form={form}>{renderStepContent()}</Form>
       </div>
 
       <div
         style={{
           marginTop: "20px",
+          marginRight: "50px",
           display: "flex",
           justifyContent: "right ",
           gap: "10px",
         }}
       >
-        <Button type="default"  onClick={prevStep} disabled={currentStep === 1}>
+        <Button type="default" onClick={prevStep} disabled={currentStep === 1}>
           Previous
         </Button>
-        <Button
-          type="primary"
-          onClick={nextStep}
-     
-        >
+        <Button type="primary" onClick={nextStep}>
           {currentStep === steps.length ? "Finish" : "Next"}
         </Button>
       </div>
