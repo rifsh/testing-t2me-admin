@@ -108,6 +108,14 @@ const dashBoardNavTree = [
       breadcrumb: false,
       submenu: []
     },
+    {
+      key: 'ticket.list',
+      path: `${APP_PREFIX_PATH}/ticket/list`,
+      title: 'sidenav.ticket',
+      icon: OrderedListOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
   ]
 }
 ]

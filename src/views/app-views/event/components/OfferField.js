@@ -1,4 +1,4 @@
-import { Card, Form, Select } from "antd";
+import { Card, Form, Select ,DatePicker} from "antd";
 import React, { useState } from "react";
 
 import offerListData from "assets/data/offer-list.json";
@@ -27,6 +27,13 @@ const OfferField = () => {
           ))}
         </Select>
       </Form.Item>
+      <Form.Item name="offerstartDate" label="Offer Start Date" >
+            <DatePicker className="w-100" placeholder="Select Offer Start date" />
+          </Form.Item>
+
+          <Form.Item name="offerEndDate" label="Offer End Date" >
+            <DatePicker className="w-100" placeholder="Select Offer End date" />
+          </Form.Item>
       <Form.Item name="coupon" label="Coupon">
         <Select
           className="w-100"
@@ -40,7 +47,13 @@ const OfferField = () => {
           ))}
         </Select>
       </Form.Item>
+      <Form.Item name="couponStartDate" label="Coupon Start Date" >
+            <DatePicker className="w-100" placeholder="Select start date" />
+          </Form.Item>
 
+          <Form.Item name="couponEdDate" label="Coupon End Date" >
+            <DatePicker className="w-100" placeholder="Select Coupon End Date" />
+          </Form.Item>
       
     </Card>
   );
