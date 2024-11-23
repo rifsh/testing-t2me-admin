@@ -11,7 +11,7 @@ const EDIT = "EDIT";
 const MultyStepForm = (props) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [form] = Form.useForm();
-  const steps = ["Event Details", "Location", "Category", "Offers"];
+  const steps = ["Event Details", "Location", "Ticket", "Category", "Offers"];
 
   const [submitLoading, setSubmitLoading] = useState(false);
   const { mode = ADD, param } = props;
@@ -46,7 +46,9 @@ const MultyStepForm = (props) => {
         return <LocationDetailsField />;
       case 3:
         return <CategoryField/>;
-      default:
+      case 4:
+        return <OfferField/>;
+      case 5:
         return <OfferField/>;
     }
   };

@@ -1,89 +1,67 @@
-import { Card, Col, Form, Input, message, Radio, Select } from "antd";
+import { AutoComplete, Card, Col, Form, Select } from "antd";
 import React, { useState } from "react";
 import countryListData from "assets/data/country-list.json";
 import venueListData from "assets/data/venue-list.json";
+
 const LocationDetailsField = () => {
   const rules = {
-    name: [{ required: true, message: "Please enter event name" }],
-    description: [
-      {
-        required: true,
-        message: "Please enter event description",
-      },
-    ],
-    country: [
-      {
-        required: true,
-        message: "Please enter event country",
-      },
-    ],
-    place: [
-      {
-        required: true,
-        message: "Please enter event place",
-      },
-    ],
-    venue: [
-      {
-        required: true,
-        message: "Please enter event venue",
-      },
-    ],
-    isAvailable: [
-      {
-        required: true,
-        message: "Please enter event isAvailable",
-      },
-    ],
+    place: [{ required: true, message: "Please enter event place" }],
+    venue: [{ required: true, message: "Please enter event venue" }],
   };
 
-  const [countryList, setCountryList] = useState(countryListData);
-  const [venueList, setVenueList] = useState(venueListData);
+  const [value, setValue] = useState("");
+  const [options, setOptions] = useState([]);
+  const [countryList] = useState(countryListData);
+  const [venueList] = useState(venueListData);
+
+  const onSearch = (searchText) => {
+    const filteredOptions = countryList
+      .filter((item) =>
+        `${item.place}, ${item.countryName}`
+          .toLowerCase()
+          .includes(searchText.toLowerCase())
+      )
+      .map((item) => ({
+        value: `${item.place}, ${item.countryName}`, 
+      }));
+
+    setOptions(filteredOptions);
+  };
+
+  const onSelect = (data) => {
+    console.log("Selected place:", data);
+    setValue(data); 
+  };
+
+  const onChange = (data) => {
+    setValue(data);
+  };
+
   return (
     <Col>
       <Card title="Location Details">
-        <Form.Item name="country" label="Country" labelAlign="right" rules={rules.country}>
-          <Select className="w-100" placeholder="Select a Country">
-            {countryList.map((country) => (
-              <Select.Option
-                key={country.countryName}
-                value={country.countryName}
-              >
-                {country.countryName}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
         <Form.Item name="place" label="Place" rules={rules.place}>
-          <Select className="w-100" placeholder="Select a Place">
-            {countryList.map((country) => (
-              <Select.Option key={country.place} value={country.place}>
-                {country.place}
-              </Select.Option>
-            ))}
-          </Select>
+          <AutoComplete
+            options={options}
+            value={value}
+            onSelect={onSelect}
+            onSearch={onSearch}
+            onChange={onChange}
+            placeholder="Search for a Place"
+            style={{ width: "100%" }}
+          />
         </Form.Item>
         <Form.Item name="venue" label="Venue" rules={rules.venue}>
           <Select className="w-100" placeholder="Select a Venue">
-            {venueList.map((country) => (
-              <Select.Option key={country.venue} value={country.venue}>
-                {country.venue}
+            {venueList.map((venue) => (
+              <Select.Option
+                key={`${venue.venue}, ${venue.countryName}`}
+                value={`${venue.venue}, ${venue.countryName}`}
+              >
+                {`${venue.venue}, ${venue.countryName}`}
               </Select.Option>
             ))}
           </Select>
-        </Form.Item>
-        <Form.Item name="max-ticket" label="Maximum Ticket" rules={rules.name}>
-          <Input placeholder="Maximum Ticket" />
-        </Form.Item>
-        <Form.Item
-          name="is-available"
-          label="Is Available"
-          rules={rules.isAvailable}
-        >
-          <Radio.Group>
-              <Radio value="yes">Yes</Radio>
-              <Radio value="no">No</Radio>
-            </Radio.Group>
         </Form.Item>
       </Card>
     </Col>
