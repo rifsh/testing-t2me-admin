@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useCallback } from 'react';
 import { Card, Table, Select, Input, Button, Tag, Menu } from 'antd';
-import OfferListData from 'assets/data/offer-list.json';
+import CouponListData from 'assets/data/coupon-list.json';
+import UserListdata from "assets/data/user-list.json";
 import { EyeOutlined, PlusCircleOutlined, SearchOutlined, FormOutlined } from '@ant-design/icons';
 import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
 import Flex from 'components/shared-components/Flex';
@@ -23,22 +24,22 @@ const getStatusColor = (status) => {
 };
 
 const OfferList = () => {
-  const [list, setList] = useState(OfferListData);
+  const [list, setList] = useState(UserListdata);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleShowStatus = (value) => {
     const filteredData = value !== 'All'
-      ? utils.filterArray(OfferListData, 'status', value)
-      : OfferListData;
+      ? utils.filterArray(UserListdata, 'status', value)
+      : UserListdata;
     setList(filteredData);
   };
 
   // Debounce search input
   const handleSearch = useCallback(
     debounce((value) => {
-      const searchArray = value ? list : OfferListData;
+      const searchArray = value ? list : UserListdata;
       const filteredData = utils.wildCardSearch(searchArray, value);
       setList(filteredData);
       setSelectedRowKeys([]);
@@ -66,34 +67,22 @@ const OfferList = () => {
 
   const tableColumns = [
     {
-      title: 'Offer Name',
-      dataIndex: 'offerName',
-      render: (_, record) => <span>{record.offerName}</span>,
-      sorter: (a, b) => a.offerName.localeCompare(b.offerName),
+      title: 'User Name',
+      dataIndex: 'userName',
+      render: (_, record) => <span>{record.userName}</span>,
+      sorter: (a, b) => a.userName.localeCompare(b.userName),
     },
     {
-      title: 'Discount Percentage',
-      dataIndex: 'DiscountPercentage',
-      render: (_, record) => <span>{record.DiscountPercentage}</span>,
-      sorter: (a, b) => parseFloat(a.DiscountPercentage) - parseFloat(b.DiscountPercentage),
+      title: 'Email',
+      dataIndex: 'emailAddress',
+      render: (_, record) => <span>{record.emailAddress}</span>,
+      sorter: (a, b) => a.emailAddress.localeCompare(b.emailAddress),
     },
     {
-      title: 'Start Date',
-      dataIndex: 'StartDate',
-      render: (_, record) => <span>{record.StartDate}</span>,
-      sorter: (a, b) => new Date(a.StartDate) - new Date(b.StartDate),
-    },
-    {
-      title: 'End Date',
-      dataIndex: 'EndDate',
-      render: (_, record) => <span>{record.EndDate}</span>,
-      sorter: (a, b) => new Date(a.EndDate) - new Date(b.EndDate),
-    },
-    {
-      title: 'Max Users',
-      dataIndex: 'MaxUsers',
-      render: (_, record) => <span>{record.MaxUsers}</span>,
-      sorter: (a, b) => a.MaxUsers - b.MaxUsers,
+      title: 'Role',
+      dataIndex: 'role',
+      render: (_, record) => <span>{record.role}</span>,
+      sorter: (a, b) => a.role.localeCompare(b.role),
     },
     {
       title: 'Status',
@@ -142,7 +131,7 @@ const OfferList = () => {
               onChange={handleShowStatus}
               placeholder="Status"
             >
-              <Option value="All">All Offers</Option>
+              <Option value="All">All Users</Option>
               <Option value="Active">Active</Option>
               <Option value="Inactive">Inactive</Option>
             </Select>
@@ -153,9 +142,9 @@ const OfferList = () => {
             type="primary"
             icon={<FormOutlined />}
             block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add`)}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/user/add`)}
           >
-            Add Offer
+            Add User
           </Button>
         </div>
       </Flex>

@@ -1,56 +1,44 @@
 /* eslint-disable no-unused-vars */
-import React, {useState} from 'react'
+import React, { useState } from 'react'
 import { Card, Table, Select, Input, Button, Badge, Menu, Tag } from 'antd';
-import OrderListData from "assets/data/order-list.data.json"
+import EventListData from "assets/data/event-list.json"
 import { EyeOutlined, FormOutlined, SearchOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import AvatarStatus from 'components/shared-components/AvatarStatus';
 import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
 import Flex from 'components/shared-components/Flex'
 import NumberFormat from 'react-number-format';
-import dayjs from 'dayjs'; 
+import dayjs from 'dayjs';
 import { DATE_FORMAT_DD_MM_YYYY } from 'constants/DateConstant'
 import utils from 'utils'
 import { useNavigate } from 'react-router-dom';
-import {APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 const { Option } = Select
-const getPaymentStatus = status => {
-	if(status === 'Paid') {
-		return 'success'
-	}
-	if(status === 'Pending') {
-		return 'warning'
-	}
-	if(status === 'Expired') {
-		return 'error'
-	}
-	return ''
-}
 
 const getShippingStatus = status => {
-	if(status === 'Ready') {
-		return 'blue'
+	if (status === 'Scheduled') {
+		return 'green'
 	}
-	if(status === 'Shipped') {
-		return 'cyan'
+	if (status === 'Ongoing') {
+		return 'blue'
 	}
 	return ''
 }
 
-const paymentStatusList = ['Paid', 'Pending', 'Expired']
+const scheduleStatusList = ['Scheduled', 'Ongoing', 'Expired']
 
 const EventsList = () => {
 
-	const [list, setList] = useState(OrderListData)
+	const [list, setList] = useState(EventListData)
 	const [selectedRows, setSelectedRows] = useState([])
 	const [selectedRowKeys, setSelectedRowKeys] = useState([])
 
 	const handleShowStatus = value => {
-		if(value !== 'All') {
-			const key = 'paymentStatus'
-			const data = utils.filterArray(OrderListData, key, value)
+		if (value !== 'All') {
+			const key = 'status'
+			const data = utils.filterArray(EventListData, key, value)
 			setList(data)
 		} else {
-			setList(OrderListData)
+			setList(EventListData)
 		}
 	}
 
@@ -79,63 +67,57 @@ const EventsList = () => {
 		{
 			title: 'Event',
 			dataIndex: 'name',
-			render: (_, record) => (
-				<div className="d-flex">
-					<AvatarStatus size={30} src={record.image} name={record.name}/>
-				</div>
-			),
+
 			sorter: (a, b) => utils.antdTableSorter(a, b, 'name')
 		},
 		{
-			title: 'Date',
-			dataIndex: 'date',
-			render: (_, record) => (
-				<span>{dayjs.unix(record.date).format(DATE_FORMAT_DD_MM_YYYY)}</span>
-			),
-			sorter: (a, b) => utils.antdTableSorter(a, b, 'date')
+			title: 'Category',
+			dataIndex: 'category',
+
+			sorter: (a, b) => utils.antdTableSorter(a, b, 'category')
 		},
 		{
-			title: 'Order status',
-			dataIndex: 'orderStatus',
-			render: (_, record) => (
-				<><Tag color={getShippingStatus(record.orderStatus)}>{record.orderStatus}</Tag></>
-			),
-			sorter: (a, b) => utils.antdTableSorter(a, b, 'orderStatus')
+			title: 'Sub Cat',
+			dataIndex: 'subCategory',
+			sorter: (a, b) => utils.antdTableSorter(a, b, 'subCategory')
 		},
 		{
-			title: 'Payment status',
-			dataIndex: 'paymentStatus',
-			render: (_, record) => (
-				<><Badge status={getPaymentStatus(record.paymentStatus)} /><span>{record.paymentStatus}</span></>
-			),
-			sorter: (a, b) => utils.antdTableSorter(a, b, 'paymentStatus')
+			title: 'Country',
+			dataIndex: 'country',
+
+			sorter: (a, b) => utils.antdTableSorter(a, b, 'country')
 		},
 		{
-			title: 'Total',
-			dataIndex: 'amount',
+			title: 'Place',
+			dataIndex: 'place',
+
+			sorter: (a, b) => utils.antdTableSorter(a, b, 'place')
+		},
+		{
+			title: 'Venue',
+			dataIndex: 'venue',
+
+			sorter: (a, b) => utils.antdTableSorter(a, b, 'venue')
+		},
+		{
+			title: 'Status',
+			dataIndex: 'status',
 			render: (_, record) => (
-				<span className="font-weight-semibold">
-					<NumberFormat
-						displayType={'text'} 
-						value={(Math.round(record.amount * 100) / 100).toFixed(2)} 
-						prefix={'$'} 
-						thousandSeparator={true} 
-					/>
-				</span>
+				<><Tag color={getShippingStatus(record.status)}>{record.status}</Tag></>
 			),
-			sorter: (a, b) => utils.antdTableSorter(a, b, 'amount')
+			sorter: (a, b) => utils.antdTableSorter(a, b, 'status')
 		},
 		{
 			title: '',
 			dataIndex: 'actions',
 			render: (_, elm) => (
 				<div className="text-right">
-					<EllipsisDropdown menu={dropdownMenu(elm)}/>
+					<EllipsisDropdown menu={dropdownMenu(elm)} />
 				</div>
 			)
 		}
 	];
-	
+
 	const rowSelection = {
 		onChange: (key, rows) => {
 			setSelectedRows(rows)
@@ -145,7 +127,7 @@ const EventsList = () => {
 
 	const onSearch = e => {
 		const value = e.currentTarget.value
-		const searchArray = e.currentTarget.value? list : OrderListData
+		const searchArray = e.currentTarget.value ? list : EventListData
 		const data = utils.wildCardSearch(searchArray, value)
 		setList(data)
 		setSelectedRowKeys([])
@@ -157,18 +139,18 @@ const EventsList = () => {
 			<Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
 				<Flex className="mb-1" mobileFlex={false}>
 					<div className="mr-md-3 mb-3">
-						<Input placeholder="Search" prefix={<SearchOutlined />} onChange={e => onSearch(e)}/>
+						<Input placeholder="Search" prefix={<SearchOutlined />} onChange={e => onSearch(e)} />
 					</div>
 					<div className="mb-3">
-						<Select 
-							defaultValue="All" 
-							className="w-100" 
-							style={{ minWidth: 180 }} 
-							onChange={handleShowStatus} 
+						<Select
+							defaultValue="All"
+							className="w-100"
+							style={{ minWidth: 180 }}
+							onChange={handleShowStatus}
 							placeholder="Status"
 						>
-							<Option value="All">All payment </Option>
-							{paymentStatusList.map(elm => <Option key={elm} value={elm}>{elm}</Option>)}
+							<Option value="All">All Events </Option>
+							{scheduleStatusList.map(elm => <Option key={elm} value={elm}>{elm}</Option>)}
 						</Select>
 					</div>
 				</Flex>
@@ -177,10 +159,10 @@ const EventsList = () => {
 				</div>
 			</Flex>
 			<div className="table-responsive">
-				<Table 
-					columns={tableColumns} 
-					dataSource={list} 
-					rowKey='id' 
+				<Table
+					columns={tableColumns}
+					dataSource={list}
+					rowKey='id'
 					rowSelection={{
 						selectedRowKeys: selectedRowKeys,
 						type: 'checkbox',

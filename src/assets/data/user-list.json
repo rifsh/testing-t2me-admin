@@ -1,0 +1,26 @@
+[
+    {
+        "userName": "Jassim PT",
+        "emailAddress": "jassim@gmail.com",
+        "role": "Manager",
+        "status": "Active"
+    },
+    {
+        "userName": "Vignesh p",
+        "emailAddress": "vignesh@gmail.com",
+        "role": "Employee",
+        "status": "Active"
+    },
+    {
+        "userName": "AmalDev",
+        "emailAddress": "amal@gmail.com",
+        "role": "Manager",
+        "status": "Active"
+    },
+    {
+        "userName": "Irshad",
+        "emailAddress": "irshu@gmail.com",
+        "role": "Manager",
+        "status": "Active"
+    }
+]
