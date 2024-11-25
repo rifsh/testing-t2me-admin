@@ -16,11 +16,27 @@
     "status": "Inactive"
   },
   {
+    "countryName": "UAE",
+    "countryCode": "IN",
+    "timezone": "GMT+5:30",
+    "createdDate": 1625097600,
+    "place": "Asia",
+    "status": "Active"
+  },
+  {
     "countryName": "India",
     "countryCode": "IN",
     "timezone": "GMT+5:30",
     "createdDate": 1625097600,
     "place": "Asia",
+    "status": "Active"
+  },
+  {
+    "countryName": "India",
+    "countryCode": "IN",
+    "timezone": "GMT+5:30",
+    "createdDate": 1625097600,
+    "place": "New Delhi",
     "status": "Active"
   }
 ]

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react'
 import PageHeaderAlt from 'components/layout-components/PageHeaderAlt'
 import { Tabs, Form, Button, message } from 'antd';
 import Flex from 'components/shared-components/Flex'
-import GeneralField from './GeneralField'
-import VariationField from './VariationField'
-import ShippingField from './ShippingField'
+
 import ProductListData from "assets/data/product-list.data.json"
+import SeatFormFields from '../components/SeatFormFields';
+
 
 const getBase64 = (img, callback) => {
   const reader = new FileReader();
@@ -16,7 +16,7 @@ const getBase64 = (img, callback) => {
 const ADD = 'ADD'
 const EDIT = 'EDIT'
 
-const EventForm = props => {
+const SeatForm = props => {
 
 	const { mode = ADD, param } = props
 
@@ -94,7 +94,7 @@ const EventForm = props => {
 				<PageHeaderAlt className="border-bottom" overlap>
 					<div className="container">
 						<Flex className="py-2" mobileFlex={false} justifyContent="space-between" alignItems="center">
-							<h2 className="mb-3">{mode === 'ADD'? 'Add New Event' : `Edit Event`} </h2>
+							<h2 className="mb-3">{mode === 'ADD'? 'Add New Offer' : `Edit Offer`} </h2>
 							<div className="mb-3">
 								<Button className="mr-2">Discard</Button>
 								<Button type="primary" onClick={() => onFinish()} htmlType="submit" loading={submitLoading} >
@@ -112,21 +112,11 @@ const EventForm = props => {
 							{
 								label: 'General',
 								key: '1',
-								children: <GeneralField 
+								children: <SeatFormFields
 									uploadedImg={uploadedImg} 
 									uploadLoading={uploadLoading} 
 									handleUploadChange={handleUploadChange}
 								/>,
-							},
-							{
-								label: 'Variation',
-								key: '2',
-								children: <VariationField />,
-							},
-							{
-								label: 'Shipping',
-								key: '3',
-								children: <ShippingField />,
 							},
 						]}
 					/>
@@ -136,4 +126,4 @@ const EventForm = props => {
 	)
 }
 
-export default EventForm
+export default SeatForm
