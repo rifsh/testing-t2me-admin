@@ -4,7 +4,7 @@ import { API_BASE_URL } from 'constants/ApiConstant';
 
 
 
-export const fetchCountries = async () => {
+export const venueCountries = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/countries`);
         return response.data;
