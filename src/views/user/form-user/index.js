@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react'
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 import PageHeaderAlt from 'components/layout-components/PageHeaderAlt'
 import { Tabs, Form, Button, message } from 'antd';
 import Flex from 'components/shared-components/Flex'
-
 import ProductListData from "assets/data/product-list.data.json"
 import CouponFormFields from '../components/UserFormFields';
+import { useDispatch } from 'react-redux';
+import { createUser } from 'store/slices/userSlice';
+import { useNavigate } from "react-router-dom";
 
 
 const getBase64 = (img, callback) => {
@@ -24,6 +27,8 @@ const OfferForm = props => {
 	const [uploadedImg, setImage] = useState('')
 	const [uploadLoading, setUploadLoading] = useState(false)
 	const [submitLoading, setSubmitLoading] = useState(false)
+	const dispatch = useDispatch();
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		if (mode === EDIT) {
@@ -62,15 +67,26 @@ const OfferForm = props => {
 	const onFinish = () => {
 		setSubmitLoading(true)
 		form.validateFields().then(values => {
-			setTimeout(() => {
-				setSubmitLoading(false)
-				if (mode === ADD) {
-					message.success(`Created ${values.name} to product list`);
-				}
-				if (mode === EDIT) {
-					message.success(`Product saved`);
-				}
-			}, 1500);
+			const userData = {
+				email: values.emailAddress,
+				username: values.userName,
+				password: values.password
+			}
+
+			if (mode === ADD) {
+
+				dispatch(createUser(userData)).then(() => {
+					message.success(`User ${values.userName} added successfully.`);
+					setSubmitLoading(false);
+					form.resetFields();
+					navigate(`${APP_PREFIX_PATH}/user/list`)
+				})
+					.catch((error) => {
+						console.error("Error:", error);
+						message.error("Failed to create user.");
+						setSubmitLoading(false);
+					});
+			}
 		}).catch(info => {
 			setSubmitLoading(false)
 			console.log('info', info)

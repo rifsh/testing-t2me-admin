@@ -1,13 +1,13 @@
 const dev = {
-  API_ENDPOINT_URL: '/api'
+	API_ENDPOINT_URL: 'https://uat-tickets2me.mitetechnology.com/api'
 };
 
 const prod = {
-  API_ENDPOINT_URL: '/api'
+	API_ENDPOINT_URL: '/api'
 };
 
 const test = {
-  API_ENDPOINT_URL: '/api'
+	API_ENDPOINT_URL: '/api'
 };
 
 const getEnv = () => {

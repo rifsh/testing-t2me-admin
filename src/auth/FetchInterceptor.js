@@ -8,23 +8,25 @@ import { notification } from 'antd';
 const unauthorizedCode = [400, 401, 403]
 
 const service = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 60000
+	baseURL: API_BASE_URL,
+	timeout: 60000
 })
 
-// Config
-const TOKEN_PAYLOAD_KEY = 'authorization'
+const TOKEN_PAYLOAD_KEY = 'Authorization'
 
 // API Request interceptor
 service.interceptors.request.use(config => {
 	const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
-	
+
 	if (jwtToken) {
-		config.headers[TOKEN_PAYLOAD_KEY] = jwtToken
+		config.headers[TOKEN_PAYLOAD_KEY] = jwtToken;
+		console.log('Request Headers:', config.headers);
+		console.log("Api Url:", API_BASE_URL);
 	}
 
-  	return config
+	return config
 }, error => {
+	console.log("error: ", error);
 	// Do something with request error here
 	notification.error({
 		message: 'Error'
@@ -33,9 +35,11 @@ service.interceptors.request.use(config => {
 })
 
 // API respone interceptor
-service.interceptors.response.use( (response) => {
-	return response.data
+service.interceptors.response.use((response) => {
+	console.log("response: ", response);
+	return response
 }, (error) => {
+	console.log("error: ", error);
 
 	let notificationParam = {
 		message: ''
@@ -57,7 +61,7 @@ service.interceptors.response.use( (response) => {
 	if (error.response.status === 500) {
 		notificationParam.message = 'Internal Server Error'
 	}
-	
+
 	if (error.response.status === 508) {
 		notificationParam.message = 'Time Out'
 	}
