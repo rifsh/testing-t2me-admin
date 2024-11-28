@@ -14,10 +14,14 @@ const service = axios.create({
 
 // Config
 const TOKEN_PAYLOAD_KEY = 'authorization'
+const HARDCODED_TOKEN =
+  'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzaGFtaWw3MDdAZ21haWwuY29tIiwiZXhwIjoxNzM1Mjc2OTcxfQ.N1zRX3wOOml8ep_NVbhlcshvlo5waYvOFU3pe3CvejA';
 
-// API Request interceptor
-service.interceptors.request.use(config => {
-	const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
+service.interceptors.request.use(
+  (config) => {
+    // let jwtToken = localStorage.getItem(AUTH_TOKEN) || HARDCODED_TOKEN;
+    let jwtToken = HARDCODED_TOKEN;
+
 	
 	if (jwtToken) {
 		config.headers[TOKEN_PAYLOAD_KEY] = jwtToken

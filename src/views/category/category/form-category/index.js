@@ -6,6 +6,8 @@ import Flex from 'components/shared-components/Flex'
 import ProductListData from "assets/data/product-list.data.json"
 import CategoryFormFields from '../components/CategoryFormFields';
 import SubCategoryFormFields from '../components/SubCategoryFormFields';
+import { addCategory } from 'store/slices/categorySlice';
+import CategoryService from 'services/CategoryService';
 
 const getBase64 = (img, callback) => {
   const reader = new FileReader();
@@ -16,7 +18,7 @@ const getBase64 = (img, callback) => {
 const ADD = 'ADD'
 const EDIT = 'EDIT'
 
-const CountryForm = props => {
+const CategoryForm = props => {
 
 	const { mode = ADD, param } = props
 
@@ -46,37 +48,8 @@ const CountryForm = props => {
 		}
   	}, [form, mode, param, props]);
 
-	const handleUploadChange = info => {
-		if (info.file.status === 'uploading') {
-			setUploadLoading(true)
-			return;
-		}
-		if (info.file.status === 'done') {
-			getBase64(info.file.originFileObj, imageUrl =>{
-				setImage(imageUrl)
-				setUploadLoading(true)
-			});
-		}
-	};
 
-	const onFinish = () => {
-		setSubmitLoading(true)
-		form.validateFields().then(values => {
-			setTimeout(() => {
-				setSubmitLoading(false)
-				if(mode === ADD) {
-					message.success(`Created ${values.name} to product list`);
-				}
-				if(mode === EDIT) {
-					message.success(`Product saved`);
-				}
-			}, 1500);
-		}).catch(info => {
-			setSubmitLoading(false)
-			console.log('info', info)
-			message.error('Please enter all required field ');
-		});
-	};
+	 
 
 	return (
 		<>
@@ -113,18 +86,16 @@ const CountryForm = props => {
 								label: 'Category',
 								key: '1',
 								children: <CategoryFormFields
-									uploadedImg={uploadedImg} 
-									uploadLoading={uploadLoading} 
-									handleUploadChange={handleUploadChange}
+								
 								/>,
 							},
 							{
 								label: 'Sub Category',
 								key: '2',
 								children: <SubCategoryFormFields
-									uploadedImg={uploadedImg} 
-									uploadLoading={uploadLoading} 
-									handleUploadChange={handleUploadChange}
+									// uploadedImg={uploadedImg} 
+									// uploadLoading={uploadLoading} 
+									// handleUploadChange={handleUploadChange}
 								/>,
 							},
 						]}
@@ -135,4 +106,4 @@ const CountryForm = props => {
 	)
 }
 
-export default CountryForm
+export default CategoryForm
