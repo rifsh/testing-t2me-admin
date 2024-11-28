@@ -16,8 +16,7 @@ const CategoryList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { categories, loading } = useSelector((state) => state.category);
-
+  const { categories, loading, error } = useSelector((state) => state.category);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredCategories, setFilteredCategories] = useState([]);
 
@@ -25,9 +24,14 @@ const CategoryList = () => {
     dispatch(fetchCategory());
   }, [dispatch]);
 
-  useEffect(() => {
-    setFilteredCategories(categories);
-  }, [categories]);
+
+  console.log("Categories:", categories);
+  console.log("Loading:", loading);
+  console.log("Error:", error);
+  
+    useEffect(() => {
+      setFilteredCategories(categories);
+    }, [categories]);
 
   const handleSearch = debounce((value) => {
     setSearchTerm(value);
@@ -43,13 +47,13 @@ const CategoryList = () => {
 
   const columns = [
     {
+      title: "ID",
+      dataIndex: "id",
+    },
+    {
       title: "Category Name",
       dataIndex: "name",
       sorter: (a, b) => a.name.localeCompare(b.name),
-    },
-    {
-      title: "Description",
-      dataIndex: "description",
     },
     {
       title: "Date",
@@ -57,6 +61,11 @@ const CategoryList = () => {
       render: (date) => dayjs(date).format(DATE_FORMAT_DD_MM_YYYY),
     },
   ];
+
+  console.log("Categories:", categories);  
+
+  if (loading) return <p>Loading categories...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <Card>

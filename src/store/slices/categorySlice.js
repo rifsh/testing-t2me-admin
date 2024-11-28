@@ -23,24 +23,32 @@ export const addCategory = createAsyncThunk(
 export const fetchCategory = createAsyncThunk(
   "category/list",
   async (_, { rejectWithValue }) => {
-    
     try {
+      console.log("API triggered");
       const response = await CategoryService.fetchCategory();
-      return response.data;
+
+      // Log response to make sure it has the correct structure
+      console.log("API Response:", response);
+
+      // Assuming the response data is an array (based on your log)
+      if (Array.isArray(response)) {
+        return response; // This should be returned directly
+      } else {
+        console.error("Invalid response structure:", response);
+        return rejectWithValue("Invalid response data");
+      }
     } catch (err) {
-      return rejectWithValue(
-        err.response?.data || "Failed to fetch categories"
-      );
+      console.log("API Failed", err);
+      return rejectWithValue(err.response?.data || "Failed to fetch categories");
     }
   }
 );
+
+
+
 const categorySlice = createSlice({
   name: "category",
-  initialState: {
-    loading: false,
-    categories: [],
-    error: null,
-  },
+  initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -55,19 +63,29 @@ const categorySlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
-
       .addCase(fetchCategory.pending, (state) => {
         state.loading = true;
+        state.error = null;  // Reset error on a new request
       })
-      .addCase(fetchCategory.fulfilled, (state, { payload }) => {
+      .addCase(fetchCategory.fulfilled, (state, action) => {
+        console.log("Fetched Categories Full Action:", action);  // Log the entire action object
+        console.log("Fetched Categories Payload1:", action.payload);  
+        if (Array.isArray(action.payload)) {
+          console.log("Fetched Categories Payload2:", action.payload); 
+          state.categories = action.payload;  // Update state if it's an array
+        } else {
+          console.error("Invalid payload in fulfilled action", action.payload);
+        }      
         state.loading = false;
-        state.categories = payload;
+        state.categories = action.payload;  // Update the categories array with the fetched data
       })
-      .addCase(fetchCategory.rejected, (state, { payload }) => {
+      .addCase(fetchCategory.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload;
+        state.error = action.payload.error;
       });
+
   },
 });
 
 export default categorySlice.reducer;
+
