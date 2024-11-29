@@ -21,7 +21,7 @@ const CategoryList = () => {
 
   useEffect(() => {
     dispatch(fetchCategory());
-  }, [dispatch]);
+  }, []);
 
   useEffect(() => {
     setFilteredCategories(categories);
@@ -31,17 +31,10 @@ const CategoryList = () => {
     if (error) message.error(error);
   }, [error]);
 
-  const handleSearch = debounce((value) => {
-    setSearchTerm(value);
-    if (value) {
-      const filtered = categories.filter((cat) =>
-        cat.name.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredCategories(filtered);
-    } else {
-      setFilteredCategories(categories);
-    }
-  }, 300);
+
+  const handleSearch = (e) => {
+    dispatch(setSearchTerm(e.target.value));
+  };
 
   const columns = [
     {
@@ -69,7 +62,7 @@ const CategoryList = () => {
           onChange={(e) => handleSearch(e.target.value)}
           value={searchTerm}
         />
-        <Button 
+        <Button
           type="primary"
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/category/add`)}
@@ -84,7 +77,7 @@ const CategoryList = () => {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              height: "300px", 
+              height: "300px",
             }}
           >
             <Loading />

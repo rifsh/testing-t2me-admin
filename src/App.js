@@ -21,6 +21,8 @@ if (environment !== 'production') {
 }
 
 function App() {
+  console.log('env', process.env.NODE_ENV);
+  
   return (
     <div className="App">
       <Provider store={store}>

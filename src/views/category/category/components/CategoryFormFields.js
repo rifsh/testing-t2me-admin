@@ -41,11 +41,6 @@ const CategoryFormFields = ({ mode = ADD, form }) => {
       console.log("Validation Failed:", errorInfo);
     }
   };
-
-  const onReset = () => {
-    form.resetFields();
-  };
-
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>

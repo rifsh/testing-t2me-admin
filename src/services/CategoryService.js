@@ -11,7 +11,7 @@ CategoryService.addCategory = function (data) {
 }
 CategoryService.fetchCategory = function () {
 	return fetch({
-		url: '/api/v1/events/secured/subcategory',
+		url: '/api/v1/events/secured/category',
 		method: 'get'
 	})
 }

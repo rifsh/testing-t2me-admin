@@ -39,13 +39,14 @@ export const LoginForm = props => {
 	} = props
 
 	const initialCredential = {
-		email: 'user1@themenate.net',
-		password: '2005ipo'
+		username: 'shamil707@gmail.com',
+		password: 'admin@321'
 	}
 
 	const onLogin = values => {
 		showLoading()
 		signIn(values);
+		// signInSuccess()
 	};
 
 	const onGoogleLogin = () => {
@@ -112,16 +113,16 @@ export const LoginForm = props => {
 				onFinish={onLogin}
 			>
 				<Form.Item 
-					name="email" 
+					name="username" 
 					label="Email" 
 					rules={[
 						{ 
 							required: true,
-							message: 'Please input your email',
+							message: 'Please input your username',
 						},
 						{ 
-							type: 'email',
-							message: 'Please enter a validate email!'
+							type: 'username',
+							message: 'Please enter a validate username!'
 						}
 					]}>
 					<Input prefix={<MailOutlined className="text-primary" />}/>
