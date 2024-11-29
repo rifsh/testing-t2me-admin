@@ -6,11 +6,11 @@ const dev = {
 // 	API_ENDPOINT_URL: '/api'
 //   };
 const prod = {
-  API_ENDPOINT_URL: '/api'
+	API_ENDPOINT_URL: '/api'
 };
 
 const test = {
-  API_ENDPOINT_URL: '/api'
+	API_ENDPOINT_URL: '/api'
 };
 
 const getEnv = () => {	

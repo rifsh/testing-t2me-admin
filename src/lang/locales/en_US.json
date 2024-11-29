@@ -125,5 +125,7 @@
 	"sidenav.errors.error.2": "Error Page 2",
 	"sidenav.docs": "Docs",
 	"sidenav.docs.documentation": "Documentation",
-	"sidenav.docs.changelog": "Changelog"
+	"sidenav.docs.changelog": "Changelog",
+	"form.item.username.label": "User Name",
+	"form.item.username.placeholder": "Enter User Name"
 }

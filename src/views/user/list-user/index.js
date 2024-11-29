@@ -1,8 +1,6 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, Table, Select, Input, Button, Tag, Menu } from 'antd';
-import CouponListData from 'assets/data/coupon-list.json';
-import UserListdata from "assets/data/user-list.json";
 import { EyeOutlined, PlusCircleOutlined, SearchOutlined, FormOutlined } from '@ant-design/icons';
 import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
 import Flex from 'components/shared-components/Flex';
@@ -10,42 +8,68 @@ import utils from 'utils';
 import { useNavigate } from "react-router-dom";
 import { debounce } from 'lodash';
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { setUserList, fetchAllUsers } from 'store/slices/userSlice';
+import { useSelector, useDispatch } from 'react-redux';
 const { Option } = Select;
 
 
-const getStatusColor = (status) => {
-  if (status.toLowerCase() === 'active') {
+const getStatusColor = (is_active) => {
+  if (is_active === true) {
     return 'green';
   }
-  if (status.toLowerCase() === 'inactive') {
+  if (is_active === false) {
     return 'red';
   }
-  return 'blue'; // For other statuses
+  return 'blue';
 };
 
 const OfferList = () => {
-  const [list, setList] = useState(UserListdata);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { list, loading, error } = useSelector((state) => state.users);
+  const [originalList, setOriginalList] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+
+
+  useEffect(() => {
+    dispatch(fetchAllUsers());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (list.length > 0) {
+      setOriginalList(list);
+    }
+  }, [list]);
+
+
+  const filteredAndSearchedList = React.useMemo(() => {
+    let result = originalList;
+    if (statusFilter !== 'All') {
+      const isActive = statusFilter === 'Active';
+      result = result.filter(user => user.is_active === isActive);
+    }
+    if (searchTerm) {
+      result = utils.wildCardSearch(result, searchTerm);
+    }
+
+    return result;
+  }, [originalList, statusFilter, searchTerm]);
 
   const handleShowStatus = (value) => {
-    const filteredData = value !== 'All'
-      ? utils.filterArray(UserListdata, 'status', value)
-      : UserListdata;
-    setList(filteredData);
+    setStatusFilter(value);
+    setSelectedRowKeys([]);
   };
 
-  // Debounce search input
-  const handleSearch = useCallback(
-    debounce((value) => {
-      const searchArray = value ? list : UserListdata;
-      const filteredData = utils.wildCardSearch(searchArray, value);
-      setList(filteredData);
-      setSelectedRowKeys([]);
-    }, 500),
-    [list]
-  );
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    setSelectedRowKeys([]);
+  };
+
 
   const dropdownMenu = (row) => (
 
@@ -68,15 +92,15 @@ const OfferList = () => {
   const tableColumns = [
     {
       title: 'User Name',
-      dataIndex: 'userName',
-      render: (_, record) => <span>{record.userName}</span>,
-      sorter: (a, b) => a.userName.localeCompare(b.userName),
+      dataIndex: 'username',
+      render: (_, record) => <span>{record.username}</span>,
+      sorter: (a, b) => a.username.localeCompare(b.username),
     },
     {
       title: 'Email',
-      dataIndex: 'emailAddress',
-      render: (_, record) => <span>{record.emailAddress}</span>,
-      sorter: (a, b) => a.emailAddress.localeCompare(b.emailAddress),
+      dataIndex: 'email',
+      render: (_, record) => <span>{record.email}</span>,
+      sorter: (a, b) => a.email.localeCompare(b.email),
     },
     {
       title: 'Role',
@@ -86,9 +110,9 @@ const OfferList = () => {
     },
     {
       title: 'Status',
-      dataIndex: 'status',
-      render: (_, record) => <Tag color={getStatusColor(record.status)}>{record.status}</Tag>,
-      sorter: (a, b) => a.status.localeCompare(b.status),
+      dataIndex: 'is_active',
+      render: (_, record) => <Tag color={getStatusColor(record.is_active)}>{record.is_active ? "Active" : "InActive"}</Tag>,
+      sorter: (a, b) => Number(b.is_active) - Number(a.is_active),
     },
     {
       title: '',
@@ -107,7 +131,7 @@ const OfferList = () => {
       setSelectedRowKeys(key);
     },
   };
-  const navigate = useNavigate();
+
   return (
     <Card>
       <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
@@ -151,7 +175,7 @@ const OfferList = () => {
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={list}
+          dataSource={filteredAndSearchedList}
           rowKey="offerName"
           rowSelection={{
             selectedRowKeys: selectedRowKeys,

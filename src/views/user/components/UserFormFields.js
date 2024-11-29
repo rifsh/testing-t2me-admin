@@ -1,5 +1,5 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker, Select } from "antd";
+import { Input, Row, Col, Card, Form, Select } from "antd";
 const { Option } = Select;
 
 const rules = {
@@ -7,6 +7,12 @@ const rules = {
     {
       required: true,
       message: "Please enter email address",
+    },
+  ],
+  password: [
+    {
+      required: true,
+      message: "Please enter password",
     },
   ],
   name: [
@@ -55,9 +61,16 @@ function CouponFormFields(props) {
           <Form.Item
             name="emailAddress"
             label="Email Address"
-            rules={rules.discountPercentage}
+            rules={rules.email}
           >
             <Input placeholder="Enter Email Address" />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="Password"
+            rules={rules.password}
+          >
+            <Input placeholder="Enter Password" />
           </Form.Item>
           <Form.Item name="role" label="role" rules={rules.status}>
             <Select className="w-100" placeholder="Select a Role">
