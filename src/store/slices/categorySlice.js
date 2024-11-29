@@ -10,12 +10,12 @@ export const initialState = {
 export const addCategory = createAsyncThunk(
   "category/add",
   async (data, { rejectWithValue }) => {
-    const { title, descr } = data
     try {
       const response = await CategoryService.addCategory(data);
       return response.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data || "Failed to add category");
+      const errorMessage = err.response?.data?.message || "Failed to add category";
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -24,36 +24,33 @@ export const fetchCategory = createAsyncThunk(
   "category/list",
   async (_, { rejectWithValue }) => {
     try {
-      console.log("API triggered");
       const response = await CategoryService.fetchCategory();
 
-      // Log response to make sure it has the correct structure
-      console.log("API Response:", response);
-
-      // Assuming the response data is an array (based on your log)
       if (Array.isArray(response)) {
-        return response; // This should be returned directly
+        return response;
       } else {
-        console.error("Invalid response structure:", response);
         return rejectWithValue("Invalid response data");
       }
     } catch (err) {
-      console.log("API Failed", err);
-      return rejectWithValue(err.response?.data || "Failed to fetch categories");
+      const errorMessage = err.response?.data?.message || "Failed to fetch categories";
+      return rejectWithValue(errorMessage);
     }
   }
 );
 
-
-
 const categorySlice = createSlice({
   name: "category",
   initialState,
-  reducers: {},
+  reducers: {
+    clearError: (state) => {
+      state.error = null;
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(addCategory.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(addCategory.fulfilled, (state, { payload }) => {
         state.loading = false;
@@ -61,31 +58,22 @@ const categorySlice = createSlice({
       })
       .addCase(addCategory.rejected, (state, { payload }) => {
         state.loading = false;
-        state.error = payload;
+        state.error = payload || "Failed to create category";
       })
       .addCase(fetchCategory.pending, (state) => {
         state.loading = true;
-        state.error = null;  // Reset error on a new request
+        state.error = null;  
       })
       .addCase(fetchCategory.fulfilled, (state, action) => {
-        console.log("Fetched Categories Full Action:", action);  // Log the entire action object
-        console.log("Fetched Categories Payload1:", action.payload);  
-        if (Array.isArray(action.payload)) {
-          console.log("Fetched Categories Payload2:", action.payload); 
-          state.categories = action.payload;  // Update state if it's an array
-        } else {
-          console.error("Invalid payload in fulfilled action", action.payload);
-        }      
         state.loading = false;
-        state.categories = action.payload;  // Update the categories array with the fetched data
+        state.categories = action.payload;
       })
       .addCase(fetchCategory.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.error;
+        state.error = action.payload || "Failed to fetch categories";
       });
-
   },
 });
 
+export const { clearError } = categorySlice.actions;
 export default categorySlice.reducer;
-

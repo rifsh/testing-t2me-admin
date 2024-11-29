@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Select, Input, Button, Tabs, Spin } from "antd";
+import { Card, Table, Input, Tabs, Button, Spin, message } from "antd";
 import { SearchOutlined, FormOutlined } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import dayjs from "dayjs";
@@ -9,8 +9,7 @@ import { fetchCategory } from "store/slices/categorySlice";
 import { useNavigate } from "react-router-dom";
 import { debounce } from "lodash";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-
-const { Option } = Select;
+import Loading from "components/shared-components/Loading";
 
 const CategoryList = () => {
   const dispatch = useDispatch();
@@ -24,14 +23,13 @@ const CategoryList = () => {
     dispatch(fetchCategory());
   }, [dispatch]);
 
+  useEffect(() => {
+    setFilteredCategories(categories);
+  }, [categories]);
 
-  console.log("Categories:", categories);
-  console.log("Loading:", loading);
-  console.log("Error:", error);
-  
-    useEffect(() => {
-      setFilteredCategories(categories);
-    }, [categories]);
+  useEffect(() => {
+    if (error) message.error(error);
+  }, [error]);
 
   const handleSearch = debounce((value) => {
     setSearchTerm(value);
@@ -62,11 +60,6 @@ const CategoryList = () => {
     },
   ];
 
-  console.log("Categories:", categories);  
-
-  if (loading) return <p>Loading categories...</p>;
-  if (error) return <p>Error: {error}</p>;
-
   return (
     <Card>
       <Flex alignItems="center" justifyContent="space-between">
@@ -76,7 +69,7 @@ const CategoryList = () => {
           onChange={(e) => handleSearch(e.target.value)}
           value={searchTerm}
         />
-        <Button
+        <Button 
           type="primary"
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/category/add`)}
@@ -84,14 +77,46 @@ const CategoryList = () => {
           Add Category
         </Button>
       </Flex>
-      <div style={{ marginTop: 20 }}>
+      <div className="table-responsive">
         {loading ? (
-          <Spin size="large" />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "300px", 
+            }}
+          >
+            <Loading />
+          </div>
         ) : (
-          <Table
-            columns={columns}
-            dataSource={filteredCategories}
-            rowKey="id"
+          <Tabs
+            defaultActiveKey="1"
+            style={{ marginTop: 30 }}
+            items={[
+              {
+                label: "Category",
+                key: "1",
+                children: (
+                  <Table
+                    columns={columns}
+                    dataSource={filteredCategories}
+                    rowKey="id"
+                  />
+                ),
+              },
+              {
+                label: "Sub Category",
+                key: "2",
+                children: (
+                  <Table
+                    columns={columns}
+                    dataSource={filteredCategories}
+                    rowKey="id"
+                  />
+                ),
+              },
+            ]}
           />
         )}
       </div>
