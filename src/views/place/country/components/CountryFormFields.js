@@ -1,5 +1,6 @@
-import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker, Select } from "antd";
+import React, { useState, useEffect } from "react";
+import { Input, Row, Col, Card, Form, Select } from "antd";
+import { fetchCountry } from "../api/countryService"; // Assuming this fetches data from an API
 const { Option } = Select;
 
 const rules = {
@@ -42,112 +43,49 @@ const rules = {
   ],
 };
 
-const venues = [
-  "Auditorium A",
-  "Auditorium B",
-  "Party Hall",
-  "Kozhikode Convention Center",
-  "Conference Room",
-  "Outdoor Stage",
-  "Exhibition Hall",
-  "Banquet Hall",
-];
+const CountryFormFields = (props) => {
+  const [countries, setCountries] = useState([]);
 
-const categories = [
-  "Movies",
-  "Sports",
-  "Entertainment",
-  "Education",
-  "Business",
-  "Health",
-  "Technology",
-  "Art and Culture",
-  "Music",
-  "Theater",
-];
+  useEffect(() => {
+    const getCountries = async () => {
+      try {
+        const countryData = await fetchCountry(); 
+        console.log("Fetched country data:", countryData); 
+        setCountries(countryData); 
+      } catch (error) {
+        console.error("Error fetching countries:", error);
+      }
+    };
 
-const subCategories = [
-  "Football",
-  "Cricket",
-  "Basketball",
-  "Tennis",
-  "Hockey",
-  "Badminton",
-  "Live Concerts",
-  "Stand-up Comedy",
-  "Workshops",
-  "Seminars",
-  "Exhibitions",
-];
+    getCountries();
+  }, []);
 
-const status = [
-  "Done",
-  "Pending",
-  "In Progress",
-  "Completed",
-  "Cancelled",
-  "On Hold",
-  "Approved",
-  "Rejected",
-  "Draft",
-  "Submitted",
-  "Failed",
-  "Processing",
-];
+  console.log("Countries state:", countries); 
 
-const countries = [
-  "India",
-  "United Arab Emirates",
-  "United States",
-  "United Kingdom",
-  "Canada",
-  "Australia",
-  "Germany",
-  "France",
-  "Japan",
-  "South Korea",
-];
-
-const places = [
-  "New York",
-  "Los Angeles",
-  "Chicago",
-  "Houston",
-  "Kozhikode",
-  "Dubai",
-  "London",
-  "Toronto",
-  "Sydney",
-  "Tokyo",
-  "Seoul",
-  "Paris",
-  "Mumbai",
-  "Delhi",
-  "Bangalore",
-];
-
-const CountryFormFields = (props) => (
-  <Row gutter={16}>
-    <Col xs={24} sm={24} md={17}>
-      <Card title="Basic Info">
-        <Form.Item name="country" label="Country name" rules={rules.country}>
-          <Select className="w-100" placeholder="Choose a Country">
-            {countries.map((elm) => (
-              <Option key={elm} value={elm}>
-                {elm}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item name="Place" label="Place" rules={rules.name}>
-          <Input placeholder="Place Name" />
-        </Form.Item>
-       
-      </Card>
-      
-    </Col>
-    
-  </Row>
-);
+  return (
+    <Row gutter={16}>
+      <Col xs={24} sm={24} md={17}>
+        <Card title="Basic Info">
+          <Form.Item name="country" label="Country name" rules={rules.country}>
+            <Select className="w-100" placeholder="Choose a Country">
+              {countries && Object.entries(countries).length > 0 ? (
+                Object.entries(countries).map(([country, code]) => (
+                  <Option key={code} value={code}>
+                    {country}
+                  </Option>
+                ))
+              ) : (
+                <Option disabled>No countries available</Option>
+              )}
+            </Select>
+          </Form.Item>
+          <Form.Item name="Place" label="Place" rules={rules.name}>
+            <Input placeholder="Place Name" />
+          </Form.Item>
+        </Card>
+      </Col>
+    </Row>
+  );
+};
 
 export default CountryFormFields;

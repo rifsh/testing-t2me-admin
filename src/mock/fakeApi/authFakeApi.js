@@ -10,11 +10,11 @@ export default function authFakeApi(server, apiPrefix) {
         if (user) {
             return {
                 data: {
-                    token: 'wVYrxaeNa9OxdnULvde1Au5m5w63'
+                    access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzaGFtaWw3MDdAZ21haWwuY29tIiwiZXhwIjoxNzM1MTExMjE3fQ.LMJ9_uRgNPkZ8KA2iznWiL87RS0ilioo5jAemWq_e30'
                 }
             }
         }
-        return new Response(401, { some: 'header' }, { message: `email: user1@themenate.net | password: 2005ipo` })
+        return new Response(401, { some: 'header' }, { message: `email: shamil707@gmail.com | password: admin@321` })
     })
 
     server.post(`${apiPrefix}/auth/loginInOAuth`, (schema) => {

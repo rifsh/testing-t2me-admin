@@ -1,70 +1,87 @@
-import React from "react";
-import { Input, Row, Col, Card, Form, Button } from "antd";
+import React, { useEffect } from "react";
+import { Input, Row, Col, Card, Form, Button, message } from "antd";
+import { addCategory } from "store/slices/categorySlice";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
+
+const ADD = "ADD";
+const EDIT = "EDIT";
 
 const rules = {
-  country: [
-    {
-      required: true,
-      message: "Please Choose a country",
-    },
-  ],
-  name: [
-    {
-      required: true,
-      message: "Please enter country name",
-    },
-  ],
+  name: [{ required: true, message: "Please enter category name" }],
   description: [
-    {
-      required: true,
-      message: "Please enter country description",
-    },
-  ],
-  price: [
-    {
-      required: true,
-      message: "Please enter country price",
-    },
-  ],
-  comparePrice: [],
-  taxRate: [
-    {
-      required: true,
-      message: "Please enter tax rate",
-    },
-  ],
-  cost: [
-    {
-      required: true,
-      message: "Please enter item cost",
-    },
+    { required: true, message: "Please enter category description" },
   ],
 };
 
-const CategoryFormFields = (props) => (
-  <Row gutter={16}>
-    <Col xs={24} sm={24} md={17}>
-      <Card title="Basic Info">
-        <Form.Item name="category" label="Category" rules={rules.name}>
-          <Input placeholder="Category" />
-        </Form.Item>
+const CategoryFormFields = ({ mode = ADD, form }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-        <Form.Item
-          name="description"
-          label="Description"
-          rules={rules.description}
-        >
-          <Input.TextArea rows={4} />
-        </Form.Item>
+  const { loading, error } = useSelector((state) => state.category);
 
-        
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
-          <Button style={{ marginRight: 10 }}>Discard</Button>
-          <Button type="primary">Add</Button>
-        </div>
-      </Card>
-    </Col>
-  </Row>
-);
+  useEffect(() => {
+    if (error) {
+      message.error(error);
+    }
+  }, [error]);
+
+  const onFinish = async () => {
+    try {
+      const values = await form.validateFields();
+
+      const resultAction = await dispatch(addCategory(values));
+      if (addCategory.fulfilled.match(resultAction)) {
+        message.success(`Category ${values.name} added successfully`);
+        form.resetFields();
+        navigate(`${APP_PREFIX_PATH}/category/list`);
+      }
+    } catch (errorInfo) {
+      console.log("Validation Failed:", errorInfo);
+    }
+  };
+  return (
+    <Row gutter={16}>
+      <Col xs={24} sm={24} md={17}>
+        <Card title="Basic Info">
+          <Form form={form} layout="vertical" >
+            <Form.Item name="name" label="Category" rules={rules.name}>
+              <Input placeholder="Category" />
+            </Form.Item>
+            <Form.Item
+              name="description"
+              label="Description"
+              rules={rules.description}
+            >
+              <Input.TextArea
+                rows={4}
+                placeholder="Enter category description"
+              />
+            </Form.Item>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: 20,
+                gap: 10,
+              }}
+            >
+              <Button>Discard</Button>
+              <Button
+                type="primary"
+                onClick={onFinish}
+                // htmlType="submit"
+                loading={loading}
+              >
+                {mode === ADD ? "Add" : "Update"}
+              </Button>
+            </div>
+          </Form>
+        </Card>
+      </Col>
+    </Row>
+  );
+};
 
 export default CategoryFormFields;

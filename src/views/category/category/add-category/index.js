@@ -1,9 +1,9 @@
 import React from 'react';
-import CountryForm from '../form-category';
+import CategoryForm from '../form-category';
 
 const AddCountry = () => {
 	return (
-		<CountryForm mode="ADD"/>
+		<CategoryForm mode="ADD"/>
 	)
 }
 
