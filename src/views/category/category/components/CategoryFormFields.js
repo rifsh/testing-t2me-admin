@@ -15,7 +15,8 @@ const rules = {
   ],
 };
 
-const CategoryFormFields = ({ mode = ADD, form }) => {
+const CategoryFormFields = ({ mode = ADD, }) => {
+  const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

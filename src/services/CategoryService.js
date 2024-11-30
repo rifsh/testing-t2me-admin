@@ -22,4 +22,12 @@ CategoryService.fetchSubCategory = function (categoryId) {
   });
 };
 
+CategoryService.addSubCategory = function (data, categoryId) {
+  return fetch({
+    url: `/api/v1/events/secured/subcategory?category_id=${categoryId}`,
+    method: "post",
+    data: data,
+  });
+};
+
 export default CategoryService;

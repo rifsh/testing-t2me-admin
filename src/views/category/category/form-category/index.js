@@ -10,12 +10,12 @@ const ADD = 'ADD'
 const EDIT = 'EDIT'
 
 const CategoryForm = ({ mode = ADD, param }) => {
-	const [form] = Form.useForm();
+	
 
 	return (
 		<Form
 			layout="vertical"
-			form={form}
+			
 			name="category-form"
 			className="ant-advanced-search-form"
 		>
@@ -34,12 +34,12 @@ const CategoryForm = ({ mode = ADD, param }) => {
 						{
 							label: 'Category',
 							key: '1',
-							children: <CategoryFormFields mode={mode} form={form} />,
+							children: <CategoryFormFields mode={mode} />,
 						},
 						{
 							label: 'Sub Category',
 							key: '2',
-							children: <SubCategoryFormFields />,
+							children: <SubCategoryFormFields mode={mode} />,
 						},
 					]}
 				/>

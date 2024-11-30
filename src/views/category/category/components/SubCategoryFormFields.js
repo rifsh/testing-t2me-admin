@@ -1,6 +1,10 @@
 import React, { useEffect } from "react";
 import { Input, Row, Col, Card, Form, Button, message, Select } from "antd";
-import { addCategory } from "store/slices/categorySlice";
+import {
+  addCategory,
+  addSubCategory,
+  fetchCategories,
+} from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -10,17 +14,20 @@ const ADD = "ADD";
 const EDIT = "EDIT";
 
 const rules = {
-  name: [{ required: true, message: "Please enter category name" }],
-  description: [
-    { required: true, message: "Please enter category description" },
-  ],
+  category: [{ required: true, message: "Please Select a category" }],
+  name: [{ required: true, message: "Please enter sub category name" }],
+  description: [{ required: true, message: "Please enter sub category description" }],
 };
 
-const CategoryFormFields = ({ mode = ADD, form }) => {
+const CategoryFormFields = ({ mode = ADD }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [form] = Form.useForm();
+  const { loading, error, categories } = useSelector((state) => state.category);
 
-  const { loading, error } = useSelector((state) => state.category);
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
   useEffect(() => {
     if (error) {
@@ -31,10 +38,13 @@ const CategoryFormFields = ({ mode = ADD, form }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-
-      const resultAction = await dispatch(addCategory(values));
-      if (addCategory.fulfilled.match(resultAction)) {
-        message.success(`Category ${values.name} added successfully`);
+  
+      const resultAction = await dispatch(
+        addSubCategory({ data: values, categoryId: values.category_id })
+      );
+  
+      if (addSubCategory.fulfilled.match(resultAction)) {
+        message.success(`Subcategory ${values.name} added successfully`);
         form.resetFields();
         navigate(`${APP_PREFIX_PATH}/category/list`);
       }
@@ -42,34 +52,32 @@ const CategoryFormFields = ({ mode = ADD, form }) => {
       console.log("Validation Failed:", errorInfo);
     }
   };
+  
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
-          <Form.Item
-            name="category"
-            label="Category name"
-            rules={rules.country}
-          >
-            <Select className="w-100" placeholder="Choose a Category">
-              {countries.map((elm) => (
-                <Option key={elm} value={elm}>
-                  {elm}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
           <Form form={form} layout="vertical">
+            <Form.Item
+              name="category_id"
+              label="Category name"
+              rules={rules.category}
+            >
+              <Select className="w-100" placeholder="Choose a Category">
+                {categories.map((elm) => (
+                  <Option key={elm.name} value={elm.id}>
+                    {elm.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
             <Form.Item name="name" label="Category" rules={rules.name}>
               <Input placeholder="Category" />
             </Form.Item>
-            <Form.Item
-              name="description"
-              label="Description"
-              rules={rules.description}
-            >
+            <Form.Item name="description" label="Description"  rules={rules.description}>
               <Input.TextArea
                 rows={4}
+               
                 placeholder="Enter category description"
               />
             </Form.Item>

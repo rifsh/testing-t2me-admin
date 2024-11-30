@@ -48,6 +48,22 @@ export const fetchSubcategories = createAsyncThunk(
     }
   }
 );
+export const addSubCategory = createAsyncThunk(
+  "category/addSubCategory",
+  async ({ data, categoryId }, { rejectWithValue }) => {
+    try {
+      const response = await CategoryService.addSubCategory(data, categoryId);
+      console.log("response data",response);
+      
+      return response;
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Failed to add subcategory";
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 const categorySlice = createSlice({
   name: "category",
   initialState,
@@ -61,7 +77,7 @@ const categorySlice = createSlice({
     setActiveTab: (state, action) => {
       state.activeTab = action.payload;
       if (action.payload === "categories") {
-        state.selectedCategoryId = null; // Reset when switching to Categories tab
+        state.selectedCategoryId = null;
       }
     },
     clearSubcategories: (state) => {
@@ -71,6 +87,37 @@ const categorySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(addCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addCategory.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.categories.push(payload);
+      })
+      .addCase(addCategory.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to create category";
+      })
+      .addCase(addSubCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addSubCategory.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        const categoryIndex = state.categories.findIndex(
+          (cat) => cat.id === payload.categoryId
+        );
+        if (categoryIndex !== -1) {
+          state.categories[categoryIndex].subcategories.push(payload);
+        } else {
+          state.subcategories.push(payload); 
+        }
+      })
+      .addCase(addSubCategory.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to add subcategory";
+      })
       .addCase(fetchCategories.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -80,14 +127,29 @@ const categorySlice = createSlice({
         state.categories = action.payload;
         state.filteredCategories = action.payload;
       })
+      .addCase(fetchCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to fetch categories";
+      })
+      .addCase(fetchSubcategories.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchSubcategories.fulfilled, (state, action) => {
         const { categoryId, subcategories } = action.payload;
         state.loading = false;
         state.selectedCategoryId = categoryId;
         state.subcategories = subcategories;
+      })
+      .addCase(fetchSubcategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to fetch categories";
       });
   },
 });
+
+
+
 
 export const { setSearchTerm, setActiveTab, clearSubcategories } =
   categorySlice.actions;
