@@ -13,8 +13,8 @@ const service = axios.create({
 });
 
 // Config
-const TOKEN_PAYLOAD_KEY = 'authorization';
-  const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
+const TOKEN_PAYLOAD_KEY = 'Authorization';
+const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
 
 // Request Interceptor
 service.interceptors.request.use(
@@ -32,15 +32,15 @@ service.interceptors.request.use(
     );
     console.log('[REQUEST] Headers:', config.headers);
 
-	if (config.data) {
-		console.log('[REQUEST] Data:', config.data);
-	} else {
-		console.log('[REQUEST] Data: No payload (likely a GET request or undefined)');
-	}
+    if (config.data) {
+      console.log('[REQUEST] Data:', config.data);
+    } else {
+      console.log('[REQUEST] Data: No payload (likely a GET request or undefined)');
+    }
 
-	if (config.params) {
-		console.log('[REQUEST] Query Params:', config.params);
-	}
+    if (config.params) {
+      console.log('[REQUEST] Query Params:', config.params);
+    }
     return config;
   },
   (error) => {

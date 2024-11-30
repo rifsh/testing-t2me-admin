@@ -4,7 +4,7 @@ const userService = {};
 
 userService.getAllUsers = function () {
     return fetch({
-        url: '/v1/auth/secured/users/',
+        url: '/api/v1/auth/secured/users/',
         method: 'get',
     })
         .then((response) => {
@@ -19,7 +19,7 @@ userService.getAllUsers = function () {
 
 userService.createUser = function (userData) {
     return fetch({
-        url: '/v1/auth/secured/register/',
+        url: '/api/v1/auth/secured/register/',
         method: 'post',
         data: userData,
     })
