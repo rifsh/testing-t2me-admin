@@ -1,13 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import CategoryService from "services/CategoryService";
 
-export const initialState = {
+const initialState = {
   loading: false,
   categories: [],
+  activeTab:'categories',
+  subcategories: [],
   filteredCategories: [],
+  searchTerm: "",
+  selectedCategoryId: null,
   error: null,
 };
-
 export const addCategory = createAsyncThunk(
   "category/add",
   async (data, { rejectWithValue }) => {
@@ -21,70 +24,72 @@ export const addCategory = createAsyncThunk(
     }
   }
 );
-
-export const fetchCategory = createAsyncThunk(
-  "category/list",
+// Fetch categories
+export const fetchCategories = createAsyncThunk(
+  "category/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
       const response = await CategoryService.fetchCategory();
-      console.log(response,"------------------")
-
-      if (Array.isArray(response)) {
-        return response.data;
-      } else {
-        return rejectWithValue("Invalid response data");
-      }
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to fetch categories";
-      return rejectWithValue(errorMessage);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue("Failed to fetch categories");
     }
   }
 );
 
+export const fetchSubcategories = createAsyncThunk(
+  "category/fetchSubcategories",
+  async (categoryId, { rejectWithValue }) => {
+    try {
+      const response = await CategoryService.fetchSubCategory(categoryId);
+      return { categoryId, subcategories: response.data };
+    } catch (error) {
+      return rejectWithValue("Failed to fetch subcategories");
+    }
+  }
+);
 const categorySlice = createSlice({
   name: "category",
   initialState,
   reducers: {
-    clearError: (state) => {
-      state.error = null;
-    },
     setSearchTerm: (state, action) => {
       state.searchTerm = action.payload;
       state.filteredCategories = state.categories.filter((cat) =>
         cat.name.toLowerCase().includes(action.payload.toLowerCase())
       );
     },
+    setActiveTab: (state, action) => {
+      state.activeTab = action.payload;
+      if (action.payload === "categories") {
+        state.selectedCategoryId = null; // Reset when switching to Categories tab
+      }
+    },
+    clearSubcategories: (state) => {
+      state.subcategories = [];
+      state.selectedCategoryId = null;
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(addCategory.pending, (state) => {
+      .addCase(fetchCategories.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(addCategory.fulfilled, (state, { payload }) => {
-        state.loading = false;
-        state.categories.push(payload);
-      })
-      .addCase(addCategory.rejected, (state, { payload }) => {
-        state.loading = false;
-        state.error = payload || "Failed to create category";
-      })
-      .addCase(fetchCategory.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchCategory.fulfilled, (state, action) => {
+      .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false;
         state.categories = action.payload;
+        state.filteredCategories = action.payload;
       })
-      .addCase(fetchCategory.rejected, (state, action) => {
+      .addCase(fetchSubcategories.fulfilled, (state, action) => {
+        const { categoryId, subcategories } = action.payload;
         state.loading = false;
-        state.error = action.payload || "Failed to fetch categories";
+        state.selectedCategoryId = categoryId;
+        state.subcategories = subcategories;
       });
   },
 });
 
-export const { clearError } = categorySlice.actions;
-export const { setSearchTerm } = categorySlice.actions;
+export const { setSearchTerm, setActiveTab, clearSubcategories } =
+  categorySlice.actions;
+
 export default categorySlice.reducer;

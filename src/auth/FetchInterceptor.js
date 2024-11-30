@@ -13,7 +13,7 @@ const service = axios.create({
 });
 
 // Config
-const TOKEN_PAYLOAD_KEY = 'authorization';
+const TOKEN_PAYLOAD_KEY = 'Authorization';
   const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
 
 // Request Interceptor
