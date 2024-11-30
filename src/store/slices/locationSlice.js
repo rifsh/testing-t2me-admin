@@ -1,90 +1,97 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import LocationService from "services/LocationService";
 
-
 export const initialState = {
   loading: false,
-  locations: [],
-  filteredLocations: [],
+  list: [],
   error: null,
+  options: [],
+  searchTerm: "",
+  statusFilter: "All",
+  selectedCountry: null,
+  createPlaceLoading: false,
 };
 
-export const addLocation = createAsyncThunk(
-  "category/add",
-  async (data, { rejectWithValue }) => {
-    try {
-      const response = await LocationService.addLocation(data);
-      return response.data;
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to add category";
-      return rejectWithValue(errorMessage);
-    }
+export const fetchAllCountires = createAsyncThunk('country/fetchAll', async (_, { rejectWithValue }) => {
+  try {
+    const response = await LocationService.getAllCountries();
+    return response;
+  } catch (error) {
+    return rejectWithValue(error.response?.data || "Error fetching Countries");
   }
-);
+});
 
-export const fetchLocation = createAsyncThunk(
-  "category/list",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await LocationService.fetchLocation();
-
-      if (Array.isArray(response.data)) {
-        return response.data;
-      } else {
-        return rejectWithValue("Invalid response data");
-      }
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to fetch categories";
-      return rejectWithValue(errorMessage);
-    }
+export const createPlace = createAsyncThunk('place/create', async (placeData, { rejectWithValue }) => {
+  try {
+    const response = await LocationService.createPlace(placeData);
+    return response;
+  } catch (error) {
+    return rejectWithValue(error.response?.data || "Error creating user");
   }
-);
+});
 
-const categorySlice = createSlice({
-  name: "locations",
+const locationSlice = createSlice({
+  name: "location",
   initialState,
   reducers: {
-    clearError: (state) => {
-      state.error = null;
-    },
-    setSearchTerm: (state, action) => {
+    setSearchTerm(state, action) {
       state.searchTerm = action.payload;
-      state.filteredLocations = state.locations.filter((cat) =>
-        cat.name.toLowerCase().includes(action.payload.toLowerCase())
-      );
     },
+    setStatusFilter(state, action) {
+      state.statusFilter = action.payload;
+    },
+    setOptions(state, action) {
+      state.options = action.payload;
+    },
+    onSelect(state, action) {
+      state.selectedCountry = action.payload
+      console.log("Selected country:", action.payload);
+    },
+    onchange(state, action) {
+      state.searchTerm = action.payload;
+    },
+    onSearch(state, action) {
+      const filteredOptions = state.list.filter(
+        (item) => `${item.code}, ${item.country}`.toLowerCase().includes(action.payload.toLowerCase())
+      ).map((item) => ({ value: `${item.code}, ${item.country}`, }))
+
+      state.options = filteredOptions;
+    }
   },
   extraReducers: (builder) => {
     builder
-      .addCase(addLocation.pending, (state) => {
+      .addCase(fetchAllCountires.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(addLocation.fulfilled, (state, { payload }) => {
+      .addCase(fetchAllCountires.fulfilled, (state, action) => {
         state.loading = false;
-        state.locations.push(payload);
+        state.list = action.payload;
       })
-      .addCase(addLocation.rejected, (state, { payload }) => {
+      .addCase(fetchAllCountires.rejected, (state, action) => {
         state.loading = false;
-        state.error = payload || "Failed to create category";
+        state.error = action.payload;
       })
-      .addCase(fetchLocation.pending, (state) => {
-        state.loading = true;
+
+      //place create case
+      .addCase(createPlace.pending, (state) => {
+        state.createPlaceLoading = true;
         state.error = null;
       })
-      .addCase(fetchLocation.fulfilled, (state, action) => {
-        state.loading = false;
-        state.locations = action.payload;
+      .addCase(createPlace.fulfilled, (state, action) => {
+        state.createPlaceLoading = false;
+        state.list.push(action.payload);
       })
-      .addCase(fetchLocation.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || "Failed to fetch categories";
+      .addCase(createPlace.rejected, (state, action) => {
+        state.createPlaceLoading = false;
+        state.error = action.payload;
       });
+
   },
 });
 
-export const { clearError } = categorySlice.actions;
-export const { setSearchTerm } = categorySlice.actions;
-export default categorySlice.reducer;
+
+
+export const { setSearchTerm, setStatusFilter, setOptions, onSelect, onchange, onSearch } = locationSlice.actions;
+export const allLocations = (state) => state.location;
+export default locationSlice.reducer;

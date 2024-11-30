@@ -2,34 +2,36 @@ import fetch from 'auth/FetchInterceptor'
 
 const LocationService = {}
 
-LocationService.login = function (data) {
+LocationService.getAllCountries = function () {
 	return fetch({
-		url: '/auth/login',
+		url: '/api/v1/location/secured/country/',
+		method: 'get',
+	})
+		.then((response) => {
+			console.log("fetched Countries = ", response.data);
+			return response.data;
+		})
+		.catch((error) => {
+			console.error("Error fetching Countries:", error);
+			throw error;
+		});
+};
+
+LocationService.createPlace = function (placeData) {
+	return fetch({
+		url: '/api/v1/location/secured/place/',
 		method: 'post',
-		data: data
+		data: placeData,
 	})
-}
+		.then((response) => {
+			console.log("Place created:", response.data);
+			return response.data;
+		})
+		.catch((error) => {
+			console.log("Error creating Place:", error);
+			throw error;
+		});
+};
 
-LocationService.register = function (data) {
-	return fetch({
-		url: '/auth/register',
-		method: 'post',
-		data: data
-	})
-}
-
-LocationService.logout = function () {
-	return fetch({
-		url: '/auth/logout',
-		method: 'post'
-	})
-}
-
-LocationService.loginInOAuth = function () {
-	return fetch({
-		url: '/auth/loginInOAuth',
-		method: 'post'
-	})
-}
 
 export default LocationService;
