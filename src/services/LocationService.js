@@ -1,35 +1,20 @@
-import fetch from 'auth/FetchInterceptor'
+import fetch from "auth/FetchInterceptor";
+import { PLACE_WITH_COUNTRY_URL, VENUE_URL } from "constants/ApiConstant";
 
-const LocationService = {}
-
-LocationService.login = function (data) {
+const LocationService = {};
+LocationService.placeWithCountry = function (place) {
 	return fetch({
-		url: '/auth/login',
-		method: 'post',
-		data: data
-	})
-}
-
-LocationService.register = function (data) {
+	  url: `${PLACE_WITH_COUNTRY_URL}${place}`, 
+	  method: "get",
+	});
+  };
+LocationService.addVenue = function (data) {
 	return fetch({
-		url: '/auth/register',
-		method: 'post',
-		data: data
-	})
-}
-
-LocationService.logout = function () {
-	return fetch({
-		url: '/auth/logout',
-		method: 'post'
-	})
-}
-
-LocationService.loginInOAuth = function () {
-	return fetch({
-		url: '/auth/loginInOAuth',
-		method: 'post'
-	})
-}
-
-export default LocationService;
+	  url: VENUE_URL, 
+	  method: "post",
+	  data: data,
+	});
+  };
+  
+  export default LocationService;
+  
