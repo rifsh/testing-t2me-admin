@@ -1,109 +1,133 @@
-import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message, Select } from "antd";
-import {
-  addCategory,
-  addSubCategory,
-  fetchCategories,
-} from "store/slices/categorySlice";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { Option } from "antd/es/mentions";
+import axios from "axios";
+import { API_BASE_URL } from "configs/AppConfig";
+import { signOutSuccess } from "store/slices/authSlice";
+import { AUTH_TOKEN } from "constants/AuthConstant";
+import { notification } from "antd";
+import store from "store";
 
-const ADD = "ADD";
-const EDIT = "EDIT";
+const unauthorizedCode = [401, 403];
 
-const rules = {
-  category: [{ required: true, message: "Please Select a category" }],
-  name: [{ required: true, message: "Please enter sub category name" }],
-  description: [{ required: true, message: "Please enter sub category description" }],
-};
+const service = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 60000,
+});
 
-const CategoryFormFields = ({ mode = ADD }) => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [form] = Form.useForm();
-  const { loading, error, categories } = useSelector((state) => state.category);
+// Config
+const TOKEN_PAYLOAD_KEY = "Authorization";
+const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
 
-  useEffect(() => {
-    dispatch(fetchCategories());
-  }, [dispatch]);
+// Request Interceptor
+service.interceptors.request.use(
+  (config) => {
+    // let jwtToken = HARDCODED_TOKEN;
 
-  useEffect(() => {
-    if (error) {
-      message.error(error);
+    if (jwtToken) {
+      config.headers[TOKEN_PAYLOAD_KEY] = `Bearer ${jwtToken}`;
     }
-  }, [error]);
 
-  const onFinish = async () => {
-    try {
-      const values = await form.validateFields();
-  
-      const resultAction = await dispatch(
-        addSubCategory({ data: values, categoryId: values.category_id })
+    // Log the outgoing request details
+    console.log(
+      `%c[REQUEST] URL: ${config.baseURL + config.url}`,
+      "color: #1d8cf8; font-weight: bold;"
+    );
+    console.log("[REQUEST] Headers:", config.headers);
+
+    if (config.data) {
+      console.log("[REQUEST] Data:", config.data);
+    } else {
+      console.log(
+        "[REQUEST] Data: No payload (likely a GET request or undefined)"
       );
-  
-      if (addSubCategory.fulfilled.match(resultAction)) {
-        message.success(`Subcategory ${values.name} added successfully`);
-        form.resetFields();
-        navigate(`${APP_PREFIX_PATH}/category/list`);
-      }
-    } catch (errorInfo) {
-      console.log("Validation Failed:", errorInfo);
     }
-  };
-  
-  return (
-    <Row gutter={16}>
-      <Col xs={24} sm={24} md={17}>
-        <Card title="Basic Info">
-          <Form form={form} layout="vertical">
-            <Form.Item
-              name="category_id"
-              label="Category name"
-              rules={rules.category}
-            >
-              <Select className="w-100" placeholder="Choose a Category">
-                {categories.map((elm) => (
-                  <Option key={elm.name} value={elm.id}>
-                    {elm.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item name="name" label="Category" rules={rules.name}>
-              <Input placeholder="Category" />
-            </Form.Item>
-            <Form.Item name="description" label="Description"  rules={rules.description}>
-              <Input.TextArea
-                rows={4}
-               
-                placeholder="Enter category description"
-              />
-            </Form.Item>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                marginTop: 20,
-                gap: 10,
-              }}
-            >
-              <Button>Discard</Button>
-              <Button
-                type="primary"
-                onClick={onFinish}
-                // htmlType="submit"
-                loading={loading}
-              >
-                {mode === ADD ? "Add" : "Update"}
-              </Button>
-            </div>
-          </Form>
-        </Card>
-      </Col>
-    </Row>
-  );
-};
 
-export default CategoryFormFields;
+    if (config.params) {
+      console.log("[REQUEST] Query Params:", config.params);
+    }
+    return config;
+  },
+  (error) => {
+    // Log request error details
+    console.error(
+      "%c[REQUEST ERROR]",
+      "color: #f5365c; font-weight: bold;",
+      error
+    );
+    notification.error({
+      message: "Request Error",
+      description:
+        "An error occurred while sending the request. Please check the console for details.",
+    });
+    return Promise.reject(error);
+  }
+);
+
+// Response Interceptor
+service.interceptors.response.use(
+  (response) => {
+    // Log the successful response details
+    console.log(
+      `%c[RESPONSE] URL: ${response.config.baseURL + response.config.url}`,
+      "color: #2dce89; font-weight: bold;"
+    );
+    console.log("[RESPONSE] Data:", response.data);
+
+    return response.data;
+  },
+  (error) => {
+    // Log the response error details
+    console.error(
+      "%c[RESPONSE ERROR]",
+      "color: #f5365c; font-weight: bold;",
+      error
+    );
+    let notificationParam = { message: "" };
+
+    if (error.response) {
+      const { status, config } = error.response;
+
+      // Log the error details
+      console.log(
+        `[ERROR] URL: ${config.baseURL + config.url}`,
+        "Status Code:",
+        status
+      );
+      console.log("[ERROR] Response Data:", error.response.data);
+
+      if (unauthorizedCode.includes(status)) {
+        notificationParam.message = "Authentication Failed";
+        notificationParam.description = "Please login again.";
+        localStorage.removeItem(AUTH_TOKEN);
+
+        store.dispatch(signOutSuccess());
+      } else if (status === 404) {
+        notificationParam.message = "Not Found";
+        notificationParam.description = "The requested resource was not found.";
+      } else if (status === 400) {
+        notificationParam.message = "Bad Request";
+        notificationParam.description =
+          "The request could not be processed due to invalid input. Please check the data and try again.";
+      } else if (status === 500) {
+        notificationParam.message = "Internal Server Error";
+        notificationParam.description =
+          "A server error occurred. Please try again later.";
+      } else if (status === 508) {
+        notificationParam.message = "Time Out";
+        notificationParam.description =
+          "The server took too long to respond. Please try again.";
+      } else {
+        notificationParam.message = "Error";
+        notificationParam.description = "An unexpected error occurred.";
+      }
+    } else {
+      console.error("[ERROR] No Response Received:", error);
+      notificationParam.message = "Network Error";
+      notificationParam.description =
+        "Unable to connect to the server. Please check your network connection.";
+    }
+
+    notification.error(notificationParam);
+    return Promise.reject(error);
+  }
+);
+
+export default service;

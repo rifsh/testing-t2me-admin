@@ -1,78 +1,41 @@
-/* eslint-disable no-unused-vars */
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Card, Table, Select, Input, Button, Tag, Menu } from 'antd';
 import { EyeOutlined, PlusCircleOutlined, SearchOutlined, FormOutlined } from '@ant-design/icons';
 import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
 import Flex from 'components/shared-components/Flex';
-import utils from 'utils';
 import { useNavigate } from "react-router-dom";
-import { debounce } from 'lodash';
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { setUserList, fetchAllUsers } from 'store/slices/userSlice';
+import { fetchAllUsers, setSearchTerm, setStatusFilter, selectFilteredUsers } from 'store/slices/userSlice';
 import { useSelector, useDispatch } from 'react-redux';
+
 const { Option } = Select;
 
-
-const getStatusColor = (is_active) => {
-  if (is_active === true) {
-    return 'green';
-  }
-  if (is_active === false) {
-    return 'red';
-  }
-  return 'blue';
-};
+const getStatusColor = (is_active) => (is_active ? 'green' : 'red');
 
 const OfferList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { list, loading, error } = useSelector((state) => state.users);
-  const [originalList, setOriginalList] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-
+  const { loading, error } = useSelector((state) => state.users);
+  const filteredUsers = useSelector(selectFilteredUsers);
+  const [selectedRows, setSelectedRows] = React.useState([]);
+  const [selectedRowKeys, setSelectedRowKeys] = React.useState([]);
 
   useEffect(() => {
     dispatch(fetchAllUsers());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (list.length > 0) {
-      setOriginalList(list);
-    }
-  }, [list]);
-
-
-  const filteredAndSearchedList = React.useMemo(() => {
-    let result = originalList;
-    if (statusFilter !== 'All') {
-      const isActive = statusFilter === 'Active';
-      result = result.filter(user => user.is_active === isActive);
-    }
-    if (searchTerm) {
-      result = utils.wildCardSearch(result, searchTerm);
-    }
-
-    return result;
-  }, [originalList, statusFilter, searchTerm]);
-
   const handleShowStatus = (value) => {
-    setStatusFilter(value);
+    dispatch(setStatusFilter(value));
     setSelectedRowKeys([]);
   };
 
-  const handleSearch = (value) => {
-    setSearchTerm(value);
+  const handleSearch = (e) => {
+    dispatch(setSearchTerm(e.target.value));
     setSelectedRowKeys([]);
   };
-
 
   const dropdownMenu = (row) => (
-
     <Menu>
       <Menu.Item>
         <Flex alignItems="center">
@@ -111,7 +74,7 @@ const OfferList = () => {
     {
       title: 'Status',
       dataIndex: 'is_active',
-      render: (_, record) => <Tag color={getStatusColor(record.is_active)}>{record.is_active ? "Active" : "InActive"}</Tag>,
+      render: (_, record) => <Tag color={getStatusColor(record.is_active)}>{record.is_active ? "Active" : "Inactive"}</Tag>,
       sorter: (a, b) => Number(b.is_active) - Number(a.is_active),
     },
     {
@@ -140,11 +103,7 @@ const OfferList = () => {
             <Input
               placeholder="Search"
               prefix={<SearchOutlined />}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                handleSearch(e.target.value);
-              }}
-              value={searchTerm}
+              onChange={handleSearch}
             />
           </div>
           <div className="mb-3">
@@ -153,7 +112,6 @@ const OfferList = () => {
               className="w-100"
               style={{ minWidth: 180 }}
               onChange={handleShowStatus}
-              placeholder="Status"
             >
               <Option value="All">All Users</Option>
               <Option value="Active">Active</Option>
@@ -175,8 +133,9 @@ const OfferList = () => {
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={filteredAndSearchedList}
-          rowKey="offerName"
+          dataSource={filteredUsers}
+          rowKey="id"
+          loading={loading}
           rowSelection={{
             selectedRowKeys: selectedRowKeys,
             type: 'checkbox',

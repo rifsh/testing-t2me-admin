@@ -1,6 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import userService from "services/userService";
 
+export const initialState = {
+    loading: false,
+    list: [],
+    error: null,
+    searchTerm: "",
+    statusFilter: "All",
+    createUserLoading: false,
+};
+
 export const fetchAllUsers = createAsyncThunk('users/fetchAll', async (_, { rejectWithValue }) => {
     try {
         const response = await userService.getAllUsers();
@@ -15,28 +24,28 @@ export const createUser = createAsyncThunk('users/create', async (userData, { re
         const response = await userService.createUser(userData);
         return response;
     } catch (error) {
-        return rejectWithValue(error.response?.data || "Error Creating user");
+        return rejectWithValue(error.response?.data || "Error creating user");
     }
-})
+});
 
-export const userSlice = createSlice({
+const userSlice = createSlice({
     name: "users",
-    initialState: {
-        list: [],
-        loading: false,
-        error: null,
-    },
+    initialState,
     reducers: {
-        setUserList(state, action) {
-            state.list = action.payload;
+        setSearchTerm(state, action) {
+            state.searchTerm = action.payload;
         },
-
+        setStatusFilter(state, action) {
+            state.statusFilter = action.payload;
+        },
     },
     extraReducers: (builder) => {
-        builder.addCase(fetchAllUsers.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        })
+        builder
+            // Fetch Users
+            .addCase(fetchAllUsers.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
             .addCase(fetchAllUsers.fulfilled, (state, action) => {
                 state.loading = false;
                 state.list = action.payload;
@@ -45,20 +54,33 @@ export const userSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
+            // Create User
             .addCase(createUser.pending, (state) => {
-                state.loading = true;
+                state.createUserLoading = true;
                 state.error = null;
             })
             .addCase(createUser.fulfilled, (state, action) => {
-                state.loading = false;
+                state.createUserLoading = false;
                 state.list.push(action.payload);
             })
             .addCase(createUser.rejected, (state, action) => {
-                state.loading = false;
+                state.createUserLoading = false;
                 state.error = action.payload;
-            })
-    }
+            });
+    },
 });
 
-export const { setUserList } = userSlice.actions;
+export const { setSearchTerm, setStatusFilter } = userSlice.actions;
+export const selectFilteredUsers = (state) => {
+    let { list, searchTerm, statusFilter } = state.users;
+    if (statusFilter !== 'All') {
+        const isActive = statusFilter === 'Active';
+        list = list.filter(user => user.is_active === isActive);
+    }
+    if (searchTerm) {
+        list = list.filter(user => user.username.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    return list;
+};
+
 export default userSlice.reducer;
