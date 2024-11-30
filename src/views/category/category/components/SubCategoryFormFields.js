@@ -1,164 +1,133 @@
-import React from "react";
-import { Input, Row, Col, Card, Form, Button, Select } from "antd";
-const { Option } = Select;
+import axios from "axios";
+import { API_BASE_URL } from "configs/AppConfig";
+import { signOutSuccess } from "store/slices/authSlice";
+import { AUTH_TOKEN } from "constants/AuthConstant";
+import { notification } from "antd";
+import store from "store";
 
-const rules = {
-  country: [
-    {
-      required: true,
-      message: "Please Choose a country",
-    },
-  ],
-  name: [
-    {
-      required: true,
-      message: "Please enter country name",
-    },
-  ],
-  description: [
-    {
-      required: true,
-      message: "Please enter country description",
-    },
-  ],
-  price: [
-    {
-      required: true,
-      message: "Please enter country price",
-    },
-  ],
-  comparePrice: [],
-  taxRate: [
-    {
-      required: true,
-      message: "Please enter tax rate",
-    },
-  ],
-  cost: [
-    {
-      required: true,
-      message: "Please enter item cost",
-    },
-  ],
-};
+const unauthorizedCode = [401, 403];
 
-const venues = [
-  "Auditorium A",
-  "Auditorium B",
-  "Party Hall",
-  "Kozhikode Convention Center",
-  "Conference Room",
-  "Outdoor Stage",
-  "Exhibition Hall",
-  "Banquet Hall",
-];
+const service = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 60000,
+});
 
-const categories = [
-  "Movies",
-  "Sports",
-  "Entertainment",
-  "Education",
-  "Business",
-  "Health",
-  "Technology",
-  "Art and Culture",
-  "Music",
-  "Theater",
-];
+// Config
+const TOKEN_PAYLOAD_KEY = "Authorization";
+const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
 
-const subCategories = [
-  "Football",
-  "Cricket",
-  "Basketball",
-  "Tennis",
-  "Hockey",
-  "Badminton",
-  "Live Concerts",
-  "Stand-up Comedy",
-  "Workshops",
-  "Seminars",
-  "Exhibitions",
-];
+// Request Interceptor
+service.interceptors.request.use(
+  (config) => {
+    // let jwtToken = HARDCODED_TOKEN;
 
-const status = [
-  "Done",
-  "Pending",
-  "In Progress",
-  "Completed",
-  "Cancelled",
-  "On Hold",
-  "Approved",
-  "Rejected",
-  "Draft",
-  "Submitted",
-  "Failed",
-  "Processing",
-];
+    if (jwtToken) {
+      config.headers[TOKEN_PAYLOAD_KEY] = `Bearer ${jwtToken}`;
+    }
 
-const countries = [
-  "India",
-  "United Arab Emirates",
-  "United States",
-  "United Kingdom",
-  "Canada",
-  "Australia",
-  "Germany",
-  "France",
-  "Japan",
-  "South Korea",
-];
+    // Log the outgoing request details
+    console.log(
+      `%c[REQUEST] URL: ${config.baseURL + config.url}`,
+      "color: #1d8cf8; font-weight: bold;"
+    );
+    console.log("[REQUEST] Headers:", config.headers);
 
-const places = [
-  "New York",
-  "Los Angeles",
-  "Chicago",
-  "Houston",
-  "Kozhikode",
-  "Dubai",
-  "London",
-  "Toronto",
-  "Sydney",
-  "Tokyo",
-  "Seoul",
-  "Paris",
-  "Mumbai",
-  "Delhi",
-  "Bangalore",
-];
+    if (config.data) {
+      console.log("[REQUEST] Data:", config.data);
+    } else {
+      console.log(
+        "[REQUEST] Data: No payload (likely a GET request or undefined)"
+      );
+    }
 
-const SubCategoryFormFields = (props) => (
-  <Row gutter={16}>
-    <Col xs={24} sm={24} md={17}>
-      <Card title="Basic Info">
-        <Form.Item name="category" label="Category name" rules={rules.country}>
-          <Select className="w-100" placeholder="Choose a Category">
-            {countries.map((elm) => (
-              <Option key={elm} value={elm}>
-                {elm}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-       
-        <Form.Item name="subCategory" label="Sub Category" rules={rules.name}>
-          <Input placeholder="Sub Category" />
-        </Form.Item>
-        <Form.Item
-          name="description"
-          label="Description"
-          rules={rules.description}
-        >
-          <Input.TextArea rows={4} />
-        </Form.Item>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
-          <Button style={{ marginRight: 10 }}>Discard</Button>
-          <Button type="primary">Add</Button>
-        </div>
-      </Card>
-      
-    </Col>
-    
-  </Row>
+    if (config.params) {
+      console.log("[REQUEST] Query Params:", config.params);
+    }
+    return config;
+  },
+  (error) => {
+    // Log request error details
+    console.error(
+      "%c[REQUEST ERROR]",
+      "color: #f5365c; font-weight: bold;",
+      error
+    );
+    notification.error({
+      message: "Request Error",
+      description:
+        "An error occurred while sending the request. Please check the console for details.",
+    });
+    return Promise.reject(error);
+  }
 );
 
-export default SubCategoryFormFields;
+// Response Interceptor
+service.interceptors.response.use(
+  (response) => {
+    // Log the successful response details
+    console.log(
+      `%c[RESPONSE] URL: ${response.config.baseURL + response.config.url}`,
+      "color: #2dce89; font-weight: bold;"
+    );
+    console.log("[RESPONSE] Data:", response.data);
+
+    return response.data;
+  },
+  (error) => {
+    // Log the response error details
+    console.error(
+      "%c[RESPONSE ERROR]",
+      "color: #f5365c; font-weight: bold;",
+      error
+    );
+    let notificationParam = { message: "" };
+
+    if (error.response) {
+      const { status, config } = error.response;
+
+      // Log the error details
+      console.log(
+        `[ERROR] URL: ${config.baseURL + config.url}`,
+        "Status Code:",
+        status
+      );
+      console.log("[ERROR] Response Data:", error.response.data);
+
+      if (unauthorizedCode.includes(status)) {
+        notificationParam.message = "Authentication Failed";
+        notificationParam.description = "Please login again.";
+        localStorage.removeItem(AUTH_TOKEN);
+
+        store.dispatch(signOutSuccess());
+      } else if (status === 404) {
+        notificationParam.message = "Not Found";
+        notificationParam.description = "The requested resource was not found.";
+      } else if (status === 400) {
+        notificationParam.message = "Bad Request";
+        notificationParam.description =
+          "The request could not be processed due to invalid input. Please check the data and try again.";
+      } else if (status === 500) {
+        notificationParam.message = "Internal Server Error";
+        notificationParam.description =
+          "A server error occurred. Please try again later.";
+      } else if (status === 508) {
+        notificationParam.message = "Time Out";
+        notificationParam.description =
+          "The server took too long to respond. Please try again.";
+      } else {
+        notificationParam.message = "Error";
+        notificationParam.description = "An unexpected error occurred.";
+      }
+    } else {
+      console.error("[ERROR] No Response Received:", error);
+      notificationParam.message = "Network Error";
+      notificationParam.description =
+        "Unable to connect to the server. Please check your network connection.";
+    }
+
+    notification.error(notificationParam);
+    return Promise.reject(error);
+  }
+);
+
+export default service;

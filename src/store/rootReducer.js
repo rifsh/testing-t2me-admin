@@ -3,6 +3,7 @@ import theme from './slices/themeSlice'
 import auth from './slices/authSlice'
 import category from './slices/categorySlice';
 import users from './slices/userSlice'
+import locations from './slices/locationSlice'
 
 const rootReducer = (asyncReducers) => (state, action) => {
     const combinedReducer = combineReducers({
@@ -10,6 +11,7 @@ const rootReducer = (asyncReducers) => (state, action) => {
         auth,
         category,
         users,
+        location: locations,
         ...asyncReducers,
     })
     return combinedReducer(state, action)
