@@ -1,5 +1,5 @@
 import React from 'react';
-import VenueForm from '../venue-country';
+import VenueForm from '../venueForm';
 
 const AddVenue = () => {
 	return (

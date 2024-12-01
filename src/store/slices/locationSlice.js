@@ -1,43 +1,34 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import LocationService from "services/LocationService";
 
-
 export const initialState = {
   loading: false,
   locations: [],
   filteredLocations: [],
+  placeWithCountryList: [],
   error: null,
+  venues:[]
 };
 
-export const addLocation = createAsyncThunk(
-  "category/add",
-  async (data, { rejectWithValue }) => {
+export const fetchPlaceWithCountry = createAsyncThunk(
+  "place/fetchPlaceWithCountry",
+  async (place, { rejectWithValue }) => {
     try {
-      const response = await LocationService.addLocation(data);
+      const response = await LocationService.placeWithCountry(place);
       return response.data;
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to add category";
-      return rejectWithValue(errorMessage);
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
     }
   }
 );
-
-export const fetchLocation = createAsyncThunk(
-  "category/list",
-  async (_, { rejectWithValue }) => {
+export const addVenue = createAsyncThunk(
+  "place/addVenue",
+  async (data, { rejectWithValue }) => {
     try {
-      const response = await LocationService.fetchLocation();
-
-      if (Array.isArray(response.data)) {
-        return response.data;
-      } else {
-        return rejectWithValue("Invalid response data");
-      }
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to fetch categories";
-      return rejectWithValue(errorMessage);
+      const response = await LocationService.addVenue(data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
     }
   }
 );
@@ -49,42 +40,43 @@ const categorySlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    setSearchTerm: (state, action) => {
-      state.searchTerm = action.payload;
-      state.filteredLocations = state.locations.filter((cat) =>
-        cat.name.toLowerCase().includes(action.payload.toLowerCase())
-      );
-    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(addLocation.pending, (state) => {
+      .addCase(fetchPlaceWithCountry.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(addLocation.fulfilled, (state, { payload }) => {
+      .addCase(fetchPlaceWithCountry.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.locations.push(payload);
+        state.placeWithCountryList = payload;
       })
-      .addCase(addLocation.rejected, (state, { payload }) => {
+      .addCase(fetchPlaceWithCountry.rejected, (state, { payload }) => {
         state.loading = false;
-        state.error = payload || "Failed to create category";
+        state.error = payload || "Failed to fetch places";
       })
-      .addCase(fetchLocation.pending, (state) => {
+      .addCase(addVenue.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchLocation.fulfilled, (state, action) => {
+      .addCase(addVenue.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.locations = action.payload;
+        const categoryIndex = state.venues.findIndex(
+          (cat) => cat.id === payload.venueId
+        );
+        if (categoryIndex !== -1) {
+          state.venues[categoryIndex].subcategories.push(payload);
+        } else {
+          state.subcategories.push(payload); 
+        }
       })
-      .addCase(fetchLocation.rejected, (state, action) => {
+      .addCase(addVenue.rejected, (state, { payload }) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch categories";
-      });
+        state.error = payload || "Failed to add subcategory";
+      })
+      ;
   },
 });
 
 export const { clearError } = categorySlice.actions;
-export const { setSearchTerm } = categorySlice.actions;
 export default categorySlice.reducer;
