@@ -7,7 +7,8 @@ EventMockData.fetchEventDetails = {
       updated_at: "2024-11-25T12:45:00.000Z",
       id: 1,
       event_name: "Tech Innovators Summit 2024",
-      description: "A global conference showcasing the latest advancements in technology and innovation.",
+      description:
+        "A global conference showcasing the latest advancements in technology and innovation.",
       venue_id: 101,
       category_id: 10,
       sub_category_id: 25,
@@ -85,6 +86,70 @@ EventMockData.fetchEventDetails = {
           },
         },
       ],
+    },
+  ],
+  status: {
+    message: "success",
+    status_code: 200,
+  },
+};
+
+EventMockData.fetchAllEvent = {
+  data: [
+    {
+      status: true,
+      created_at: "2024-12-02T15:14:37.870101",
+      updated_at: "2024-12-02T15:14:37.871099",
+      id: 2,
+      event_name: "Annual Tech Conference",
+      description:
+        "A conference showcasing the latest in technology innovations.",
+      venue_id: 1,
+      category_id: 1,
+      sub_category_id: 1,
+      available_types: "reserved_seating",
+      max_tickets: 500,
+    },
+    {
+      status: true,
+      created_at: "2024-12-02T15:19:40.789332",
+      updated_at: "2024-12-02T15:19:40.790329",
+      id: 3,
+      event_name: "Music Fest 2024",
+      description:
+        "A vibrant festival celebrating music from around the world.",
+      venue_id: 2,
+      category_id: 2,
+      sub_category_id: 3,
+      available_types: "general_admission",
+      max_tickets: 2000,
+    },
+    {
+      status: true,
+      created_at: "2024-12-02T15:20:07.312929",
+      updated_at: "2024-12-02T15:20:07.312929",
+      id: 4,
+      event_name: "Startup Pitch Night",
+      description: "An event for startups to pitch their ideas to investors.",
+      venue_id: 3,
+      category_id: 3,
+      sub_category_id: 2,
+      available_types: "vip_seating",
+      max_tickets: 150,
+    },
+    {
+      status: true,
+      created_at: "2024-12-02T15:28:08.930673",
+      updated_at: "2024-12-02T15:28:08.931672",
+      id: 5,
+      event_name: "Art Exhibition",
+      description:
+        "A showcase of contemporary art pieces from emerging artists.",
+      venue_id: 4,
+      category_id: 4,
+      sub_category_id: 5,
+      available_types: "general_admission",
+      max_tickets: 300,
     },
   ],
   status: {

@@ -34,7 +34,6 @@ const EventDetails = () => {
           title="Event Details"
           bordered
           hoverable
-          // style={{ boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)" }}
         >
           <Title level={3}>{eventDetails.event_name}</Title>
           <Text strong>Description: </Text>{eventDetails.description}
@@ -63,8 +62,6 @@ const EventDetails = () => {
           </Space>
         </Card>
       </Col>
-
-      {/* Event Offers */}
       <Col span={12}>
         <Card title="Event Offers" bordered hoverable>
           <List
@@ -95,7 +92,6 @@ const EventDetails = () => {
         </Card>
       </Col>
 
-      {/* Event Coupons */}
       <Col span={12}>
         <Card title="Event Coupons" bordered hoverable>
           <List
