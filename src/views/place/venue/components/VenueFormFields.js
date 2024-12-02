@@ -47,7 +47,9 @@ const VenueFormFields = ({ mode }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      const resultAction = await dispatch(addVenue({ ...values, ...coordinates }));
+      const resultAction = await dispatch(
+        addVenue({ ...values, ...coordinates })
+      );
 
       if (addVenue.fulfilled.match(resultAction)) {
         message.success(`Venue ${values.name} added successfully`);
@@ -69,7 +71,9 @@ const VenueFormFields = ({ mode }) => {
           className="ant-advanced-search-form"
         >
           <Card>
-            <h2 className="mb-3">{mode === "ADD" ? "Add Venue" : "Edit Venue"}</h2>
+            <h2 className="mb-3">
+              {mode === "ADD" ? "Add Venue" : "Edit Venue"}
+            </h2>
 
             <Form.Item
               name="address"
@@ -102,11 +106,52 @@ const VenueFormFields = ({ mode }) => {
                 loading={loading}
               />
             </Form.Item>
-
+            <Form.Item
+              name="venue"
+              label="Venue"
+              rules={[
+                { required: true, message: "Please enter the venue name" },
+              ]}
+            >
+              <Input placeholder="Enter the venue name" />
+            </Form.Item>
+            <Form.Item
+              name="capacity"
+              label="Capacity"
+              rules={[{ required: true, message: "Please enter capacity" }]}
+            >
+              <Input type="number" placeholder="Enter capacity" />
+            </Form.Item>
+            <Form.Item
+              name="indoor"
+              label="Indoor/Outdoor"
+              rules={[
+                { required: true, message: "Please specify indoor/outdoor" },
+              ]}
+            >
+              <Select className="w-100" placeholder="Select type">
+                <Option value="indoor">Indoor</Option>
+                <Option value="outdoor">Outdoor</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="description"
+              label="Description"
+              rules={[
+                { required: true, message: "Please enter a description" },
+              ]}
+            >
+              <Input.TextArea rows={4} placeholder="Enter a description" />
+            </Form.Item>
             <Form.Item
               name="latitude"
               label="Latitude"
-              rules={[{ required: true, message: "Please select a location on the map" }]}
+              rules={[
+                {
+                  required: true,
+                  message: "Please select a location on the map",
+                },
+              ]}
             >
               <Input value={coordinates.lat} readOnly />
             </Form.Item>
@@ -114,7 +159,12 @@ const VenueFormFields = ({ mode }) => {
             <Form.Item
               name="longitude"
               label="Longitude"
-              rules={[{ required: true, message: "Please select a location on the map" }]}
+              rules={[
+                {
+                  required: true,
+                  message: "Please select a location on the map",
+                },
+              ]}
             >
               <Input value={coordinates.lng} readOnly />
             </Form.Item>
@@ -131,7 +181,11 @@ const VenueFormFields = ({ mode }) => {
               </MapContainer>
             </div>
 
-            <Flex className="py-2" mobileFlex={false} justifyContent="space-between">
+            <Flex
+              className="py-2"
+              mobileFlex={false}
+              justifyContent="space-between"
+            >
               <Button onClick={() => form.resetFields()}>Discard</Button>
               <Button type="primary" onClick={onFinish} loading={loading}>
                 {mode === "ADD" ? "Add" : "Save"}
