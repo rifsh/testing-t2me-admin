@@ -1,0 +1,96 @@
+const EventMockData = {};
+EventMockData.fetchEventDetails = {
+  data: [
+    {
+      status: true,
+      created_at: "2024-11-15T09:30:00.000Z",
+      updated_at: "2024-11-25T12:45:00.000Z",
+      id: 1,
+      event_name: "Tech Innovators Summit 2024",
+      description: "A global conference showcasing the latest advancements in technology and innovation.",
+      venue_id: 101,
+      category_id: 10,
+      sub_category_id: 25,
+      available_types: "General Admission, VIP",
+      max_tickets: 5000,
+      event_offers: [
+        {
+          id: 301,
+          valid_to: "2024-12-20",
+          valid_from: "2024-11-01",
+          offer: {
+            status: true,
+            created_at: "2024-10-20T10:00:00.000Z",
+            updated_at: "2024-11-15T15:00:00.000Z",
+            name: "Early Bird Discount",
+            discount_percentage: 15,
+            start_date: "2024-11-01",
+            end_date: "2024-12-20",
+            max_uses: 1000,
+            id: 501,
+          },
+        },
+        {
+          id: 302,
+          valid_to: "2024-12-25",
+          valid_from: "2024-11-15",
+          offer: {
+            status: true,
+            created_at: "2024-11-10T10:00:00.000Z",
+            updated_at: "2024-11-20T15:00:00.000Z",
+            name: "Group Booking Offer",
+            discount_percentage: 20,
+            start_date: "2024-11-15",
+            end_date: "2024-12-25",
+            max_uses: 500,
+            id: 502,
+          },
+        },
+      ],
+      event_coupons: [
+        {
+          id: 401,
+          valid_to: "2024-12-30",
+          valid_from: "2024-12-01",
+          coupons: {
+            status: true,
+            created_at: "2024-11-25T08:00:00.000Z",
+            updated_at: "2024-11-30T10:00:00.000Z",
+            name: "Holiday Special",
+            discount_percentage: 20,
+            start_date: "2024-12-01",
+            end_date: "2024-12-30",
+            max_uses: 500,
+            coupon_code: "HOLIDAY2024",
+            min_purchase_amount: 500,
+            id: 601,
+          },
+        },
+        {
+          id: 402,
+          valid_to: "2024-12-31",
+          valid_from: "2024-12-10",
+          coupons: {
+            status: true,
+            created_at: "2024-11-28T08:00:00.000Z",
+            updated_at: "2024-12-01T10:00:00.000Z",
+            name: "New Year Countdown",
+            discount_percentage: 25,
+            start_date: "2024-12-10",
+            end_date: "2024-12-31",
+            max_uses: 300,
+            coupon_code: "NYE2024",
+            min_purchase_amount: 1000,
+            id: 602,
+          },
+        },
+      ],
+    },
+  ],
+  status: {
+    message: "success",
+    status_code: 200,
+  },
+};
+
+export default EventMockData;

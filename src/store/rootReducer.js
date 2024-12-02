@@ -4,6 +4,7 @@ import auth from "./slices/authSlice";
 import category from "./slices/categorySlice";
 import users from "./slices/userSlice";
 import locations from "./slices/locationSlice";
+import event from "./slices/eventSlice";
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -13,6 +14,7 @@ const rootReducer = (asyncReducers = {}) => {
       category,
       users,
       locations,
+      event,
       ...asyncReducers, 
     });
 

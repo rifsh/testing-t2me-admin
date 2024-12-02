@@ -169,6 +169,9 @@ const EventsList = () => {
 						preserveSelectedRowKeys: false,
 						...rowSelection,
 					}}
+					onRow={(record) => ({
+						onClick: () => {navigate(`${APP_PREFIX_PATH}/event/details`)},  
+					})}
 				/>
 			</div>
 		</Card>
