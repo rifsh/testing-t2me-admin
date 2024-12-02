@@ -39,7 +39,23 @@ export const fetchAllEvent = createAsyncThunk(
       } else {
         const response = await EventService.fetchAllEvents();
         return response.data;
-        }
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+export const addEvent = createAsyncThunk(
+  "event/addEvent",
+  async (data, { rejectWithValue }) => {
+    try {
+      if (ALL_EVENT_MOCK_API) {
+        const response = EventMockData.fetchAllEvent;
+        return response.data;
+      } else {
+        const response = await EventService.adEvent();
+        return response.data;
+      }
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
     }
@@ -52,35 +68,49 @@ const eventSlice = createSlice({
   reducers: {
     handleShowStatus(state, action) {
       const status = action.payload;
-      if (status === 'All') {
-        state.filteredEvents = state.allEvents;  
+      if (status === "All") {
+        state.filteredEvents = state.allEvents;
       } else {
-        state.filteredEvents = state.allEvents.filter(event => event.status === status);
+        state.filteredEvents = state.allEvents.filter(
+          (event) => event.status === status
+        );
       }
     },
   },
-  extraReducers: builder => {
+  extraReducers: (builder) => {
     builder
-      .addCase(fetchAllEvent.pending, state => {
+      .addCase(addEvent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addEvent.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.allEvents.push(payload);
+      })
+      .addCase(addEvent.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to create category";
+      })
+      .addCase(fetchAllEvent.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchAllEvent.fulfilled, (state, action) => {
         state.loading = false;
         state.allEvents = action.payload;
-        state.filteredEvents = action.payload; 
+        state.filteredEvents = action.payload;
       })
       .addCase(fetchAllEvent.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(fetchEventDetails.pending, state => {
+      .addCase(fetchEventDetails.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchEventDetails.fulfilled, (state, action) => {
         state.loading = false;
-        state.eventDetails = action.payload[0]; 
+        state.eventDetails = action.payload[0];
       })
       .addCase(fetchEventDetails.rejected, (state, action) => {
         state.loading = false;

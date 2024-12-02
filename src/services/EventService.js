@@ -7,4 +7,11 @@ EventService.fetchAllEvents = function () {
     method: "get",
   });
 };
+EventService.adEvent = function (data) {
+  return fetch({
+    url: EVENT_URL,
+    method: "post",
+    data: "data",
+  });
+};
 export default EventService;
