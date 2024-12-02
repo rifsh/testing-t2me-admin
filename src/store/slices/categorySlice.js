@@ -1,10 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { ALL_CATEGORY_MOCK_API } from "configs/MockConfig";
+import { SUB_CATEGORY_URL } from "constants/ApiConstant";
+import CategoryMockData from "mock/data/categoryData";
 import CategoryService from "services/CategoryService";
 
 const initialState = {
   loading: false,
   categories: [],
-  activeTab:'categories',
+  activeTab: "categories",
   subcategories: [],
   filteredCategories: [],
   searchTerm: "",
@@ -29,8 +32,13 @@ export const fetchCategories = createAsyncThunk(
   "category/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await CategoryService.fetchCategory();
-      return response.data;
+      if (ALL_CATEGORY_MOCK_API) {
+        const response =  CategoryMockData.fetchAllCategory;        
+        return response.data;
+      } else {
+        const response = await CategoryService.fetchCategory();
+        return response.data;
+      }
     } catch (error) {
       return rejectWithValue("Failed to fetch categories");
     }
@@ -41,6 +49,15 @@ export const fetchSubcategories = createAsyncThunk(
   "category/fetchSubcategories",
   async (categoryId, { rejectWithValue }) => {
     try {
+      if (SUB_CATEGORY_URL) {
+       
+        const response = CategoryMockData.fetchSubCategory;
+        const subCategory = response.data.filter(
+          (subcategory) => subcategory.category_id === categoryId
+        );
+        return { categoryId, subcategories: subCategory };
+      }
+
       const response = await CategoryService.fetchSubCategory(categoryId);
       return { categoryId, subcategories: response.data };
     } catch (error) {
@@ -48,13 +65,14 @@ export const fetchSubcategories = createAsyncThunk(
     }
   }
 );
+
 export const addSubCategory = createAsyncThunk(
   "category/addSubCategory",
   async ({ data, categoryId }, { rejectWithValue }) => {
     try {
       const response = await CategoryService.addSubCategory(data, categoryId);
-      console.log("response data",response);
-      
+      console.log("response data", response);
+
       return response;
     } catch (err) {
       const errorMessage =
@@ -111,7 +129,7 @@ const categorySlice = createSlice({
         if (categoryIndex !== -1) {
           state.categories[categoryIndex].subcategories.push(payload);
         } else {
-          state.subcategories.push(payload); 
+          state.subcategories.push(payload);
         }
       })
       .addCase(addSubCategory.rejected, (state, { payload }) => {
@@ -147,9 +165,6 @@ const categorySlice = createSlice({
       });
   },
 });
-
-
-
 
 export const { setSearchTerm, setActiveTab, clearSubcategories } =
   categorySlice.actions;
