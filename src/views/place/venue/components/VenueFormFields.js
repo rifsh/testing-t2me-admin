@@ -10,43 +10,31 @@ import {
   message,
   AutoComplete,
 } from "antd";
+import { MapContainer, TileLayer } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import { addVenue, fetchPlaceWithCountry } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
+import LocationMarker from "./LocationMarker";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 
 const { Option } = Select;
 
-const VenueFormFields = (props) => {
-  const { mode } = props;
-  const [form] = Form.useForm(); // Move useForm inside the component body
+const VenueFormFields = ({ mode }) => {
+  const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const { placeWithCountryList, loading, error } = useSelector(
+  const navigate = useNavigate();
+
+  const { placeWithCountryList, coordinates, loading, error } = useSelector(
     (state) => state.locations
   );
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (error) {
       message.error(error);
     }
   }, [error]);
-
-  const onFinish = async () => {
-    try {
-      const values = await form.validateFields();
-
-      const resultAction = await dispatch(addVenue(values));
-      if (addVenue.fulfilled.match(resultAction)) {
-        message.success(`Category ${values.name} added successfully`);
-        form.resetFields();
-        navigate(`${APP_PREFIX_PATH}/venue/list`);
-      }
-    } catch (errorInfo) {
-      console.log("Validation Failed:", errorInfo);
-    }
-  };
 
   useEffect(() => {
     dispatch(fetchPlaceWithCountry(""));
@@ -56,24 +44,33 @@ const VenueFormFields = (props) => {
     dispatch(fetchPlaceWithCountry(value));
   };
 
+  const onFinish = async () => {
+    try {
+      const values = await form.validateFields();
+      const resultAction = await dispatch(addVenue({ ...values, ...coordinates }));
+
+      if (addVenue.fulfilled.match(resultAction)) {
+        message.success(`Venue ${values.name} added successfully`);
+        form.resetFields();
+        navigate(`${APP_PREFIX_PATH}/venue/list`);
+      }
+    } catch (errorInfo) {
+      console.error("Validation Failed:", errorInfo);
+    }
+  };
+
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Form
           layout="vertical"
           form={form}
-          name="advanced_search"
+          name="venue_form"
           className="ant-advanced-search-form"
-          initialValues={{
-            heightUnit: "cm",
-            widthUnit: "cm",
-            weightUnit: "kg",
-          }}
         >
           <Card>
-            <h2 className="mb-3">
-              {mode === "ADD" ? "Add New Event" : `Edit Event`}{" "}
-            </h2>
+            <h2 className="mb-3">{mode === "ADD" ? "Add Venue" : "Edit Venue"}</h2>
+
             <Form.Item
               name="address"
               label="Address"
@@ -99,68 +96,46 @@ const VenueFormFields = (props) => {
                 onSearch={handleSearch}
                 placeholder="Search for a Place"
                 style={{ width: "100%" }}
-                options={
-                  placeWithCountryList?.map((place) => ({
-                    value: `${place.place_name}, ${place.country_name}`,
-                  })) || []
-                }
+                options={placeWithCountryList.map((place) => ({
+                  value: `${place.place_name}, ${place.country_name}`,
+                }))}
                 loading={loading}
               />
             </Form.Item>
 
             <Form.Item
-              name="venue"
-              label="Venue"
-              rules={[{ required: true, message: "Please enter the venue name" }]}
+              name="latitude"
+              label="Latitude"
+              rules={[{ required: true, message: "Please select a location on the map" }]}
             >
-              <Input placeholder="Enter the venue name" />
+              <Input value={coordinates.lat} readOnly />
             </Form.Item>
 
             <Form.Item
-              name="capacity"
-              label="Capacity"
-              rules={[{ required: true, message: "Please enter capacity" }]}
+              name="longitude"
+              label="Longitude"
+              rules={[{ required: true, message: "Please select a location on the map" }]}
             >
-              <Input type="number" placeholder="Enter capacity" />
+              <Input value={coordinates.lng} readOnly />
             </Form.Item>
 
-            <Form.Item
-              name="indoor"
-              label="Indoor/Outdoor"
-              rules={[
-                { required: true, message: "Please specify indoor/outdoor" },
-              ]}
-            >
-              <Select className="w-100" placeholder="Select type">
-                <Option value="indoor">Indoor</Option>
-                <Option value="outdoor">Outdoor</Option>
-              </Select>
-            </Form.Item>
+            <div className="mb-3">
+              <h3>Pick Location</h3>
+              <MapContainer
+                center={coordinates}
+                zoom={13}
+                style={{ height: "400px", width: "100%" }}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <LocationMarker form={form} />
+              </MapContainer>
+            </div>
 
-            <Form.Item
-              name="description"
-              label="Description"
-              rules={[{ required: true, message: "Please enter a description" }]}
-            >
-              <Input.TextArea rows={4} placeholder="Enter a description" />
-            </Form.Item>
-            <Flex
-              className="py-2"
-              mobileFlex={false}
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <div className="mb-3">
-                <Button className="mr-2">Discard</Button>
-                <Button
-                  type="primary"
-                  onClick={() => onFinish()}
-                  htmlType="submit"
-                  loading={loading}
-                >
-                  {mode === "ADD" ? "Add" : `Save`}
-                </Button>
-              </div>
+            <Flex className="py-2" mobileFlex={false} justifyContent="space-between">
+              <Button onClick={() => form.resetFields()}>Discard</Button>
+              <Button type="primary" onClick={onFinish} loading={loading}>
+                {mode === "ADD" ? "Add" : "Save"}
+              </Button>
             </Flex>
           </Card>
         </Form>

@@ -3,15 +3,13 @@ import LocationService from "services/LocationService";
 
 export const initialState = {
   loading: false,
-  locations: [],
-  filteredLocations: [],
   placeWithCountryList: [],
+  coordinates: { lat: 23.4241, lng: 53.8478 },
   error: null,
-  venues:[]
 };
 
 export const fetchPlaceWithCountry = createAsyncThunk(
-  "place/fetchPlaceWithCountry",
+  "locations/fetchPlaceWithCountry",
   async (place, { rejectWithValue }) => {
     try {
       const response = await LocationService.placeWithCountry(place);
@@ -21,31 +19,31 @@ export const fetchPlaceWithCountry = createAsyncThunk(
     }
   }
 );
+
 export const addVenue = createAsyncThunk(
-  "place/addVenue",
+  "locations/addVenue",
   async (data, { rejectWithValue }) => {
     try {
       const response = await LocationService.addVenue(data);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch places");
+      return rejectWithValue(error.message || "Failed to add venue");
     }
   }
 );
 
-const categorySlice = createSlice({
+const locationSlice = createSlice({
   name: "locations",
   initialState,
   reducers: {
-    clearError: (state) => {
-      state.error = null;
+    setCoordinates: (state, action) => {
+      state.coordinates = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchPlaceWithCountry.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(fetchPlaceWithCountry.fulfilled, (state, { payload }) => {
         state.loading = false;
@@ -53,30 +51,17 @@ const categorySlice = createSlice({
       })
       .addCase(fetchPlaceWithCountry.rejected, (state, { payload }) => {
         state.loading = false;
-        state.error = payload || "Failed to fetch places";
+        state.error = payload;
       })
-      .addCase(addVenue.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(addVenue.fulfilled, (state, { payload }) => {
+      .addCase(addVenue.fulfilled, (state) => {
         state.loading = false;
-        const categoryIndex = state.venues.findIndex(
-          (cat) => cat.id === payload.venueId
-        );
-        if (categoryIndex !== -1) {
-          state.venues[categoryIndex].subcategories.push(payload);
-        } else {
-          state.subcategories.push(payload); 
-        }
       })
       .addCase(addVenue.rejected, (state, { payload }) => {
         state.loading = false;
-        state.error = payload || "Failed to add subcategory";
-      })
-      ;
+        state.error = payload;
+      });
   },
 });
 
-export const { clearError } = categorySlice.actions;
-export default categorySlice.reducer;
+export const { setCoordinates } = locationSlice.actions;
+export default locationSlice.reducer;
