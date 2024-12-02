@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select } from "antd";
-import { fetchCountry } from "../api/countryService"; // Assuming this fetches data from an API
-const { Option } = Select;
+import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect } from "react";
+import { Input, Row, Col, Card, Form, AutoComplete } from "antd";
+import { fetchAllCountires, allLocations, onSelect, onchange, onSearch } from 'store/slices/locationSlice';
+
 
 const rules = {
   country: [
@@ -44,40 +45,40 @@ const rules = {
 };
 
 const CountryFormFields = (props) => {
-  const [countries, setCountries] = useState([]);
+  const dispatch = useDispatch();
+  const { list: searchTerm, options } = useSelector(allLocations);
 
   useEffect(() => {
-    const getCountries = async () => {
-      try {
-        const countryData = await fetchCountry(); 
-        console.log("Fetched country data:", countryData); 
-        setCountries(countryData); 
-      } catch (error) {
-        console.error("Error fetching countries:", error);
-      }
-    };
+    dispatch(fetchAllCountires());
+  }, [dispatch]);
 
-    getCountries();
-  }, []);
+  const handleSelect = (data) => {
+    dispatch(onSelect(data));
+  };
 
-  console.log("Countries state:", countries); 
+  const handleChange = (data) => {
+    dispatch(onchange(data));
+  };
+
+  const handleSearch = (searchText) => {
+    dispatch(onSearch(searchText));
+  }
+
 
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
           <Form.Item name="country" label="Country name" rules={rules.country}>
-            <Select className="w-100" placeholder="Choose a Country">
-              {countries && Object.entries(countries).length > 0 ? (
-                Object.entries(countries).map(([country, code]) => (
-                  <Option key={code} value={code}>
-                    {country}
-                  </Option>
-                ))
-              ) : (
-                <Option disabled>No countries available</Option>
-              )}
-            </Select>
+            <AutoComplete
+              options={options}
+              value={searchTerm}
+              onSelect={handleSelect}
+              onSearch={handleSearch}
+              onChange={handleChange}
+              placeholder="Search for a Place"
+              style={{ width: "100%" }}
+            />
           </Form.Item>
           <Form.Item name="Place" label="Place" rules={rules.name}>
             <Input placeholder="Place Name" />
