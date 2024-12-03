@@ -1,9 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { ALL_COUNTRIES_MOCK_API } from "configs/MockConfig";
+import LocationMockData from "mock/data/location";
 import LocationService from "services/LocationService";
 
 export const initialState = {
   loading: false,
-  list: [],
+  countries: [],
   placeWithCountryList: [],
   error: null,
   venues: [],
@@ -19,8 +21,12 @@ export const fetchAllCountires = createAsyncThunk(
   "country/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
+      if (ALL_COUNTRIES_MOCK_API) {
+        const response = LocationMockData.fetchAllCountries;
+        return response.data;
+      }else{
       const response = await LocationService.getAllCountries();
-      return response;
+      return response.data;}
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Error fetching Countries"
@@ -32,8 +38,9 @@ export const fetchAllCountires = createAsyncThunk(
 export const createPlace = createAsyncThunk(
   "place/create",
   async (placeData, { rejectWithValue }) => {
-    try {
-      const response = await LocationService.createPlace(placeData);
+    try {console.log(placeData);
+    
+      const response = await LocationService.addPlace(placeData);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");
@@ -57,6 +64,8 @@ export const addVenue = createAsyncThunk(
   "locations/addVenue",
   async (data, { rejectWithValue }) => {
     try {
+      console.log('venue data', data);
+      
       const response = await LocationService.addVenue(data);
       return response.data;
     } catch (error) {
@@ -89,7 +98,7 @@ const locationSlice = createSlice({
       state.searchTerm = action.payload;
     },
     onSearch(state, action) {
-      const filteredOptions = state.list
+      const filteredOptions = state.countries
         .filter((item) =>
           `${item.code}, ${item.country}`
             .toLowerCase()
@@ -108,7 +117,7 @@ const locationSlice = createSlice({
       })
       .addCase(fetchAllCountires.fulfilled, (state, action) => {
         state.loading = false;
-        state.list = action.payload;
+        state.countries = action.payload;
       })
       .addCase(fetchAllCountires.rejected, (state, action) => {
         state.loading = false;
@@ -122,12 +131,13 @@ const locationSlice = createSlice({
       })
       .addCase(createPlace.fulfilled, (state, action) => {
         state.createPlaceLoading = false;
-        state.list.push(action.payload);
+        state.countries.push(action.payload);
       })
       .addCase(createPlace.rejected, (state, action) => {
         state.createPlaceLoading = false;
         state.error = action.payload;
-      }) .addCase(fetchPlaceWithCountry.pending, (state) => {
+      })
+      .addCase(fetchPlaceWithCountry.pending, (state) => {
         state.loading = true;
       })
       .addCase(fetchPlaceWithCountry.fulfilled, (state, { payload }) => {

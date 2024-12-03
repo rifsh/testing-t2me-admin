@@ -4,6 +4,7 @@ import countryListData from "assets/data/country-list.json";
 import venueListData from "assets/data/venue-list.json";
 import { fetchPlaceWithCountry } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
+import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 
 const LocationDetailsField = () => {
   const dispatch = useDispatch();
@@ -24,17 +25,7 @@ const LocationDetailsField = () => {
   return (
     <Col>
       <Card title="Location Details">
-        <Form.Item name="place" label="Place" rules={rules.place}>
-          <AutoComplete
-            onSearch={handleSearch}
-            placeholder="Search for a Place"
-            style={{ width: "100%" }}
-            options={placeWithCountryList.map((place) => ({
-              value: `${place.place_name}, ${place.country_name}`,
-            }))}
-            loading={loading}
-          />
-        </Form.Item>
+      <PlaceWithCountryForm />
         <Form.Item name="venue" label="Venue" rules={rules.venue}>
           <Select className="w-100" placeholder="Select a Venue">
             {venueList.map((venue) => (

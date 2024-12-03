@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Input, Row, Col, Card, Form, Select } from "antd";
 import { fetchCountry } from "../api/countryService"; // Assuming this fetches data from an API
+import { fetchAllCountires } from "store/slices/locationSlice";
+import { useDispatch, useSelector } from "react-redux";
 const { Option } = Select;
 
 const rules = {
@@ -44,39 +46,30 @@ const rules = {
 };
 
 const CountryFormFields = (props) => {
-  const [countries, setCountries] = useState([]);
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-    const getCountries = async () => {
-      try {
-        const countryData = await fetchCountry(); 
-        console.log("Fetched country data:", countryData); 
-        setCountries(countryData); 
-      } catch (error) {
-        console.error("Error fetching countries:", error);
-      }
-    };
+  const { loading, countries } = useSelector((state) => state.locations);
+  const fetchAllCountry = () => {
+    dispatch(fetchAllCountires());
+  };
 
-    getCountries();
-  }, []);
-
-  console.log("Countries state:", countries); 
+  console.log("Countries state:", countries);
 
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
           <Form.Item name="country" label="Country name" rules={rules.country}>
-            <Select className="w-100" placeholder="Choose a Country">
-              {countries && Object.entries(countries).length > 0 ? (
-                Object.entries(countries).map(([country, code]) => (
-                  <Option key={code} value={code}>
-                    {country}
+            <Select
+              className="w-100"
+              placeholder="Choose a Country"
+              onClick={fetchAllCountry}
+            >
+             {countries.map((cntry) => (
+                  <Option key={cntry.country} value={cntry.id}>
+                    {cntry.country}
                   </Option>
-                ))
-              ) : (
-                <Option disabled>No countries available</Option>
-              )}
+                ))}
             </Select>
           </Form.Item>
           <Form.Item name="Place" label="Place" rules={rules.name}>
