@@ -3,7 +3,7 @@ import { API_BASE_URL } from "configs/AppConfig";
 import { signOutSuccess } from "store/slices/authSlice";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { notification } from "antd";
-import store from "store";
+import store from "../store";
 
 const unauthorizedCode = [401, 403];
 
