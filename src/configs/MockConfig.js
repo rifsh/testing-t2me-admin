@@ -4,4 +4,4 @@ export const ALL_EVENT_MOCK_API = true;
 export const ALL_CATEGORY_MOCK_API = true;
 export const SUB_CATEGORY_MOCK_API = true;
 export const ALL_COUNTRIES_MOCK_API = true;
-export const ALL_OFFERS_MOCK_API = true;
+export const ALL_OFFERS_MOCK_API = false;

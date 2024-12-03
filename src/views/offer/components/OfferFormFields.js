@@ -131,33 +131,44 @@ function OfferFormFields(props) {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Offer Details">
-
           <Form.Item
-            name="offerName"
+            name="name"
             label="Offer Name"
             rules={rules.discountPercentage}
           >
             <Input placeholder="Enter Offer Name" />
           </Form.Item>
           <Form.Item
-            name="discountPercentage"
+            name="discount_percentage"
             label="Discount Percentage"
             rules={rules.discountPercentage}
           >
             <Input placeholder="Enter discount percentage" />
           </Form.Item>
 
-          <Form.Item name="startDate" label="Start Date" rules={rules.startDate}>
-            <DatePicker className="w-100" placeholder="Select start date" />
+          <Form.Item
+            name="start_date"
+            label="Start Date"
+            rules={rules.startDate}
+          >
+            <DatePicker
+              className="w-100"
+              placeholder="Select start date"
+              format="YYYY-MM-DD"
+            />
           </Form.Item>
 
-          <Form.Item name="endDate" label="End Date" rules={rules.endDate}>
-            <DatePicker className="w-100" placeholder="Select end date" />
+          <Form.Item name="end_date" label="End Date" rules={rules.endDate}>
+            <DatePicker
+              className="w-100"
+              placeholder="Select end date"
+              format="YYYY-MM-DD"
+            />
           </Form.Item>
-          <Form.Item name="maxUsers" label="Max Users" rules={rules.maxUsers}>
+          <Form.Item name="max_uses" label="Max Users" rules={rules.maxUsers}>
             <Input type="number" placeholder="Enter maximum users" />
           </Form.Item>
-          <Form.Item name="status" label="Status" rules={rules.status}>
+          {/* <Form.Item name="status" label="Status" rules={rules.status}>
             <Select className="w-100" placeholder="Select a status">
               {["active", "upcoming"].map((status) => (
                 <Option key={status} value={status}>
@@ -165,11 +176,9 @@ function OfferFormFields(props) {
                 </Option>
               ))}
             </Select>
-          </Form.Item>
+          </Form.Item> */}
         </Card>
-
       </Col>
-
     </Row>
   );
 }
