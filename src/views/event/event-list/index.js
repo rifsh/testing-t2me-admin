@@ -52,18 +52,24 @@ const EventsList = () => {
     {
       title: 'Category',
       dataIndex: 'category_id',
+      render: categoryId => <span>{`Category ${categoryId}`}</span>, // Can replace this with an actual category name mapping
       sorter: (a, b) => utils.antdTableSorter(a, b, 'category_id'),
     },
     {
-      title: 'Sub Cat',
+      title: 'Sub Category',
       dataIndex: 'sub_category_id',
+      render: subCategoryId => <span>{`Sub Category ${subCategoryId}`}</span>, // Can replace this with an actual sub-category name mapping
       sorter: (a, b) => utils.antdTableSorter(a, b, 'sub_category_id'),
+    },
+    {
+      title: 'Max Tickets',
+      dataIndex: 'max_tickets',
     },
     {
       title: 'Status',
       dataIndex: 'status',
       render: (_, record) => (
-        <Tag color={getShippingStatus(record.status)}>{record.status}</Tag>
+        <Tag color={getEventStatus(record.status)}>{record.status ? 'Active' : 'Inactive'}</Tag>
       ),
       sorter: (a, b) => utils.antdTableSorter(a, b, 'status'),
     },
@@ -78,21 +84,14 @@ const EventsList = () => {
     },
   ];
 
-  const getShippingStatus = status => {
-    if (status === 'Scheduled') {
-      return 'green';
-    }
-    if (status === 'Ongoing') {
-      return 'blue';
-    }
-    return '';
+  const getEventStatus = status => {
+    return status ? 'green' : 'red'; 
   };
 
   const onSearch = e => {
     const value = e.currentTarget.value;
     const searchArray = value ? allEvents : allEvents;
     const data = utils.wildCardSearch(searchArray, value);
-    
   };
 
   const handleStatusChange = value => {
@@ -136,7 +135,7 @@ const EventsList = () => {
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={filteredEvents || allEvents} // Show filtered events based on the selected status
+          dataSource={filteredEvents || allEvents} 
           rowKey="id"
           onRow={record => ({
             onClick: () => {

@@ -25,11 +25,9 @@ LocationService.addPlace = function (data) {
 		data: data,
 	});
 };
-LocationService.addVenue = function (data, place_id) {
-	console.log('venue data service',data);
-	
+LocationService.addVenue = function (data, placeId) {	
 	return fetch({
-		url:`${VENUE_URL}${place_id}`,
+		url:`${VENUE_URL}${placeId}`,
 		method: "post",
 		data: data,
 	});
@@ -41,13 +39,4 @@ LocationService.placeWithCountry = function (place) {
 		method: "get",
 	});
 };
-
-LocationService.addVenue = function (data) {
-	return fetch({
-		url: VENUE_URL,
-		method: "post",
-		data: data,
-	});
-};
-
 export default LocationService;

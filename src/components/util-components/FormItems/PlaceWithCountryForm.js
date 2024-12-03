@@ -18,27 +18,33 @@ const PlaceWithCountryForm = ({ form }) => {
 
   const handleSearch = (value) => {
     if (value) {
-      dispatch(fetchPlaceWithCountry(value));
+      dispatch(fetchPlaceWithCountry(value ?? ""));
     }
   };
 
+  const autoCompleteOptions = placeWithCountryList.length
+    ? placeWithCountryList.map((place) => ({
+        label: `${place.name}, ${place.country.name}`,
+        value: place.id,
+      }))
+    : [{ label: "No places found", value: "" }];
+
   return (
-    <Form.Item
-      name="place_id"
-      label="Place"
-      rules={[{ required: true, message: "Please select a place" }]}
-    >
-      <AutoComplete
-        onSearch={handleSearch}
-        placeholder="Search for a Place"
-        style={{ width: "100%" }}
-        options={placeWithCountryList.map((place) => ({
-          label: `${place.name}, ${place.country.name}`,
-          value: place.id,
-        }))}
-        loading={loading}
-      />
-    </Form.Item>
+    <Form form={form} style={{ marginBottom: 50 }}>
+      <Form.Item
+        name="place_id"
+        label="Place"
+        rules={[{ required: true, message: "Please select a place" }]}
+      >
+        <AutoComplete
+          onSearch={handleSearch}
+          placeholder="Search for a Place"
+          style={{ width: "100%" }}
+          options={autoCompleteOptions}
+          loading={loading}
+        />
+      </Form.Item>
+    </Form>
   );
 };
 

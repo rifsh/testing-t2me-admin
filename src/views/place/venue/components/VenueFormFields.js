@@ -1,14 +1,5 @@
 import React, { useEffect } from "react";
-import {
-  Input,
-  Row,
-  Col,
-  Card,
-  Form,
-  Select,
-  Button,
-  message,
-} from "antd";
+import { Input, Row, Col, Card, Form, Select, Button, message } from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { addVenue } from "store/slices/locationSlice";
@@ -39,9 +30,10 @@ const VenueFormFields = ({ mode }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      console.log(values);
 
-      const resultAction = await dispatch(addVenue(values));
+      const resultAction = await dispatch(
+        addVenue({ data: values, placeId: values.place_id })
+      );
 
       if (addVenue.fulfilled.match(resultAction)) {
         message.success(`Venue ${values.name} added successfully`);
@@ -80,7 +72,9 @@ const VenueFormFields = ({ mode }) => {
             <Form.Item
               name="name"
               label="Venue"
-              rules={[{ required: true, message: "Please enter the venue name" }]}
+              rules={[
+                { required: true, message: "Please enter the venue name" },
+              ]}
             >
               <Input placeholder="Enter the venue name" />
             </Form.Item>
@@ -116,7 +110,10 @@ const VenueFormFields = ({ mode }) => {
               name="latitude"
               label="Latitude"
               rules={[
-                { required: true, message: "Please select a location on the map" },
+                {
+                  required: true,
+                  message: "Please select a location on the map",
+                },
               ]}
             >
               <Input value={coordinates.lat} readOnly />
@@ -126,7 +123,10 @@ const VenueFormFields = ({ mode }) => {
               name="longitude"
               label="Longitude"
               rules={[
-                { required: true, message: "Please select a location on the map" },
+                {
+                  required: true,
+                  message: "Please select a location on the map",
+                },
               ]}
             >
               <Input value={coordinates.lng} readOnly />
