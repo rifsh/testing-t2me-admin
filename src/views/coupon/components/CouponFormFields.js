@@ -47,52 +47,56 @@ function CouponFormFields(props) {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Coupon Details">
-
           <Form.Item
-            name="couponName"
+            name="name"
             label="Coupon Name"
             rules={rules.discountPercentage}
           >
             <Input placeholder="Enter Coupon Name" />
           </Form.Item>
           <Form.Item
-            name="couponCode"
+            name="coupon_code"
             label="Coupon Code"
             rules={rules.discountPercentage}
           >
             <Input placeholder="Enter Coupon Code" />
           </Form.Item>
           <Form.Item
-            name="discountPercentage"
+            name="discount_percentage"
             label="Discount Percentage"
             rules={rules.discountPercentage}
           >
             <Input placeholder="Enter discount percentage" />
           </Form.Item>
 
-          <Form.Item name="startDate" label="Start Date" rules={rules.startDate}>
-            <DatePicker className="w-100" placeholder="Select start date" />
+          <Form.Item
+            name="start_date"
+            label="Start Date"
+            rules={rules.startDate}
+          >
+            <DatePicker
+              className="w-100"
+              placeholder="Select start date"
+              format="YYYY-MM-DD"
+            />
           </Form.Item>
 
-          <Form.Item name="endDate" label="End Date" rules={rules.endDate}>
-            <DatePicker className="w-100" placeholder="Select end date" />
+          <Form.Item name="end_date" label="End Date" rules={rules.endDate}>
+            <DatePicker
+              className="w-100"
+              placeholder="Select end date"
+              format="YYYY-MM-DD"
+            />
           </Form.Item>
-          <Form.Item name="maxUsers" label="Max Users" rules={rules.maxUsers}>
+          <Form.Item name="max_uses" label="Max Users" rules={rules.maxUsers}>
             <Input type="number" placeholder="Enter maximum users" />
           </Form.Item>
-          <Form.Item name="status" label="Status" rules={rules.status}>
-            <Select className="w-100" placeholder="Select a status">
-              {["active", "upcoming"].map((status) => (
-                <Option key={status} value={status}>
-                  {status}
-                </Option>
-              ))}
-            </Select>
+          <Form.Item name="min_purchase_amount" label="Min Purchase Amount" rules={rules.maxUsers}>
+            <Input type="number" placeholder="Enter min purchase amount" />
           </Form.Item>
+          
         </Card>
-
       </Col>
-
     </Row>
   );
 }
