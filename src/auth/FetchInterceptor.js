@@ -1,9 +1,9 @@
 import axios from "axios";
 import { API_BASE_URL } from "configs/AppConfig";
 import { signOutSuccess } from "store/slices/authSlice";
-import store from "../store";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { notification } from "antd";
+import store from "../store";
 
 const unauthorizedCode = [401, 403];
 
@@ -13,7 +13,7 @@ const service = axios.create({
 });
 
 // Config
-const TOKEN_PAYLOAD_KEY = 'Authorization';
+const TOKEN_PAYLOAD_KEY = "Authorization";
 const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
 
 // Request Interceptor
@@ -103,9 +103,9 @@ service.interceptors.response.use(
         notificationParam.message = "Not Found";
         notificationParam.description = "The requested resource was not found.";
       } else if (status === 400) {
-        notificationParam.message = "Request Failed";
+        notificationParam.message = "Bad Request";
         notificationParam.description =
-          "The resource already exists. Please try with a different value.";
+          "The request could not be processed due to invalid input. Please check the data and try again.";
       } else if (status === 500) {
         notificationParam.message = "Internal Server Error";
         notificationParam.description =

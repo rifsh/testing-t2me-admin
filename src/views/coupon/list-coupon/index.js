@@ -1,53 +1,40 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { Card, Table, Select, Input, Button, Tag, Menu } from 'antd';
-import CouponListData from 'assets/data/coupon-list.json';
 import { EyeOutlined, PlusCircleOutlined, SearchOutlined, FormOutlined } from '@ant-design/icons';
 import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
 import Flex from 'components/shared-components/Flex';
-import utils from 'utils';
 import { useNavigate } from "react-router-dom";
-import { debounce } from 'lodash';
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAllCoupons, filterCoupons } from 'store/slices/couponSlice';
+import { APP_PREFIX_PATH } from 'configs/AppConfig';
 const { Option } = Select;
 
-
 const getStatusColor = (status) => {
-  if (status.toLowerCase() === 'active') {
-    return 'green';
+  if (status) {
+    return 'green'; // Active
   }
-  if (status.toLowerCase() === 'inactive') {
-    return 'red';
-  }
-  return 'blue'; // For other statuses
+  return 'red'; // Inactive
 };
 
 const OfferList = () => {
-  const [list, setList] = useState(CouponListData);
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { filteredCoupons, loading } = useSelector((state) => state.coupons);
 
-  const handleShowStatus = (value) => {
-    const filteredData = value !== 'All'
-      ? utils.filterArray(CouponListData, 'status', value)
-      : CouponListData;
-    setList(filteredData);
+  useEffect(() => {
+    dispatch(fetchAllCoupons());
+  }, [dispatch]);
+
+  const handleSearch = (value) => {
+    dispatch(filterCoupons({ searchTerm: value, status: null }));
   };
 
-  // Debounce search input
-  const handleSearch = useCallback(
-    debounce((value) => {
-      const searchArray = value ? list : CouponListData;
-      const filteredData = utils.wildCardSearch(searchArray, value);
-      setList(filteredData);
-      setSelectedRowKeys([]);
-    }, 500),
-    [list]
-  );
+  const handleShowStatus = (status) => {
+    dispatch(filterCoupons({ searchTerm: null, status }));
+  };
 
   const dropdownMenu = (row) => (
-    
     <Menu>
       <Menu.Item>
         <Flex alignItems="center">
@@ -67,64 +54,59 @@ const OfferList = () => {
   const tableColumns = [
     {
       title: 'Coupon Name',
-      dataIndex: 'couponName',
-      render: (_, record) => <span>{record.couponName}</span>,
-      sorter: (a, b) => a.couponName.localeCompare(b.couponName),
+      dataIndex: 'name',
+      render: (_, record) => <span>{record.name}</span>,
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
       title: 'Coupon Code',
-      dataIndex: 'couponCode',
-      render: (_, record) => <span>{record.couponCode}</span>,
-      sorter: (a, b) => a.couponCode.localeCompare(b.couponCode),
+      dataIndex: 'coupon_code',
+      render: (_, record) => <span>{record.coupon_code}</span>,
+      sorter: (a, b) => a.coupon_code.localeCompare(b.coupon_code),
     },
     {
-      title: 'Discount Percentage',
-      dataIndex: 'DiscountPercentage',
-      render: (_, record) => <span>{record.DiscountPercentage}</span>,
-      sorter: (a, b) => parseFloat(a.DiscountPercentage) - parseFloat(b.DiscountPercentage),
+      title: 'Discount (%)',
+      dataIndex: 'discount_percentage',
+      render: (_, record) => <span>{record.discount_percentage}</span>,
+      sorter: (a, b) => a.discount_percentage - b.discount_percentage,
     },
     {
       title: 'Start Date',
-      dataIndex: 'StartDate',
-      render: (_, record) => <span>{record.StartDate}</span>,
-      sorter: (a, b) => new Date(a.StartDate) - new Date(b.StartDate),
+      dataIndex: 'start_date',
+      render: (_, record) => <span>{record.start_date}</span>,
+      sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
     },
     {
       title: 'End Date',
-      dataIndex: 'EndDate',
-      render: (_, record) => <span>{record.EndDate}</span>,
-      sorter: (a, b) => new Date(a.EndDate) - new Date(b.EndDate),
+      dataIndex: 'end_date',
+      render: (_, record) => <span>{record.end_date}</span>,
+      sorter: (a, b) => new Date(a.end_date) - new Date(b.end_date),
     },
     {
-      title: 'Max Users',
-      dataIndex: 'MaxUsers',
-      render: (_, record) => <span>{record.MaxUsers}</span>,
-      sorter: (a, b) => a.MaxUsers - b.MaxUsers,
+      title: 'Max Uses',
+      dataIndex: 'max_uses',
+      render: (_, record) => <span>{record.max_uses}</span>,
+      sorter: (a, b) => a.max_uses - b.max_uses,
     },
     {
       title: 'Status',
       dataIndex: 'status',
-      render: (_, record) => <Tag color={getStatusColor(record.status)}>{record.status}</Tag>,
-      sorter: (a, b) => a.status.localeCompare(b.status),
+      render: (_, record) => (
+        <Tag color={getStatusColor(record.status)}>{record.status ? 'Active' : 'Inactive'}</Tag>
+      ),
+      sorter: (a, b) => a.status - b.status,
     },
     {
       title: '',
       dataIndex: 'actions',
-      render: (_, elm) => (
+      render: (_, record) => (
         <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
+          <EllipsisDropdown menu={dropdownMenu(record)} />
         </div>
       ),
     },
   ];
 
-  const rowSelection = {
-    onChange: (key, rows) => {
-      setSelectedRows(rows);
-      setSelectedRowKeys(key);
-    },
-  };
-  const navigate = useNavigate();
   return (
     <Card>
       <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
@@ -133,11 +115,7 @@ const OfferList = () => {
             <Input
               placeholder="Search"
               prefix={<SearchOutlined />}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                handleSearch(e.target.value);
-              }}
-              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
           <div className="mb-3">
@@ -155,7 +133,7 @@ const OfferList = () => {
           </div>
         </Flex>
         <div>
-        <Button
+          <Button
             type="primary"
             icon={<FormOutlined />}
             block
@@ -168,14 +146,10 @@ const OfferList = () => {
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={list}
-          rowKey="offerName"
-          rowSelection={{
-            selectedRowKeys: selectedRowKeys,
-            type: 'checkbox',
-            preserveSelectedRowKeys: false,
-            ...rowSelection,
-          }}
+          dataSource={filteredCoupons}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 10 }}
         />
       </div>
     </Card>

@@ -1,5 +1,5 @@
 import fetch from "auth/FetchInterceptor";
-import { PLACE_WITH_COUNTRY_URL, VENUE_URL } from "constants/ApiConstant";
+import { PLACE_URL, PLACE_WITH_COUNTRY_URL, VENUE_URL } from "constants/ApiConstant";
 
 const LocationService = {}
 
@@ -18,20 +18,19 @@ LocationService.getAllCountries = function () {
 		});
 };
 
-LocationService.createPlace = function (placeData) {
+LocationService.addPlace = function (data) {
 	return fetch({
-		url: '/api/v1/location/secured/place/',
-		method: 'post',
-		data: placeData,
-	})
-		.then((response) => {
-			console.log("Place created:", response.data);
-			return response.data;
-		})
-		.catch((error) => {
-			console.log("Error creating Place:", error);
-			throw error;
-		});
+		url: PLACE_URL,
+		method: "post",
+		data: data,
+	});
+};
+LocationService.addVenue = function (data, placeId) {	
+	return fetch({
+		url:`${VENUE_URL}${placeId}`,
+		method: "post",
+		data: data,
+	});
 };
 
 LocationService.placeWithCountry = function (place) {
@@ -40,13 +39,4 @@ LocationService.placeWithCountry = function (place) {
 		method: "get",
 	});
 };
-
-LocationService.addVenue = function (data) {
-	return fetch({
-		url: VENUE_URL,
-		method: "post",
-		data: data,
-	});
-};
-
 export default LocationService;

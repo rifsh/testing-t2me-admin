@@ -5,77 +5,49 @@ import Flex from 'components/shared-components/Flex'
 
 import ProductListData from "assets/data/product-list.data.json"
 import CouponFormFields from '../components/CouponFormFields';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import moment from 'moment';
+import { addOffer } from 'store/slices/offerSlice';
+import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import { addCoupon } from 'store/slices/couponSlice';
 
-
-const getBase64 = (img, callback) => {
-  const reader = new FileReader();
-  reader.addEventListener('load', () => callback(reader.result));
-  reader.readAsDataURL(img);
-}
 
 const ADD = 'ADD'
 const EDIT = 'EDIT'
 
 const OfferForm = props => {
 
-	const { mode = ADD, param } = props
-
+	
+	const { mode = ADD, param } = props;
+	const { loading, error } = useSelector((state) => state.offers);
 	const [form] = Form.useForm();
-	const [uploadedImg, setImage] = useState('')
-	const [uploadLoading, setUploadLoading] = useState(false)
-	const [submitLoading, setSubmitLoading] = useState(false)
-
+	const dispatch = useDispatch();
+	const navigate = useNavigate();
+  
 	useEffect(() => {
-    	if(mode === EDIT) {
-			console.log('is edit')
-			console.log('props', props)
-			const { id } = param
-			const produtId = parseInt(id)
-			const productData = ProductListData.filter( product => product.id === produtId)
-			const product = productData[0]
-			form.setFieldsValue({
-				comparePrice: 0.00,
-				cost: 0.00,
-				taxRate: 6,
-				description: 'There are many variations of passages of Lorem Ipsum available.',
-				category: product.category,
-				name: product.name,
-				price: product.price
-			});
-			setImage(product.image)
+	  if (error) {
+		message.error(error);
+	  }
+	}, [error]);
+  
+	const onFinish = async () => {
+	  try {
+		const values = await form.validateFields();
+		values.start_date = moment(values.start_date).format("YYYY-MM-DD");
+		values.end_date = moment(values.end_date).format("YYYY-MM-DD");
+		const resultAction = await dispatch(addCoupon(values));
+		if (addCoupon.fulfilled.match(resultAction)) {
+		  message.success(`Offer ${values.name} added successfully`);
+		  form.resetFields();
+		  navigate(`${APP_PREFIX_PATH}/coupon/list`);
+		} else {
+		  message.error("Failed to add the coupon. Please try again.");
 		}
-  	}, [form, mode, param, props]);
-
-	const handleUploadChange = info => {
-		if (info.file.status === 'uploading') {
-			setUploadLoading(true)
-			return;
-		}
-		if (info.file.status === 'done') {
-			getBase64(info.file.originFileObj, imageUrl =>{
-				setImage(imageUrl)
-				setUploadLoading(true)
-			});
-		}
-	};
-
-	const onFinish = () => {
-		setSubmitLoading(true)
-		form.validateFields().then(values => {
-			setTimeout(() => {
-				setSubmitLoading(false)
-				if(mode === ADD) {
-					message.success(`Created ${values.name} to product list`);
-				}
-				if(mode === EDIT) {
-					message.success(`Product saved`);
-				}
-			}, 1500);
-		}).catch(info => {
-			setSubmitLoading(false)
-			console.log('info', info)
-			message.error('Please enter all required field ');
-		});
+	  } catch (info) {
+		console.error("Validation Failed:", info);
+		message.error("Please enter all required fields.");
+	  }
 	};
 
 	return (
@@ -97,7 +69,7 @@ const OfferForm = props => {
 							<h2 className="mb-3">{mode === 'ADD'? 'Add New Offer' : `Edit Offer`} </h2>
 							<div className="mb-3">
 								<Button className="mr-2">Discard</Button>
-								<Button type="primary" onClick={() => onFinish()} htmlType="submit" loading={submitLoading} >
+								<Button type="primary" onClick={() => onFinish()} htmlType="submit" loading={loading} >
 									{mode === 'ADD'? 'Add' : `Save`}
 								</Button>
 							</div>
@@ -113,9 +85,7 @@ const OfferForm = props => {
 								label: 'General',
 								key: '1',
 								children: <CouponFormFields
-									uploadedImg={uploadedImg} 
-									uploadLoading={uploadLoading} 
-									handleUploadChange={handleUploadChange}
+									
 								/>,
 							},
 						]}

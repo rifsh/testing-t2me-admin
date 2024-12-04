@@ -1,31 +1,25 @@
 import React, { useEffect } from "react";
-import {
-  Input,
-  Row,
-  Col,
-  Card,
-  Form,
-  Select,
-  Button,
-  message,
-  AutoComplete,
-} from "antd";
-import { addVenue, fetchPlaceWithCountry } from "store/slices/locationSlice";
+import { Input, Row, Col, Card, Form, Select, Button, message } from "antd";
+import { MapContainer, TileLayer } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { addVenue } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
+import LocationMarker from "./LocationMarker";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 
 const { Option } = Select;
 
-const VenueFormFields = (props) => {
-  const { mode } = props;
-  const [form] = Form.useForm(); // Move useForm inside the component body
+const VenueFormFields = ({ mode }) => {
+  const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const { placeWithCountryList, loading, error } = useSelector(
+  const navigate = useNavigate();
+
+  const { coordinates, loading, error } = useSelector(
     (state) => state.locations
   );
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (error) {
@@ -37,23 +31,18 @@ const VenueFormFields = (props) => {
     try {
       const values = await form.validateFields();
 
-      const resultAction = await dispatch(addVenue(values));
+      const resultAction = await dispatch(
+        addVenue({ data: values, placeId: values.place_id })
+      );
+
       if (addVenue.fulfilled.match(resultAction)) {
-        message.success(`Category ${values.name} added successfully`);
+        message.success(`Venue ${values.name} added successfully`);
         form.resetFields();
         navigate(`${APP_PREFIX_PATH}/venue/list`);
       }
     } catch (errorInfo) {
-      console.log("Validation Failed:", errorInfo);
+      console.error("Validation Failed:", errorInfo);
     }
-  };
-
-  useEffect(() => {
-    dispatch(fetchPlaceWithCountry(""));
-  }, [dispatch]);
-
-  const handleSearch = (value) => {
-    dispatch(fetchPlaceWithCountry(value));
   };
 
   return (
@@ -62,18 +51,14 @@ const VenueFormFields = (props) => {
         <Form
           layout="vertical"
           form={form}
-          name="advanced_search"
+          name="venue_form"
           className="ant-advanced-search-form"
-          initialValues={{
-            heightUnit: "cm",
-            widthUnit: "cm",
-            weightUnit: "kg",
-          }}
         >
           <Card>
             <h2 className="mb-3">
-              {mode === "ADD" ? "Add New Event" : `Edit Event`}{" "}
+              {mode === "ADD" ? "Add Venue" : "Edit Venue"}
             </h2>
+
             <Form.Item
               name="address"
               label="Address"
@@ -82,40 +67,17 @@ const VenueFormFields = (props) => {
               <Input placeholder="Enter the address" />
             </Form.Item>
 
-            <Form.Item
-              name="city"
-              label="City"
-              rules={[{ required: true, message: "Please enter the city" }]}
-            >
-              <Input placeholder="Enter the city" />
-            </Form.Item>
+            <PlaceWithCountryForm form={form} />
 
             <Form.Item
-              name="place"
-              label="Place"
-              rules={[{ required: true, message: "Please select a place" }]}
-            >
-              <AutoComplete
-                onSearch={handleSearch}
-                placeholder="Search for a Place"
-                style={{ width: "100%" }}
-                options={
-                  placeWithCountryList?.map((place) => ({
-                    value: `${place.place_name}, ${place.country_name}`,
-                  })) || []
-                }
-                loading={loading}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="venue"
+              name="name"
               label="Venue"
-              rules={[{ required: true, message: "Please enter the venue name" }]}
+              rules={[
+                { required: true, message: "Please enter the venue name" },
+              ]}
             >
               <Input placeholder="Enter the venue name" />
             </Form.Item>
-
             <Form.Item
               name="capacity"
               label="Capacity"
@@ -123,7 +85,6 @@ const VenueFormFields = (props) => {
             >
               <Input type="number" placeholder="Enter capacity" />
             </Form.Item>
-
             <Form.Item
               name="indoor"
               label="Indoor/Outdoor"
@@ -132,35 +93,66 @@ const VenueFormFields = (props) => {
               ]}
             >
               <Select className="w-100" placeholder="Select type">
-                <Option value="indoor">Indoor</Option>
-                <Option value="outdoor">Outdoor</Option>
+                <Option value={true}>Indoor</Option>
+                <Option value={false}>Outdoor</Option>
               </Select>
             </Form.Item>
-
             <Form.Item
               name="description"
               label="Description"
-              rules={[{ required: true, message: "Please enter a description" }]}
+              rules={[
+                { required: true, message: "Please enter a description" },
+              ]}
             >
               <Input.TextArea rows={4} placeholder="Enter a description" />
             </Form.Item>
+            <Form.Item
+              name="latitude"
+              label="Latitude"
+              rules={[
+                {
+                  required: true,
+                  message: "Please select a location on the map",
+                },
+              ]}
+            >
+              <Input value={coordinates.lat} readOnly />
+            </Form.Item>
+
+            <Form.Item
+              name="longitude"
+              label="Longitude"
+              rules={[
+                {
+                  required: true,
+                  message: "Please select a location on the map",
+                },
+              ]}
+            >
+              <Input value={coordinates.lng} readOnly />
+            </Form.Item>
+
+            <div className="mb-3">
+              <h3>Pick Location</h3>
+              <MapContainer
+                center={coordinates}
+                zoom={13}
+                style={{ height: "400px", width: "100%" }}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <LocationMarker form={form} />
+              </MapContainer>
+            </div>
+
             <Flex
               className="py-2"
               mobileFlex={false}
               justifyContent="space-between"
-              alignItems="center"
             >
-              <div className="mb-3">
-                <Button className="mr-2">Discard</Button>
-                <Button
-                  type="primary"
-                  onClick={() => onFinish()}
-                  htmlType="submit"
-                  loading={loading}
-                >
-                  {mode === "ADD" ? "Add" : `Save`}
-                </Button>
-              </div>
+              <Button>Discard</Button>
+              <Button type="primary" onClick={onFinish} loading={loading}>
+                {mode === "ADD" ? "Add" : "Save"}
+              </Button>
             </Flex>
           </Card>
         </Form>

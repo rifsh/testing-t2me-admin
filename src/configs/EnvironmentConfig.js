@@ -1,7 +1,10 @@
 const dev = {
-	API_ENDPOINT_URL: 'https://uat-tickets2me.mitetechnology.com'
+  API_ENDPOINT_URL: 'https://uat-tickets2me.mitetechnology.com'
 };
 
+// const dev = {
+// 	API_ENDPOINT_URL: '/api'
+//   };
 const prod = {
 	API_ENDPOINT_URL: '/api'
 };
@@ -10,7 +13,7 @@ const test = {
 	API_ENDPOINT_URL: '/api'
 };
 
-const getEnv = () => {
+const getEnv = () => {	
 	switch (process.env.NODE_ENV) {
 		case 'development':
 			return dev

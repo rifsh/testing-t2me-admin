@@ -1,8 +1,8 @@
-import { useSelector, useDispatch } from 'react-redux';
-import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, AutoComplete } from "antd";
-import { fetchAllCountires, allLocations, onSelect, onchange, onSearch } from 'store/slices/locationSlice';
-
+import React, { useState, useEffect } from "react";
+import { Input, Row, Col, Card, Form, Select } from "antd";
+import { fetchAllCountires } from "store/slices/locationSlice";
+import { useDispatch, useSelector } from "react-redux";
+const { Option } = Select;
 
 const rules = {
   country: [
@@ -46,39 +46,30 @@ const rules = {
 
 const CountryFormFields = (props) => {
   const dispatch = useDispatch();
-  const { list: searchTerm, options } = useSelector(allLocations);
 
-  useEffect(() => {
+  const { loading, countries } = useSelector((state) => state.locations);
+  const fetchAllCountry = () => {
     dispatch(fetchAllCountires());
-  }, [dispatch]);
-
-  const handleSelect = (data) => {
-    dispatch(onSelect(data));
   };
 
-  const handleChange = (data) => {
-    dispatch(onchange(data));
-  };
-
-  const handleSearch = (searchText) => {
-    dispatch(onSearch(searchText));
-  }
-
+  console.log("Countries state:", countries);
 
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
           <Form.Item name="country" label="Country name" rules={rules.country}>
-            <AutoComplete
-              options={options}
-              value={searchTerm}
-              onSelect={handleSelect}
-              onSearch={handleSearch}
-              onChange={handleChange}
-              placeholder="Search for a Place"
-              style={{ width: "100%" }}
-            />
+            <Select
+              className="w-100"
+              placeholder="Choose a Country"
+              onClick={fetchAllCountry}
+            >
+             {countries.map((cntry) => (
+                  <Option key={cntry.country} value={cntry.id}>
+                    {cntry.country}
+                  </Option>
+                ))}
+            </Select>
           </Form.Item>
           <Form.Item name="Place" label="Place" rules={rules.name}>
             <Input placeholder="Place Name" />

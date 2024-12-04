@@ -7,6 +7,10 @@ import LocationDetailsField from "./LocationDetailsField";
 import CategoryField from "./CategoryField";
 import OfferField from "./OfferField";
 import TicketField from "./TicketsField";
+import { addEvent } from "store/slices/eventSlice";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 const ADD = "ADD";
 const EDIT = "EDIT";
 const MultyStepForm = (props) => {
@@ -16,7 +20,8 @@ const MultyStepForm = (props) => {
 
   const [submitLoading, setSubmitLoading] = useState(false);
   const { mode = ADD, param } = props;
-
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const nextStep = () => {
     setSubmitLoading(true);
     form
@@ -33,6 +38,21 @@ const MultyStepForm = (props) => {
       });
   };
 
+
+  const onFinish = async () => {
+    try {
+      const values = await form.validateFields();
+
+      const resultAction = await dispatch(addEvent(values));
+      if (addEvent.fulfilled.match(resultAction)) {
+        message.success(`Event ${values.name} added successfully`);
+        form.resetFields();
+        navigate(`${APP_PREFIX_PATH}/category/list`);
+      }
+    } catch (errorInfo) {
+      console.log("Validation Failed:", errorInfo);
+    }
+  };
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
@@ -117,7 +137,7 @@ const MultyStepForm = (props) => {
         <Button type="default" onClick={prevStep} disabled={currentStep === 1}>
           Previous
         </Button>
-        <Button type="primary" onClick={nextStep}>
+        <Button type="primary" onClick={currentStep === steps.length ? onFinish:nextStep}>
           {currentStep === steps.length ? "Finish" : "Next"}
         </Button>
       </div>

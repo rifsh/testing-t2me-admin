@@ -1,7 +1,7 @@
 import fetch from "auth/FetchInterceptor";
 import {  CATEGORY_URL, SUB_CATEGORY_URL } from "constants/ApiConstant";
 
-const CategoryService = {};
+const     CategoryService = {};
 
 CategoryService.addCategory = function (data) {
   return fetch({

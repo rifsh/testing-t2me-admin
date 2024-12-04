@@ -1,53 +1,40 @@
-/* eslint-disable no-unused-vars */
-import React, { useState, useCallback } from 'react';
-import { Card, Table, Select, Input, Button, Tag, Menu } from 'antd';
-import OfferListData from 'assets/data/offer-list.json';
-import { EyeOutlined, PlusCircleOutlined, SearchOutlined, FormOutlined } from '@ant-design/icons';
-import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
-import Flex from 'components/shared-components/Flex';
-import utils from 'utils';
+import React, { useEffect } from "react";
+import { Card, Table, Select, Input, Button, Tag, Menu } from "antd";
+import {
+  EyeOutlined,
+  PlusCircleOutlined,
+  SearchOutlined,
+  FormOutlined,
+} from "@ant-design/icons";
+import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
+import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
-import { debounce } from 'lodash';
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllOffers, filterOffers } from "store/slices/offerSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+
 const { Option } = Select;
 
-
-const getStatusColor = (status) => {
-  if (status.toLowerCase() === 'active') {
-    return 'green';
-  }
-  if (status.toLowerCase() === 'inactive') {
-    return 'red';
-  }
-  return 'blue'; // For other statuses
-};
+const getStatusColor = (status) => (status ? "green" : "red");
 
 const OfferList = () => {
-  const [list, setList] = useState(OfferListData);
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { filteredOffers, loading } = useSelector((state) => state.offers);
 
-  const handleShowStatus = (value) => {
-    const filteredData = value !== 'All'
-      ? utils.filterArray(OfferListData, 'status', value)
-      : OfferListData;
-    setList(filteredData);
+  useEffect(() => {
+    dispatch(fetchAllOffers());
+  }, [dispatch]);
+
+  const handleSearch = (e) => {
+    dispatch(filterOffers({ searchTerm: e.target.value, status: null }));
   };
 
-  // Debounce search input
-  const handleSearch = useCallback(
-    debounce((value) => {
-      const searchArray = value ? list : OfferListData;
-      const filteredData = utils.wildCardSearch(searchArray, value);
-      setList(filteredData);
-      setSelectedRowKeys([]);
-    }, 500),
-    [list]
-  );
+  const handleShowStatus = (status) => {
+    dispatch(filterOffers({ searchTerm: null, status }));
+  };
 
   const dropdownMenu = (row) => (
-
     <Menu>
       <Menu.Item>
         <Flex alignItems="center">
@@ -66,112 +53,81 @@ const OfferList = () => {
 
   const tableColumns = [
     {
-      title: 'Offer Name',
-      dataIndex: 'offerName',
-      render: (_, record) => <span>{record.offerName}</span>,
-      sorter: (a, b) => a.offerName.localeCompare(b.offerName),
+      title: "Offer Name",
+      dataIndex: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: 'Discount Percentage',
-      dataIndex: 'DiscountPercentage',
-      render: (_, record) => <span>{record.DiscountPercentage}</span>,
-      sorter: (a, b) => parseFloat(a.DiscountPercentage) - parseFloat(b.DiscountPercentage),
+      title: "Discount Percentage",
+      dataIndex: "discount_percentage",
+      sorter: (a, b) => a.discount_percentage - b.discount_percentage,
     },
     {
-      title: 'Start Date',
-      dataIndex: 'StartDate',
-      render: (_, record) => <span>{record.StartDate}</span>,
-      sorter: (a, b) => new Date(a.StartDate) - new Date(b.StartDate),
+      title: "Start Date",
+      dataIndex: "start_date",
+      sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
     },
     {
-      title: 'End Date',
-      dataIndex: 'EndDate',
-      render: (_, record) => <span>{record.EndDate}</span>,
-      sorter: (a, b) => new Date(a.EndDate) - new Date(b.EndDate),
+      title: "End Date",
+      dataIndex: "end_date",
+      sorter: (a, b) => new Date(a.end_date) - new Date(b.end_date),
     },
     {
-      title: 'Max Users',
-      dataIndex: 'MaxUsers',
-      render: (_, record) => <span>{record.MaxUsers}</span>,
-      sorter: (a, b) => a.MaxUsers - b.MaxUsers,
+      title: "Max Users",
+      dataIndex: "max_uses",
+      sorter: (a, b) => a.max_uses - b.max_uses,
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      render: (_, record) => <Tag color={getStatusColor(record.status)}>{record.status}</Tag>,
-      sorter: (a, b) => a.status.localeCompare(b.status),
-    },
-    {
-      title: '',
-      dataIndex: 'actions',
-      render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
+      title: "Status",
+      dataIndex: "status",
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>
+          {status ? "Active" : "Inactive"}
+        </Tag>
       ),
+    },
+    {
+      title: "",
+      dataIndex: "actions",
+      render: (_, row) => <EllipsisDropdown menu={dropdownMenu(row)} />,
     },
   ];
 
-  const rowSelection = {
-    onChange: (key, rows) => {
-      setSelectedRows(rows);
-      setSelectedRowKeys(key);
-    },
-  };
-  const navigate = useNavigate();
   return (
     <Card>
-      <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
-        <Flex className="mb-1" mobileFlex={false}>
-          <div className="mr-md-3 mb-3">
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                handleSearch(e.target.value);
-              }}
-              value={searchTerm}
-            />
-          </div>
-          <div className="mb-3">
-            <Select
-              defaultValue="All"
-              className="w-100"
-              style={{ minWidth: 180 }}
-              onChange={handleShowStatus}
-              placeholder="Status"
-            >
-              <Option value="All">All Offers</Option>
-              <Option value="Active">Active</Option>
-              <Option value="Inactive">Inactive</Option>
-            </Select>
-          </div>
-        </Flex>
-        <div>
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add`)}
+      <Flex alignItems="center" justifyContent="space-between">
+        <Flex>
+          <Input
+            placeholder="Search"
+            prefix={<SearchOutlined />}
+            onChange={handleSearch}
+            className="mr-2"
+          />
+          <Select
+            defaultValue="All"
+            onChange={handleShowStatus}
+            className="mr-2"
           >
-            Add Offer
-          </Button>
-        </div>
+            <Option value="All">All</Option>
+            <Option value="Active">Active</Option>
+            <Option value="Inactive">Inactive</Option>
+          </Select>
+        </Flex>
+        <Button
+          type="primary"
+          icon={<FormOutlined />}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add`)}
+        >
+          Add Offer
+        </Button>
       </Flex>
-      <div className="table-responsive">
-        <Table
-          columns={tableColumns}
-          dataSource={list}
-          rowKey="offerName"
-          rowSelection={{
-            selectedRowKeys: selectedRowKeys,
-            type: 'checkbox',
-            preserveSelectedRowKeys: false,
-            ...rowSelection,
-          }}
-        />
-      </div>
+      <Table
+        columns={tableColumns}
+        dataSource={filteredOffers}
+        rowKey="id"
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+      />
     </Card>
   );
 };
