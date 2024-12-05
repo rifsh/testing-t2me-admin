@@ -16,6 +16,10 @@ const PlaceWithCountryForm = ({ form }) => {
     }
   }, [error]);
 
+  useEffect(() => {
+    dispatch(fetchPlaceWithCountry(""));
+  }, [dispatch]);
+  
   const handleSearch = (value) => {
     if (value) {
       dispatch(fetchPlaceWithCountry(value ?? ""));
