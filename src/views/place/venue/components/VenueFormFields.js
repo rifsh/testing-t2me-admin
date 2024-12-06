@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import LocationMarker from "./LocationMarker";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
+import { RulesMessageConstants } from "constants/RulesConstant";
 
 const { Option } = Select;
 
@@ -69,38 +70,36 @@ const VenueFormFields = ({ mode }) => {
 
             <PlaceWithCountryForm
               form={form}
-              rules={[{ required: true, message: "Please select a place" }]}
+              rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
             />
 
             <Form.Item
               name="name"
               label="Venue"
-              rules={[
-                { required: true, message: "Please enter the venue name" },
-              ]}
+              rules={[{ required: true, message: RulesMessageConstants.VENUE }]}
             >
               <Input placeholder="Enter the venue name" />
             </Form.Item>
             <Form.Item
               name="capacity"
               label="Capacity"
-              rules={[{ required: true, message: "Please enter capacity" }]}
+              rules={[
+                { required: true, message: RulesMessageConstants.CAPACITY },
+              ]}
             >
               <Input type="number" placeholder="Enter capacity" />
             </Form.Item>
             <Form.Item
               name="indoor"
-              label="Indoor/Outdoor"
-              rules={[
-                { required: true, message: "Please specify indoor/outdoor" },
-              ]}
+              label="Indoor/Outdoor"FTRDESW
+              rules={[{ required: true, message: RulesMessageConstants.INDOOR }]}
             >
               <Select className="w-100" placeholder="Select type">
                 <Option value={true}>Indoor</Option>
                 <Option value={false}>Outdoor</Option>
               </Select>
             </Form.Item>
-            <Form.Item
+            <Form.Item  
               name="description"
               label="Description"
               rules={[
