@@ -7,8 +7,7 @@ const { Option } = Select;
 const TicketStructureFields = () => {
   const [form] = Form.useForm();
   const [ticketTypes, setTicketTypes] = useState([{ id: 1 }]);
-  
-  // Predefined lists to make each structure unique
+
   const structureTypes = [
     'Event Ticket', 
     'Conference Pass', 
@@ -55,7 +54,7 @@ const TicketStructureFields = () => {
           title={`Ticket Type Details ${index + 1}`}
           style={{ marginBottom: "24px", position: "relative" }}
         >
-          <Form.Item
+          {/* <Form.Item
             name={['ticket_types', index, 'category']}
             label="Ticket Category"
             rules={[{ required: true, message: "Please select a ticket category" }]}
@@ -65,10 +64,17 @@ const TicketStructureFields = () => {
                 <Option key={category} value={category}>{category}</Option>
               ))}
             </Select>
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             name={['ticket_types', index, 'name']}
+            label="Ticket Type Name"
+            rules={[{ required: true, message: "Please enter a name" }]}
+          >
+            <Input placeholder="Enter Ticket Name" />
+          </Form.Item>
+          <Form.Item
+            name={['ticket_set', index, 'ticket_set']}
             label="Ticket Name"
             rules={[{ required: true, message: "Please enter a name" }]}
           >

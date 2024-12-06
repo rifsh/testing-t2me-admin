@@ -1,21 +1,12 @@
 import React, { useState } from "react";
-import {
-  Input,
-  Row,
-  Col,
-  Card,
-  Form,
-  AutoComplete,
-  Select,
-  Switch,
-  Button,
-} from "antd";
+import { Input, Card, Form, Select, Button, message } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import venueListData from "assets/data/venue-list.json";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
+import { RulesMessageConstants } from "constants/RulesConstant";
 
 const rules = {
   venue: [
@@ -39,7 +30,6 @@ const TicketFormFields = ({ form }) => {
     navigate(`${APP_PREFIX_PATH}/ticket/type/add`);
   };
 
-  // Handle form submission
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
@@ -52,8 +42,10 @@ const TicketFormFields = ({ form }) => {
   return (
     <Form form={form} layout="vertical" onFinish={onFinish}>
       <Card title="Ticket Form">
-        
-        <PlaceWithCountryForm/>
+        <PlaceWithCountryForm
+          label={"Place"}
+          rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
+        />
         <Form.Item name="venue" label="Venue" rules={rules.venue}>
           <Select
             placeholder="Select a venue"
@@ -71,7 +63,7 @@ const TicketFormFields = ({ form }) => {
           <Input placeholder="Enter Ticket Price" />
         </Form.Item>
 
-        <div className="container" style={{padding:"0px"}}>
+        <div className="container" style={{ padding: "0px" }}>
           <Flex
             className="py-2"
             mobileFlex={false}
