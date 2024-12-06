@@ -3,7 +3,7 @@ import { message, AutoComplete, Form, Row, Col } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPlaceWithCountry } from "store/slices/locationSlice";
 
-const PlaceWithCountryForm = ({ form, onSelect, rules }) => {
+const PlaceWithCountryForm = ({ form, onSelect, rules,label }) => {
   const dispatch = useDispatch();
 
   const { placeWithCountryList, loading, error } = useSelector(
@@ -51,7 +51,7 @@ const PlaceWithCountryForm = ({ form, onSelect, rules }) => {
     <Form form={form} layout="vertical">
       <Form.Item
         name="place_id"
-        // label="Place"
+        label={label}
         rules={rules}
         style={{ marginBottom: 0 }}
       >

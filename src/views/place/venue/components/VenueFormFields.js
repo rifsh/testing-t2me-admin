@@ -69,7 +69,7 @@ const VenueFormFields = ({ mode }) => {
             </Form.Item>
 
             <PlaceWithCountryForm
-              form={form}
+              form={form} label={"Place"}
               rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
             />
 
