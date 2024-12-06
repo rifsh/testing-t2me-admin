@@ -11,8 +11,11 @@ import {
   Button,
 } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import countryListData from "assets/data/country-list.json";
 import venueListData from "assets/data/venue-list.json";
+import { useNavigate } from "react-router-dom";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
+import Flex from "components/shared-components/Flex";
+import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 
 const rules = {
   venue: [
@@ -29,155 +32,71 @@ const rules = {
   ],
 };
 
-const TicketFormFields = () => {
-  const [value, setValue] = useState("");
-  const [options, setOptions] = useState([]);
-  const [countryList] = useState(countryListData);
-  const [venueList] = useState(venueListData);
-  const [isTicketTypeEnable, setIsTicketTypeEnable] = useState(false);
-  const [ticketTypes, setTicketTypes] = useState([{ id: 1 }]);
+const TicketFormFields = ({ form }) => {
+  const navigate = useNavigate();
 
-  const onSearch = (searchText) => {
-    const filteredOptions = countryList
-      .filter((item) =>
-        `${item.place}, ${item.countryName}`
-          .toLowerCase()
-          .includes(searchText.toLowerCase())
-      )
-      .map((item) => ({
-        value: `${item.place}, ${item.countryName}`,
-      }));
-
-    setOptions(filteredOptions);
+  const addTicketType = () => {
+    navigate(`${APP_PREFIX_PATH}/ticket/type/add`);
   };
 
-  const onSelect = (data) => {
-    setValue(data);
-  };
-
-  const onChange = (data) => {
-    setValue(data);
-  };
-
-  const addTicketTypeField = () => {
-    setTicketTypes((prev) => [...prev, { id: prev.length + 1 }]);
-  };
-
-  const deleteTicketTypeField = (id) => {
-    setTicketTypes((prev) => prev.filter((ticketType) => ticketType.id !== id));
+  // Handle form submission
+  const onFinish = async () => {
+    try {
+      const values = await form.validateFields();
+      console.log("Form Submitted:", values);
+    } catch (error) {
+      console.log("Form validation failed:", error);
+    }
   };
 
   return (
-    <Row gutter={16}>
-      <Col xs={24} sm={24} md={17}>
-        <Card title="Seat Details">
-          <Form.Item name="place" label="Place" rules={rules.place}>
-            <AutoComplete
-              options={options}
-              value={value}
-              onSelect={onSelect}
-              onSearch={onSearch}
-              onChange={onChange}
-              placeholder="Search for a Place"
-              style={{ width: "100%" }}
-            />
-          </Form.Item>
-          <Form.Item name="venue" label="Venue" rules={rules.venue}>
-            <Select className="w-100" placeholder="Select a Venue">
-              {venueList.map((venue) => (
-                <Select.Option
-                  key={`${venue.venue}, ${venue.countryName}`}
-                  value={`${venue.venue}, ${venue.countryName}`}
-                >
-                  {`${venue.venue}, ${venue.countryName}`}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item name="price" label="Ticket Price" rules={rules.section}>
-            <Input placeholder="Enter Ticket Price" />
-          </Form.Item>
-          <Form.Item
-            name="ticketNumber"
-            label="No of Ticket"
-            rules={rules.section}
-          >
-            <Input placeholder="Enter No of Ticket" />
-          </Form.Item>
-          <Form.Item
-            name="enableTicketType"
-            label="Enable Ticket Type"
-            valuePropName="checked"
-          >
-            <Switch
-              checked={isTicketTypeEnable}
-              onChange={(checked) => setIsTicketTypeEnable(checked)}
-            />
-          </Form.Item>
-        </Card>
+    <Form form={form} layout="vertical" onFinish={onFinish}>
+      <Card title="Ticket Form">
+        
+        <PlaceWithCountryForm/>
+        <Form.Item name="venue" label="Venue" rules={rules.venue}>
+          <Select
+            placeholder="Select a venue"
+            options={venueListData.map((venue) => ({
+              value: venue.venue,
+              label: venue.venue,
+            }))}
+          />
+        </Form.Item>
 
-        {isTicketTypeEnable &&
-          ticketTypes.map((ticketType, index) => (
-            <div
-              key={ticketType.id}
-              style={{
-                marginBottom: "24px",
-                position: "relative",
-              }}
-            >
-              <Card
-                title={`Ticket Type Details ${index + 1}`}
-                style={{
-                  marginBottom: "8px",
-                }}
-              >
-                <Form.Item
-                  name={`ticketTypeName${ticketType.id}`}
-                  label="Ticket Type Name"
-                  rules={rules.section}
-                >
-                  <Input placeholder="Enter Ticket Type Name" />
-                </Form.Item>
-                <Form.Item
-                  name={`ticketTypePrice${ticketType.id}`}
-                  label="Ticket Price"
-                  rules={rules.section}
-                >
-                  <Input placeholder="Enter Ticket Price" />
-                </Form.Item>
-                <Form.Item
-                  name={`noOfTicket${ticketType.id}`}
-                  label="No of Ticket"
-                  rules={rules.section}
-                >
-                  <Input placeholder="Enter No of Ticket" />
-                </Form.Item>
-              </Card>
-              <Button
-                type="default"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => deleteTicketTypeField(ticketType.id)}
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  right: "-48px", 
-                }}
-              />
-            </div>
-          ))}
-        {isTicketTypeEnable && (
-          <Button
-            type="dashed"
-            onClick={addTicketTypeField}
-            icon={<PlusOutlined />}
-            style={{ width: "100%" }}
+        <Form.Item name={"number_of_tickets"} label="No of Ticket">
+          <Input placeholder="Number of Tickets" />
+        </Form.Item>
+        <Form.Item name={"base_price"} label="Ticket Price">
+          <Input placeholder="Enter Ticket Price" />
+        </Form.Item>
+
+        <div className="container" style={{padding:"0px"}}>
+          <Flex
+            className="py-2"
+            mobileFlex={false}
+            justifyContent="space-between"
+            // alignItems="center"
           >
-            Add Ticket Type
-          </Button>
-        )}
-      </Col>
-    </Row>
+            <Button className="mr-2">Discard</Button>
+            <div className="mb-3">
+              <Button
+                icon={<PlusOutlined />}
+                type="default"
+                onClick={addTicketType}
+                style={{ marginRight: "10px" }}
+              >
+                Add Ticket Type
+              </Button>
+
+              <Button type="primary" htmlType="submit">
+                Submit
+              </Button>
+            </div>
+          </Flex>
+        </div>
+      </Card>
+    </Form>
   );
 };
 

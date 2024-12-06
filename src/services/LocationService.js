@@ -1,5 +1,5 @@
 import fetch from "auth/FetchInterceptor";
-import { PLACE_URL, PLACE_WITH_COUNTRY_URL, VENUE_URL } from "constants/ApiConstant";
+import { ApiConstant, } from "constants/ApiConstant";
 
 const LocationService = {}
 
@@ -20,14 +20,14 @@ LocationService.getAllCountries = function () {
 
 LocationService.addPlace = function (data) {
 	return fetch({
-		url: PLACE_URL,
+		url: ApiConstant.PLACE_URL,
 		method: "post",
 		data: data,
 	});
 };
 LocationService.addVenue = function (data, placeId) {	
 	return fetch({
-		url:`${VENUE_URL}${placeId}`,
+		url:`${ApiConstant.VENUE_URL}?place_id=${placeId}`,
 		method: "post",
 		data: data,
 	});
@@ -35,8 +35,14 @@ LocationService.addVenue = function (data, placeId) {
 
 LocationService.placeWithCountry = function (place) {
 	return fetch({
-		url: `${PLACE_WITH_COUNTRY_URL}${place}`,
+		url: `${ApiConstant.PLACE_WITH_COUNTRY_URL}?place=${place}`,
 		method: "get",
 	});
+};
+LocationService.getVenues = function (place_id) {
+    return fetch({
+        url: place_id ? `${ApiConstant.VENUE_URL}?place_id=${place_id}` : `${ApiConstant.VENUE_URL}`,
+        method: "get",
+    });
 };
 export default LocationService;

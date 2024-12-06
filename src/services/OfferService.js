@@ -1,13 +1,11 @@
 import fetch from "auth/FetchInterceptor";
-import {
-  OFFER_URL,
-} from "constants/ApiConstant";
+import { ApiConstant } from "constants/ApiConstant";
 
 const OfferService = {};
 
 OfferService.addOffer = function (data) {
   return fetch({
-    url: OFFER_URL,
+    url: ApiConstant.OFFER_URL,
     method: "post",
     data: data,
   });
@@ -15,7 +13,7 @@ OfferService.addOffer = function (data) {
 
 OfferService.getAllOffer = function (place) {
   return fetch({
-    url: OFFER_URL,
+    url: ApiConstant.OFFER_URL,
     method: "get",
   });
 };

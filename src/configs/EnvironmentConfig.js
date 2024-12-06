@@ -1,10 +1,7 @@
 const dev = {
-  API_ENDPOINT_URL: 'https://uat-tickets2me.mitetechnology.com'
+//   API_ENDPOINT_URL: 'https://uat-tickets2me.mitetechnology.com'
+  API_ENDPOINT_URL: 'http://192.168.1.100:8000'
 };
-
-// const dev = {
-// 	API_ENDPOINT_URL: '/api'
-//   };
 const prod = {
 	API_ENDPOINT_URL: '/api'
 };

@@ -13,7 +13,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 const ADD = "ADD";
 const EDIT = "EDIT";
-const MultyStepForm = (props) => {
+const MultyStepEventForm = (props) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [form] = Form.useForm();
   const steps = ["Event Details", "Category","Location", "Ticket",  "Offers"];
@@ -145,4 +145,4 @@ const MultyStepForm = (props) => {
   );
 };
 
-export default MultyStepForm;
+export default MultyStepEventForm;

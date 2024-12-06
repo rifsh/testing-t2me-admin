@@ -6,3 +6,4 @@ export const SUB_CATEGORY_MOCK_API = true;
 export const ALL_COUNTRIES_MOCK_API = true;
 export const ALL_OFFERS_MOCK_API = true;
 export const ALL_COUPONS_MOCK_API = true;
+export const GET_VENUE_MOCK_API = true;

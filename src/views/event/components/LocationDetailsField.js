@@ -18,9 +18,7 @@ const LocationDetailsField = () => {
     (state) => state.locations
   );
 
-  const handleSearch = (value) => {
-    dispatch(fetchPlaceWithCountry(value));
-  };
+  
 
   return (
     <Col>

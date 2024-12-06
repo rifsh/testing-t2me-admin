@@ -1,9 +1,9 @@
 import React from 'react';
-import TicketForm from '../form-ticket';
+import TicketFormFields from '../components/TicketFormFields';
 
 const AddSeat = () => {
 	return (
-		<TicketForm mode="ADD"/>
+		<TicketFormFields mode="ADD"/>
 	)
 }
 

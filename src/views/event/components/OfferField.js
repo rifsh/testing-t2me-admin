@@ -1,41 +1,64 @@
-import { Card, Form, Select ,DatePicker} from "antd";
-import React, { useState } from "react";
-
-import offerListData from "assets/data/offer-list.json";
-import couponListData from "assets/data/coupon-list.json";
+import { Card, Form, Select, DatePicker } from "antd";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllOffers } from "store/slices/offerSlice";
+import { fetchAllCoupons } from "store/slices/couponSlice";
 
 const { Option } = Select;
 
 const OfferField = () => {
-  const [offerList] = useState(offerListData);
-  const [couponList] = useState(couponListData);
+  const dispatch = useDispatch();
+  const { filteredOffers: filteredOffer, loading: offerLoading } = useSelector((state) => state.offers);
+  const { filteredCoupons, loading: couponLoading } = useSelector((state) => state.coupons);
 
+ 
+  useEffect(() => {
+    dispatch(fetchAllOffers());
+    dispatch(fetchAllCoupons());
+  }, [dispatch]);
 
 
   return (
     <Card>
       <Form.Item name="offer" label="Offer">
-        <Select
-          className="w-100"
-          placeholder="Choose a Offer"
-          
+      <Select
+        loading={offerLoading}
+          mode="multiple"
+          style={{ width: "100%" }}
+          placeholder="Please select"
+          defaultValue={[]}
+          // onChange={handleChange}
         >
-          {offerList.map((elm) => (
-            <Option key={elm.offerName} value={elm.offerName}>
-              {elm.offerName}
+         {filteredOffer.map((elm) => (
+            <Option key={elm.id} value={elm.id}>
+              {elm.name}
             </Option>
           ))}
         </Select>
       </Form.Item>
-      <Form.Item name="offerstartDate" label="Offer Start Date" >
+      {/* <Form.Item name="offerstartDate" label="Offer Start Date" >
             <DatePicker className="w-100" placeholder="Select Offer Start date" />
           </Form.Item>
 
           <Form.Item name="offerEndDate" label="Offer End Date" >
             <DatePicker className="w-100" placeholder="Select Offer End date" />
-          </Form.Item>
+          </Form.Item> */}
       <Form.Item name="coupon" label="Coupon">
         <Select
+        loading={couponLoading}
+          mode="multiple"
+          style={{ width: "100%" }}
+          placeholder="Please select"
+          defaultValue={[]}
+          // onChange={handleChange}
+        >
+         {filteredCoupons.map((elm) => (
+            <Option key={elm.id} value={elm.id}>
+              {elm.name}
+            </Option>
+          ))}
+        </Select>
+        {/* <Select
           className="w-100"
           placeholder="Choose a Coupon"
           
@@ -45,16 +68,15 @@ const OfferField = () => {
               {elm.couponName}
             </Option>
           ))}
-        </Select>
+        </Select> */}
       </Form.Item>
-      <Form.Item name="couponStartDate" label="Coupon Start Date" >
-            <DatePicker className="w-100" placeholder="Select start date" />
-          </Form.Item>
+      {/* <Form.Item name="couponStartDate" label="Coupon Start Date">
+        <DatePicker className="w-100" placeholder="Select start date" />
+      </Form.Item>
 
-          <Form.Item name="couponEdDate" label="Coupon End Date" >
-            <DatePicker className="w-100" placeholder="Select Coupon End Date" />
-          </Form.Item>
-      
+      <Form.Item name="couponEdDate" label="Coupon End Date">
+        <DatePicker className="w-100" placeholder="Select Coupon End Date" />
+      </Form.Item> */}
     </Card>
   );
 };
