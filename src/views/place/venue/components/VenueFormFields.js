@@ -67,7 +67,10 @@ const VenueFormFields = ({ mode }) => {
               <Input placeholder="Enter the address" />
             </Form.Item>
 
-            <PlaceWithCountryForm form={form} />
+            <PlaceWithCountryForm
+              form={form}
+              rules={[{ required: true, message: "Please select a place" }]}
+            />
 
             <Form.Item
               name="name"

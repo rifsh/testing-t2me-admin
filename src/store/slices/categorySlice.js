@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { ALL_CATEGORY_MOCK_API } from "configs/MockConfig";
-import { SUB_CATEGORY_URL } from "constants/ApiConstant";
+import {
+  ALL_CATEGORY_MOCK_API,
+  SUB_CATEGORY_MOCK_API,
+} from "configs/MockConfig";
 import CategoryMockData from "mock/data/categoryData";
 import CategoryService from "services/CategoryService";
 
@@ -33,7 +35,7 @@ export const fetchCategories = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       if (ALL_CATEGORY_MOCK_API) {
-        const response =  CategoryMockData.fetchAllCategory;        
+        const response = CategoryMockData.fetchAllCategory;
         return response.data;
       } else {
         const response = await CategoryService.fetchCategory();
@@ -49,8 +51,7 @@ export const fetchSubcategories = createAsyncThunk(
   "category/fetchSubcategories",
   async (categoryId, { rejectWithValue }) => {
     try {
-      if (SUB_CATEGORY_URL) {
-       
+      if (SUB_CATEGORY_MOCK_API) {
         const response = CategoryMockData.fetchSubCategory;
         const subCategory = response.data.filter(
           (subcategory) => subcategory.category_id === categoryId

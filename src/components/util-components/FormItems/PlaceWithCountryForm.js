@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
-import { message, AutoComplete, Form } from "antd";
+import { message, AutoComplete, Form, Row, Col } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPlaceWithCountry } from "store/slices/locationSlice";
 
-const PlaceWithCountryForm = ({ form }) => {
+const PlaceWithCountryForm = ({ form, onSelect, rules }) => {
   const dispatch = useDispatch();
 
   const { placeWithCountryList, loading, error } = useSelector(
@@ -19,31 +19,48 @@ const PlaceWithCountryForm = ({ form }) => {
   useEffect(() => {
     dispatch(fetchPlaceWithCountry(""));
   }, [dispatch]);
-  
+
   const handleSearch = (value) => {
     if (value) {
-      dispatch(fetchPlaceWithCountry(value ?? ""));
+      dispatch(fetchPlaceWithCountry(value));
+    }
+  };
+
+  const handleSelect = async (value, option) => {
+    try {
+      await form.setFieldsValue({
+        // place_id: option.id, 
+      });
+      if (onSelect) {
+        onSelect(option.id); 
+      }
+    } catch (error) {
+      console.error("Error setting place_id or calling onSelect:", error);
     }
   };
 
   const autoCompleteOptions = placeWithCountryList.length
     ? placeWithCountryList.map((place) => ({
         label: `${place.name}, ${place.country.name}`,
+        id: place.id, 
         value: place.id,
       }))
     : [{ label: "No places found", value: "" }];
 
   return (
-    <Form form={form} style={{ marginBottom: 50 }}>
+    <Form form={form} layout="vertical">
       <Form.Item
         name="place_id"
-        label="Place"
-        rules={[{ required: true, message: "Please select a place" }]}
+        // label="Place"
+        rules={rules}
+        style={{ marginBottom: 0 }}
       >
         <AutoComplete
           onSearch={handleSearch}
+          onSelect={handleSelect}
           placeholder="Search for a Place"
           style={{ width: "100%" }}
+         
           options={autoCompleteOptions}
           loading={loading}
         />

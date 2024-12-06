@@ -1,31 +1,31 @@
 import fetch from "auth/FetchInterceptor";
-import {  CATEGORY_URL, SUB_CATEGORY_URL } from "constants/ApiConstant";
+import {  ApiConstant,  } from "constants/ApiConstant";
 
 const     CategoryService = {};
 
 CategoryService.addCategory = function (data) {
   return fetch({
-    url: CATEGORY_URL,
+    url: ApiConstant.CATEGORY_URL,
     method: "post",
     data: data,
   });
 };
 CategoryService.fetchCategory = function () {
   return fetch({
-    url: CATEGORY_URL,
+    url:ApiConstant.CATEGORY_URL,
     method: "get",
   });
 };
 CategoryService.fetchSubCategory = function (categoryId) {
   return fetch({
-    url: `${SUB_CATEGORY_URL}${categoryId}`,
+    url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${categoryId}`,
     method: "get",
   });
 };
 
 CategoryService.addSubCategory = function (data, categoryId) {
   return fetch({
-    url: `${SUB_CATEGORY_URL}${categoryId}`,
+    url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${categoryId}`,
     method: "post",
     data: data,
   });

@@ -1,6 +1,7 @@
 import fetch from "auth/FetchInterceptor";
 import {
-  COUPON_URL,
+  ApiConstant,
+
 
 } from "constants/ApiConstant";
 
@@ -8,7 +9,7 @@ const CouponService = {};
 
 CouponService.addCoupon = function (data) {
   return fetch({
-    url: COUPON_URL,
+    url: ApiConstant.COUPON_URL,
     method: "post",
     data: data,
   });
@@ -16,7 +17,7 @@ CouponService.addCoupon = function (data) {
 
 CouponService.getAllCoupon = function (place) {
   return fetch({
-    url: COUPON_URL,
+    url: ApiConstant.COUPON_URL,
     method: "get",
   });
 };

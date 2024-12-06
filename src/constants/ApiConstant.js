@@ -1,9 +1,11 @@
-export const API_BASE_URL = 'https://uat-tickets2me.mitetechnology.com'
-export const CATEGORY_URL = "/api/v1/events/secured/category"
-export const SUB_CATEGORY_URL = "/api/v1/events/secured/subcategory?category_id="
-export const PLACE_WITH_COUNTRY_URL = "/api/v1/location/secured/place_with_country?place="
-export const PLACE_URL = "/api/v1/location/secured/place"
-export const VENUE_URL = "/api/v1/location/secured/venue?place_id="
-export const EVENT_URL = "/api/v1/events/secured/event"
-export const OFFER_URL = "/api/v1/offers/secured/offers"
-export const COUPON_URL = "/api/v1/offers/secured/coupons"
+export const ApiConstant = {
+    API_BASE_URL: 'https://uat-tickets2me.mitetechnology.com',
+    CATEGORY_URL: "/api/v1/events/secured/category",
+    SUB_CATEGORY_URL: "/api/v1/events/secured/subcategory",
+    PLACE_WITH_COUNTRY_URL: "/api/v1/location/secured/place_with_country",
+    PLACE_URL: "/api/v1/location/secured/place",
+    VENUE_URL: "/api/v1/location/secured/venue",
+    EVENT_URL: "/api/v1/events/secured/event",
+    OFFER_URL: "/api/v1/offers/secured/offers",
+    COUPON_URL: "/api/v1/offers/secured/coupons"
+};

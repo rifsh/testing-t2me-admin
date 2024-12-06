@@ -15,6 +15,7 @@ import venueListData from "assets/data/venue-list.json";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
+import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 
 const rules = {
   venue: [
@@ -34,7 +35,6 @@ const rules = {
 const TicketFormFields = ({ form }) => {
   const navigate = useNavigate();
 
-  // Navigate to Add Ticket Type page
   const addTicketType = () => {
     navigate(`${APP_PREFIX_PATH}/ticket/type/add`);
   };
@@ -52,7 +52,8 @@ const TicketFormFields = ({ form }) => {
   return (
     <Form form={form} layout="vertical" onFinish={onFinish}>
       <Card title="Ticket Form">
-        {/* Venue Selection */}
+        
+        <PlaceWithCountryForm/>
         <Form.Item name="venue" label="Venue" rules={rules.venue}>
           <Select
             placeholder="Select a venue"
