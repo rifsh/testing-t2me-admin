@@ -116,7 +116,7 @@ const VenueList = () => {
             onSelect={(id) => handleSelectPlace(id)}
           />
         </Col>
-        <Col xs={24} sm={8} style={{ textAlign: 'right' }}>
+        <Col xs={24} sm={8} style={{ textAlign: "right" }}>
           <Button
             type="primary"
             icon={<FormOutlined />}
@@ -133,7 +133,7 @@ const VenueList = () => {
             placeholder="Search"
             prefix={<SearchOutlined />}
             onChange={handleSearch}
-            style={{ width: '100%' }}
+            style={{ width: "100%" }}
           />
         </Col>
         <Col xs={24} sm={12}>
@@ -141,7 +141,7 @@ const VenueList = () => {
             defaultValue="All"
             onChange={handleShowStatus}
             placeholder="Status"
-            style={{ width: '100%' }}
+            style={{ width: "100%" }}
           >
             <Option value="All">All status</Option>
             <Option value={true}>Active</Option>
