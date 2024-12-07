@@ -158,7 +158,7 @@ export const LoginForm = props => {
 					</Button>
 				</Form.Item>
 				<span>
-					v-1.0.2
+					v-1.0.3
 				</span>
 				{
 					otherSignIn ? renderOtherSignIn : null
