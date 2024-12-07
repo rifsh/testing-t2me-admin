@@ -53,9 +53,9 @@ const dashBoardNavTree = [
         submenu: []
       },
       {
-        key: 'country.list',
-        path: `${APP_PREFIX_PATH}/country/list`,
-        title: 'sidenav.country.list',
+        key: 'place.list',
+        path: `${APP_PREFIX_PATH}/place/list`,
+        title: 'sidenav.place.list',
         icon: OrderedListOutlined,
         breadcrumb: false,
         submenu: []

@@ -1,5 +1,5 @@
 import React from 'react';
-import CountryForm from '../form-country';
+import CountryForm from '../form-place';
 
 const AddCountry = () => {
 	return (
