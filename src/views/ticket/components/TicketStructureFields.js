@@ -1,28 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { Input, Form, Card, Button, Col, Select } from "antd";
+import React, { useState } from "react";
+import { Input, Form, Card, Button, Col,  } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 
-const { Option } = Select;
 
 const TicketStructureFields = () => {
-  const [form] = Form.useForm();
+  // const [form] = Form.useForm();
   const [ticketTypes, setTicketTypes] = useState([{ id: 1 }]);
-
-  const structureTypes = [
-    'Event Ticket', 
-    'Conference Pass', 
-    'Workshop Registration', 
-    'Seminar Entry', 
-    'Festival Ticket'
-  ];
-
-  const ticketCategories = [
-    'Standard', 
-    'Premium', 
-    'VIP', 
-    'Early Bird', 
-    'Group'
-  ];
 
   const addTicketTypeField = () => {
     setTicketTypes((prev) => [...prev, { id: Date.now() }]);

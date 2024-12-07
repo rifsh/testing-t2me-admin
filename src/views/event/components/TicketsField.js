@@ -10,7 +10,7 @@ const TicketField = () => {
     ticket: [{ required: true, message: "Please select a ticket." }],
   };
 
-  const [maxCapacity, setMaxCapacity] = useState(1000);
+  const [maxCapacity] = useState(1000);
   const [couponList] = useState(couponListData);
 
   const validateMaxTicket = (_, value) => {

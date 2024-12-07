@@ -1,5 +1,4 @@
 import fetch from "auth/FetchInterceptor";
-import { API_BASE_URL } from "constants/ApiConstant";
 
 const AuthService = {};
 AuthService.login = function (data) {
