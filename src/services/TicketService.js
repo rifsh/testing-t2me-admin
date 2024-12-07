@@ -3,9 +3,9 @@ import { ApiConstant } from "constants/ApiConstant";
 
 const TicketsService = {};
 
-TicketsService.getAllTickets = function () {
+TicketsService.getAllTickets = function (venueId) {
   return fetch({
-    url:ApiConstant.TICKET_URL,	
+    url: `${ApiConstant.TICKET_URL}?venue_id=${venueId}`,
     method: "get",
   });
 };

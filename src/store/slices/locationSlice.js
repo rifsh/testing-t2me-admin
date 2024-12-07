@@ -84,7 +84,7 @@ export const addVenue = createAsyncThunk(
 export const getVenues = createAsyncThunk(
   "locations/getVenues",
   async (place_id, { rejectWithValue }) => {
-    console.log('hjkkkkkkkkkkkkkkkkkkkkk');
+   
     
     try {
       if (GET_VENUE_MOCK_API) {
