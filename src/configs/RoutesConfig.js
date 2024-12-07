@@ -58,24 +58,24 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/event/event-details")),
   },
   {
-    key: "country.list",
-    path: `${APP_PREFIX_PATH}/country/list`,
-    component: React.lazy(() => import("views/place/country/list-country")),
+    key: "place.list",
+    path: `${APP_PREFIX_PATH}/place/list`,
+    component: React.lazy(() => import("views/locations/place/list-place")),
   },
   {
-    key: "country.add",
-    path: `${APP_PREFIX_PATH}/country/add`,
-    component: React.lazy(() => import("views/place/country/add-country")),
+    key: "place.add",
+    path: `${APP_PREFIX_PATH}/place/add`,
+    component: React.lazy(() => import("views/locations/place/add-place")),
   },
   {
     key: "venue.list",
     path: `${APP_PREFIX_PATH}/venue/list`,
-    component: React.lazy(() => import("views/place/venue/list-venue")),
+    component: React.lazy(() => import("views/locations/venue/list-venue")),
   },
   {
     key: "venue.add",
     path: `${APP_PREFIX_PATH}/venue/add`,
-    component: React.lazy(() => import("views/place/venue/add-venue")),
+    component: React.lazy(() => import("views/locations/venue/add-venue")),
   },
   {
     key: "category.list",

@@ -1,24 +1,34 @@
-import React, { useEffect } from 'react';
-import { Card, Table, Select, Input, Button, Tag, Menu } from 'antd';
-import { EyeOutlined, PlusCircleOutlined, SearchOutlined, FormOutlined } from '@ant-design/icons';
-import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
-import Flex from 'components/shared-components/Flex';
+import React, { useEffect } from "react";
+import { Card, Table, Select, Input, Button, Tag, Menu } from "antd";
+import {
+  EyeOutlined,
+  PlusCircleOutlined,
+  SearchOutlined,
+  FormOutlined,
+} from "@ant-design/icons";
+import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
+import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { fetchAllUsers, setSearchTerm, setStatusFilter, selectFilteredUsers } from 'store/slices/userSlice';
-import { useSelector, useDispatch } from 'react-redux';
+import {
+  fetchAllUsers,
+  setSearchTerm,
+  setStatusFilter,
+  selectFilteredUsers,
+} from "store/slices/userSlice";
+import { useSelector, useDispatch } from "react-redux";
 
 const { Option } = Select;
 
-const getStatusColor = (is_active) => (is_active ? 'green' : 'red');
+const getStatusColor = (is_active) => (is_active ? "green" : "red");
 
 const OfferList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { loading, error } = useSelector((state) => state.users);
+  const { loading } = useSelector((state) => state.users);
   const filteredUsers = useSelector(selectFilteredUsers);
-  const [selectedRows, setSelectedRows] = React.useState([]);
+  const [setSelectedRows] = React.useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = React.useState([]);
 
   useEffect(() => {
@@ -54,32 +64,36 @@ const OfferList = () => {
 
   const tableColumns = [
     {
-      title: 'User Name',
-      dataIndex: 'username',
+      title: "User Name",
+      dataIndex: "username",
       render: (_, record) => <span>{record.username}</span>,
       sorter: (a, b) => a.username.localeCompare(b.username),
     },
     {
-      title: 'Email',
-      dataIndex: 'email',
+      title: "Email",
+      dataIndex: "email",
       render: (_, record) => <span>{record.email}</span>,
       sorter: (a, b) => a.email.localeCompare(b.email),
     },
     {
-      title: 'Role',
-      dataIndex: 'role',
+      title: "Role",
+      dataIndex: "role",
       render: (_, record) => <span>{record.role}</span>,
       sorter: (a, b) => a.role.localeCompare(b.role),
     },
     {
-      title: 'Status',
-      dataIndex: 'is_active',
-      render: (_, record) => <Tag color={getStatusColor(record.is_active)}>{record.is_active ? "Active" : "Inactive"}</Tag>,
+      title: "Status",
+      dataIndex: "is_active",
+      render: (_, record) => (
+        <Tag color={getStatusColor(record.is_active)}>
+          {record.is_active ? "Active" : "Inactive"}
+        </Tag>
+      ),
       sorter: (a, b) => Number(b.is_active) - Number(a.is_active),
     },
     {
-      title: '',
-      dataIndex: 'actions',
+      title: "",
+      dataIndex: "actions",
       render: (_, elm) => (
         <div className="text-right">
           <EllipsisDropdown menu={dropdownMenu(elm)} />
@@ -97,7 +111,11 @@ const OfferList = () => {
 
   return (
     <Card>
-      <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
+      <Flex
+        alignItems="center"
+        justifyContent="space-between"
+        mobileFlex={false}
+      >
         <Flex className="mb-1" mobileFlex={false}>
           <div className="mr-md-3 mb-3">
             <Input
@@ -138,7 +156,7 @@ const OfferList = () => {
           loading={loading}
           rowSelection={{
             selectedRowKeys: selectedRowKeys,
-            type: 'checkbox',
+            type: "checkbox",
             preserveSelectedRowKeys: false,
             ...rowSelection,
           }}

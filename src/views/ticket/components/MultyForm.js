@@ -56,7 +56,6 @@ const MultyStepTicketForm = () => {
       const updatedStructures = ticketStructures.filter((_, index) => index !== currentStep);
       setTicketStructures(updatedStructures);
       
-      // Adjust current step if needed
       setCurrentStep(Math.min(currentStep, updatedStructures.length - 1));
     } else {
       message.warning("At least one Ticket Structure must remain.");
@@ -67,7 +66,6 @@ const MultyStepTicketForm = () => {
     try {
       const finalValues = await form.validateFields();
       
-      // Update last structure values
       const updatedStructures = ticketStructures.map((structure, index) => 
         index === currentStep ? { ...structure, values: finalValues } : structure
       );

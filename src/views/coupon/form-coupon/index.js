@@ -1,25 +1,22 @@
-import React, { useState, useEffect } from 'react'
+import React, {  useEffect } from 'react'
 import PageHeaderAlt from 'components/layout-components/PageHeaderAlt'
 import { Tabs, Form, Button, message } from 'antd';
 import Flex from 'components/shared-components/Flex'
-
-import ProductListData from "assets/data/product-list.data.json"
 import CouponFormFields from '../components/CouponFormFields';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
-import { addOffer } from 'store/slices/offerSlice';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { addCoupon } from 'store/slices/couponSlice';
 
 
 const ADD = 'ADD'
-const EDIT = 'EDIT'
+// const EDIT = 'EDIT'
 
 const OfferForm = props => {
 
 	
-	const { mode = ADD, param } = props;
+	const { mode = ADD,  } = props;
 	const { loading, error } = useSelector((state) => state.offers);
 	const [form] = Form.useForm();
 	const dispatch = useDispatch();

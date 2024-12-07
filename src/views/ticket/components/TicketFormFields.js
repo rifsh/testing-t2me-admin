@@ -1,34 +1,24 @@
-import React, { useState } from "react";
-import { Input, Card, Form, Select, Button, message } from "antd";
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import venueListData from "assets/data/venue-list.json";
+
+import { Input, Card, Form, Select, Button,  } from "antd";
+import {  PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { RulesMessageConstants } from "constants/RulesConstant";
-
-const rules = {
-  venue: [
-    {
-      required: true,
-      message: "Please select a venue",
-    },
-  ],
-  section: [
-    {
-      required: true,
-      message: "This field is required",
-    },
-  ],
-};
+import { getVenues } from "store/slices/locationSlice";
+import { useSelector, useDispatch } from "react-redux";
 
 const TicketFormFields = ({ form }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const addTicketType = () => {
     navigate(`${APP_PREFIX_PATH}/ticket/type/add`);
   };
+
+  // Fetch filtered venues from Redux store
+  const { filteredVenues } = useSelector((state) => state.locations);
 
   const onFinish = async () => {
     try {
@@ -44,14 +34,21 @@ const TicketFormFields = ({ form }) => {
       <Card title="Ticket Form">
         <PlaceWithCountryForm
           label={"Place"}
+          onSelect={(id) => {
+            dispatch(getVenues(id)); 
+          }}
           rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
         />
-        <Form.Item name="venue" label="Venue" rules={rules.venue}>
+        <Form.Item
+          name="venue"
+          label="Venue"
+          rules={[{ required: true, message: RulesMessageConstants.VENUE }]}
+        >
           <Select
             placeholder="Select a venue"
-            options={venueListData.map((venue) => ({
-              value: venue.venue,
-              label: venue.venue,
+            options={filteredVenues.map((venue) => ({
+              value: venue.name,
+              label: venue.name,
             }))}
           />
         </Form.Item>
@@ -68,7 +65,6 @@ const TicketFormFields = ({ form }) => {
             className="py-2"
             mobileFlex={false}
             justifyContent="space-between"
-            // alignItems="center"
           >
             <Button className="mr-2">Discard</Button>
             <div className="mb-3">

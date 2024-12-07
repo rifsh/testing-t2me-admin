@@ -1,22 +1,20 @@
-import { AutoComplete, Card, Col, Form, Select } from "antd";
+import {  Card, Col, Form, Select } from "antd";
 import React, { useState } from "react";
-import countryListData from "assets/data/country-list.json";
 import venueListData from "assets/data/venue-list.json";
-import { fetchPlaceWithCountry } from "store/slices/locationSlice";
-import { useDispatch, useSelector } from "react-redux";
+// import { useDispatch, useSelector } from "react-redux";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 
 const LocationDetailsField = () => {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const rules = {
     place: [{ required: true, message: "Please enter event place" }],
     venue: [{ required: true, message: "Please enter event venue" }],
   };
 
   const [venueList] = useState(venueListData);
-  const { placeWithCountryList, coordinates, loading, error } = useSelector(
-    (state) => state.locations
-  );
+  // const { placeWithCountryList, coordinates, loading, error } = useSelector(
+  //   (state) => state.locations
+  // );
 
   
 

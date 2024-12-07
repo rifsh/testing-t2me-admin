@@ -18,7 +18,7 @@ export const HeaderNav = props => {
 
 	const { isMobile } = props;
 
-	const [searchActive, setSearchActive] = useState(false);
+	const [ setSearchActive] = useState(false);
 
 	const dispatch = useDispatch()
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, {  useEffect } from "react";
 import { Input, Row, Col, Card, Form, Select } from "antd";
 import { fetchAllCountires } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -48,9 +48,10 @@ const CountryFormFields = (props) => {
   const dispatch = useDispatch();
 
   const { loading, countries } = useSelector((state) => state.locations);
-  const fetchAllCountry = () => {
+
+  useEffect(() => {
     dispatch(fetchAllCountires());
-  };
+  }, [dispatch]);
 
   console.log("Countries state:", countries);
 
@@ -58,11 +59,11 @@ const CountryFormFields = (props) => {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
-          <Form.Item name="country" label="Country name" rules={rules.country}>
+          <Form.Item name="id" label="Country name" rules={rules.country}>
             <Select
               className="w-100"
               placeholder="Choose a Country"
-              onClick={fetchAllCountry}
+             
             >
              {countries.map((cntry) => (
                   <Option key={cntry.country} value={cntry.id}>
@@ -71,7 +72,7 @@ const CountryFormFields = (props) => {
                 ))}
             </Select>
           </Form.Item>
-          <Form.Item name="Place" label="Place" rules={rules.name}>
+          <Form.Item name="name" label="Place" rules={rules.name}>
             <Input placeholder="Place Name" />
           </Form.Item>
         </Card>

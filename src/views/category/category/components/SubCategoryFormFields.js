@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Input, Row, Col, Card, Form, Button, message, Select } from "antd";
 import {
-  addCategory,
   addSubCategory,
   fetchCategories,
 } from "store/slices/categorySlice";
@@ -11,7 +10,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { Option } from "antd/es/mentions";
 
 const ADD = "ADD";
-const EDIT = "EDIT";
+// const EDIT = "EDIT";
 
 const rules = {
   category: [{ required: true, message: "Please Select a category" }],
