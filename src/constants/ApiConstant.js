@@ -7,5 +7,6 @@ export const ApiConstant = {
     VENUE_URL: "/api/v1/location/secured/venue",
     EVENT_URL: "/api/v1/events/secured/event",
     OFFER_URL: "/api/v1/offers/secured/offers",
-    COUPON_URL: "/api/v1/offers/secured/coupons"
+    COUPON_URL: "/api/v1/offers/secured/coupons",
+    TICKET_URL: "/api/v1/tickets/secured/ticketstructure"
 };

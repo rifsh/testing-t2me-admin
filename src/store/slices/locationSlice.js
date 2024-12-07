@@ -84,11 +84,13 @@ export const addVenue = createAsyncThunk(
 export const getVenues = createAsyncThunk(
   "locations/getVenues",
   async (place_id, { rejectWithValue }) => {
+   
+    
     try {
       if (GET_VENUE_MOCK_API) {
         const response = LocationMockData.getAllVenues;
         return response.data;
-      } else {
+      } else {  
         const response = await LocationService.getVenues(place_id);
         return response.data;
       }

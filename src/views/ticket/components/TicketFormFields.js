@@ -1,6 +1,6 @@
-
-import { Input, Card, Form, Select, Button,  } from "antd";
-import {  PlusOutlined } from "@ant-design/icons";
+import React from "react";
+import { Form, Input, Card, Select, Button, message } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
@@ -8,8 +8,10 @@ import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWith
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { getVenues } from "store/slices/locationSlice";
 import { useSelector, useDispatch } from "react-redux";
+import { addTicket } from "store/slices/ticketSlice";
 
-const TicketFormFields = ({ form }) => {
+const TicketFormFields = () => {
+  const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -17,38 +19,58 @@ const TicketFormFields = ({ form }) => {
     navigate(`${APP_PREFIX_PATH}/ticket/type/add`);
   };
 
-  // Fetch filtered venues from Redux store
   const { filteredVenues } = useSelector((state) => state.locations);
-
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      console.log("Form Submitted:", values);
+      const ticketData = {
+        venue_id:values.venue_id,
+        // name: values.name,
+        number_of_tickets: values.number_of_tickets,
+        base_price: values.base_price,
+        ticket_types:[]
+      };
+      const venue_id = values.venue_id;
+  
+      const resultAction = await dispatch(addTicket({ ticketData, venue_id }));
+  
+      if (addTicket.fulfilled.match(resultAction)) {
+        message.success(`Ticket "${values.name}" added successfully!`);
+        form.resetFields();
+        navigate(`${APP_PREFIX_PATH}/ticket/list`);
+      } else {
+        message.error(resultAction.payload || "Failed to add the ticket. Please try again.");
+      }
     } catch (error) {
       console.log("Form validation failed:", error);
     }
   };
+  
 
   return (
     <Form form={form} layout="vertical" onFinish={onFinish}>
       <Card title="Ticket Form">
         <PlaceWithCountryForm
+          form={form}
           label={"Place"}
           onSelect={(id) => {
-            dispatch(getVenues(id)); 
+            dispatch(getVenues(id));
+            form.setFieldsValue({ venue_id: null });
           }}
           rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
         />
+
         <Form.Item
-          name="venue"
+          name="venue_id"
           label="Venue"
           rules={[{ required: true, message: RulesMessageConstants.VENUE }]}
         >
           <Select
             placeholder="Select a venue"
             options={filteredVenues.map((venue) => ({
-              value: venue.name,
+              value: venue.id,
               label: venue.name,
+              
             }))}
           />
         </Form.Item>
@@ -56,8 +78,8 @@ const TicketFormFields = ({ form }) => {
         <Form.Item name={"number_of_tickets"} label="No of Ticket">
           <Input placeholder="Number of Tickets" />
         </Form.Item>
-        <Form.Item name={"base_price"} label="Ticket Price">
-          <Input placeholder="Enter Ticket Price" />
+        <Form.Item name={"base_price"} label="Price">
+          <Input placeholder="Enter Ticket Price" type="number" />
         </Form.Item>
 
         <div className="container" style={{ padding: "0px" }}>
@@ -77,7 +99,7 @@ const TicketFormFields = ({ form }) => {
                 Add Ticket Type
               </Button>
 
-              <Button type="primary" htmlType="submit">
+              <Button type="primary" htmlType="submit" onClick={onFinish}>
                 Submit
               </Button>
             </div>
