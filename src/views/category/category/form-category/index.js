@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+
 import PageHeaderAlt from 'components/layout-components/PageHeaderAlt'
 import { Tabs, Form } from 'antd';
 import Flex from 'components/shared-components/Flex'
@@ -7,9 +7,9 @@ import CategoryFormFields from '../components/CategoryFormFields';
 import SubCategoryFormFields from '../components/SubCategoryFormFields';
 
 const ADD = 'ADD'
-const EDIT = 'EDIT'
+// const EDIT = 'EDIT'
 
-const CategoryForm = ({ mode = ADD, param }) => {
+const CategoryForm = ({ mode = ADD }) => {
 	
 
 	return (

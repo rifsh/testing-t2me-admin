@@ -1,9 +1,9 @@
-import { createServer } from "miragejs";
-import { API_BASE_URL } from "configs/AppConfig";
+// import { createServer } from "miragejs";
+// import { API_BASE_URL } from "configs/AppConfig";
 
-import { signInUserData } from "./data/authData";
+// import { signInUserData } from "./data/authData";
 
-import { authFakeApi } from "./fakeApi";
+// import { authFakeApi } from "./fakeApi";
 
 export default function mockServer({ environment = "test" }) {
  

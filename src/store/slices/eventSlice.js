@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { ALL_EVENT_MOCK_API, EVENT_DETAILS_MOCK_API } from "configs/MockConfig";
 import EventMockData from "mock/data/eventData";
 import EventService from "services/EventService";
-import Utils from "utils";
 
 const initialState = {
   eventDetails: null,

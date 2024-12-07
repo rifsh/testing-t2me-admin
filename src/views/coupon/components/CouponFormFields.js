@@ -1,6 +1,6 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker, Select } from "antd";
-const { Option } = Select;
+import { Input, Row, Col, Card, Form, DatePicker, } from "antd";
+
 
 const rules = {
   country: [

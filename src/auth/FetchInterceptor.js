@@ -13,12 +13,12 @@ const service = axios.create({
 });
 
 // Config
-const TOKEN_PAYLOAD_KEY = "Authorization";
-const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
 
 // Request Interceptor
 service.interceptors.request.use(
   (config) => {
+    const TOKEN_PAYLOAD_KEY = "Authorization";
+    const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
     // let jwtToken = HARDCODED_TOKEN;
 
     if (jwtToken) {

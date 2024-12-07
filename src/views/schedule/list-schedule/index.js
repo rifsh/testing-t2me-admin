@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Button, Card, Input, Select, Table } from "antd";
 import Flex from "components/shared-components/Flex";
 import { FormOutlined, SearchOutlined } from "@ant-design/icons";
-import utils from "utils";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 

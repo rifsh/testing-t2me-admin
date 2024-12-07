@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   ALL_COUNTRIES_MOCK_API,
-  ALL_OFFERS_MOCK_API,
+  ENABLE_MOCK_API,
   GET_VENUE_MOCK_API,
 } from "configs/MockConfig";
 import LocationMockData from "mock/data/location";
@@ -26,7 +26,7 @@ export const fetchAllCountires = createAsyncThunk(
   "country/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      if (ALL_COUNTRIES_MOCK_API) {
+      if (ALL_COUNTRIES_MOCK_API && ENABLE_MOCK_API) {
         const response = LocationMockData.fetchAllCountries;
         return response.data;
       } else {
@@ -84,11 +84,13 @@ export const addVenue = createAsyncThunk(
 export const getVenues = createAsyncThunk(
   "locations/getVenues",
   async (place_id, { rejectWithValue }) => {
+   
+    
     try {
       if (GET_VENUE_MOCK_API) {
         const response = LocationMockData.getAllVenues;
         return response.data;
-      } else {
+      } else {  
         const response = await LocationService.getVenues(place_id);
         return response.data;
       }

@@ -1,39 +1,45 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useCallback } from 'react';
-import { Card, Table, Select, Input, Button, Badge, Menu, Tag } from 'antd';
-import CountryListData from 'assets/data/country-list.json';
-import { EyeOutlined, FormOutlined, SearchOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
-import Flex from 'components/shared-components/Flex';
-import dayjs from 'dayjs';
-import { DATE_FORMAT_DD_MM_YYYY } from 'constants/DateConstant';
-import utils from 'utils';
-import { useNavigate } from 'react-router-dom';
-import { APP_PREFIX_PATH } from 'configs/AppConfig';
-import { debounce } from 'lodash';
+import React, { useState, useCallback } from "react";
+import { Card, Table, Select, Input, Button, Menu, Tag } from "antd";
+import CountryListData from "assets/data/country-list.json";
+import {
+  EyeOutlined,
+  FormOutlined,
+  SearchOutlined,
+  PlusCircleOutlined,
+} from "@ant-design/icons";
+import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
+import Flex from "components/shared-components/Flex";
+import dayjs from "dayjs";
+import { DATE_FORMAT_DD_MM_YYYY } from "constants/DateConstant";
+import utils from "utils";
+import { useNavigate } from "react-router-dom";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { debounce } from "lodash";
 
 const { Option } = Select;
 
 const getStatusColor = (status) => {
-  if (status === 'Active') {
-    return 'green';
+  if (status === "Active") {
+    return "green";
   }
-  if (status === 'Inactive') {
-    return 'red';
+  if (status === "Inactive") {
+    return "red";
   }
-  return '';
+  return "";
 };
 
-const CountryList = () => {
+const PlaceList = () => {
   const [list, setList] = useState(CountryListData);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleShowStatus = (value) => {
-    const filteredData = value !== 'All'
-      ? utils.filterArray(CountryListData, 'status', value)
-      : CountryListData;
+    const filteredData =
+      value !== "All"
+        ? utils.filterArray(CountryListData, "status", value)
+        : CountryListData;
     setList(filteredData);
   };
 
@@ -44,7 +50,7 @@ const CountryList = () => {
       const filteredData = utils.wildCardSearch(searchArray, value);
       setList(filteredData);
       setSelectedRowKeys([]);
-    }, 500), 
+    }, 500),
     []
   );
 
@@ -67,56 +73,48 @@ const CountryList = () => {
 
   const tableColumns = [
     {
-      title: 'Date',
-      dataIndex: 'createdDate',
+      title: "Date",
+      dataIndex: "createdDate",
       render: (_, record) => (
         <span>{dayjs(record.createdDate).format(DATE_FORMAT_DD_MM_YYYY)}</span>
       ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, 'createdDate'),
+      sorter: (a, b) => utils.antdTableSorter(a, b, "createdDate"),
     },
     {
-      title: 'Country Name',
-      dataIndex: 'countryName',
-      render: (_, record) => (
-		<span>{record.countryName}</span>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, 'countryName'),
+      title: "Country Name",
+      dataIndex: "countryName",
+      render: (_, record) => <span>{record.countryName}</span>,
+      sorter: (a, b) => utils.antdTableSorter(a, b, "countryName"),
     },
     {
-      title: 'Country Code',
-      dataIndex: 'countryCode',
-      render: (_, record) => (
-        <span>{record.countryCode}</span>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, 'countryCode'),
+      title: "Country Code",
+      dataIndex: "countryCode",
+      render: (_, record) => <span>{record.countryCode}</span>,
+      sorter: (a, b) => utils.antdTableSorter(a, b, "countryCode"),
     },
     {
-      title: 'Timezone',
-      dataIndex: 'timezone',
-      render: (_, record) => (
-        <span>{record.timezone}</span>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, 'timezone'),
+      title: "Timezone",
+      dataIndex: "timezone",
+      render: (_, record) => <span>{record.timezone}</span>,
+      sorter: (a, b) => utils.antdTableSorter(a, b, "timezone"),
     },
     {
-      title: 'Place',
-      dataIndex: 'place',
-      render: (_, record) => (
-        <span>{record.place}</span>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, 'place'),
+      title: "Place",
+      dataIndex: "place",
+      render: (_, record) => <span>{record.place}</span>,
+      sorter: (a, b) => utils.antdTableSorter(a, b, "place"),
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
+      title: "Status",
+      dataIndex: "status",
       render: (_, record) => (
         <Tag color={getStatusColor(record.status)}>{record.status}</Tag>
       ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, 'status'),
+      sorter: (a, b) => utils.antdTableSorter(a, b, "status"),
     },
     {
-      title: '',
-      dataIndex: 'actions',
+      title: "",
+      dataIndex: "actions",
       render: (_, elm) => (
         <div className="text-right">
           <EllipsisDropdown menu={dropdownMenu(elm)} />
@@ -136,7 +134,11 @@ const CountryList = () => {
 
   return (
     <Card>
-      <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
+      <Flex
+        alignItems="center"
+        justifyContent="space-between"
+        mobileFlex={false}
+      >
         <Flex className="mb-1" mobileFlex={false}>
           <div className="mr-md-3 mb-3">
             <Input
@@ -168,9 +170,9 @@ const CountryList = () => {
             type="primary"
             icon={<FormOutlined />}
             block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/country/add`)}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/place/add`)}
           >
-            Add Country
+            Add Place
           </Button>
         </div>
       </Flex>
@@ -181,7 +183,7 @@ const CountryList = () => {
           rowKey="countryCode"
           rowSelection={{
             selectedRowKeys: selectedRowKeys,
-            type: 'checkbox',
+            type: "checkbox",
             preserveSelectedRowKeys: false,
             ...rowSelection,
           }}
@@ -191,4 +193,4 @@ const CountryList = () => {
   );
 };
 
-export default CountryList;
+export default PlaceList;

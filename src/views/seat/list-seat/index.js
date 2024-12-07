@@ -15,7 +15,7 @@ const SeatList = () => {
 
 
   const [list, setList] = useState(seatData);
-  const [selectedRows, setSelectedRows] = useState([]);
+  const [ setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 

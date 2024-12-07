@@ -1,4 +1,4 @@
-import { Card, Col, Form, Input, message } from "antd";
+import { Card, Col, Form, Input, } from "antd";
 import React from "react";
 
 const EventDetailsField = () => {

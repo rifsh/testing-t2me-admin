@@ -2,10 +2,6 @@ import React from 'react';
 import { Dropdown, Avatar } from 'antd';
 import { useDispatch } from 'react-redux'
 import { 
-	EditOutlined, 
-	SettingOutlined, 
-	ShopOutlined, 
-	QuestionCircleOutlined, 
 	LogoutOutlined 
 } from '@ant-design/icons';
 import NavItem from './NavItem';

@@ -1,16 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, {  useEffect } from 'react'
 import PageHeaderAlt from 'components/layout-components/PageHeaderAlt'
-import { Form, Button, message } from 'antd';
-import Flex from 'components/shared-components/Flex'
+import { Form } from 'antd';
 
 import ProductListData from "assets/data/product-list.data.json"
 import VenueFormFields from '../components/VenueFormFields';
 
-const getBase64 = (img, callback) => {
-  const reader = new FileReader();
-  reader.addEventListener('load', () => callback(reader.result));
-  reader.readAsDataURL(img);
-}
+
 
 const ADD = 'ADD'
 const EDIT = 'EDIT'
@@ -20,10 +15,7 @@ const VenueForm = props => {
 	const { mode = ADD, param } = props
 
 	const [form] = Form.useForm();
-	const [uploadedImg, setImage] = useState('')
-	const [uploadLoading, setUploadLoading] = useState(false)
-	const [submitLoading, setSubmitLoading] = useState(false)
-
+	
 	useEffect(() => {
     	if (mode === EDIT) {
 			console.log('is edit')
@@ -41,7 +33,7 @@ const VenueForm = props => {
 				name: product.name,
 				price: product.price
 			});
-			setImage(product.image)
+		
 		}
   	}, [form, mode, param, props]);
 

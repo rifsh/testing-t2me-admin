@@ -1,4 +1,4 @@
-import { Button, Card, Form, message } from "antd";
+import { Button,  Form, message } from "antd";
 import React, { useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import EventDetailsField from "./EventDetailsField";
@@ -12,7 +12,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 const ADD = "ADD";
-const EDIT = "EDIT";
+// const EDIT = "EDIT";
 const MultyStepEventForm = (props) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [form] = Form.useForm();

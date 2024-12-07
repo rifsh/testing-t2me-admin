@@ -15,7 +15,7 @@ const scheduleStatusList = ['All', 'Scheduled', 'Ongoing', 'Expired'];
 
 const EventsList = () => {
   const dispatch = useDispatch();
-  const { allEvents, loading, error, filteredEvents } = useSelector(state => state.event);
+  const { allEvents, filteredEvents } = useSelector(state => state.event);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,13 +52,13 @@ const EventsList = () => {
     {
       title: 'Category',
       dataIndex: 'category_id',
-      render: categoryId => <span>{`Category ${categoryId}`}</span>, // Can replace this with an actual category name mapping
+      render: categoryId => <span>{`Category ${categoryId}`}</span>, 
       sorter: (a, b) => utils.antdTableSorter(a, b, 'category_id'),
     },
     {
       title: 'Sub Category',
       dataIndex: 'sub_category_id',
-      render: subCategoryId => <span>{`Sub Category ${subCategoryId}`}</span>, // Can replace this with an actual sub-category name mapping
+      render: subCategoryId => <span>{`Sub Category ${subCategoryId}`}</span>, 
       sorter: (a, b) => utils.antdTableSorter(a, b, 'sub_category_id'),
     },
     {

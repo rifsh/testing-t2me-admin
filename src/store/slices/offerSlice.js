@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
-  ALL_COUNTRIES_MOCK_API,
   ALL_OFFERS_MOCK_API,
   ENABLE_MOCK_API,
 } from "configs/MockConfig";

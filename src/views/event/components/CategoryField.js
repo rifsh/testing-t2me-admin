@@ -1,30 +1,18 @@
 import { Card, Form, Select } from "antd";
-import React, { useState } from "react";
-
-import categoryListData from "assets/data/category-list.json";
 import { fetchCategories, fetchSubcategories } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const { Option } = Select;
 
 const CategoryField = () => {
-  const [categoryList] = useState(categoryListData);
-  const [selectedCategory, setSelectedCategory] = useState();
   const dispatch = useDispatch();
   const {
     filteredCategories,
     subcategories,
-    selectedCategoryId,
     loading,
-    activeTab,
   } = useSelector((state) => state.category);
 
-  const handleCategoryChange = (value) => {
-    const selected = categoryList.find(
-      (category) => category.category === value
-    );
-    setSelectedCategory(selected);
-  };
+  
 
   const fetchCategoryItems = () => {
     dispatch(fetchCategories());
