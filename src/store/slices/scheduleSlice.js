@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { ALL_OFFERS_MOCK_API, ENABLE_MOCK_API } from "configs/MockConfig";
+import { ALL_OFFERS_MOCK_API, ENABLE_MOCK_API, GET_SCHEDULE_MOCK_API } from "configs/MockConfig";
 import ScheduleMockData from "mock/data/scheduleData";
 import ScheduleService from "services/ScheduleService";
 
@@ -17,7 +17,7 @@ export const fetchAllSchedules = createAsyncThunk(
   "schedule/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      if (ALL_OFFERS_MOCK_API && ENABLE_MOCK_API) {
+      if (GET_SCHEDULE_MOCK_API && ENABLE_MOCK_API) {
         const response = ScheduleMockData.fetchAllSchedules;
         return response.data;
       } else {
