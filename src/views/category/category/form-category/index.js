@@ -1,11 +1,8 @@
 
-import PageHeaderAlt from 'components/layout-components/PageHeaderAlt'
-import { Tabs, Form } from 'antd';
 import Flex from 'components/shared-components/Flex'
 import React, { useEffect } from "react";
-import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import { Tabs, Form } from "antd";
-import Flex from "components/shared-components/Flex";
+import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import CategoryFormFields from "../components/CategoryFormFields";
 import SubCategoryFormFields from "../components/SubCategoryFormFields";
 import { useSelector } from "react-redux";

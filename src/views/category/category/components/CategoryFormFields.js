@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 
 const ADD = "ADD";
-// const EDIT = "EDIT";
+const EDIT = "EDIT";
 
 const rules = {
   name: [{ required: true, message: "Please enter category name" }],
