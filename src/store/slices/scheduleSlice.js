@@ -31,7 +31,17 @@ export const fetchAllSchedules = createAsyncThunk(
     }
   }
 );
-
+export const addSchedule = createAsyncThunk(
+  "offer/add",
+  async (offerData, { rejectWithValue }) => {
+    try {
+      const response = await ScheduleService.addSchedule(offerData);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Error creating user");
+    }
+  }
+);
 const scheduleSlice = createSlice({
   name: "schedules",
   initialState,
@@ -62,10 +72,8 @@ const scheduleSlice = createSlice({
       );
 
       if (existingOfferIndex !== -1) {
-        // Remove if already exists
         state.selectedOffers.splice(existingOfferIndex, 1);
       } else {
-        // Add if not exists
         state.selectedOffers.push(action.payload);
       }
     },
@@ -75,19 +83,38 @@ const scheduleSlice = createSlice({
       );
 
       if (existingCouponIndex !== -1) {
-        // Remove if already exists
         state.selectedCoupons.splice(existingCouponIndex, 1);
       } else {
-        // Add if not exists
         state.selectedCoupons.push(action.payload);
       }
     },
     setSelectedItemForModal: (state, action) => {
       state.selectedItemForModal = action.payload;
     },
+    updateSelectedOffer: (state, action) => {
+      const existingOfferIndex = state.selectedOffers.findIndex(
+        (offer) => offer.id === action.payload.id
+      );
+      state.selectedOffers[existingOfferIndex].start_date =
+        action.payload.start_date;
+      state.selectedOffers[existingOfferIndex].end_date =
+        action.payload.end_date;
+    },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(addSchedule.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addSchedule.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.filteredSchedules.push(payload);
+      })
+      .addCase(addSchedule.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(fetchAllSchedules.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -104,10 +131,11 @@ const scheduleSlice = createSlice({
   },
 });
 
-export const { 
-  filterSchedules, 
-  toggleSelectedOffer, 
+export const {
+  filterSchedules,
+  toggleSelectedOffer,
   toggleSelectedCoupon,
-  setSelectedItemForModal 
+  setSelectedItemForModal,
+  updateSelectedOffer,
 } = scheduleSlice.actions;
 export default scheduleSlice.reducer;

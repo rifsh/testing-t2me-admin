@@ -20,6 +20,9 @@ import {
 } from "store/slices/scheduleSlice";
 import { fetchAllOffers } from "store/slices/offerSlice";
 import { fetchAllCoupons } from "store/slices/couponSlice";
+import OfferDateModal from "./OfferDateModal";
+import { useNavigate } from "react-router-dom";
+import { fetchAllEvent } from "store/slices/eventSlice";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -27,6 +30,7 @@ const { Text } = Typography;
 function ScheduleFormFields() {
   const dispatch = useDispatch();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [form] = Form.useForm();
 
   const { filteredOffers: filteredOffer, loading: offerLoading } = useSelector(
     (state) => state.offers
@@ -41,6 +45,7 @@ function ScheduleFormFields() {
   useEffect(() => {
     dispatch(fetchAllOffers());
     dispatch(fetchAllCoupons());
+    dispatch(fetchAllEvent());
   }, [dispatch]);
 
   const handleCouponSelect = (couponId) => {
@@ -75,13 +80,22 @@ function ScheduleFormFields() {
     setIsModalVisible(false);
     dispatch(setSelectedItemForModal(null));
   };
+  const {filteredEvents } = useSelector((state) => state.event);
+  const navigate = useNavigate();
 
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Schedule Details">
+          {/* <Form form={form}> */}
           <Form.Item name="event" label="Event" rules={RulesConstants.event}>
-            <Input placeholder="Event Name" />
+          <Select className="w-100" placeholder="Choose a Category">
+                {filteredEvents.map((elm) => (
+                  <Option key={elm.id} value={elm.id}>
+                    {elm.event_name}
+                  </Option>
+                ))}
+              </Select>
           </Form.Item>
 
           <Form.Item
@@ -138,11 +152,13 @@ function ScheduleFormFields() {
               ))}
             </Select>
           </Form.Item>
+          {/* </Form> */}
         </Card>
       </Col>
 
       <Col xs={24} sm={24} md={7}>
         <div style={{ marginBottom: 16, marginTop: 0 }}>
+          {selectedOffers.length > 0 ? <Text>Selected Offers</Text> : null}
           {selectedOffers.map((offer) => (
             <Card
               key={offer.id}
@@ -188,6 +204,7 @@ function ScheduleFormFields() {
           ))}
         </div>
         <div style={{ marginBottom: 16, marginTop: 0 }}>
+          {selectedCoupons.length > 0 ? <Text>Selected Coupons</Text> : null}
           {selectedCoupons.map((offer) => (
             <Card
               key={offer.id}
@@ -234,25 +251,11 @@ function ScheduleFormFields() {
         </div>
       </Col>
 
-      <Modal
-        title="Item Details"
-        visible={isModalVisible}
-        onCancel={handleModalClose}
-        footer={null}
-      >
-        {selectedItemForModal && (
-          <div>
-            <h3>{selectedItemForModal.name}</h3>
-            {Object.entries(selectedItemForModal)
-              .filter(([key]) => key !== "id" && key !== "name")
-              .map(([key, value]) => (
-                <p key={key}>
-                  <strong>{key}:</strong> {String(value)}
-                </p>
-              ))}
-          </div>
-        )}
-      </Modal>
+      <OfferDateModal
+        isModalVisible={isModalVisible}
+        selectedItemForModal={selectedItemForModal}
+        handleModalClose={handleModalClose}
+      />
     </Row>
   );
 }

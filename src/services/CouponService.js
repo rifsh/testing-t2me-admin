@@ -1,9 +1,5 @@
 import fetch from "auth/FetchInterceptor";
-import {
-  ApiConstant,
-
-
-} from "constants/ApiConstant";
+import { ApiConstant } from "constants/ApiConstant";
 
 const CouponService = {};
 
