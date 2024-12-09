@@ -4,7 +4,7 @@ import { Tabs, Form, Button, message } from 'antd';
 import Flex from 'components/shared-components/Flex'
 
 import ProductListData from "assets/data/product-list.data.json"
-import SeatFormFields from '../components/SeatFormFields';
+import SeatFormFields from '../components/ScheduleFormFields';
 
 
 const getBase64 = (img, callback) => {
