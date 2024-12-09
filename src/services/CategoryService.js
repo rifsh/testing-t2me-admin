@@ -10,12 +10,24 @@ CategoryService.addCategory = function (data) {
     data: data,
   });
 };
+CategoryService.updateCategory = function (data) {
+  if (!data.id) {
+    throw new Error("Category ID is required for updating.");
+  }
+  return fetch({
+    url: `${ApiConstant.CATEGORY_URL}/${data.id}`,
+    method: "put",
+    data: data,
+  });
+};
+
 CategoryService.fetchCategory = function () {
   return fetch({
     url:ApiConstant.CATEGORY_URL,
     method: "get",
   });
 };
+
 CategoryService.fetchSubCategory = function (categoryId) {
   return fetch({
     url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${categoryId}`,

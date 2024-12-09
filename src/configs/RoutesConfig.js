@@ -88,6 +88,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/category/category/add-category")),
   },
   {
+    key: "category.edit",
+    path: `${APP_PREFIX_PATH}/category/edit`,
+    component: React.lazy(() => import("views/category/category/add-category")),
+  },
+  {
     key: "offer.list",
     path: `${APP_PREFIX_PATH}/offer/list`,
     component: React.lazy(() => import("views/offer/list-offer")),
