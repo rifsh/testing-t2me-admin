@@ -4,7 +4,7 @@ import { Tabs, Form, Button, message } from "antd";
 import Flex from "components/shared-components/Flex";
 import OfferFormFields from "../components/OfferFormFields";
 import { useDispatch, useSelector } from "react-redux";
-import { addOffer } from "store/slices/offerSlice";
+import { addOffer, setIsDateRequired } from "store/slices/offerSlice";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import moment from "moment/moment";
@@ -15,12 +15,13 @@ const ADD = "ADD";
 
 const OfferForm = (props) => {
   const { mode = ADD,  } = props;
-  const { loading, error } = useSelector((state) => state.offers);
+  const { loading, error ,isDateRequired} = useSelector((state) => state.offers);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
+    dispatch(setIsDateRequired(false))
     if (error) {
       message.error(error);
     }
@@ -29,8 +30,11 @@ const OfferForm = (props) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
+      if(isDateRequired){
       values.start_date = moment(values.start_date).format("YYYY-MM-DD");
-      values.end_date = moment(values.end_date).format("YYYY-MM-DD");
+      values.end_date = moment(values.end_date).format("YYYY-MM-DD");}
+      values.key_words=values.key_words??[]
+      values.date_required=values.date_required??isDateRequired
       const resultAction = await dispatch(addOffer(values));
       if (addOffer.fulfilled.match(resultAction)) {
         message.success(`Offer ${values.name} added successfully`);

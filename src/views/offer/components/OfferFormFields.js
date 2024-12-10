@@ -125,12 +125,12 @@ function OfferFormFields(props) {
                       Remove
                     </Button>
                   </Space>
-                ))}
+                )??[])}
                 <Button type="dashed" onClick={() => add()} block>
                   Add Keyword
                 </Button>
               </>
-            )}
+            )??[]}
           </Form.List>
         </Card>
       </Col>
