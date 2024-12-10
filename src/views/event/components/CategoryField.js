@@ -23,7 +23,7 @@
     return (
       <Col xs={24} sm={24} md={17}>
         <Card xs={24} sm={24} md={17}>
-          <Form.Item name="category" label="Category">
+          <Form.Item name="category_id" label="Category">
             <Select
               className="w-100"
               placeholder="Choose a Category"
@@ -39,7 +39,7 @@
             </Select>
           </Form.Item>
 
-          <Form.Item name="subCategory" label="Sub Category">
+          <Form.Item name="sub_category_id" label="Sub Category">
             <Select
               className="w-100"
               placeholder="Choose a Sub Category"
@@ -47,7 +47,7 @@
             >
               {subcategories &&
                 subcategories.map((sub) => (
-                  <Option key={sub.name} value={sub.name}>
+                  <Option key={sub.name} value={sub.id}>
                     {sub.name}
                   </Option>
                 ))}

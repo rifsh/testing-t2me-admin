@@ -1,20 +1,25 @@
-import { Card, Col, Form, Input, Select } from "antd";
-import React, { useEffect, useState } from "react";
-import couponListData from "assets/data/coupon-list.json";
-import { useSelector } from "react-redux";
+import { Card, Col, Form, Input, Select, Spin } from "antd";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchAllTickets,
+  getAvailableTicketsType,
+} from "store/slices/ticketSlice";
 
 const { Option } = Select;
 
 const TicketField = ({ form }) => {
-  const rules = {
-    ticketType: [{ required: true, message: "Please select a ticket type." }],
-    ticket: [{ required: true, message: "Please select a ticket." }],
-  };
-
+  const dispatch = useDispatch();
+  const { availableTicketTyps, filteredTickets, loading } = useSelector(
+    (state) => state.tickets
+  );
   const { selectedVenue } = useSelector((state) => state.locations);
-  const [couponList] = useState(couponListData);
 
   useEffect(() => {
+    if (selectedVenue?.id) {
+      dispatch(getAvailableTicketsType(selectedVenue.id));
+      dispatch(fetchAllTickets(selectedVenue.id));
+    }
     if (selectedVenue?.capacity) {
       form.setFieldsValue({
         maxCapacity: selectedVenue.capacity,
@@ -33,7 +38,9 @@ const TicketField = ({ form }) => {
     }
     if (value > selectedVenue.capacity) {
       return Promise.reject(
-        new Error(`Max Ticket cannot exceed Max Capacity (${selectedVenue.capacity}).`)
+        new Error(
+          `Max Ticket cannot exceed Max Capacity (${selectedVenue.capacity}).`
+        )
       );
     }
     return Promise.resolve();
@@ -42,17 +49,12 @@ const TicketField = ({ form }) => {
   return (
     <Col xs={24} sm={24} md={17}>
       <Card title="Ticket Details">
-        
-        <Form.Item
-          name="maxCapacity"
-          label="Max Capacity"
-          initialValue={selectedVenue?.capacity}
-        >
+        <Form.Item name="max_capacity" label="Max Capacity">
           <Input readOnly />
         </Form.Item>
 
         <Form.Item
-          name="maxTicket"
+          name="max_tickets"
           label="Max Ticket"
           rules={[{ validator: validateMaxTicket }]}
         >
@@ -60,24 +62,66 @@ const TicketField = ({ form }) => {
         </Form.Item>
 
         <Form.Item
-          name="ticketType"
-          label="Ticket Type"
-          rules={rules.ticketType}
+          name="available_types"
+          label="Type"
+          rules={[{ required: true, message: "Please select a ticket type." }]}
         >
           <Select className="w-100" placeholder="Choose a Ticket Type">
-            {couponList.map((elm) => (
-              <Option key={elm.couponName} value={elm.couponName}>
-                {elm.couponName}
+            {availableTicketTyps.map((type) => (
+              <Option key={type.id} value={type.type}>
+                {type.type}
               </Option>
             ))}
           </Select>
         </Form.Item>
 
-        <Form.Item name="ticket" label="Ticket" rules={rules.ticket}>
-          <Select className="w-100" placeholder="Choose a Ticket">
-            {couponList.map((elm) => (
-              <Option key={elm.couponName} value={elm.couponName}>
-                {elm.couponName}
+        <Form.Item
+          name="ticket_structure_id"
+          label="Structure"
+          rules={[{ required: true, message: "Please select a ticket." }]}
+        >
+          <Select
+            className="w-100"
+            placeholder="Choose a Ticket"
+            loading={loading}
+          >
+            {filteredTickets.map((ticket) => (
+              <Option key={ticket.id} value={ticket.id}>
+                {ticket.name}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+        <Form.Item
+          name="ticket_set"
+          label="Set"
+          rules={[{ required: true, message: "Please select a ticket." }]}
+        >
+          <Select
+            className="w-100"
+            placeholder="Choose a Ticket"
+            loading={loading}
+          >
+            {filteredTickets.map((ticket) => (
+              <Option key={ticket.id} value={/* ticket.id */ "Set1"}>
+                {ticket.name}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+        <Form.Item
+          name="seat_structure_id"
+          label="Seat Structure"
+          rules={[{ required: true, message: "Please select a ticket." }]}
+        >
+          <Select
+            className="w-100"
+            placeholder="Choose a Ticket"
+            loading={loading}
+          >
+            {filteredTickets.map((ticket) => (
+              <Option key={ticket.id} value={/* ticket.id */ 0}>
+                {ticket.name}
               </Option>
             ))}
           </Select>
