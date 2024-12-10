@@ -19,7 +19,7 @@ const MultyStepEventForm = (props) => {
   const steps = ["Event Details", "Category","Location", "Ticket",  "Offers"];
 
   const [submitLoading, setSubmitLoading] = useState(false);
-  const { mode = ADD, param } = props;
+  // const { mode = ADD, param } = props;
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const nextStep = () => {
@@ -66,13 +66,16 @@ const MultyStepEventForm = (props) => {
       case 2:
         return <CategoryField />;
       case 3:
-        return <LocationDetailsField />;
+        return <LocationDetailsField form={form} />;
       case 4:
-        return <TicketField />;
-        case 5:
+        return <TicketField form={form} />;
+      case 5:
         return <OfferField />;
+      default:
+        return null;
     }
   };
+  
 
   return (
     <div>
@@ -122,7 +125,7 @@ const MultyStepEventForm = (props) => {
         ))}
       </div>
       <div style={{ marginLeft: "50px", marginRight: "50px" }}>
-        <Form form={form}>{renderStepContent()}</Form>
+        <Form layout="vertical" form={form}>{renderStepContent()}</Form>
       </div>
 
       <div
