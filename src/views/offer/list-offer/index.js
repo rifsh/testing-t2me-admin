@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Card, Table, Select, Input, Button, Tag, Menu } from "antd";
+import { Card, Table, Select, Input, Button, Tag, Menu, Spin } from "antd";
 import {
   EyeOutlined,
   PlusCircleOutlined,
@@ -27,25 +27,27 @@ const OfferList = () => {
   }, [dispatch]);
 
   const handleSearch = (e) => {
-    dispatch(filterOffers({ searchTerm: e.target.value, status: null }));
+    const searchTerm = e.target.value.trim();
+    dispatch(filterOffers({ searchTerm, status: null }));
   };
 
   const handleShowStatus = (status) => {
-    dispatch(filterOffers({ searchTerm: null, status }));
+    const statusFilter = status === "All" ? null : status === "Active";
+    dispatch(filterOffers({ searchTerm: null, status: statusFilter }));
   };
 
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item>
+      <Menu.Item key="view">
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
       </Menu.Item>
-      <Menu.Item>
+      <Menu.Item key="add-remark">
         <Flex alignItems="center">
           <PlusCircleOutlined />
-          <span className="ml-2">Add to remark</span>
+          <span className="ml-2">Add to Remark</span>
         </Flex>
       </Menu.Item>
     </Menu>
@@ -65,12 +67,18 @@ const OfferList = () => {
     {
       title: "Start Date",
       dataIndex: "start_date",
-      sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
+      render: (start_date) => (start_date ? start_date : "N/A"),
+      sorter: (a, b) =>
+        new Date(a.start_date || "1970-01-01") -
+        new Date(b.start_date || "1970-01-01"),
     },
     {
       title: "End Date",
       dataIndex: "end_date",
-      sorter: (a, b) => new Date(a.end_date) - new Date(b.end_date),
+      render: (end_date) => (end_date ? end_date : "N/A"),
+      sorter: (a, b) =>
+        new Date(a.end_date || "1970-01-01") -
+        new Date(b.end_date || "1970-01-01"),
     },
     {
       title: "Max Users",
@@ -87,7 +95,7 @@ const OfferList = () => {
       ),
     },
     {
-      title: "",
+      title: "Actions",
       dataIndex: "actions",
       render: (_, row) => <EllipsisDropdown menu={dropdownMenu(row)} />,
     },
@@ -95,18 +103,20 @@ const OfferList = () => {
 
   return (
     <Card>
-      <Flex alignItems="center" justifyContent="space-between">
+      <Flex alignItems="center" justifyContent="space-between" className="mb-3">
         <Flex>
           <Input
             placeholder="Search"
             prefix={<SearchOutlined />}
             onChange={handleSearch}
             className="mr-2"
+            allowClear
           />
           <Select
             defaultValue="All"
             onChange={handleShowStatus}
             className="mr-2"
+            style={{ width: 120 }}
           >
             <Option value="All">All</Option>
             <Option value="Active">Active</Option>
@@ -121,13 +131,14 @@ const OfferList = () => {
           Add Offer
         </Button>
       </Flex>
-      <Table
-        columns={tableColumns}
-        dataSource={filteredOffers}
-        rowKey="id"
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-      />
+      <Spin spinning={loading}>
+        <Table
+          columns={tableColumns}
+          dataSource={filteredOffers}
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+        />
+      </Spin>
     </Card>
   );
 };
