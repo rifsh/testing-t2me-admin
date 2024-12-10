@@ -1,0 +1,1 @@
+export const APP_CURRENT_VERSION='v-1.0.4'

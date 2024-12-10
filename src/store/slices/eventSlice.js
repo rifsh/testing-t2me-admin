@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { ALL_EVENT_MOCK_API, EVENT_DETAILS_MOCK_API } from "configs/MockConfig";
+import { ALL_EVENT_MOCK_API, ENABLE_MOCK_API, EVENT_DETAILS_MOCK_API } from "configs/MockConfig";
 import EventMockData from "mock/data/eventData";
 import EventService from "services/EventService";
 
@@ -32,11 +32,12 @@ export const fetchAllEvent = createAsyncThunk(
   "event/fetchAllEvent",
   async (_, { rejectWithValue }) => {
     try {
-      if (ALL_EVENT_MOCK_API) {
+      if (ENABLE_MOCK_API&& ALL_EVENT_MOCK_API) {
         const response = EventMockData.fetchAllEvent;
         return response.data;
       } else {
-        const response = await EventService.fetchAllEvents();
+     
+        const response = await EventService.getAllEvent();
         return response.data;
       }
     } catch (error) {

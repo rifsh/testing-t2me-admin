@@ -38,10 +38,10 @@ export const LoginForm = props => {
 		allowRedirect = true
 	} = props
 
-	const initialCredential = {
-		username: 'shamil707@gmail.com',
-		password: 'admin@321'
-	}
+	// const initialCredential = {
+	// 	username: 'shamil707@gmail.com',
+	// 	password: 'admin@321'
+	// }
 
 	const onLogin = values => {
 		showLoading()
@@ -109,12 +109,14 @@ export const LoginForm = props => {
 			<Form 
 				layout="vertical" 
 				name="login-form" 
-				initialValues={initialCredential}
+				
+				// initialValues={initialCredential}
 				onFinish={onLogin}
 			>
 				<Form.Item 
 					name="username" 
 					label="Email" 
+					
 					rules={[
 						{ 
 							required: true,
@@ -125,7 +127,7 @@ export const LoginForm = props => {
 							message: 'Please enter a validate username!'
 						}
 					]}>
-					<Input prefix={<MailOutlined className="text-primary" />}/>
+					<Input prefix={<MailOutlined className="text-primary"/>} placeholder='Username'/>
 				</Form.Item>
 				<Form.Item 
 					name="password" 
@@ -150,7 +152,7 @@ export const LoginForm = props => {
 						}
 					]}
 				>
-					<Input.Password prefix={<LockOutlined className="text-primary" />}/>
+					<Input.Password prefix={<LockOutlined className="text-primary" />} placeholder='Password'/>
 				</Form.Item>
 				<Form.Item>
 					<Button type="primary" htmlType="submit" block loading={loading}>
