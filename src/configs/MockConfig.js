@@ -8,4 +8,5 @@ export const ALL_OFFERS_MOCK_API = false;
 export const ALL_COUPONS_MOCK_API = false;
 export const GET_VENUE_MOCK_API = false;
 export const GET_TICKET_MOCK_API = false;
+export const GET_TICKET_TYPE_MOCK_API = true;
 export const GET_SCHEDULE_MOCK_API = true;

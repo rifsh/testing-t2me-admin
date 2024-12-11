@@ -18,3 +18,10 @@ TicketsService.addTicket = function (data,venueId) {
   });
 };
 export default TicketsService;
+
+TicketsService.getAvailableTicketsType = function (venueId) {
+  return fetch({
+    url: `${ApiConstant.TICKET_URL}?venue_id=${venueId}`,
+    method: "get",
+  });
+};

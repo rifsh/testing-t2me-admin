@@ -1,5 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { ENABLE_MOCK_API, GET_TICKET_MOCK_API } from "configs/MockConfig";
+import {
+  ENABLE_MOCK_API,
+  GET_TICKET_MOCK_API,
+  GET_TICKET_TYPE_MOCK_API,
+} from "configs/MockConfig";
 import TicketMockData from "mock/data/ticketData";
 import TicketsService from "services/TicketService";
 
@@ -11,7 +15,8 @@ export const initialState = {
   filteredTickets: [],
   placeId: null,
   venueId: null,
-  selectedVenue: null,
+  availableTicketTyps: [],
+  // selectedVenue: null,
   isModalVisible: false,
 };
 
@@ -37,6 +42,7 @@ export const fetchAllTickets = createAsyncThunk(
     }
   }
 );
+
 export const addTicket = createAsyncThunk(
   "ticket/addTicket",
   async ({ ticketData, venue_id }, { rejectWithValue }) => {
@@ -48,24 +54,30 @@ export const addTicket = createAsyncThunk(
     }
   }
 );
+export const getAvailableTicketsType = createAsyncThunk(
+  "ticket/fetchAvailableTicketsType",
+  async (venue_id, { rejectWithValue }) => {
+    try {
+      if (GET_TICKET_TYPE_MOCK_API && ENABLE_MOCK_API) {
+        const response = TicketMockData.getAvailableTicketTyps;
+        return response.data;
+      } else {
+        const response = await TicketsService.getAvailableTicketsType(venue_id);
+        return response.data;
+      }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching ticket types"
+      );
+    }
+  }
+);
+
 export const ticketSlice = createSlice({
   name: "tickets",
   initialState,
   reducers: {
-    setSearchTerm(state, action) {
-      state.searchTerm = action.payload;
-    },
-    setStatusFilter(state, action) {
-      state.statusFilter = action.payload;
-    },
-    setPlaceId(state, action) {
-      state.placeId = action.payload;
-    },
-    setVenueId(state, action) {
-      state.venueId = action.payload;
-    },
-    filterTickets(state, action) {
-      const { searchTerm, status } = action.payload;
+    filterTickets(state, { payload: { searchTerm, status } }) {
       let filteredTickets = state.filteredTickets;
 
       if (status && status !== "All") {
@@ -82,24 +94,28 @@ export const ticketSlice = createSlice({
       }
       state.filteredTickets = filteredTickets;
     },
-    setSelectedVenue(state, action) {
-      state.selectedVenue = action.payload;
-    },
-    setIsModalVisible(state, action) {
-      state.isModalVisible = action.payload;
-    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchAllTickets.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(fetchAllTickets.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.filteredTickets = payload;
       })
       .addCase(fetchAllTickets.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+      })
+      .addCase(getAvailableTicketsType.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getAvailableTicketsType.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.availableTicketTyps = payload;
+      })
+      .addCase(getAvailableTicketsType.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
       })
@@ -124,7 +140,7 @@ export const {
   setPlaceId,
   setVenueId,
   filterTickets,
-  setSelectedVenue,
+  // setSelectedVenue,
   setIsModalVisible,
 } = ticketSlice.actions;
 

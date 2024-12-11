@@ -13,9 +13,9 @@ const EventDetailsField = () => {
   };
   return (
     <div>
-      <Col>
+      <Col xs={24} sm={24} md={17}>
         <Card title="Event Info">
-          <Form.Item name="name" label="Event name" rules={rules.name}>
+          <Form.Item name="event_name" label="Event name" rules={rules.name}>
             <Input placeholder="Event Name" />
           </Form.Item>
 

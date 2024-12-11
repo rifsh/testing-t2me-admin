@@ -10,6 +10,7 @@ export const initialState = {
   loading: false,
   offers: [],
   filteredOffers: [], 
+  isDateRequired:false,
   error: null,
 };
 export const fetchAllOffers = createAsyncThunk(
@@ -67,6 +68,9 @@ const offerSlice = createSlice({
 
       state.filteredOffers = filteredOffers;
     },
+    setIsDateRequired:(state, action)=>{
+      state.isDateRequired=action.payload
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -86,5 +90,5 @@ const offerSlice = createSlice({
   },
 });
 
-export const { filterOffers } = offerSlice.actions;
+export const { filterOffers,setIsDateRequired } = offerSlice.actions;
 export default offerSlice.reducer;
