@@ -3,7 +3,7 @@ import { Card, Table, Input, Button, Collapse, Modal, Row, Col, Divider } from '
 import { PlusCircleOutlined, SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { fetchAllTickets, filterTickets } from 'store/slices/ticketSlice';
+import { fetchAllTickets, filterTickets , resetTicketSets} from 'store/slices/ticketSlice';
 import { useDispatch, useSelector } from 'react-redux';
 const { Panel } = Collapse;
 
@@ -13,6 +13,7 @@ const TicketList = () => {
   const { filteredTickets, loading,searchTerm } = useSelector((state) => state.tickets);
 
   useEffect(() => {
+    dispatch(resetTicketSets())
     dispatch(fetchAllTickets());
   }, [dispatch]);
 

@@ -14,6 +14,7 @@ export const initialState = {
   placeWithCountryList: [],
   error: null,
   venues: [],
+  selectedVenue:null,
   coordinates: { lat: 23.4241, lng: 53.8478 },
   options: [],
   searchTerm: "",
@@ -112,6 +113,10 @@ const locationSlice = createSlice({
     setStatusFilter(state, action) {
       state.statusFilter = action.payload;
     },
+    setSelectedVenue(state, action) {
+      
+      state.selectedVenue = action.payload;
+    },
     setOptions(state, action) {
       state.options = action.payload;
     },
@@ -121,6 +126,10 @@ const locationSlice = createSlice({
     },
     onchange(state, action) {
       state.searchTerm = action.payload;
+    },
+    singleVenue(state,action){
+      console.warn(action)
+      state.venues.push(action.payload)
     },
     filterVenues(state, action) {
       const { searchTerm, status } = action.payload;
@@ -180,8 +189,6 @@ const locationSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
-      //place create case
       .addCase(createPlace.pending, (state) => {
         state.createPlaceLoading = true;
         state.error = null;
@@ -222,8 +229,10 @@ export const {
   onSelect,
   onchange,
   filterVenues,
+  singleVenue,
   onSearch,
   setCoordinates,
+  setSelectedVenue
 } = locationSlice.actions;
 export const allLocations = (state) => state.location;
 

@@ -1,5 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { ALL_EVENT_MOCK_API, EVENT_DETAILS_MOCK_API } from "configs/MockConfig";
+import {
+  ALL_EVENT_MOCK_API,
+  ENABLE_MOCK_API,
+  EVENT_DETAILS_MOCK_API,
+} from "configs/MockConfig";
 import EventMockData from "mock/data/eventData";
 import EventService from "services/EventService";
 
@@ -9,6 +13,11 @@ const initialState = {
   filteredEvents: [],
   loading: false,
   error: null,
+  selectedCoupons: [],
+  selectedOffers: [],
+  submitData: {},
+  currentStep: 1,
+  submitLoading: false,
 };
 
 export const fetchEventDetails = createAsyncThunk(
@@ -32,11 +41,11 @@ export const fetchAllEvent = createAsyncThunk(
   "event/fetchAllEvent",
   async (_, { rejectWithValue }) => {
     try {
-      if (ALL_EVENT_MOCK_API) {
+      if (ENABLE_MOCK_API && ALL_EVENT_MOCK_API) {
         const response = EventMockData.fetchAllEvent;
         return response.data;
       } else {
-        const response = await EventService.fetchAllEvents();
+        const response = await EventService.getAllEvent();
         return response.data;
       }
     } catch (error) {
@@ -48,13 +57,9 @@ export const addEvent = createAsyncThunk(
   "event/addEvent",
   async (data, { rejectWithValue }) => {
     try {
-      if (ALL_EVENT_MOCK_API) {
-        const response = EventMockData.fetchAllEvent;
-        return response.data;
-      } else {
-        const response = await EventService.adEvent();
-        return response.data;
-      }
+      const response = await EventService.addEvent(data);
+      return response.data;
+     
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
     }
@@ -73,6 +78,42 @@ const eventSlice = createSlice({
         state.filteredEvents = state.allEvents.filter(
           (event) => event.status === status
         );
+      }
+    },
+    setSubmitData(state, action) {
+      state.submitData = { ...state.submitData, ...action.payload };
+    },
+    setCurrentStep(state, action) {
+      state.currentStep = action.payload;
+    },
+    setSubmitLoading(state, action) {
+      state.submitLoading = action.payload;
+    },
+    resetSelected: (state) => {
+      state.selectedOffers = [];
+      state.selectedCoupons = [];
+      state.currentStep=1
+    },
+    toggleSelectedOffer: (state, action) => {
+      const existingOfferIndex = state.selectedOffers.findIndex(
+        (offer) => offer.id === action.payload.id
+      );
+
+      if (existingOfferIndex !== -1) {
+        state.selectedOffers.splice(existingOfferIndex, 1);
+      } else {
+        state.selectedOffers.push(action.payload);
+      }
+    },
+    toggleSelectedCoupon: (state, action) => {
+      const existingCouponIndex = state.selectedCoupons.findIndex(
+        (coupon) => coupon.id === action.payload.id
+      );
+
+      if (existingCouponIndex !== -1) {
+        state.selectedCoupons.splice(existingCouponIndex, 1);
+      } else {
+        state.selectedCoupons.push(action.payload);
       }
     },
   },
@@ -118,6 +159,14 @@ const eventSlice = createSlice({
   },
 });
 
-export const { handleShowStatus } = eventSlice.actions;
+export const {
+  handleShowStatus,
+  setSubmitData,
+  toggleSelectedCoupon,
+  toggleSelectedOffer,
+  resetSelected,
+  setCurrentStep,
+  setSubmitLoading,
+} = eventSlice.actions;
 
 export default eventSlice.reducer;

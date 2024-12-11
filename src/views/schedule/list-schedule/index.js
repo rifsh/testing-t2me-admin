@@ -1,75 +1,58 @@
-import React, { useState } from "react";
-import { Button, Card, Input, Select, Table } from "antd";
+import React, { useEffect, useState } from "react";
+import { Button, Card, Input, Select, Table, Tag } from "antd";
 import Flex from "components/shared-components/Flex";
 import { FormOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllSchedules, filterSchedules } from "store/slices/scheduleSlice";
 
 const { Option } = Select;
 
-const scheduleDataList = [
-  {
-    key: "1", // Added unique key for table rows
-    event: "Meeting with Team",
-    startTime: "2024-11-21T10:00:00",
-    endTime: "2024-11-21T11:00:00",
-    status: "Active",
-  },
-  {
-    key: "2",
-    event: "Project Presentation",
-    startTime: "2024-11-21T14:00:00",
-    endTime: "2024-11-21T15:30:00",
-    status: "Inactive",
-  },
-];
-
 const ScheduleList = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [list, setList] = useState(scheduleDataList);
-
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { filteredSchedules, loading } = useSelector(
+    (state) => state.schedules
+  );
+  // const [form] = Form.useForm();
 
-  // Filter list by status
-  const handleShowStatus = (value) => {
-    const filteredData =
-      value !== "All"
-        ? scheduleDataList.filter((item) => item.status === value)
-        : scheduleDataList;
-    setList(filteredData);
-  };
+  useEffect(() => {
+    dispatch(fetchAllSchedules());
+  }, [dispatch]);
 
-  // Filter list by search term
   const handleSearch = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchTerm(value);
-    const filteredData = scheduleDataList.filter(
-      (item) =>
-        item.event.toLowerCase().includes(value) ||
-        item.status.toLowerCase().includes(value)
-    );
-    setList(filteredData);
+    dispatch(filterSchedules({ searchTerm: e.target.value }));
   };
 
+  const handleShowStatus = (status) => {
+    dispatch(filterSchedules({ status }));
+  };
+  const getStatusColor = (status) => (status ? "green" : "red");
   const tableColumns = [
     {
       title: "Event",
-      dataIndex: "event",
+      dataIndex: "event_id",
       sorter: (a, b) => a.event.localeCompare(b.event),
     },
     {
       title: "Start Time",
-      dataIndex: "startTime",
+      dataIndex: "start_date",
       sorter: (a, b) => a.startTime.localeCompare(b.startTime),
     },
     {
       title: "End Time",
-      dataIndex: "endTime",
+      dataIndex: "end_date",
       sorter: (a, b) => a.endTime.localeCompare(b.endTime),
     },
     {
       title: "Status",
       dataIndex: "status",
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>
+          {status ? "Active" : "Inactive"}
+        </Tag>
+      ),
       sorter: (a, b) => a.status.localeCompare(b.status),
     },
   ];
@@ -82,7 +65,6 @@ const ScheduleList = () => {
             <Input
               placeholder="Search"
               prefix={<SearchOutlined />}
-              value={searchTerm}
               onChange={handleSearch}
             />
           </div>
@@ -108,7 +90,7 @@ const ScheduleList = () => {
         </Button>
       </Flex>
       <div>
-        <Table columns={tableColumns} dataSource={list} />
+        <Table columns={tableColumns} dataSource={filteredSchedules} />
       </div>
     </Card>
   );

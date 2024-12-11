@@ -1,30 +1,42 @@
 import React, { useEffect, useState } from "react";
 import {
+  Input,
   Row,
   Col,
   Card,
   Form,
+  DatePicker,
   Select,
+  Modal,
   Typography,
+  Button,
 } from "antd";
+import { RulesConstants } from "constants/RulesConstant";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  toggleSelectedOffer,
+  setSelectedItemForModal,
+  toggleSelectedCoupon,
+} from "store/slices/scheduleSlice";
 import { fetchAllOffers } from "store/slices/offerSlice";
 import { fetchAllCoupons } from "store/slices/couponSlice";
-import { fetchAllEvent, toggleSelectedCoupon, toggleSelectedOffer } from "store/slices/eventSlice";
+import OfferDateModal from "./OfferDateModal";
+import { useNavigate } from "react-router-dom";
+import { fetchAllEvent } from "store/slices/eventSlice";
 
 const { Option } = Select;
 const { Text } = Typography;
 
-const OfferField = () => {
+function ScheduleFormFields() {
   const dispatch = useDispatch();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [form] = Form.useForm();
 
-  // State from Redux
   const { filteredOffers: filteredOffer, loading: offerLoading } = useSelector(
     (state) => state.offers
   );
-  const { selectedOffers, selectedCoupons } = useSelector(
-    (state) => state.event
+  const { selectedOffers, selectedCoupons, selectedItemForModal } = useSelector(
+    (state) => state.schedules
   );
   const { filteredCoupons, loading: couponLoading } = useSelector(
     (state) => state.coupons
@@ -33,7 +45,7 @@ const OfferField = () => {
   useEffect(() => {
     dispatch(fetchAllOffers());
     dispatch(fetchAllCoupons());
-    // dispatch(fetchAllEvent());
+    dispatch(fetchAllEvent());
   }, [dispatch]);
 
   const handleCouponSelect = (couponId) => {
@@ -59,10 +71,57 @@ const OfferField = () => {
     }
   };
 
+  const showItemDetails = (item) => {
+    dispatch(setSelectedItemForModal(item));
+    setIsModalVisible(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+    dispatch(setSelectedItemForModal(null));
+  };
+  const {filteredEvents } = useSelector((state) => state.event);
+  const navigate = useNavigate();
+
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
-        <Card>
+        <Card title="Schedule Details">
+          {/* <Form form={form}> */}
+          <Form.Item name="event" label="Event" rules={RulesConstants.event}>
+          <Select className="w-100" placeholder="Choose a Category">
+                {filteredEvents.map((elm) => (
+                  <Option key={elm.id} value={elm.id}>
+                    {elm.event_name}
+                  </Option>
+                ))}
+              </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="start_date"
+            label="Start Time"
+            rules={RulesConstants.start_time}
+          >
+            <DatePicker
+              showTime
+              className="w-100"
+              placeholder="Select start time"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="end_date"
+            label="End Time"
+            rules={RulesConstants.end_time}
+          >
+            <DatePicker
+              showTime
+              className="w-100"
+              placeholder="Select end time"
+            />
+          </Form.Item>
+
           <Form.Item name="offer" label="Offer">
             <Select
               loading={offerLoading}
@@ -93,8 +152,10 @@ const OfferField = () => {
               ))}
             </Select>
           </Form.Item>
+          {/* </Form> */}
         </Card>
       </Col>
+
       <Col xs={24} sm={24} md={7}>
         <div style={{ marginBottom: 16, marginTop: 0 }}>
           {selectedOffers.length > 0 ? <Text>Selected Offers</Text> : null}
@@ -102,6 +163,7 @@ const OfferField = () => {
             <Card
               key={offer.id}
               size="small"
+              onClick={() => showItemDetails(offer)}
               style={{
                 cursor: "pointer",
                 marginBottom: "8px",
@@ -143,10 +205,11 @@ const OfferField = () => {
         </div>
         <div style={{ marginBottom: 16, marginTop: 0 }}>
           {selectedCoupons.length > 0 ? <Text>Selected Coupons</Text> : null}
-          {selectedCoupons.map((coupon) => (
+          {selectedCoupons.map((offer) => (
             <Card
-              key={coupon.id}
+              key={offer.id}
               size="small"
+              onClick={() => showItemDetails(offer)}
               style={{
                 cursor: "pointer",
                 marginBottom: "8px",
@@ -160,7 +223,7 @@ const OfferField = () => {
                   style={{ marginBottom: "8px" }}
                 >
                   <Text strong style={{ fontSize: "14px", color: "#333" }}>
-                    {coupon.name}
+                    {offer.name}
                   </Text>
                   <Text
                     style={{
@@ -171,15 +234,15 @@ const OfferField = () => {
                       borderRadius: "4px",
                     }}
                   >
-                    Max Uses: {coupon.max_uses}
+                    Max Uses: {offer.max_uses}
                   </Text>
                 </Row>
                 <Row justify="space-between">
                   <Text style={{ fontSize: "10px ", color: "#595959" }}>
-                    Start: {coupon.start_date}
+                    Start: {offer.start_date}
                   </Text>
                   <Text style={{ fontSize: "10px ", color: "#595959" }}>
-                    End: {coupon.end_date}
+                    End: {offer.end_date}
                   </Text>
                 </Row>
               </Col>
@@ -187,8 +250,14 @@ const OfferField = () => {
           ))}
         </div>
       </Col>
+
+      <OfferDateModal
+        isModalVisible={isModalVisible}
+        selectedItemForModal={selectedItemForModal}
+        handleModalClose={handleModalClose}
+      />
     </Row>
   );
-};
+}
 
-export default OfferField;
+export default ScheduleFormFields;

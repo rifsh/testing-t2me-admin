@@ -1,17 +1,20 @@
-const { ApiConstant } = require("constants/ApiConstant");
+import fetch from "auth/FetchInterceptor";
+import { ApiConstant } from "constants/ApiConstant";
 
-const EventService = {};
-EventService.fetchAllEvents = function () {
+const EventsService = {};
+
+EventsService.addEvent = function (data) {
+  return fetch({
+    url: ApiConstant.EVENT_URL,
+    method: "post",
+    data: data,
+  });
+};
+
+EventsService.getAllEvent = function (place) {
   return fetch({
     url: ApiConstant.EVENT_URL,
     method: "get",
   });
 };
-EventService.adEvent = function (data) {
-  return fetch({
-    url: ApiConstant.EVENT_URL,
-    method: "post",
-    data: "data",
-  });
-};
-export default EventService;
+export default EventsService;

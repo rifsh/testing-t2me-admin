@@ -3,13 +3,13 @@ import { message, AutoComplete, Form,} from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPlaceWithCountry } from "store/slices/locationSlice";
 
-const PlaceWithCountryForm = ({ form, onSelect, rules,label }) => {
+const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
   const dispatch = useDispatch();
 
   const { placeWithCountryList, loading, error } = useSelector(
     (state) => state.locations
   );
-
+  console.warn(placeWithCountryList, loading, error,'...')
   useEffect(() => {
     if (error) {
       message.error(error);
@@ -27,9 +27,10 @@ const PlaceWithCountryForm = ({ form, onSelect, rules,label }) => {
   };
 
   const handleSelect = async (value, option) => {
+    console.log(value, option)
     try {
       await form.setFieldsValue({
-        // place_id: option.id, 
+        place_id: option.label, 
       });
       if (onSelect) {
         onSelect(option.id); 
@@ -53,7 +54,7 @@ const PlaceWithCountryForm = ({ form, onSelect, rules,label }) => {
         name="place_id"
         label={label}
         rules={rules}
-        style={{ marginBottom: 0 }}
+        style={style}
       >
         <AutoComplete
           onSearch={handleSearch}

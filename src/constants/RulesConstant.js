@@ -4,3 +4,36 @@ export const RulesMessageConstants = {
   CAPACITY:"Please enter capacity",
   INDOOR:"Please specify indoor/outdoor",
 };
+
+export const RulesConstants = {
+  event: [
+    {
+      required: true,
+      message: "Please select an event",
+    },
+  ],
+  start_time: [
+    {
+      required: true,
+      message: "Please select a start time",
+    },
+  ],
+  end_time: [
+    {
+      required: true,
+      message: "Please select an end time",
+    },
+  ],
+  status: [
+    {
+      required: true,
+      message: "Please select status",
+    },
+  ],
+  venue: [
+    {
+      required: true,
+      message: "Please select a venue",
+    },
+  ],
+};

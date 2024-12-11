@@ -1,98 +1,109 @@
-import React, { useState } from "react";
-import { Input, Form, Card, Button, Col,  } from "antd";
+import React, { useEffect, useState } from "react";
+import { Input, Form, Card, Button, Col } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-
-
-const TicketStructureFields = () => {
-  // const [form] = Form.useForm();
-  const [ticketTypes, setTicketTypes] = useState([{ id: 1 }]);
-
+import { useNavigate } from "react-router-dom";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { useDispatch } from "react-redux";
+const TicketStructureFields = ({ ticket_states }) => {
+  const [ticketTypes, setTicketTypes] = useState([{ id: 1 }]); // Dynamically manage form fields
+  const { form, tickets, ticketCategory, handleExternalFunction, currentStep } = ticket_states;
+  const dispatch = useDispatch()
+  const nav = useNavigate()
+  // Add new ticket type field
   const addTicketTypeField = () => {
     setTicketTypes((prev) => [...prev, { id: Date.now() }]);
   };
 
+  // Delete ticket type field
   const deleteTicketTypeField = (id) => {
     if (ticketTypes.length > 1) {
       setTicketTypes((prev) => prev.filter((type) => type.id !== id));
     }
   };
 
+  // Save current step data
+  const saveCurrentStep = async () => {
+    const values = await form.validateFields();
+    handleExternalFunction(values.ticket_types); // Pass only ticket types data
+    console.log(values, form, "Saved Step Data");
+  };
+
+  useEffect(() => {
+    console.log(tickets, tickets.length,"Current Step");
+    if (tickets && tickets.length > 0) {
+      const ticketss = tickets[0]; // Access the first item in the tickets array
+      console.log(ticketss, "Ticket Data");
+
+      // Find the ticket set corresponding to the current step
+      const existingData = ticketss.ticket_types?.find(
+        (ticket) => ticket.id === currentStep
+      );
+      console.log(existingData, "Existing Data");
+
+      if (existingData) {
+        // Set form fields using existing data if found
+        form.setFieldsValue({
+          ticket_types: existingData.tickets || [], // Use 'tickets' data
+        });
+
+        // Update ticketTypes state to match the existing data
+        setTicketTypes(
+          existingData.tickets.map((_, index) => ({ id: index + 1 }))
+        );
+      } else {
+        // Reset the form and ticketTypes for this step
+        form.resetFields();
+        setTicketTypes([{ id: 1 }]); // Default to one ticket form
+      }
+    } else {
+      // If no tickets exist, reset everything
+      form.resetFields();
+      setTicketTypes([{ id: 1 }]);
+      nav(`${APP_PREFIX_PATH}/ticket/add`)
+    }
+  }, [currentStep, tickets, form]);
+
+  console.log(tickets, "Rendered Ticket Types");
+
   return (
     <Col xs={24} sm={24} md={24}>
-      {/* <Form.Item
-        name="structure_type"
-        label="Structure Type"
-        rules={[{ required: true, message: "Please select a structure type" }]}
-      >
-        <Select placeholder="Select Structure Type">
-          {structureTypes.map(type => (
-            <Option key={type} value={type}>{type}</Option>
-          ))}
-        </Select>
-      </Form.Item> */}
-
       {ticketTypes.map((ticketType, index) => (
         <Card
           key={ticketType.id}
           title={`Ticket Type Details ${index + 1}`}
           style={{ marginBottom: "24px", position: "relative" }}
         >
-          {/* <Form.Item
-            name={['ticket_types', index, 'category']}
-            label="Ticket Category"
-            rules={[{ required: true, message: "Please select a ticket category" }]}
-          >
-            <Select placeholder="Select Ticket Category">
-              {ticketCategories.map(category => (
-                <Option key={category} value={category}>{category}</Option>
-              ))}
-            </Select>
-          </Form.Item> */}
-
           <Form.Item
-            name={['ticket_types', index, 'name']}
+            name={["ticket_types", index, "name"]}
             label="Ticket Type Name"
             rules={[{ required: true, message: "Please enter a name" }]}
           >
             <Input placeholder="Enter Ticket Name" />
           </Form.Item>
-          <Form.Item
-            name={['ticket_set', index, 'ticket_set']}
-            label="Ticket Name"
-            rules={[{ required: true, message: "Please enter a name" }]}
-          >
-            <Input placeholder="Enter Ticket Name" />
-          </Form.Item>
 
           <Form.Item
-            name={['ticket_types', index, 'price']}
+            name={["ticket_types", index, "price"]}
             label="Ticket Price"
             rules={[
               { required: true, message: "Please enter a price" },
-              { pattern: /^\d+(\.\d{1,2})?$/, message: "Please enter a valid price" }
+              {
+                pattern: /^\d+(\.\d{1,2})?$/,
+                message: "Please enter a valid price",
+              },
             ]}
           >
-            <Input 
-              placeholder="Enter Ticket Price" 
-              type="number" 
-              min={0} 
-              step="0.01" 
-            />
+            <Input placeholder="Enter Ticket Price" type="number" min={0} />
           </Form.Item>
 
           <Form.Item
-            name={['ticket_types', index, 'quantity']}
+            name={["ticket_types", index, "number_of_tickets"]}
             label="Ticket Quantity"
             rules={[
               { required: true, message: "Please enter ticket quantity" },
-              { pattern: /^\d+$/, message: "Please enter a valid number" }
+              { pattern: /^\d+$/, message: "Please enter a valid number" },
             ]}
           >
-            <Input 
-              placeholder="Enter Number of Tickets" 
-              type="number" 
-              min={1} 
-            />
+            <Input placeholder="Enter Number of Tickets" type="number" min={1} />
           </Form.Item>
 
           {ticketTypes.length > 1 && (
@@ -107,13 +118,21 @@ const TicketStructureFields = () => {
         </Card>
       ))}
 
-      <Button 
-        type="dashed" 
-        onClick={addTicketTypeField} 
-        icon={<PlusOutlined />} 
-        style={{ width: "100%" }}
+      <Button
+        type="dashed"
+        onClick={addTicketTypeField}
+        icon={<PlusOutlined />}
+        style={{ width: "50%" }}
       >
         Add Ticket Type
+      </Button>
+      <Button
+        type="dashed"
+        onClick={saveCurrentStep}
+        icon={<PlusOutlined />}
+        style={{ width: "50%" }}
+      >
+        Save Current Step
       </Button>
     </Col>
   );
