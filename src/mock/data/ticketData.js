@@ -104,10 +104,15 @@ TicketMockData.getAllTickets = {
   },
 };
 
-TicketMockData. getAvailableTicketTyps = {
+TicketMockData.getAvailableTicketTyps = {
   data: [
-    { id: 1, type: "SEAT_STRUCTURE" },
-    { id: 2, type: "BOOKING_STRUCTURE" },
+    {
+      available_types: [
+        "seat_structure",
+        "ticket_structure",
+        "movie_seat_structure",
+      ],
+    },
   ],
   status: {
     message: "success",

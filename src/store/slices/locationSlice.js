@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   ALL_COUNTRIES_MOCK_API,
   ENABLE_MOCK_API,
+  GET_PLACE_MOCK_API,
   GET_VENUE_MOCK_API,
 } from "configs/MockConfig";
 import LocationMockData from "mock/data/location";
@@ -11,10 +12,13 @@ export const initialState = {
   loading: false,
   countries: [],
   filteredVenues: [],
+  filteredPlaces: [],
   placeWithCountryList: [],
   error: null,
   venues: [],
-  selectedVenue:null,
+  detailedCountryList:[],
+  places: [],
+  selectedVenue: null,
   coordinates: { lat: 23.4241, lng: 53.8478 },
   options: [],
   searchTerm: "",
@@ -85,16 +89,41 @@ export const addVenue = createAsyncThunk(
 export const getVenues = createAsyncThunk(
   "locations/getVenues",
   async (place_id, { rejectWithValue }) => {
-   
-    
     try {
       if (GET_VENUE_MOCK_API) {
         const response = LocationMockData.getAllVenues;
         return response.data;
-      } else {  
+      } else {
         const response = await LocationService.getVenues(place_id);
         return response.data;
       }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+export const getPlaces = createAsyncThunk(
+  "locations/getPlaces",
+  async (country_id, { rejectWithValue }) => {
+    try {
+      if (GET_PLACE_MOCK_API && ENABLE_MOCK_API) {
+        const response = LocationMockData.getAllPlaces;
+        return response.data;
+      } else {
+        const response = await LocationService.getPlaces(country_id);
+        return response.data;
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+export const getCoutryDetails = createAsyncThunk(
+  "locations/getCountryDetails",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await LocationService.getCoutryDetails();
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch places");
     }
@@ -114,7 +143,6 @@ const locationSlice = createSlice({
       state.statusFilter = action.payload;
     },
     setSelectedVenue(state, action) {
-      
       state.selectedVenue = action.payload;
     },
     setOptions(state, action) {
@@ -127,30 +155,52 @@ const locationSlice = createSlice({
     onchange(state, action) {
       state.searchTerm = action.payload;
     },
-    singleVenue(state,action){
-      console.warn(action)
-      state.venues.push(action.payload)
+    singleVenue(state, action) {
+      console.warn(action);
+      state.venues.push(action.payload);
     },
     filterVenues(state, action) {
       const { searchTerm, status } = action.payload;
 
-      let filteredVenues = state.offers;
+      let filteredVenues = state.venues; 
       if (status && status !== "All") {
         filteredVenues = filteredVenues.filter(
-          (offer) =>
-            (status === "Active" && offer.status === true) ||
-            (status === "Inactive" && offer.status === false)
+          (venue) =>
+            (status === "Active" && venue.status === true) ||
+            (status === "Inactive" && venue.status === false)
         );
       }
 
       if (searchTerm) {
-        filteredVenues = filteredVenues.filter((offer) =>
-          offer.name.toLowerCase().includes(searchTerm.toLowerCase())
+        filteredVenues = filteredVenues.filter((venue) =>
+          venue.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
 
       state.filteredVenues = filteredVenues;
     },
+
+    filterPlaces(state, action) {
+      const { searchTerm, status } = action.payload;
+
+      let filteredPlaces = state.places;
+      if (status && status !== "All") {
+        filteredPlaces = filteredPlaces.filter(
+          (place) =>
+            (status === "Active" && place.status === true) ||
+            (status === "Inactive" && place.status === false)
+        );
+      }
+
+      if (searchTerm) {
+        filteredPlaces = filteredPlaces.filter((place) =>
+          place.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      state.filteredPlaces = filteredPlaces;
+    },
+
     onSearch(state, action) {
       const filteredOptions = state.countries
         .filter((item) =>
@@ -183,9 +233,37 @@ const locationSlice = createSlice({
       })
       .addCase(getVenues.fulfilled, (state, action) => {
         state.loading = false;
+        state.venues = action.payload;
         state.filteredVenues = action.payload;
       })
       .addCase(getVenues.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getCoutryDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getCoutryDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.venues = action.payload;
+        state.detailedCountryList = action.payload;
+
+      })
+      .addCase(getCoutryDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getPlaces.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getPlaces.fulfilled, (state, action) => {
+        state.loading = false;
+        state.places = action.payload;
+        state.filteredPlaces = action.payload;
+      })
+      .addCase(getPlaces.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -232,7 +310,8 @@ export const {
   singleVenue,
   onSearch,
   setCoordinates,
-  setSelectedVenue
+  filterPlaces,
+  setSelectedVenue,
 } = locationSlice.actions;
 export const allLocations = (state) => state.location;
 

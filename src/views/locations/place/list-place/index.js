@@ -1,7 +1,17 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useCallback } from "react";
-import { Card, Table, Select, Input, Button, Menu, Tag } from "antd";
-import CountryListData from "assets/data/country-list.json";
+import React, { useEffect } from "react";
+import {
+  Card,
+  Table,
+  Select,
+  Input,
+  Button,
+  Menu,
+  Tag,
+  Row,
+  Col,
+  Form,
+} from "antd";
 import {
   EyeOutlined,
   FormOutlined,
@@ -15,44 +25,43 @@ import { DATE_FORMAT_DD_MM_YYYY } from "constants/DateConstant";
 import utils from "utils";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { debounce } from "lodash";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  filterPlaces,
+  getCoutryDetails,
+  getPlaces,
+} from "store/slices/locationSlice";
 
 const { Option } = Select;
 
-const getStatusColor = (status) => {
-  if (status === "Active") {
-    return "green";
-  }
-  if (status === "Inactive") {
-    return "red";
-  }
-  return "";
-};
+const getStatusColor = (status) => (status ? "green" : "red");
 
 const PlaceList = () => {
-  const [list, setList] = useState(CountryListData);
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const handleShowStatus = (value) => {
-    const filteredData =
-      value !== "All"
-        ? utils.filterArray(CountryListData, "status", value)
-        : CountryListData;
-    setList(filteredData);
-  };
-
-  // Debounce search input
-  const handleSearch = useCallback(
-    debounce((value) => {
-      const searchArray = value ? list : CountryListData;
-      const filteredData = utils.wildCardSearch(searchArray, value);
-      setList(filteredData);
-      setSelectedRowKeys([]);
-    }, 500),
-    []
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { filteredPlaces, detailedCountryList, loading } = useSelector(
+    (state) => state.locations
   );
+
+  useEffect(() => {
+    dispatch(getPlaces());
+    dispatch(getCoutryDetails());
+  }, [dispatch]);
+
+  const handleSearch = (value) => {
+    dispatch(filterPlaces({ searchTerm: value, status: null }));
+  };
+  const handleSelectCountry = async (id) => {
+    dispatch(getPlaces(id));
+  };
+  const handleShowStatus = (status) => {
+    dispatch(
+      filterPlaces({
+        searchTerm: null,
+        status: status === "All" ? null : status === "Active",
+      })
+    );
+  };
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -73,47 +82,36 @@ const PlaceList = () => {
 
   const tableColumns = [
     {
-      title: "Date",
-      dataIndex: "createdDate",
-      render: (_, record) => (
-        <span>{dayjs(record.createdDate).format(DATE_FORMAT_DD_MM_YYYY)}</span>
+      title: "Place Name",
+      dataIndex: "name",
+      sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
+    },
+    {
+      title: "Country ID",
+      dataIndex: "country_id",
+      sorter: (a, b) => utils.antdTableSorter(a, b, "country_id"),
+    },
+    {
+      title: "Created Date",
+      dataIndex: "created_at",
+      render: (createdDate) => (
+        <span>{dayjs(createdDate).format(DATE_FORMAT_DD_MM_YYYY)}</span>
       ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, "createdDate"),
+      sorter: (a, b) => utils.antdTableSorter(a, b, "created_at"),
     },
-    {
-      title: "Country Name",
-      dataIndex: "countryName",
-      render: (_, record) => <span>{record.countryName}</span>,
-      sorter: (a, b) => utils.antdTableSorter(a, b, "countryName"),
-    },
-    {
-      title: "Country Code",
-      dataIndex: "countryCode",
-      render: (_, record) => <span>{record.countryCode}</span>,
-      sorter: (a, b) => utils.antdTableSorter(a, b, "countryCode"),
-    },
-    {
-      title: "Timezone",
-      dataIndex: "timezone",
-      render: (_, record) => <span>{record.timezone}</span>,
-      sorter: (a, b) => utils.antdTableSorter(a, b, "timezone"),
-    },
-    {
-      title: "Place",
-      dataIndex: "place",
-      render: (_, record) => <span>{record.place}</span>,
-      sorter: (a, b) => utils.antdTableSorter(a, b, "place"),
-    },
+
     {
       title: "Status",
       dataIndex: "status",
-      render: (_, record) => (
-        <Tag color={getStatusColor(record.status)}>{record.status}</Tag>
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>
+          {status ? "Active" : "Inactive"}
+        </Tag>
       ),
       sorter: (a, b) => utils.antdTableSorter(a, b, "status"),
     },
     {
-      title: "",
+      title: "Action",
       dataIndex: "actions",
       render: (_, elm) => (
         <div className="text-right">
@@ -123,70 +121,68 @@ const PlaceList = () => {
     },
   ];
 
-  const rowSelection = {
-    onChange: (key, rows) => {
-      setSelectedRows(rows);
-      setSelectedRowKeys(key);
-    },
-  };
-
-  const navigate = useNavigate();
-
   return (
     <Card>
-      <Flex
-        alignItems="center"
-        justifyContent="space-between"
-        mobileFlex={false}
-      >
-        <Flex className="mb-1" mobileFlex={false}>
-          <div className="mr-md-3 mb-3">
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                handleSearch(e.target.value);
-              }}
-              value={searchTerm}
-            />
-          </div>
-          <div className="mb-3">
+      <Row gutter={16} justify="space-between" style={{ marginBottom: 16 }}>
+        <Col xs={24} sm={8}>
+          <Form.Item name="country_id" label="Country name">
             <Select
-              defaultValue="All"
               className="w-100"
-              style={{ minWidth: 180 }}
-              onChange={handleShowStatus}
-              placeholder="Status"
+              placeholder="Choose a Country"
+              loading={loading}
+              onSelect={(id) => handleSelectCountry(id)}
             >
-              <Option value="All">All payment</Option>
-              <Option value="Active">Active</Option>
-              <Option value="Inactive">Inactive</Option>
+              {detailedCountryList.map((country) => {
+                return (
+                  <Option key={country.id} value={country.id}>
+                    {country.name}
+                  </Option>
+                );
+              })}
             </Select>
-          </div>
-        </Flex>
-        <div>
+          </Form.Item>
+        </Col>
+        <Col xs={24} sm={8} style={{ textAlign: "right" }}>
           <Button
             type="primary"
             icon={<FormOutlined />}
-            block
             onClick={() => navigate(`${APP_PREFIX_PATH}/place/add`)}
           >
             Add Place
           </Button>
-        </div>
+        </Col>
+      </Row>
+      <Flex
+        alignItems="center"
+        justifyContent="space-between"
+        mobileFlex={false}
+        className="mb-3"
+      >
+        <Input
+          placeholder="Search"
+          prefix={<SearchOutlined />}
+          onChange={(e) => handleSearch(e.target.value)}
+          style={{ marginRight: 8 }}
+        />
+        <Select
+          defaultValue="All"
+          className="w-100"
+          style={{ minWidth: 180 }}
+          onChange={handleShowStatus}
+          placeholder="Status"
+        >
+          <Option value="All">All</Option>
+          <Option value="Active">Active</Option>
+          <Option value="Inactive">Inactive</Option>
+        </Select>
       </Flex>
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={list}
-          rowKey="countryCode"
-          rowSelection={{
-            selectedRowKeys: selectedRowKeys,
-            type: "checkbox",
-            preserveSelectedRowKeys: false,
-            ...rowSelection,
-          }}
+          dataSource={filteredPlaces}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 10 }}
         />
       </div>
     </Card>
