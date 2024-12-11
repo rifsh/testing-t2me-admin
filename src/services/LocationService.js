@@ -1,48 +1,56 @@
 import fetch from "auth/FetchInterceptor";
-import { ApiConstant, } from "constants/ApiConstant";
+import { ApiConstant } from "constants/ApiConstant";
 
-const LocationService = {}
+const LocationService = {};
 
 LocationService.getAllCountries = function () {
-	return fetch({
-		url: '/api/v1/location/secured/country/',
-		method: 'get',
-	})
-		.then((response) => {
-			console.log("fetched Countries = ", response.data);
-			return response.data;
-		})
-		.catch((error) => {
-			console.error("Error fetching Countries:", error);
-			throw error;
-		});
+  return fetch({
+    url: "/api/v1/location/secured/country/",
+    method: "get",
+  });
 };
 
 LocationService.addPlace = function (data) {
-	return fetch({
-		url: ApiConstant.PLACE_URL,
-		method: "post",
-		data: data,
-	});
+  return fetch({
+    url: ApiConstant.PLACE_URL,
+    method: "post",
+    data: data,
+  });
 };
-LocationService.addVenue = function (data, placeId) {	
-	return fetch({
-		url:`${ApiConstant.VENUE_URL}?place_id=${placeId}`,
-		method: "post",
-		data: data,
-	});
+LocationService.addVenue = function (data, placeId) {
+  return fetch({
+    url: `${ApiConstant.VENUE_URL}?place_id=${placeId}`,
+    method: "post",
+    data: data,
+  });
 };
 
 LocationService.placeWithCountry = function (place) {
-	return fetch({
-		url: `${ApiConstant.PLACE_WITH_COUNTRY_URL}?place=${place}`,
-		method: "get",
-	});
+  return fetch({
+    url: `${ApiConstant.PLACE_WITH_COUNTRY_URL}?place=${place}`,
+    method: "get",
+  });
 };
 LocationService.getVenues = function (place_id) {
-    return fetch({
-        url: place_id ? `${ApiConstant.VENUE_URL}?place_id=${place_id}` : `${ApiConstant.VENUE_URL}`,
-        method: "get",
-    });
+  return fetch({
+    url: place_id
+      ? `${ApiConstant.VENUE_URL}?place_id=${place_id}`
+      : `${ApiConstant.VENUE_URL}`,
+    method: "get",
+  });
+};
+LocationService.getPlaces = function (country_id) {
+  return fetch({
+    url: country_id
+      ? `${ApiConstant.PLACE_URL}?country_id=${country_id}`
+      : `${ApiConstant.PLACE_URL}`,
+    method: "get",
+  });
+};
+LocationService.getCoutryDetails = function () {
+  return fetch({
+    url: ApiConstant.COUNTRY_DETAILS_URL,
+    method: "get",
+  });
 };
 export default LocationService;

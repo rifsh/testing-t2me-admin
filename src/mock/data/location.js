@@ -1,4 +1,72 @@
 const LocationMockData = {};
+LocationMockData.getAllPlaces = {
+  data: [
+    {
+      status: true,
+      created_at: "2024-12-07T10:44:22.535165",
+      updated_at: "2024-12-07T10:44:22.535374",
+      id: 1,
+      name: "Malappuram",
+      country_id: 1,
+      latitude: null,
+      longitude: null,
+    },
+    {
+      status: true,
+      created_at: "2024-12-07T10:44:22.353917",
+      updated_at: "2024-12-07T10:44:22.354090",
+      id: 2,
+      name: "Calicut",
+      country_id: 1,
+      latitude: null,
+      longitude: null,
+    },
+    {
+      status: true,
+      created_at: "2024-12-07T10:44:22.535165",
+      updated_at: "2024-12-07T10:44:22.535374",
+      id: 5,
+      name: "Agra",
+      country_id: 1,
+      latitude: null,
+      longitude: null,
+    },
+    {
+      status: true,
+      created_at: "2024-12-07T10:44:22.242448",
+      updated_at: "2024-12-07T10:44:22.242599",
+      id: 7,
+      name: "India",
+      country_id: 1,
+      latitude: null,
+      longitude: null,
+    },
+    {
+      status: true,
+      created_at: "2024-12-07T10:44:22.535165",
+      updated_at: "2024-12-07T10:44:22.535374",
+      id: 9,
+      name: "Cochi",
+      country_id: 1,
+      latitude: null,
+      longitude: null,
+    },
+    {
+      status: true,
+      created_at: "2024-12-07T10:44:22.420929",
+      updated_at: "2024-12-07T10:44:22.421075",
+      id: 10,
+      name: "Kerela",
+      country_id: 1,
+      latitude: null,
+      longitude: null,
+    },
+  ],
+  status: {
+    message: "success",
+    status_code: 200,
+  },
+};
 LocationMockData.getAllVenues = {
   data: [
     {

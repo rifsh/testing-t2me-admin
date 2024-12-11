@@ -11,7 +11,7 @@ TicketsService.getAllTickets = function (venueId) {
 };
 
 TicketsService.addTicket = function (data,venueId) {
-  console.warn(data,';ljsahdddddddddddddddddddddddddddd')
+
   return fetch({
     url: `${ApiConstant.TICKET_URL}?venue_id=${venueId}`,
     method: "post",
@@ -20,9 +20,9 @@ TicketsService.addTicket = function (data,venueId) {
 };
 export default TicketsService;
 
-TicketsService.getAvailableTicketsType = function (venueId) {
+TicketsService.getAvailableTicketsType = function () {
   return fetch({
-    url: `${ApiConstant.TICKET_URL}?venue_id=${venueId}`,
+    url: ApiConstant.AVAILABLE_TICKET_TYPE_URL,
     method: "get",
   });
 };

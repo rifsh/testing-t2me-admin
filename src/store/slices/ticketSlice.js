@@ -17,14 +17,17 @@ export const initialState = {
   placeId: null,
   venueId: null,
   availableTicketTyps: [],
+  selectedTicketTyps: [],
   // selectedVenue: null,
   isModalVisible: false,
-  ticketTypes: [], // Store ticket types as an array of objects
+  ticketTypes: [], 
 };
 
 export const fetchAllTickets = createAsyncThunk(
   "ticket/fetchAllTickets",
   async (_, { rejectWithValue, getState }) => {
+   
+    
     try {
       if (GET_TICKET_MOCK_API && ENABLE_MOCK_API) {
         const response = TicketMockData.getAllTickets;
@@ -53,13 +56,16 @@ export const addTicket = createAsyncThunk(
 );
 export const getAvailableTicketsType = createAsyncThunk(
   "ticket/fetchAvailableTicketsType",
-  async (venue_id, { rejectWithValue }) => {
+  async (_,  { rejectWithValue }) => {
     try {
+     
       if (GET_TICKET_TYPE_MOCK_API && ENABLE_MOCK_API) {
+        
+        
         const response = TicketMockData.getAvailableTicketTyps;
         return response.data;
       } else {
-        const response = await TicketsService.getAvailableTicketsType(venue_id);
+        const response = await TicketsService.getAvailableTicketsType();
         return response.data;
       }
     } catch (error) {
@@ -98,6 +104,9 @@ export const ticketSlice = createSlice({
     },
     setIsModalVisible(state, action) {
       state.isModalVisible = action.payload;
+    },
+    setSelectedTicketType(state, action) {
+      state.selectedTicketTyps = action.payload;
     },
 
    
@@ -175,7 +184,7 @@ export const ticketSlice = createSlice({
       })
       .addCase(getAvailableTicketsType.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.availableTicketTyps = payload;
+        state.availableTicketTyps = payload[0];
       })
       .addCase(getAvailableTicketsType.rejected, (state, { payload }) => {
         state.loading = false;
@@ -206,8 +215,9 @@ export const {
   resetTicketTypes,
   setIsModalVisible,
   removeSpecificTicketSet,
-  addOrUpdateTicketSet, // Action to add a new ticket type
-  resetTicketSets, // Action to reset ticket types
+  setSelectedTicketType,
+  addOrUpdateTicketSet, 
+  resetTicketSets, 
 } = ticketSlice.actions;
 
 export const selectTickets = (state) => state.tickets;
