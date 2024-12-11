@@ -18,7 +18,7 @@ const Login = props => {
 						<Card>
 							<div className="my-4">
 								<div className="text-center">
-									<img className="img-fluid" src={`/img/${theme === 'light' ? 'logo.png': 'logo-white.png'}`} alt="" />
+									<img className="img-fluid" src={`/img/${theme === 'light' ? 'logo.png': 'logo-white.png'}`} alt="" width={"200px"} />
 									<p>Don't have an account yet? <a href="/auth/register">Sign Up</a></p>
 								</div>
 								<Row justify="center">

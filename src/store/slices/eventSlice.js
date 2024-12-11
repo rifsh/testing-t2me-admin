@@ -8,7 +8,7 @@ import EventMockData from "mock/data/eventData";
 import EventService from "services/EventService";
 
 const initialState = {
-  eventDetails: null,
+  eventDetails: {},
   allEvents: [],
   filteredEvents: [],
   loading: false,
@@ -22,14 +22,14 @@ const initialState = {
 
 export const fetchEventDetails = createAsyncThunk(
   "event/fetchEventDetails",
-  async (_, { rejectWithValue }) => {
+  async (eventId, { rejectWithValue }) => {
     try {
-      if (EVENT_DETAILS_MOCK_API) {
+      if (EVENT_DETAILS_MOCK_API && ENABLE_MOCK_API) {
         const response = EventMockData.fetchEventDetails;
         return response.data;
       } else {
-        // const response = await EventService.fetchEventDetails();
-        // return response.data;
+        const response = await EventService.fetchEventDetails(eventId);
+        return response.data;
         throw new Error("Real API not implemented.");
       }
     } catch (error) {
@@ -59,7 +59,6 @@ export const addEvent = createAsyncThunk(
     try {
       const response = await EventService.addEvent(data);
       return response.data;
-     
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
     }
@@ -92,7 +91,7 @@ const eventSlice = createSlice({
     resetSelected: (state) => {
       state.selectedOffers = [];
       state.selectedCoupons = [];
-      state.currentStep=1
+      state.currentStep = 1;
     },
     toggleSelectedOffer: (state, action) => {
       const existingOfferIndex = state.selectedOffers.findIndex(

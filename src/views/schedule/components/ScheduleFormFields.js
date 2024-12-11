@@ -22,7 +22,7 @@ import { fetchAllOffers } from "store/slices/offerSlice";
 import { fetchAllCoupons } from "store/slices/couponSlice";
 import OfferDateModal from "./OfferDateModal";
 import { useNavigate } from "react-router-dom";
-import { fetchAllEvent } from "store/slices/eventSlice";
+import { fetchAllEvent, fetchEventDetails } from "store/slices/eventSlice";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -32,25 +32,21 @@ function ScheduleFormFields() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
 
-  const { filteredOffers: filteredOffer, loading: offerLoading } = useSelector(
-    (state) => state.offers
-  );
   const { selectedOffers, selectedCoupons, selectedItemForModal } = useSelector(
     (state) => state.schedules
   );
-  const { filteredCoupons, loading: couponLoading } = useSelector(
-    (state) => state.coupons
-  );
+  const { eventDetails, loading } = useSelector((state) => state.event);
 
   useEffect(() => {
-    dispatch(fetchAllOffers());
-    dispatch(fetchAllCoupons());
     dispatch(fetchAllEvent());
   }, [dispatch]);
 
+  const handleEventSelect = (eventId) => {
+    dispatch(fetchEventDetails(eventId));
+  };
   const handleCouponSelect = (couponId) => {
-    const selectedCoupon = filteredCoupons.find(
-      (coupon) => coupon.id === couponId
+    const selectedCoupon = eventDetails.event_coupons.find(
+      (coupon) => coupon.coupons.id === couponId
     );
     if (selectedCoupon) {
       dispatch(toggleSelectedCoupon(selectedCoupon));
@@ -58,7 +54,9 @@ function ScheduleFormFields() {
   };
 
   const handleOfferSelect = (offerId) => {
-    const selectedOffer = filteredOffer.find((offer) => offer.id === offerId);
+    const selectedOffer = eventDetails.event_offers.find(
+      (offer) => offer.id === offerId
+    );
     if (selectedOffer) {
       dispatch(toggleSelectedOffer(selectedOffer));
     }
@@ -80,22 +78,29 @@ function ScheduleFormFields() {
     setIsModalVisible(false);
     dispatch(setSelectedItemForModal(null));
   };
-  const {filteredEvents } = useSelector((state) => state.event);
+  const { filteredEvents } = useSelector((state) => state.event);
   const navigate = useNavigate();
 
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Schedule Details">
-          {/* <Form form={form}> */}
           <Form.Item name="event" label="Event" rules={RulesConstants.event}>
-          <Select className="w-100" placeholder="Choose a Category">
+            {loading ? (
+              <div>Loading...</div>
+            ) : (
+              <Select
+                className="w-100"
+                placeholder="Choose a Category"
+                onSelect={(id) => handleEventSelect(id)}
+              >
                 {filteredEvents.map((elm) => (
                   <Option key={elm.id} value={elm.id}>
                     {elm.event_name}
                   </Option>
                 ))}
               </Select>
+            )}
           </Form.Item>
 
           <Form.Item
@@ -124,35 +129,34 @@ function ScheduleFormFields() {
 
           <Form.Item name="offer" label="Offer">
             <Select
-              loading={offerLoading}
+              loading={loading}
               style={{ width: "100%" }}
               placeholder="Please select"
               value={selectedOffers.length ? selectedOffers[0].id : undefined}
               onChange={(value) => handleOfferSelect(value)}
             >
-              {filteredOffer.map((offer) => (
+              {eventDetails?.event_offers?.map((offer) => (
                 <Option key={offer.id} value={offer.id}>
-                  {offer.name}
+                  {offer.offer.name}
                 </Option>
               ))}
             </Select>
           </Form.Item>
           <Form.Item name="coupon" label="Coupon">
             <Select
-              loading={couponLoading}
+              loading={loading}
               style={{ width: "100%" }}
               placeholder="Please select"
               value={selectedCoupons.length ? selectedCoupons[0].id : undefined}
               onChange={(value) => handleCouponSelect(value)}
             >
-              {filteredCoupons.map((coupon) => (
-                <Option key={coupon.id} value={coupon.id}>
-                  {coupon.name}
+              {eventDetails?.event_coupons?.map((coupon) => (
+                <Option key={coupon.coupons.id} value={coupon.coupons.id}>
+                  {coupon.coupons.name}
                 </Option>
               ))}
             </Select>
           </Form.Item>
-          {/* </Form> */}
         </Card>
       </Col>
 

@@ -123,9 +123,9 @@ const PlaceList = () => {
 
   return (
     <Card>
-      <Row gutter={16} justify="space-between" style={{ marginBottom: 16 }}>
+      <Row gutter={16} justify="space-between" >
         <Col xs={24} sm={8}>
-          <Form.Item name="country_id" label="Country name">
+          <Form.Item name="country_id">
             <Select
               className="w-100"
               placeholder="Choose a Country"
@@ -152,7 +152,7 @@ const PlaceList = () => {
           </Button>
         </Col>
       </Row>
-      <Flex
+      <Row
         alignItems="center"
         justifyContent="space-between"
         mobileFlex={false}
@@ -162,12 +162,12 @@ const PlaceList = () => {
           placeholder="Search"
           prefix={<SearchOutlined />}
           onChange={(e) => handleSearch(e.target.value)}
-          style={{ marginRight: 8 }}
+          style={{ marginRight: 8 , width:"50%"}}
         />
         <Select
           defaultValue="All"
           className="w-100"
-          style={{ minWidth: 180 }}
+          style={{ width:40}}
           onChange={handleShowStatus}
           placeholder="Status"
         >
@@ -175,7 +175,7 @@ const PlaceList = () => {
           <Option value="Active">Active</Option>
           <Option value="Inactive">Inactive</Option>
         </Select>
-      </Flex>
+      </Row>
       <div className="table-responsive">
         <Table
           columns={tableColumns}

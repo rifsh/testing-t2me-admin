@@ -79,7 +79,7 @@ export const NavProfile = ({mode}) => {
 		<Dropdown placement="bottomRight" menu={{items}} trigger={["click"]}>
 			<NavItem mode={mode}>
 				<Profile>
-					<Avatar src="/img/avatars/thumb-1.jpg" />
+					<Avatar src="/img/avatars/profile_thumb.png" />
 					<UserInfo className="profile-text">
 						<Name>{userData&&userData.username}</Name>
 						<Title>{userData&&userData.is_superuser?"Superuser":"User"}</Title>
