@@ -1,12 +1,12 @@
-import React, { useEffect } from "react";
-import { Card, Table, Select, Input, Button, Tag, Menu } from "antd";
+import React, { useEffect, useState } from "react";
+import { Card, Table, Select, Input, Button, Tag, Modal, Descriptions, Dropdown } from "antd";
 import {
   EyeOutlined,
   PlusCircleOutlined,
   SearchOutlined,
   FormOutlined,
+  MoreOutlined
 } from "@ant-design/icons";
-import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,6 +22,9 @@ const OfferList = () => {
   const dispatch = useDispatch();
   const { filteredOffers, loading } = useSelector((state) => state.offers);
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState(null);
+
   useEffect(() => {
     dispatch(fetchAllOffers());
   }, [dispatch]);
@@ -34,22 +37,37 @@ const OfferList = () => {
     dispatch(filterOffers({ searchTerm: null, status }));
   };
 
-  const dropdownMenu = (row) => (
-    <Menu>
-      <Menu.Item>
+  const showModal = (offer) => {
+    setSelectedOffer(offer);
+    setIsModalVisible(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+    setSelectedOffer(null);
+  };
+
+  const getDropdownMenu = (row) => [
+    {
+      key: 'view',
+      label: (
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
-      <Menu.Item>
+      ),
+      onClick: () => showModal(row)
+    },
+    {
+      key: 'remark',
+      label: (
         <Flex alignItems="center">
           <PlusCircleOutlined />
           <span className="ml-2">Add to remark</span>
         </Flex>
-      </Menu.Item>
-    </Menu>
-  );
+      )
+    }
+  ];
 
   const tableColumns = [
     {
@@ -66,11 +84,13 @@ const OfferList = () => {
       title: "Start Date",
       dataIndex: "start_date",
       sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
     },
     {
       title: "End Date",
       dataIndex: "end_date",
       sorter: (a, b) => new Date(a.end_date) - new Date(b.end_date),
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
     },
     {
       title: "Max Users",
@@ -89,7 +109,14 @@ const OfferList = () => {
     {
       title: "",
       dataIndex: "actions",
-      render: (_, row) => <EllipsisDropdown menu={dropdownMenu(row)} />,
+      render: (_, row) => (
+        <Dropdown 
+          menu={{ items: getDropdownMenu(row) }} 
+          trigger={['click']}
+        >
+          <Button type="text" icon={<MoreOutlined />} />
+        </Dropdown>
+      ),
     },
   ];
 
@@ -128,6 +155,41 @@ const OfferList = () => {
         loading={loading}
         pagination={{ pageSize: 10 }}
       />
+
+      <Modal
+        title="Offer Details"
+        open={isModalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        width={800}
+      >
+        {selectedOffer && (
+          <Descriptions column={1} bordered>
+            <Descriptions.Item label="Offer Name">{selectedOffer.name}</Descriptions.Item>
+            <Descriptions.Item label="Discount Percentage">
+              {selectedOffer.discount_percentage}%
+            </Descriptions.Item>
+            <Descriptions.Item label="Start Date">
+              {selectedOffer.start_date ? new Date(selectedOffer.start_date).toLocaleDateString() : "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="End Date">
+              {selectedOffer.end_date ? new Date(selectedOffer.end_date).toLocaleDateString() : "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Max Users">{selectedOffer.max_uses}</Descriptions.Item>
+            <Descriptions.Item label="Status">
+              {selectedOffer.status ? "Active" : "Inactive"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Keywords">
+              {selectedOffer.key_words && selectedOffer.key_words.length
+                ? selectedOffer.key_words.join(", ")
+                : "None"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Offer Description">
+              {selectedOffer.description || "No description available"}
+            </Descriptions.Item>
+          </Descriptions>
+        )}
+      </Modal>
     </Card>
   );
 };

@@ -1,7 +1,8 @@
-import React, {  useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select } from "antd";
+import React, { useEffect } from "react";
+import { Input, Row, Col, Card, Form, Select, Spin } from "antd";
 import { fetchAllCountires } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
+
 const { Option } = Select;
 
 const rules = {
@@ -46,30 +47,63 @@ const rules = {
 
 const CountryFormFields = (props) => {
   const dispatch = useDispatch();
-
-  const { loading, countries } = useSelector((state) => state.locations);
+  const { loading, countries, error } = useSelector((state) => state.locations);
 
   useEffect(() => {
-    dispatch(fetchAllCountires());
-  }, [dispatch]);
+    if (countries.length === 0) {
+      dispatch(fetchAllCountires());
+    }
+  }, [dispatch, countries]);
 
-  console.log("Countries state:", countries);
+ 
+  useEffect(() => {
+  }, [countries, loading, error]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <Row justify="center" align="middle" style={{ minHeight: '200px' }}>
+        <Spin size="large" />
+      </Row>
+    );
+  }
+
+  // Show error state if exists
+  if (error) {
+    return (
+      <Row>
+        <Col span={24}>
+          <div style={{ color: 'red', textAlign: 'center' }}>
+            {error || 'Failed to load countries'}
+          </div>
+        </Col>
+      </Row>
+    );
+  }
 
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
-          <Form.Item name="id" label="Country name" rules={rules.country}>
+          <Form.Item
+            name="id"  
+            label="Country name"
+            rules={rules.country}
+          >
             <Select
               className="w-100"
               placeholder="Choose a Country"
-             
+              loading={loading}
             >
-             {countries.map((cntry) => (
-                  <Option key={cntry.country} value={cntry.id}>
-                    {cntry.country}
+              {countries && countries.length > 0 ? (
+                countries.map((country) => (
+                  <Option key={country.id} value={country.id}>
+                    {country.country}
                   </Option>
-                ))}
+                ))
+              ) : (
+                <Option disabled>No countries available</Option>
+              )}
             </Select>
           </Form.Item>
           <Form.Item name="name" label="Place" rules={rules.name}>

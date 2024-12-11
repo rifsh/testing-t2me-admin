@@ -104,4 +104,20 @@ TicketMockData.getAllTickets = {
   },
 };
 
+TicketMockData.getAvailableTicketTyps = {
+  data: [
+    {
+      available_types: [
+        "seat_structure",
+        "ticket_structure",
+        "movie_seat_structure",
+      ],
+    },
+  ],
+  status: {
+    message: "success",
+    status_code: 200,
+  },
+};
+
 export default TicketMockData;

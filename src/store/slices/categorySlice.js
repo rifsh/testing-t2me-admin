@@ -29,6 +29,22 @@ export const addCategory = createAsyncThunk(
     }
   }
 );
+export const updateCategory = createAsyncThunk(
+  "category/update", // Update action type
+  async (data, { rejectWithValue }) => {
+    try {
+      // Make the request to the update category API
+      const response = await CategoryService.updateCategory(data); 
+      console.warn(response,'//////////////////')
+      return response.data;
+    } catch (err) {
+      console.error(err,'//////////////////')
+      const errorMessage =
+        err.response?.data?.message || "Failed to update category";
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
 // Fetch categories
 export const fetchCategories = createAsyncThunk(
   "category/fetchCategories",
