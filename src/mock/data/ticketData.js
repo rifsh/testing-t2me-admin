@@ -119,5 +119,76 @@ TicketMockData.getAvailableTicketTyps = {
     status_code: 200,
   },
 };
+TicketMockData.ticket_set = [
+  {
+    set_name: "VIP Set",
+    tickets: [
+      {
+        name: "Premium",
+        price: 100,
+        number_of_tickets: 20,
+        ticket_set: "VIP Set",
+      },
+      {
+        name: "Gold",
+        price: 80,
+        number_of_tickets: 30,
+        ticket_set: "VIP Set",
+      },
+      {
+        name: "Normal",
+        price: 60,
+        number_of_tickets: 50,
+        ticket_set: "VIP Set",
+      },
+    ],
+  },
+  {
+    set_name: "Regular Set",
+    tickets: [
+      {
+        name: "Premium",
+        price: 120,
+        number_of_tickets: 15,
+        ticket_set: "Regular Set",
+      },
+      {
+        name: "Gold",
+        price: 90,
+        number_of_tickets: 25,
+        ticket_set: "Regular Set",
+      },
+      {
+        name: "Normal",
+        price: 70,
+        number_of_tickets: 40,
+        ticket_set: "Regular Set",
+      },
+    ],
+  },
+  {
+    set_name: "Discounted Set",
+    tickets: [
+      {
+        name: "Premium",
+        price: 90,
+        number_of_tickets: 25,
+        ticket_set: "Discounted Set",
+      },
+      {
+        name: "Gold",
+        price: 70,
+        number_of_tickets: 35,
+        ticket_set: "Discounted Set",
+      },
+      {
+        name: "Normal",
+        price: 50,
+        number_of_tickets: 60,
+        ticket_set: "Discounted Set",
+      },
+    ],
+  },
+];
 
 export default TicketMockData;

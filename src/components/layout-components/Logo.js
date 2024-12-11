@@ -56,9 +56,9 @@ export const Logo = ({ mobileLogo, logoType }) => {
 
   const getLogoWidth = () => {
     if (navCollapsed) {
-      return '50px';
+      return '45px';
     }
-    return '200px';
+    return '180px';
   };
 
   return (

@@ -81,7 +81,7 @@ export const NavProfile = ({mode}) => {
 				<Profile>
 					<Avatar src="/img/avatars/profile_thumb.png" />
 					<UserInfo className="profile-text">
-						<Name>{userData&&userData.username}</Name>
+						<Name>{userData&&userData.email}</Name>
 						<Title>{userData&&userData.is_superuser?"Superuser":"User"}</Title>
 					</UserInfo>
 				</Profile>
