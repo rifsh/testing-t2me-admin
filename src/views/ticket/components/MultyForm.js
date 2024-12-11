@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Steps, Row, Col, message, Input } from "antd";
 import TicketStructureFields from "./TicketStructureFields";
 import { useNavigate } from "react-router-dom";
-import { addOrUpdateTicketSet, removeSpecificTicketSet } from "store/slices/ticketSlice";
+import { addOrUpdateTicketSet, currentStepSaveUpdate, removeSpecificTicketSet, resetTicketSets } from "store/slices/ticketSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { addTicket } from "store/slices/ticketSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -14,7 +14,7 @@ const MultyStepTicketForm = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
-  const tickets = useSelector((state) => state.tickets.ticketTypes);
+  const { ticketTypes: tickets, currentStepSaved } = useSelector((state) => state.tickets);
   const { filteredVenues, venues } = useSelector((state) => state.locations);
   const dispatch = useDispatch();
   const [ticketCategory, setTicketCategory] = useState([]);
@@ -78,12 +78,16 @@ const MultyStepTicketForm = () => {
   
 console.log(ticketCategory,'tikcetgdgd')
   const addTicketStructure = () => {
-    const newStructureId = Date.now();
-    setTicketStructures([
-      ...ticketStructures,
-      { id: newStructureId, values: null }, // Add a new structure with null values
-    ]);
-    setCurrentStep(ticketStructures.length); 
+    if (currentStepSaved){
+
+      const newStructureId = Date.now();
+      setTicketStructures([
+        ...ticketStructures,
+        { id: newStructureId, values: null }, // Add a new structure with null values
+      ]);
+      setCurrentStep(ticketStructures.length); 
+      dispatch(currentStepSaveUpdate(false))
+    }
 
   };
 
@@ -104,6 +108,10 @@ console.log(ticketCategory,'tikcetgdgd')
         console.warn("No matching ticket found to remove.");
       }
       setCurrentStep(Math.min(currentStep, updatedStructures.length - 1));
+      if (ticketCategory.length==updatedStructures.length){
+
+        dispatch(currentStepSaveUpdate(true))
+      }
     } else {
       message.warning("At least one Ticket Structure must remain.");
     }
@@ -139,6 +147,7 @@ console.log(ticketCategory,'tikcetgdgd')
       if (addTicket.fulfilled.match(resultAction)) {
         message.success(`Ticket added successfully!`);
         form.resetFields();
+        dispatch(resetTicketSets())
         navigate(`${APP_PREFIX_PATH}/ticket/list`);
       } else {
         message.error(resultAction.payload || "Failed to add the ticket. Please try again.");
@@ -204,6 +213,11 @@ console.log(ticketCategory,'tikcetgdgd')
             tickets: ticketsWithIds,
           })
         );
+        
+        if (ticketStructures.length==ticketCategory.length){
+
+          dispatch(currentStepSaveUpdate(true))
+        }
         message.success("data saved")
       }
     } catch (error) {
@@ -261,7 +275,7 @@ console.log(ticketCategory,'tikcetgdgd')
         </Col>
         <Col style={{ display: "flex", gap: "10px" }}>
           
-            <Button type="dashed" onClick={addTicketStructure}>
+            <Button type="dashed" disabled={!currentStepSaved}  onClick={currentStepSaved&&addTicketStructure}>
               Add Ticket Structure
             </Button>
           {ticketStructures.length > 1 && (
