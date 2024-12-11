@@ -12,7 +12,7 @@ LocationService.getAllCountries = function () {
 
 LocationService.addPlace = function (data) {
   return fetch({
-    url: ApiConstant.PLACE_URL,
+    url: `${ApiConstant.PLACE_URL}?country_id=${data.country_id}`,
     method: "post",
     data: data,
   });
