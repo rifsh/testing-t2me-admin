@@ -13,10 +13,8 @@ const service = axios.create({
 });
 
 // Config
-
 service.interceptors.request.use(
   (config) => {
-    // let jwtToken = HARDCODED_TOKEN;
     const TOKEN_PAYLOAD_KEY = "Authorization";
     const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
 
@@ -69,7 +67,6 @@ service.interceptors.response.use(
       "color: #2dce89; font-weight: bold;"
     );
     console.log("[RESPONSE] Data:", response.data);
-
     return response.data;
   },
   (error) => {
@@ -79,10 +76,11 @@ service.interceptors.response.use(
       "color: #f5365c; font-weight: bold;",
       error
     );
+
     let notificationParam = { message: "" };
 
     if (error.response) {
-      const { status, config } = error.response;
+      const { status, data, config } = error.response;
 
       // Log the error details
       console.log(
@@ -90,40 +88,68 @@ service.interceptors.response.use(
         "Status Code:",
         status
       );
-      console.log("[ERROR] Response Data:", error.response.data);
+      console.log("[ERROR] Response Data:", data);
 
-      if (unauthorizedCode.includes(status)) {
-        notificationParam.message = "Authentication Failed";
-        notificationParam.description = "Please login again.";
+      // Handle unique constraint violation error (duplicate category)
+      if (data.error && data.status && data.status.message) {
+        const errorMessage = data.status.message;
+        if (
+          errorMessage.includes(
+            "duplicate key value violates unique constraint"
+          )
+        ) {
+          notificationParam.message = "Item Already Exists";
+          notificationParam.description =
+            "An unexpected error occurred on the server. Please try again later.";
+        } else {
+          notificationParam.message = data.error;
+          notificationParam.description =
+            "An unexpected error occurred on the server. Please try again later.";
+        }
+      } else if (data.detail) {
+        if (
+          data.detail.toLowerCase().includes("incorrect username or password")
+        ) {
+          notificationParam.message = "Login Failed";
+          notificationParam.description =
+            "The username or password you entered is incorrect. Please try again.";
+        }
+      } else if (unauthorizedCode.includes(status)) {
+        notificationParam.message = "Session Expired";
+        notificationParam.description =
+          "Your session has expired. Please log in again.";
         localStorage.removeItem(AUTH_TOKEN);
-
         store.dispatch(signOutSuccess());
       } else if (status === 404) {
-        notificationParam.message = "Not Found";
-        notificationParam.description = "The requested resource was not found.";
+        notificationParam.message = "Resource Not Found";
+        notificationParam.description =
+          "The requested resource could not be found. Please check the URL or try again later.";
       } else if (status === 400) {
-        notificationParam.message = "Bad Request";
+        notificationParam.message = "Invalid Request";
         notificationParam.description =
-          "The request could not be processed due to invalid input. Please check the data and try again.";
+          "The request could not be processed due to incorrect data. Please check your input and try again.";
       } else if (status === 500) {
-        notificationParam.message = "Internal Server Error";
+        notificationParam.message = "Server Error";
         notificationParam.description =
-          "A server error occurred. Please try again later.";
+          "An unexpected error occurred on the server. Please try again later.";
       } else if (status === 508) {
-        notificationParam.message = "Time Out";
+        notificationParam.message = "Timeout";
         notificationParam.description =
-          "The server took too long to respond. Please try again.";
+          "The server took too long to respond. Please check your internet connection or try again.";
       } else {
-        notificationParam.message = "Error";
-        notificationParam.description = "An unexpected error occurred.";
+        notificationParam.message = "Unexpected Error";
+        notificationParam.description =
+          "An unexpected error occurred. Please try again or contact support if the issue persists.";
       }
     } else {
+      // If there's no response from the server (network issue)
       console.error("[ERROR] No Response Received:", error);
       notificationParam.message = "Network Error";
       notificationParam.description =
-        "Unable to connect to the server. Please check your network connection.";
+        "Unable to connect to the server. Please check your internet connection and try again.";
     }
 
+    // Show the error notification
     notification.error(notificationParam);
     return Promise.reject(error);
   }

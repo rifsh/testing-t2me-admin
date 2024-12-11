@@ -17,4 +17,10 @@ EventsService.getAllEvent = function (place) {
     method: "get",
   });
 };
+EventsService.fetchEventDetails = function (eventId) {
+  return fetch({
+    url: `${ApiConstant.EVENT_DETAILS_URL}?event_id=${eventId}`,
+    method: "get",
+  });
+};
 export default EventsService;

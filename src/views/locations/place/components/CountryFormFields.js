@@ -55,14 +55,12 @@ const CountryFormFields = (props) => {
     }
   }, [dispatch, countries]);
 
- 
-  useEffect(() => {
-  }, [countries, loading, error]);
+  useEffect(() => {}, [countries, loading, error]);
 
   // Show loading state
   if (loading) {
     return (
-      <Row justify="center" align="middle" style={{ minHeight: '200px' }}>
+      <Row justify="center" align="middle" style={{ minHeight: "200px" }}>
         <Spin size="large" />
       </Row>
     );
@@ -73,8 +71,8 @@ const CountryFormFields = (props) => {
     return (
       <Row>
         <Col span={24}>
-          <div style={{ color: 'red', textAlign: 'center' }}>
-            {error || 'Failed to load countries'}
+          <div style={{ color: "red", textAlign: "center" }}>
+            {error || "Failed to load countries"}
           </div>
         </Col>
       </Row>
@@ -85,11 +83,7 @@ const CountryFormFields = (props) => {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
-          <Form.Item
-            name="id"  
-            label="Country name"
-            rules={rules.country}
-          >
+          <Form.Item name="country_id" label="Country name" rules={rules.country}>
             <Select
               className="w-100"
               placeholder="Choose a Country"
