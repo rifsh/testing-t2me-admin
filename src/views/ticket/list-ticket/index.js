@@ -89,17 +89,26 @@ const TicketList = () => {
             dataIndex: 'ticket_types',
             render: (_, record) => (
               <Collapse defaultActiveKey={[]} accordion>
-                {Object.keys(record.ticket_types).map(set => (
-                  <Panel header={set} key={set} extra={<span>+{record.ticket_types[set].length} types</span>}>
-                    <ul style={{ paddingLeft: 20 }}>
-                      {record.ticket_types[set].map(ticket => (
-                        <li key={ticket.name}>
-                          <strong>{ticket.name}</strong>: ${ticket.price} for {ticket.number_of_tickets} tickets
-                        </li>
-                      ))}
-                    </ul>
-                  </Panel>
-                ))}
+                {record?.ticket_types && Object.keys(record?.ticket_types || {}).length > 0 ? (
+                  Object.keys(record.ticket_types).map(set => (
+                    <Panel
+                      header={set}
+                      key={set}
+                      extra={<span>+{record?.ticket_types[set].length} types</span>}
+                    >
+                      <ul style={{ paddingLeft: 20 }}>
+                        {record?.ticket_types[set].map(ticket => (
+                          <li key={ticket.name}>
+                            <strong>{ticket.name}</strong>: ${ticket.price} for {ticket.number_of_tickets} tickets
+                          </li>
+                        ))}
+                      </ul>
+                    </Panel>
+                  ))
+                ) : (
+                  <span>No ticket types available</span>
+                )}
+
               </Collapse>
             ),
           },

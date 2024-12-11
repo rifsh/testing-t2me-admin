@@ -4,8 +4,9 @@ import { ApiConstant } from "constants/ApiConstant";
 const TicketsService = {};
 
 TicketsService.getAllTickets = function (venueId) {
+  console.warn("venueId",venueId)
   return fetch({
-    url: `${ApiConstant.TICKET_URL}?venue_id=${venueId}`,
+    url: `${ApiConstant.TICKET_URL}${venueId ? `?venue_id=${venueId}` : ""}`,
     method: "get",
   });
 };

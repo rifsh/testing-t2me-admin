@@ -19,6 +19,7 @@ export const initialState = {
   availableTicketTyps: [],
   selectedTicketTyps: [],
   // selectedVenue: null,
+  currentStepSaved : false,
   isModalVisible: false,
   ticketTypes: [], 
 };
@@ -33,7 +34,7 @@ export const fetchAllTickets = createAsyncThunk(
         const response = TicketMockData.getAllTickets;
         return response.data;
       } else {
-        const response = await TicketsService.getAllTickets(1);
+        const response = await TicketsService.getAllTickets();
         return response.data;
       }
     } catch (error) {
@@ -54,6 +55,7 @@ export const addTicket = createAsyncThunk(
     }
   }
 );
+
 export const getAvailableTicketsType = createAsyncThunk(
   "ticket/fetchAvailableTicketsType",
   async (_,  { rejectWithValue }) => {
@@ -111,7 +113,7 @@ export const ticketSlice = createSlice({
 
    
     addOrUpdateTicketSet(state, action) {
-      const { venue_id,place_id, number_of_tickets, base_price, ticket_set, tickets, id } = action.payload;
+      const { venue_id,place_id, number_of_tickets, name, base_price, ticket_set, tickets, id } = action.payload;
       console.log(state, ticket_set, tickets, 'Saving Ticket Set');
     
       if (venue_id && number_of_tickets && base_price) {
@@ -120,6 +122,7 @@ export const ticketSlice = createSlice({
           state.ticketTypes.push({
             venue_id,
             number_of_tickets,
+            name,
             base_price,
             place_id,
             ticket_types: [],
@@ -153,6 +156,9 @@ export const ticketSlice = createSlice({
       ,
   
       // Reset all ticket sets
+      currentStepSaveUpdate(state, action) {
+        state.currentStepSaved = action.payload;
+      },
       resetTicketSets(state) {
         state.ticketTypes = [];
       },
@@ -216,8 +222,9 @@ export const {
   setIsModalVisible,
   removeSpecificTicketSet,
   setSelectedTicketType,
-  addOrUpdateTicketSet, 
-  resetTicketSets, 
+  currentStepSaveUpdate,
+  addOrUpdateTicketSet, // Action to add a new ticket type
+  resetTicketSets, // Action to reset ticket types
 } = ticketSlice.actions;
 
 export const selectTickets = (state) => state.tickets;
