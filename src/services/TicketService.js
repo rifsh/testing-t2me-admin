@@ -11,6 +11,7 @@ TicketsService.getAllTickets = function (venueId) {
 };
 
 TicketsService.addTicket = function (data,venueId) {
+  console.warn(data,';ljsahdddddddddddddddddddddddddddd')
   return fetch({
     url: `${ApiConstant.TICKET_URL}?venue_id=${venueId}`,
     method: "post",

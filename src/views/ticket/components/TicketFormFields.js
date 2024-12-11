@@ -1,14 +1,14 @@
-import React from "react";
-import { Form, Input, Card,  Button, message } from "antd";
+import React, { useState, useEffect } from "react";
+import { Form, Input, Card, Select, Button, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { RulesMessageConstants } from "constants/RulesConstant";
-import { getVenues } from "store/slices/locationSlice";
-import {  useDispatch } from "react-redux";
-import { addTicket } from "store/slices/ticketSlice";
+import { getVenues, singleVenue } from "store/slices/locationSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { addTicket, addOrUpdateTicketSet, resetTicketTypes } from "store/slices/ticketSlice";
 import VenueListForm from "components/util-components/FormItems/VenueList";
 
 const TicketFormFields = () => {
@@ -16,8 +16,20 @@ const TicketFormFields = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const addTicketType = () => {
-    navigate(`${APP_PREFIX_PATH}/ticket/type/add`);
+  const { filteredVenues } = useSelector((state) => state.locations);
+  const tickets = useSelector((state) => state.tickets.ticketTypes);
+  const VenueData = useSelector((state) =>
+    state.locations.filteredVenues.find((venue) => venue.id === form.getFieldValue("venue_id"))
+  );
+
+  const addTicketType = async () => {
+    try {
+      const formValues = await form.validateFields();
+      dispatch(addOrUpdateTicketSet(formValues));
+      navigate(`${APP_PREFIX_PATH}/ticket/type/add`);
+    } catch (error) {
+      console.error("Validation failed:", error);
+    }
   };
 
   const onFinish = async () => {
@@ -25,17 +37,14 @@ const TicketFormFields = () => {
       const values = await form.validateFields();
       const ticketData = {
         venue_id: values.venue_id,
-        // name: values.name,
         number_of_tickets: values.number_of_tickets,
         base_price: values.base_price,
         ticket_types: [],
       };
-      const venue_id = values.venue_id;
-
-      const resultAction = await dispatch(addTicket({ ticketData, venue_id }));
+      const resultAction = await dispatch(addTicket({ ticketData, venue_id: values.venue_id }));
 
       if (addTicket.fulfilled.match(resultAction)) {
-        message.success(`Ticket "${values.name}" added successfully!`);
+        message.success(`Ticket added successfully!`);
         form.resetFields();
         navigate(`${APP_PREFIX_PATH}/ticket/list`);
       } else {
@@ -47,6 +56,17 @@ const TicketFormFields = () => {
       console.log("Form validation failed:", error);
     }
   };
+
+  useEffect(() => {
+    dispatch(resetTicketTypes());
+    if (tickets && tickets.length > 0) {
+      const ticket = tickets[0];
+      if (ticket.base_price) form.setFieldsValue({ base_price: ticket.base_price });
+      if (ticket.number_of_tickets) form.setFieldsValue({ number_of_tickets: ticket.number_of_tickets });
+      if (ticket.venue_id) form.setFieldsValue({ venue_id: ticket.venue_id });
+      if (ticket.place_id) form.setFieldsValue({ place_id: ticket.place_id });
+    }
+  }, []);
 
   return (
     <Form form={form} layout="vertical" onFinish={onFinish}>
@@ -65,22 +85,30 @@ const TicketFormFields = () => {
           label="Venue"
           rules={[{ required: true, message: RulesMessageConstants.VENUE }]}
         />
-
         
-
-        <Form.Item name={"number_of_tickets"} label="No of Ticket">
-          <Input placeholder="Number of Tickets" />
+        <Form.Item
+          name="number_of_tickets"
+          label="No of Tickets"
+          rules={[
+            { required: true, message: "Please enter the number of tickets" },
+            {
+              validator: (_, value) =>
+                value && VenueData?.capacity && value > VenueData.capacity
+                  ? Promise.reject(new Error(`The number of tickets cannot exceed the venue capacity of ${VenueData.capacity}.`))
+                  : Promise.resolve(),
+            },
+          ]}
+        >
+          <Input
+            placeholder={VenueData ? `Venue Capacity: ${VenueData.capacity || 0}` : "Number of tickets"}
+            type="number"
+          />
         </Form.Item>
-        <Form.Item name={"base_price"} label="Price">
+        <Form.Item name="base_price" label="Price">
           <Input placeholder="Enter Ticket Price" type="number" />
         </Form.Item>
-
         <div className="container" style={{ padding: "0px" }}>
-          <Flex
-            className="py-2"
-            mobileFlex={false}
-            justifyContent="space-between"
-          >
+          <Flex className="py-2" mobileFlex={false} justifyContent="space-between">
             <Button className="mr-2">Discard</Button>
             <div className="mb-3">
               <Button
@@ -91,8 +119,7 @@ const TicketFormFields = () => {
               >
                 Add Ticket Type
               </Button>
-
-              <Button type="primary" htmlType="submit" onClick={onFinish}>
+              <Button type="primary" htmlType="submit">
                 Submit
               </Button>
             </div>

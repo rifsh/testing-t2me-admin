@@ -5,6 +5,7 @@ import {
   GET_TICKET_TYPE_MOCK_API,
 } from "configs/MockConfig";
 import TicketMockData from "mock/data/ticketData";
+import { act } from "react";
 import TicketsService from "services/TicketService";
 
 export const initialState = {
@@ -18,17 +19,12 @@ export const initialState = {
   availableTicketTyps: [],
   // selectedVenue: null,
   isModalVisible: false,
+  ticketTypes: [], // Store ticket types as an array of objects
 };
 
 export const fetchAllTickets = createAsyncThunk(
   "ticket/fetchAllTickets",
   async (_, { rejectWithValue, getState }) => {
-    // const { placeId, venueId } = getState().tickets;
-
-    // if (!placeId || !venueId) {
-    //   return rejectWithValue("Please select a Place and Venue.");
-    // }
-
     try {
       if (GET_TICKET_MOCK_API && ENABLE_MOCK_API) {
         const response = TicketMockData.getAllTickets;
@@ -46,6 +42,7 @@ export const fetchAllTickets = createAsyncThunk(
 export const addTicket = createAsyncThunk(
   "ticket/addTicket",
   async ({ ticketData, venue_id }, { rejectWithValue }) => {
+    console.warn(ticketData, venue_id,'..................')
     try {
       const response = await TicketsService.addTicket(ticketData, venue_id);
       return response.data;
@@ -73,6 +70,7 @@ export const getAvailableTicketsType = createAsyncThunk(
   }
 );
 
+
 export const ticketSlice = createSlice({
   name: "tickets",
   initialState,
@@ -94,6 +92,70 @@ export const ticketSlice = createSlice({
       }
       state.filteredTickets = filteredTickets;
     },
+
+    setSelectedVenue(state, action) {
+      state.selectedVenue = action.payload;
+    },
+    setIsModalVisible(state, action) {
+      state.isModalVisible = action.payload;
+    },
+
+   
+    addOrUpdateTicketSet(state, action) {
+      const { venue_id,place_id, number_of_tickets, base_price, ticket_set, tickets, id } = action.payload;
+      console.log(state, ticket_set, tickets, 'Saving Ticket Set');
+    
+      if (venue_id && number_of_tickets && base_price) {
+        // First time adding venue data and ticket set
+        if (state.ticketTypes.length === 0) {
+          state.ticketTypes.push({
+            venue_id,
+            number_of_tickets,
+            base_price,
+            place_id,
+            ticket_types: [],
+          });
+        }
+      } else {
+        // Subsequent times: Add new ticket set (ticket types only)
+        const existingTicketSetIndex = state.ticketTypes[0]?.ticket_types.findIndex(
+          (set) => set.id === id
+        );
+    
+        if (existingTicketSetIndex !== -1) {
+          // If the ticket set already exists, update it
+          state.ticketTypes[0].ticket_types[existingTicketSetIndex] = { ticket_set, tickets, id };
+        } else {
+          // Otherwise, add the new ticket set
+          state.ticketTypes[0].ticket_types.push({ ticket_set, tickets, id });
+        }
+      }
+    }
+    
+      ,removeSpecificTicketSet(state, action) {
+        const ticketSetToRemove = action.payload; // Name of the ticket_set to remove
+      
+        if (state.ticketTypes.length > 0 && state.ticketTypes[0]?.ticket_types) {
+          state.ticketTypes[0].ticket_types = state.ticketTypes[0].ticket_types.filter(
+            (set) => set.id !== ticketSetToRemove
+          );
+        }
+      }
+      ,
+  
+      // Reset all ticket sets
+      resetTicketSets(state) {
+        state.ticketTypes = [];
+      },
+      resetTicketTypes(state) {
+        if (state.ticketTypes.length > 0) {
+          state.ticketTypes[0].ticket_types = []; // Reset ticket_types to an empty array
+        }
+      }
+      
+
+  
+
   },
   extraReducers: (builder) => {
     builder
@@ -140,8 +202,12 @@ export const {
   setPlaceId,
   setVenueId,
   filterTickets,
-  // setSelectedVenue,
+  setSelectedVenue,
+  resetTicketTypes,
   setIsModalVisible,
+  removeSpecificTicketSet,
+  addOrUpdateTicketSet, // Action to add a new ticket type
+  resetTicketSets, // Action to reset ticket types
 } = ticketSlice.actions;
 
 export const selectTickets = (state) => state.tickets;

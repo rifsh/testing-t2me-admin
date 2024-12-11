@@ -127,6 +127,10 @@ const locationSlice = createSlice({
     onchange(state, action) {
       state.searchTerm = action.payload;
     },
+    singleVenue(state,action){
+      console.warn(action)
+      state.venues.push(action.payload)
+    },
     filterVenues(state, action) {
       const { searchTerm, status } = action.payload;
 
@@ -225,6 +229,7 @@ export const {
   onSelect,
   onchange,
   filterVenues,
+  singleVenue,
   onSearch,
   setCoordinates,
   setSelectedVenue

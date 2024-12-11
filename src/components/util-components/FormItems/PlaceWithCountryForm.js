@@ -9,7 +9,7 @@ const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
   const { placeWithCountryList, loading, error } = useSelector(
     (state) => state.locations
   );
-
+  console.warn(placeWithCountryList, loading, error,'...')
   useEffect(() => {
     if (error) {
       message.error(error);
@@ -27,9 +27,10 @@ const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
   };
 
   const handleSelect = async (value, option) => {
+    console.log(value, option)
     try {
       await form.setFieldsValue({
-        // place_id: option.id, 
+        place_id: option.label, 
       });
       if (onSelect) {
         onSelect(option.id); 
