@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dropdown, Avatar } from 'antd';
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { 
 	LogoutOutlined 
 } from '@ant-design/icons';
@@ -9,6 +9,8 @@ import Flex from 'components/shared-components/Flex';
 import { signOut } from 'store/slices/authSlice';
 import styled from '@emotion/styled';
 import { FONT_WEIGHT, MEDIA_QUERIES, SPACER, FONT_SIZES } from 'constants/ThemeConstant'
+import { jwtDecode } from 'jwt-decode';
+import { AUTH_TOKEN } from 'constants/AuthConstant';
 
 const Icon = styled.div(() => ({
 	fontSize: FONT_SIZES.LG
@@ -20,32 +22,33 @@ const Profile = styled.div(() => ({
 }))
 
 const UserInfo = styled('div')`
-	padding-left: ${SPACER[2]};
+padding-left: ${SPACER[2]};
 
-	@media ${MEDIA_QUERIES.MOBILE} {
-		display: none
+@media ${MEDIA_QUERIES.MOBILE} {
+	display: none
 	}
-`
-
-const Name = styled.div(() => ({
-	fontWeight: FONT_WEIGHT.SEMIBOLD
-}))
-
-const Title = styled.span(() => ({
-	opacity: 0.8
-}))
-
-// const MenuItem = (props) => (
-// 	<Flex as="a" href={props.path} alignItems="center" gap={SPACER[2]}>
-// 		<Icon>{props.icon}</Icon>
+	`
+	
+	const Name = styled.div(() => ({
+		fontWeight: FONT_WEIGHT.SEMIBOLD
+	}))
+	
+	const Title = styled.span(() => ({
+		opacity: 0.8
+	}))
+	
+	// const MenuItem = (props) => (
+		// 	<Flex as="a" href={props.path} alignItems="center" gap={SPACER[2]}>
+		// 		<Icon>{props.icon}</Icon>
 // 		<span>{props.label}</span>
 // 	</Flex>
 // )
 
 const MenuItemSignOut = (props) => {
-
+	
 	const dispatch = useDispatch();
-
+	
+	
 	const handleSignOut = () => {
 		dispatch(signOut())
 	}
@@ -70,14 +73,16 @@ const items = [
 ]
 
 export const NavProfile = ({mode}) => {
+	const {userData} = useSelector(state=>state.auth)
+
 	return (
 		<Dropdown placement="bottomRight" menu={{items}} trigger={["click"]}>
 			<NavItem mode={mode}>
 				<Profile>
 					<Avatar src="/img/avatars/profile_thumb.png" />
 					<UserInfo className="profile-text">
-						<Name>Charlie Howard</Name>
-						<Title>Frontend Developer</Title>
+						<Name>{userData&&userData.username}</Name>
+						<Title>{userData&&userData.is_superuser?"Superuser":"User"}</Title>
 					</UserInfo>
 				</Profile>
 			</NavItem>

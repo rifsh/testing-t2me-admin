@@ -2,12 +2,16 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import FirebaseService from "services/FirebaseService";
 import AuthService from "services/AuthService";
+import { jwtDecode } from "jwt-decode";
 
 export const initialState = {
   loading: false,
   message: "",
   showMessage: false,
   redirect: "",
+  userData:localStorage.getItem(AUTH_TOKEN)
+  ? jwtDecode(localStorage.getItem(AUTH_TOKEN))
+  : null,
   token: localStorage.getItem(AUTH_TOKEN) || null,
 };
 export const signIn = createAsyncThunk(

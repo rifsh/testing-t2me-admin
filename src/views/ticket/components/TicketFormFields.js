@@ -8,7 +8,7 @@ import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWith
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { getVenues, singleVenue } from "store/slices/locationSlice";
 import { useSelector, useDispatch } from "react-redux";
-import { addTicket, addOrUpdateTicketSet, resetTicketTypes } from "store/slices/ticketSlice";
+import { addTicket, addOrUpdateTicketSet, resetTicketTypes, resetTicketSets } from "store/slices/ticketSlice";
 import VenueListForm from "components/util-components/FormItems/VenueList";
 
 const TicketFormFields = () => {
@@ -32,8 +32,9 @@ const TicketFormFields = () => {
     }
   };
 
-  const onFinish = async () => {
+  const onSubmit = async () => {
     try {
+      console.log('kon')
       const values = await form.validateFields();
       const ticketData = {
         venue_id: values.venue_id,
@@ -46,6 +47,7 @@ const TicketFormFields = () => {
       if (addTicket.fulfilled.match(resultAction)) {
         message.success(`Ticket added successfully!`);
         form.resetFields();
+        dispatch(resetTicketSets())
         navigate(`${APP_PREFIX_PATH}/ticket/list`);
       } else {
         message.error(
@@ -56,7 +58,8 @@ const TicketFormFields = () => {
       console.log("Form validation failed:", error);
     }
   };
-
+ 
+  
   useEffect(() => {
     dispatch(resetTicketTypes());
     if (tickets && tickets.length > 0) {
@@ -69,8 +72,11 @@ const TicketFormFields = () => {
   }, []);
 
   return (
-    <Form form={form} layout="vertical" onFinish={onFinish}>
-      <Card title="Ticket Form">
+
+
+    
+<Form form={form} layout="vertical" >
+<Card title="Ticket Form">
         <PlaceWithCountryForm
           form={form}
           label={"Place"}
@@ -86,6 +92,9 @@ const TicketFormFields = () => {
           rules={[{ required: true, message: RulesMessageConstants.VENUE }]}
         />
         
+        <Form.Item name="name" label="Structure name">
+          <Input placeholder="Enter Ticket Structure Name" type="text" />
+        </Form.Item>
         <Form.Item
           name="number_of_tickets"
           label="No of Tickets"
@@ -119,7 +128,7 @@ const TicketFormFields = () => {
               >
                 Add Ticket Type
               </Button>
-              <Button type="primary" htmlType="submit">
+              <Button onClick={onSubmit} type="primary" htmlType="submit">
                 Submit
               </Button>
             </div>
