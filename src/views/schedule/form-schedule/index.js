@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
-import { Tabs, Form, Button, message } from "antd";
+import { Form, Button, message } from "antd";
 import Flex from "components/shared-components/Flex";
 
 import ProductListData from "assets/data/product-list.data.json";
@@ -64,6 +64,7 @@ const ScheduleForm = (props) => {
             valid_to: moment(e.end_date).format("YYYY-MM-DD"),
           })) ?? [],
       };
+
       const resultAction = await dispatch(addSchedule(submitData));
       if (AddSchedule.fulfilled.match(resultAction)) {
         message.success(`Schedule ${values.name} added successfully`);
@@ -100,7 +101,7 @@ const ScheduleForm = (props) => {
               alignItems="center"
             >
               <h2 className="mb-3">
-                {mode === "ADD" ? "Add New Offer" : `Edit Offer`}{" "}
+                {mode === "ADD" ? "Add New Schedule" : `Edit Schedule`}{" "}
               </h2>
               <div className="mb-3">
                 <Button className="mr-2">Discard</Button>
@@ -116,18 +117,8 @@ const ScheduleForm = (props) => {
             </Flex>
           </div>
         </PageHeaderAlt>
-        <div className="container">
-          <Tabs
-            defaultActiveKey="1"
-            style={{ marginTop: 30 }}
-            items={[
-              {
-                label: "General",
-                key: "1",
-                children: <SeatFormFields />,
-              },
-            ]}
-          />
+        <div className="container" style={{ marginTop: 30 }}>
+          <SeatFormFields />
         </div>
       </Form>
     </>

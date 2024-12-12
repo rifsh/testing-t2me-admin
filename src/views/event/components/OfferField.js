@@ -1,23 +1,19 @@
 import React, { useEffect, useState } from "react";
-import {
-  Row,
-  Col,
-  Card,
-  Form,
-  Select,
-  Typography,
-} from "antd";
+import { Row, Col, Card, Form, Select, Typography, Button } from "antd";
+import { ClockCircleFilled, CloseCircleOutlined, CloseOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllOffers } from "store/slices/offerSlice";
 import { fetchAllCoupons } from "store/slices/couponSlice";
-import { fetchAllEvent, toggleSelectedCoupon, toggleSelectedOffer } from "store/slices/eventSlice";
+import {
+  toggleSelectedCoupon,
+  toggleSelectedOffer,
+} from "store/slices/eventSlice";
 
 const { Option } = Select;
 const { Text } = Typography;
 
 const OfferField = () => {
   const dispatch = useDispatch();
-  const [isModalVisible, setIsModalVisible] = useState(false);
 
   // State from Redux
   const { filteredOffers: filteredOffer, loading: offerLoading } = useSelector(
@@ -33,7 +29,6 @@ const OfferField = () => {
   useEffect(() => {
     dispatch(fetchAllOffers());
     dispatch(fetchAllCoupons());
-    // dispatch(fetchAllEvent());
   }, [dispatch]);
 
   const handleCouponSelect = (couponId) => {
@@ -52,11 +47,12 @@ const OfferField = () => {
     }
   };
 
-  const handleDeleteOffer = (offerId) => {
-    const existingOffer = selectedOffers.find((offer) => offer.id === offerId);
-    if (existingOffer) {
-      dispatch(toggleSelectedOffer(existingOffer));
-    }
+  const handleDeleteOffer = (offer) => {
+    dispatch(toggleSelectedOffer(offer));
+  };
+
+  const handleDeleteCoupon = (coupon) => {
+    dispatch(toggleSelectedCoupon(coupon));
   };
 
   return (
@@ -108,6 +104,18 @@ const OfferField = () => {
                 position: "relative",
               }}
             >
+              <Button
+                type="text"
+                icon={<CloseCircleOutlined />}
+                onClick={() => handleDeleteOffer(offer)}
+                
+                style={{
+                  position: "absolute",
+                  top: "15px",
+                  right: "-40px",
+                  zIndex: 10,
+                }}
+              />
               <Col style={{ padding: "0px" }}>
                 <Row
                   justify="space-between"
@@ -129,14 +137,28 @@ const OfferField = () => {
                     Max Uses: {offer.max_uses}
                   </Text>
                 </Row>
-                <Row justify="space-between">
-                  <Text style={{ fontSize: "10px ", color: "#595959" }}>
-                    Start: {offer.start_date}
+                {offer.date_required ? (
+                  <Row justify="space-between">
+                    <Text style={{ fontSize: "10px", color: "#595959" }}>
+                      Start: {offer.start_date}
+                    </Text>
+                    <Text style={{ fontSize: "10px", color: "#595959" }}>
+                      End: {offer.end_date}
+                    </Text>
+                  </Row>
+                ) : (
+                  <Text
+                    style={{
+                      fontSize: "10px",
+                      lineHeight: "10px", 
+                      margin: 0,
+                      padding: 0, 
+                      color: "orange",
+                    }}
+                  >
+                    You can specify a date for this offer during scheduling, if needed.
                   </Text>
-                  <Text style={{ fontSize: "10px ", color: "#595959" }}>
-                    End: {offer.end_date}
-                  </Text>
-                </Row>
+                )}
               </Col>
             </Card>
           ))}
@@ -153,6 +175,17 @@ const OfferField = () => {
                 position: "relative",
               }}
             >
+              <Button
+                type="text"
+                icon={<CloseCircleOutlined />}
+                onClick={() => handleDeleteCoupon(coupon)}
+                style={{
+                  position: "absolute",
+                  top: "15px",
+                  right: "-40px",
+                  zIndex: 10,
+                }}
+              />
               <Col style={{ padding: "0px" }}>
                 <Row
                   justify="space-between"

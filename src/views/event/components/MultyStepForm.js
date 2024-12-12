@@ -61,6 +61,8 @@ const MultyStepEventForm = () => {
 
       const updatedSubmitData = {
         ...submitData,
+        available_types:submitData.available_types.toUpperCase(),//temparary
+        ticket_set:"set1",//temparary
         max_tickets: parseInt(submitData.max_tickets, 10),
       };
 

@@ -30,7 +30,7 @@ const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
     console.log(value, option)
     try {
       await form.setFieldsValue({
-        place_id: option.label, 
+        place_id: option.id, 
       });
       if (onSelect) {
         onSelect(option.id); 
