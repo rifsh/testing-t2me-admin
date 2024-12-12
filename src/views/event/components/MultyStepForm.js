@@ -60,8 +60,7 @@ const MultyStepEventForm = () => {
       await dispatch(setSubmitData(offers));
 
       const updatedSubmitData = {
-        ...submitData,  
-        ticket_set:"set1",//temparary
+        ...submitData,
         max_tickets: parseInt(submitData.max_tickets, 10),
       };
 

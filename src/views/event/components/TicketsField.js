@@ -1,5 +1,4 @@
 import { Card, Col, Form, Input, Row, Select, Typography, message } from "antd";
-import TicketMockData from "mock/data/ticketData";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -17,14 +16,21 @@ const TicketField = ({ form }) => {
     useSelector((state) => state.tickets);
   const { selectedVenue } = useSelector((state) => state.locations);
 
-  const [availableSets,setavailableSets] = useState();
-  const [selectedTicketSet, setSelectedTicketSet] = useState(null); 
+  const [availableSets, setAvailableSets] = useState([]);
+  const [selectedTicketSet, setSelectedTicketSet] = useState(null);
+  const [selectedTicketStructure, setSelectedTicketStructure] = useState(null);
 
   useEffect(() => {
+    if (!selectedVenue) {
+      console.warn("No selected venue.");
+      return;
+    }
+
     if (selectedVenue?.id) {
       dispatch(getAvailableTicketsType());
       dispatch(fetchAllTickets(selectedVenue.id));
     }
+
     if (selectedVenue?.capacity) {
       form.setFieldsValue({
         max_capacity: selectedVenue.capacity,
@@ -32,9 +38,16 @@ const TicketField = ({ form }) => {
     }
   }, [selectedVenue, form, dispatch]);
 
+  useEffect(() => {
+    // Reset ticket structure and sets when ticket type changes
+    setSelectedTicketStructure(null);
+    setAvailableSets([]);
+    setSelectedTicketSet(null);
+    form.resetFields(['ticket_structure_id', 'ticket_set']);
+  }, [selectedTicketType, form]);
+
   const handleSetTicketType = (value) => {
     try {
-      console.log("Handling ticket type selection:", value);
       dispatch(setSelectedTicketType(value));
     } catch (error) {
       console.error("Error setting ticket type:", error);
@@ -42,14 +55,33 @@ const TicketField = ({ form }) => {
     }
   };
 
+  const handleSelectTicketStructure = (structureId) => {
+    // Find the selected ticket structure
+    const selectedStructure = filteredTickets.find(
+      (ticket) => ticket.id === structureId
+    );
+
+    if (selectedStructure) {
+      setSelectedTicketStructure(selectedStructure);
+      
+      // Extract ticket types from the selected structure
+      const ticketTypes = selectedStructure.ticket_types || [];
+      setAvailableSets(ticketTypes);
+
+      // Reset ticket set selection
+      setSelectedTicketSet(null);
+      form.resetFields(['ticket_set']);
+    }
+  };
+
   const handleSelectTicketSet = (setName) => {
-    const selectedSet = availableSets.find((set) => set.set_name === setName);
-    setSelectedTicketSet(selectedSet);
+    if (availableSets) {
+      const selectedSet = availableSets.find((set) => set.ticket_set === setName);
+      setSelectedTicketSet(selectedSet);
+    }
   };
 
   const renderTicketTypeFields = () => {
-    console.log("Current selected ticket type:", selectedTicketType);
-
     switch (selectedTicketType) {
       case 2:
         return (
@@ -64,10 +96,10 @@ const TicketField = ({ form }) => {
               className="w-100"
               placeholder="Choose a Ticket Structure"
               loading={loading}
-             
+              onChange={handleSelectTicketStructure}
             >
               {filteredTickets.map((ticket) => (
-                <Option key={ticket.id} value={ticket.id}  onSelect={availableSets(ticket.ticket_types)} >
+                <Option key={ticket.id} value={ticket.id}>
                   {ticket.name}
                 </Option>
               ))}
@@ -88,6 +120,7 @@ const TicketField = ({ form }) => {
               className="w-100"
               placeholder="Choose a Seat Structure"
               loading={loading}
+              onChange={handleSelectTicketStructure}
             >
               {filteredTickets.map((ticket) => (
                 <Option key={ticket.id} value={ticket.id}>
@@ -114,6 +147,7 @@ const TicketField = ({ form }) => {
               className="w-100"
               placeholder="Choose a Movie Seat Structure"
               loading={loading}
+              onChange={handleSelectTicketStructure}
             >
               {filteredTickets.map((ticket) => (
                 <Option key={ticket.id} value={ticket.id}>
@@ -192,24 +226,27 @@ const TicketField = ({ form }) => {
           {/* Dynamically rendered ticket type specific fields */}
           {selectedTicketType && renderTicketTypeFields()}
 
-          <Form.Item
-            name="ticket_set"
-            label="Ticket Set"
-            rules={[{ required: true, message: "Please select a ticket set." }]}
-          >
-            <Select
-              className="w-100"
-              placeholder="Choose a Ticket Set"
-              loading={loading}
-              onChange={handleSelectTicketSet}
+          {/* Ticket Set selection - only show if a ticket structure is selected */}
+          {selectedTicketStructure && (
+            <Form.Item
+              name="ticket_set"
+              label="Ticket Set"
+              rules={[{ required: true, message: "Please select a ticket set." }]}
             >
-              {/* {availableSets.map((ticket) => (
-                <Option key={ticket.ticket_set} value={ticket.ticket_set}>
-                  {ticket.set_name}
-                </Option>
-              ))} */}
-            </Select>
-          </Form.Item>
+              <Select
+                className="w-100"
+                placeholder="Choose a Ticket Set"
+                loading={loading}
+                onChange={handleSelectTicketSet}
+              >
+                {availableSets.map((ticketSet) => (
+                  <Option key={ticketSet.ticket_set} value={ticketSet.ticket_set}>
+                    {ticketSet.ticket_set}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
         </Card>
       </Col>
 
@@ -226,28 +263,28 @@ const TicketField = ({ form }) => {
                   alignItems: "center",
                   padding: "10px",
                   borderRadius: "8px",
-                  backgroundColor: "#f9f9f9", // Light background for each ticket
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
-                  transition: "transform 0.2s, box-shadow 0.2s", // Smooth transitions
+                  backgroundColor: "#f9f9f9",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                  transition: "transform 0.2s, box-shadow 0.2s",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "scale(1.03)"; // Slight scale effect on hover
+                  e.currentTarget.style.transform = "scale(1.03)";
                   e.currentTarget.style.boxShadow =
-                    "0 4px 8px rgba(0, 0, 0, 0.2)"; // Enhance shadow
+                    "0 4px 8px rgba(0, 0, 0, 0.2)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "scale(1)"; // Reset scale
+                  e.currentTarget.style.transform = "scale(1)";
                   e.currentTarget.style.boxShadow =
-                    "0 2px 4px rgba(0, 0, 0, 0.1)"; // Reset shadow
+                    "0 2px 4px rgba(0, 0, 0, 0.1)";
                 }}
               >
                 <Text
                   strong
                   style={{
                     fontSize: "16px",
-                    color: "#555", // Light grey for the ticket name
+                    color: "#555",
                     textTransform: "capitalize",
-                    fontWeight: "600", // Slightly bolder text for prominence
+                    fontWeight: "600",
                   }}
                 >
                   {ticket.name}
@@ -255,8 +292,8 @@ const TicketField = ({ form }) => {
                 <Text
                   style={{
                     fontSize: "16px",
-                    color: "#333", // Darker color for price for contrast
-                    fontWeight: "700", // Bolder for better visibility
+                    color: "#333",
+                    fontWeight: "700",
                   }}
                 >
                   ${ticket.price}
@@ -269,8 +306,8 @@ const TicketField = ({ form }) => {
                 strong
                 style={{
                   fontSize: "16px",
-                  color: "#555", // Light grey for total tickets label
-                  fontWeight: "600", // Bolder to maintain hierarchy
+                  color: "#555",
+                  fontWeight: "600",
                 }}
               >
                 Total Tickets:{" "}
@@ -278,8 +315,8 @@ const TicketField = ({ form }) => {
               <Text
                 style={{
                   fontSize: "16px",
-                  fontWeight: "700", // Bolder total ticket count
-                  color: "#333", // Darker color for total tickets count
+                  fontWeight: "700",
+                  color: "#333",
                 }}
               >
                 {selectedTicketSet.tickets.reduce(
