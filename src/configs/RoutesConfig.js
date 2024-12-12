@@ -51,10 +51,10 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/event/list`,
     component: React.lazy(() => import("views/event/event-list")),
   },
- 
+
   {
     key: "event.details",
-    path: `${APP_PREFIX_PATH}/event/details`,
+    path: `${APP_PREFIX_PATH}/event/details/:eventId`,
     component: React.lazy(() => import("views/event/event-details")),
   },
   {
@@ -80,7 +80,9 @@ export const protectedRoutes = [
   {
     key: "category.list",
     path: `${APP_PREFIX_PATH}/category/list`,
-    component: React.lazy(() => import("views/category/category/list-category")),
+    component: React.lazy(() =>
+      import("views/category/category/list-category")
+    ),
   },
   {
     key: "category.add",

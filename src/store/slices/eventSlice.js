@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+
 import {
   ALL_EVENT_MOCK_API,
   ENABLE_MOCK_API,
@@ -6,7 +7,6 @@ import {
 } from "configs/MockConfig";
 import EventMockData from "mock/data/eventData";
 import EventService from "services/EventService";
-
 const initialState = {
   eventDetails: {},
   allEvents: [],
@@ -16,9 +16,14 @@ const initialState = {
   selectedCoupons: [],
   selectedOffers: [],
   submitData: {},
+  message: null,
   currentStep: 1,
   submitLoading: false,
+  dialogVisible: false,   
+  modalLoading: false,  
+  selectedEvent: null,  
 };
+
 
 export const fetchEventDetails = createAsyncThunk(
   "event/fetchEventDetails",
@@ -64,18 +69,29 @@ export const addEvent = createAsyncThunk(
     }
   }
 );
+export const editEvent = createAsyncThunk(
+  "event/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await EventService.updateEvent(data, action);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 
 const eventSlice = createSlice({
   name: "event",
   initialState,
   reducers: {
-    handleShowStatus(state, action) {
-      const status = action.payload;
-      if (status === "All") {
+    handleShowStatus: (state, action) => {
+      const value = action.payload;
+      if (value === "All") {
         state.filteredEvents = state.allEvents;
       } else {
         state.filteredEvents = state.allEvents.filter(
-          (event) => event.status === status
+          (event) => event.status === value
         );
       }
     },
@@ -97,7 +113,6 @@ const eventSlice = createSlice({
       const existingOfferIndex = state.selectedOffers.findIndex(
         (offer) => offer.id === action.payload.id
       );
-
       if (existingOfferIndex !== -1) {
         state.selectedOffers.splice(existingOfferIndex, 1);
       } else {
@@ -108,12 +123,21 @@ const eventSlice = createSlice({
       const existingCouponIndex = state.selectedCoupons.findIndex(
         (coupon) => coupon.id === action.payload.id
       );
-
       if (existingCouponIndex !== -1) {
         state.selectedCoupons.splice(existingCouponIndex, 1);
       } else {
         state.selectedCoupons.push(action.payload);
       }
+    },
+    // New reducers for dialog, modal and selectedEvent
+    setDialogVisible(state, action) {
+      state.dialogVisible = action.payload;
+    },
+    setModalLoading(state, action) {
+      state.modalLoading = action.payload;
+    },
+    setSelectedEvent(state, action) {
+      state.selectedEvent = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -128,7 +152,21 @@ const eventSlice = createSlice({
       })
       .addCase(addEvent.rejected, (state, { payload }) => {
         state.loading = false;
-        state.error = payload || "Failed to create category";
+        state.error = payload || "Failed to create event";
+      })
+      .addCase(editEvent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editEvent.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message; 
+        }
+      })
+      .addCase(editEvent.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
       })
       .addCase(fetchAllEvent.pending, (state) => {
         state.loading = true;
@@ -159,7 +197,10 @@ const eventSlice = createSlice({
 });
 
 export const {
-  handleShowStatus,
+
+  setDialogVisible,
+  setModalLoading,
+  setSelectedEvent,  handleShowStatus,
   setSubmitData,
   toggleSelectedCoupon,
   toggleSelectedOffer,

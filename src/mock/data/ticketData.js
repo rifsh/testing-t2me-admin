@@ -108,9 +108,18 @@ TicketMockData.getAvailableTicketTyps = {
   data: [
     {
       available_types: [
-        "seat_structure",
-        "ticket_structure",
-        "movie_seat_structure",
+        {
+          id: 1,
+          name: "SEAT STRUCTURE",
+        },
+        {
+          id: 2,
+          name: "TICKET STRUCTURE",
+        },
+        {
+          id: 3,
+          name: "MOVIE SEAT STRUCTURE",
+        },
       ],
     },
   ],

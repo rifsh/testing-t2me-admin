@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import { handleAction } from "utils/api/warning-submit-util";
 
 const EventsService = {};
 
@@ -23,4 +24,13 @@ EventsService.fetchEventDetails = function (eventId) {
     method: "get",
   });
 };
+EventsService.updateEvent = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action)); 
+  return fetch({
+    url: `${ApiConstant.EDIT_EVENT_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: data, 
+  });
+};
+
 export default EventsService;

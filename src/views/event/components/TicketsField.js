@@ -17,8 +17,8 @@ const TicketField = ({ form }) => {
     useSelector((state) => state.tickets);
   const { selectedVenue } = useSelector((state) => state.locations);
 
-  const [availableSets] = useState(TicketMockData.ticket_set);
-  const [selectedTicketSet, setSelectedTicketSet] = useState(null); // State for selected ticket set
+  const [availableSets,setavailableSets] = useState();
+  const [selectedTicketSet, setSelectedTicketSet] = useState(null); 
 
   useEffect(() => {
     if (selectedVenue?.id) {
@@ -51,7 +51,7 @@ const TicketField = ({ form }) => {
     console.log("Current selected ticket type:", selectedTicketType);
 
     switch (selectedTicketType) {
-      case "ticket_structure":
+      case 2:
         return (
           <Form.Item
             name="ticket_structure_id"
@@ -64,9 +64,10 @@ const TicketField = ({ form }) => {
               className="w-100"
               placeholder="Choose a Ticket Structure"
               loading={loading}
+             
             >
               {filteredTickets.map((ticket) => (
-                <Option key={ticket.id} value={ticket.id}>
+                <Option key={ticket.id} value={ticket.id}  onSelect={availableSets(ticket.ticket_types)} >
                   {ticket.name}
                 </Option>
               ))}
@@ -74,7 +75,7 @@ const TicketField = ({ form }) => {
           </Form.Item>
         );
 
-      case "seat_structure":
+      case 1:
         return (
           <Form.Item
             name="seat_structure_id"
@@ -97,7 +98,7 @@ const TicketField = ({ form }) => {
           </Form.Item>
         );
 
-      case "movie_seat_structure":
+      case 3:
         return (
           <Form.Item
             name="movie_seat_structure_id"
@@ -181,8 +182,8 @@ const TicketField = ({ form }) => {
               onChange={handleSetTicketType}
             >
               {availableTicketTyps?.available_types?.map((type) => (
-                <Option key={type} value={type}>
-                  {type}
+                <Option key={type.id} value={type.id}>
+                  {type.name}
                 </Option>
               ))}
             </Select>
@@ -202,11 +203,11 @@ const TicketField = ({ form }) => {
               loading={loading}
               onChange={handleSelectTicketSet}
             >
-              {availableSets.map((ticket) => (
-                <Option key={'set1'} value={ticket.set_name}>
+              {/* {availableSets.map((ticket) => (
+                <Option key={ticket.ticket_set} value={ticket.ticket_set}>
                   {ticket.set_name}
                 </Option>
-              ))}
+              ))} */}
             </Select>
           </Form.Item>
         </Card>
