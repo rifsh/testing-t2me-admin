@@ -27,10 +27,11 @@ const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
   };
 
   const handleSelect = async (value, option) => {
-    console.log(value, option)
+    // console.log(value, option)
     try {
       await form.setFieldsValue({
-        place_id: option.id, 
+        place_id: option.key, 
+        place: option.label, 
       });
       if (onSelect) {
         onSelect(option.id); 
@@ -51,9 +52,10 @@ const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
   return (
     <Form form={form} layout="vertical">
       <Form.Item
-        name="place_id"
+        name="place"
         label={label}
         rules={rules}
+        id="455"
         style={style}
       >
         <AutoComplete

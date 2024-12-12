@@ -17,6 +17,7 @@ import {
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { resetTicketSelection } from "store/slices/ticketSlice";
 
 const steps = ["Event Details", "Category", "Location", "Ticket", "Offers"];
 
@@ -71,6 +72,7 @@ const MultyStepEventForm = () => {
           `Event ${updatedSubmitData.event_name} added successfully`
         );
         form.resetFields();
+        dispatch(resetTicketSelection());
         dispatch(resetSelected());
         navigate(`${APP_PREFIX_PATH}/event/list`);
       }

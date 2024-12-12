@@ -198,10 +198,19 @@ export const ticketSlice = createSlice({
       state.selectedTicketSet = selectedSet || null;
     },
     resetTicketSelection(state) {
+      state.searchTerm = "";
+      state.statusFilter = "All";
+      state.filteredTickets = [];
+      state.placeId = null;
+      state.venueId = null;
+      state.availableTicketTyps = [];
       state.selectedTicketType = null;
       state.selectedTicketStructure = null;
       state.availableTicketSets = [];
       state.selectedTicketSet = null;
+      state.currentStepSaved = false;
+      state.isModalVisible = false;
+      state.ticketTypes = [];
     },
   },
   extraReducers: (builder) => {
