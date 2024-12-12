@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 const { Title, Text } = Typography;
 
 export const TicketSetDetails = () => {
+  
   const { selectedTicketStructure, selectedTicketSet } = useSelector(
     (state) => state.tickets
   );
@@ -42,7 +43,7 @@ export const TicketSetDetails = () => {
               style={{
                 padding: "16px",
                 borderRadius: "8px",
-                background: "#e2f0f0",
+                // background: "#e2f0f0",
                 marginBottom: "12px",
                 // boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
                 display: "flex",
