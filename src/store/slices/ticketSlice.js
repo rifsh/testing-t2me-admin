@@ -17,7 +17,7 @@ export const initialState = {
   placeId: null,
   venueId: null,
   availableTicketTyps: [],
-  selectedTicketTyps: [],
+  selectedTicketTyps: null,
   // selectedVenue: null,
   currentStepSaved : false,
   isModalVisible: false,
@@ -108,7 +108,8 @@ export const ticketSlice = createSlice({
       state.isModalVisible = action.payload;
     },
     setSelectedTicketType(state, action) {
-      state.selectedTicketTyps = action.payload;
+      console.log('Setting selected ticket type:', action.payload);
+      state.selectedTicketType = action.payload;
     },
 
    
