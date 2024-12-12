@@ -266,10 +266,9 @@ export const {
   setSelectedTicketSet,
   resetTicketSelection,
   removeSpecificTicketSet,
-
   currentStepSaveUpdate,
-  addOrUpdateTicketSet, // Action to add a new ticket type
-  resetTicketSets, // Action to reset ticket types
+  addOrUpdateTicketSet,
+  resetTicketSets,
 } = ticketSlice.actions;
 
 export const selectTickets = (state) => state.tickets;

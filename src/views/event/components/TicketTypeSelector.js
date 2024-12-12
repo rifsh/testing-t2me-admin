@@ -1,26 +1,19 @@
 import React from "react";
 import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  setSelectedTicketType,
-  setSelectedTicketSet,
-} from "store/slices/ticketSlice";
+import { setSelectedTicketType } from "store/slices/ticketSlice";
 
 const { Option } = Select;
 
 export const TicketTypeSelector = () => {
   const dispatch = useDispatch();
-  const {
-    availableTicketTyps,
-    selectedTicketType,
-    
-  } = useSelector((state) => state.tickets);
+  const { availableTicketTyps, selectedTicketType } = useSelector(
+    (state) => state.tickets
+  );
 
   const handleSetTicketType = (value) => {
-    // Reset ticket set when changing ticket type
     dispatch(setSelectedTicketType(value));
   };
-
 
   return (
     <>
@@ -42,8 +35,6 @@ export const TicketTypeSelector = () => {
           ))}
         </Select>
       </Form.Item>
-
-      
     </>
   );
 };

@@ -50,8 +50,8 @@ const TicketField = ({ form }) => {
   };
 
   return (
-    <Row justify="space-between">
-      <Col xs={24} sm={24} md={setSelectedTicketSet ? 17 : 24}>
+    <Row gutter={16}>
+         <Col xs={24} sm={24} md={17}>
         <Card title="Ticket Details">
           <Form.Item name="max_capacity" label="Max Capacity">
             <Input readOnly />
@@ -70,7 +70,7 @@ const TicketField = ({ form }) => {
           
         </Card>
       </Col>
-      <Card><TicketSetDetails/></Card>
+      <TicketSetDetails/>
     </Row>
   );
 };
