@@ -26,6 +26,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { resetTicketSelection } from "store/slices/ticketSlice";
 
 const steps = ["Event Details", "Category", "Location", "Ticket", "Offers"];
+
 const MultyStepEventForm = ({ eventId }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
@@ -38,7 +39,7 @@ const MultyStepEventForm = ({ eventId }) => {
     dialogVisible,
     modalLoading,
   } = useSelector((state) => state.event);
- 
+
   useEffect(() => {
     if (eventId) {
       dispatch(fetchEventDetails(eventId));
@@ -46,7 +47,7 @@ const MultyStepEventForm = ({ eventId }) => {
   }, [dispatch, eventId]);
 
   useEffect(() => {
-    if (eventDetails) {
+    if (eventDetails && eventId) {
       form.setFieldsValue({
         event_name: eventDetails.event_name,
         description: eventDetails.description,
@@ -63,7 +64,7 @@ const MultyStepEventForm = ({ eventId }) => {
         coupon_ids: eventDetails.event_coupons.map((coupon) => coupon.id),
       });
     }
-  }, [eventDetails, form]);
+  }, [eventDetails, eventId, form]);
 
   const renderLoadingState = () => (
     <div style={{ textAlign: "center", padding: "50px" }}>
@@ -200,7 +201,7 @@ const MultyStepEventForm = ({ eventId }) => {
       </div>
       <div style={{ marginLeft: "50px", marginRight: "50px" }}>
         <Form layout="vertical" form={form}>
-          {loading ? <p>Loading event details...</p> : renderStepContent()}
+          {eventDetails ? renderStepContent() : <p>Loading event details...</p>}
         </Form>
       </div>
 
@@ -239,3 +240,5 @@ const MultyStepEventForm = ({ eventId }) => {
 };
 
 export default MultyStepEventForm;
+
+
