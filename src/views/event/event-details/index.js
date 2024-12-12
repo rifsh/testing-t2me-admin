@@ -1,62 +1,53 @@
 import React, { useEffect } from "react";
 import { Card, Row, Col, Typography, List, Tag, Divider, Space } from "antd";
-import { ShoppingCartOutlined, TagOutlined, GiftOutlined, InfoCircleOutlined } from "@ant-design/icons";
-import { fetchEventDetails } from "store/slices/eventSlice";
 import { useSelector, useDispatch } from "react-redux";
+import { useParams } from "react-router-dom";
+import { fetchEventDetails } from "store/slices/eventSlice";
 import Loading from "components/shared-components/Loading";
 
 const { Title, Text } = Typography;
 
 const EventDetails = () => {
+  // Get eventId from URL params
+  const { eventId } = useParams();
   const dispatch = useDispatch();
   const { eventDetails, loading, error } = useSelector((state) => state.event);
 
+  // Fetch event details if not already available
   useEffect(() => {
-    dispatch(fetchEventDetails());
-  }, [dispatch]);
+    if (eventId && !eventDetails) {
+      dispatch(fetchEventDetails(eventId));
+    }
+  }, [dispatch, eventId, eventDetails]);
 
-  if (loading) {
-    return <div><Loading></Loading></div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  if (!eventDetails) {
-    return <div>No Event Details Found</div>;
-  }
+  if (loading) return <Loading />;
+  if (error) return <div>Error: {error}</div>;
+  if (!eventDetails) return <div>No Event Details Found</div>;
 
   return (
     <Row gutter={[16, 16]} style={{ padding: "20px" }}>
       <Col span={24}>
-        <Card
-          title="Event Details"
-          bordered
-          hoverable
-        >
+        <Card title="Event Details" bordered hoverable>
           <Title level={3}>{eventDetails.event_name}</Title>
-          <Text strong>Description: </Text>{eventDetails.description}
+          <Text strong>Description: </Text>
+          {eventDetails.description}
           <Divider />
           <Space direction="vertical" size="middle">
             <Text>
-              <InfoCircleOutlined style={{ marginRight: 8 }} />
-              Venue ID: <Tag color="geekblue">{eventDetails.venue_id}</Tag>
+              Venue : <Tag color="geekblue">{eventDetails.venue_id}</Tag>
             </Text>
             <Text>
-              <TagOutlined style={{ marginRight: 8 }} />
-              Category ID: <Tag color="cyan">{eventDetails.category_id}</Tag>
+              Category : <Tag color="cyan">{eventDetails.category_id}</Tag>
             </Text>
             <Text>
-              <TagOutlined style={{ marginRight: 8 }} />
-              Sub-category ID: <Tag color="purple">{eventDetails.sub_category_id}</Tag>
+              Sub Category :{" "}
+              <Tag color="purple">{eventDetails.sub_category_id}</Tag>
             </Text>
             <Text>
-              <GiftOutlined style={{ marginRight: 8 }} />
-              Available Types: <Tag color="orange">{eventDetails.available_types}</Tag>
+              Available Type:{" "}
+              <Tag color="orange">{eventDetails.available_types}</Tag>
             </Text>
             <Text>
-              <ShoppingCartOutlined style={{ marginRight: 8 }} />
               Max Tickets: <Tag color="green">{eventDetails.max_tickets}</Tag>
             </Text>
           </Space>
@@ -74,7 +65,8 @@ const EventDetails = () => {
                   </Text>
                   <Divider />
                   <Text>
-                    Discount: <Tag color="red">{offer.offer.discount_percentage}%</Tag>
+                    Discount:{" "}
+                    <Tag color="red">{offer.offer.discount_percentage}%</Tag>
                   </Text>
                   <Text>
                     Valid From: <Tag color="green">{offer.valid_from}</Tag>
@@ -104,10 +96,14 @@ const EventDetails = () => {
                   </Text>
                   <Divider />
                   <Text>
-                    Coupon Code: <Tag color="orange">{coupon.coupons.coupon_code}</Tag>
+                    Coupon Code:{" "}
+                    <Tag color="orange">{coupon.coupons.coupon_code}</Tag>
                   </Text>
                   <Text>
-                    Discount: <Tag color="magenta">{coupon.coupons.discount_percentage}%</Tag>
+                    Discount:{" "}
+                    <Tag color="magenta">
+                      {coupon.coupons.discount_percentage}%
+                    </Tag>
                   </Text>
                   <Text>
                     Valid From: <Tag color="green">{coupon.valid_from}</Tag>
@@ -116,7 +112,8 @@ const EventDetails = () => {
                     Valid To: <Tag color="red">{coupon.valid_to}</Tag>
                   </Text>
                   <Text>
-                    Min Purchase: <Tag color="gold">{coupon.coupons.min_purchase_amount}</Tag>
+                    Min Purchase:{" "}
+                    <Tag color="gold">{coupon.coupons.min_purchase_amount}</Tag>
                   </Text>
                   <Text>
                     Max Uses: <Tag color="blue">{coupon.coupons.max_uses}</Tag>
