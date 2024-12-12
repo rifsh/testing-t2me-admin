@@ -8,6 +8,7 @@ export const ApiConstant = {
     COUNTRY_DETAILS_URL: "/api/v1/location/secured/country/details",
     EVENT_URL: "/api/v1/events/secured/event",
     EVENT_DETAILS_URL: "/api/v1/events/secured/events/detail",
+    EDIT_EVENT_URL: "/api/v1/events/secured/edit_event",
     OFFER_URL: "/api/v1/offers/secured/offers",
     COUPON_URL: "/api/v1/offers/secured/coupons",
     TICKET_URL: "/api/v1/tickets/secured/ticketstructure",

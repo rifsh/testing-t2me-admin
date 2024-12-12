@@ -1,45 +1,28 @@
 import React, { useEffect } from "react";
 import { Card, Row, Col, Typography, List, Tag, Divider, Space } from "antd";
-import {
-  ShoppingCartOutlined,
-  TagOutlined,
-  GiftOutlined,
-  InfoCircleOutlined,
-} from "@ant-design/icons";
-import { fetchEventDetails } from "store/slices/eventSlice";
 import { useSelector, useDispatch } from "react-redux";
+import { useParams } from "react-router-dom";
+import { fetchEventDetails } from "store/slices/eventSlice";
 import Loading from "components/shared-components/Loading";
-import { useLocation } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
 const EventDetails = () => {
-  const location = useLocation();
-  const eventId = location.state?.eventId;
-
+  // Get eventId from URL params
+  const { eventId } = useParams();
   const dispatch = useDispatch();
   const { eventDetails, loading, error } = useSelector((state) => state.event);
 
+  // Fetch event details if not already available
   useEffect(() => {
-    if (eventId) {
+    if (eventId && !eventDetails) {
       dispatch(fetchEventDetails(eventId));
     }
-  }, [dispatch, eventId]);
-  if (loading) {
-    return (
-      <div>
-        <Loading></Loading>
-      </div>
-    );
-  }
+  }, [dispatch, eventId, eventDetails]);
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  if (!eventDetails) {
-    return <div>No Event Details Found</div>;
-  }
+  if (loading) return <Loading />;
+  if (error) return <div>Error: {error}</div>;
+  if (!eventDetails) return <div>No Event Details Found</div>;
 
   return (
     <Row gutter={[16, 16]} style={{ padding: "20px" }}>
@@ -51,25 +34,20 @@ const EventDetails = () => {
           <Divider />
           <Space direction="vertical" size="middle">
             <Text>
-              <InfoCircleOutlined style={{ marginRight: 8 }} />
-              Venue ID: <Tag color="geekblue">{eventDetails.venue_id}</Tag>
+              Venue : <Tag color="geekblue">{eventDetails.venue_id}</Tag>
             </Text>
             <Text>
-              <TagOutlined style={{ marginRight: 8 }} />
-              Category ID: <Tag color="cyan">{eventDetails.category_id}</Tag>
+              Category : <Tag color="cyan">{eventDetails.category_id}</Tag>
             </Text>
             <Text>
-              <TagOutlined style={{ marginRight: 8 }} />
-              Sub-category ID:{" "}
+              Sub Category :{" "}
               <Tag color="purple">{eventDetails.sub_category_id}</Tag>
             </Text>
             <Text>
-              <GiftOutlined style={{ marginRight: 8 }} />
-              Available Types:{" "}
+              Available Type:{" "}
               <Tag color="orange">{eventDetails.available_types}</Tag>
             </Text>
             <Text>
-              <ShoppingCartOutlined style={{ marginRight: 8 }} />
               Max Tickets: <Tag color="green">{eventDetails.max_tickets}</Tag>
             </Text>
           </Space>

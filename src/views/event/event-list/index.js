@@ -9,12 +9,22 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchAllEvent, handleShowStatus } from "store/slices/eventSlice";
+import {
+  editEvent,
+  fetchAllEvent,
+  fetchEventDetails,
+  handleShowStatus,
+  setDialogVisible,
+  setModalLoading,
+  setSelectedEvent,
+  // setSubmitData,
+} from "store/slices/eventSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import utils from "utils";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { ActionType } from "utils/api/warning-submit-util";
 
 const { Option } = Select;
 
@@ -23,38 +33,54 @@ const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
 const EventsList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { allEvents, filteredEvents ,loading} = useSelector((state) => state.event);
-
-  const [dialogVisible, setDialogVisible] = useState(false);
-  const [modalLoading, setLoading] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const { allEvents, filteredEvents, message, loading, dialogVisible, modalLoading, selectedEvent } =
+    useSelector((state) => state.event);
 
   useEffect(() => {
     dispatch(fetchAllEvent());
   }, [dispatch]);
 
-  const handleViewDetails = (id) => {
-    navigate(`${APP_PREFIX_PATH}/event/details`, { state: { eventId: id } });
+  const handleViewDetails = async (id) => {
+    await dispatch(fetchEventDetails(id));
+    navigate(`${APP_PREFIX_PATH}/event/details/${id}`);
   };
-  
 
-  const handleEditEvent = (id) => {
+  const handleEditEvent = async (id) => {
     navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
   };
 
-  const handleShowWarning = (event) => {
-    setSelectedEvent(event);
-    setDialogVisible(true);
+  const handleUpdateStatus = async (event) => {
+    const newStatus = !event.status;
+    const data = { status: newStatus, id: event.id };
+    const resultAction = await dispatch(
+      editEvent({ data: data, action: ActionType.WARNING })
+    );
+
+    if (editEvent.fulfilled.match(resultAction)) {
+      dispatch(setSelectedEvent(data));
+      dispatch(setDialogVisible(true));
+    }
   };
 
-  const handleModalSubmit = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setDialogVisible(false);
-      console.log("Confirmed action for event:", selectedEvent);
-    }, 2000);
+  const handleModalSubmit = async () => {
+    dispatch(setModalLoading(true));
+    const resultAction = await dispatch(
+      editEvent({ data: selectedEvent, action: ActionType.SUBMIT })
+    );
+    dispatch(setModalLoading(false));
+    dispatch(setDialogVisible(false));
+    dispatch(fetchAllEvent());
+    if (editEvent.fulfilled.match(resultAction)) {
+      message.success(
+        `Event ${selectedEvent ? "Activated" : "Deactivated"} successfully`
+      );
+    }
   };
+
+  const handleModalCancel = () => {
+    dispatch(setDialogVisible(false));
+  };
+
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -104,8 +130,9 @@ const EventsList = () => {
       dataIndex: "status",
       render: (_, record) => (
         <Tag
-          color={record.status ? "green" : "red"} style={{cursor:"pointer"}}
-          onClick={() => handleShowWarning(record)}
+          color={record.status ? "green" : "red"}
+          style={{ cursor: "pointer" }}
+          onClick={() => handleUpdateStatus(record)}
         >
           {record.status ? "Active" : "Inactive"}
         </Tag>
@@ -126,7 +153,7 @@ const EventsList = () => {
   const onSearch = (e) => {
     const value = e.currentTarget.value;
     const data = utils.wildCardSearch(allEvents, value);
-    dispatch(handleShowStatus(data)); 
+    dispatch(handleShowStatus(data));
   };
 
   const handleStatusChange = (value) => {
@@ -176,8 +203,8 @@ const EventsList = () => {
         </div>
       </Flex>
       <div className="table-responsive">
-        <Table 
-        loading={loading}
+        <Table
+          loading={loading}
           columns={tableColumns}
           dataSource={filteredEvents || allEvents}
           rowKey="id"
@@ -187,10 +214,10 @@ const EventsList = () => {
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
-        details="This action will permanently modify your data. Please review the details carefully before proceeding."
+        details={message}
         warningMessage="Do you want to continue?"
         onSubmit={handleModalSubmit}
-        onCancel={() => setDialogVisible(false)}
+        onCancel={handleModalCancel}
         confirmText="Proceed"
         cancelText="Back"
         loading={modalLoading}
