@@ -4,6 +4,7 @@ import { FormOutlined, SearchOutlined, EyeOutlined, PlusCircleOutlined, Ellipsis
 import Flex from "components/shared-components/Flex";
 import Loading from "components/shared-components/Loading";
 import {  updateCategory } from "store/slices/categorySlice";
+import utils from "utils";
 
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -14,8 +15,13 @@ import {
 } from "store/slices/categorySlice";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import {
+  Tag
+} from "antd";
 
 const { TabPane } = Tabs;
+
+const getStatusColor = (status) => (status ? "green" : "red");
 
 const EllipsisDropdown = ({ menu }) => (
   <Dropdown overlay={menu} trigger={["click"]}>
@@ -47,6 +53,8 @@ const CategoryList = () => {
     dispatch(fetchSubcategories(record.id));
     dispatch(setActiveTab("subcategories"));
   };
+
+  
 
   const handleTabChange = (key) => {
     dispatch(setActiveTab(key));
@@ -91,12 +99,7 @@ const CategoryList = () => {
       </Menu>
     );
   };
-  const categoryColumns = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      sorter: (a, b) => Number(a.id) - Number(b.id),
-    },
+  const categoryColumns = [  
     {
       title: "Category Name",
       dataIndex: "name",
@@ -105,7 +108,12 @@ const CategoryList = () => {
     {
       title: "Status",
       dataIndex: "status",
-      sorter: (a, b) => a.status.localeCompare(b.status),
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>
+          {status ? "Active" : "Inactive"}
+        </Tag>
+      ),
+      sorter: (a, b) => utils.antdTableSorter(a, b, "status"),
     },
     {
       title: "",
@@ -189,7 +197,6 @@ const CategoryList = () => {
             <TabPane
               tab="Subcategories"
               key="subcategories"
-              disabled={!selectedCategoryId}
             >
               {subcategories.length > 0 ? (
                 <Table

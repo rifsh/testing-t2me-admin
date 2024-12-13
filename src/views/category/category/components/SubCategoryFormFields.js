@@ -70,8 +70,8 @@ const CategoryFormFields = ({ mode = ADD }) => {
                 ))}
               </Select>
             </Form.Item>
-            <Form.Item name="name" label="Category" rules={rules.name}>
-              <Input placeholder="Category" />
+            <Form.Item name="name" label="Sub Category" rules={rules.name}>
+              <Input placeholder="Sub Category" />
             </Form.Item>
             <Form.Item name="description" label="Description"  rules={rules.description}>
               <Input.TextArea

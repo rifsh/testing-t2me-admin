@@ -86,7 +86,7 @@ const TicketList = () => {
         // })}
         columns={[
           {
-            title: "Structure Name",
+            title: "Ticket types",
             dataIndex: "name",
             render: (venue) => <strong>{venue}</strong>,
           },
@@ -105,7 +105,7 @@ const TicketList = () => {
             render: (price) => `$${price}`,
           },
           {
-            title: "Ticket Types",
+            title: "Ticket Sub Types",
             dataIndex: "ticket_types",
             render: (_, record) => (
               <Collapse defaultActiveKey={[]} accordion>
