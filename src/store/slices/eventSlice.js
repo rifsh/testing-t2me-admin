@@ -149,6 +149,9 @@ const eventSlice = createSlice({
       .addCase(addEvent.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.allEvents.push(payload);
+        state.selectedCoupons=[]
+        state.selectedOffers=[]
+        state.se=[]
       })
       .addCase(addEvent.rejected, (state, { payload }) => {
         state.loading = false;
