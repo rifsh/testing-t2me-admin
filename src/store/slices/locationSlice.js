@@ -16,11 +16,13 @@ export const initialState = {
   placeWithCountryList: [],
   error: null,
   venues: [],
-  detailedCountryList:[],
+  detailedCountryList: [],
   places: [],
   selectedVenue: null,
+  selectedPlace: null,
   coordinates: { lat: 23.4241, lng: 53.8478 },
   options: [],
+  message: null,
   searchTerm: "",
   statusFilter: "All",
   selectedCountry: null,
@@ -56,6 +58,17 @@ export const createPlace = createAsyncThunk(
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");
+    }
+  }
+);
+export const editPlace = createAsyncThunk(
+  "place/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await LocationService.editPlace(data, action);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
     }
   }
 );
@@ -145,6 +158,9 @@ const locationSlice = createSlice({
     setSelectedVenue(state, action) {
       state.selectedVenue = action.payload;
     },
+    setSelectedPlace(state, action) {
+      state.selectedPlace = action.payload;
+    },
     setOptions(state, action) {
       state.options = action.payload;
     },
@@ -155,6 +171,12 @@ const locationSlice = createSlice({
     onchange(state, action) {
       state.searchTerm = action.payload;
     },
+    setLocationDialogVisible(state, action) {
+      state.dialogVisible = action.payload;
+    },
+    setLocationModalLoading(state, action) {
+      state.modalLoading = action.payload;
+    },
     singleVenue(state, action) {
       console.warn(action);
       state.venues.push(action.payload);
@@ -162,7 +184,7 @@ const locationSlice = createSlice({
     filterVenues(state, action) {
       const { searchTerm, status } = action.payload;
 
-      let filteredVenues = state.venues; 
+      let filteredVenues = state.venues;
       if (status && status !== "All") {
         filteredVenues = filteredVenues.filter(
           (venue) =>
@@ -248,7 +270,6 @@ const locationSlice = createSlice({
         state.loading = false;
         state.venues = action.payload;
         state.detailedCountryList = action.payload;
-
       })
       .addCase(getCoutryDetails.rejected, (state, action) => {
         state.loading = false;
@@ -266,6 +287,20 @@ const locationSlice = createSlice({
       .addCase(getPlaces.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(editPlace.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editPlace.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+        }
+      })
+      .addCase(editPlace.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
       })
       .addCase(createPlace.pending, (state) => {
         state.createPlaceLoading = true;
@@ -305,13 +340,16 @@ export const {
   setStatusFilter,
   setOptions,
   onSelect,
-  onchange,
+  onchange,setLocationDialogVisible,
+  setLocationModalLoading,
   filterVenues,
   singleVenue,
   onSearch,
   setCoordinates,
   filterPlaces,
   setSelectedVenue,
+  
+  setSelectedPlace,
 } = locationSlice.actions;
 export const allLocations = (state) => state.location;
 
