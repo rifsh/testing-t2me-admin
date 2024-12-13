@@ -27,7 +27,7 @@ export const TicketSetDetails = () => {
       <Card
         title={
           <Title level={5} style={{ margin: 0, color: "#2c3e50" }}>
-            Ticket Set Details
+            SELECTED DETAILS
           </Title>
         }
         bordered={true}
@@ -54,6 +54,11 @@ export const TicketSetDetails = () => {
               <div>
                 <Text strong style={{ fontSize: "16px", color: "#34495e" }}>
                   {ticket.name}
+                </Text>
+              </div>
+              <div>
+                <Text strong style={{ fontSize: "16px", color: "#34495e" }}>
+                  {ticket.number_of_tickets} Tickets
                 </Text>
               </div>
               <div>

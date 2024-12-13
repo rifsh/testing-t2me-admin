@@ -30,9 +30,9 @@ export const TicketStructureSelector = () => {
 
   const renderStructureField = () => {
     const structureNames = {
-      2: "Structure",
-      1: "Seat Structure",
-      3: "Movie Seat Structure",
+      2: "Ticket Type",
+      1: "Seat Type",
+      3: "Movie Seat Type",
     };
 
     const fieldNames = {
@@ -71,7 +71,7 @@ export const TicketStructureSelector = () => {
         {selectedTicketType && availableTicketSets.length > 0 && (
           <Form.Item
             name="ticket_set"
-            label="Ticket Set"
+            label="Sub Type"
             rules={[{ required: true, message: "Please select a ticket set." }]}
           >
             <Select

@@ -81,16 +81,18 @@ const PlaceList = () => {
   );
 
   const tableColumns = [
+    // {
+    //   title: "Country ID",
+    //   dataIndex: "country_id",
+    //   sorter: (a, b) => utils.antdTableSorter(a, b, "country_id"),
+    // },
+    // Todo : it should be country name
     {
       title: "Place Name",
       dataIndex: "name",
       sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
     },
-    {
-      title: "Country ID",
-      dataIndex: "country_id",
-      sorter: (a, b) => utils.antdTableSorter(a, b, "country_id"),
-    },
+  
     {
       title: "Created Date",
       dataIndex: "created_at",
