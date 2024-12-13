@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import { handleAction } from "utils/api/warning-submit-util";
 
 const LocationService = {};
 
@@ -14,6 +15,14 @@ LocationService.addPlace = function (data) {
   return fetch({
     url: `${ApiConstant.PLACE_URL}?country_id=${data.country_id}`,
     method: "post",
+    data: data,
+  });
+};
+LocationService.editPlace = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
     data: data,
   });
 };
