@@ -110,15 +110,15 @@ TicketMockData.getAvailableTicketTyps = {
       available_types: [
         {
           id: 1,
-          name: "SEAT STRUCTURE",
+          name: "SEAT TYPE",
         },
         {
           id: 2,
-          name: "TICKET STRUCTURE",
+          name: "TICKET TYPE",
         },
         {
           id: 3,
-          name: "MOVIE SEAT STRUCTURE",
+          name: "MOVIE SEAT TYPE",
         },
       ],
     },
