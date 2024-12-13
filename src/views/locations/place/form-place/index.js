@@ -1,45 +1,120 @@
-import React, {  useEffect } from "react";
+import React, { useEffect } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
-import { Tabs, Form, Button, message } from "antd";
+import { Tabs, Form, Button, message as antdMessage, message } from "antd";
 import Flex from "components/shared-components/Flex";
 import CountryFormFields from "../components/CountryFormFields";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { createPlace as addPlace } from "store/slices/locationSlice";
+import {
+  createPlace,
+  editPlace,
+  getPlaces,
+  setLocationDialogVisible,
+  setLocationModalLoading,
+  setSelectedPlace,
+} from "store/slices/locationSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { ActionType } from "utils/api/warning-submit-util";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
 
-
-const ADD = "ADD";
-// const EDIT = "EDIT";
-
-const CountryForm = (props) => {
-  const { mode = ADD,  } = props;
-
+const CountryForm = ({ placeId }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { loading, error } = useSelector((state) => state.locations);
+  const {
+    loading,
+    error,
+    detailedCountryList,
+    dialogVisible,
+    modalLoading,
+    selectedPlace,
+    filteredPlaces,
+    message: warningMessage,
+  } = useSelector((state) => state.locations);
 
   useEffect(() => {
+    if (placeId && filteredPlaces && filteredPlaces.length > 0) {
+      const numericPlaceId = parseInt(placeId, 10);
+      const place = filteredPlaces.find((p) => p.id === numericPlaceId);
+  
+      if (place) {
+        form.setFieldsValue({
+          country_id: place.country_id,
+          name: place.name,
+        });
+      } else {
+        console.warn(`No place found with ID: ${numericPlaceId}`);
+      }
+    }
+  }, [placeId, filteredPlaces, form]);
+  
+  useEffect(() => {
     if (error) {
-      message.error(error);
+      antdMessage.error(error);
     }
   }, [error]);
 
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      const resultAction = await dispatch(addPlace(values));
 
-      if (addPlace.fulfilled.match(resultAction)) {
-        message.success(`Place ${values.name} added successfully`);
-        form.resetFields();
-        navigate(`${APP_PREFIX_PATH}/place/list`);
+      if (!placeId) {
+        // Adding a new place
+        const resultAction = await dispatch(createPlace(values));
+
+        if (createPlace.fulfilled.match(resultAction)) {
+          message.success(`Place ${values.name} added successfully`);
+          form.resetFields();
+          navigate(`${APP_PREFIX_PATH}/place/list`);
+        }
+      } else {
+        // Editing an existing place
+        // if (!selectedPlace) {
+        //   console.error("No selected place found for editing.");
+        //   antdMessage.error(
+        //     "Unable to find the selected place. Please try again."
+        //   );
+        //   return;
+        // }
+
+        const data = {
+          ...values,
+          placeId: placeId, // Ensure selectedPlace is defined here
+        };
+        console.log("Edit Data:", data);
+
+        const resultAction = await dispatch(
+          editPlace({ data, action: ActionType.WARNING })
+        );
+
+        if (editPlace.fulfilled.match(resultAction)) {
+          dispatch(setSelectedPlace(data));
+          dispatch(setLocationDialogVisible(true));
+        }
       }
     } catch (errorInfo) {
       console.error("Validation Failed:", errorInfo);
     }
+  };
+
+  const handleModalSubmit = async () => {
+    dispatch(setLocationModalLoading(true));
+    const resultAction = await dispatch(
+      editPlace({ data: selectedPlace, action: ActionType.SUBMIT })
+    );
+    dispatch(setLocationModalLoading(false));
+    dispatch(setLocationDialogVisible(false));
+    dispatch(getPlaces());
+    if (editPlace.fulfilled.match(resultAction)) {
+      antdMessage.success(`Event ${selectedPlace.name} updated successfully`);
+      form.resetFields();
+      navigate(`${APP_PREFIX_PATH}/place/list`);
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setLocationDialogVisible(false));
   };
 
   return (
@@ -47,7 +122,7 @@ const CountryForm = (props) => {
       <Form
         layout="vertical"
         form={form}
-        name="advanced_search"
+        name="country_form"
         className="ant-advanced-search-form"
         initialValues={{
           heightUnit: "cm",
@@ -64,7 +139,7 @@ const CountryForm = (props) => {
               alignItems="center"
             >
               <h2 className="mb-3">
-                {mode === "ADD" ? "Add New Country" : `Edit Country`}{" "}
+                {!placeId ? "Add New Place" : `Edit Place`}{" "}
               </h2>
               <div className="mb-3">
                 <Button className="mr-2">Discard</Button>
@@ -74,7 +149,7 @@ const CountryForm = (props) => {
                   htmlType="submit"
                   loading={loading}
                 >
-                  {mode === "ADD" ? "Add" : `Save`}
+                  {!placeId ? "Add" : `Save`}
                 </Button>
               </div>
             </Flex>
@@ -94,6 +169,17 @@ const CountryForm = (props) => {
           />
         </div>
       </Form>
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={warningMessage}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={modalLoading}
+      />
     </>
   );
 };

@@ -32,7 +32,8 @@ import {
   filterPlaces,
   getCoutryDetails,
   getPlaces,
-  setLocationDialogVisible,setLocationModalLoading,
+  setLocationDialogVisible,
+  setLocationModalLoading,
   setSelectedPlace,
 } from "store/slices/locationSlice";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
@@ -66,11 +67,16 @@ const PlaceList = () => {
   const handleSelectCountry = async (id) => {
     dispatch(getPlaces(id));
   };
+
+  const handleEditPlace = async (id) => {
+    navigate(`${APP_PREFIX_PATH}/place/edit/${id}`);
+  };
+
   const handleUpdateStatus = async (place) => {
     const newStatus = !place.status;
     const data = { status: newStatus, id: place.id };
     console.log("new data", data);
-    
+
     const resultAction = await dispatch(
       editPlace({ data: data, action: ActionType.WARNING })
     );
@@ -109,7 +115,7 @@ const PlaceList = () => {
         </Flex>
       </Menu.Item>
       <Menu.Item>
-        <Flex alignItems="center">
+        <Flex alignItems="center" onClick={() => handleEditPlace(row.id)}>
           <EditOutlined />
           <span className="ml-2">Edit Place</span>
         </Flex>
