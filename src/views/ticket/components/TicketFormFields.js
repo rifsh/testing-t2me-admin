@@ -34,7 +34,6 @@ const TicketFormFields = () => {
 
   const onSubmit = async () => {
     try {
-      console.log('kon')
       const values = await form.validateFields();
       const ticketData = {
         venue_id: values.venue_id,
@@ -128,7 +127,7 @@ const TicketFormFields = () => {
                 onClick={addTicketType}
                 style={{ marginRight: "10px" }}
               >
-                Add Ticket Type
+                Add Sub Ticket Type
               </Button>
               <Button onClick={onSubmit} type="primary" htmlType="submit">
                 Submit
