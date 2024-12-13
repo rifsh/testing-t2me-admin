@@ -17,6 +17,7 @@ import {
   FormOutlined,
   SearchOutlined,
   PlusCircleOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
@@ -45,6 +46,7 @@ const PlaceList = () => {
 
   useEffect(() => {
     dispatch(getPlaces());
+    
     dispatch(getCoutryDetails());
   }, [dispatch]);
 
@@ -54,14 +56,7 @@ const PlaceList = () => {
   const handleSelectCountry = async (id) => {
     dispatch(getPlaces(id));
   };
-  const handleShowStatus = (status) => {
-    dispatch(
-      filterPlaces({
-        searchTerm: null,
-        status: status === "All" ? null : status === "Active",
-      })
-    );
-  };
+
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -73,8 +68,8 @@ const PlaceList = () => {
       </Menu.Item>
       <Menu.Item>
         <Flex alignItems="center">
-          <PlusCircleOutlined />
-          <span className="ml-2">Add to remark</span>
+          <EditOutlined />
+          <span className="ml-2">Edit Place</span>
         </Flex>
       </Menu.Item>
     </Menu>
@@ -113,7 +108,7 @@ const PlaceList = () => {
       sorter: (a, b) => utils.antdTableSorter(a, b, "status"),
     },
     {
-      title: "Action",
+      title: "",
       dataIndex: "actions",
       render: (_, elm) => (
         <div className="text-right">
@@ -132,11 +127,12 @@ const PlaceList = () => {
               className="w-100"
               placeholder="Choose a Country"
               loading={loading}
+              defaultValue={"All Country"}
               onSelect={(id) => handleSelectCountry(id)}
             >
               {detailedCountryList.map((country) => {
                 return (
-                  <Option key={country.id} value={country.id}>
+                  <Option key={country.id} value={country.id} >
                     {country.name}
                   </Option>
                 );
@@ -154,30 +150,18 @@ const PlaceList = () => {
           </Button>
         </Col>
       </Row>
-      <Row
-        alignItems="center"
-        justifyContent="space-between"
-        mobileFlex={false}
-        className="mb-3"
-      >
+      <Row gutter={16} justify="space-between" style={{paddingBottom:"15px"}}>
+        <Col xs={24} sm={8}>
         <Input
           placeholder="Search"
           prefix={<SearchOutlined />}
           onChange={(e) => handleSearch(e.target.value)}
-          style={{ marginRight: 8 , width:"50%"}}
+          
         />
-        <Select
-          defaultValue="All"
-          className="w-100"
-          style={{ width:40}}
-          onChange={handleShowStatus}
-          placeholder="Status"
-        >
-          <Option value="All">All</Option>
-          <Option value="Active">Active</Option>
-          <Option value="Inactive">Inactive</Option>
-        </Select>
+        </Col>
+       
       </Row>
+      
       <div className="table-responsive">
         <Table
           columns={tableColumns}
