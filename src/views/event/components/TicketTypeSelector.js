@@ -19,7 +19,7 @@ export const TicketTypeSelector = () => {
     <>
       <Form.Item
         name="available_types"
-        label="Type"
+        label="Booking Type"
         rules={[{ required: true, message: "Please select a ticket type." }]}
       >
         <Select
