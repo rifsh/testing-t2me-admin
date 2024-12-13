@@ -102,32 +102,32 @@ const EventsList = () => {
   const tableColumns = [
     {
       title: "Event",
-      dataIndex: "event_name",
+      dataIndex: "event_name", 
       sorter: (a, b) => utils.antdTableSorter(a, b, "event_name"),
     },
     {
       title: "Category",
-      dataIndex: "category_name",
-      sorter: (a, b) => utils.antdTableSorter(a, b, "category_name"),
+      dataIndex: ["category", "name"], 
+      sorter: (a, b) => utils.antdTableSorter(a, b, ["category", "name"]),
     },
     {
       title: "Sub Category",
-      dataIndex: "sub_category_name",
-      sorter: (a, b) => utils.antdTableSorter(a, b, "sub_category_name"),
+      dataIndex: ["sub_category", "name"], 
+      sorter: (a, b) => utils.antdTableSorter(a, b, ["sub_category", "name"]),
     },
     {
       title: "Venue",
-      dataIndex: "venue_name",
-      sorter: (a, b) => utils.antdTableSorter(a, b, "venue_name"),
+      dataIndex: ["venue", "name"], 
+      sorter: (a, b) => utils.antdTableSorter(a, b, ["venue", "name"]),
     },
     {
       title: "Max Tickets",
-      dataIndex: "max_tickets",
+      dataIndex: "max_tickets", 
       sorter: (a, b) => utils.antdTableSorter(a, b, "max_tickets"),
     },
     {
       title: "Status",
-      dataIndex: "status",
+      dataIndex: "status", 
       render: (_, record) => (
         <Tag
           color={record.status ? "green" : "red"}
@@ -149,7 +149,8 @@ const EventsList = () => {
       ),
     },
   ];
-
+  
+  
   const onSearch = (e) => {
     const value = e.currentTarget.value;
     const data = utils.wildCardSearch(allEvents, value);
