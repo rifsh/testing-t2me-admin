@@ -122,7 +122,14 @@ console.log(ticketCategory,'tikcetgdgd')
       // Create a shallow copy of tickets[0] to avoid mutating the original object
       let ticketData = { ...tickets[0] };
       let venue_id = ticketData.venue_id;
-  
+      console.log(ticketData);
+    console.log(ticketData.ticket_types);
+
+      if (Array.isArray(ticketData.ticket_types) && ticketData.ticket_types.find(item => item.ticket_set == null)) {
+        message.error("Title missing");
+        return;
+      }
+
       console.warn("Original Ticket Data:", ticketData);
   
       // Flatten the ticket_types and replace it with the extracted tickets
