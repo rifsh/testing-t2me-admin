@@ -14,8 +14,8 @@ import {
   fetchAllEvent,
   fetchEventDetails,
   handleShowStatus,
-  setDialogVisible,
-  setModalLoading,
+  setDialogVisible as setEventDialogVisible,
+  setModalLoading as setEventModalLoading,
   setSelectedEvent,
   // setSubmitData,
 } from "store/slices/eventSlice";
@@ -25,6 +25,7 @@ import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import utils from "utils";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
+import { setSelectedVenue } from "store/slices/locationSlice";
 
 const { Option } = Select;
 
@@ -57,18 +58,18 @@ const EventsList = () => {
     );
 
     if (editEvent.fulfilled.match(resultAction)) {
-      dispatch(setSelectedEvent(data));
-      dispatch(setDialogVisible(true));
+      dispatch(setSelectedVenue(data));
+      dispatch(setEventDialogVisible(true));
     }
   };
 
   const handleModalSubmit = async () => {
-    dispatch(setModalLoading(true));
+    dispatch(setEventModalLoading(true));
     const resultAction = await dispatch(
       editEvent({ data: selectedEvent, action: ActionType.SUBMIT })
     );
-    dispatch(setModalLoading(false));
-    dispatch(setDialogVisible(false));
+    dispatch(setEventModalLoading(false));
+    dispatch(setEventDialogVisible(false));
     dispatch(fetchAllEvent());
     if (editEvent.fulfilled.match(resultAction)) {
       message.success(
@@ -78,7 +79,7 @@ const EventsList = () => {
   };
 
   const handleModalCancel = () => {
-    dispatch(setDialogVisible(false));
+    dispatch(setEventDialogVisible(false));
   };
 
 

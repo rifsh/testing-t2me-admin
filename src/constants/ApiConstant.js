@@ -4,6 +4,7 @@ export const ApiConstant = {
     SUB_CATEGORY_URL: "/api/v1/events/secured/subcategory",
     PLACE_WITH_COUNTRY_URL: "/api/v1/location/secured/place_with_country",
     PLACE_URL: "/api/v1/location/secured/place",
+    EDIT_PLACE_URL: "/api/v1/location/secured/edit_place",
     VENUE_URL: "/api/v1/location/secured/venue",
     COUNTRY_DETAILS_URL: "/api/v1/location/secured/country/details",
     EVENT_URL: "/api/v1/events/secured/event",
