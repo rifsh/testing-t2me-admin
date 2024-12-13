@@ -1,19 +1,34 @@
-import React, { useEffect, useState } from 'react';
-import { Card, Table, Input, Button, Collapse, Modal, Row, Col, Divider } from 'antd';
-import { PlusCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from "react";
+import {
+  Card,
+  Table,
+  Input,
+  Button,
+  Collapse,
+  Modal,
+  Row,
+  Col,
+  Divider,
+} from "antd";
+import { PlusCircleOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { fetchAllTickets, filterTickets , resetTicketSets} from 'store/slices/ticketSlice';
-import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchAllTickets,
+  filterTickets,
+  resetTicketSets,
+} from "store/slices/ticketSlice";
+import { useDispatch, useSelector } from "react-redux";
 const { Panel } = Collapse;
 
 const TicketList = () => {
-  
   const dispatch = useDispatch();
-  const { filteredTickets, loading,searchTerm } = useSelector((state) => state.tickets);
+  const { filteredTickets, loading, searchTerm } = useSelector(
+    (state) => state.tickets
+  );
 
   useEffect(() => {
-    dispatch(resetTicketSets())
+    dispatch(resetTicketSets());
     dispatch(fetchAllTickets());
   }, [dispatch]);
 
@@ -21,15 +36,8 @@ const TicketList = () => {
     dispatch(filterTickets({ searchTerm: e.target.value, status: null }));
   };
 
-  // const handleShowStatus = (status) => {
-  //   dispatch(filterOffers({ searchTerm: null, status }));
-  // };
-
-  // const [list, setList] = useState(seatData);
-  // const [searchTerm, setSearchTerm] = useState('');
   const [selectedVenue, setSelectedVenue] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-
 
   const showDetails = (venue) => {
     setSelectedVenue(venue);
@@ -42,10 +50,17 @@ const TicketList = () => {
 
   const navigate = useNavigate();
 
-
   return (
-    <Card style={{ padding: '20px' }}>
-      <div className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <Card style={{ padding: "20px" }}>
+      <div
+        className="header"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
         <Input
           placeholder="Search Ticket Type"
           prefix={<SearchOutlined />}
@@ -66,40 +81,80 @@ const TicketList = () => {
         rowKey="id"
         dataSource={filteredTickets}
         pagination={false}
-        onRow={(record) => ({
-          onClick: () => showDetails(record),
-        })}
+        // onRow={(record) => ({
+        //   onClick: () => showDetails(record),
+        // })}
         columns={[
           {
-            title: 'Venue ID',
-            dataIndex: 'venue_id',
-            render: (venue_id) => <strong>{venue_id}</strong>,
+            title: "Structure Name",
+            dataIndex: "name",
+            render: (venue) => <strong>{venue}</strong>,
           },
           {
-            title: 'Number of Tickets',
-            dataIndex: 'number_of_tickets',
+            title: "Venue",
+            dataIndex: "venue",
+            render: (venue) => <strong>{venue.name}</strong>,
           },
           {
-            title: 'Base Price',
-            dataIndex: 'base_price',
+            title: "Number of Tickets",
+            dataIndex: "number_of_tickets",
+          },
+          {
+            title: "Base Price",
+            dataIndex: "base_price",
             render: (price) => `$${price}`,
           },
           {
-            title: 'Ticket Types',
-            dataIndex: 'ticket_types',
+            title: "Ticket Types",
+            dataIndex: "ticket_types",
             render: (_, record) => (
               <Collapse defaultActiveKey={[]} accordion>
-                {record?.ticket_types && Object.keys(record?.ticket_types || {}).length > 0 ? (
-                  Object.keys(record.ticket_types).map(set => (
+                {record.ticket_types && record.ticket_types.length > 0 ? (
+                  record.ticket_types.map((set, index) => (
                     <Panel
-                      header={set}
-                      key={set}
-                      extra={<span>+{record?.ticket_types[set].length} types</span>}
+                      header={set.ticket_set}
+                      key={index}
+                      extra={<span>{set.tickets.length} Types</span>}
                     >
                       <ul style={{ paddingLeft: 20 }}>
-                        {record?.ticket_types[set].map(ticket => (
-                          <li key={ticket.name}>
-                            <strong>{ticket.name}</strong>: ${ticket.price} for {ticket.number_of_tickets} tickets
+                        {set.tickets.map((ticket, ticketIndex) => (
+                          <li key={ticketIndex} style={{ padding: "10px 0" }}>
+                            <div
+                              style={{
+                                // display: "flex",
+                                justifyContent: "space-between",
+                                // alignItems: "center",
+                              }}
+                            >
+                              <Col>
+                                <span style={{ fontWeight: "bold" }}>
+                                  {ticket.name}
+                                </span>
+                                <div style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}>
+                                  <span
+                                    style={{
+                                      color: "lightblue",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    Tickets : {ticket.number_of_tickets}
+                                  </span>{" "}
+                                  
+                                  <span
+                                    style={{
+                                      color: "lightgreen",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    Price : ${ticket.price}
+                                  </span>
+                                </div>
+                              </Col>
+                            </div>
                           </li>
                         ))}
                       </ul>
@@ -108,7 +163,6 @@ const TicketList = () => {
                 ) : (
                   <span>No ticket types available</span>
                 )}
-
               </Collapse>
             ),
           },
@@ -125,25 +179,40 @@ const TicketList = () => {
         {selectedVenue && (
           <div>
             <Row gutter={16} style={{ marginBottom: 16 }}>
-              <Col span={12}><strong>Venue ID:</strong> {selectedVenue.venue_id}</Col>
-              <Col span={12}><strong>Base Price:</strong> ${selectedVenue.base_price}</Col>
+              <Col span={12}>
+                <strong>Venue ID:</strong> {selectedVenue.venue.id}
+              </Col>
+              <Col span={12}>
+                <strong>Base Price:</strong> ${selectedVenue.base_price}
+              </Col>
             </Row>
             <Divider />
 
             {/* Dynamically Display Ticket Sections */}
-            {Object.keys(selectedVenue.ticket_types).map(set => (
-              <div key={set}>
-                <h4 style={{ fontSize: 16, fontWeight: 600 }}>{set} Tickets</h4>
+            {selectedVenue.ticket_types.map((set, index) => (
+              <div key={index}>
+                <h4 style={{ fontSize: 16, fontWeight: 600 }}>
+                  {set.ticket_set} Tickets
+                </h4>
                 <Row gutter={16}>
-                  {selectedVenue.ticket_types[set].map(ticket => (
-                    <Col span={12} key={ticket.name}>
+                  {set.tickets.map((ticket, ticketIndex) => (
+                    <Col span={12} key={ticketIndex}>
                       <Card
                         title={ticket.name}
                         bordered={false}
-                        style={{ marginBottom: 16, backgroundColor: set === 'set1' ? '#f5f5f5' : '#e6f7ff' }}
+                        style={{
+                          marginBottom: 16,
+                          backgroundColor:
+                            set.ticket_set === "Set1" ? "#f5f5f5" : "#e6f7ff",
+                        }}
                       >
-                        <p><strong>Price:</strong> ${ticket.price}</p>
-                        <p><strong>Available Tickets:</strong> {ticket.number_of_tickets}</p>
+                        <p>
+                          <strong>Price:</strong> ${ticket.price}
+                        </p>
+                        <p>
+                          <strong>Available Tickets:</strong>{" "}
+                          {ticket.number_of_tickets}
+                        </p>
                       </Card>
                     </Col>
                   ))}

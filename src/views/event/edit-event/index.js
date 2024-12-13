@@ -1,13 +1,13 @@
-import React from 'react'
-import EventForm from '../components';
+import React from 'react';
 import { useParams } from 'react-router-dom';
+import MultyStepEventForm from '../components/MultyStepForm';
 
 const EditEvent = () => {
-	const params = useParams();
+  const params = useParams();
 
-	return (
-		<EventForm mode="EDIT" param={params}/>
-	)
+  return (
+    <MultyStepEventForm eventId={params.eventId} />
+  );
 }
 
-export default EditEvent
+export default EditEvent;
