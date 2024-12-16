@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Row, Col, Button, Avatar, Dropdown, Table,  Tag } from 'antd';
-import StatisticWidget from 'components/shared-components/StatisticWidget';
+import React, { useEffect, useState } from "react";
+import { Row, Col, Button, Avatar, Dropdown, Table, Tag, Spin } from 'antd';
+import AnnualStatistic from 'components/shared-components/StatisticWidget';
 import ChartWidget from 'components/shared-components/ChartWidget';
 import AvatarStatus from 'components/shared-components/AvatarStatus';
 import GoalWidget from 'components/shared-components/GoalWidget';
@@ -8,14 +8,13 @@ import Card from 'components/shared-components/Card';
 import Flex from 'components/shared-components/Flex';
 import { 
   VisitorChartData, 
-  AnnualStatisticData, 
   ActiveMembersData, 
   NewMembersData, 
   RecentTransactionData 
 } from './StaticsDashboardData';
 import ApexChart from 'react-apexcharts';
 import { apexLineChartDefaultOption, COLOR_2 } from 'constants/ChartConstant';
-import { SPACER } from 'constants/ThemeConstant'
+import { SPACER } from 'constants/ThemeConstant';
 import { 
   UserAddOutlined, 
   FileExcelOutlined, 
@@ -26,11 +25,13 @@ import {
   ReloadOutlined 
 } from '@ant-design/icons';
 import utils from 'utils';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAnnualStats } from "store/slices/staticsSlice";
+
 
 const MembersChart = props => (
-  <ApexChart {...props}/>
-)
+  <ApexChart {...props} />
+);
 
 const memberChartOption = {
   ...apexLineChartDefaultOption,
@@ -42,7 +43,7 @@ const memberChartOption = {
     },
     colors: [COLOR_2],
   }
-}
+};
 
 const latestTransactionOption = [
   {
@@ -72,7 +73,7 @@ const latestTransactionOption = [
       </Flex>
     ),
   },
-]
+];
 
 const newJoinMemberOptions = [
   {
@@ -93,18 +94,17 @@ const newJoinMemberOptions = [
       </Flex>
     ),
   },
-]
+];
 
-const CardDropdown = ({items}) => {
-
+const CardDropdown = ({ items }) => {
   return (
-    <Dropdown menu={{items}} trigger={['click']} placement="bottomRight">
+    <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
       <a href="/#" className="text-gray font-size-lg" onClick={e => e.preventDefault()}>
         <EllipsisOutlined />
       </a>
     </Dropdown>
-  )
-}
+  );
+};
 
 const tableColumns = [
   {
@@ -113,7 +113,7 @@ const tableColumns = [
     key: 'name',
     render: (text, record) => (
       <div className="d-flex align-items-center">
-        <Avatar size={30} className="font-size-sm" style={{backgroundColor: record.avatarColor}}>
+        <Avatar size={30} className="font-size-sm" style={{ backgroundColor: record.avatarColor }}>
           {utils.getNameInitial(text)}
         </Avatar>
         <span className="ml-2">{text}</span>
@@ -142,12 +142,20 @@ const tableColumns = [
 ];
 
 export const StaticsDashboard = () => {
+  const dispatch = useDispatch();
   const [visitorChartData] = useState(VisitorChartData);
-  const [annualStatisticData] = useState(AnnualStatisticData);
   const [activeMembersData] = useState(ActiveMembersData);
-  const [newMembersData] = useState(NewMembersData)
-  const [recentTransactionData] = useState(RecentTransactionData)
-  const { direction } = useSelector(state => state.theme)
+  const [newMembersData] = useState(NewMembersData);
+  const [recentTransactionData] = useState(RecentTransactionData);
+  const { direction } = useSelector(state => state.theme);
+  //annualStats
+  const { annualStats, loading } = useSelector(state => state.statics);
+
+
+  // Fetch the annual statistic data on component mount
+  useEffect(() => {
+    dispatch(fetchAnnualStats());
+  }, [dispatch]);
 
   return (
     <>  
@@ -155,49 +163,30 @@ export const StaticsDashboard = () => {
         <Col xs={24} sm={24} md={24} lg={18}>
           <Row gutter={16}>
             {
-              annualStatisticData.map((elm, i) => (
-                <Col xs={24} sm={24} md={24} lg={24} xl={8} key={i}>
-                  <StatisticWidget 
-                    title={elm.title} 
-                    value={elm.value}
-                    status={elm.status}
-                    subtitle={elm.subtitle}
-                  />
+              loading ? (
+                <Col xs={24}>
+                  <Spin size="large" />
                 </Col>
-              ))
+              ) : (
+                Array.isArray(annualStats) && annualStats.length > 0 ? (
+                  Object.keys(annualStats).map((key, i) => (
+                    <Col xs={24} sm={24} md={24} lg={24} xl={8} key={i}>
+                      <AnnualStatistic 
+                        title={annualStats[key].title} 
+                        value={annualStats[key].value}
+                        status={annualStats[key].status}
+                        subtitle={annualStats[key].subtitle}
+                      />
+                    </Col>
+                  ))
+                ) : (
+                  <Col xs={24}>
+                    <p>No data available</p>
+                  </Col>
+                )
+              )
             }
           </Row>
-          <Row gutter={16}>
-            <Col span={24}>
-                <ChartWidget 
-                  title="Unique Visitors" 
-                  series={visitorChartData.series} 
-                  xAxis={visitorChartData.categories} 
-                  height={'400px'}
-                  direction={direction}
-                />
-            </Col>
-          </Row>
-        </Col>
-        <Col xs={24} sm={24} md={24} lg={6}>
-          <GoalWidget 
-            title="Monthly Target" 
-            value={87}
-            subtitle="You need abit more effort to hit monthly target"
-            extra={<Button type="primary">Learn More</Button>}
-          />
-          <StatisticWidget 
-            title={
-              <MembersChart 
-                options={memberChartOption}
-                series={activeMembersData}
-                height={145}
-              />
-            }
-            value='17,329'
-            status={3.7}
-            subtitle="Active members"
-          />
         </Col>
       </Row>
       <Row gutter={16}>
@@ -230,8 +219,7 @@ export const StaticsDashboard = () => {
         </Col>
       </Row>
     </>
-  )
-}
-
+  );
+};
 
 export default StaticsDashboard;

@@ -3,7 +3,7 @@ import Card from 'components/shared-components/Card';
 import PropTypes from "prop-types";
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 
-const StatisticWidget = ({ title, value, status, subtitle, prefix }) => {
+const AnnualStatistic = ({ title, value, status, subtitle, prefix }) => {
 	return (
 		<Card>
 			{title && <h4 className="mb-0">{title}</h4>}
@@ -11,25 +11,17 @@ const StatisticWidget = ({ title, value, status, subtitle, prefix }) => {
 				{prefix ? <div className="mr-2">{prefix}</div> : null}
 				<div>
 					<div className="d-flex align-items-center">
-						<h1 className="mb-0 font-weight-bold">{value}</h1>
-						{
-							status ? 
-							<span className={`font-size-md font-weight-bold ml-3 ${status !== 0 && status > 0 ? 'text-success' : 'text-danger'}`} >
-								{status}
-								{status !== 0 && status > 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-							</span> 
-							: 
-							null
-						}
+						<h1 className="mb-0 font-weight-bold text-success">{value}</h1>						
 					</div>
 					{subtitle && <div className="text-gray-light mt-1">{subtitle}</div>}
+					<h1 className="mb-0 font-weight-bold">{status}</h1>						
 				</div>
 			</div>
 		</Card>
 	)
 }
 
-StatisticWidget.propTypes = {
+AnnualStatistic.propTypes = {
   	title: PropTypes.oneOfType([
 		PropTypes.string,
 		PropTypes.element
@@ -40,4 +32,4 @@ StatisticWidget.propTypes = {
 	prefix: PropTypes.element
 };
 
-export default StatisticWidget
+export default AnnualStatistic
