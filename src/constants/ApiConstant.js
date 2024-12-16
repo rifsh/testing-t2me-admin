@@ -14,5 +14,7 @@ export const ApiConstant = {
     COUPON_URL: "/api/v1/offers/secured/coupons",
     TICKET_URL: "/api/v1/tickets/secured/ticketstructure",
     AVAILABLE_TICKET_TYPE_URL: "/api/v1/events/secured/available_types",
-    SCHEDULE_URL: "/api/v1/events/secured/schedules"
+    SCHEDULE_URL: "/api/v1/events/secured/schedules",
+    STATICS_EVENT_LIST: "/api/v1/statics/secured/events",
+    STATICS_USER_LIST: "/api/v1/statics/secured/users"
 };
