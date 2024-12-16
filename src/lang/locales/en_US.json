@@ -2,6 +2,7 @@
 	"home": "Home",
 	"sidenav.dashboard": "Dashboard",
 	"sidenav.dashboard.default": "Default",
+	"sidenav.dashboard.statics": "Statics",
 	"sidenav.dashboard.analytic": "Analytic",
 	"sidenav.dashboard.sales": "Sales",
 	"sidenav.event": "Event",

@@ -42,6 +42,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/app-views/dashboards/sales")),
   },
   {
+    key: "dashboard.statics",
+    path: `${APP_PREFIX_PATH}/dashboards/statics`,
+    component: React.lazy(() => import("views/app-views/dashboards/statics")),
+  },
+  {
     key: "event.add",
     path: `${APP_PREFIX_PATH}/event/add`,
     component: React.lazy(() => import("views/event/add-event")),
