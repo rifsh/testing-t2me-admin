@@ -93,7 +93,7 @@ const TicketList = () => {
           {
             title: "Venue",
             dataIndex: "venue",
-            render: (venue) => <strong>{venue.name}</strong>,
+            render: (venue) => <strong>{venue?.name}</strong>,
           },
           {
             title: "Number of Tickets",
@@ -109,7 +109,7 @@ const TicketList = () => {
             dataIndex: "ticket_types",
             render: (_, record) => (
               <Collapse defaultActiveKey={[]} accordion>
-                {record.ticket_types && record.ticket_types.length > 0 ? (
+                {record?.ticket_types && record.ticket_types?.length > 0 ? (
                   record.ticket_types.map((set, index) => (
                     <Panel
                       header={set.ticket_set}
@@ -198,7 +198,7 @@ const TicketList = () => {
                   {set.tickets.map((ticket, ticketIndex) => (
                     <Col span={12} key={ticketIndex}>
                       <Card
-                        title={ticket.name}
+                        title={ticket?.name}
                         bordered={false}
                         style={{
                           marginBottom: 16,

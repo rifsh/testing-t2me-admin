@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Card, Row, Col, Typography, List, Divider, Space, Image, Button } from "antd";
+import { Card, Row, Col, Typography, Space, Image, Button } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import { fetchEventDetails } from "store/slices/eventSlice";
@@ -24,113 +24,101 @@ const EventDetails = () => {
 
   return (
     <Row gutter={[16, 16]} style={{ padding: "20px" }}>
-      {/* Event Image Section with reduced height */}
+      {/* Event Image Section */}
       <Col span={24}>
         <Card
           bordered={false}
-          cover={<Image alt="event image" src="https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg?cs=srgb&dl=pexels-wolfgang-1002140-2747449.jpg&fm=jpg" height={250} />}
+          cover={
+            <Image
+              alt="event image"
+              src="https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg?cs=srgb&dl=pexels-wolfgang-1002140-2747449.jpg&fm=jpg"
+              height={300}
+              style={{ objectFit: "cover" }}
+            />
+          }
         >
-          <Title level={2}>{eventDetails.event_name}</Title>
+          <Title level={2} style={{ margin: "10px 0" }}>
+            {eventDetails.event_name}
+          </Title>
           <Text>{eventDetails.description}</Text>
         </Card>
       </Col>
 
       {/* Event Overview Section */}
       <Col span={24}>
-        <Card title="Event Overview" bordered hoverable>
-          <Row>
+        <Card
+          title={<span style={{ color: "#1890ff" }}>Event Overview</span>}
+          bordered={false}
+        >
+          <Row gutter={[16, 16]}>
             <Col span={12}>
-              <Text strong>Date: </Text>{eventDetails.event_date}
+              <Text strong>Venue:</Text> {eventDetails.venue.name}
             </Col>
-            <Col span={12} style={{ textAlign: 'right' }}>
-              <Text strong>Venue: </Text>{eventDetails.venue_id}
-            </Col>
-          </Row>
-          <Row>
             <Col span={12}>
-              <Text strong>Category: </Text>{eventDetails.category_id}
+              <Text strong>Available Seats:</Text> {eventDetails.max_tickets}
             </Col>
-            <Col span={12} style={{ textAlign: 'right' }}>
-              <Text strong>Available Seats: </Text>{eventDetails.max_tickets}
+            <Col span={12}>
+              <Text strong>Category:</Text> {eventDetails.category.name}
+            </Col>
+            <Col span={12}>
+              <Text strong>Sub Category:</Text> {eventDetails.sub_category.name}
             </Col>
           </Row>
         </Card>
       </Col>
 
-      {/* Event Offers Section (No card for each offer, simple listing) */}
       <Col span={24}>
-        <Card title="Event Offers" bordered hoverable>
-          <List
-            dataSource={eventDetails.event_offers}
-            renderItem={(offer) => (
-              <List.Item>
-                <Row style={{ width: '100%' }}>
-                  <Col span={12}>
-                    <Text strong>Offer Name: </Text>{offer.offer.name}
-                  </Col>
-                  <Col span={12} style={{ textAlign: 'right' }}>
-                    <Text strong>Discount: </Text>{offer.offer.discount_percentage}%
-                  </Col>
-                </Row>
-                <Row style={{ width: '100%' }}>
-                  <Col span={12}>
-                    <Text strong>Valid From: </Text>{offer.valid_from}
-                  </Col>
-                  <Col span={12} style={{ textAlign: 'right' }}>
-                    <Text strong>Valid To: </Text>{offer.valid_to}
-                  </Col>
-                </Row>
-                <Row style={{ width: '100%' }}>
-                  <Col span={12}>
-                    <Text strong>Max Uses: </Text>{offer.offer.max_uses}
-                  </Col>
-                </Row>
-              </List.Item>
-            )}
-          />
+        <Card title="Event Offers" bordered={false}>
+          <Row gutter={[16, 16]}>
+            {eventDetails.event_offers.map((offer, index) => (
+              <Col xs={24} sm={12} md={8} lg={10} key={index}>
+                <Card hoverable style={{backgroundColor:"#F1FAEC"}}>
+                  <h2 style={{ color: "darkred" }}>{offer.offer.name}</h2>
+                  <Row justify={"space-between"}>
+                    <Text>{offer.offer.discount_percentage}% Discount</Text>
+                    <Text>Max Users: {offer.offer.max_uses}</Text>
+                  </Row>
+                  <Row justify={"space-between"}>
+                    <Text>Valid From: {offer.offer.start_date}</Text>
+                    <Text>Valid To: {offer.offer.end_date}</Text>
+                  </Row>
+                </Card>
+              </Col>
+            ))}
+          </Row>
         </Card>
       </Col>
 
-      {/* Event Coupons Section (Simplified like Offers) */}
+      
       <Col span={24}>
-        <Card title="Event Coupons" bordered hoverable>
-          <List
-            dataSource={eventDetails.event_coupons}
-            renderItem={(coupon) => (
-              <List.Item>
-                <Row style={{ width: '100%' }}>
-                  <Col span={12}>
-                    <Text strong>Coupon Name: </Text>{coupon.coupons.name}
-                  </Col>
-                  <Col span={12} style={{ textAlign: 'right' }}>
-                    <Text strong>Coupon Code: </Text>{coupon.coupons.coupon_code}
-                  </Col>
-                </Row>
-                <Row style={{ width: '100%' }}>
-                  <Col span={12}>
-                    <Text strong>Discount: </Text>{coupon.coupons.discount_percentage}%
-                  </Col>
-                  <Col span={12} style={{ textAlign: 'right' }}>
-                    <Text strong>Valid From: </Text>{coupon.valid_from}
-                  </Col>
-                </Row>
-                <Row style={{ width: '100%' }}>
-                  <Col span={12}>
-                    <Text strong>Min Purchase: </Text>{coupon.coupons.min_purchase_amount}
-                  </Col>
-                  <Col span={12} style={{ textAlign: 'right' }}>
-                    <Text strong>Valid To: </Text>{coupon.valid_to}
-                  </Col>
-                </Row>
-                <Row style={{ width: '100%' }}>
-                  <Col span={12}>
-                    <Text strong>Max Uses: </Text>{coupon.coupons.max_uses}
-                  </Col>
-                </Row>
-              </List.Item>
-            )}
-          />
+        <Card title="Event Coupon" bordered={false} >
+          <Row gutter={[16, 16]}>
+            {eventDetails.event_coupons.map((coupon, index) => (
+              <Col xs={24} sm={12} md={8} lg={10} key={index}>
+                <Card hoverable style={{backgroundColor:"#F6FFFF"}}>
+                  <h2 style={{ color: "darkred" }}>{coupon.coupons.name}</h2>
+                  <Row justify={"space-between"}>
+                    <Text>{coupon.coupons.discount_percentage}% Discount</Text>
+                    <Text>Max Users: {coupon.coupons.max_uses}</Text>
+                  </Row>
+                  <Row justify={"space-between"}>
+                    <Text>Valid From: {coupon.coupons.start_date}</Text>
+                    <Text>Valid To: {coupon.coupons.end_date}</Text>
+                  </Row>
+                </Card>
+              </Col>
+            ))}
+          </Row>
         </Card>
+      </Col>
+
+      
+
+      {/* Action Button Section */}
+      <Col span={24} style={{ textAlign: "center", marginTop: "20px" }}>
+        <Button type="primary" size="large">
+          Register Now
+        </Button>
       </Col>
     </Row>
   );

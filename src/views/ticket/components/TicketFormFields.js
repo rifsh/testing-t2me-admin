@@ -34,12 +34,12 @@ const TicketFormFields = () => {
 
   const onSubmit = async () => {
     try {
-      console.log('kon')
       const values = await form.validateFields();
       const ticketData = {
         venue_id: values.venue_id,
         number_of_tickets: values.number_of_tickets,
         base_price: values.base_price,
+        name:values.name,
         ticket_types: [],
       };
       const resultAction = await dispatch(addTicket({ ticketData, venue_id: values.venue_id }));
@@ -92,8 +92,9 @@ const TicketFormFields = () => {
           rules={[{ required: true, message: RulesMessageConstants.VENUE }]}
         />
         
-        <Form.Item name="name" label="Structure name">
-          <Input placeholder="Enter Ticket Structure Name" type="text" />
+        <Form.Item name="name" label="Ticket Type name" rules={[
+            { required: true, message: "Please enter the number of tickets" }]}>
+          <Input placeholder="Enter Ticket Type Name" type="text"  />
         </Form.Item>
         <Form.Item
           name="number_of_tickets"
@@ -126,7 +127,7 @@ const TicketFormFields = () => {
                 onClick={addTicketType}
                 style={{ marginRight: "10px" }}
               >
-                Add Ticket Type
+                Add Sub Ticket Type
               </Button>
               <Button onClick={onSubmit} type="primary" htmlType="submit">
                 Submit

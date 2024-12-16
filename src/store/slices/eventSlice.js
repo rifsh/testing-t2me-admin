@@ -19,11 +19,10 @@ const initialState = {
   message: null,
   currentStep: 1,
   submitLoading: false,
-  dialogVisible: false,   
-  modalLoading: false,  
-  selectedEvent: null,  
+  dialogVisible: false,
+  modalLoading: false,
+  selectedEvent: null,
 };
-
 
 export const fetchEventDetails = createAsyncThunk(
   "event/fetchEventDetails",
@@ -129,7 +128,6 @@ const eventSlice = createSlice({
         state.selectedCoupons.push(action.payload);
       }
     },
-    // New reducers for dialog, modal and selectedEvent
     setDialogVisible(state, action) {
       state.dialogVisible = action.payload;
     },
@@ -149,9 +147,9 @@ const eventSlice = createSlice({
       .addCase(addEvent.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.allEvents.push(payload);
-        state.selectedCoupons=[]
-        state.selectedOffers=[]
-        state.se=[]
+        state.selectedCoupons = [];
+        state.selectedOffers = [];
+        state.se = [];
       })
       .addCase(addEvent.rejected, (state, { payload }) => {
         state.loading = false;
@@ -164,7 +162,7 @@ const eventSlice = createSlice({
       .addCase(editEvent.fulfilled, (state, { payload }) => {
         state.loading = false;
         if (payload.message) {
-          state.message = payload.message; 
+          state.message = payload.message;
         }
       })
       .addCase(editEvent.rejected, (state, { payload }) => {
@@ -200,10 +198,10 @@ const eventSlice = createSlice({
 });
 
 export const {
-
   setDialogVisible,
   setModalLoading,
-  setSelectedEvent,  handleShowStatus,
+  setSelectedEvent,
+  handleShowStatus,
   setSubmitData,
   toggleSelectedCoupon,
   toggleSelectedOffer,

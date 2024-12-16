@@ -17,6 +17,7 @@ import {
   FormOutlined,
   SearchOutlined,
   PlusCircleOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
@@ -27,24 +28,35 @@ import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  editPlace,
   filterPlaces,
   getCoutryDetails,
   getPlaces,
+  setLocationDialogVisible,setLocationModalLoading,
+  setSelectedPlace,
 } from "store/slices/locationSlice";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+
+import { ActionType } from "utils/api/warning-submit-util";
 
 const { Option } = Select;
-
-const getStatusColor = (status) => (status ? "green" : "red");
 
 const PlaceList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { filteredPlaces, detailedCountryList, loading } = useSelector(
-    (state) => state.locations
-  );
+  const {
+    filteredPlaces,
+    detailedCountryList,
+    dialogVisible,
+    modalLoading,
+    selectedPlace,
+    message,
+    loading,
+  } = useSelector((state) => state.locations);
 
   useEffect(() => {
     dispatch(getPlaces());
+
     dispatch(getCoutryDetails());
   }, [dispatch]);
 
@@ -54,13 +66,38 @@ const PlaceList = () => {
   const handleSelectCountry = async (id) => {
     dispatch(getPlaces(id));
   };
-  const handleShowStatus = (status) => {
-    dispatch(
-      filterPlaces({
-        searchTerm: null,
-        status: status === "All" ? null : status === "Active",
-      })
+  const handleUpdateStatus = async (place) => {
+    const newStatus = !place.status;
+    const data = { status: newStatus, id: place.id };
+    console.log("new data", data);
+    
+    const resultAction = await dispatch(
+      editPlace({ data: data, action: ActionType.WARNING })
     );
+
+    if (editPlace.fulfilled.match(resultAction)) {
+      dispatch(setSelectedPlace(data));
+      dispatch(setLocationDialogVisible(true));
+    }
+  };
+
+  const handleModalSubmit = async () => {
+    dispatch(setLocationModalLoading(true));
+    const resultAction = await dispatch(
+      editPlace({ data: selectedPlace, action: ActionType.SUBMIT })
+    );
+    dispatch(setLocationModalLoading(false));
+    dispatch(setLocationDialogVisible(false));
+    dispatch(getPlaces());
+    if (editPlace.fulfilled.match(resultAction)) {
+      message.success(
+        `Event ${selectedPlace ? "Activated" : "Deactivated"} successfully`
+      );
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setLocationDialogVisible(false));
   };
 
   const dropdownMenu = (row) => (
@@ -73,8 +110,8 @@ const PlaceList = () => {
       </Menu.Item>
       <Menu.Item>
         <Flex alignItems="center">
-          <PlusCircleOutlined />
-          <span className="ml-2">Add to remark</span>
+          <EditOutlined />
+          <span className="ml-2">Edit Place</span>
         </Flex>
       </Menu.Item>
     </Menu>
@@ -92,7 +129,7 @@ const PlaceList = () => {
       dataIndex: "name",
       sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
     },
-  
+
     {
       title: "Created Date",
       dataIndex: "created_at",
@@ -105,15 +142,19 @@ const PlaceList = () => {
     {
       title: "Status",
       dataIndex: "status",
-      render: (status) => (
-        <Tag color={getStatusColor(status)}>
-          {status ? "Active" : "Inactive"}
+      render: (_, record) => (
+        <Tag
+          color={record.status ? "green" : "red"}
+          style={{ cursor: "pointer" }}
+          onClick={() => handleUpdateStatus(record)}
+        >
+          {record.status ? "Active" : "Inactive"}
         </Tag>
       ),
       sorter: (a, b) => utils.antdTableSorter(a, b, "status"),
     },
     {
-      title: "Action",
+      title: "",
       dataIndex: "actions",
       render: (_, elm) => (
         <div className="text-right">
@@ -125,13 +166,14 @@ const PlaceList = () => {
 
   return (
     <Card>
-      <Row gutter={16} justify="space-between" >
+      <Row gutter={16} justify="space-between">
         <Col xs={24} sm={8}>
           <Form.Item name="country_id">
             <Select
               className="w-100"
               placeholder="Choose a Country"
               loading={loading}
+              defaultValue={"All Country"}
               onSelect={(id) => handleSelectCountry(id)}
             >
               {detailedCountryList.map((country) => {
@@ -155,29 +197,19 @@ const PlaceList = () => {
         </Col>
       </Row>
       <Row
-        alignItems="center"
-        justifyContent="space-between"
-        mobileFlex={false}
-        className="mb-3"
+        gutter={16}
+        justify="space-between"
+        style={{ paddingBottom: "15px" }}
       >
-        <Input
-          placeholder="Search"
-          prefix={<SearchOutlined />}
-          onChange={(e) => handleSearch(e.target.value)}
-          style={{ marginRight: 8 , width:"50%"}}
-        />
-        <Select
-          defaultValue="All"
-          className="w-100"
-          style={{ width:40}}
-          onChange={handleShowStatus}
-          placeholder="Status"
-        >
-          <Option value="All">All</Option>
-          <Option value="Active">Active</Option>
-          <Option value="Inactive">Inactive</Option>
-        </Select>
+        <Col xs={24} sm={8}>
+          <Input
+            placeholder="Search"
+            prefix={<SearchOutlined />}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </Col>
       </Row>
+
       <div className="table-responsive">
         <Table
           columns={tableColumns}
@@ -187,6 +219,17 @@ const PlaceList = () => {
           pagination={{ pageSize: 10 }}
         />
       </div>
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={message}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={modalLoading}
+      />
     </Card>
   );
 };

@@ -14,8 +14,8 @@ import {
   fetchAllEvent,
   fetchEventDetails,
   handleShowStatus,
-  setDialogVisible,
-  setModalLoading,
+  setDialogVisible as setEventDialogVisible,
+  setModalLoading as setEventModalLoading,
   setSelectedEvent,
   // setSubmitData,
 } from "store/slices/eventSlice";
@@ -25,6 +25,7 @@ import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import utils from "utils";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
+import { setSelectedVenue } from "store/slices/locationSlice";
 
 const { Option } = Select;
 
@@ -57,18 +58,18 @@ const EventsList = () => {
     );
 
     if (editEvent.fulfilled.match(resultAction)) {
-      dispatch(setSelectedEvent(data));
-      dispatch(setDialogVisible(true));
+      dispatch(setSelectedVenue(data));
+      dispatch(setEventDialogVisible(true));
     }
   };
 
   const handleModalSubmit = async () => {
-    dispatch(setModalLoading(true));
+    dispatch(setEventModalLoading(true));
     const resultAction = await dispatch(
       editEvent({ data: selectedEvent, action: ActionType.SUBMIT })
     );
-    dispatch(setModalLoading(false));
-    dispatch(setDialogVisible(false));
+    dispatch(setEventModalLoading(false));
+    dispatch(setEventDialogVisible(false));
     dispatch(fetchAllEvent());
     if (editEvent.fulfilled.match(resultAction)) {
       message.success(
@@ -78,7 +79,7 @@ const EventsList = () => {
   };
 
   const handleModalCancel = () => {
-    dispatch(setDialogVisible(false));
+    dispatch(setEventDialogVisible(false));
   };
 
 
@@ -102,32 +103,32 @@ const EventsList = () => {
   const tableColumns = [
     {
       title: "Event",
-      dataIndex: "event_name",
+      dataIndex: "event_name", 
       sorter: (a, b) => utils.antdTableSorter(a, b, "event_name"),
     },
     {
       title: "Category",
-      dataIndex: "category_name",
-      sorter: (a, b) => utils.antdTableSorter(a, b, "category_name"),
+      dataIndex: ["category", "name"], 
+      sorter: (a, b) => utils.antdTableSorter(a, b, ["category", "name"]),
     },
     {
       title: "Sub Category",
-      dataIndex: "sub_category_name",
-      sorter: (a, b) => utils.antdTableSorter(a, b, "sub_category_name"),
+      dataIndex: ["sub_category", "name"], 
+      sorter: (a, b) => utils.antdTableSorter(a, b, ["sub_category", "name"]),
     },
     {
       title: "Venue",
-      dataIndex: "venue_name",
-      sorter: (a, b) => utils.antdTableSorter(a, b, "venue_name"),
+      dataIndex: ["venue", "name"], 
+      sorter: (a, b) => utils.antdTableSorter(a, b, ["venue", "name"]),
     },
     {
       title: "Max Tickets",
-      dataIndex: "max_tickets",
+      dataIndex: "max_tickets", 
       sorter: (a, b) => utils.antdTableSorter(a, b, "max_tickets"),
     },
     {
       title: "Status",
-      dataIndex: "status",
+      dataIndex: "status", 
       render: (_, record) => (
         <Tag
           color={record.status ? "green" : "red"}
@@ -149,7 +150,8 @@ const EventsList = () => {
       ),
     },
   ];
-
+  
+  
   const onSearch = (e) => {
     const value = e.currentTarget.value;
     const data = utils.wildCardSearch(allEvents, value);
