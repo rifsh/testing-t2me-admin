@@ -150,6 +150,7 @@ export const StaticsDashboard = () => {
   const { direction } = useSelector(state => state.theme);
   //annualStats
   const { annualStats, loading } = useSelector(state => state.statics);
+  // const { userStats } = useSelector(state => state.userStats);
 
 
   // Fetch the annual statistic data on component mount
@@ -172,10 +173,10 @@ export const StaticsDashboard = () => {
                   Object.keys(annualStats).map((key, i) => (
                     <Col xs={24} sm={24} md={24} lg={24} xl={8} key={i}>
                       <AnnualStatistic 
-                        title={annualStats[key].title} 
-                        value={annualStats[key].value}
-                        status={annualStats[key].status}
-                        subtitle={annualStats[key].subtitle}
+                        title1={annualStats[key].title1} 
+                        value1={annualStats[key].value1}
+                        title2={annualStats[key].title2}
+                        value2={annualStats[key].value2}
                       />
                     </Col>
                   ))

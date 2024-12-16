@@ -4,7 +4,14 @@ const StaticsService = {};
 
 StaticsService.fetchAnnualStats = function (place) {
   return fetch({
-    url: ApiConstant.STATICS_LIST,
+    url: ApiConstant.STATICS_EVENT_LIST,
+    method: "get",
+  });
+};
+
+StaticsService.fetchUserStats = function (place) {
+  return fetch({
+    url: ApiConstant.STATICS_USER_LIST,
     method: "get",
   });
 };

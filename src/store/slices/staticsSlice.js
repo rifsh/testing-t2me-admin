@@ -21,9 +21,28 @@ export const fetchAnnualStats = createAsyncThunk(
       // Mock API call check
       if (ENABLE_MOCK_API) {
         const response = StaticsMockData.fetchAnnualStats;
-        return response.data; // Return mock data if mock API is enabled
+        return response.data.statistics; // Return mock data if mock API is enabled
       } else {
         const response = await StaticsService.fetchAnnualStats(); // Call the actual API
+        return response.data;
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch annual statistics");
+    }
+  }
+);
+
+
+export const fetchUserStats = createAsyncThunk(
+  "statistics/fetchUserStats",
+  async (_, { rejectWithValue }) => {
+    try {
+      // Mock API call check
+      if (ENABLE_MOCK_API) {
+        const response = StaticsMockData.fetchUserStats;
+        return response.data.statistics; // Return mock data if mock API is enabled
+      } else {
+        const response = await StaticsService.fetchUserStats(); // Call the actual API
         return response.data;
       }
     } catch (error) {
@@ -37,7 +56,7 @@ const staticsSlice = createSlice({
   initialState,
   reducers: {
     setAnnualStats(state, action) {
-      state.annualStats = action.payload;
+      state.annualStats = action.payload[0].statistics;
     },
     setMessage(state, action) {
       state.message = action.payload;
@@ -51,7 +70,7 @@ const staticsSlice = createSlice({
       })
       .addCase(fetchAnnualStats.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.annualStats = payload;
+        state.annualStats = payload[0].statistics;;
       })
       .addCase(fetchAnnualStats.rejected, (state, { payload }) => {
         state.loading = false;

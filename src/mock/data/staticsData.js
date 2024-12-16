@@ -2,22 +2,22 @@ const StaticsMockData = {};
 StaticsMockData.fetchAnnualStats = {
   data: [
 	{
-		title: 'Active Events',
-		value:'20', 
-		status: "100",
-		subtitle: `Total Events`
+		title1: 'Active Events',
+		value1:'20', 
+		title2: "Total Events",
+		value2: `100`
 	},
 	{
-		title: 'Active Schedules',
-		value:'20', 
-		status: "100",
-		subtitle: `Total Schedules`
+		title1: 'Active Schedules',
+		value1:'20', 
+		title2: "Total Schedules",
+		value2: `100`
 	},
 	{
-		title: 'Users',
-		value:'800', 
-		status: 0.7,
-		subtitle: `Active Users`
+		title1: 'Active Users',
+		value1:'20', 
+		title2: "Total Users",
+		value2: `100`
 	}
   ]
 };
