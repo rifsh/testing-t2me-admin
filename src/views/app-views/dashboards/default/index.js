@@ -11,7 +11,7 @@ import {
   AnnualStatisticData, 
   ActiveMembersData, 
   NewMembersData, 
-  RecentTransactionData 
+  RecentScheduleData 
 } from './DefaultDashboardData';
 import ApexChart from 'react-apexcharts';
 import { apexLineChartDefaultOption, COLOR_2 } from 'constants/ChartConstant';
@@ -146,7 +146,7 @@ export const DefaultDashboard = () => {
   const [annualStatisticData] = useState(AnnualStatisticData);
   const [activeMembersData] = useState(ActiveMembersData);
   const [newMembersData] = useState(NewMembersData)
-  const [recentTransactionData] = useState(RecentTransactionData)
+  const [recentScheduleData] = useState(RecentScheduleData)
   const { direction } = useSelector(state => state.theme)
 
   return (
@@ -218,11 +218,11 @@ export const DefaultDashboard = () => {
           </Card>
         </Col>
         <Col xs={24} sm={24} md={24} lg={17}>
-          <Card title="Latest Transactions" extra={<CardDropdown items={latestTransactionOption} />}>
+          <Card title="Latest Schedules" extra={<CardDropdown items={latestTransactionOption} />}>
             <Table 
               className="no-border-last" 
               columns={tableColumns} 
-              dataSource={recentTransactionData} 
+              dataSource={recentScheduleData} 
               rowKey='id' 
               pagination={false}
             />
