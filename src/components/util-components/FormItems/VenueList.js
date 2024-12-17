@@ -5,7 +5,7 @@ import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 
 const VenueListForm = ({ form, label, rules, onSelect }) => {
   const dispatch = useDispatch();
-  const { filteredVenues, selectedVenue } = useSelector(
+  const { filteredVenues, selectedVenue, loading } = useSelector(
     (state) => state.locations
   );
 
@@ -24,6 +24,16 @@ const VenueListForm = ({ form, label, rules, onSelect }) => {
   return (
     <Form.Item name="venue_id" label={label} rules={rules}>
       <Select
+        notFoundContent={
+          loading ? (
+            <span>Loading venues...</span>
+          ) : (
+            <span>
+              No venues available. You can add a venue under the selected place.
+            </span>
+          )
+        }
+        loading={loading}
         placeholder="Select a venue"
         options={filteredVenues.map((venue) => ({
           value: venue.id,

@@ -157,28 +157,27 @@ const categorySlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchCategories.fulfilled, (state, action) => {
+      .addCase(fetchCategories.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.categories = action.payload;
-        state.filteredCategories = action.payload;
+        state.categories = payload;
+        state.filteredCategories = payload;
       })
-      .addCase(fetchCategories.rejected, (state, action) => {
+      .addCase(fetchCategories.rejected, (state, { payload }) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch categories";
+        state.error = payload;
       })
       .addCase(fetchSubcategories.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchSubcategories.fulfilled, (state, action) => {
-        const { categoryId, subcategories } = action.payload;
+      .addCase(fetchSubcategories.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.selectedCategoryId = categoryId;
-        state.subcategories = subcategories;
+        state.selectedCategoryId = payload.categoryId;
+        state.subcategories = payload.subcategories;
       })
-      .addCase(fetchSubcategories.rejected, (state, action) => {
+      .addCase(fetchSubcategories.rejected, (state, { payload }) => {
         state.loading = false;
-        state.error = action.payload || "Failed to fetch categories";
+        state.error = payload;
       });
   },
 });
