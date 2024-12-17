@@ -4,9 +4,10 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const EventsService = {};
 
-EventsService.addEvent = function (data) {
+EventsService.addEvent = function (data,action) {
+    const encodedAction = encodeURIComponent(handleAction(action)); 
   return fetch({
-    url: ApiConstant.EVENT_URL,
+    url: `${ApiConstant.EVENT_URL}?action=${encodedAction}`,
     method: "post",
     data: data,
   });
