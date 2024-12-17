@@ -17,4 +17,5 @@ export const ApiConstant = {
   SCHEDULE_URL: "/api/v1/events/secured/schedules",
   STATICS_EVENT_LIST: "/api/v1/statics/secured/events",
   STATICS_USER_LIST: "/api/v1/statics/secured/users",
+  STATICS_SCHEDULES_LIST: "/api/v1/statics/secured/schedules",
 };

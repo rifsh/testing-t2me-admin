@@ -77,7 +77,7 @@ export const NewMembersData = [{
 	name: "Samantha Phillips",
 }]
 
-export const RecentTransactionData = [
+export const RecentScheduleData = [
 	{
 		id: '#5331',
 		name: 'Clayton Bates',

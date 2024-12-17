@@ -15,7 +15,7 @@ export const AvatarStatus = props => {
 				<div>
 					{
 						onNameClick ? 
-						<div onClick={() => onNameClick({name, subTitle1, src, id})} className="avatar-status-name clickable">{name}</div> 
+						<div onClick={() => onNameClick({name, subTitle1	, src, id})} className="avatar-status-name clickable">{name}</div> 
 						:
 						<div className="avatar-status-name">{name}</div>
 					}

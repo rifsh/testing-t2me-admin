@@ -16,5 +16,12 @@ StaticsService.fetchAnnualStatsforUsers = function (place) {
   });
 };
 
+StaticsService.fetchAnnualStatsforSchedules = function (place) {
+  return fetch({
+    url: ApiConstant.STATICS_SCHEDULES_LIST,
+    method: "get",
+  });
+};
+
 
 export default StaticsService;
