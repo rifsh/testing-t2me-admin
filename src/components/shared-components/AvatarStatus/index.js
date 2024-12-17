@@ -7,7 +7,7 @@ const renderAvatar = props => {
 }
 
 export const AvatarStatus = props => {
-	const { name, suffix, subTitle, id, type, src, icon, size, shape, gap, text, onNameClick } = props
+	const { name, suffix, subTitle1, subTitle2, id, type, src, icon, size, shape, gap, text, onNameClick } = props
 	return (
 		<div className="avatar-status d-flex align-items-center">
 			{renderAvatar({icon, src, type, size, shape, gap, text })}
@@ -15,13 +15,14 @@ export const AvatarStatus = props => {
 				<div>
 					{
 						onNameClick ? 
-						<div onClick={() => onNameClick({name, subTitle, src, id})} className="avatar-status-name clickable">{name}</div> 
+						<div onClick={() => onNameClick({name, subTitle1, src, id})} className="avatar-status-name clickable">{name}</div> 
 						:
 						<div className="avatar-status-name">{name}</div>
 					}
 					<span>{suffix}</span>
 				</div>
-				<div className="text-muted avatar-status-subtitle">{subTitle}</div>
+				<div className="text-muted avatar-status-subtitle">{subTitle1}</div>
+				<div className="text-muted avatar-status-subtitle">{subTitle2}</div>
 			</div>
 		</div>
 	)
