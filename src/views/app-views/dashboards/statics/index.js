@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Row, Col, Button, Avatar, Dropdown, Table, Tag, Spin } from 'antd';
 import AnnualStatistic from 'components/shared-components/StatisticWidget';
-import ChartWidget from 'components/shared-components/ChartWidget';
 import AvatarStatus from 'components/shared-components/AvatarStatus';
-import GoalWidget from 'components/shared-components/GoalWidget';
 import Card from 'components/shared-components/Card';
 import Flex from 'components/shared-components/Flex';
 import { 
-  VisitorChartData, 
-  ActiveMembersData, 
-  NewMembersData, 
   RecentTransactionData 
 } from './StaticsDashboardData';
 import ApexChart from 'react-apexcharts';
@@ -26,24 +21,11 @@ import {
 } from '@ant-design/icons';
 import utils from 'utils';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchAnnualStats } from "store/slices/staticsSlice";
+import {
+  fetchAnnualStatsforEvents,
+  fetchUserStatsForUsers
+} from 'store/slices/staticsSlice';
 
-
-const MembersChart = props => (
-  <ApexChart {...props} />
-);
-
-const memberChartOption = {
-  ...apexLineChartDefaultOption,
-  ...{
-    chart: {
-      sparkline: {
-        enabled: true,
-      }
-    },
-    colors: [COLOR_2],
-  }
-};
 
 const latestTransactionOption = [
   {
@@ -143,19 +125,14 @@ const tableColumns = [
 
 export const StaticsDashboard = () => {
   const dispatch = useDispatch();
-  const [visitorChartData] = useState(VisitorChartData);
-  const [activeMembersData] = useState(ActiveMembersData);
-  const [newMembersData] = useState(NewMembersData);
   const [recentTransactionData] = useState(RecentTransactionData);
-  const { direction } = useSelector(state => state.theme);
-  //annualStats
-  const { annualStats, loading } = useSelector(state => state.statics);
-  // const { userStats } = useSelector(state => state.userStats);
+  const { annualStatsForEvents, annualStatsForUsers, loading } = useSelector(state => state.statics);
 
 
   // Fetch the annual statistic data on component mount
   useEffect(() => {
-    dispatch(fetchAnnualStats());
+    dispatch(fetchAnnualStatsforEvents());
+    dispatch(fetchUserStatsForUsers());
   }, [dispatch]);
 
   return (
@@ -169,14 +146,14 @@ export const StaticsDashboard = () => {
                   <Spin size="large" />
                 </Col>
               ) : (
-                Array.isArray(annualStats) && annualStats.length > 0 ? (
-                  Object.keys(annualStats).map((key, i) => (
+                Array.isArray(annualStatsForEvents) && annualStatsForEvents.length > 0 ? (
+                  Object.keys(annualStatsForEvents).map((key, i) => (
                     <Col xs={24} sm={24} md={24} lg={24} xl={8} key={i}>
                       <AnnualStatistic 
-                        title1={annualStats[key].title1} 
-                        value1={annualStats[key].value1}
-                        title2={annualStats[key].title2}
-                        value2={annualStats[key].value2}
+                        title1={annualStatsForEvents[key].title1} 
+                        value1={annualStatsForEvents[key].value1}
+                        title2={annualStatsForEvents[key].title2}
+                        value2={annualStatsForEvents[key].value2}
                       />
                     </Col>
                   ))
@@ -191,33 +168,68 @@ export const StaticsDashboard = () => {
         </Col>
       </Row>
       <Row gutter={16}>
-        <Col xs={24} sm={24} md={24} lg={7}>
-          <Card title="New Join Member" extra={<CardDropdown items={newJoinMemberOptions} />}>
-            <div className="mt-3">
-              {
-                newMembersData.map((elm, i) => (
-                  <div key={i} className={`d-flex align-items-center justify-content-between mb-4`}>
-                    <AvatarStatus id={i} src={elm.img} name={elm.name} subTitle={elm.title} />
-                    <div>
-                      <Button icon={<UserAddOutlined />} type="default" size="small">Add</Button>
-                    </div>
-                  </div>
-                ))
-              }
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} sm={24} md={24} lg={17}>
-          <Card title="Latest Transactions" extra={<CardDropdown items={latestTransactionOption} />}>
-            <Table 
-              className="no-border-last" 
-              columns={tableColumns} 
-              dataSource={recentTransactionData} 
-              rowKey='id' 
-              pagination={false}
-            />
-          </Card>
-        </Col>
+        {loading ? (
+          <Col xs={24}>
+            <Spin size="large" />
+          </Col>
+        ) : (
+          <>
+            <Col xs={24} sm={24} md={24} lg={7}>
+              <Card 
+                title="Member's Data" 
+                extra={<CardDropdown items={newJoinMemberOptions} />}
+              >
+                <div className="mt-3">
+                  {Array.isArray(annualStatsForUsers) && annualStatsForUsers.length > 0 ? (
+                    annualStatsForUsers.map((elm, i) => (
+                      <div 
+                        key={i} 
+                        className="d-flex align-items-center justify-content-between mb-4"
+                      >
+                        <AvatarStatus 
+                          id={i} 
+                          src={elm.img} 
+                          name={elm.name} 
+                          subTitle1={elm.title} 
+                          subTitle2={elm.role} 
+                        />
+                        <div>
+                          <Button 
+                            icon={<UserAddOutlined />} 
+                            type="default" 
+                            size="small"
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No data available</p>
+                  )}
+                </div>
+              </Card>
+            </Col>
+            <Col xs={24} sm={24} md={24} lg={17}>
+              <Card 
+                title="Latest Transactions" 
+                extra={<CardDropdown items={latestTransactionOption} />}
+              >
+                {Array.isArray(recentTransactionData) && recentTransactionData.length > 0 ? (
+                  <Table
+                    className="no-border-last"
+                    columns={tableColumns}
+                    dataSource={recentTransactionData}
+                    rowKey="id"
+                    pagination={false}
+                  />
+                ) : (
+                  <p>No transactions available</p>
+                )}
+              </Card>
+            </Col>
+          </>
+        )}
       </Row>
     </>
   );
