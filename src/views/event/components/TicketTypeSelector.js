@@ -5,13 +5,18 @@ import { setSelectedTicketType } from "store/slices/ticketSlice";
 
 const { Option } = Select;
 
-export const TicketTypeSelector = () => {
+export const TicketTypeSelector = ({ form }) => {
   const dispatch = useDispatch();
   const { availableTicketTyps, selectedTicketType } = useSelector(
     (state) => state.tickets
   );
 
   const handleSetTicketType = (value) => {
+    form.setFieldsValue({
+      seat_structure_id: null,
+      ticket_structure_id: null,
+      ticket_set: null,
+    });
     dispatch(setSelectedTicketType(value));
   };
 

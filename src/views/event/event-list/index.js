@@ -14,8 +14,8 @@ import {
   fetchAllEvent,
   fetchEventDetails,
   handleShowStatus,
-  setDialogVisible as setEventDialogVisible,
-  setModalLoading as setEventModalLoading,
+  setDialogVisible,
+  setModalLoading,
   setSelectedEvent,
   // setSubmitData,
 } from "store/slices/eventSlice";
@@ -25,7 +25,6 @@ import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import utils from "utils";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
-import { setSelectedVenue } from "store/slices/locationSlice";
 
 const { Option } = Select;
 
@@ -34,8 +33,15 @@ const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
 const EventsList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { allEvents, filteredEvents, message, loading, dialogVisible, modalLoading, selectedEvent } =
-    useSelector((state) => state.event);
+  const {
+    allEvents,
+    filteredEvents,
+    message,
+    loading,
+    dialogVisible,
+    modalLoading,
+    selectedEvent,
+  } = useSelector((state) => state.event);
 
   useEffect(() => {
     dispatch(fetchAllEvent());
@@ -58,18 +64,18 @@ const EventsList = () => {
     );
 
     if (editEvent.fulfilled.match(resultAction)) {
-      dispatch(setSelectedVenue(data));
-      dispatch(setEventDialogVisible(true));
+      dispatch(setSelectedEvent(data));
+      dispatch(setDialogVisible(true));
     }
   };
 
   const handleModalSubmit = async () => {
-    dispatch(setEventModalLoading(true));
+    dispatch(setModalLoading(true));
     const resultAction = await dispatch(
       editEvent({ data: selectedEvent, action: ActionType.SUBMIT })
     );
-    dispatch(setEventModalLoading(false));
-    dispatch(setEventDialogVisible(false));
+    dispatch(setModalLoading(false));
+    dispatch(setDialogVisible(false));
     dispatch(fetchAllEvent());
     if (editEvent.fulfilled.match(resultAction)) {
       message.success(
@@ -79,9 +85,8 @@ const EventsList = () => {
   };
 
   const handleModalCancel = () => {
-    dispatch(setEventDialogVisible(false));
+    dispatch(setDialogVisible(false));
   };
-
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -103,32 +108,32 @@ const EventsList = () => {
   const tableColumns = [
     {
       title: "Event",
-      dataIndex: "event_name", 
+      dataIndex: "event_name",
       sorter: (a, b) => utils.antdTableSorter(a, b, "event_name"),
     },
     {
       title: "Category",
-      dataIndex: ["category", "name"], 
+      dataIndex: ["category", "name"],
       sorter: (a, b) => utils.antdTableSorter(a, b, ["category", "name"]),
     },
     {
       title: "Sub Category",
-      dataIndex: ["sub_category", "name"], 
+      dataIndex: ["sub_category", "name"],
       sorter: (a, b) => utils.antdTableSorter(a, b, ["sub_category", "name"]),
     },
     {
       title: "Venue",
-      dataIndex: ["venue", "name"], 
+      dataIndex: ["venue", "name"],
       sorter: (a, b) => utils.antdTableSorter(a, b, ["venue", "name"]),
     },
     {
       title: "Max Tickets",
-      dataIndex: "max_tickets", 
+      dataIndex: "max_tickets",
       sorter: (a, b) => utils.antdTableSorter(a, b, "max_tickets"),
     },
     {
       title: "Status",
-      dataIndex: "status", 
+      dataIndex: "status",
       render: (_, record) => (
         <Tag
           color={record.status ? "green" : "red"}
@@ -150,8 +155,7 @@ const EventsList = () => {
       ),
     },
   ];
-  
-  
+
   const onSearch = (e) => {
     const value = e.currentTarget.value;
     const data = utils.wildCardSearch(allEvents, value);

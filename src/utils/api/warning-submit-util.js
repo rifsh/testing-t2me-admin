@@ -1,6 +1,7 @@
 export const ActionType = {
     WARNING: "warning",
     SUBMIT: "submit",
+    CONFIRM:"confirm"
   };
   
  export const handleAction = (action) => {
@@ -9,6 +10,8 @@ export const ActionType = {
         return ActionType.WARNING;
       case ActionType.SUBMIT:
         return ActionType.SUBMIT;
+      case ActionType.CONFIRM:
+        return ActionType.CONFIRM;
       default:
         return "Invalid action";
     }

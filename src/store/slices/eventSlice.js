@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
+
 import {
   ALL_EVENT_MOCK_API,
   ENABLE_MOCK_API,
@@ -7,6 +8,7 @@ import {
 } from "configs/MockConfig";
 import EventMockData from "mock/data/eventData";
 import EventService from "services/EventService";
+import { ActionType } from "utils/api/warning-submit-util";
 const initialState = {
   eventDetails: {},
   allEvents: [],
@@ -22,6 +24,8 @@ const initialState = {
   dialogVisible: false,
   modalLoading: false,
   selectedEvent: null,
+  warningMessage: null,
+  successResponse:null
 };
 
 export const fetchEventDetails = createAsyncThunk(
@@ -34,7 +38,6 @@ export const fetchEventDetails = createAsyncThunk(
       } else {
         const response = await EventService.fetchEventDetails(eventId);
         return response.data;
-        throw new Error("Real API not implemented.");
       }
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
@@ -59,12 +62,22 @@ export const fetchAllEvent = createAsyncThunk(
 );
 export const addEvent = createAsyncThunk(
   "event/addEvent",
-  async (data, { rejectWithValue }) => {
+  async ({ data, action }, { rejectWithValue }) => {
+
+    
     try {
-      const response = await EventService.addEvent(data);
-      return response.data;
+      if (action ===ActionType.SUBMIT) {console.log('actiontype', action);
+      
+        const response = await EventService.addEvent(data, action);
+        return response.data; 
+      } else if (action === ActionType.CONFIRM) {
+       
+        const response = await EventService.addEvent(data, action);
+        return response.data;
+      }
+      throw new Error("Invalid action type");
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch event details");
+      return rejectWithValue(error.message || "Failed to process event");
     }
   }
 );
@@ -83,7 +96,11 @@ export const editEvent = createAsyncThunk(
 const eventSlice = createSlice({
   name: "event",
   initialState,
+  
   reducers: {
+    resetState: (state) => {
+      return initialState; 
+    },
     handleShowStatus: (state, action) => {
       const value = action.payload;
       if (value === "All") {
@@ -107,6 +124,9 @@ const eventSlice = createSlice({
       state.selectedOffers = [];
       state.selectedCoupons = [];
       state.currentStep = 1;
+    },
+    setWarningMessage(state, action) {
+      state.warningMessage = action.payload;
     },
     toggleSelectedOffer: (state, action) => {
       const existingOfferIndex = state.selectedOffers.findIndex(
@@ -137,24 +157,30 @@ const eventSlice = createSlice({
     setSelectedEvent(state, action) {
       state.selectedEvent = action.payload;
     },
+    
   },
   extraReducers: (builder) => {
     builder
-      .addCase(addEvent.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(addEvent.fulfilled, (state, { payload }) => {
-        state.loading = false;
-        state.allEvents.push(payload);
-        state.selectedCoupons = [];
-        state.selectedOffers = [];
-        state.se = [];
-      })
-      .addCase(addEvent.rejected, (state, { payload }) => {
-        state.loading = false;
-        state.error = payload || "Failed to create event";
-      })
+    .addCase(addEvent.pending, (state) => {
+      console.log("AddEvent - Pending State");
+      state.loading = true;
+      state.error = null;
+      state.debugInfo = null;
+    })
+    .addCase(addEvent.fulfilled, (state, action) => {
+      console.log("AddEvent - Fulfilled", action.payload);
+      state.loading = false;
+      state.error = null;
+      state.successResponse=action.payload
+      state.debugInfo = action.payload;
+      
+    })
+    .addCase(addEvent.rejected, (state, action) => {
+      console.error("AddEvent - Rejected", action.payload);
+      state.loading = false;
+      state.error = action.payload;
+      state.debugInfo = action.payload;
+    })
       .addCase(editEvent.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -204,6 +230,8 @@ export const {
   handleShowStatus,
   setSubmitData,
   toggleSelectedCoupon,
+  setWarningMessage,
+  resetState,
   toggleSelectedOffer,
   resetSelected,
   setCurrentStep,

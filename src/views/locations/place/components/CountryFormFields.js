@@ -57,7 +57,6 @@ const CountryFormFields = (props) => {
 
   useEffect(() => {}, [countries, loading, error]);
 
-  // Show loading state
   if (loading) {
     return (
       <Row justify="center" align="middle" style={{ minHeight: "200px" }}>
