@@ -77,6 +77,11 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/place/add`,
     component: React.lazy(() => import("views/locations/place/add-place")),
   },
+    {
+      key: "place.edit",
+      path: `${APP_PREFIX_PATH}/place/edit/:placeId`,
+      component: React.lazy(() => import("views/locations/place/edit_place")),
+    },
   {
     key: "venue.list",
     path: `${APP_PREFIX_PATH}/venue/list`,

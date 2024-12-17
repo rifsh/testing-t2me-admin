@@ -65,8 +65,8 @@ const TicketField = ({ form }) => {
             <Input placeholder="Enter Max Ticket" type="number" />
           </Form.Item>
 
-          <TicketTypeSelector />
-          <TicketStructureSelector />
+          <TicketTypeSelector form={form} />
+          <TicketStructureSelector form={form} />
           
         </Card>
       </Col>

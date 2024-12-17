@@ -21,7 +21,7 @@ LocationService.addPlace = function (data) {
 LocationService.editPlace = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.EDIT_PLACE_URL}/${data.placeId}?action=${encodedAction}`,
     method: "put",
     data: data,
   });

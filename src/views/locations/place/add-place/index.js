@@ -1,10 +1,10 @@
 import React from 'react';
 import CountryForm from '../form-place';
 
-const AddCountry = () => {
+const AddPlace = () => {
 	return (
 		<CountryForm mode="ADD"/>
 	)
 }
 
-export default AddCountry
+export default AddPlace
