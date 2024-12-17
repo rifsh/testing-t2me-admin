@@ -1,28 +1,37 @@
 import { Card, Col, Form, Select } from "antd";
 import {
+  clearSubcategories,
   fetchCategories,
   fetchSubcategories,
 } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RulesMessageConstants } from "constants/RulesConstant";
+import { useEffect } from "react";
 
 const { Option } = Select;
 
-const CategoryField = () => {
+const CategoryField = ({ form }) => {
   const rules = {
     category: [{ required: true, message: RulesMessageConstants.PLACE }],
     subCategory: [{ required: true, message: RulesMessageConstants.VENUE }],
   };
+
   const dispatch = useDispatch();
   const { filteredCategories, subcategories, loading } = useSelector(
     (state) => state.category
   );
 
-  const fetchCategoryItems = () => {  
+  useEffect(() => {
     dispatch(fetchCategories());
-  };
-  const fetchSubCategoryItems = (categoryId) => {
-    dispatch(fetchSubcategories(categoryId));
+  }, [dispatch]);
+
+  const handleCategoryChange = (value) => {
+    if (value) {
+      dispatch(fetchSubcategories(value));
+    } else {
+      dispatch(clearSubcategories());
+    }
+    form.setFieldsValue({ sub_category_id: null });
   };
 
   return (
@@ -32,12 +41,14 @@ const CategoryField = () => {
           <Select
             className="w-100"
             placeholder="Choose a Category"
-            onClick={fetchCategoryItems}
-            onSelect={(value) => fetchSubCategoryItems(value)}
-            loading={loading}
+            onChange={handleCategoryChange}
+            loading={ loading}
+            notFoundContent={
+              loading ? "Loading Categories..." : "No Category Available"
+            }
           >
             {filteredCategories.map((elm) => (
-              <Option key={elm.name} value={elm.id}>
+              <Option key={elm.id} value={elm.id}>
                 {elm.name}
               </Option>
             ))}
@@ -53,10 +64,14 @@ const CategoryField = () => {
             className="w-100"
             placeholder="Choose a Sub Category"
             disabled={!subcategories}
+            loading={loading}
+            notFoundContent={
+              loading ? "Loading Subcategories..." : `No Sub Category Available`
+            }
           >
             {subcategories &&
               subcategories.map((sub) => (
-                <Option key={sub.name} value={sub.id}>
+                <Option key={sub.id} value={sub.id}>
                   {sub.name}
                 </Option>
               ))}
