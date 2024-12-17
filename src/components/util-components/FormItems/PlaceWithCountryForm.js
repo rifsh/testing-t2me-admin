@@ -30,9 +30,11 @@ const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
     // console.log(value, option)
     try {
       await form.setFieldsValue({
-        place_id: option.key, 
+        place_id: option.id, 
+        
         place: option.label, 
       });
+      
       if (onSelect) {
         onSelect(option.id); 
       }
@@ -55,7 +57,7 @@ const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
         name="place"
         label={label}
         rules={rules}
-        id="455"
+        // id="455"
         style={style}
       >
         <AutoComplete

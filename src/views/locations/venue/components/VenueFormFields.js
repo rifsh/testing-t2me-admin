@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Input, Row, Col, Card, Form, Select, Button, message } from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { addVenue } from "store/slices/locationSlice";
+import { addVenue, setSelectedPlace } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +18,7 @@ const VenueFormFields = ({ mode }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { coordinates, loading, error } = useSelector(
+  const { coordinates, loading, error, selectedPlace } = useSelector(
     (state) => state.locations
   );
 
@@ -27,13 +27,22 @@ const VenueFormFields = ({ mode }) => {
       message.error(error);
     }
   }, [error]);
-
+  const handlePlaceSelect = (id) => {
+    dispatch(setSelectedPlace(id));
+  };
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
+      if (!selectedPlace) {
+        message.error("Place ID is missing. Please select a place.");
+        return;
+      }
 
       const resultAction = await dispatch(
-        addVenue({ data: values, placeId: values.place_id })
+        addVenue({
+          data: { ...values, place_id: selectedPlace },
+          placeId: selectedPlace,
+        })
       );
 
       if (addVenue.fulfilled.match(resultAction)) {
@@ -69,7 +78,9 @@ const VenueFormFields = ({ mode }) => {
             </Form.Item>
 
             <PlaceWithCountryForm
-              form={form} label={"Place"}
+              form={form}
+              label={"Place"}
+              onSelect={handlePlaceSelect}
               rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
             />
 
@@ -91,15 +102,18 @@ const VenueFormFields = ({ mode }) => {
             </Form.Item>
             <Form.Item
               name="indoor"
-              label="Indoor/Outdoor"FTRDESW
-              rules={[{ required: true, message: RulesMessageConstants.INDOOR }]}
+              label="Indoor/Outdoor"
+              FTRDESW
+              rules={[
+                { required: true, message: RulesMessageConstants.INDOOR },
+              ]}
             >
               <Select className="w-100" placeholder="Select type">
                 <Option value={true}>Indoor</Option>
                 <Option value={false}>Outdoor</Option>
               </Select>
             </Form.Item>
-            <Form.Item  
+            <Form.Item
               name="description"
               label="Description"
               rules={[
