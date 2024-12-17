@@ -1,15 +1,14 @@
-// src/components/TicketComponents/VenueList.js
-
 import React, { useEffect } from "react";
 import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 
-const VenueListForm = ({ form, label, rules }) => {
+const VenueListForm = ({ form, label, rules, onSelect }) => {
   const dispatch = useDispatch();
   const { filteredVenues, selectedVenue } = useSelector(
     (state) => state.locations
   );
+
   useEffect(() => {
     if (form.getFieldValue("venue_id")) {
       dispatch(getVenues(form.getFieldValue("venue_id")));
@@ -17,11 +16,11 @@ const VenueListForm = ({ form, label, rules }) => {
   }, [dispatch, form]);
 
   const handleSetSelectedVenue = (value) => {
-    const venue = filteredVenues.find((venue) => venue.id === value); 
-   
-
+    const venue = filteredVenues.find((venue) => venue.id === value);
+    if (onSelect) onSelect(value);
     dispatch(setSelectedVenue(venue));
   };
+
   return (
     <Form.Item name="venue_id" label={label} rules={rules}>
       <Select
@@ -30,12 +29,7 @@ const VenueListForm = ({ form, label, rules }) => {
           value: venue.id,
           label: venue.name,
         }))}
-        onSelect={(venue) => {
-          handleSetSelectedVenue(venue);
-
-          //   dispatch(getVenues(id));
-          //   form.setFieldsValue({ venue_id: null });
-        }}
+        onSelect={handleSetSelectedVenue}
       />
     </Form.Item>
   );

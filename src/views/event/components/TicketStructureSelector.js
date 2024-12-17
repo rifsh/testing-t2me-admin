@@ -5,7 +5,7 @@ import { setSelectedTicketSet, setSelectedTicketStructure } from "store/slices/t
 
 const { Option } = Select;
 
-export const TicketStructureSelector = () => {
+export const TicketStructureSelector = ({form}) => {
   const dispatch = useDispatch();
   const {
     filteredTickets,
@@ -16,9 +16,13 @@ export const TicketStructureSelector = () => {
   } = useSelector((state) => state.tickets);
 
   const handleSelectTicketSet = (setName) => {
+    
     dispatch(setSelectedTicketSet(setName));
   };
   const handleSelectTicketStructure = (structureId) => {
+    form.setFieldsValue({
+      ticket_set: null,
+    });
     const selectedStructure = filteredTickets.find(
       (ticket) => ticket.id === structureId
     );

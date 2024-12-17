@@ -14,25 +14,43 @@ const LocationDetailsField = ({ form }) => {
     venue: [{ required: true, message: RulesMessageConstants.VENUE }],
   };
 
+  const handlePlaceSelect = (id) => {
+    dispatch(getVenues(id));
+    form.setFieldsValue({
+      available_types: null,
+      seat_structure_id: null,
+      ticket_structure_id: null,
+      ticket_set: null,
+      venue_id: null,
+    });
+    dispatch(resetTicketSelection());
+  };
+
+  const handleVenueSelect = () => {
+    form.setFieldsValue({
+      available_types: null,
+      seat_structure_id: null,
+      ticket_structure_id: null,
+      ticket_set: null,
+    });
+    dispatch(resetTicketSelection());
+  };
+
   return (
     <Col xs={24} sm={24} md={17}>
       <Card title="Location Details">
         <PlaceWithCountryForm
           form={form}
           label="Place"
-          onSelect={(id) => {
-            dispatch(getVenues(id));
-            form.setFieldsValue({
-              available_types: null,
-            });
-
-            dispatch(resetTicketSelection());
-            form.setFieldsValue({ venue_id: null });
-          }}
+          onSelect={handlePlaceSelect}
           rules={rules.place}
         />
-
-        <VenueListForm form={form} label="Venue" rules={rules.venue} />
+        <VenueListForm
+          form={form}
+          label="Venue"
+          rules={rules.venue}
+          onSelect={handleVenueSelect}
+        />
       </Card>
     </Col>
   );

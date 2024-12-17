@@ -38,7 +38,6 @@ export const fetchEventDetails = createAsyncThunk(
       } else {
         const response = await EventService.fetchEventDetails(eventId);
         return response.data;
-        throw new Error("Real API not implemented.");
       }
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
@@ -64,17 +63,15 @@ export const fetchAllEvent = createAsyncThunk(
 export const addEvent = createAsyncThunk(
   "event/addEvent",
   async ({ data, action }, { rejectWithValue }) => {
-    console.log('kaaaaaaaaaaaaaaaaaaaaaaa');
+
     
     try {
-      // Different logic based on action type
       if (action ===ActionType.SUBMIT) {console.log('actiontype', action);
       
-        // Simulating a submit action that returns details for confirmation
         const response = await EventService.addEvent(data, action);
-        return response.data; // This should return the details to show in the modal
+        return response.data; 
       } else if (action === ActionType.CONFIRM) {
-        // Actual event confirmation/activation
+       
         const response = await EventService.addEvent(data, action);
         return response.data;
       }
@@ -151,7 +148,6 @@ const eventSlice = createSlice({
         state.selectedCoupons.push(action.payload);
       }
     },
-    // New reducers for dialog, modal and selectedEvent
     setDialogVisible(state, action) {
       state.dialogVisible = action.payload;
     },
@@ -177,6 +173,7 @@ const eventSlice = createSlice({
       state.error = null;
       state.successResponse=action.payload
       state.debugInfo = action.payload;
+      
     })
     .addCase(addEvent.rejected, (state, action) => {
       console.error("AddEvent - Rejected", action.payload);
@@ -234,6 +231,7 @@ export const {
   setSubmitData,
   toggleSelectedCoupon,
   setWarningMessage,
+  resetState,
   toggleSelectedOffer,
   resetSelected,
   setCurrentStep,

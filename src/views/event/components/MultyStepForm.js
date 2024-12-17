@@ -16,13 +16,11 @@ import {
   setDialogVisible,
   setSelectedEvent,
   setModalLoading,
-  fetchAllEvent,
-  setWarningMessage,
+  resetState,
 } from "store/slices/eventSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
 import ResponseShowModal from "components/util-components/ModalItems/ResponseShowModal";
 
@@ -36,8 +34,7 @@ const MultyStepEventForm = () => {
     dialogVisible,
     modalLoading,
     selectedEvent,
-    submitLoading,
-    warningMessage,successResponse
+    submitLoading,successResponse
   } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -81,9 +78,6 @@ const MultyStepEventForm = () => {
 
       if (addEvent.fulfilled.match(resultAction)) {
         dispatch(setSelectedEvent(finalData));
-        // dispatch(
-        //   setWarningMessage(JSON.stringify(resultAction.payload, null, 2))
-        // );
         dispatch(setDialogVisible(true));
       } else {
         message.error("Event submission failed.");
@@ -105,7 +99,6 @@ const MultyStepEventForm = () => {
 
       dispatch(setModalLoading(true));
 
-      // Dispatch addEvent with CONFIRM action
       const resultAction = await dispatch(
         addEvent({
           data: selectedEvent,
@@ -118,8 +111,9 @@ const MultyStepEventForm = () => {
           `Event "${selectedEvent.event_name}" activated successfully.`
         );
 
-        // Reset form and navigate
         form.resetFields();
+        
+        dispatch(resetState());
         dispatch(resetSelected());
         navigate(`${APP_PREFIX_PATH}/event/list`);
       } else {
