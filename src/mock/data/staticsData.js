@@ -52,6 +52,46 @@ StaticsMockData.fetchAnnualStatsForUsers = {
 	]
   };
 
+  StaticsMockData.fetchUserStatsForSchedules = {
+	data: [
+		{
+			schdule_name: 'Irshad & Yasseen Pedning Schedule name',
+			start_date: '8 May 2020',
+			end_date: '$137.00',
+			event_name: 'Approved',
+			event_id: '#04d182'
+		},
+		{
+			schdule_name: 'Irshad & Yasseen Pedning Schedule name',
+			start_date: '8 May 2020',
+			end_date: '$137.00',
+			event_name: 'Approved',
+			event_id: '#04d182'
+		},
+		{
+			schdule_name: 'Irshad & Yasseen Pedning Schedule name',
+			start_date: '8 May 2020',
+			end_date: '$137.00',
+			event_name: 'Approved',
+			event_id: '#04d182'
+		},
+		{
+			schdule_name: 'Irshad & Yasseen Pedning Schedule name',
+			start_date: '8 May 2020',
+			end_date: '$137.00',
+			event_name: 'Approved',
+			event_id: '#04d182'
+		},
+		{
+			schdule_name: 'Irshad & Yasseen Pedning Schedule name',
+			start_date: '8 May 2020',
+			end_date: '$137.00',
+			event_name: 'Approved',
+			event_id: '#04d182'
+		},
+	]
+  };
+
 export default StaticsMockData;
 
 

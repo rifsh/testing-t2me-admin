@@ -5,7 +5,7 @@ import AvatarStatus from 'components/shared-components/AvatarStatus';
 import Card from 'components/shared-components/Card';
 import Flex from 'components/shared-components/Flex';
 import { 
-  RecentTransactionData 
+  RecentScheduleData 
 } from './StaticsDashboardData';
 import ApexChart from 'react-apexcharts';
 import { apexLineChartDefaultOption, COLOR_2 } from 'constants/ChartConstant';
@@ -23,7 +23,8 @@ import utils from 'utils';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchAnnualStatsforEvents,
-  fetchUserStatsForUsers
+  fetchUserStatsForUsers,
+  fetchUserStatsForSchedules
 } from 'store/slices/staticsSlice';
 
 
@@ -90,9 +91,9 @@ const CardDropdown = ({ items }) => {
 
 const tableColumns = [
   {
-    title: 'Customer',
-    dataIndex: 'name',
-    key: 'name',
+    title: 'Schedule Name',
+    dataIndex: 'schdule_name',
+    key: 'schdule_name',
     render: (text, record) => (
       <div className="d-flex align-items-center">
         <Avatar size={30} className="font-size-sm" style={{ backgroundColor: record.avatarColor }}>
@@ -103,14 +104,19 @@ const tableColumns = [
     ),
   },
   {
-    title: 'Date',
-    dataIndex: 'date',
-    key: 'date',
+    title: 'Event Name',
+    dataIndex: 'event_name',
+    key: 'eventname',
   },
   {
-    title: 'Amount',
-    dataIndex: 'amount',
-    key: 'amount',
+    title: 'Start Date',
+    dataIndex: 'start_date',
+    key: 'startdate',
+  },
+  {
+    title: 'End Date',
+    dataIndex: 'end_date',
+    key: 'enddate',
   },
   {
     title: () => <div className="text-right">Status</div>,
@@ -125,14 +131,16 @@ const tableColumns = [
 
 export const StaticsDashboard = () => {
   const dispatch = useDispatch();
-  const [recentTransactionData] = useState(RecentTransactionData);
-  const { annualStatsForEvents, annualStatsForUsers, loading } = useSelector(state => state.statics);
-
-
+  const [recentScheduleData] = useState(RecentScheduleData);
+  const { annualStatsForEvents, annualStatsForUsers, annualStatsForSchedules, loading, loadingMembers, loadingSchedules} = useSelector(state => state.statics);
+  
+  
+  
   // Fetch the annual statistic data on component mount
   useEffect(() => {
     dispatch(fetchAnnualStatsforEvents());
     dispatch(fetchUserStatsForUsers());
+    dispatch(fetchUserStatsForSchedules());    
   }, [dispatch]);
 
   return (
@@ -142,9 +150,14 @@ export const StaticsDashboard = () => {
           <Row gutter={16}>
             {
               loading ? (
-                <Col xs={24}>
-                  <Spin size="large" />
-                </Col>
+                // Show 3 spinner items when loading
+                [1, 2, 3].map(i => (
+                  <Col xs={24} sm={24} md={24} lg={24} xl={8} key={i}>
+                    <AnnualStatistic                       
+                      value2={<Spin size="small" />}
+                    />
+                  </Col>
+                ))
               ) : (
                 Array.isArray(annualStatsForEvents) && annualStatsForEvents.length > 0 ? (
                   Object.keys(annualStatsForEvents).map((key, i) => (
@@ -167,70 +180,90 @@ export const StaticsDashboard = () => {
           </Row>
         </Col>
       </Row>
+
+
       <Row gutter={16}>
-        {loading ? (
-          <Col xs={24}>
-            <Spin size="large" />
+        {/* Members Data Section */}
+        {loadingMembers ? (
+          <Col xs={24} sm={24} md={24} lg={7}>
+            <Card 
+              title="Member's Data" 
+              extra={<CardDropdown items={newJoinMemberOptions} />}
+            >
+              <Spin size="large" />
+            </Card>
           </Col>
         ) : (
-          <>
-            <Col xs={24} sm={24} md={24} lg={7}>
-              <Card 
-                title="Member's Data" 
-                extra={<CardDropdown items={newJoinMemberOptions} />}
-              >
-                <div className="mt-3">
-                  {Array.isArray(annualStatsForUsers) && annualStatsForUsers.length > 0 ? (
-                    annualStatsForUsers.map((elm, i) => (
-                      <div 
-                        key={i} 
-                        className="d-flex align-items-center justify-content-between mb-4"
-                      >
-                        <AvatarStatus 
-                          id={i} 
-                          src={elm.img} 
-                          name={elm.name} 
-                          subTitle1={elm.title} 
-                          subTitle2={elm.role} 
-                        />
-                        <div>
-                          <Button 
-                            icon={<UserAddOutlined />} 
-                            type="default" 
-                            size="small"
-                          >
-                            Add
-                          </Button>
-                        </div>
+          <Col xs={24} sm={24} md={24} lg={7}>
+            <Card 
+              title="Member's Data" 
+              extra={<CardDropdown items={newJoinMemberOptions} />}
+            >
+              <div className="mt-3">
+                {Array.isArray(annualStatsForUsers) && annualStatsForUsers.length > 0 ? (
+                  annualStatsForUsers.map((elm, i) => (
+                    <div 
+                      key={i} 
+                      className="d-flex align-items-center justify-content-between mb-4"
+                    >
+                      <AvatarStatus 
+                        id={i} 
+                        src={elm.img} 
+                        name={elm.name} 
+                        subTitle1={elm.title} 
+                        subTitle2={elm.role} 
+                      />
+                      <div>
+                        <Button 
+                          icon={<UserAddOutlined />} 
+                          type="default" 
+                          size="small"
+                        >
+                          Add
+                        </Button>
                       </div>
-                    ))
-                  ) : (
-                    <p>No data available</p>
-                  )}
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={17}>
-              <Card 
-                title="Latest Transactions" 
-                extra={<CardDropdown items={latestTransactionOption} />}
-              >
-                {Array.isArray(recentTransactionData) && recentTransactionData.length > 0 ? (
-                  <Table
-                    className="no-border-last"
-                    columns={tableColumns}
-                    dataSource={recentTransactionData}
-                    rowKey="id"
-                    pagination={false}
-                  />
+                    </div>
+                  ))
                 ) : (
-                  <p>No transactions available</p>
+                  <p>No data available</p>
                 )}
-              </Card>
-            </Col>
-          </>
+              </div>
+            </Card>
+          </Col>
+        )}
+
+        {/* Latest Transactions Section */}
+        {loadingSchedules ? (
+          <Col xs={24} sm={24} md={24} lg={17}>
+            <Card 
+              title="Latest Schedules" 
+              extra={<CardDropdown items={latestTransactionOption} />}
+            >
+              <Spin size="large" />
+            </Card>
+          </Col>
+        ) : (
+          <Col xs={24} sm={24} md={24} lg={17}>
+            <Card 
+              title="Latest Schedules" 
+              extra={<CardDropdown items={latestTransactionOption} />}
+            >
+              {Array.isArray(annualStatsForSchedules) && annualStatsForSchedules.length > 0 ? (
+                <Table
+                  className="no-border-last"
+                  columns={tableColumns}
+                  dataSource={annualStatsForSchedules}
+                  rowKey="id"
+                  pagination={false}
+                />
+              ) : (
+                <p>No Schedules available</p>
+              )}
+            </Card>
+          </Col>
         )}
       </Row>
+     
     </>
   );
 };

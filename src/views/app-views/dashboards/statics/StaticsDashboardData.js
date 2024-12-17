@@ -77,45 +77,40 @@ export const NewMembersData = [{
 	name: "Samantha Phillips",
 }]
 
-export const RecentTransactionData = [
+export const RecentScheduleData = [
 	{
-		id: '#5331',
-		name: 'Clayton Bates',
-		date: '8 May 2020',
-		amount: '$137.00',
-		status: 'Approved',
-		avatarColor: '#04d182'
+		schdule_name: 'Irshad & Yasseen Pedning Schedule name',
+		start_date: '8 May 2020',
+		end_date: '$137.00',
+		event_name: 'Approved',
+		event_id: '#04d182'
 	},
 	{
-		id: '#5332',
-		name: 'Gabriel Frazier',
-		date: '6 May 2020',
-		amount: '$322.00',
-		status: 'Approved',
-		avatarColor: '#fa8c16'
+		schdule_name: 'Irshad & Yasseen Pedning Schedule name',
+		start_date: '8 May 2020',
+		end_date: '$137.00',
+		event_name: 'Approved',
+		event_id: '#04d182'
 	},
 	{
-		id: '#5333',
-		name: 'Debra Hamilton',
-		date: '1 May 2020',
-		amount: '$543.00',
-		status: 'Pending',
-		avatarColor: '#1890ff'
+		schdule_name: 'Irshad & Yasseen Pedning Schedule name',
+		start_date: '8 May 2020',
+		end_date: '$137.00',
+		event_name: 'Approved',
+		event_id: '#04d182'
 	},
 	{
-		id: '#5334',
-		name: 'Stacey Ward',
-		date: '28 April 2020',
-		amount: '$876.00',
-		status: 'Rejected',
-		avatarColor: '#ffc542'
+		schdule_name: 'Irshad & Yasseen Pedning Schedule name',
+		start_date: '8 May 2020',
+		end_date: '$137.00',
+		event_name: 'Approved',
+		event_id: '#04d182'
 	},
 	{
-		id: '#5335',
-		name: 'Troy Alexander',
-		date: '28 April 2020',
-		amount: '$241.00',
-		status: 'Approved',
-		avatarColor: '#ff6b72'
+		schdule_name: 'Irshad & Yasseen Pedning Schedule name',
+		start_date: '8 May 2020',
+		end_date: '$137.00',
+		event_name: 'Approved',
+		event_id: '#04d182'
 	},
 ];

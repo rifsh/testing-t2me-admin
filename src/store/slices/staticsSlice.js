@@ -9,8 +9,11 @@ import StaticsMockData from "mock/data/staticsData"; // If you have mock data av
 
 const initialState = {
   annualStatsForEvents: [],
-  annualStatsForUsers: [], // Corrected casing to match naming convention
+  annualStatsForUsers: [], 
+  annualStatsForSchedules: [],
   loading: false,
+  loadingMembers: true,
+  loadingSchedules: false,
   error: null,
   message: null,
 };
@@ -51,6 +54,24 @@ export const fetchUserStatsForUsers = createAsyncThunk(
   }
 );
 
+// Async thunk for fetching user stats
+export const fetchUserStatsForSchedules = createAsyncThunk(
+  "statistics/fetchUserStatsForSchedules",
+  async (_, { rejectWithValue }) => {
+    try {
+      if (ENABLE_MOCK_API) {
+        const response = StaticsMockData.fetchUserStatsForSchedules;
+        return response.data; // Return mock data if mock API is enabled
+      } else {
+        const response = await StaticsService.fetchAnnualStatsforSchedules(); // Call the actual API
+        return response.data;
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch annual statistics for users");
+    }
+  }
+);
+
 // Slice definition
 const staticsSlice = createSlice({
   name: "statics",
@@ -83,22 +104,34 @@ const staticsSlice = createSlice({
       })
       // User stats cases
       .addCase(fetchUserStatsForUsers.pending, (state) => {
-        state.loading = true;
+        state.loadingMembers = true;
         state.error = null;
       })
       .addCase(fetchUserStatsForUsers.fulfilled, (state, { payload }) => {
-        state.loading = false;
+        state.loadingMembers = false;
         state.annualStatsForUsers = payload[0].statistics;
       })
       .addCase(fetchUserStatsForUsers.rejected, (state, { payload }) => {
-        state.loading = false;
+        state.loadingMembers = false;
+        state.error = payload || "Failed to fetch annual statistics for users";
+      })       
+      .addCase(fetchUserStatsForSchedules.pending, (state) => {
+        state.loadingSchedules = true;
+        state.error = null;
+      })
+      .addCase(fetchUserStatsForSchedules.fulfilled, (state, { payload }) => {
+        state.loadingSchedules = false;
+        state.annualStatsForSchedules = payload[0].statistics;
+      })
+      .addCase(fetchUserStatsForSchedules.rejected, (state, { payload }) => {
+        state.loadingSchedules = false;
         state.error = payload || "Failed to fetch annual statistics for users";
       });
   },
 });
 
 // Export actions
-export const { setAnnualStats, setUserStats, setMessage } = staticsSlice.actions;
+export const { setAnnualStats, setUserStats, setScheduleStats, setMessage } = staticsSlice.actions;
 
 // Export reducer
 export default staticsSlice.reducer;
