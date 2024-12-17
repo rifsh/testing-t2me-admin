@@ -1,15 +1,15 @@
 import React, { useEffect } from "react";
-import { message, AutoComplete, Form,} from "antd";
+import { message, AutoComplete, Form } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPlaceWithCountry } from "store/slices/locationSlice";
 
-const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
+const PlaceWithCountryForm = ({ form, onSelect, style, rules, label }) => {
   const dispatch = useDispatch();
 
   const { placeWithCountryList, loading, error } = useSelector(
     (state) => state.locations
   );
-  console.warn(placeWithCountryList, loading, error,'...')
+  console.warn(placeWithCountryList, loading, error, "...");
   useEffect(() => {
     if (error) {
       message.error(error);
@@ -30,11 +30,13 @@ const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
     // console.log(value, option)
     try {
       await form.setFieldsValue({
-        place_id: option.key, 
-        place: option.label, 
+        place_id: option.id,
+
+        place: option.label,
       });
+
       if (onSelect) {
-        onSelect(option.id); 
+        onSelect(option.id);
       }
     } catch (error) {
       console.error("Error setting place_id or calling onSelect:", error);
@@ -44,7 +46,7 @@ const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
   const autoCompleteOptions = placeWithCountryList.length
     ? placeWithCountryList.map((place) => ({
         label: `${place.name}, ${place.country.name}`,
-        id: place.id, 
+        id: place.id,
         value: place.id,
       }))
     : [{ label: "No places found", value: "" }];
@@ -55,15 +57,15 @@ const PlaceWithCountryForm = ({ form, onSelect,style, rules,label }) => {
         name="place"
         label={label}
         rules={rules}
-        id="455"
+        // id="455"
         style={style}
       >
         <AutoComplete
+          notFoundContent={loading ? "Loading Places..." : "No Place Available"}
           onSearch={handleSearch}
           onSelect={handleSelect}
           placeholder="Search for a Place"
           style={{ width: "100%" }}
-         
           options={autoCompleteOptions}
           loading={loading}
         />

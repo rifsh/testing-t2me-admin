@@ -1,5 +1,5 @@
 import { Button, Form, message } from "antd";
-import React from "react";
+import React, { useEffect } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import EventDetailsField from "./EventDetailsField";
 import { BLUE_BASE, GRAY_LIGHTER } from "constants/ThemeConstant";
@@ -24,8 +24,8 @@ import { useNavigate } from "react-router-dom";
 import { ActionType } from "utils/api/warning-submit-util";
 import ResponseShowModal from "components/util-components/ModalItems/ResponseShowModal";
 
-const steps = ["Event Details", "Category", "Location", "Ticket", "Offers"];
 const MultyStepEventForm = () => {
+  const steps = ["Event Details", "Category", "Location", "Ticket", "Offers"];
   const {
     currentStep,
     selectedCoupons,
@@ -34,11 +34,15 @@ const MultyStepEventForm = () => {
     dialogVisible,
     modalLoading,
     selectedEvent,
-    submitLoading,successResponse
+    submitLoading,
+    successResponse,
   } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form] = Form.useForm();
+  useEffect(() => {
+    dispatch(resetState());
+  }, [dispatch]);
 
   const nextStep = async () => {
     try {
@@ -112,7 +116,7 @@ const MultyStepEventForm = () => {
         );
 
         form.resetFields();
-        
+
         dispatch(resetState());
         dispatch(resetSelected());
         navigate(`${APP_PREFIX_PATH}/event/list`);
@@ -227,7 +231,7 @@ const MultyStepEventForm = () => {
           </Button>
         )}
       </div>
-      <ResponseShowModal 
+      <ResponseShowModal
         visible={dialogVisible}
         title="Confirm Event Details"
         jsonData={successResponse}

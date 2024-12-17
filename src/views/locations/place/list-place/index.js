@@ -74,7 +74,7 @@ const PlaceList = () => {
 
   const handleUpdateStatus = async (place) => {
     const newStatus = !place.status;
-    const data = { status: newStatus, id: place.id };
+    const data = { status: newStatus, placeId: place.id };
     console.log("new data", data);
 
     const resultAction = await dispatch(
