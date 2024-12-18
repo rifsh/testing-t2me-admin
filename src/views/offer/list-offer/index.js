@@ -1,26 +1,40 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Select, Input, Button, Tag, Modal, Descriptions, Dropdown } from "antd";
+import {
+  Card,
+  Table,
+  Select,
+  Input,
+  Button,
+  Modal,
+  Descriptions,
+  Dropdown,
+} from "antd";
 import {
   EyeOutlined,
   PlusCircleOutlined,
   SearchOutlined,
   FormOutlined,
-  MoreOutlined
+  MoreOutlined,
 } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllOffers, filterOffers } from "store/slices/offerSlice";
+import { editOffer, fetchAllOffers, filterOffers } from "store/slices/offerSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import {
+  setDialogVisible,
+  setSelectedItem,
+} from "store/slices/statusModalSlice";
+import Utils from "utils";
+import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
 const { Option } = Select;
 
-const getStatusColor = (status) => (status ? "green" : "red");
 
 const OfferList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredOffers, loading } = useSelector((state) => state.offers);
+  const { filteredOffers, loading,message } = useSelector((state) => state.offers);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
@@ -46,34 +60,40 @@ const OfferList = () => {
     setIsModalVisible(false);
     setSelectedOffer(null);
   };
+  const handleUpdateStatus = (item) => {
+    const newStatus = !item.status;
+    const data = { status: newStatus, id: item.id };
 
+    dispatch(setDialogVisible(true));
+    dispatch(setSelectedItem(data));
+  };
   const getDropdownMenu = (row) => [
     {
-      key: 'view',
+      key: "view",
       label: (
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
       ),
-      onClick: () => showModal(row)
+      onClick: () => showModal(row),
     },
     {
-      key: 'remark',
+      key: "remark",
       label: (
         <Flex alignItems="center">
           <PlusCircleOutlined />
           <span className="ml-2">Add to remark</span>
         </Flex>
-      )
-    }
+      ),
+    },
   ];
 
   const tableColumns = [
     {
       title: "Offer Name",
       dataIndex: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
     },
     {
       title: "Discount Percentage",
@@ -97,23 +117,12 @@ const OfferList = () => {
       dataIndex: "max_uses",
       sorter: (a, b) => a.max_uses - b.max_uses,
     },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (status) => (
-        <Tag color={getStatusColor(status)}>
-          {status ? "Active" : "Inactive"}
-        </Tag>
-      ),
-    },
+    Utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "",
       dataIndex: "actions",
       render: (_, row) => (
-        <Dropdown 
-          menu={{ items: getDropdownMenu(row) }} 
-          trigger={['click']}
-        >
+        <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
           <Button type="text" icon={<MoreOutlined />} />
         </Dropdown>
       ),
@@ -165,17 +174,25 @@ const OfferList = () => {
       >
         {selectedOffer && (
           <Descriptions column={1} bordered>
-            <Descriptions.Item label="Offer Name">{selectedOffer.name}</Descriptions.Item>
+            <Descriptions.Item label="Offer Name">
+              {selectedOffer.name}
+            </Descriptions.Item>
             <Descriptions.Item label="Discount Percentage">
               {selectedOffer.discount_percentage}%
             </Descriptions.Item>
             <Descriptions.Item label="Start Date">
-              {selectedOffer.start_date ? new Date(selectedOffer.start_date).toLocaleDateString() : "N/A"}
+              {selectedOffer.start_date
+                ? new Date(selectedOffer.start_date).toLocaleDateString()
+                : "N/A"}
             </Descriptions.Item>
             <Descriptions.Item label="End Date">
-              {selectedOffer.end_date ? new Date(selectedOffer.end_date).toLocaleDateString() : "N/A"}
+              {selectedOffer.end_date
+                ? new Date(selectedOffer.end_date).toLocaleDateString()
+                : "N/A"}
             </Descriptions.Item>
-            <Descriptions.Item label="Max Users">{selectedOffer.max_uses}</Descriptions.Item>
+            <Descriptions.Item label="Max Users">
+              {selectedOffer.max_uses}
+            </Descriptions.Item>
             <Descriptions.Item label="Status">
               {selectedOffer.status ? "Active" : "Inactive"}
             </Descriptions.Item>
@@ -190,6 +207,12 @@ const OfferList = () => {
           </Descriptions>
         )}
       </Modal>
+      <UpdateStatusModal
+        responseMessage={message}
+        editFunction={editOffer}
+        getAllFunction={fetchAllOffers}
+      />
+
     </Card>
   );
 };

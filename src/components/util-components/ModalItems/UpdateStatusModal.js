@@ -7,12 +7,13 @@ import {
 } from "store/slices/statusModalSlice";
 import { ActionType } from "utils/api/warning-submit-util";
 import { message } from "antd";
+import { TextConstants } from "constants/TextConstant";
 
 const UpdateStatusModal = ({
   editFunction,
   getAllFunction,
-  onSubmitMessage = "Status updated successfully.",
-  onCloseMessage = "Status update canceled.",
+  onSubmitMessage = TextConstants.StatusUpdatedSuccess,
+  onCloseMessage = TextConstants.StatusUpdateCanceled,
   responseMessage,
 }) => {
   const dispatch = useDispatch();
@@ -26,8 +27,7 @@ const UpdateStatusModal = ({
         editFunction({ data: selectedItem, action: ActionType.WARNING })
       ).then((result) => {
         if (!editFunction.fulfilled.match(result)) {
-            message.error('Error loading the item for editing.')
-        //   alert("Error loading the item for editing.");
+          message.error(TextConstants.ErrorLoadingItem);
         }
       });
     }
@@ -44,7 +44,7 @@ const UpdateStatusModal = ({
       dispatch(getAllFunction());
       message.success(onSubmitMessage);
     } else {
-      message.error("Error updating the status.");
+      message.error(TextConstants.StatusUpdateError);
     }
   };
 
@@ -56,13 +56,13 @@ const UpdateStatusModal = ({
   return (
     <WarningModal
       visible={dialogVisible}
-      title="Confirm Action"
-      details={responseMessage || "Are you sure you want to proceed?"}
-      warningMessage="Do you want to continue?"
+      title={TextConstants.Confirm_Action}
+      details={responseMessage || TextConstants.WantToProceed}
+      warningMessage={TextConstants.WantToProceed}
       onSubmit={handleModalSubmit}
       onCancel={handleModalCancel}
-      confirmText="Proceed"
-      cancelText="Back"
+      confirmText={TextConstants.ProceedButton}
+      cancelText={TextConstants.BackButton}
       loading={modalLoading}
     />
   );

@@ -15,16 +15,17 @@ import { useNavigate } from "react-router-dom";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import utils from "utils";
-import { filterVenues, getVenues } from "store/slices/locationSlice";
+import { editVenue, filterVenues, getVenues } from "store/slices/locationSlice";
+import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import { setDialogVisible, setSelectedItem } from "store/slices/statusModalSlice";
 
 const { Option } = Select;
 
-const getStatusColor = (status) => (status ? "green" : "red");
 
 const VenueList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredVenues, loading } = useSelector((state) => state.locations);
+  const { filteredVenues, loading,message } = useSelector((state) => state.locations);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -43,7 +44,13 @@ const VenueList = () => {
     console.log("Selected Place ID:", id);
     dispatch(getVenues(id));
   };
+  const handleUpdateStatus = (item) => {
+    const newStatus = !item.status;
+    const data = { status: newStatus, id: item.id };
 
+    dispatch(setDialogVisible(true));
+    dispatch(setSelectedItem(data));
+  };  
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
@@ -86,16 +93,7 @@ const VenueList = () => {
       render: (capacity) => <span>{capacity || "0"}</span>,
       sorter: (a, b) => utils.antdTableSorter(a, b, "capacity"),
     },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (status) => (
-        <Tag color={getStatusColor(status)}>
-          {status ? "Active" : "Inactive"}
-        </Tag>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, "status"),
-    },
+    utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "",
       dataIndex: "actions",
@@ -159,6 +157,11 @@ const VenueList = () => {
           pagination={{ pageSize: 10 }}
         />
       </div>
+      <UpdateStatusModal
+        responseMessage={message}
+        editFunction={editVenue}
+        getAllFunction={getVenues}
+      />
     </Card>
   );
 };
