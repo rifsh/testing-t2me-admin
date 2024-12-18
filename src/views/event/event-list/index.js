@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { Card, Table, Select, Input, Button, Tag, Menu } from "antd";
+import React, { useEffect,  } from "react";
+import { Card, Table, Select, Input, Button,  Menu } from "antd";
 import {
   EyeOutlined,
-  PlusCircleOutlined,
   SearchOutlined,
   FormOutlined,
   EditOutlined,
@@ -14,17 +13,13 @@ import {
   fetchAllEvent,
   fetchEventDetails,
   handleShowStatus,
-  setDialogVisible,
-  setModalLoading,
-  setSelectedEvent,
-  // setSubmitData,
 } from "store/slices/eventSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import utils from "utils";
-import WarningModal from "components/util-components/ModalItems/WarningModal";
-import { ActionType } from "utils/api/warning-submit-util";
+import { setDialogVisible, setSelectedItem } from "store/slices/statusModalSlice";
+import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
 const { Option } = Select;
 
@@ -38,9 +33,6 @@ const EventsList = () => {
     filteredEvents,
     message,
     loading,
-    dialogVisible,
-    modalLoading,
-    selectedEvent,
   } = useSelector((state) => state.event);
 
   useEffect(() => {
@@ -56,37 +48,13 @@ const EventsList = () => {
     navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
   };
 
-  const handleUpdateStatus = async (event) => {
-    const newStatus = !event.status;
-    const data = { status: newStatus, id: event.id };
-    const resultAction = await dispatch(
-      editEvent({ data: data, action: ActionType.WARNING })
-    );
-
-    if (editEvent.fulfilled.match(resultAction)) {
-      dispatch(setSelectedEvent(data));
+    const handleUpdateStatus = (item) => {
+      const newStatus = !item.status;
+      const data = { status: newStatus, id: item.id };
+  
       dispatch(setDialogVisible(true));
-    }
-  };
-
-  const handleModalSubmit = async () => {
-    dispatch(setModalLoading(true));
-    const resultAction = await dispatch(
-      editEvent({ data: selectedEvent, action: ActionType.SUBMIT })
-    );
-    dispatch(setModalLoading(false));
-    dispatch(setDialogVisible(false));
-    dispatch(fetchAllEvent());
-    if (editEvent.fulfilled.match(resultAction)) {
-      message.success(
-        `Event ${selectedEvent ? "Activated" : "Deactivated"} successfully`
-      );
-    }
-  };
-
-  const handleModalCancel = () => {
-    dispatch(setDialogVisible(false));
-  };
+      dispatch(setSelectedItem(data));
+    };
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -131,20 +99,7 @@ const EventsList = () => {
       dataIndex: "max_tickets",
       sorter: (a, b) => utils.antdTableSorter(a, b, "max_tickets"),
     },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (_, record) => (
-        <Tag
-          color={record.status ? "green" : "red"}
-          style={{ cursor: "pointer" }}
-          onClick={() => handleUpdateStatus(record)}
-        >
-          {record.status ? "Active" : "Inactive"}
-        </Tag>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, "status"),
-    },
+    utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "",
       dataIndex: "actions",
@@ -217,16 +172,10 @@ const EventsList = () => {
         />
       </div>
 
-      <WarningModal
-        visible={dialogVisible}
-        title="Confirm Action"
-        details={message}
-        warningMessage="Do you want to continue?"
-        onSubmit={handleModalSubmit}
-        onCancel={handleModalCancel}
-        confirmText="Proceed"
-        cancelText="Back"
-        loading={modalLoading}
+      <UpdateStatusModal
+        responseMessage={message}
+        editFunction={editEvent}
+        getAllFunction={fetchAllEvent}
       />
     </Card>
   );

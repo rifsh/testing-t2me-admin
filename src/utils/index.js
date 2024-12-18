@@ -1,4 +1,6 @@
-class Utils {
+import { Tag } from "antd";
+
+class 		Utils {
 
 	/**
 	 * Get first character from first & last sentences of a username
@@ -211,6 +213,33 @@ class Utils {
 		}
 		return breakpoints
 	}
+
+
+	/**
+ * Utility to handle rendering and sorting logic for the "Status" column in Ant Design Table.
+ * @param {Object} record - The record object for the current row.
+ * @param {Function} handleUpdateStatus - Function to handle the status update on click.
+ * @returns {Object} - An object containing render and sorter logic for the "Status" column.
+ */
+static statusColumnUtil = (handleUpdateStatus) => ({
+	title: "Status",
+	dataIndex: "status",
+	render: (_, record) => (
+	  <Tag
+		color={record.status ? "green" : "red"}
+		style={{ cursor: "pointer" }}
+		onClick={() => handleUpdateStatus(record)}
+	  >
+		{record.status ? "Active" : "Inactive"}
+	  </Tag>
+	),
+	sorter: (a, b) => {
+	  if (a.status === b.status) return 0;
+	  return a.status ? -1 : 1; 
+	},
+	sortDirections: ["ascend", "descend"],
+  });
+  
 }
 
 export default Utils;

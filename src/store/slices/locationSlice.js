@@ -72,6 +72,17 @@ export const editPlace = createAsyncThunk(
     }
   }
 );
+export const editVenue = createAsyncThunk(
+  "venue/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await LocationService.editVenue(data, action);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 
 export const fetchPlaceWithCountry = createAsyncThunk(
   "locations/fetchPlaceWithCountry",
@@ -299,6 +310,20 @@ const locationSlice = createSlice({
         }
       })
       .addCase(editPlace.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
+      .addCase(editVenue.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editVenue.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+        }
+      })
+      .addCase(editVenue.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to edit event";
       })

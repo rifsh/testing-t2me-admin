@@ -18,10 +18,18 @@ LocationService.addPlace = function (data) {
     data: data,
   });
 };
-LocationService.editPlace = function (data, action) {
+  LocationService.editPlace = function (data, action) {
+    const encodedAction = encodeURIComponent(handleAction(action));
+    return fetch({
+      url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}?action=${encodedAction}`,
+      method: "put",
+      data: data,
+    });
+  };
+LocationService.editVenue = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.EDIT_PLACE_URL}/${data.placeId}?action=${encodedAction}`,
+    url: `${ApiConstant.EDIT_VENUE_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
   });
