@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-
 import {
   ALL_EVENT_MOCK_API,
   ENABLE_MOCK_API,
@@ -17,6 +16,7 @@ const initialState = {
   error: null,
   selectedCoupons: [],
   selectedOffers: [],
+  validationData: [],
   submitData: {},
   message: null,
   currentStep: 1,
@@ -25,7 +25,7 @@ const initialState = {
   modalLoading: false,
   selectedEvent: null,
   warningMessage: null,
-  successResponse:null
+  successResponse: null,
 };
 
 export const fetchEventDetails = createAsyncThunk(
@@ -60,18 +60,34 @@ export const fetchAllEvent = createAsyncThunk(
     }
   }
 );
+export const checkEventValidation = createAsyncThunk(
+  "event/validation",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await EventService.checkValidation();
+      if (response.status.status_code === "00000") {
+        return response.data;
+      } else {
+        return rejectWithValue(
+          response.status.message || "Event validation failed. Please try again."
+        );
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to validate event. Please try again.");
+    }
+  }
+);
+
 export const addEvent = createAsyncThunk(
   "event/addEvent",
   async ({ data, action }, { rejectWithValue }) => {
-
-    
     try {
-      if (action ===ActionType.SUBMIT) {console.log('actiontype', action);
-      
+      if (action === ActionType.SUBMIT) {
+        console.log("actiontype", action);
+
         const response = await EventService.addEvent(data, action);
-        return response.data; 
+        return response.data;
       } else if (action === ActionType.CONFIRM) {
-       
         const response = await EventService.addEvent(data, action);
         return response.data;
       }
@@ -96,10 +112,10 @@ export const editEvent = createAsyncThunk(
 const eventSlice = createSlice({
   name: "event",
   initialState,
-  
+
   reducers: {
     resetState: (state) => {
-      return initialState; 
+      return initialState;
     },
     handleShowStatus: (state, action) => {
       const value = action.payload;
@@ -157,30 +173,28 @@ const eventSlice = createSlice({
     setSelectedEvent(state, action) {
       state.selectedEvent = action.payload;
     },
-    
   },
   extraReducers: (builder) => {
     builder
-    .addCase(addEvent.pending, (state) => {
-      console.log("AddEvent - Pending State");
-      state.loading = true;
-      state.error = null;
-      state.debugInfo = null;
-    })
-    .addCase(addEvent.fulfilled, (state, action) => {
-      console.log("AddEvent - Fulfilled", action.payload);
-      state.loading = false;
-      state.error = null;
-      state.successResponse=action.payload
-      state.debugInfo = action.payload;
-      
-    })
-    .addCase(addEvent.rejected, (state, action) => {
-      console.error("AddEvent - Rejected", action.payload);
-      state.loading = false;
-      state.error = action.payload;
-      state.debugInfo = action.payload;
-    })
+      .addCase(addEvent.pending, (state) => {
+        console.log("AddEvent - Pending State");
+        state.loading = true;
+        state.error = null;
+        state.debugInfo = null;
+      })
+      .addCase(addEvent.fulfilled, (state, action) => {
+        console.log("AddEvent - Fulfilled", action.payload);
+        state.loading = false;
+        state.error = null;
+        state.successResponse = action.payload;
+        state.debugInfo = action.payload;
+      })
+      .addCase(addEvent.rejected, (state, action) => {
+        console.error("AddEvent - Rejected", action.payload);
+        state.loading = false;
+        state.error = action.payload;
+        state.debugInfo = action.payload;
+      })
       .addCase(editEvent.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -205,6 +219,18 @@ const eventSlice = createSlice({
         state.filteredEvents = action.payload;
       })
       .addCase(fetchAllEvent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(checkEventValidation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(checkEventValidation.fulfilled, (state, action) => {
+        state.loading = false;
+        state.validationData = action.payload;
+      })
+      .addCase(checkEventValidation.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
