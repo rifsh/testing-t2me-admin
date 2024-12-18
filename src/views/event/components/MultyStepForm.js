@@ -17,6 +17,7 @@ import {
   setSelectedEvent,
   setModalLoading,
   resetState,
+  checkEventValidation,
 } from "store/slices/eventSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
@@ -45,19 +46,31 @@ const MultyStepEventForm = () => {
   }, [dispatch]);
 
   const nextStep = async () => {
+    dispatch(setSubmitLoading(true));
     try {
       const values = await form.validateFields();
-      dispatch(setSubmitData(values));
-      if (currentStep < steps.length) {
-        dispatch(setCurrentStep(currentStep + 1));
+      const resultAction = await dispatch(checkEventValidation());
+  
+      if (checkEventValidation.fulfilled.match(resultAction)) {
+        dispatch(setSubmitData(values));
+  
+        if (currentStep < steps.length - 1) {
+          dispatch(setCurrentStep(currentStep + 1));
+        } else {
+          message.success("You have reached the final step!");
+        }
+      } else {
+        const errorMessage =
+          resultAction.payload || "Event validation failed. Please try again.";
+        message.error(errorMessage);
       }
     } catch (error) {
-      message.error("Please complete all required fields.");
+      message.error(error.message || "Please ensure all required fields are filled.");
     } finally {
       dispatch(setSubmitLoading(false));
     }
   };
-
+  
   const onFinish = async () => {
     try {
       dispatch(setSubmitLoading(true));

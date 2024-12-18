@@ -1,26 +1,34 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect } from 'react';
-import { Card, Table, Select, Input, Button, Tag, Menu } from 'antd';
-import { EyeOutlined, PlusCircleOutlined, SearchOutlined, FormOutlined } from '@ant-design/icons';
-import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
-import Flex from 'components/shared-components/Flex';
+import React, { useEffect } from "react";
+import { Card, Table, Select, Input, Button, Tag, Menu } from "antd";
+import {
+  EyeOutlined,
+  PlusCircleOutlined,
+  SearchOutlined,
+  FormOutlined,
+} from "@ant-design/icons";
+import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
+import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchAllCoupons, filterCoupons } from 'store/slices/couponSlice';
-import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import { useDispatch, useSelector } from "react-redux";
+import { editCoupon, fetchAllCoupons, filterCoupons } from "store/slices/couponSlice";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
+import Utils from "utils";
+import { setSelectedItem } from "store/slices/statusModalSlice";
+import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 const { Option } = Select;
 
 const getStatusColor = (status) => {
   if (status) {
-    return 'green'; // Active
+    return "green"; // Active
   }
-  return 'red'; // Inactive
+  return "red"; // Inactive
 };
 
 const OfferList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { filteredCoupons, loading } = useSelector((state) => state.coupons);
+  const { filteredCoupons, loading , message} = useSelector((state) => state.coupons);
 
   useEffect(() => {
     dispatch(fetchAllCoupons());
@@ -29,7 +37,12 @@ const OfferList = () => {
   const handleSearch = (value) => {
     dispatch(filterCoupons({ searchTerm: value, status: null }));
   };
+  const handleUpdateStatus = (item) => {
+    const newStatus = !item.status;
+    const data = { status: newStatus, id: item.id };
 
+    dispatch(setSelectedItem(data));
+  };
   const handleShowStatus = (status) => {
     dispatch(filterCoupons({ searchTerm: null, status }));
   };
@@ -53,52 +66,45 @@ const OfferList = () => {
 
   const tableColumns = [
     {
-      title: 'Coupon Name',
-      dataIndex: 'name',
+      title: "Coupon Name",
+      dataIndex: "name",
       render: (_, record) => <span>{record.name}</span>,
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: 'Coupon Code',
-      dataIndex: 'coupon_code',
+      title: "Coupon Code",
+      dataIndex: "coupon_code",
       render: (_, record) => <span>{record.coupon_code}</span>,
       sorter: (a, b) => a.coupon_code.localeCompare(b.coupon_code),
     },
     {
-      title: 'Discount (%)',
-      dataIndex: 'discount_percentage',
+      title: "Discount (%)",
+      dataIndex: "discount_percentage",
       render: (_, record) => <span>{record.discount_percentage}</span>,
       sorter: (a, b) => a.discount_percentage - b.discount_percentage,
     },
     {
-      title: 'Start Date',
-      dataIndex: 'start_date',
+      title: "Start Date",
+      dataIndex: "start_date",
       render: (_, record) => <span>{record.start_date}</span>,
       sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
     },
     {
-      title: 'End Date',
-      dataIndex: 'end_date',
+      title: "End Date",
+      dataIndex: "end_date",
       render: (_, record) => <span>{record.end_date}</span>,
       sorter: (a, b) => new Date(a.end_date) - new Date(b.end_date),
     },
     {
-      title: 'Max Uses',
-      dataIndex: 'max_uses',
+      title: "Max Uses",
+      dataIndex: "max_uses",
       render: (_, record) => <span>{record.max_uses}</span>,
       sorter: (a, b) => a.max_uses - b.max_uses,
     },
+    Utils.statusColumnUtil(handleUpdateStatus),
     {
-      title: 'Status',
-      dataIndex: 'status',
-      render: (_, record) => (
-        <Tag color={getStatusColor(record.status)}>{record.status ? 'Active' : 'Inactive'}</Tag>
-      ),
-      sorter: (a, b) => a.status - b.status,
-    },
-    {
-      title: '',
-      dataIndex: 'actions',
+      title: "",
+      dataIndex: "actions",
       render: (_, record) => (
         <div className="text-right">
           <EllipsisDropdown menu={dropdownMenu(record)} />
@@ -109,7 +115,11 @@ const OfferList = () => {
 
   return (
     <Card>
-      <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
+      <Flex
+        alignItems="center"
+        justifyContent="space-between"
+        mobileFlex={false}
+      >
         <Flex className="mb-1" mobileFlex={false}>
           <div className="mr-md-3 mb-3">
             <Input
@@ -152,6 +162,11 @@ const OfferList = () => {
           pagination={{ pageSize: 10 }}
         />
       </div>
+      <UpdateStatusModal
+        responseMessage={message}
+        editFunction={editCoupon}
+        getAllFunction={fetchAllCoupons}
+      />
     </Card>
   );
 };

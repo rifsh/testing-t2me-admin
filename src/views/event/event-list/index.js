@@ -52,7 +52,6 @@ const EventsList = () => {
       const newStatus = !item.status;
       const data = { status: newStatus, id: item.id };
   
-      dispatch(setDialogVisible(true));
       dispatch(setSelectedItem(data));
     };
 

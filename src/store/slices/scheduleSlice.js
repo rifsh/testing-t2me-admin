@@ -1,5 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { ALL_OFFERS_MOCK_API, ENABLE_MOCK_API, GET_SCHEDULE_MOCK_API } from "configs/MockConfig";
+import {
+  ALL_OFFERS_MOCK_API,
+  ENABLE_MOCK_API,
+  GET_SCHEDULE_MOCK_API,
+} from "configs/MockConfig";
 import ScheduleMockData from "mock/data/scheduleData";
 import ScheduleService from "services/ScheduleService";
 
@@ -11,6 +15,7 @@ export const initialState = {
   selectedOffers: [],
   selectedItemForModal: null,
   error: null,
+  message: null,
 };
 
 export const fetchAllSchedules = createAsyncThunk(
@@ -32,13 +37,24 @@ export const fetchAllSchedules = createAsyncThunk(
   }
 );
 export const addSchedule = createAsyncThunk(
-  "offer/add",
+  "schedule/add",
   async (offerData, { rejectWithValue }) => {
     try {
       const response = await ScheduleService.addSchedule(offerData);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");
+    }
+  }
+);
+export const editSchedule = createAsyncThunk(
+  "schedule/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await ScheduleService.editSchedule(data, action);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
     }
   }
 );
@@ -103,6 +119,20 @@ const scheduleSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(editSchedule.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editSchedule.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+        }
+      })
+      .addCase(editSchedule.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
       .addCase(addSchedule.pending, (state) => {
         state.loading = true;
         state.error = null;

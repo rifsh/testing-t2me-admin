@@ -24,6 +24,7 @@ export const initialState = {
   currentStepSaved: false,
   isModalVisible: false,
   ticketTypes: [],
+  message:null
 };
 
 export const fetchAllTickets = createAsyncThunk(
@@ -74,7 +75,17 @@ export const getAvailableTicketsType = createAsyncThunk(
     }
   }
 );
-
+export const editTicket = createAsyncThunk(
+  "ticket/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await TicketsService.editTicket(data, action);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 export const ticketSlice = createSlice({
   name: "tickets",
   initialState,
@@ -198,23 +209,25 @@ export const ticketSlice = createSlice({
       state.selectedTicketSet = selectedSet || null;
     },
     resetTicketSelection(state) {
-      state.searchTerm = "";
-      state.statusFilter = "All";
-      state.filteredTickets = [];
-      state.placeId = null;
-      state.venueId = null;
-      state.availableTicketTyps = [];
-      state.selectedTicketType = null;
-      state.selectedTicketStructure = null;
-      state.availableTicketSets = [];
-      state.selectedTicketSet = null;
-      state.currentStepSaved = false;
-      state.isModalVisible = false;
-      state.ticketTypes = [];
+     return initialState;
     },
   },
   extraReducers: (builder) => {
     builder
+     .addCase(editTicket.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+          })
+          .addCase(editTicket.fulfilled, (state, { payload }) => {
+            state.loading = false;
+            if (payload.message) {
+              state.message = payload.message;
+            }
+          })
+          .addCase(editTicket.rejected, (state, { payload }) => {
+            state.loading = false;
+            state.error = payload || "Failed to edit event";
+          })
       .addCase(fetchAllTickets.pending, (state) => {
         state.loading = true;
       })

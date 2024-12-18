@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import { handleAction } from "utils/api/warning-submit-util";
 
 const TicketsService = {};
 
@@ -10,7 +11,14 @@ TicketsService.getAllTickets = function (venueId) {
     method: "get",
   });
 };
-
+TicketsService.editTicket = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.TICKET_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+  });
+};
 TicketsService.addTicket = function (data,venueId) {
 
   return fetch({
