@@ -10,6 +10,9 @@ const statusModalSlice = createSlice({
   name: "statusModal",
   initialState,
   reducers: {
+    resetStatusModalState(state, action) {
+      return initialState;
+    },
     setSelectedItem(state, action) {
       state.selectedItem = action.payload;
     },
@@ -29,6 +32,7 @@ const statusModalSlice = createSlice({
 export const {
   
   setDialogVisible,
+  resetStatusModalState,
   setModalLoading,
   setSelectedItem,
 

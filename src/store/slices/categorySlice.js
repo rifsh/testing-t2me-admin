@@ -15,6 +15,7 @@ const initialState = {
   searchTerm: "",
   selectedCategoryId: null,
   error: null,
+  message: null,
 };
 export const addCategory = createAsyncThunk(
   "category/add",
@@ -29,23 +30,19 @@ export const addCategory = createAsyncThunk(
     }
   }
 );
+
 export const updateCategory = createAsyncThunk(
-  "category/update", // Update action type
-  async (data, { rejectWithValue }) => {
+  "category/edit",
+  async ({ data, action }, { rejectWithValue }) => {
     try {
-      // Make the request to the update category API
-      const response = await CategoryService.updateCategory(data); 
-      console.warn(response,'//////////////////')
-      return response.data;
-    } catch (err) {
-      console.error(err,'//////////////////')
-      const errorMessage =
-        err.response?.data?.message || "Failed to update category";
-      return rejectWithValue(errorMessage);
+      const response = await CategoryService.updateCategory(data, action);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to update category");
     }
   }
 );
-// Fetch categories
+
 export const fetchCategories = createAsyncThunk(
   "category/fetchCategories",
   async (_, { rejectWithValue }) => {
@@ -178,6 +175,20 @@ const categorySlice = createSlice({
       .addCase(fetchSubcategories.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
+      })
+      .addCase(updateCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateCategory.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+        }
+      })
+      .addCase(updateCategory.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
       });
   },
 });

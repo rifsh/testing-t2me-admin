@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import {  ApiConstant,  } from "constants/ApiConstant";
+import { handleAction } from "utils/api/warning-submit-util";
 
 const     CategoryService = {};
 
@@ -10,12 +11,11 @@ CategoryService.addCategory = function (data) {
     data: data,
   });
 };
-CategoryService.updateCategory = function (data) {
-  if (!data.id) {
-    throw new Error("Category ID is required for updating.");
-  }
+
+CategoryService.updateCategory = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.CATEGORY_URL}/${data.id}`,
+    url: `${ApiConstant.CATEGORY_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
   });

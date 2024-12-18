@@ -13,9 +13,15 @@ EventsService.addEvent = function (data,action) {
   });
 };
 
-EventsService.getAllEvent = function (place) {
+EventsService.getAllEvent = function () {
   return fetch({
     url: ApiConstant.EVENT_URL,
+    method: "get",
+  });
+};
+EventsService.checkValidation = function () {
+  return fetch({
+    url: ApiConstant.EVENT_VALIDATION_URL,
     method: "get",
   });
 };
