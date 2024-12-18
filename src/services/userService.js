@@ -3,7 +3,12 @@ import { ApiConstant } from "constants/ApiConstant";
 import { handleAction } from "utils/api/warning-submit-util";
 
 const UserService = {};
-
+UserService.getAllRoles = function () {
+  return fetch({
+    url: `${ApiConstant.ROLES_URL}`,
+    method: "get",
+  });
+};
 UserService.getAllUsers = function () {
   return fetch({
     url: "/api/v1/auth/secured/users/",

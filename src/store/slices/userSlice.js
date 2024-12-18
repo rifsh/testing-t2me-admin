@@ -10,6 +10,8 @@ export const initialState = {
   error: null,
   createUserLoading: false,
   message: null,
+  roles: [],
+  selectedRole: null,
 };
 
 export const fetchAllUsers = createAsyncThunk(
@@ -18,6 +20,17 @@ export const fetchAllUsers = createAsyncThunk(
     try {
       const response = await UserService.getAllUsers();
       return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Error fetching users");
+    }
+  }
+);
+export const fetchAllRoles = createAsyncThunk(
+  "users/roles",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await UserService.getAllRoles();
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching users");
     }
@@ -78,9 +91,24 @@ const userSlice = createSlice({
     setSearchTerm: (state, action) => {
       state.searchTerm = action.payload;
     },
+    setSelectedRole: (state, action) => {
+      state.selectedRole = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchAllRoles.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllRoles.fulfilled, (state, action) => {
+        state.loading = false;
+        state.roles = action.payload;
+      })
+      .addCase(fetchAllRoles.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(fetchAllUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -124,6 +152,7 @@ const userSlice = createSlice({
   },
 });
 
-export const { filterUsers, setStatusFilter, setSearchTerm } = userSlice.actions;
+export const { filterUsers, setSelectedRole, setStatusFilter, setSearchTerm } =
+  userSlice.actions;
 
 export default userSlice.reducer;
