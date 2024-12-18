@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import {
+  resetStatusModalState,
   setDialogVisible,
   setModalLoading,
 } from "store/slices/statusModalSlice";
@@ -22,11 +23,15 @@ const UpdateStatusModal = ({
   );
 
   useEffect(() => {
-    if (dialogVisible && selectedItem) {
+    if (selectedItem) {
       dispatch(
         editFunction({ data: selectedItem, action: ActionType.WARNING })
       ).then((result) => {
-        if (!editFunction.fulfilled.match(result)) {
+        if (editFunction.fulfilled.match(result)) {
+          dispatch(setDialogVisible(true));
+          
+        } else {
+          dispatch(setDialogVisible(false));
           message.error(TextConstants.ErrorLoadingItem);
         }
       });
@@ -42,6 +47,8 @@ const UpdateStatusModal = ({
     dispatch(setDialogVisible(false));
     if (editFunction.fulfilled.match(result)) {
       dispatch(getAllFunction());
+      dispatch(resetStatusModalState());
+
       message.success(onSubmitMessage);
     } else {
       message.error(TextConstants.StatusUpdateError);

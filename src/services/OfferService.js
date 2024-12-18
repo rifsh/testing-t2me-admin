@@ -14,7 +14,7 @@ OfferService.addOffer = function (data) {
 OfferService.editOffer = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.EDIT_OFFER_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.OFFER_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
   });

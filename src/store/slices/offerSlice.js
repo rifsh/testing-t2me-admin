@@ -1,18 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  ALL_OFFERS_MOCK_API,
-  ENABLE_MOCK_API,
-} from "configs/MockConfig";
+import { ALL_OFFERS_MOCK_API, ENABLE_MOCK_API } from "configs/MockConfig";
 import OfferMockData from "mock/data/offerData";
 import OfferService from "services/OfferService";
 
 export const initialState = {
   loading: false,
   offers: [],
-  filteredOffers: [], 
-  isDateRequired:false,
+  filteredOffers: [],
+  isDateRequired: false,
   error: null,
-  message:null
+  message: null,
 };
 export const fetchAllOffers = createAsyncThunk(
   "offer/fetchAll",
@@ -79,26 +76,26 @@ const offerSlice = createSlice({
 
       state.filteredOffers = filteredOffers;
     },
-    setIsDateRequired:(state, action)=>{
-      state.isDateRequired=action.payload
-    }
+    setIsDateRequired: (state, action) => {
+      state.isDateRequired = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
-     .addCase(editOffer.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-          })
-          .addCase(editOffer.fulfilled, (state, { payload }) => {
-            state.loading = false;
-            if (payload.message) {
-              state.message = payload.message;
-            }
-          })
-          .addCase(editOffer.rejected, (state, { payload }) => {
-            state.loading = false;
-            state.error = payload || "Failed to edit event";
-          })
+      .addCase(editOffer.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editOffer.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+        }
+      })
+      .addCase(editOffer.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
       .addCase(fetchAllOffers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -115,5 +112,5 @@ const offerSlice = createSlice({
   },
 });
 
-export const { filterOffers,setIsDateRequired } = offerSlice.actions;
+export const { filterOffers, setIsDateRequired } = offerSlice.actions;
 export default offerSlice.reducer;

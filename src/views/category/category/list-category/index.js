@@ -1,9 +1,25 @@
 import React, { useEffect } from "react";
-import { Card, Table, Input, Tabs, Button, Select, Menu, Dropdown, message } from "antd";
-import { FormOutlined, SearchOutlined, EyeOutlined, PlusCircleOutlined, EllipsisOutlined } from "@ant-design/icons";
+import {
+  Card,
+  Table,
+  Input,
+  Tabs,
+  Button,
+  Select,
+  Menu,
+  Dropdown,
+  message,
+} from "antd";
+import {
+  FormOutlined,
+  SearchOutlined,
+  EyeOutlined,
+  PlusCircleOutlined,
+  EllipsisOutlined,
+} from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import Loading from "components/shared-components/Loading";
-import {  updateCategory } from "store/slices/categorySlice";
+import { updateCategory } from "store/slices/categorySlice";
 import utils from "utils";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -15,13 +31,14 @@ import {
 } from "store/slices/categorySlice";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import Utils from "utils";
 import {
-  Tag
-} from "antd";
+  setDialogVisible,
+  setSelectedItem,
+} from "store/slices/statusModalSlice";
+import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
 const { TabPane } = Tabs;
-
-const getStatusColor = (status) => (status ? "green" : "red");
 
 const EllipsisDropdown = ({ menu }) => (
   <Dropdown overlay={menu} trigger={["click"]}>
@@ -32,12 +49,13 @@ const EllipsisDropdown = ({ menu }) => (
 const CategoryList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const {
     filteredCategories,
     subcategories,
     selectedCategoryId,
     loading,
+    message,
     activeTab,
   } = useSelector((state) => state.category);
 
@@ -54,20 +72,28 @@ const CategoryList = () => {
     dispatch(setActiveTab("subcategories"));
   };
 
-  
+  const handleUpdateStatus = (item) => {
+    const newStatus = !item.status;
+    const data = { status: newStatus, id: item.id };
+
+    dispatch(setDialogVisible(true));
+    dispatch(setSelectedItem(data));
+  };
 
   const handleTabChange = (key) => {
     dispatch(setActiveTab(key));
   };
 
   const dropdownMenu = (row) => {
-    
-  
     return (
       <Menu>
         <Menu.Item
           key="1"
-          onClick={() => navigate(`${APP_PREFIX_PATH}/category/edit`, { state: { mode: "EDIT", id: row.id } })}
+          onClick={() =>
+            navigate(`${APP_PREFIX_PATH}/category/edit`, {
+              state: { mode: "EDIT", id: row.id },
+            })
+          }
         >
           <Flex alignItems="center">
             <EyeOutlined />
@@ -79,8 +105,10 @@ const CategoryList = () => {
           onClick={async () => {
             try {
               // Dispatch updateCategory with toggled status
-              const resultAction = await dispatch(updateCategory({ id: row.id, status: false}));
-  
+              const resultAction = await dispatch(
+                updateCategory({ id: row.id, status: false })
+              );
+
               if (updateCategory.fulfilled.match(resultAction)) {
                 message.success(`Category ${row.name} status updated `);
                 navigate(`${APP_PREFIX_PATH}/category/list`);
@@ -99,22 +127,13 @@ const CategoryList = () => {
       </Menu>
     );
   };
-  const categoryColumns = [  
+  const categoryColumns = [
     {
       title: "Category Name",
       dataIndex: "name",
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (status) => (
-        <Tag color={getStatusColor(status)}>
-          {status ? "Active" : "Inactive"}
-        </Tag>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, "status"),
-    },
+    Utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "",
       dataIndex: "actions",
@@ -138,15 +157,16 @@ const CategoryList = () => {
       title: "Subcategory Name",
       dataIndex: "name",
     },
-    {
-      title: "Status",
-      dataIndex: "status",
-    },
+    Utils.statusColumnUtil(handleUpdateStatus),
   ];
 
   return (
     <Card>
-      <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
+      <Flex
+        alignItems="center"
+        justifyContent="space-between"
+        mobileFlex={false}
+      >
         <Flex className="mb-1" mobileFlex={false}>
           <Input
             placeholder="Search Categories"
@@ -168,12 +188,15 @@ const CategoryList = () => {
         <Button
           type="primary"
           icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/category/add`, { state: { mode: "ADD" } })}
+          onClick={() =>
+            navigate(`${APP_PREFIX_PATH}/category/add`, {
+              state: { mode: "ADD" },
+            })
+          }
         >
           Add Category
         </Button>
       </Flex>
-
       <div style={{ marginTop: 20 }}>
         {loading ? (
           <Loading />
@@ -194,10 +217,7 @@ const CategoryList = () => {
                 })}
               />
             </TabPane>
-            <TabPane
-              tab="Subcategories"
-              key="subcategories"
-            >
+            <TabPane tab="Subcategories" key="subcategories">
               {subcategories.length > 0 ? (
                 <Table
                   columns={subCategoryColumns}
@@ -212,6 +232,11 @@ const CategoryList = () => {
           </Tabs>
         )}
       </div>
+      <UpdateStatusModal
+        responseMessage={message}
+        editFunction={updateCategory}
+        getAllFunction={fetchCategories}
+      />{" "}
     </Card>
   );
 };
