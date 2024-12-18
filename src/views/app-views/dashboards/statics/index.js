@@ -126,7 +126,7 @@ const tableColumns = [
     key: 'status',
     render: (_, record) => (
       <div className="text-right">
-        <Tag className="mr-0" color={record.status === 'Approved' ? 'cyan' : record.status === 'Pending' ? 'blue' : 'volcano'}>{record.status}</Tag>
+        <Tag className="mr-0" color={record.status === 'Active' ? 'cyan' : record.status === 'Inactive' ? 'blue' : 'volcano'}>{record.status}</Tag>
       </div>
     ),
   },
