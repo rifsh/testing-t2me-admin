@@ -94,14 +94,17 @@ const tableColumns = [
     title: 'Schedule Name',
     dataIndex: 'schdule_name',
     key: 'schdule_name',
-    render: (text, record) => (
-      <div className="d-flex align-items-center">
-        <Avatar size={30} className="font-size-sm" style={{ backgroundColor: record.avatarColor }}>
-          {utils.getNameInitial(text)}
-        </Avatar>
-        <span className="ml-2">{text}</span>
-      </div>
-    ),
+    render: (text, record) => {
+      const name = text || 'Unknown'; // Fallback for invalid names
+      return (
+        <div className="d-flex align-items-center">
+          <Avatar size={30} className="font-size-sm" style={{ backgroundColor: record.avatarColor }}>
+            {utils.getNameInitial(name)}
+          </Avatar>
+          <span className="ml-2">{name}</span>
+        </div>
+      );
+    },
   },
   {
     title: 'Event Name',
