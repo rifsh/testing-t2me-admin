@@ -12,6 +12,7 @@ export const initialState = {
   filteredOffers: [], 
   isDateRequired:false,
   error: null,
+  message:null
 };
 export const fetchAllOffers = createAsyncThunk(
   "offer/fetchAll",
@@ -42,7 +43,17 @@ export const addOffer = createAsyncThunk(
   }
 );
 
-
+export const editOffer = createAsyncThunk(
+  "offer/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await OfferService.editOffer(data, action);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 
 const offerSlice = createSlice({
   name: "offers",
@@ -74,6 +85,20 @@ const offerSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+     .addCase(editOffer.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+          })
+          .addCase(editOffer.fulfilled, (state, { payload }) => {
+            state.loading = false;
+            if (payload.message) {
+              state.message = payload.message;
+            }
+          })
+          .addCase(editOffer.rejected, (state, { payload }) => {
+            state.loading = false;
+            state.error = payload || "Failed to edit event";
+          })
       .addCase(fetchAllOffers.pending, (state) => {
         state.loading = true;
         state.error = null;

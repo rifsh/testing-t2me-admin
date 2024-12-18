@@ -32,13 +32,7 @@ import {
   filterPlaces,
   getCoutryDetails,
   getPlaces,
-  setLocationDialogVisible,
-  setLocationModalLoading,
-  setSelectedPlace,
 } from "store/slices/locationSlice";
-import WarningModal from "components/util-components/ModalItems/WarningModal";
-
-import { ActionType } from "utils/api/warning-submit-util";
 import {
   setDialogVisible,
   setSelectedItem,
@@ -50,15 +44,9 @@ const { Option } = Select;
 const PlaceList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const {
-    filteredPlaces,
-    detailedCountryList,
-    dialogVisible,
-    modalLoading,
-    selectedPlace,
-    message,
-    loading,
-  } = useSelector((state) => state.locations);
+  const { filteredPlaces, detailedCountryList, message, loading } = useSelector(
+    (state) => state.locations
+  );
 
   useEffect(() => {
     dispatch(getPlaces());
@@ -76,9 +64,9 @@ const PlaceList = () => {
   const handleEditPlace = async (id) => {
     navigate(`${APP_PREFIX_PATH}/place/edit/${id}`);
   };
-  const handleUpdateStatus = (place) => {
-    const newStatus = !place.status;
-    const data = { status: newStatus, placeId: place.id };
+  const handleUpdateStatus = (item) => {
+    const newStatus = !item.status;
+    const data = { status: newStatus, id: item.id };
 
     dispatch(setDialogVisible(true));
     dispatch(setSelectedItem(data));
@@ -122,21 +110,8 @@ const PlaceList = () => {
       ),
       sorter: (a, b) => utils.antdTableSorter(a, b, "created_at"),
     },
+    utils.statusColumnUtil(handleUpdateStatus),
 
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (_, record) => (
-        <Tag
-          color={record.status ? "green" : "red"}
-          style={{ cursor: "pointer" }}
-          onClick={() => handleUpdateStatus(record)}
-        >
-          {record.status ? "Active" : "Inactive"}
-        </Tag>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, "status"),
-    },
     {
       title: "",
       dataIndex: "actions",
