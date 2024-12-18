@@ -14,16 +14,20 @@ import { PlusCircleOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import {
+  editTicket,
   fetchAllTickets,
   filterTickets,
   resetTicketSets,
 } from "store/slices/ticketSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { setSelectedItem } from "store/slices/statusModalSlice";
+import Utils from "utils";
+import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 const { Panel } = Collapse;
 
 const TicketList = () => {
   const dispatch = useDispatch();
-  const { filteredTickets, loading, searchTerm } = useSelector(
+  const { filteredTickets, loading, searchTerm, message } = useSelector(
     (state) => state.tickets
   );
 
@@ -49,7 +53,12 @@ const TicketList = () => {
   };
 
   const navigate = useNavigate();
+  const handleUpdateStatus = (item) => {
+    const newStatus = !item.status;
+    const data = { status: newStatus, id: item.id };
 
+    dispatch(setSelectedItem(data));
+  };
   return (
     <Card style={{ padding: "20px" }}>
       <div
@@ -130,11 +139,13 @@ const TicketList = () => {
                                 <span style={{ fontWeight: "bold" }}>
                                   {ticket.name}
                                 </span>
-                                <div style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                  }}
+                                >
                                   <span
                                     style={{
                                       color: "lightblue",
@@ -143,7 +154,6 @@ const TicketList = () => {
                                   >
                                     Tickets : {ticket.number_of_tickets}
                                   </span>{" "}
-                                  
                                   <span
                                     style={{
                                       color: "lightgreen",
@@ -166,9 +176,14 @@ const TicketList = () => {
               </Collapse>
             ),
           },
+          Utils.statusColumnUtil(handleUpdateStatus),
         ]}
       />
-
+      <UpdateStatusModal
+        responseMessage={message}
+        editFunction={editTicket}
+        getAllFunction={fetchAllTickets}
+      />
       <Modal
         title="Venue Details"
         visible={isModalVisible}

@@ -11,6 +11,7 @@ export const initialState = {
   coupons: [],
   filteredCoupons: [], 
   error: null,
+  message: null,
 };
 export const fetchAllCoupons = createAsyncThunk(
   "coupon/fetchAll",
@@ -41,7 +42,17 @@ export const addCoupon = createAsyncThunk(
   }
 );
 
-
+export const editCoupon = createAsyncThunk(
+  "coupon/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await CouponService.editCoupon(data, action);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 
 const couponSlice = createSlice({
   name: "coupons",
@@ -70,6 +81,20 @@ const couponSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+     .addCase(editCoupon.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+          })
+          .addCase(editCoupon.fulfilled, (state, { payload }) => {
+            state.loading = false;
+            if (payload.message) {
+              state.message = payload.message;
+            }
+          })
+          .addCase(editCoupon.rejected, (state, { payload }) => {
+            state.loading = false;
+            state.error = payload || "Failed to edit event";
+          })
       .addCase(fetchAllCoupons.pending, (state) => {
         state.loading = true;
         state.error = null;

@@ -5,14 +5,21 @@ import { FormOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllSchedules, filterSchedules } from "store/slices/scheduleSlice";
+import {
+  editSchedule,
+  fetchAllSchedules,
+  filterSchedules,
+} from "store/slices/scheduleSlice";
+import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import { setSelectedItem } from "store/slices/statusModalSlice";
+import Utils from "utils";
 
 const { Option } = Select;
 
 const ScheduleList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredSchedules, loading } = useSelector(
+  const { filteredSchedules, message } = useSelector(
     (state) => state.schedules
   );
   // const [form] = Form.useForm();
@@ -28,7 +35,12 @@ const ScheduleList = () => {
   const handleShowStatus = (status) => {
     dispatch(filterSchedules({ status }));
   };
-  const getStatusColor = (status) => (status ? "green" : "red");
+  const handleUpdateStatus = (item) => {
+    const newStatus = !item.status;
+    const data = { status: newStatus, id: item.id };
+
+    dispatch(setSelectedItem(data));
+  };
   const tableColumns = [
     {
       title: "Event",
@@ -45,16 +57,7 @@ const ScheduleList = () => {
       dataIndex: "end_date",
       sorter: (a, b) => a.endTime.localeCompare(b.endTime),
     },
-    {
-      title: "Status",
-      dataIndex: "status",
-      render: (status) => (
-        <Tag color={getStatusColor(status)}>
-          {status ? "Active" : "Inactive"}
-        </Tag>
-      ),
-      sorter: (a, b) => a.status.localeCompare(b.status),
-    },
+    Utils.statusColumnUtil(handleUpdateStatus),
   ];
 
   return (
@@ -92,6 +95,12 @@ const ScheduleList = () => {
       <div>
         <Table columns={tableColumns} dataSource={filteredSchedules} />
       </div>
+
+      <UpdateStatusModal
+        responseMessage={message}
+        editFunction={editSchedule}
+        getAllFunction={fetchAllSchedules}
+      />
     </Card>
   );
 };

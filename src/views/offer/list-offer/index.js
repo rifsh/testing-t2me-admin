@@ -19,7 +19,11 @@ import {
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { editOffer, fetchAllOffers, filterOffers } from "store/slices/offerSlice";
+import {
+  editOffer,
+  fetchAllOffers,
+  filterOffers,
+} from "store/slices/offerSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import {
   setDialogVisible,
@@ -30,11 +34,12 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 
 const { Option } = Select;
 
-
 const OfferList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredOffers, loading,message } = useSelector((state) => state.offers);
+  const { filteredOffers, loading, message } = useSelector(
+    (state) => state.offers
+  );
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
@@ -64,7 +69,6 @@ const OfferList = () => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
 
-    dispatch(setDialogVisible(true));
     dispatch(setSelectedItem(data));
   };
   const getDropdownMenu = (row) => [
@@ -212,7 +216,6 @@ const OfferList = () => {
         editFunction={editOffer}
         getAllFunction={fetchAllOffers}
       />
-
     </Card>
   );
 };

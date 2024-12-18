@@ -29,8 +29,9 @@ const UpdateStatusModal = ({
       ).then((result) => {
         if (editFunction.fulfilled.match(result)) {
           dispatch(setDialogVisible(true));
-          
         } else {
+          dispatch(resetStatusModalState());
+
           dispatch(setDialogVisible(false));
           message.error(TextConstants.ErrorLoadingItem);
         }

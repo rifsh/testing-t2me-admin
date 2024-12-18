@@ -19,11 +19,7 @@ import {
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchAllUsers,
-  filterUsers,
-  editUser,
-} from "store/slices/userSlice";
+import { fetchAllUsers, filterUsers, editUser } from "store/slices/userSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import {
   setDialogVisible,
@@ -37,7 +33,9 @@ const { Option } = Select;
 const UserList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredUsers, loading, message } = useSelector((state) => state.users);
+  const { filteredUsers, loading, message } = useSelector(
+    (state) => state.users
+  );
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -68,7 +66,6 @@ const UserList = () => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
 
-  
     dispatch(setSelectedItem(data));
   };
 
@@ -124,7 +121,11 @@ const UserList = () => {
 
   return (
     <Card>
-      <Flex alignItems="center" justifyContent="space-between" style={{paddingBottom:"30px"}}>
+      <Flex
+        alignItems="center"
+        justifyContent="space-between"
+        style={{ paddingBottom: "30px" }}
+      >
         <Flex>
           <Input
             placeholder="Search"
