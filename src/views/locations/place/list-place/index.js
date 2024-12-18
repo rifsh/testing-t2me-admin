@@ -39,6 +39,11 @@ import {
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 
 import { ActionType } from "utils/api/warning-submit-util";
+import {
+  setDialogVisible,
+  setSelectedItem,
+} from "store/slices/statusModalSlice";
+import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
 const { Option } = Select;
 
@@ -71,39 +76,12 @@ const PlaceList = () => {
   const handleEditPlace = async (id) => {
     navigate(`${APP_PREFIX_PATH}/place/edit/${id}`);
   };
-
-  const handleUpdateStatus = async (place) => {
+  const handleUpdateStatus = (place) => {
     const newStatus = !place.status;
     const data = { status: newStatus, placeId: place.id };
-    console.log("new data", data);
 
-    const resultAction = await dispatch(
-      editPlace({ data: data, action: ActionType.WARNING })
-    );
-
-    if (editPlace.fulfilled.match(resultAction)) {
-      dispatch(setSelectedPlace(data));
-      dispatch(setLocationDialogVisible(true));
-    }
-  };
-
-  const handleModalSubmit = async () => {
-    dispatch(setLocationModalLoading(true));
-    const resultAction = await dispatch(
-      editPlace({ data: selectedPlace, action: ActionType.SUBMIT })
-    );
-    dispatch(setLocationModalLoading(false));
-    dispatch(setLocationDialogVisible(false));
-    dispatch(getPlaces());
-    if (editPlace.fulfilled.match(resultAction)) {
-      message.success(
-        `Event ${selectedPlace ? "Activated" : "Deactivated"} successfully`
-      );
-    }
-  };
-
-  const handleModalCancel = () => {
-    dispatch(setLocationDialogVisible(false));
+    dispatch(setDialogVisible(true));
+    dispatch(setSelectedItem(data));
   };
 
   const dropdownMenu = (row) => (
@@ -225,16 +203,10 @@ const PlaceList = () => {
           pagination={{ pageSize: 10 }}
         />
       </div>
-      <WarningModal
-        visible={dialogVisible}
-        title="Confirm Action"
-        details={message}
-        warningMessage="Do you want to continue?"
-        onSubmit={handleModalSubmit}
-        onCancel={handleModalCancel}
-        confirmText="Proceed"
-        cancelText="Back"
-        loading={modalLoading}
+      <UpdateStatusModal
+        responseMessage={message}
+        editFunction={editPlace}
+        getAllFunction={getPlaces}
       />
     </Card>
   );
