@@ -92,8 +92,8 @@ const CardDropdown = ({ items }) => {
 const tableColumns = [
   {
     title: 'Schedule Name',
-    dataIndex: 'schdule_name',
-    key: 'schdule_name',
+    dataIndex: 'schedule_name',
+    key: 'schedule_name',
     render: (text, record) => {
       const name = text || 'Unknown'; // Fallback for invalid names
       return (
