@@ -16,6 +16,8 @@ import {
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { setSelectedItem } from "store/slices/modalSlice";
+import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 
 const CountryForm = ({ placeId }) => {
   const [form] = Form.useForm();
@@ -26,9 +28,10 @@ const CountryForm = ({ placeId }) => {
     loading,
     error,
     detailedCountryList,
-    dialogVisible,
+    dialogVisible,responseData,
     modalLoading,
     selectedPlace,
+    responseMessage,
     filteredPlaces,
     message: warningMessage,
   } = useSelector((state) => state.locations);
@@ -37,7 +40,7 @@ const CountryForm = ({ placeId }) => {
     if (placeId && filteredPlaces && filteredPlaces.length > 0) {
       const numericPlaceId = parseInt(placeId, 10);
       const place = filteredPlaces.find((p) => p.id === numericPlaceId);
-  
+
       if (place) {
         form.setFieldsValue({
           country_id: place.country_id,
@@ -48,7 +51,7 @@ const CountryForm = ({ placeId }) => {
       }
     }
   }, [placeId, filteredPlaces, form]);
-  
+
   useEffect(() => {
     if (error) {
       antdMessage.error(error);
@@ -60,13 +63,16 @@ const CountryForm = ({ placeId }) => {
       const values = await form.validateFields();
 
       if (!placeId) {
-        const resultAction = await dispatch(createPlace({placeData:values, action: ActionType.SUBMIT}));
+        dispatch(setSelectedItem(values));
+          // form.resetFields();
+        // const resultAction = await dispatch(
+        //   createPlace({ placeData: values, action: ActionType.SUBMIT })
+        // );
 
-        if (createPlace.fulfilled.match(resultAction)) {
-          message.success(`Place ${values.name} added successfully`);
-          form.resetFields();
-          navigate(`${APP_PREFIX_PATH}/place/list`);
-        }
+        // if (createPlace.fulfilled.match(resultAction)) {
+        //   message.success(`Place ${values.name} added successfully`);
+        //   navigate(`${APP_PREFIX_PATH}/place/list`);
+        // }
       } else {
         // Editing an existing place
         // if (!selectedPlace) {
@@ -79,7 +85,7 @@ const CountryForm = ({ placeId }) => {
 
         const data = {
           ...values,
-          placeId: placeId, 
+          placeId: placeId,
         };
         console.log("Edit Data:", data);
 
@@ -179,7 +185,13 @@ const CountryForm = ({ placeId }) => {
         cancelText="Back"
         loading={modalLoading}
       />
-      
+      <SubmitAndConfirmModal
+        
+        responseData={responseData}
+        addFunction={createPlace}
+        navigationPath={`${APP_PREFIX_PATH}/place/list`}
+        responseMessage={responseMessage}
+      />
     </>
   );
 };

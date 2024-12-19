@@ -7,20 +7,21 @@ import { useNavigate } from "react-router-dom";
 import {
   setResponseDialogVisible,
   setModalLoading,
+  resetStatusModalState,
 } from "store/slices/modalSlice";
-import { resetStatusModalState } from "store/slices/modalSlice";
 import { ActionType } from "utils/api/warning-submit-util";
+
 export const SubmitAndConfirmModal = ({
   addFunction,
   navigationPath,
   responseData,
-  onCloseMessage,
+  onSubmitMessage = TextConstants.ItemAddedSuccessfully,
+  onCloseMessage = TextConstants.ItemAddCanceled,
   responseMessage,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Corrected: Access the right slice of the state
   const { responseDialogVisible, selectedItem, modalLoading } = useSelector(
     (state) => state.modalSlice
   );
@@ -34,7 +35,7 @@ export const SubmitAndConfirmModal = ({
           dispatch(setResponseDialogVisible(true));
         } else {
           dispatch(resetStatusModalState());
-          message.error("Error submitting the item. Please try again.");
+          message.error(TextConstants.ErrorSubmittingItem);
         }
       });
     }
@@ -43,7 +44,7 @@ export const SubmitAndConfirmModal = ({
   const handleModalSubmit = async () => {
     try {
       if (!selectedItem) {
-        message.error("No item selected for confirmation.");
+        message.error(TextConstants.NoItemSelected);
         return;
       }
 
@@ -54,15 +55,15 @@ export const SubmitAndConfirmModal = ({
       );
 
       if (addFunction.fulfilled.match(resultAction)) {
-        message.success("Item successfully added.");
+        message.success(onSubmitMessage);
         dispatch(resetStatusModalState());
         navigate(navigationPath);
       } else {
-        message.error("Failed to confirm the item.");
+        message.error(TextConstants.FailedToConfirmItem);
       }
     } catch (error) {
-      console.error("Error during confirmation:", error);
-      message.error("An error occurred during confirmation.");
+      console.error(TextConstants.ConfirmationError, error);
+      message.error(TextConstants.ConfirmationError);
     } finally {
       dispatch(setModalLoading(false));
       dispatch(setResponseDialogVisible(false));
@@ -77,13 +78,13 @@ export const SubmitAndConfirmModal = ({
   return (
     <ResponseShowModal
       visible={responseDialogVisible}
-      title="Confirm Item Details"
+      title={TextConstants.ConfirmItemDetails}
       jsonData={responseData}
       warningMessage={responseMessage}
       onSubmit={handleModalSubmit}
       onCancel={handleModalCancel}
-      confirmText="Confirm Item"
-      cancelText="Cancel"
+      confirmText={TextConstants.ConfirmItem}
+      cancelText={TextConstants.Cancel}
       loading={modalLoading}
     />
   );
