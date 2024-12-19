@@ -25,7 +25,8 @@ const initialState = {
   modalLoading: false,
   selectedEvent: null,
   warningMessage: null,
-  successResponse: null,
+  responseData: null,
+  responseMessage: null,
 };
 
 export const fetchEventDetails = createAsyncThunk(
@@ -69,11 +70,14 @@ export const checkEventValidation = createAsyncThunk(
         return response.data;
       } else {
         return rejectWithValue(
-          response.status.message || "Event validation failed. Please try again."
+          response.status.message ||
+            "Event validation failed. Please try again."
         );
       }
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to validate event. Please try again.");
+      return rejectWithValue(
+        error.message || "Failed to validate event. Please try again."
+      );
     }
   }
 );
@@ -82,16 +86,8 @@ export const addEvent = createAsyncThunk(
   "event/addEvent",
   async ({ data, action }, { rejectWithValue }) => {
     try {
-      if (action === ActionType.SUBMIT) {
-        console.log("actiontype", action);
-
-        const response = await EventService.addEvent(data, action);
-        return response.data;
-      } else if (action === ActionType.CONFIRM) {
-        const response = await EventService.addEvent(data, action);
-        return response.data;
-      }
-      throw new Error("Invalid action type");
+      const response = await EventService.addEvent(data, action);
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to process event");
     }
@@ -180,20 +176,20 @@ const eventSlice = createSlice({
         console.log("AddEvent - Pending State");
         state.loading = true;
         state.error = null;
-        state.debugInfo = null;
+        state.responseMessage = null;
       })
       .addCase(addEvent.fulfilled, (state, action) => {
         console.log("AddEvent - Fulfilled", action.payload);
         state.loading = false;
         state.error = null;
-        state.successResponse = action.payload;
-        state.debugInfo = action.payload;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
       })
       .addCase(addEvent.rejected, (state, action) => {
         console.error("AddEvent - Rejected", action.payload);
         state.loading = false;
-        state.error = action.payload;
-        state.debugInfo = action.payload;
+        state.error = action.payload.data;
+        state.responseMessage = action.payload.status.message;
       })
       .addCase(editEvent.pending, (state) => {
         state.loading = true;

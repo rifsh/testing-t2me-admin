@@ -18,7 +18,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import utils from "utils";
-import { setDialogVisible, setSelectedItem } from "store/slices/statusModalSlice";
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
 const { Option } = Select;

@@ -10,7 +10,7 @@ import staticsReducer from './slices/staticsSlice';
 import coupons from "./slices/couponSlice";
 import tickets from "./slices/ticketSlice";
 import schedules from "./slices/scheduleSlice";
-import statusModal from "./slices/statusModalSlice.js";
+import modalSlice from "./slices/modalSlice.js";
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -26,7 +26,7 @@ const rootReducer = (asyncReducers = {}) => {
       coupons,
       tickets,
       schedules,
-      statusModal,
+      modalSlice,
       ...asyncReducers, 
     });
 

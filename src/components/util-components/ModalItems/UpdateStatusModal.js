@@ -5,7 +5,7 @@ import {
   resetStatusModalState,
   setDialogVisible,
   setModalLoading,
-} from "store/slices/statusModalSlice";
+} from "store/slices/modalSlice";
 import { ActionType } from "utils/api/warning-submit-util";
 import { message } from "antd";
 import { TextConstants } from "constants/TextConstant";
@@ -18,8 +18,8 @@ const UpdateStatusModal = ({
   responseMessage,
 }) => {
   const dispatch = useDispatch();
-  const { dialogVisible, selectedItem, modalLoading } = useSelector(
-    (state) => state.statusModal
+  const { statusDialogVisible, selectedItem, modalLoading } = useSelector(
+    (state) => state.modalSlice
   );
 
   useEffect(() => {
@@ -37,7 +37,7 @@ const UpdateStatusModal = ({
         }
       });
     }
-  }, [dialogVisible, dispatch, editFunction, selectedItem]);
+  }, [statusDialogVisible, dispatch, editFunction, selectedItem]);
 
   const handleModalSubmit = async () => {
     dispatch(setModalLoading(true));
@@ -57,13 +57,14 @@ const UpdateStatusModal = ({
   };
 
   const handleModalCancel = () => {
-    dispatch(setDialogVisible(false));
+    dispatch(resetStatusModalState());
+
     message.warning(onCloseMessage);
   };
 
   return (
     <WarningModal
-      visible={dialogVisible}
+      visible={statusDialogVisible}
       title={TextConstants.Confirm_Action}
       details={responseMessage || TextConstants.WantToProceed}
       warningMessage={TextConstants.WantToProceed}

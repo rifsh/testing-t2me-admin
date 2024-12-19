@@ -60,8 +60,7 @@ const CountryForm = ({ placeId }) => {
       const values = await form.validateFields();
 
       if (!placeId) {
-        // Adding a new place
-        const resultAction = await dispatch(createPlace(values));
+        const resultAction = await dispatch(createPlace({placeData:values, action: ActionType.SUBMIT}));
 
         if (createPlace.fulfilled.match(resultAction)) {
           message.success(`Place ${values.name} added successfully`);
@@ -80,7 +79,7 @@ const CountryForm = ({ placeId }) => {
 
         const data = {
           ...values,
-          placeId: placeId, // Ensure selectedPlace is defined here
+          placeId: placeId, 
         };
         console.log("Edit Data:", data);
 
@@ -180,6 +179,7 @@ const CountryForm = ({ placeId }) => {
         cancelText="Back"
         loading={modalLoading}
       />
+      
     </>
   );
 };
