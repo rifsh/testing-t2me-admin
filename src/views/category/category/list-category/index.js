@@ -35,7 +35,7 @@ import Utils from "utils";
 import {
   setDialogVisible,
   setSelectedItem,
-} from "store/slices/statusModalSlice";
+} from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
 const { TabPane } = Tabs;

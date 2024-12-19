@@ -11,13 +11,15 @@ LocationService.getAllCountries = function () {
   });
 };
 
-LocationService.addPlace = function (data) {
+LocationService.addPlace = function (data,action) {
+  const encodedAction = encodeURIComponent(handleAction(action)); 
   return fetch({
-    url: `${ApiConstant.PLACE_URL}?country_id=${data.country_id}`,
+    url: `${ApiConstant.PLACE_URL}?country_id=${data.country_id}&action=${encodedAction}`,
     method: "post",
     data: data,
   });
 };
+
   LocationService.editPlace = function (data, action) {
     const encodedAction = encodeURIComponent(handleAction(action));
     return fetch({
@@ -37,6 +39,14 @@ LocationService.editVenue = function (data, action) {
 LocationService.addVenue = function (data, placeId) {
   return fetch({
     url: `${ApiConstant.VENUE_URL}?place_id=${placeId}`,
+    method: "post",
+    data: data,
+  });
+};
+LocationService.addVenue =  function (data,action) {
+  const encodedAction = encodeURIComponent(handleAction(action)); 
+  return fetch({
+    url: `${ApiConstant.VENUE_URL}?place_id=${data.placeId}&action=${encodedAction}`,
     method: "post",
     data: data,
   });

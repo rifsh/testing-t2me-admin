@@ -12,18 +12,14 @@ import {
   setSubmitData,
   setCurrentStep,
   setSubmitLoading,
-  resetSelected,
-  setDialogVisible,
-  setSelectedEvent,
-  setModalLoading,
   resetState,
   checkEventValidation,
 } from "store/slices/eventSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { ActionType } from "utils/api/warning-submit-util";
-import ResponseShowModal from "components/util-components/ModalItems/ResponseShowModal";
+import { SubmitAndConfirmModal } from "../../../components/util-components/ModalItems/SubmitConfirmModal";
+import { setSelectedItem } from "store/slices/modalSlice";
 
 const MultyStepEventForm = () => {
   const steps = ["Event Details", "Category", "Location", "Ticket", "Offers"];
@@ -36,7 +32,8 @@ const MultyStepEventForm = () => {
     modalLoading,
     selectedEvent,
     submitLoading,
-    successResponse,
+    responseData,
+    responseMessage,
   } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -50,27 +47,29 @@ const MultyStepEventForm = () => {
     try {
       const values = await form.validateFields();
       const resultAction = await dispatch(checkEventValidation());
-  
+
       if (checkEventValidation.fulfilled.match(resultAction)) {
         dispatch(setSubmitData(values));
-  
-        if (currentStep < steps.length - 1) {
+
+        if (currentStep < steps.length ) {
           dispatch(setCurrentStep(currentStep + 1));
-        } else {
+        /* } else {
           message.success("You have reached the final step!");
-        }
+        */ }
       } else {
         const errorMessage =
           resultAction.payload || "Event validation failed. Please try again.";
         message.error(errorMessage);
       }
     } catch (error) {
-      message.error(error.message || "Please ensure all required fields are filled.");
+      message.error(
+        error.message || "Please ensure all required fields are filled."
+      );
     } finally {
       dispatch(setSubmitLoading(false));
     }
   };
-  
+
   const onFinish = async () => {
     try {
       dispatch(setSubmitLoading(true));
@@ -84,69 +83,13 @@ const MultyStepEventForm = () => {
         ...offers,
         max_tickets: parseInt(submitData.max_tickets || "0", 10),
       };
-      console.log(finalData, "fianl data");
-
-      const resultAction = await dispatch(
-        addEvent({
-          data: finalData,
-          action: ActionType.SUBMIT,
-        })
-      );
-
-      if (addEvent.fulfilled.match(resultAction)) {
-        dispatch(setSelectedEvent(finalData));
-        dispatch(setDialogVisible(true));
-      } else {
-        message.error("Event submission failed.");
-      }
+      dispatch(setSelectedItem(finalData));
     } catch (error) {
       console.error("Submission Error:", error);
       message.error("An error occurred during submission.");
     } finally {
       dispatch(setSubmitLoading(false));
     }
-  };
-
-  const handleModalSubmit = async () => {
-    try {
-      if (!selectedEvent) {
-        message.error("No event selected for confirmation.");
-        return;
-      }
-
-      dispatch(setModalLoading(true));
-
-      const resultAction = await dispatch(
-        addEvent({
-          data: selectedEvent,
-          action: ActionType.CONFIRM,
-        })
-      );
-
-      if (addEvent.fulfilled.match(resultAction)) {
-        message.success(
-          `Event "${selectedEvent.event_name}" activated successfully.`
-        );
-
-        form.resetFields();
-
-        dispatch(resetState());
-        dispatch(resetSelected());
-        navigate(`${APP_PREFIX_PATH}/event/list`);
-      } else {
-        message.error("Event activation failed.");
-      }
-    } catch (error) {
-      console.error("Confirmation Error:", error);
-      message.error("An error occurred during confirmation.");
-    } finally {
-      dispatch(setModalLoading(false));
-      dispatch(setDialogVisible(false));
-    }
-  };
-
-  const handleModalCancel = () => {
-    dispatch(setDialogVisible(false));
   };
 
   const prevStep = () => {
@@ -244,16 +187,12 @@ const MultyStepEventForm = () => {
           </Button>
         )}
       </div>
-      <ResponseShowModal
-        visible={dialogVisible}
-        title="Confirm Event Details"
-        jsonData={successResponse}
-        warningMessage="Review the event details before confirmation"
-        onSubmit={handleModalSubmit}
-        onCancel={handleModalCancel}
-        confirmText="Confirm Event"
-        cancelText="Cancel"
-        loading={modalLoading}
+      <SubmitAndConfirmModal onCloseMessage={'asdl'}
+        responseData={responseData}
+        addFunction={addEvent}
+        navigationPath={`${APP_PREFIX_PATH}/event/list`}
+        responseMessage={responseMessage}
+
       />
     </div>
   );

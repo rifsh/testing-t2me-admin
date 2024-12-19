@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { editCoupon, fetchAllCoupons, filterCoupons } from "store/slices/couponSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Utils from "utils";
-import { setSelectedItem } from "store/slices/statusModalSlice";
+import { setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 const { Option } = Select;
 
