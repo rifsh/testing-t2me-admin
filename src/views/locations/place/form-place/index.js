@@ -89,7 +89,7 @@ const CountryForm = ({ placeId }) => {
 
         const data = {
           ...values,
-          placeId: placeId,
+          id: placeId,
         };
         console.log("Edit Data:", data);
 

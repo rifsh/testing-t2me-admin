@@ -1,9 +1,9 @@
 import React from 'react';
-import OfferForm from '../form-user';
+import UserForm from '../form-user';
 
 const AddOffer = () => {
 	return (
-		<OfferForm mode="ADD" />
+		<UserForm mode="ADD" />
 	)
 }
 
