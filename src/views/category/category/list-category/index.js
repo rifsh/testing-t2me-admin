@@ -136,10 +136,10 @@ const CategoryList = () => {
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: "Parent Category",
-      dataIndex: "parent_category",
-      render: (_, record) => <span>{record.parent_category}</span>,
-      sorter: (a, b) => a.parent_category.localeCompare(b.parent_category),
+      title: "Category Name",
+      dataIndex: ["category","name"],
+      // render: (_, record) => <span>{record.parent_category}</span>,  
+      sorter: (a, b) => Utils.antdTableSorter(a, b, ["category", "name"]),
     },
     Utils.statusColumnUtil(handleUpdateStatus),
     {
