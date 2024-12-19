@@ -27,6 +27,8 @@ export const initialState = {
   statusFilter: "All",
   selectedCountry: null,
   createPlaceLoading: false,
+  responseData: null,
+  responseMessage: null,
 };
 
 export const fetchAllCountires = createAsyncThunk(
@@ -50,12 +52,11 @@ export const fetchAllCountires = createAsyncThunk(
 
 export const createPlace = createAsyncThunk(
   "place/create",
-  async (placeData, { rejectWithValue }) => {
+  async ({placeData, action}, { rejectWithValue }) => {
     try {
-      console.log(placeData);
 
-      const response = await LocationService.addPlace(placeData);
-      return response;
+      const response = await LocationService.addPlace(placeData, action);
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");
     }
@@ -332,12 +333,14 @@ const locationSlice = createSlice({
         state.error = null;
       })
       .addCase(createPlace.fulfilled, (state, action) => {
-        state.createPlaceLoading = false;
-        state.countries.push(action.payload);
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
       })
       .addCase(createPlace.rejected, (state, action) => {
         state.createPlaceLoading = false;
-        state.error = action.payload;
+        state.error = action.payload.data;
       })
       .addCase(fetchPlaceWithCountry.pending, (state) => {
         state.loading = true;

@@ -20,7 +20,7 @@ import {
   resetTicketSets,
 } from "store/slices/ticketSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { setSelectedItem } from "store/slices/statusModalSlice";
+import { setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 const { Panel } = Collapse;

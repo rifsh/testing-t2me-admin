@@ -11,7 +11,7 @@ import {
   filterSchedules,
 } from "store/slices/scheduleSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
-import { setSelectedItem } from "store/slices/statusModalSlice";
+import { setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 
 const { Option } = Select;
