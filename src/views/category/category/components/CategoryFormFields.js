@@ -4,6 +4,8 @@ import { addCategory, updateCategory } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -20,7 +22,9 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { loading, error } = useSelector((state) => state.category);
+  const { loading, error, responseData, responseMessage } = useSelector(
+    (state) => state.category
+  );
 
   // Handle error message
   useEffect(() => {
@@ -35,7 +39,6 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
       form.setFieldsValue({
         name: category.name,
         description: category.description,
-        
       });
     }
   }, [mode, category, form]);
@@ -45,14 +48,18 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
       const values = await form.validateFields();
 
       if (mode === ADD) {
-        const resultAction = await dispatch(addCategory(values));
-        if (addCategory.fulfilled.match(resultAction)) {
-          message.success(`Category ${values.name} added successfully`);
-          form.resetFields();
-          navigate(`${APP_PREFIX_PATH}/category/list`);
-        }
+        dispatch(setSelectedSubmitItem(values));
+
+        // const resultAction = await dispatch(addCategory(values));
+        // if (addCategory.fulfilled.match(resultAction)) {
+        //   message.success(`Category ${values.name} added successfully`);
+        //   form.resetFields();
+        //   navigate(`${APP_PREFIX_PATH}/category/list`);
+        // }
       } else if (mode === EDIT) {
-        const resultAction = await dispatch(updateCategory({ id: category.id, ...values }));
+        const resultAction = await dispatch(
+          updateCategory({ id: category.id, ...values })
+        );
         if (updateCategory.fulfilled.match(resultAction)) {
           message.success(`Category ${values.name} updated successfully`);
           navigate(`${APP_PREFIX_PATH}/category/list`);
@@ -89,20 +96,24 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
                 gap: 10,
               }}
             >
-              <Button onClick={() => navigate(`${APP_PREFIX_PATH}/category/list`)}>
+              <Button
+                onClick={() => navigate(`${APP_PREFIX_PATH}/category/list`)}
+              >
                 Discard
               </Button>
-              <Button
-                type="primary"
-                onClick={onFinish}
-                loading={loading}
-              >
+              <Button type="primary" onClick={onFinish} loading={loading}>
                 {mode === ADD ? "Add" : "Update"}
               </Button>
             </div>
           </Form>
         </Card>
       </Col>
+      <SubmitAndConfirmModal
+        responseData={responseData}
+        addFunction={addCategory}
+        navigationPath={`${APP_PREFIX_PATH}/category/list`}
+        responseMessage={responseMessage}
+      />
     </Row>
   );
 };

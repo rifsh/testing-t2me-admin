@@ -10,6 +10,8 @@ export const initialState = {
   isDateRequired: false,
   error: null,
   message: null,
+  responseData: null,
+  responseMessage: null,
 };
 export const fetchAllOffers = createAsyncThunk(
   "offer/fetchAll",
@@ -30,9 +32,9 @@ export const fetchAllOffers = createAsyncThunk(
 
 export const addOffer = createAsyncThunk(
   "offer/add",
-  async (offerData, { rejectWithValue }) => {
+  async ({ data, action }, { rejectWithValue }) => {
     try {
-      const response = await OfferService.addOffer(offerData);
+      const response = await OfferService.addOffer(data, action);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");
@@ -108,6 +110,20 @@ const offerSlice = createSlice({
       .addCase(fetchAllOffers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(addOffer.pending, (state) => {
+        state.createPlaceLoading = true;
+        state.error = null;
+      })
+      .addCase(addOffer.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(addOffer.rejected, (state, action) => {
+        state.createPlaceLoading = false;
+        state.error = action.payload.data;
       });
   },
 });

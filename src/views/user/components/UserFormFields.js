@@ -10,7 +10,11 @@ const rules = {
   email: [
     {
       required: true,
-      message: "Please enter email address",
+      message: "Please enter an email address",
+    },
+    {
+      type: "email",
+      message: "Please enter a valid email address",
     },
   ],
   password: [
@@ -33,7 +37,7 @@ const rules = {
   ],
 };
 
-function CouponFormFields(props) {
+function CouponFormFields() {
   const dispatch = useDispatch();
   const { roles, loading, selectedRole } = useSelector((state) => state.users);
   const { filteredEvents, loading: eventLoading } = useSelector(
@@ -55,11 +59,11 @@ function CouponFormFields(props) {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="User Details">
-          <Form.Item name="userName" label="User Name" rules={rules.name}>
+          <Form.Item name="username" label="User Name" rules={rules.name}>
             <Input placeholder="Enter User Name" />
           </Form.Item>
           <Form.Item
-            name="emailAddress"
+            name="email"
             label="Email Address"
             rules={rules.email}
           >
@@ -100,6 +104,7 @@ function CouponFormFields(props) {
           )}
         </Card>
       </Col>
+
     </Row>
   );
 }

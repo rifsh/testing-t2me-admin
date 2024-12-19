@@ -16,44 +16,11 @@ const TicketForm = props => {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  useEffect(() => {
-    if (mode === EDIT) {
-      console.log('is edit');
-      console.log('props', props);
-      const { id } = param;
-      const productId = parseInt(id);
-      const productData = ProductListData.filter((product) => product.id === productId);
-      const product = productData[0];
-      form.setFieldsValue({
-        comparePrice: 0.00,
-        cost: 0.00,
-        taxRate: 6,
-        description: 'There are many variations of passages of Lorem Ipsum available.',
-        category: product.category,
-        name: product.name,
-        price: product.price,
-      });
-      setImage(product.image);
-    }
-  }, [form, mode, param, props]);
-
-  const handleUploadChange = info => {
-    if (info.file.status === 'uploading') {
-      setUploadLoading(true);
-      return;
-    }
-    if (info.file.status === 'done') {
-    //   getBase64(info.file.originFileObj, (imageUrl) => {
-    //     setImage(imageUrl);
-    //     setUploadLoading(true);
-    //   });
-    }
-  };
-
+ 
   const onFinish = () => {
     setSubmitLoading(true);
     form.validateFields().then(values => {
-      // Transform form data into the expected format
+    
       const formData = {
         venue_id: values.venue,
         base_price: values.basePrice,

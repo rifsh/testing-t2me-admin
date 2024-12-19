@@ -27,7 +27,7 @@ const { Panel } = Collapse;
 
 const TicketList = () => {
   const dispatch = useDispatch();
-  const { filteredTickets, loading, searchTerm, message } = useSelector(
+  const { filteredTickets, searchTerm, message } = useSelector(
     (state) => state.tickets
   );
 
@@ -43,10 +43,10 @@ const TicketList = () => {
   const [selectedVenue, setSelectedVenue] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const showDetails = (venue) => {
-    setSelectedVenue(venue);
-    setIsModalVisible(true);
-  };
+  // const showDetails = (venue) => {
+  //   setSelectedVenue(venue);
+  //   setIsModalVisible(true);
+  // };
 
   const handleCancel = () => {
     setIsModalVisible(false);
@@ -171,7 +171,9 @@ const TicketList = () => {
                     </Panel>
                   ))
                 ) : (
-                  <span>No ticket types available</span>
+                  <Panel collapsible="disabled" header={'No ticket types available'}>
+                    
+                  </Panel>
                 )}
               </Collapse>
             ),

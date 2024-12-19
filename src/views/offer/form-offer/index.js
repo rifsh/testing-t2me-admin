@@ -1,4 +1,4 @@
-import React, {  useEffect } from "react";
+import React, { useEffect } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import { Tabs, Form, Button, message } from "antd";
 import Flex from "components/shared-components/Flex";
@@ -8,21 +8,22 @@ import { addOffer, setIsDateRequired } from "store/slices/offerSlice";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import moment from "moment/moment";
-
-
+import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
+import { setSelectedSubmitItem } from "store/slices/modalSlice";
 
 const ADD = "ADD";
 // const EDIT = "EDIT";
 
 const OfferForm = (props) => {
-  const { mode = ADD,  } = props;
-  const { loading, error ,isDateRequired} = useSelector((state) => state.offers);
+  const { mode = ADD } = props;
+  const { loading, error, isDateRequired, responseData, responseMessage } =
+    useSelector((state) => state.offers);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(setIsDateRequired(false))
+    dispatch(setIsDateRequired(false));
     if (error) {
       message.error(error);
     }
@@ -31,19 +32,21 @@ const OfferForm = (props) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      if(isDateRequired){
-      values.start_date = moment(values.start_date).format("YYYY-MM-DD");
-      values.end_date = moment(values.end_date).format("YYYY-MM-DD");}
-      values.key_words=values.key_words??[]
-      values.date_required=values.date_required??isDateRequired
-      const resultAction = await dispatch(addOffer(values));
-      if (addOffer.fulfilled.match(resultAction)) {
-        message.success(`Offer ${values.name} added successfully`);
-        form.resetFields();
-        navigate(`${APP_PREFIX_PATH}/offer/list`);
-      } else {
-        message.error("Failed to add the offer. Please try again.");
+      if (isDateRequired) {
+        values.start_date = moment(values.start_date).format("YYYY-MM-DD");
+        values.end_date = moment(values.end_date).format("YYYY-MM-DD");
       }
+      values.key_words = values.key_words ?? [];
+      values.date_required = values.date_required ?? isDateRequired;
+       dispatch(setSelectedSubmitItem(values));
+      // const resultAction = await dispatch(addOffer(values));
+      // if (addOffer.fulfilled.match(resultAction)) {
+      //   message.success(`Offer ${values.name} added successfully`);
+      //   form.resetFields();
+      //   navigate(`${APP_PREFIX_PATH}/offer/list`);
+      // } else {
+      //   message.error("Failed to add the offer. Please try again.");
+      // }
     } catch (info) {
       console.error("Validation Failed:", info);
       message.error("Please enter all required fields.");
@@ -102,6 +105,12 @@ const OfferForm = (props) => {
           />
         </div>
       </Form>
+      <SubmitAndConfirmModal
+        responseData={responseData}
+        addFunction={addOffer}
+        navigationPath={`${APP_PREFIX_PATH}/offer/list`}
+        responseMessage={responseMessage}
+      />
     </>
   );
 };

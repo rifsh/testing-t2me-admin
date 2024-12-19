@@ -12,6 +12,8 @@ export const initialState = {
   message: null,
   roles: [],
   selectedRole: null,
+  responseData: null,
+  responseMessage: null,
 };
 
 export const fetchAllUsers = createAsyncThunk(
@@ -39,9 +41,9 @@ export const fetchAllRoles = createAsyncThunk(
 
 export const createUser = createAsyncThunk(
   "users/create",
-  async (userData, { rejectWithValue }) => {
+  async ({ data, action }, { rejectWithValue }) => {
     try {
-      const response = await UserService.createUser(userData);
+      const response = await UserService.createUser(data, action);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");
@@ -123,17 +125,18 @@ const userSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(createUser.pending, (state) => {
-        state.createUserLoading = true;
+        state.createPlaceLoading = true;
         state.error = null;
       })
       .addCase(createUser.fulfilled, (state, action) => {
-        state.createUserLoading = false;
-        state.list.push(action.payload);
-        state.filteredUsers.push(action.payload);
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
       })
       .addCase(createUser.rejected, (state, action) => {
-        state.createUserLoading = false;
-        state.error = action.payload;
+        state.createPlaceLoading = false;
+        state.error = action.payload.data;
       })
       .addCase(editUser.pending, (state) => {
         state.loading = true;

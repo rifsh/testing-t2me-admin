@@ -36,17 +36,11 @@ LocationService.editVenue = function (data, action) {
     data: data,
   });
 };
-LocationService.addVenue = function (data, placeId) {
-  return fetch({
-    url: `${ApiConstant.VENUE_URL}?place_id=${placeId}`,
-    method: "post",
-    data: data,
-  });
-};
+
 LocationService.addVenue =  function (data,action) {
   const encodedAction = encodeURIComponent(handleAction(action)); 
   return fetch({
-    url: `${ApiConstant.VENUE_URL}?place_id=${data.placeId}&action=${encodedAction}`,
+    url: `${ApiConstant.VENUE_URL}?place_id=${data.place_id}&action=${encodedAction}`,
     method: "post",
     data: data,
   });

@@ -16,7 +16,10 @@ import {
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
-import { setSelectedItem } from "store/slices/modalSlice";
+import {
+  setSelectedItem,
+  setSelectedSubmitItem,
+} from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 
 const CountryForm = ({ placeId }) => {
@@ -28,10 +31,11 @@ const CountryForm = ({ placeId }) => {
     loading,
     error,
     detailedCountryList,
-    dialogVisible,responseData,
+    dialogVisible,
+    responseData,
+    responseMessage,
     modalLoading,
     selectedPlace,
-    responseMessage,
     filteredPlaces,
     message: warningMessage,
   } = useSelector((state) => state.locations);
@@ -63,8 +67,8 @@ const CountryForm = ({ placeId }) => {
       const values = await form.validateFields();
 
       if (!placeId) {
-        dispatch(setSelectedItem(values));
-          // form.resetFields();
+        dispatch(setSelectedSubmitItem(values));
+        // form.resetFields();
         // const resultAction = await dispatch(
         //   createPlace({ placeData: values, action: ActionType.SUBMIT })
         // );
@@ -85,7 +89,7 @@ const CountryForm = ({ placeId }) => {
 
         const data = {
           ...values,
-          placeId: placeId,
+          id: placeId,
         };
         console.log("Edit Data:", data);
 
@@ -186,7 +190,6 @@ const CountryForm = ({ placeId }) => {
         loading={modalLoading}
       />
       <SubmitAndConfirmModal
-        
         responseData={responseData}
         addFunction={createPlace}
         navigationPath={`${APP_PREFIX_PATH}/place/list`}

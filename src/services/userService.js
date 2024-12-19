@@ -31,20 +31,13 @@ UserService.editUser = function (data, action) {
     data: data,
   });
 };
-UserService.createUser = function (userData) {
+UserService.createUser = function (data,action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: "/api/v1/auth/secured/register/",
+    url: `${ApiConstant.REGISTER_USER_URL}?action=${encodedAction}`,
     method: "post",
-    data: userData,
-  })
-    .then((response) => {
-      console.log("User created:", response.data);
-      return response.data;
-    })
-    .catch((error) => {
-      console.log("Error creating user:", error);
-      throw error;
-    });
+    data: data,
+  });
 };
 
 export default UserService;

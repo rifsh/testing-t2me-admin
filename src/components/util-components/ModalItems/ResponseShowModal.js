@@ -14,9 +14,9 @@ const ResponseShowModal = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
   loading = false,
-  jsonData = null, // JSON data to display
+  jsonData = null, 
 }) => {
-  // Generate table data dynamically from jsonData
+
   const tableData = useMemo(() => {
     if (!jsonData) return [];
     return Object.entries(jsonData).map(([key, value], index) => ({

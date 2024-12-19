@@ -1,17 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  ALL_COUPONS_MOCK_API,
-  ENABLE_MOCK_API,
-} from "configs/MockConfig";
+import { ALL_COUPONS_MOCK_API, ENABLE_MOCK_API } from "configs/MockConfig";
 import CouponMockData from "mock/data/couponData";
 import CouponService from "services/CouponService";
 
 export const initialState = {
   loading: false,
   coupons: [],
-  filteredCoupons: [], 
+  filteredCoupons: [],
   error: null,
   message: null,
+  responseData: null,
+  responseMessage: null,
 };
 export const fetchAllCoupons = createAsyncThunk(
   "coupon/fetchAll",
@@ -32,9 +31,9 @@ export const fetchAllCoupons = createAsyncThunk(
 
 export const addCoupon = createAsyncThunk(
   "coupon/add",
-  async (couponData, { rejectWithValue }) => {
+  async ({ data, action }, { rejectWithValue }) => {
     try {
-      const response = await CouponService.addCoupon(couponData);
+      const response = await CouponService.addCoupon(data, action);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");
@@ -81,20 +80,20 @@ const couponSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-     .addCase(editCoupon.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-          })
-          .addCase(editCoupon.fulfilled, (state, { payload }) => {
-            state.loading = false;
-            if (payload.message) {
-              state.message = payload.message;
-            }
-          })
-          .addCase(editCoupon.rejected, (state, { payload }) => {
-            state.loading = false;
-            state.error = payload || "Failed to edit event";
-          })
+      .addCase(editCoupon.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editCoupon.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+        }
+      })
+      .addCase(editCoupon.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
       .addCase(fetchAllCoupons.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -107,6 +106,20 @@ const couponSlice = createSlice({
       .addCase(fetchAllCoupons.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(addCoupon.pending, (state) => {
+        state.createPlaceLoading = true;
+        state.error = null;
+      })
+      .addCase(addCoupon.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(addCoupon.rejected, (state, action) => {
+        state.createPlaceLoading = false;
+        state.error = action.payload.data;
       });
   },
 });
