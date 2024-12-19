@@ -52,11 +52,11 @@ export const fetchAllCountires = createAsyncThunk(
 
 export const createPlace = createAsyncThunk(
   "place/create",
-  async ({placeData, action}, { rejectWithValue }) => {
+  async ({data, action}, { rejectWithValue }) => {
     try {
 
-      const response = await LocationService.addPlace(placeData, action);
-      return response.data;
+      const response = await LocationService.addPlace(data, action);
+      return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");
     }
