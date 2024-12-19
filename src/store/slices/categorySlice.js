@@ -13,16 +13,18 @@ const initialState = {
   subcategories: [],
   filteredCategories: [],
   searchTerm: "",
+  responseData:null,
+  responseMessage:null,
   selectedCategoryId: null,
   error: null,
   message: null,
 };
 export const addCategory = createAsyncThunk(
   "category/add",
-  async (data, { rejectWithValue }) => {
+  async ({data, action}, { rejectWithValue }) => {
     try {
-      const response = await CategoryService.addCategory(data);
-      return response.data;
+      const response = await CategoryService.addCategory(data, action);
+      return response;
     } catch (err) {
       const errorMessage =
         err.response?.data?.message || "Failed to add category";
@@ -123,9 +125,11 @@ const categorySlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(addCategory.fulfilled, (state, { payload }) => {
+      .addCase(addCategory.fulfilled, (state, action) => {
         state.loading = false;
-        state.categories.push(payload);
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
       })
       .addCase(addCategory.rejected, (state, { payload }) => {
         state.loading = false;

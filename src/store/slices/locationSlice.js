@@ -99,12 +99,11 @@ export const fetchPlaceWithCountry = createAsyncThunk(
 
 export const addVenue = createAsyncThunk(
   "locations/addVenue",
-  async ({ data, placeId }, { rejectWithValue }) => {
+  async ({ data, action }, { rejectWithValue }) => {
     try {
-      console.log("venue data", data, "id", placeId);
 
-      const response = await LocationService.addVenue(data, placeId);
-      return response.data;
+      const response = await LocationService.addVenue(data, action);
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to add venue");
     }
@@ -353,8 +352,11 @@ const locationSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
-      .addCase(addVenue.fulfilled, (state) => {
+      .addCase(addVenue.fulfilled,(state, action) => {
         state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
       })
       .addCase(addVenue.rejected, (state, { payload }) => {
         state.loading = false;

@@ -1,12 +1,13 @@
 import fetch from "auth/FetchInterceptor";
-import {  ApiConstant,  } from "constants/ApiConstant";
+import { ApiConstant } from "constants/ApiConstant";
 import { handleAction } from "utils/api/warning-submit-util";
 
-const     CategoryService = {};
+const CategoryService = {};
 
-CategoryService.addCategory = function (data) {
+CategoryService.addCategory = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: ApiConstant.CATEGORY_URL,
+    url: `${ApiConstant.CATEGORY_URL}?action=${encodedAction}`,
     method: "post",
     data: data,
   });
@@ -23,7 +24,7 @@ CategoryService.updateCategory = function (data, action) {
 
 CategoryService.fetchCategory = function () {
   return fetch({
-    url:ApiConstant.CATEGORY_URL,
+    url: ApiConstant.CATEGORY_URL,
     method: "get",
   });
 };

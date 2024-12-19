@@ -51,11 +51,12 @@ const MultyStepEventForm = () => {
       if (checkEventValidation.fulfilled.match(resultAction)) {
         dispatch(setSubmitData(values));
 
-        if (currentStep < steps.length ) {
+        if (currentStep < steps.length) {
           dispatch(setCurrentStep(currentStep + 1));
-        /* } else {
+          /* } else {
           message.success("You have reached the final step!");
-        */ }
+        */
+        }
       } else {
         const errorMessage =
           resultAction.payload || "Event validation failed. Please try again.";
@@ -187,12 +188,11 @@ const MultyStepEventForm = () => {
           </Button>
         )}
       </div>
-      <SubmitAndConfirmModal onCloseMessage={'asdl'}
+      <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addEvent}
         navigationPath={`${APP_PREFIX_PATH}/event/list`}
         responseMessage={responseMessage}
-
       />
     </div>
   );

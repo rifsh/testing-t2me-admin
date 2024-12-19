@@ -22,7 +22,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllUsers, filterUsers, editUser } from "store/slices/userSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import {
-  setDialogVisible,
   setSelectedItem,
 } from "store/slices/modalSlice";
 import Utils from "utils";
