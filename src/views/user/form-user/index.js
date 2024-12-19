@@ -30,8 +30,7 @@ const UserForm = (props) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-    console.log(values, 'slserjwkavalue');
-	
+
       dispatch(setSelectedSubmitItem(values));
     } catch (info) {
       console.error("Validation Failed:", info);

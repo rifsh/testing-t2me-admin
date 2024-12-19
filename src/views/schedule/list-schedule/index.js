@@ -43,9 +43,14 @@ const ScheduleList = () => {
   };
   const tableColumns = [
     {
-      title: "Event",
-      dataIndex: "event_id",
+      title: "Schedule Name",
+      dataIndex: "name",
       sorter: (a, b) => a.event.localeCompare(b.event),
+    },
+    {
+      title: "Event",
+      dataIndex: ["event", "event_name"],
+      sorter: (a, b) => Utils.antdTableSorter(a, b, ["event", "event_name"]),
     },
     {
       title: "Start Time",

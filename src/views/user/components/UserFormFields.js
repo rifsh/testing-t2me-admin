@@ -10,7 +10,11 @@ const rules = {
   email: [
     {
       required: true,
-      message: "Please enter email address",
+      message: "Please enter an email address",
+    },
+    {
+      type: "email",
+      message: "Please enter a valid email address",
     },
   ],
   password: [

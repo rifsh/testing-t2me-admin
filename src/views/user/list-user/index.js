@@ -103,8 +103,8 @@ const UserList = () => {
     },
     {
       title: "Role",
-      dataIndex: "role",
-      sorter: (a, b) => a.role.localeCompare(b.role),
+      dataIndex: ["role", "name"],
+      sorter: (a, b) => Utils.antdTableSorter(a, b, ["role", "name"]),
     },
     Utils.statusColumnUtil(handleUpdateStatus),
     {
