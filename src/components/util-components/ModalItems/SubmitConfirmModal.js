@@ -22,14 +22,14 @@ export const SubmitAndConfirmModal = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { responseDialogVisible, selectedItem, modalLoading } = useSelector(
+  const { responseDialogVisible, selectedSubmitItem, modalLoading } = useSelector(
     (state) => state.modalSlice
   );
 
   useEffect(() => {
-    if (selectedItem) {
+    if (selectedSubmitItem) {
       dispatch(
-        addFunction({ data: selectedItem, action: ActionType.SUBMIT })
+        addFunction({ data: selectedSubmitItem, action: ActionType.SUBMIT })
       ).then((result) => {
         if (addFunction.fulfilled.match(result)) {
           dispatch(setResponseDialogVisible(true));
@@ -39,11 +39,11 @@ export const SubmitAndConfirmModal = ({
         }
       });
     }
-  }, [selectedItem, dispatch, addFunction]);
+  }, [selectedSubmitItem, dispatch, addFunction]);
 
   const handleModalSubmit = async () => {
     try {
-      if (!selectedItem) {
+      if (!selectedSubmitItem) {
         message.error(TextConstants.NoItemSelected);
         return;
       }
@@ -51,7 +51,7 @@ export const SubmitAndConfirmModal = ({
       dispatch(setModalLoading(true));
 
       const resultAction = await dispatch(
-        addFunction({ data: selectedItem, action: ActionType.CONFIRM })
+        addFunction({ data: selectedSubmitItem, action: ActionType.CONFIRM })
       );
 
       if (addFunction.fulfilled.match(resultAction)) {
@@ -71,7 +71,7 @@ export const SubmitAndConfirmModal = ({
   };
 
   const handleModalCancel = () => {
-    dispatch(setResponseDialogVisible(false));
+    dispatch(resetStatusModalState());
     message.warning(onCloseMessage);
   };
 

@@ -1,12 +1,12 @@
 import React from 'react'
-import EventForm from '../components';
 import { useParams } from 'react-router-dom';
+import CouponForm from '../form-coupon';
 
 const EditEvent = () => {
 	const params = useParams();
 
 	return (
-		<EventForm mode="EDIT" param={params}/>
+		<CouponForm mode="EDIT" param={params}/>
 	)
 }
 

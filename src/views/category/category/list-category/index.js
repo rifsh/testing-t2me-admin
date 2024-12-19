@@ -1,81 +1,69 @@
-import React, { useEffect } from "react";
-import {
-  Card,
-  Table,
-  Input,
-  Tabs,
-  Button,
-  Select,
-  Menu,
-  Dropdown,
-  message,
-} from "antd";
+import React, { useEffect, useState } from "react";
+import { Card, Table, Input, Tabs, Button, Select, Menu, message } from "antd";
 import {
   FormOutlined,
   SearchOutlined,
   EyeOutlined,
   PlusCircleOutlined,
-  EllipsisOutlined,
 } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
-import Loading from "components/shared-components/Loading";
-import { updateCategory } from "store/slices/categorySlice";
-import utils from "utils";
-
+import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchCategories,
-  fetchSubcategories,
-  setSearchTerm,
-  setActiveTab,
-} from "store/slices/categorySlice";
+// import {
+//   fetchCategories,
+//   fetchSubcategories,
+//   setSearchTerm,
+//   setActiveTab,
+//   updateCategory,
+//   filterCategories,
+// } from "store/slices/categorySlice";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Utils from "utils";
-import {
-  setDialogVisible,
-  setSelectedItem,
-} from "store/slices/modalSlice";
+import { setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import {
+  fetchSubcategories,
+  setSearchTerm,
+  setActiveTab,
+  updateCategory,
+  filterCategories,
+  fetchCategories,
+  editSubCategory,
+} from "store/slices/categorySlice";
 
 const { TabPane } = Tabs;
-
-const EllipsisDropdown = ({ menu }) => (
-  <Dropdown overlay={menu} trigger={["click"]}>
-    <Button icon={<EllipsisOutlined />} type="text" />
-  </Dropdown>
-);
+const { Option } = Select;
 
 const CategoryList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const {
     filteredCategories,
     subcategories,
-    selectedCategoryId,
     loading,
-    message,
+    message: responseMessage,
     activeTab,
   } = useSelector((state) => state.category);
 
   useEffect(() => {
     dispatch(fetchCategories());
+    dispatch(fetchSubcategories());
   }, [dispatch]);
 
-  const handleSearch = (e) => {
-    dispatch(setSearchTerm(e.target.value));
+  const handleSearch = (value) => {
+    dispatch(filteredCategories({ searchTerm: value, status: null }));
   };
 
-  const handleRowClick = (record) => {
-    dispatch(fetchSubcategories(record.id));
-    dispatch(setActiveTab("subcategories"));
+  const handleShowStatus = (status) => {
+    dispatch(filteredCategories({ searchTerm: null, status }));
   };
 
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
-
     dispatch(setSelectedItem(data));
   };
 
@@ -83,80 +71,86 @@ const CategoryList = () => {
     dispatch(setActiveTab(key));
   };
 
-  const dropdownMenu = (row) => {
-    return (
-      <Menu>
-        <Menu.Item
-          key="1"
-          onClick={() =>
-            navigate(`${APP_PREFIX_PATH}/category/edit`, {
-              state: { mode: "EDIT", id: row.id },
-            })
-          }
-        >
-          <Flex alignItems="center">
-            <EyeOutlined />
-            <span className="ml-2">Edit Details</span>
-          </Flex>
-        </Menu.Item>
-        <Menu.Item
-          key="2"
-          onClick={async () => {
-            try {
-              // Dispatch updateCategory with toggled status
-              const resultAction = await dispatch(
-                updateCategory({ id: row.id, status: false })
-              );
-
-              if (updateCategory.fulfilled.match(resultAction)) {
-                message.success(`Category ${row.name} status updated `);
-                navigate(`${APP_PREFIX_PATH}/category/list`);
-              }
-            } catch (error) {
-              message.error("Failed to update category status");
-              console.error(error);
-            }
-          }}
-        >
-          <Flex alignItems="center">
-            <PlusCircleOutlined />
-            <span className="ml-2">Block</span> {/* Change button text */}
-          </Flex>
-        </Menu.Item>
-      </Menu>
-    );
+  const handleCategorySelect = (value) => {
+    setSelectedCategory(value);
+    dispatch(fetchSubcategories(value));
   };
+
+  const dropdownMenu = (row) => (
+    <Menu>
+      <Menu.Item
+        onClick={() => navigate(`${APP_PREFIX_PATH}/category/edit/${row.id}`)}
+      >
+        <Flex alignItems="center">
+          <EyeOutlined />
+          <span className="ml-2">View Details</span>
+        </Flex>
+      </Menu.Item>
+      <Menu.Item>
+        <Flex alignItems="center">
+          <PlusCircleOutlined />
+          <span className="ml-2">Add to remark</span>
+        </Flex>
+      </Menu.Item>
+    </Menu>
+  );
+  const truncateText = (text, maxLength = 50) => {
+    if (!text) return "";
+    return text.length > maxLength
+      ? `${text.substring(0, maxLength)}...`
+      : text;
+  };
+
+  // Adjusted columns
   const categoryColumns = [
     {
       title: "Category Name",
       dataIndex: "name",
+      render: (_, record) => <span>{record.name}</span>,
       sorter: (a, b) => a.name.localeCompare(b.name),
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      render: (_, record) => <span>{truncateText(record.description)}</span>,
+      sorter: (a, b) =>
+        (a.description || "").localeCompare(b.description || ""),
     },
     Utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "",
       dataIndex: "actions",
-      render: (_, elm) => {
-        console.log(elm, "Actions data");
-        return (
-          <div className="text-right">
-            <EllipsisDropdown menu={dropdownMenu(elm)} />
-          </div>
-        );
-      },
+      render: (_, record) => (
+        <div className="text-right">
+          <EllipsisDropdown menu={dropdownMenu(record)} />
+        </div>
+      ),
     },
   ];
 
   const subCategoryColumns = [
     {
-      title: "ID",
-      dataIndex: "id",
-    },
-    {
       title: "Subcategory Name",
       dataIndex: "name",
+      render: (_, record) => <span>{record.name}</span>,
+      sorter: (a, b) => a.name.localeCompare(b.name),
+    },
+    {
+      title: "Category Name",
+      dataIndex: ["category","name"],
+      // render: (_, record) => <span>{record.parent_category}</span>,  
+      sorter: (a, b) => Utils.antdTableSorter(a, b, ["category", "name"]),
     },
     Utils.statusColumnUtil(handleUpdateStatus),
+    {
+      title: "",
+      dataIndex: "actions",
+      render: (_, record) => (
+        <div className="text-right">
+          <EllipsisDropdown menu={dropdownMenu(record)} />
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -167,75 +161,98 @@ const CategoryList = () => {
         mobileFlex={false}
       >
         <Flex className="mb-1" mobileFlex={false}>
-          <Input
-            placeholder="Search Categories"
-            prefix={<SearchOutlined />}
-            onChange={handleSearch}
-            className="mr-md-3 mb-3"
-          />
-          <Select
-            defaultValue="All"
-            className="w-100"
-            style={{ minWidth: 180 }}
-            placeholder="Status"
-          >
-            <Select.Option value="All">All</Select.Option>
-            <Select.Option value="Active">Active</Select.Option>
-            <Select.Option value="Inactive">Inactive</Select.Option>
-          </Select>
+          <div className="mr-md-3 mb-3">
+            <Input
+              placeholder="Search"
+              prefix={<SearchOutlined />}
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+          </div>
+          <div className="mb-3">
+            <Select
+              defaultValue="All"
+              className="w-100"
+              style={{ minWidth: 180 }}
+              onChange={handleShowStatus}
+              placeholder="Status"
+            >
+              <Option value="All">All Categories</Option>
+              <Option value="Active">Active</Option>
+              <Option value="Inactive">Inactive</Option>
+            </Select>
+          </div>
         </Flex>
-        <Button
-          type="primary"
-          icon={<FormOutlined />}
-          onClick={() =>
-            navigate(`${APP_PREFIX_PATH}/category/add`, {
-              state: { mode: "ADD" },
-            })
-          }
-        >
-          Add Category
-        </Button>
+        <div>
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            block
+            onClick={() => navigate(`${APP_PREFIX_PATH}/category/add`)}
+          >
+            Add Category
+          </Button>
+        </div>
       </Flex>
-      <div style={{ marginTop: 20 }}>
-        {loading ? (
-          <Loading />
-        ) : (
-          <Tabs activeKey={activeTab} onChange={handleTabChange}>
-            <TabPane tab="Categories" key="categories">
-              <Table
-                columns={categoryColumns}
-                dataSource={filteredCategories}
-                rowKey="id"
-                pagination={false}
-                onRow={(record) => ({
-                  onClick: (event) => {
-                    if (!event.target.closest(".ant-dropdown-trigger")) {
-                      handleRowClick(record);
-                    }
-                  },
-                })}
-              />
-            </TabPane>
-            <TabPane tab="Subcategories" key="subcategories">
-              {subcategories.length > 0 ? (
-                <Table
-                  columns={subCategoryColumns}
-                  dataSource={subcategories}
-                  rowKey="id"
-                  pagination={false}
-                />
-              ) : (
-                <p>No Subcategories</p>
-              )}
-            </TabPane>
-          </Tabs>
-        )}
-      </div>
-      <UpdateStatusModal
-        responseMessage={message}
-        editFunction={updateCategory}
-        getAllFunction={fetchCategories}
-      />{" "}
+
+      <Tabs activeKey={activeTab} onChange={handleTabChange}>
+        <TabPane tab="Categories" key="categories">
+          <div className="table-responsive">
+            <Table
+              columns={categoryColumns}
+              dataSource={filteredCategories}
+              rowKey="id"
+              loading={loading}
+              pagination={{
+                pageSize: 10,
+                // showSizeChanger: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} items`,
+              }}
+            />
+            <UpdateStatusModal
+              responseMessage={responseMessage}
+              editFunction={updateCategory}
+              getAllFunction={fetchCategories}
+            />
+          </div>
+        </TabPane>
+        <TabPane tab="Subcategories" key="subcategories">
+          <div className="mb-3">
+            <Select
+              placeholder="Select Category"
+              className="mb-3"
+              style={{ minWidth: 180 }}
+              onChange={handleCategorySelect}
+              value={selectedCategory}
+            >
+              {filteredCategories.map((category) => (
+                <Option key={category.id} value={category.id}>
+                  {category.name}
+                </Option>
+              ))}
+            </Select>
+          </div>
+          <div className="table-responsive">
+            <Table
+              columns={subCategoryColumns}
+              dataSource={subcategories}
+              rowKey="subId"
+              loading={loading}
+              pagination={{
+                pageSize: 10,
+                // showSizeChanger: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} items`,
+              }}
+            />
+            <UpdateStatusModal
+              responseMessage={responseMessage}
+              editFunction={editSubCategory}
+              getAllFunction={fetchSubcategories}
+            />
+          </div>
+        </TabPane>
+      </Tabs>
     </Card>
   );
 };

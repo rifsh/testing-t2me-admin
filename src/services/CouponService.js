@@ -4,9 +4,11 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const CouponService = {};
 
-CouponService.addCoupon = function (data) {
+
+CouponService.addCoupon = function (data,action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: ApiConstant.COUPON_URL,
+    url: `${ApiConstant.COUPON_URL}?action=${encodedAction}`,
     method: "post",
     data: data,
   });

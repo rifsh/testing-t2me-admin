@@ -135,7 +135,7 @@ const OfferList = () => {
 
   return (
     <Card>
-      <Flex alignItems="center" justifyContent="space-between">
+      <Flex alignItems="center" className="mb-3" justifyContent="space-between">
         <Flex>
           <Input
             placeholder="Search"

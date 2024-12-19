@@ -1,10 +1,10 @@
 import React from 'react';
-import OfferForm from '../form-coupon';
+import CouponForm from '../form-coupon';
 
-const AddOffer = () => {
+const AddCoupon = () => {
 	return (
-		<OfferForm mode="ADD"/>
+		<CouponForm mode="ADD"/>
 	)
 }
 
-export default AddOffer
+export default AddCoupon

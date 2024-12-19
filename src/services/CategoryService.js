@@ -1,12 +1,13 @@
 import fetch from "auth/FetchInterceptor";
-import {  ApiConstant,  } from "constants/ApiConstant";
+import { ApiConstant } from "constants/ApiConstant";
 import { handleAction } from "utils/api/warning-submit-util";
 
-const     CategoryService = {};
+const CategoryService = {};
 
-CategoryService.addCategory = function (data) {
+CategoryService.addCategory = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: ApiConstant.CATEGORY_URL,
+    url: `${ApiConstant.CATEGORY_URL}?action=${encodedAction}`,
     method: "post",
     data: data,
   });
@@ -23,14 +24,16 @@ CategoryService.updateCategory = function (data, action) {
 
 CategoryService.fetchCategory = function () {
   return fetch({
-    url:ApiConstant.CATEGORY_URL,
+    url: ApiConstant.CATEGORY_URL,
     method: "get",
   });
 };
 
 CategoryService.fetchSubCategory = function (categoryId) {
   return fetch({
-    url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${categoryId}`,
+    url: categoryId
+    ? `${ApiConstant.SUB_CATEGORY_URL}?category_id=${categoryId}`
+    : `${ApiConstant.SUB_CATEGORY_URL}`,
     method: "get",
   });
 };
@@ -42,5 +45,14 @@ CategoryService.addSubCategory = function (data, categoryId) {
     data: data,
   });
 };
+CategoryService.editSubCategory = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.SUB_CATEGORY_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+  });
+};
+
 
 export default CategoryService;

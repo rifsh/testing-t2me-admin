@@ -10,6 +10,8 @@ import LocationMarker from "./LocationMarker";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { RulesMessageConstants } from "constants/RulesConstant";
+import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 
 const { Option } = Select;
 
@@ -18,7 +20,8 @@ const VenueFormFields = ({ mode }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { coordinates, loading, error, selectedPlace } = useSelector(
+  const { coordinates, loading, error,  responseData,
+    responseMessage,selectedPlace } = useSelector(
     (state) => state.locations
   );
 
@@ -38,18 +41,19 @@ const VenueFormFields = ({ mode }) => {
         return;
       }
 
-      const resultAction = await dispatch(
-        addVenue({
-          data: { ...values, place_id: selectedPlace },
-          placeId: selectedPlace,
-        })
-      );
+      dispatch(setSelectedSubmitItem( { ...values, place_id: selectedPlace }))
+      // const resultAction = await dispatch(
+      //   addVenue({
+      //     data: { ...values, place_id: selectedPlace },
+      //     placeId: selectedPlace,
+      //   })
+      // );
 
-      if (addVenue.fulfilled.match(resultAction)) {
-        message.success(`Venue ${values.name} added successfully`);
-        form.resetFields();
-        navigate(`${APP_PREFIX_PATH}/venue/list`);
-      }
+      // if (addVenue.fulfilled.match(resultAction)) {
+      //   message.success(`Venue ${values.name} added successfully`);
+      //   form.resetFields();
+      //   navigate(`${APP_PREFIX_PATH}/venue/list`);
+      // }
     } catch (errorInfo) {
       console.error("Validation Failed:", errorInfo);
     }
@@ -172,7 +176,14 @@ const VenueFormFields = ({ mode }) => {
             </Flex>
           </Card>
         </Form>
+        
       </Col>
+      <SubmitAndConfirmModal
+              responseData={responseData}
+              addFunction={addVenue}
+              navigationPath={`${APP_PREFIX_PATH}/venue/list`}
+              responseMessage={responseMessage}
+            />
     </Row>
   );
 };

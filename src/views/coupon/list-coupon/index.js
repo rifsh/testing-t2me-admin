@@ -25,7 +25,7 @@ const getStatusColor = (status) => {
   return "red"; // Inactive
 };
 
-const OfferList = () => {
+const CouponList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { filteredCoupons, loading , message} = useSelector((state) => state.coupons);
@@ -86,13 +86,13 @@ const OfferList = () => {
     {
       title: "Start Date",
       dataIndex: "start_date",
-      render: (_, record) => <span>{record.start_date}</span>,
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
       sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
     },
     {
       title: "End Date",
       dataIndex: "end_date",
-      render: (_, record) => <span>{record.end_date}</span>,
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
       sorter: (a, b) => new Date(a.end_date) - new Date(b.end_date),
     },
     {
@@ -171,4 +171,4 @@ const OfferList = () => {
   );
 };
 
-export default OfferList;
+export default CouponList;

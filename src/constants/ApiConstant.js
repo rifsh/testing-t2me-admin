@@ -2,6 +2,7 @@ export const ApiConstant = {
   API_BASE_URL: "https://uat-tickets2me.mitetechnology.com",
   CATEGORY_URL: "/api/v1/events/secured/category",
   USER_URL: "/api/v1/auth/secured/users",
+  REGISTER_USER_URL: "/api/v1/auth/secured/register",
   ROLES_URL: "/api/v1/auth/secured/role",
   SUB_CATEGORY_URL: "/api/v1/events/secured/subcategory",
   PLACE_WITH_COUNTRY_URL: "/api/v1/location/secured/place_with_country",
