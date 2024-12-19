@@ -27,7 +27,7 @@ const { Panel } = Collapse;
 
 const TicketList = () => {
   const dispatch = useDispatch();
-  const { filteredTickets,  searchTerm, message } = useSelector(
+  const { filteredTickets, searchTerm, message } = useSelector(
     (state) => state.tickets
   );
 
@@ -171,7 +171,9 @@ const TicketList = () => {
                     </Panel>
                   ))
                 ) : (
-                  <span>No ticket types available</span>
+                  <Panel collapsible="disabled" header={'No ticket types available'}>
+                    
+                  </Panel>
                 )}
               </Collapse>
             ),

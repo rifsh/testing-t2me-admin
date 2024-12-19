@@ -75,7 +75,7 @@ export const fetchSubcategories = createAsyncThunk(
       }
 
       const response = await CategoryService.fetchSubCategory(categoryId);
-      return { categoryId, subcategories: response.data };
+      return response.data;
     } catch (error) {
       return rejectWithValue("Failed to fetch subcategories");
     }
@@ -94,6 +94,17 @@ export const addSubCategory = createAsyncThunk(
       const errorMessage =
         err.response?.data?.message || "Failed to add subcategory";
       return rejectWithValue(errorMessage);
+    }
+  }
+);
+export const editSubCategory = createAsyncThunk(
+  "category/editSubCategory",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await CategoryService.editSubCategory(data, action);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to update category");
     }
   }
 );
@@ -173,8 +184,7 @@ const categorySlice = createSlice({
       })
       .addCase(fetchSubcategories.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.selectedCategoryId = payload.categoryId;
-        state.subcategories = payload.subcategories;
+        state.subcategories = payload;
       })
       .addCase(fetchSubcategories.rejected, (state, { payload }) => {
         state.loading = false;
@@ -191,6 +201,20 @@ const categorySlice = createSlice({
         }
       })
       .addCase(updateCategory.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
+      .addCase(editSubCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editSubCategory.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+        }
+      })
+      .addCase(editSubCategory.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to edit event";
       });

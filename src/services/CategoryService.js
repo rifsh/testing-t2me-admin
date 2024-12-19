@@ -31,7 +31,9 @@ CategoryService.fetchCategory = function () {
 
 CategoryService.fetchSubCategory = function (categoryId) {
   return fetch({
-    url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${categoryId}`,
+    url: categoryId
+    ? `${ApiConstant.SUB_CATEGORY_URL}?category_id=${categoryId}`
+    : `${ApiConstant.SUB_CATEGORY_URL}`,
     method: "get",
   });
 };
@@ -43,5 +45,14 @@ CategoryService.addSubCategory = function (data, categoryId) {
     data: data,
   });
 };
+CategoryService.editSubCategory = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.SUB_CATEGORY_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+  });
+};
+
 
 export default CategoryService;
