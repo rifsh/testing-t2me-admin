@@ -31,14 +31,14 @@ const TicketField = ({ form }) => {
   }, [selectedVenue, form, dispatch]);
 
   const validateMaxTickets = (_, value) => {
-    if (!value) {
-      return Promise.reject(
-        new Error("Please enter the maximum number of tickets.")
-      );
-    }
-    if (isNaN(value)) {
-      return Promise.reject(new Error("Please enter a valid number."));
-    }
+    // if (!value) {
+    //   return Promise.reject(
+    //     new Error("Please enter the maximum number of tickets.")
+    //   );
+    // }
+    // if (isNaN(value)) {
+    //   return Promise.reject(new Error("Please enter a valid number."));
+    // }
     if (value > selectedVenue.capacity) {
       return Promise.reject(
         new Error(

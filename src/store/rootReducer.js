@@ -1,3 +1,4 @@
+// rootReducer.js
 import { combineReducers } from "redux";
 import theme from "./slices/themeSlice";
 import auth from "./slices/authSlice";
@@ -10,7 +11,8 @@ import staticsReducer from './slices/staticsSlice';
 import coupons from "./slices/couponSlice";
 import tickets from "./slices/ticketSlice";
 import schedules from "./slices/scheduleSlice";
-import modalSlice from "./slices/modalSlice.js";
+import modalSlice from "./slices/modalSlice";
+import tax from "./slices/taxSlice"; 
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -26,7 +28,8 @@ const rootReducer = (asyncReducers = {}) => {
       coupons,
       tickets,
       schedules,
-      modalSlice,
+      modalSlice,     
+      tax,      
       ...asyncReducers, 
     });
 

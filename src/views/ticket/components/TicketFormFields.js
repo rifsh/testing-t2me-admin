@@ -8,8 +8,11 @@ import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWith
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { getVenues, singleVenue } from "store/slices/locationSlice";
 import { useSelector, useDispatch } from "react-redux";
-import { addTicket, addOrUpdateTicketSet, resetTicketTypes, resetTicketSets } from "store/slices/ticketSlice";
+import { addTicket, currentStepSaveUpdate, addOrUpdateTicketSet, resetTicketTypes, resetTicketSets } from "store/slices/ticketSlice";
 import VenueListForm from "components/util-components/FormItems/VenueList";
+import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
+import { setSelectedSubmitItem } from "store/slices/modalSlice";
 
 const TicketFormFields = () => {
   const [form] = Form.useForm();
@@ -21,7 +24,8 @@ const TicketFormFields = () => {
   const VenueData = useSelector((state) =>
     state.locations.filteredVenues.find((venue) => venue.id === form.getFieldValue("venue_id"))
   );
-
+  const { responseData, responseMessage } =
+  useSelector((state) => state.tickets);
   const addTicketType = async () => {
     try {
       const formValues = await form.validateFields();
@@ -35,6 +39,7 @@ const TicketFormFields = () => {
   const onSubmit = async () => {
     try {
       const values = await form.validateFields();
+      
       const ticketData = {
         venue_id: values.venue_id,
         number_of_tickets: values.number_of_tickets,
@@ -42,18 +47,19 @@ const TicketFormFields = () => {
         name:values.name,
         ticket_types: [],
       };
-      const resultAction = await dispatch(addTicket({ ticketData, venue_id: values.venue_id }));
+      // const resultAction = await dispatch(addTicket({ ticketData, venue_id: values.venue_id }));
+      dispatch(setSelectedSubmitItem(ticketData));
 
-      if (addTicket.fulfilled.match(resultAction)) {
-        message.success(`Ticket added successfully!`);
-        form.resetFields();
-        dispatch(resetTicketSets())
-        navigate(`${APP_PREFIX_PATH}/ticket/list`);
-      } else {
-        message.error(
-          resultAction.payload || "Failed to add the ticket. Please try again."
-        );
-      }
+      // if (addTicket.fulfilled.match(resultAction)) {
+      //   message.success(`Ticket added successfully!`);
+      //   form.resetFields();
+      //   dispatch(resetTicketSets())
+      //   navigate(`${APP_PREFIX_PATH}/ticket/list`);
+      // } else {
+      //   message.error(
+      //     resultAction.payload || "Failed to add the ticket. Please try again."
+      //   );
+      // }
     } catch (error) {
       console.log("Form validation failed:", error);
     }
@@ -62,6 +68,8 @@ const TicketFormFields = () => {
   
   useEffect(() => {
     dispatch(resetTicketTypes());
+    dispatch(currentStepSaveUpdate(false))
+
     if (tickets && tickets.length > 0) {
       const ticket = tickets[0];
       if (ticket.base_price) form.setFieldsValue({ base_price: ticket.base_price });
@@ -119,7 +127,7 @@ const TicketFormFields = () => {
         </Form.Item>
         <div className="container" style={{ padding: "0px" }}>
           <Flex className="py-2" mobileFlex={false} justifyContent="space-between">
-            <Button className="mr-2">Discard</Button>
+          <DiscardButton form={form} />
             <div className="mb-3">
               <Button
                 icon={<PlusOutlined />}
@@ -136,7 +144,14 @@ const TicketFormFields = () => {
           </Flex>
         </div>
       </Card>
+      <SubmitAndConfirmModal
+        responseData={responseData}
+        addFunction={addTicket}
+        navigationPath={`${APP_PREFIX_PATH}/ticket/list`}
+        responseMessage={responseMessage}
+      />
     </Form>
+    
   );
 };
 

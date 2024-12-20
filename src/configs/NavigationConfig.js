@@ -133,6 +133,14 @@ const dashBoardNavTree = [
         breadcrumb: false,
         submenu: []
       },
+      {
+        key: 'tax.list',
+        path: `${APP_PREFIX_PATH}/tax/list`,
+        title: 'sidenav.tax',
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: []
+      },
     ]
   }
 ]

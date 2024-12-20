@@ -19,10 +19,10 @@ TicketsService.editTicket = function (data, action) {
     data: data,
   });
 };
-TicketsService.addTicket = function (data,venueId) {
-
+TicketsService.addTicket = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.TICKET_URL}?venue_id=${venueId}`,
+    url: `${ApiConstant.TICKET_URL}?venue_id=${data.venue_id}&action=${encodedAction}`,
     method: "post",
     data: data,
   });

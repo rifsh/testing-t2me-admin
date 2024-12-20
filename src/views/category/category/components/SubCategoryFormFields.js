@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { Option } from "antd/es/mentions";
+import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 
 const ADD = "ADD";
 // const EDIT = "EDIT";
@@ -88,7 +89,7 @@ const CategoryFormFields = ({ mode = ADD }) => {
                 gap: 10,
               }}
             >
-              <Button>Discard</Button>
+               <DiscardButton form={form} />
               <Button
                 type="primary"
                 onClick={onFinish}

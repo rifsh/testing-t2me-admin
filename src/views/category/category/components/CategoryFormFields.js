@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
+import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -96,11 +97,8 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
                 gap: 10,
               }}
             >
-              <Button
-                onClick={() => navigate(`${APP_PREFIX_PATH}/category/list`)}
-              >
-                Discard
-              </Button>
+              <DiscardButton form={form} />
+
               <Button type="primary" onClick={onFinish} loading={loading}>
                 {mode === ADD ? "Add" : "Update"}
               </Button>

@@ -10,6 +10,8 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { addCoupon } from "store/slices/couponSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import Utils from "utils";
 
 const ADD = "ADD";
 // const EDIT = 'EDIT'
@@ -32,8 +34,8 @@ const CouponForm = (props) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      values.start_date = moment(values.start_date).format("YYYY-MM-DD");
-      values.end_date = moment(values.end_date).format("YYYY-MM-DD");
+      values.start_date =Utils.formatDate(values.start_date);
+        values.end_date = Utils.formatDate(values.end_date);
       dispatch(setSelectedSubmitItem(values));
       //   const resultAction = await dispatch(addCoupon(values));
       //   if (addCoupon.fulfilled.match(resultAction)) {
@@ -74,7 +76,7 @@ const CouponForm = (props) => {
                 {mode === "ADD" ? "Add New Offer" : `Edit Offer`}{" "}
               </h2>
               <div className="mb-3">
-                <Button className="mr-2">Discard</Button>
+              <DiscardButton form={form} />
                 <Button
                   type="primary"
                   onClick={() => onFinish()}

@@ -58,7 +58,7 @@ const OfferField = () => {
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
-        <Card>
+        <Card title={"Offer & Coupon (Optional)"}>
           <Form.Item name="offer" label="Offer">
             <Select
               loading={offerLoading}
