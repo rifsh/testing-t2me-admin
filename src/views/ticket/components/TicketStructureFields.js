@@ -1,17 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { Input, Form, Card, Button, Col } from "antd";
+import { Input, Form, Card, Button, Col, message } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch } from "react-redux";
+import { currentStepSaveUpdate } from "store/slices/ticketSlice";
 const TicketStructureFields = ({ ticket_states }) => {
   const [ticketTypes, setTicketTypes] = useState([{ id: 1 }]); // Dynamically manage form fields
-  const { form, tickets, ticketCategory, handleExternalFunction, currentStep } = ticket_states;
+  const { form,currentStepSaved, tickets, ticketCategory, handleExternalFunction, currentStep,setTicketCategory } = ticket_states;
   const dispatch = useDispatch()
   const nav = useNavigate()
   // Add new ticket type field
+
+
   const addTicketTypeField = () => {
+    console.warn(ticketCategory, currentStep)
     setTicketTypes((prev) => [...prev, { id: Date.now() }]);
+    const values = form.getFieldsValue();
+    const TicketTypeNames = values.ticket_types.map(item => item.name);
+    const pipeSeparatedNames = TicketTypeNames.join(" | ");
+    console.warn(pipeSeparatedNames)
+    setTicketCategory(prevCategory =>
+      prevCategory.map((item) =>
+        item.step === currentStep
+          ? {
+              ...item,
+              value: pipeSeparatedNames // Directly set to pipeSeparatedNames
+            }
+          : item // Leave other steps unchanged
+      )
+    );
+        console.warn(TicketTypeNames,';///', ticketCategory, currentStep)
   };
 
   // Delete ticket type field
@@ -24,7 +43,36 @@ const TicketStructureFields = ({ ticket_states }) => {
   // Save current step data
   const saveCurrentStep = async () => {
     const values = await form.validateFields();
+    if (!currentStepSaved){
+      const TicketTypeNames = values.ticket_types.map(item => item.name);
+      const pipeSeparatedNames = TicketTypeNames.join(" | ");
+      console.warn(pipeSeparatedNames)
+      setTicketCategory(prevCategory =>
+      prevCategory.map((item) =>
+        item.step === currentStep
+          ? {
+              ...item,
+              value: pipeSeparatedNames // Directly set to pipeSeparatedNames
+            }
+          : item // Leave other steps unchanged
+      )
+    ); 
+    const isDuplicateTitle = ticketCategory.some(
+
+      (item) => item.value === pipeSeparatedNames && item.step !== currentStep
+    );
+
+    if (isDuplicateTitle) {
+      message.error("Title for Ticket Type already exists. Please manually change the title and save the current step again");
+      dispatch(currentStepSaveUpdate(true))
+      return;
+    }
+  
+    handleExternalFunction(values.ticket_types, pipeSeparatedNames); // Pass only ticket types data
+  }else{
+
     handleExternalFunction(values.ticket_types); // Pass only ticket types data
+  }
     console.log(values, form, "Saved Step Data");
   };
 
