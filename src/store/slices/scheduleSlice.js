@@ -125,6 +125,9 @@ const scheduleSlice = createSlice({
     setSelectedItemForModal: (state, action) => {
       state.selectedItemForModal = action.payload;
     },
+    resetSchedule:(state,action)=>{
+      return initialState
+    }
    
   },
   extraReducers: (builder) => {
@@ -174,7 +177,7 @@ const scheduleSlice = createSlice({
 });
 
 export const {
-  filterSchedules,
+  filterSchedules,resetSchedule,
   toggleSelectedOffer,
   toggleSelectedCoupon,
   setSelectedItemForModal,

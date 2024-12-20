@@ -1,32 +1,22 @@
 import React, { useEffect, useState } from "react";
 import {
-  Card,
   Form,
   Select,
-  DatePicker,
   Typography,
-  Row,
-  Col,
   Button,
   message,
 } from "antd";
-import { FaCheckCircle } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
-  setSubmitLoading,
   setCurrentStep,
   resetState,
 } from "store/slices/eventSlice";
 import {
-  toggleSelectedOffer,
-  toggleSelectedCoupon,
-  addSchedule,
-  setSelectedItemForModal,
+  addSchedule,resetSchedule,
 } from "store/slices/scheduleSlice";
 import { ScheduleDetails } from "../components/ScheduleDetails";
 import { ScheduleOffersAndCoupons } from "../components/ScheduleOffersAndCoupons";
-import moment from "moment";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { StepIndicator } from "../components/StepIndicator";
 import { ScheduleTimeSlots } from "../components/ScheduleTimeSlotes";
@@ -47,6 +37,7 @@ const MultyStepScheduleForm = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const { selectedItemForModal,responseData, responseMessage } = useSelector((state) => state.schedules);
   useEffect(() => {
+    dispatch(resetSchedule());
     dispatch(resetState());
   }, [dispatch]);
 
@@ -87,13 +78,13 @@ const MultyStepScheduleForm = () => {
         event_id: values.event_id,
         offer_ids:
           selectedOffers.map((e) => ({
-            offer_id: e.id,
+            offer_id: e.offer.id,
             valid_from:Utils.formatDate(e.offer.start_date),
             valid_to:Utils.formatDate(e.offer.end_date),
           })) ?? [],
         coupon_ids:
           selectedCoupons.map((e) => ({
-            coupon_id: e.id,
+            coupon_id: e.coupons.id,
             valid_from: Utils.formatDate(e.coupons.start_date),
             valid_to: Utils.formatDate(e.coupons.end_date),
           })) ?? [],
