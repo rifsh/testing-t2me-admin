@@ -5,6 +5,7 @@ import Flex from 'components/shared-components/Flex'
 
 import ProductListData from "assets/data/product-list.data.json"
 import SeatFormFields from '../components/SeatFormFields';
+import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 
 
 const getBase64 = (img, callback) => {
@@ -96,7 +97,7 @@ const SeatForm = props => {
 						<Flex className="py-2" mobileFlex={false} justifyContent="space-between" alignItems="center">
 							<h2 className="mb-3">{mode === 'ADD'? 'Add New Offer' : `Edit Offer`} </h2>
 							<div className="mb-3">
-								<Button className="mr-2">Discard</Button>
+							<DiscardButton form={form} />
 								<Button type="primary" onClick={() => onFinish()} htmlType="submit" loading={submitLoading} >
 									{mode === 'ADD'? 'Add' : `Save`}
 								</Button>

@@ -4,9 +4,11 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const ScheduleService = {};
 
-ScheduleService.addSchedule = function (data) {
+
+ScheduleService.addSchedule = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: ApiConstant.SCHEDULE_URL,
+    url: `${ApiConstant.SCHEDULE_URL}?action=${encodedAction}`,
     method: "post",
     data: data,
   });

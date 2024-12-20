@@ -1,5 +1,6 @@
 import { Tag } from "antd";
-
+import dayjs from 'dayjs';
+import { updateSelectedOffer } from "store/slices/scheduleSlice";
 class 		Utils {
 
 	/**
@@ -144,7 +145,39 @@ class 		Utils {
 		}
 		return
 	}
+	static antdTableObjectSorter(a, b, key) {
+		// Helper function to access nested properties
+		const getValue = (obj, keyPath) => {
+			return keyPath.reduce((acc, curr) => (acc ? acc[curr] : undefined), obj);
+		};
+	
+		const aValue = getValue(a, key);
+		const bValue = getValue(b, key);
+	
+		if (typeof aValue === 'number' && typeof bValue === 'number') {
+			return aValue - bValue; // Ascending order for numbers
+		}
+	
+		if (typeof aValue === 'string' && typeof bValue === 'string') {
+			const lowerA = aValue.toLowerCase();
+			const lowerB = bValue.toLowerCase();
+			return lowerA < lowerB ? -1 : lowerA > lowerB ? 1 : 0; // Ascending order for strings
+		}
+	
+		return 0; // Default for non-comparable types or equal values
+	}
+	// dateUtil.js
 
+	static formatDate = (inputDate, format = 'YYYY-MM-DD') => {
+		const date = new Date(inputDate);
+	
+		if (format === 'YYYY-MM-DD') {
+		  return date.toLocaleDateString('en-CA'); // Default format (YYYY-MM-DD)
+		} else if (format === 'HH:mm:ss') {
+		  return date.toLocaleTimeString('en-GB'); // Time format (HH:mm:ss)
+		}
+		return null; // Return null if an unsupported format is provided
+	  };
 	/**
 	 * Filter array of object 
 	 * @param {Array} list - array of objects that need to filter
@@ -239,7 +272,51 @@ static statusColumnUtil = (handleUpdateStatus) => ({
 	},
 	sortDirections: ["ascend", "descend"],
   });
+  /**
+ * Validates if the end date is earlier than the start date.
+ * @param {dayjs} startDate 
+ * @param {dayjs} endDate
+ * @returns {boolean}
+ */
+static isEndDateValid = (startDate, endDate) => {
+	return endDate && endDate.isBefore(startDate, 'day');
+  };
   
+  /**
+   * Validates if the start date is before the schedule start date.
+   * @param {dayjs} scheduleStartDate 
+   * @param {dayjs} startDate
+   * @returns {boolean}
+   */
+  static isStartDateBeforeSchedule = (scheduleStartDate, startDate) => {
+	return scheduleStartDate && startDate.isBefore(dayjs(scheduleStartDate), 'day');
+  };
+  
+  /**
+   * Validates if the end date is after the schedule end date.
+   * @param {dayjs} scheduleEndDate
+   * @param {dayjs} endDate
+   * @returns {boolean}
+   */
+  static isEndDateAfterSchedule = (scheduleEndDate, endDate) => {
+	return scheduleEndDate && endDate.isAfter(dayjs(scheduleEndDate), 'day');
+  };
+  
+  /**
+   * Dispatches the updated offer dates.
+   * @param {Function} dispatch 
+   * @param {Object} selectedItem 
+   * @param {dayjs} valid_from 
+   * @param {dayjs} valid_to
+   */
+  static dispatchOfferDates = (dispatch, selectedItem, valid_from, valid_to) => {
+	dispatch(
+	  updateSelectedOffer({
+		id: selectedItem.offer.id,
+		start_date: valid_from ? valid_from.format("YYYY-MM-DD") : null,
+		end_date: valid_to ? valid_to.format("YYYY-MM-DD") : null,
+	  })
+	);
 }
-
+}
 export default Utils;

@@ -1,5 +1,5 @@
 import React from 'react';
-import ScheduleForm from '../form-schedule';
+import ScheduleForm from '../form-schedule/MultyStepScheduleForm';
 
 
 const AddSchedule = () => {

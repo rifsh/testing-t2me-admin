@@ -6,6 +6,7 @@ export const SUB_CATEGORY_MOCK_API = false;
 export const ALL_COUNTRIES_MOCK_API = false;
 export const ALL_OFFERS_MOCK_API = false;
 export const ALL_COUPONS_MOCK_API = false;
+export const AVAILABLE_TAX_CATEGORY_API = false;
 export const GET_VENUE_MOCK_API = false;
 export const GET_PLACE_MOCK_API = false;
 export const GET_TICKET_MOCK_API = false;

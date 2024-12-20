@@ -72,7 +72,7 @@ function CouponFormFields() {
           <Form.Item name="password" label="Password" rules={rules.password}>
             <Input placeholder="Enter Password" />
           </Form.Item>
-          <Form.Item name="role" label="Role" rules={rules.role}>
+          <Form.Item name="role_id" label="Role" rules={rules.role}>
             <Select
               className="w-100"
               placeholder="Select a Role"
@@ -80,14 +80,14 @@ function CouponFormFields() {
               onChange={(value) => handleSelectedRole(value)}
             >
               {roles.map((role) => (
-                <Option key={role.name} value={role.name}>
+                <Option key={role.id} value={role.id}>
                   {role.name}
                 </Option>
               ))}
             </Select>
           </Form.Item>
 
-          {selectedRole === "event organizer" && (
+          {selectedRole === 3 && (
             <Form.Item name="events" label="Events">
               <Select mode="multiple"
                 loading={eventLoading}

@@ -21,6 +21,7 @@ import {
   setSelectedSubmitItem,
 } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
+import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 
 const CountryForm = ({ placeId }) => {
   const [form] = Form.useForm();
@@ -151,7 +152,8 @@ const CountryForm = ({ placeId }) => {
                 {!placeId ? "Add New Place" : `Edit Place`}{" "}
               </h2>
               <div className="mb-3">
-                <Button className="mr-2">Discard</Button>
+             
+                <DiscardButton form={form} />
                 <Button
                   type="primary"
                   onClick={onFinish}

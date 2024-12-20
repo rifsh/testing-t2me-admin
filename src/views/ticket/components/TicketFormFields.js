@@ -10,6 +10,7 @@ import { getVenues, singleVenue } from "store/slices/locationSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { addTicket, currentStepSaveUpdate, addOrUpdateTicketSet, resetTicketTypes, resetTicketSets } from "store/slices/ticketSlice";
 import VenueListForm from "components/util-components/FormItems/VenueList";
+import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 
@@ -126,7 +127,7 @@ const TicketFormFields = () => {
         </Form.Item>
         <div className="container" style={{ padding: "0px" }}>
           <Flex className="py-2" mobileFlex={false} justifyContent="space-between">
-            <Button className="mr-2">Discard</Button>
+          <DiscardButton form={form} />
             <div className="mb-3">
               <Button
                 icon={<PlusOutlined />}

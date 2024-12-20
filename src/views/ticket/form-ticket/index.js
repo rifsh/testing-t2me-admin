@@ -4,6 +4,7 @@ import PageHeaderAlt from 'components/layout-components/PageHeaderAlt';
 import Flex from 'components/shared-components/Flex';
 import TicketFormFields from '../components/TicketFormFields';
 import ProductListData from "assets/data/product-list.data.json";
+import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 
 const ADD = 'ADD';
 const EDIT = 'EDIT';
@@ -62,7 +63,7 @@ const TicketForm = props => {
             <Flex className="py-2" mobileFlex={false} justifyContent="space-between" alignItems="center">
               <h2 className="mb-3">{mode === 'ADD' ? 'Add New Event' : `Edit Event`}</h2>
               <div className="mb-3">
-                <Button className="mr-2">Discard</Button>
+              <DiscardButton form={form} />
                 <Button
                   type="primary"
                   onClick={() => onFinish()}
