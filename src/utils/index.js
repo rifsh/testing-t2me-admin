@@ -144,7 +144,28 @@ class 		Utils {
 		}
 		return
 	}
-
+	static antdTableObjectSorter(a, b, key) {
+		// Helper function to access nested properties
+		const getValue = (obj, keyPath) => {
+			return keyPath.reduce((acc, curr) => (acc ? acc[curr] : undefined), obj);
+		};
+	
+		const aValue = getValue(a, key);
+		const bValue = getValue(b, key);
+	
+		if (typeof aValue === 'number' && typeof bValue === 'number') {
+			return aValue - bValue; // Ascending order for numbers
+		}
+	
+		if (typeof aValue === 'string' && typeof bValue === 'string') {
+			const lowerA = aValue.toLowerCase();
+			const lowerB = bValue.toLowerCase();
+			return lowerA < lowerB ? -1 : lowerA > lowerB ? 1 : 0; // Ascending order for strings
+		}
+	
+		return 0; // Default for non-comparable types or equal values
+	}
+	
 	/**
 	 * Filter array of object 
 	 * @param {Array} list - array of objects that need to filter

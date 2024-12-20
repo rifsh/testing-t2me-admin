@@ -19,7 +19,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { SubmitAndConfirmModal } from "../../../components/util-components/ModalItems/SubmitConfirmModal";
-import { setSelectedItem } from "store/slices/modalSlice";
+import { setSelectedItem, setSelectedSubmitItem } from "store/slices/modalSlice";
 
 const MultyStepEventForm = () => {
   const steps = ["Event Details", "Category", "Location", "Ticket", "Offers"];
@@ -84,7 +84,8 @@ const MultyStepEventForm = () => {
         ...offers,
         max_tickets: parseInt(submitData.max_tickets || "0", 10),
       };
-      dispatch(setSelectedItem(finalData));
+
+      dispatch(setSelectedSubmitItem(finalData));
     } catch (error) {
       console.error("Submission Error:", error);
       message.error("An error occurred during submission.");

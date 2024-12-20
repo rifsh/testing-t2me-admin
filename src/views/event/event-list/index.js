@@ -1,5 +1,5 @@
-import React, { useEffect,  } from "react";
-import { Card, Table, Select, Input, Button,  Menu } from "antd";
+import React, { useEffect } from "react";
+import { Card, Table, Select, Input, Button, Menu } from "antd";
 import {
   EyeOutlined,
   SearchOutlined,
@@ -28,12 +28,9 @@ const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
 const EventsList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const {
-    allEvents,
-    filteredEvents,
-    message,
-    loading,
-  } = useSelector((state) => state.event);
+  const { allEvents, filteredEvents, message, loading } = useSelector(
+    (state) => state.event
+  );
 
   useEffect(() => {
     dispatch(fetchAllEvent());
@@ -48,12 +45,12 @@ const EventsList = () => {
     navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
   };
 
-    const handleUpdateStatus = (item) => {
-      const newStatus = !item.status;
-      const data = { status: newStatus, id: item.id };
-  
-      dispatch(setSelectedItem(data));
-    };
+  const handleUpdateStatus = (item) => {
+    const newStatus = !item.status;
+    const data = { status: newStatus, id: item.id };
+
+    dispatch(setSelectedItem(data));
+  };
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -81,17 +78,17 @@ const EventsList = () => {
     {
       title: "Category",
       dataIndex: ["category", "name"],
-      sorter: (a, b) => utils.antdTableSorter(a, b, ["category", "name"]),
+      sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["category", "name"]),
     },
     {
       title: "Sub Category",
       dataIndex: ["sub_category", "name"],
-      sorter: (a, b) => utils.antdTableSorter(a, b, ["sub_category", "name"]),
+      sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["sub_category", "name"]),
     },
     {
       title: "Venue",
       dataIndex: ["venue", "name"],
-      sorter: (a, b) => utils.antdTableSorter(a, b, ["venue", "name"]),
+      sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["venue", "name"]),
     },
     {
       title: "Max Tickets",
