@@ -24,7 +24,9 @@ export const initialState = {
   currentStepSaved: false,
   isModalVisible: false,
   ticketTypes: [],
-  message:null
+  message:null,
+  responseData: null,
+  responseMessage: null,
 };
 
 export const fetchAllTickets = createAsyncThunk(
@@ -46,11 +48,10 @@ export const fetchAllTickets = createAsyncThunk(
 
 export const addTicket = createAsyncThunk(
   "ticket/addTicket",
-  async ({ ticketData, venue_id }, { rejectWithValue }) => {
-    console.warn(ticketData, venue_id, "..................");
+  async ({ data, action }, { rejectWithValue }) => {
     try {
-      const response = await TicketsService.addTicket(ticketData, venue_id);
-      return response.data;
+      const response = await TicketsService.addTicket(data,action);
+      return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating ticket");
     }
@@ -254,9 +255,12 @@ export const ticketSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(addTicket.fulfilled, (state, { payload }) => {
+      .addCase(addTicket.fulfilled, (state, action) => {
         state.loading = false;
-        state.filteredTickets.push(payload);
+        state.error = null;
+        state.responseData = action.payload.data;
+        console.error(action.payload.data)
+        state.responseMessage = action.payload.status.message;
       })
       .addCase(addTicket.rejected, (state, { payload }) => {
         state.loading = false;

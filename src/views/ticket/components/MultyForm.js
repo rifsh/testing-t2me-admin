@@ -6,7 +6,8 @@ import { addOrUpdateTicketSet, currentStepSaveUpdate, removeSpecificTicketSet, r
 import { useDispatch, useSelector } from "react-redux";
 import { addTicket } from "store/slices/ticketSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-
+import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
+import { setSelectedSubmitItem } from "store/slices/modalSlice";
 
 const { Step } = Steps;
 
@@ -14,10 +15,11 @@ const MultyStepTicketForm = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
-  const { ticketTypes: tickets, currentStepSaved } = useSelector((state) => state.tickets);
-  const { filteredVenues, venues } = useSelector((state) => state.locations);
+
+  const { ticketTypes: tickets, currentStepSaved,responseData, responseMessage } = useSelector((state) => state.tickets);
+  // const { filteredVenues, venues } = useSelector((state) => state.locations);
   const dispatch = useDispatch();
-  const [ticketCategory, setTicketCategory] = useState([]);
+  const [ticketCategory, setTicketCategory] = useState([{step:0,value:""}]);
   const [ticketStructures, setTicketStructures] = useState([
     { id: 1, values: null }, // Initial structure
   ]);
@@ -44,6 +46,17 @@ const MultyStepTicketForm = () => {
         form.resetFields();
         form.setFieldsValue(ticketStructures[currentStep + 1]?.values || {});
       }
+      setTicketCategory((prevCategory) => {
+        const existingStep = prevCategory.find((category) => category.step === currentStep);
+    
+        if (!existingStep) {
+          // Add a new step if it doesn't exist
+          return [...prevCategory, { step: currentStep, value: "" }];
+        }
+    
+        // Return the unchanged category if the step exists
+        return prevCategory;
+      });
     } catch (error) {
       message.error("Please complete all required fields.");
     }
@@ -56,40 +69,56 @@ const MultyStepTicketForm = () => {
     }
   };
 
-  const updateTitle = (value) => {
-    setTicketCategory((prevCategory) => {
-      // Check if the currentStep already exists in the array
-      const existingStep = prevCategory.find((category) => category.step === currentStep);
-  
-      if (existingStep) {
-        // If the currentStep exists, update its value
-        return prevCategory.map((category) =>
-          category.step === currentStep
-            ? { ...category, value: value }
-            : category
-        );
-      } else {
-        // If the currentStep doesn't exist, add a new entry
-        return [...prevCategory, { step: currentStep, value: value }];
-      }
-    });
+  const updateTitle = (value, stepIndex) => {
+    setTicketCategory((prevCategory) =>
+      prevCategory.map((item) =>
+        item.step === stepIndex
+          ? { ...item, value } // Update the value for the specific step
+          : item // Leave other steps unchanged
+      )
+    );
   };
   
   
-console.log(ticketCategory,'tikcetgdgd')
-  const addTicketStructure = () => {
-    if (currentStepSaved){
+  
+const addTicketStructure = () => {
+  if (currentStepSaved) {
+    // Calculate the new step based on the current length of ticketStructures
+    const newStep = ticketStructures.length;
+    const newStructureId = Date.now();
 
-      const newStructureId = Date.now();
-      setTicketStructures([
-        ...ticketStructures,
-        { id: newStructureId, values: null }, // Add a new structure with null values
-      ]);
-      setCurrentStep(ticketStructures.length); 
-      dispatch(currentStepSaveUpdate(false))
+    // Add the new structure
+    setTicketStructures([
+      ...ticketStructures,
+      { id: newStructureId, values: null },
+    ]);
+
+    // Update the current step to the new step
+    setCurrentStep(newStep);
+
+    // Update currentStepSaved
+    dispatch(currentStepSaveUpdate(false));
+  }
+
+  // Update ticketCategory with the calculated newStep
+  setTicketCategory((prevCategory) => {
+    const newStep = ticketStructures.length; // Calculate currentStep
+    const existingStep = prevCategory.find((category) => category.step === newStep);
+
+    console.log(newStep, "currentStep check", existingStep);
+
+    if (!existingStep) {
+      // Add a new step if it doesn't exist
+      return [...prevCategory, { step: newStep, value: "" }];
     }
 
-  };
+    // Return the unchanged category if the step exists
+    return prevCategory;
+  });
+};
+
+
+console.log(ticketCategory,'tikcetgdgd')
 
   const removeTicketStructure = () => {
     if (ticketStructures.length > 1) {
@@ -147,37 +176,72 @@ console.log(ticketCategory,'tikcetgdgd')
       }
   
       console.log("Updated Ticket Data with Flattened Tickets:", ticketData);
-  
       // Dispatch the updated ticket data
-      const resultAction = await dispatch(addTicket({ ticketData, venue_id }));
+      dispatch(setSelectedSubmitItem(ticketData));
+
+      // const resultAction = await dispatch(addTicket({ ticketData, venue_id }));
   
-      if (addTicket.fulfilled.match(resultAction)) {
-        message.success(`Ticket added successfully!`);
-        form.resetFields();
-        dispatch(resetTicketSets())
-        navigate(`${APP_PREFIX_PATH}/ticket/list`);
-      } else {
-        message.error(resultAction.payload || "Failed to add the ticket. Please try again.");
-      }
+      // if (addTicket.fulfilled.match(resultAction)) {
+      //   message.success(`Ticket added successfully!`);
+      //   form.resetFields();
+      //   dispatch(resetTicketSets())
+      //   navigate(`${APP_PREFIX_PATH}/ticket/list`);
+      // } else {
+      //   message.error(resultAction.payload || "Failed to add the ticket. Please try again.");
+      // }
     } catch (error) {
       console.error("Submission failed:", error);
       message.error("An error occurred. Please check your data and try again.");
     }
   };
   
-  const handleExternalFunction = async (values) => {
-    console.log(values);
+  const extractTicketData = (responseData) => {
+    // Ensure responseData and ticket_types are available
+    if (!responseData || !Array.isArray(responseData.ticket_types)) {
+      return {};  // Return empty object if ticket_types is not available
+    }
+  
+    // Create an object where the key is a common property (e.g., 'ticket_set') and its value is an array of ticket_set values
+    const ticketDataObject = responseData.ticket_types.reduce((acc, item) => {
+      // Use base properties (like base_price, name, etc.) as the main object values
+      const { base_price, name, number_of_tickets } = responseData;
+  
+      // If the key does not exist yet, create it, otherwise just push the ticket_set into the array
+      const key = 'ticket_set'; // In this case, the key for the ticket set array
+      if (!acc[key]) {
+        acc[key] = [];  // Initialize the array if it doesn't exist
+      }
+  
+      // Add the ticket_set value to the array
+      
+      // Also store other properties in the same object
+      acc.base_price = base_price;
+      acc.name = name;
+      acc.number_of_tickets = number_of_tickets;
+      acc[key].push(item.name);
+  
+      return acc;
+    }, {});
+  
+    return ticketDataObject;
+  };
+  
+  
+  const mappedTicketData = extractTicketData(responseData);
+console.log(mappedTicketData,'/////...................>>>>>>>>>>><<<<<<<<<<<<<<<')
+  const handleExternalFunction = async (values, pipeSeparatedNames) => {
   
     try {
+     
       const setId = currentStep; // Current step will be the unique ID for this set
       const ticketSetName = ticketCategory.find(item => item.step === currentStep)?.value;
-      if (!ticketSetName){
+      if (!ticketSetName & currentStepSaved){
         message.error(`Enter a title for Ticket Type`);
         return;
       }else {
-        console.log('ticket...')
+        console.log('tickwet...')
         const ticket = tickets[0].ticket_types.find(
-          (ticket) => ticket.ticket_set === ticketSetName && ticket.id !== currentStep
+          (ticket) =>ticket.id !== currentStep &&  ticket.ticket_set === ticketSetName 
         );
         console.log(ticket,'...')
 
@@ -203,29 +267,34 @@ console.log(ticketCategory,'tikcetgdgd')
       }
   
       if (Array.isArray(values)) {
+
         // Map over tickets and add the necessary data (with id, name, price, quantity)
         const ticketsWithIds = values.map((ticket, index) => ({
           id: `${setId}-ticket-${index + 1}`, // Ensure id is set properly
           name: ticket.name,
           price: ticket.price,
           number_of_tickets: ticket.number_of_tickets,
-          ticket_set: ticketSetName,
+          ticket_set: ticketSetName || pipeSeparatedNames,
         }));
   
         // Dispatch the action with the correct payload
         dispatch(
           addOrUpdateTicketSet({
             id: setId, // Ensure id is passed to the action
-            ticket_set: ticketSetName,
+            ticket_set: ticketSetName || pipeSeparatedNames,
             tickets: ticketsWithIds,
           })
         );
         
+        if (!currentStepSaved){
+          message.success("data saved . You are open to change the title, please save again after the change ")
+        }else{
+          message.success("data saved")
+        }
         if (ticketStructures.length==ticketCategory.length){
 
           dispatch(currentStepSaveUpdate(true))
         }
-        message.success("data saved")
       }
     } catch (error) {
       console.error(error);
@@ -247,12 +316,12 @@ console.log(ticketCategory,'tikcetgdgd')
       title={
         <div style={{ display: "flex", alignItems: "center" }}>
           <Input
-            value={structure.title}
-            onChange={(e) => updateTitle(e.target.value)}
+            value={ticketCategory.find((item) => item.step === index)?.value || ""} // Fetch value for each step
+            onChange={(e) => updateTitle(e.target.value, index)} // Pass the step index to update the correct title
             placeholder="Enter Title"
             style={{ marginRight: "10px" }}
-            disabled={currentStep !== index } // Disable if not the current step
-          />
+            disabled={currentStep !== index || !currentStepSaved}
+            />
         </div>
       }
     />
@@ -268,7 +337,7 @@ console.log(ticketCategory,'tikcetgdgd')
         initialValues={ticketStructures[currentStep]?.values || {}}
       >
         <TicketStructureFields
-          ticket_states={{ form, tickets,ticketCategory,handleExternalFunction,currentStep }}
+          ticket_states={{ form,setTicketCategory,currentStepSaved, tickets,ticketCategory,handleExternalFunction,currentStep }}
           
         />
       </Form>
@@ -298,6 +367,12 @@ console.log(ticketCategory,'tikcetgdgd')
           </Button>
         </Col>
       </Row>
+      <SubmitAndConfirmModal
+        responseData={mappedTicketData}
+        addFunction={addTicket}
+        navigationPath={`${APP_PREFIX_PATH}/ticket/list`}
+        responseMessage={responseMessage}
+      />
     </div>
   );
 };
