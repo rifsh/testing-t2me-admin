@@ -2,6 +2,7 @@ import React from "react";
 import { Input, Row, Col, Card, Form, DatePicker, Checkbox, Button, Space } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsDateRequired } from "store/slices/offerSlice";
+import moment from "moment";
 
 const rules = {
   name: [
@@ -36,12 +37,41 @@ const rules = {
   ],
 };
 
-function OfferFormFields(props) {
+function OfferFormFields() {
   const dispatch = useDispatch();
   const { isDateRequired } = useSelector((state) => state.offers);
+  const [form] = Form.useForm();
+  const startDate = Form.useWatch('start_date', form);
 
   const handleRequiredChanges = (e) => {
     dispatch(setIsDateRequired(e.target.checked));
+    // Reset dates when toggling date requirement
+    if (!e.target.checked) {
+      form.setFieldsValue({
+        start_date: null,
+        end_date: null
+      });
+    }
+  };
+
+  // Disallow selecting dates before today
+  const disablePastDates = (current) => {
+    return current && current < moment().startOf('day');
+  };
+
+  // Validate end date based on start date
+  const disableEndDate = (current) => {
+    if (!startDate) {
+      return false;
+    }
+    return current && current < moment(startDate).startOf('day');
+  };
+
+  const handleStartDateChange = (date) => {
+    // Reset end date when start date changes
+    form.setFieldsValue({
+      end_date: null
+    });
   };
 
   return (
@@ -86,13 +116,36 @@ function OfferFormFields(props) {
                   className="w-100"
                   placeholder="Select start date"
                   format="YYYY-MM-DD"
+                  disabledDate={disablePastDates}
+                  onChange={handleStartDateChange}
+                  showToday={false}
                 />
               </Form.Item>
-              <Form.Item name="end_date" label="End Date" rules={rules.endDate}>
+              <Form.Item 
+                name="end_date" 
+                label="End Date" 
+                rules={[
+                  ...rules.endDate,
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      const startDate = getFieldValue('start_date');
+                      if (!startDate || !value) {
+                        return Promise.resolve();
+                      }
+                      if (value.isBefore(startDate, 'day')) {
+                        return Promise.reject(new Error('End date must be after start date'));
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+              >
                 <DatePicker
                   className="w-100"
                   placeholder="Select end date"
                   format="YYYY-MM-DD"
+                  disabledDate={disableEndDate}
+                  showToday={false}
                 />
               </Form.Item>
             </>
@@ -107,7 +160,7 @@ function OfferFormFields(props) {
                     <Form.Item
                       {...restField}
                       name={name}
-                      fieldId={fieldKey}
+                      fieldKey={fieldKey}
                       rules={[
                         {
                           required: true,
@@ -125,12 +178,12 @@ function OfferFormFields(props) {
                       Remove
                     </Button>
                   </Space>
-                )??[])}
+                ))}
                 <Button type="dashed" onClick={() => add()} block>
                   Add Keyword
                 </Button>
               </>
-            )??[]}
+            )}
           </Form.List>
         </Card>
       </Col>

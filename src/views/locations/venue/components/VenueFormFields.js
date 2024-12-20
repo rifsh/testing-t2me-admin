@@ -12,6 +12,7 @@ import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWith
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
+import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 
 const { Option } = Select;
 
@@ -169,7 +170,7 @@ const VenueFormFields = ({ mode }) => {
               mobileFlex={false}
               justifyContent="space-between"
             >
-              <Button>Discard</Button>
+               <DiscardButton form={form} />
               <Button type="primary" onClick={onFinish} loading={loading}>
                 {mode === "ADD" ? "Add" : "Save"}
               </Button>

@@ -1,9 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  ALL_OFFERS_MOCK_API,
-  ENABLE_MOCK_API,
-  GET_SCHEDULE_MOCK_API,
-} from "configs/MockConfig";
+import { GET_SCHEDULE_MOCK_API, ENABLE_MOCK_API } from "configs/MockConfig";
 import ScheduleMockData from "mock/data/scheduleData";
 import ScheduleService from "services/ScheduleService";
 
@@ -16,6 +12,8 @@ export const initialState = {
   selectedItemForModal: null,
   error: null,
   message: null,
+  responseData: null,
+  responseMessage: null,
 };
 
 export const fetchAllSchedules = createAsyncThunk(
@@ -36,17 +34,19 @@ export const fetchAllSchedules = createAsyncThunk(
     }
   }
 );
+
 export const addSchedule = createAsyncThunk(
   "schedule/add",
-  async (offerData, { rejectWithValue }) => {
+  async ({ data, action }, { rejectWithValue }) => {
     try {
-      const response = await ScheduleService.addSchedule(offerData);
+      const response = await ScheduleService.addSchedule(data, action);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");
     }
   }
 );
+
 export const editSchedule = createAsyncThunk(
   "schedule/edit",
   async ({ data, action }, { rejectWithValue }) => {
@@ -58,6 +58,7 @@ export const editSchedule = createAsyncThunk(
     }
   }
 );
+
 const scheduleSlice = createSlice({
   name: "schedules",
   initialState,
@@ -84,13 +85,30 @@ const scheduleSlice = createSlice({
     },
     toggleSelectedOffer: (state, action) => {
       const existingOfferIndex = state.selectedOffers.findIndex(
-        (offer) => offer.id === action.payload.id
+        (offer) => offer.offer.id === action.payload.offer.id
       );
 
       if (existingOfferIndex !== -1) {
         state.selectedOffers.splice(existingOfferIndex, 1);
       } else {
         state.selectedOffers.push(action.payload);
+      }
+    },
+    updateSelectedOffer: (state, action) => {
+      const existingOfferIndex = state.selectedOffers.findIndex(
+        (offer) => offer.offer.id === action.payload.id
+      );
+      
+      if (existingOfferIndex !== -1) {
+        state.selectedOffers[existingOfferIndex] = {
+          ...state.selectedOffers[existingOfferIndex],
+          offer: {
+            ...state.selectedOffers[existingOfferIndex].offer,
+            start_date: action.payload.start_date,
+            end_date: action.payload.end_date,
+            date_required: true
+          }
+        };
       }
     },
     toggleSelectedCoupon: (state, action) => {
@@ -107,15 +125,7 @@ const scheduleSlice = createSlice({
     setSelectedItemForModal: (state, action) => {
       state.selectedItemForModal = action.payload;
     },
-    updateSelectedOffer: (state, action) => {
-      const existingOfferIndex = state.selectedOffers.findIndex(
-        (offer) => offer.id === action.payload.id
-      );
-      state.selectedOffers[existingOfferIndex].start_date =
-        action.payload.start_date;
-      state.selectedOffers[existingOfferIndex].end_date =
-        action.payload.end_date;
-    },
+   
   },
   extraReducers: (builder) => {
     builder
@@ -137,9 +147,11 @@ const scheduleSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(addSchedule.fulfilled, (state, { payload }) => {
+      .addCase(addSchedule.fulfilled, (state, action) => {
         state.loading = false;
-        state.filteredSchedules.push(payload);
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
       })
       .addCase(addSchedule.rejected, (state, action) => {
         state.loading = false;
