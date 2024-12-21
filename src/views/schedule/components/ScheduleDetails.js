@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Card, Form, Select, Input } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllEvent } from "store/slices/eventSlice";
+import { resetSchedule } from "store/slices/scheduleSlice";
 
 const { Option } = Select;
 
@@ -12,7 +13,9 @@ export function ScheduleDetails() {
   useEffect(() => {
     dispatch(fetchAllEvent());
   }, [dispatch]);
-
+  const handleSelectEvent = () => {
+    dispatch(resetSchedule());
+  };
   return (
     <Card title="Schedule Details">
       <Form.Item
@@ -31,6 +34,7 @@ export function ScheduleDetails() {
           loading={loading}
           className="w-100"
           placeholder="Select an event"
+          onChange={handleSelectEvent}
           allowClear
         >
           {filteredEvents.map((event) => (

@@ -21,10 +21,14 @@ const VenueFormFields = ({ mode }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { coordinates, loading, error,  responseData,
-    responseMessage,selectedPlace } = useSelector(
-    (state) => state.locations
-  );
+  const {
+    coordinates,
+    loading,
+    error,
+    responseData,
+    responseMessage,
+    selectedPlace,
+  } = useSelector((state) => state.locations);
 
   useEffect(() => {
     if (error) {
@@ -42,7 +46,7 @@ const VenueFormFields = ({ mode }) => {
         return;
       }
 
-      dispatch(setSelectedSubmitItem( { ...values, place_id: selectedPlace }))
+      dispatch(setSelectedSubmitItem({ ...values, place_id: selectedPlace }));
       // const resultAction = await dispatch(
       //   addVenue({
       //     data: { ...values, place_id: selectedPlace },
@@ -170,21 +174,20 @@ const VenueFormFields = ({ mode }) => {
               mobileFlex={false}
               justifyContent="space-between"
             >
-               <DiscardButton form={form} />
+              <DiscardButton form={form} />
               <Button type="primary" onClick={onFinish} loading={loading}>
                 {mode === "ADD" ? "Add" : "Save"}
               </Button>
             </Flex>
           </Card>
         </Form>
-        
       </Col>
       <SubmitAndConfirmModal
-              responseData={responseData}
-              addFunction={addVenue}
-              navigationPath={`${APP_PREFIX_PATH}/venue/list`}
-              responseMessage={responseMessage}
-            />
+        responseData={responseData}
+        addFunction={addVenue}
+        navigationPath={`${APP_PREFIX_PATH}/venue/list`}
+        responseMessage={responseMessage}
+      />
     </Row>
   );
 };
