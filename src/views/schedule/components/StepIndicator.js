@@ -1,29 +1,7 @@
-import React, { useEffect, useState } from "react";
-import {
-  Card,
-  Form,
-  Select,
-  DatePicker,
-  Typography,
-  Row,
-  Col,
-  Button,
-  message,
-} from "antd";
+import React from "react";
+import { Select, Typography } from "antd";
 import { FaCheckCircle } from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import {
-  setSubmitLoading,
-  setCurrentStep,
-  resetState,
-} from "store/slices/eventSlice";
-import {
-  toggleSelectedOffer,
-  toggleSelectedCoupon,
-} from "store/slices/scheduleSlice";
 
-const { Option } = Select;
 const { Text } = Typography;
 export const StepIndicator = ({ steps, currentStep }) => (
   <div
