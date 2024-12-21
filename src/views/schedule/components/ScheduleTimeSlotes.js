@@ -1,8 +1,14 @@
 import React from "react";
 import { Card, Form, DatePicker } from "antd";
 import dayjs from "dayjs";
+import { useDispatch } from "react-redux";
+import { resetSchedule } from "store/slices/scheduleSlice";
 
 export function ScheduleTimeSlots({ form }) {
+  const dispatch = useDispatch();
+  const handleSelectEvent = () => {
+    dispatch(resetSchedule());
+  };
   return (
     <Card title="Schedule Details">
       <Form.Item
@@ -12,8 +18,10 @@ export function ScheduleTimeSlots({ form }) {
           { required: true, message: "Please select start time" },
           {
             validator(_, value) {
-              if (value && value.isBefore(dayjs(), 'minute')) {
-                return Promise.reject(new Error("Start time cannot be in the past"));
+              if (value && value.isBefore(dayjs(), "minute")) {
+                return Promise.reject(
+                  new Error("Start time cannot be in the past")
+                );
               }
               return Promise.resolve();
             },
@@ -22,9 +30,10 @@ export function ScheduleTimeSlots({ form }) {
       >
         <DatePicker
           showTime
+          onChange={handleSelectEvent}
           className="w-100"
           placeholder="Select start time"
-          disabledDate={(current) => current && current < dayjs().endOf('day')}
+          disabledDate={(current) => current && current < dayjs().endOf("day")}
         />
       </Form.Item>
 
@@ -35,12 +44,16 @@ export function ScheduleTimeSlots({ form }) {
           { required: true, message: "Please select end time" },
           {
             validator(_, value) {
-              const startDate = dayjs(form.getFieldValue('start_date'));
-              if (value && value.isBefore(dayjs(), 'minute')) {
-                return Promise.reject(new Error("End time cannot be in the past"));
+              const startDate = dayjs(form.getFieldValue("start_date"));
+              if (value && value.isBefore(dayjs(), "minute")) {
+                return Promise.reject(
+                  new Error("End time cannot be in the past")
+                );
               }
               if (startDate && value && value.isBefore(startDate)) {
-                return Promise.reject(new Error("End time must be after start time"));
+                return Promise.reject(
+                  new Error("End time must be after start time")
+                );
               }
               return Promise.resolve();
             },
@@ -48,10 +61,10 @@ export function ScheduleTimeSlots({ form }) {
         ]}
       >
         <DatePicker
-          showTime
+          showTime onChange={handleSelectEvent}
           className="w-100"
           placeholder="Select end time"
-          disabledDate={(current) => current && current < dayjs().endOf('day')}
+          disabledDate={(current) => current && current < dayjs().endOf("day")}
         />
       </Form.Item>
     </Card>

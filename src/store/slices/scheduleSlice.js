@@ -106,7 +106,25 @@ const scheduleSlice = createSlice({
             ...state.selectedOffers[existingOfferIndex].offer,
             start_date: action.payload.start_date,
             end_date: action.payload.end_date,
-            date_required: true
+            date_required: true,
+            wasAdjusted: true,
+          }
+        };
+      }
+    },
+    updateSelectedCoupons: (state, action) => {
+      const existingCouponsIndex = state.selectedCoupons.findIndex(
+        (coupons) => coupons.coupons.id === action.payload.id
+      );
+      
+      if (existingCouponsIndex !== -1) {
+        state.selectedCoupons[existingCouponsIndex] = {
+          ...state.selectedCoupons[existingCouponsIndex],
+          coupons: {
+            ...state.selectedCoupons[existingCouponsIndex].coupons,
+            start_date: action.payload.start_date,
+            end_date: action.payload.end_date,
+            wasAdjusted: true,
           }
         };
       }
@@ -179,7 +197,7 @@ const scheduleSlice = createSlice({
 export const {
   filterSchedules,resetSchedule,
   toggleSelectedOffer,
-  toggleSelectedCoupon,
+  toggleSelectedCoupon,updateSelectedCoupons,
   setSelectedItemForModal,
   updateSelectedOffer,
 } = scheduleSlice.actions;

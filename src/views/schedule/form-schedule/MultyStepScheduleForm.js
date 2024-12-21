@@ -79,14 +79,14 @@ const MultyStepScheduleForm = () => {
         offer_ids:
           selectedOffers.map((e) => ({
             offer_id: e.offer.id,
-            valid_from:Utils.formatDate(e.offer.start_date),
-            valid_to:Utils.formatDate(e.offer.end_date),
+            valid_from:Utils.formatDate(e.offer.start_date===null?values.start_date:e.offer.start_date),
+            valid_to:Utils.formatDate(e.offer.end_date===null?values.end_date:e.offer.end_date),
           })) ?? [],
         coupon_ids:
           selectedCoupons.map((e) => ({
             coupon_id: e.coupons.id,
-            valid_from: Utils.formatDate(e.coupons.start_date),
-            valid_to: Utils.formatDate(e.coupons.end_date),
+            valid_from:Utils.formatDate(e.coupons.start_date===null?values.start_date:e.coupons.start_date),
+            valid_to:Utils.formatDate(e.coupons.end_date===null?values.end_date:e.coupons.end_date),
           })) ?? [],
       };
  dispatch(setSelectedSubmitItem(submitData));
