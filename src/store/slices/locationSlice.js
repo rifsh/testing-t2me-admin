@@ -147,7 +147,7 @@ export const getCoutryDetails = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await LocationService.getCoutryDetails();
-      return response.data;
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch places");
     }
@@ -299,8 +299,8 @@ const locationSlice = createSlice({
       })
       .addCase(getCoutryDetails.fulfilled, (state, action) => {
         state.loading = false;
-        state.venues = action.payload;
-        state.detailedCountryList = action.payload;
+        // state.venues = action.payload.items;
+        state.detailedCountryList = action.payload.items;
       })
       .addCase(getCoutryDetails.rejected, (state, action) => {
         state.loading = false;
@@ -366,7 +366,7 @@ const locationSlice = createSlice({
       })
       .addCase(fetchPlaceWithCountry.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.placeWithCountryList = payload;
+        state.placeWithCountryList = payload.items;
       })
       .addCase(fetchPlaceWithCountry.rejected, (state, { payload }) => {
         state.loading = false;
