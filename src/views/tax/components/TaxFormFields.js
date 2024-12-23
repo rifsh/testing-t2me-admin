@@ -18,6 +18,8 @@ import "leaflet/dist/leaflet.css";
 import {
   addVenue,
   fetchAllCountires,
+  getCoutryDetails,
+  getPlaces,
   setSelectedPlace,
 } from "store/slices/locationSlice";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
@@ -44,20 +46,21 @@ const TaxFormFields = ({ mode }) => {
 
   const {
     loading: locationLoading,
-    selectedPlace,
-    countries,
+
+    detailedCountryList,
+    filteredPlaces,
   } = locationState;
-  
+
   const {
     loading,
     error,
     responseData,
     responseMessage,
-    availableTaxCategory = [], 
+    availableTaxCategory = [],
   } = taxState;
 
   useEffect(() => {
-    dispatch(fetchAllCountires());
+    dispatch(getCoutryDetails());
     dispatch(fetchAvailableCategory());
   }, [dispatch]);
   useEffect(() => {
@@ -66,8 +69,10 @@ const TaxFormFields = ({ mode }) => {
     }
   }, [error]);
 
-  const handlePlaceSelect = (id) => {
-    dispatch(setSelectedPlace(id));
+  const handleCountrySelect = (id) => {
+    form.setFieldValue("place_id", null);
+    // dispatch(getPlaces(form.getFieldValue("country_id")));
+    dispatch(getPlaces(id));
   };
 
   const handleCheckboxChange = (e) => {
@@ -77,16 +82,12 @@ const TaxFormFields = ({ mode }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      if (!selectedPlace && isLocationBased) {
+      if (!form.getFieldValue("place_id") && isLocationBased) {
         message.error("Place ID is missing. Please select a place.");
         return;
       }
 
-      const payload = {
-        ...values,
-        place_id: isLocationBased ? selectedPlace : null,
-      };
-      dispatch(setSelectedSubmitItem(payload));
+      dispatch(setSelectedSubmitItem(values));
     } catch (errorInfo) {
       console.error("Validation Failed:", errorInfo);
     }
@@ -109,11 +110,12 @@ const TaxFormFields = ({ mode }) => {
                 className="w-100"
                 placeholder="Choose a Country"
                 loading={locationLoading}
+                onChange={(id) => handleCountrySelect(id)}
               >
-                {countries && countries.length > 0 ? (
-                  countries.map((country) => (
-                    <Option key={country.id} value={country.id}>
-                      {country.country}
+                {detailedCountryList && detailedCountryList.length > 0 ? (
+                  detailedCountryList.map((place) => (
+                    <Option key={place.id} value={place.id}>
+                      {place.name}
                     </Option>
                   ))
                 ) : (
@@ -129,14 +131,31 @@ const TaxFormFields = ({ mode }) => {
             </Form.Item>
 
             {isLocationBased && (
-              <PlaceWithCountryForm
-                form={form}
-                label="Place"
-                onSelect={handlePlaceSelect}
-                rules={[
-                  { required: true, message: RulesMessageConstants.PLACE },
-                ]}
-              />
+              <Form.Item name="place_id" label="Place name">
+                <Select
+                  className="w-100"
+                  placeholder="Choose a Country"
+                  loading={locationLoading}
+                >
+                  {filteredPlaces && filteredPlaces.length > 0 ? (
+                    filteredPlaces.map((country) => (
+                      <Option key={country.id} value={country.id}>
+                        {country.name}
+                      </Option>
+                    ))
+                  ) : (
+                    <Option disabled>No countries available</Option>
+                  )}
+                </Select>
+              </Form.Item>
+              // <PlaceWithCountryForm
+              //   form={form}
+              //   label="Place"
+              //   onSelect={handlePlaceSelect}
+              //   rules={[
+              //     { required: true, message: RulesMessageConstants.PLACE },
+              //   ]}
+              // />
             )}
             <Form.Item name="available_category" label="Tax Category">
               <Select
@@ -197,7 +216,7 @@ const TaxFormFields = ({ mode }) => {
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addTax}
-        navigationPath={`${APP_PREFIX_PATH}/venue/list`}
+        navigationPath={`${APP_PREFIX_PATH}/tax/list`}
         responseMessage={responseMessage}
       />
     </Row>

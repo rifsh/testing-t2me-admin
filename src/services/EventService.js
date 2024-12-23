@@ -4,8 +4,8 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const EventsService = {};
 
-EventsService.addEvent = function (data,action) {
-    const encodedAction = encodeURIComponent(handleAction(action)); 
+EventsService.addEvent = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.EVENT_URL}?action=${encodedAction}`,
     method: "post",
@@ -13,12 +13,18 @@ EventsService.addEvent = function (data,action) {
   });
 };
 
-EventsService.getAllEvent = function () {
+EventsService.getAllEvent = function (page, pageSize) {
+  const params = {};
+  if (page !== null) params.page = page;
+  if (pageSize !== null) params.size = pageSize;
+
   return fetch({
     url: ApiConstant.EVENT_URL,
     method: "get",
+    params: params,
   });
 };
+
 EventsService.checkValidation = function () {
   return fetch({
     url: ApiConstant.EVENT_VALIDATION_URL,
@@ -32,11 +38,11 @@ EventsService.fetchEventDetails = function (eventId) {
   });
 };
 EventsService.updateEvent = function (data, action) {
-  const encodedAction = encodeURIComponent(handleAction(action)); 
+  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.EDIT_EVENT_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
-    data: data, 
+    data: data,
   });
 };
 

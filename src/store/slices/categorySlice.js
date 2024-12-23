@@ -54,7 +54,7 @@ export const fetchCategories = createAsyncThunk(
         return response.data;
       } else {
         const response = await CategoryService.fetchCategory();
-        return response.data;
+        return response.data[0];
       }
     } catch (error) {
       return rejectWithValue("Failed to fetch categories");
@@ -75,7 +75,7 @@ export const fetchSubcategories = createAsyncThunk(
       }
 
       const response = await CategoryService.fetchSubCategory(categoryId);
-      return response.data;
+      return response.data[0];
     } catch (error) {
       return rejectWithValue("Failed to fetch subcategories");
     }
@@ -171,8 +171,8 @@ const categorySlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.categories = payload;
-        state.filteredCategories = payload;
+        state.categories = payload.items;
+        state.filteredCategories = payload.items;
       })
       .addCase(fetchCategories.rejected, (state, { payload }) => {
         state.loading = false;
@@ -184,7 +184,7 @@ const categorySlice = createSlice({
       })
       .addCase(fetchSubcategories.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.subcategories = payload;
+        state.subcategories = payload.items;
       })
       .addCase(fetchSubcategories.rejected, (state, { payload }) => {
         state.loading = false;

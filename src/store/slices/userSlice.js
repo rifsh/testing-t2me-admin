@@ -21,7 +21,7 @@ export const fetchAllUsers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await UserService.getAllUsers();
-      return response;
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching users");
     }
@@ -117,8 +117,8 @@ const userSlice = createSlice({
       })
       .addCase(fetchAllUsers.fulfilled, (state, action) => {
         state.loading = false;
-        state.list = action.payload;
-        state.filteredUsers = action.payload;
+        state.list = action.payload.items;
+        state.filteredUsers = action.payload.items;
       })
       .addCase(fetchAllUsers.rejected, (state, action) => {
         state.loading = false;

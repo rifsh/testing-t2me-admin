@@ -33,10 +33,7 @@ import {
   getCoutryDetails,
   getPlaces,
 } from "store/slices/locationSlice";
-import {
-  setDialogVisible,
-  setSelectedItem,
-} from "store/slices/modalSlice";
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
 const { Option } = Select;
@@ -58,7 +55,11 @@ const PlaceList = () => {
     dispatch(filterPlaces({ searchTerm: value, status: null }));
   };
   const handleSelectCountry = async (id) => {
-    dispatch(getPlaces(id));
+    if (id === 0) {
+      dispatch(getPlaces());
+    } else {
+      dispatch(getPlaces(id));
+    }
   };
 
   const handleEditPlace = async (id) => {
@@ -131,16 +132,17 @@ const PlaceList = () => {
               className="w-100"
               placeholder="Choose a Country"
               loading={loading}
-              defaultValue={"All Country"}
-              onSelect={(id) => handleSelectCountry(id)}
+              defaultValue={0}
+              onSelect={handleSelectCountry}
             >
-              {detailedCountryList.map((country) => {
-                return (
-                  <Option key={country.id} value={country.id}>
-                    {country.name}
-                  </Option>
-                );
-              })}
+              <Option key={0} value={0}>
+                All Countries
+              </Option>
+              {detailedCountryList.map((country) => (
+                <Option key={country.id} value={country.id}>
+                  {country.name}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
         </Col>

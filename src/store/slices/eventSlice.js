@@ -7,10 +7,14 @@ import {
 } from "configs/MockConfig";
 import EventMockData from "mock/data/eventData";
 import EventService from "services/EventService";
+import Utils from "utils";
 import { ActionType } from "utils/api/warning-submit-util";
 const initialState = {
   eventDetails: {},
-  allEvents: [],
+  events: {
+    items: [],
+    total: 0,
+  },
   filteredEvents: [],
   loading: false,
   error: null,
@@ -27,6 +31,12 @@ const initialState = {
   warningMessage: null,
   responseData: null,
   responseMessage: null,
+  pagination: {
+    total: null,
+    page: 1,
+    size: 10,
+    pages: null,
+  },
 };
 
 export const fetchEventDetails = createAsyncThunk(
@@ -47,20 +57,22 @@ export const fetchEventDetails = createAsyncThunk(
 );
 export const fetchAllEvent = createAsyncThunk(
   "event/fetchAllEvent",
-  async (_, { rejectWithValue }) => {
+  async ({ page, size }, { rejectWithValue }) => {
     try {
       if (ENABLE_MOCK_API && ALL_EVENT_MOCK_API) {
         const response = EventMockData.fetchAllEvent;
         return response.data;
       } else {
-        const response = await EventService.getAllEvent();
-        return response.data;
+        const response = await EventService.getAllEvent(page, size);
+
+        return response.data[0];
       }
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
     }
   }
 );
+
 export const checkEventValidation = createAsyncThunk(
   "event/validation",
   async (_, { rejectWithValue }) => {
@@ -113,16 +125,38 @@ const eventSlice = createSlice({
     resetState: (state) => {
       return initialState;
     },
-    handleShowStatus: (state, action) => {
-      const value = action.payload;
-      if (value === "All") {
-        state.filteredEvents = state.allEvents;
-      } else {
-        state.filteredEvents = state.allEvents.filter(
-          (event) => event.status === value
+    filterEvent: (state, action) => {
+      const { searchTerm, status } = action.payload;
+      let filteredItems = [...state.events.items];
+
+      if (status && status !== "All") {
+        filteredItems = filteredItems.filter(
+          (item) =>
+            (status === "Active" && item.status) ||
+            (status === "Inactive" && !item.status)
         );
       }
+
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        filteredItems = filteredItems.filter(
+          (item) =>
+            [
+              "event_name",
+              "category.name",
+              "sub_category.name",
+              "venue.name",
+            ].some((key) =>
+              Utils.getObjectValue(item, key)
+                ?.toLowerCase()
+                .includes(searchLower)
+            ) || String(item.max_tickets).includes(searchLower)
+        );
+      }
+
+      state.filteredEvents = filteredItems;
     },
+
     setSubmitData(state, action) {
       state.submitData = { ...state.submitData, ...action.payload };
     },
@@ -169,6 +203,12 @@ const eventSlice = createSlice({
     setSelectedEvent(state, action) {
       state.selectedEvent = action.payload;
     },
+    setCurrentPage(state, action) {
+      state.currentPage = action.payload;
+    },
+    setPageSize(state, action) {
+      state.pageSize = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -210,9 +250,12 @@ const eventSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchAllEvent.fulfilled, (state, action) => {
-        state.loading = false;
-        state.allEvents = action.payload;
-        state.filteredEvents = action.payload;
+        state.loading=false
+        state.events = {
+          items: action.payload.items,
+        };
+        state.pagination = action.payload;
+        state.filteredEvents = action.payload.items;
       })
       .addCase(fetchAllEvent.rejected, (state, action) => {
         state.loading = false;
@@ -236,7 +279,32 @@ const eventSlice = createSlice({
       })
       .addCase(fetchEventDetails.fulfilled, (state, action) => {
         state.loading = false;
-        state.eventDetails = action.payload[0];
+        const eventData = { ...action.payload[0] };
+
+        const uniqueOffers = eventData.event_offers.reduce((acc, current) => {
+          const isDuplicate = acc.find(
+            (item) => item.offer.id === current.offer.id
+          );
+          if (!isDuplicate) {
+            acc.push(current);
+          }
+          return acc;
+        }, []);
+
+        const uniqueCoupons = eventData.event_coupons.reduce((acc, current) => {
+          const isDuplicate = acc.find(
+            (item) => item.coupons.id === current.coupons.id
+          );
+          if (!isDuplicate) {
+            acc.push(current);
+          }
+          return acc;
+        }, []);
+
+        eventData.event_offers = uniqueOffers;
+        eventData.event_coupons = uniqueCoupons;
+
+        state.eventDetails = eventData;
       })
       .addCase(fetchEventDetails.rejected, (state, action) => {
         state.loading = false;
@@ -247,15 +315,17 @@ const eventSlice = createSlice({
 
 export const {
   setDialogVisible,
+  setCurrentPage,
   setModalLoading,
   setSelectedEvent,
-  handleShowStatus,
+  filterEvent,
   setSubmitData,
   toggleSelectedCoupon,
   setWarningMessage,
   resetState,
   toggleSelectedOffer,
   resetSelected,
+  setPageSize,
   setCurrentStep,
   setSubmitLoading,
 } = eventSlice.actions;

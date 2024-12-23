@@ -14,10 +14,10 @@ export const fetchAvailableCategory = createAsyncThunk(
 );
 export const fetchAllTax = createAsyncThunk(
   "tax/fetchAllTax",
-  async (country_id, { rejectWithValue }) => {
+  async (data, { rejectWithValue }) => {
     try {
-      const response = await TaxService.fetchAllTax(country_id);
-      return response.data;
+      const response = await TaxService.fetchAllTax(data);
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -65,7 +65,7 @@ const taxSlice = createSlice({
       })
       .addCase(fetchAllTax.fulfilled, (state, action) => {
         state.loading = false;
-        state.allTax = action.payload;
+        state.allTax = action.payload.items;
       })
       .addCase(fetchAllTax.rejected, (state, action) => {
         state.loading = false;

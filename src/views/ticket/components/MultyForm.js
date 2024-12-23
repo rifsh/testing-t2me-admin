@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Form, Steps, Row, Col, message, Input } from "antd";
+import { Button, Form, Steps, Row, Col, message, Input, Tooltip  } from "antd";
 import TicketStructureFields from "./TicketStructureFields";
 import { useNavigate } from "react-router-dom";
 import { addOrUpdateTicketSet, currentStepSaveUpdate, removeSpecificTicketSet, resetTicketSets } from "store/slices/ticketSlice";
@@ -196,25 +196,16 @@ console.log(ticketCategory,'tikcetgdgd')
   };
   
   const extractTicketData = (responseData) => {
-    // Ensure responseData and ticket_types are available
     if (!responseData || !Array.isArray(responseData.ticket_types)) {
-      return {};  // Return empty object if ticket_types is not available
+      return {};  
     }
-  
-    // Create an object where the key is a common property (e.g., 'ticket_set') and its value is an array of ticket_set values
     const ticketDataObject = responseData.ticket_types.reduce((acc, item) => {
-      // Use base properties (like base_price, name, etc.) as the main object values
       const { base_price, name, number_of_tickets } = responseData;
-  
-      // If the key does not exist yet, create it, otherwise just push the ticket_set into the array
-      const key = 'ticket_set'; // In this case, the key for the ticket set array
+      const key = 'ticket_set'; 
       if (!acc[key]) {
-        acc[key] = [];  // Initialize the array if it doesn't exist
+        acc[key] = [];  
       }
   
-      // Add the ticket_set value to the array
-      
-      // Also store other properties in the same object
       acc.base_price = base_price;
       acc.name = name;
       acc.number_of_tickets = number_of_tickets;
@@ -277,7 +268,6 @@ console.log(mappedTicketData,'/////...................>>>>>>>>>>><<<<<<<<<<<<<<<
           ticket_set: ticketSetName || pipeSeparatedNames,
         }));
   
-        // Dispatch the action with the correct payload
         dispatch(
           addOrUpdateTicketSet({
             id: setId, // Ensure id is passed to the action
@@ -318,7 +308,7 @@ console.log(mappedTicketData,'/////...................>>>>>>>>>>><<<<<<<<<<<<<<<
           <Input
             value={ticketCategory.find((item) => item.step === index)?.value || ""} // Fetch value for each step
             onChange={(e) => updateTitle(e.target.value, index)} // Pass the step index to update the correct title
-            placeholder="Enter Title"
+            placeholder="Title"
             style={{ marginRight: "10px" }}
             disabled={currentStep !== index || !currentStepSaved}
             />
@@ -351,20 +341,43 @@ console.log(mappedTicketData,'/////...................>>>>>>>>>>><<<<<<<<<<<<<<<
         </Col>
         <Col style={{ display: "flex", gap: "10px" }}>
           
-            <Button type="dashed" disabled={!currentStepSaved}  onClick={currentStepSaved&&addTicketStructure}>
-              Add Ticket Structure
-            </Button>
+        <Tooltip 
+    title={!currentStepSaved ? "Save the current step to enable this action." : ""}
+    placement="top"
+  >
+    <div style={{ display: "inline-block" }}>
+      <Button
+        type="dashed"
+        disabled={!currentStepSaved}
+        onClick={currentStepSaved && addTicketStructure}
+      >
+        Add Ticket Structure
+      </Button>
+    </div>
+  </Tooltip>
           {ticketStructures.length > 1 && (
             <Button danger onClick={removeTicketStructure}>
               Remove Current Structure
             </Button>
           )}
-          <Button
-            type="primary"
-            onClick={currentStep === ticketStructures.length - 1 ? onSubmit : nextStep}
-          >
-            {currentStep === ticketStructures.length - 1 ? "Submit" : "Next"}
-          </Button>
+         <Tooltip
+  title={
+    currentStep === ticketStructures.length - 1 && !currentStepSaved
+      ? "Save the current step to enable submission."
+      : ""
+  }
+  placement="top"
+>
+  <div style={{ display: "inline-block" }}>
+    <Button
+      type="primary"
+      onClick={currentStep === ticketStructures.length - 1 ? onSubmit : nextStep}
+      disabled={currentStep === ticketStructures.length - 1 && !currentStepSaved}
+    >
+      {currentStep === ticketStructures.length - 1 ? "Submit" : "Next"}
+    </Button>
+  </div>
+</Tooltip>
         </Col>
       </Row>
       <SubmitAndConfirmModal
