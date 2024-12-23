@@ -65,24 +65,32 @@ const scheduleSlice = createSlice({
   reducers: {
     filterSchedules: (state, action) => {
       const { searchTerm, status } = action.payload;
-
-      let filteredSchedules = state.schedules;
+    
+      let fltreSchedule = state.schedules;
+    
+      // Filter based on status (Active or Inactive)
       if (status && status !== "All") {
-        filteredSchedules = filteredSchedules.filter(
+        fltreSchedule = fltreSchedule.filter(
           (schedule) =>
             (status === "Active" && schedule.status === true) ||
             (status === "Inactive" && schedule.status === false)
         );
       }
-
+    
+      // Filter based on search term
       if (searchTerm) {
-        filteredSchedules = filteredSchedules.filter((schedule) =>
-          schedule.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        fltreSchedule = fltreSchedule.filter((schedule) => {
+          // Skip schedules where the name is null or undefined
+          if (!schedule.name) return false; 
+    
+          // Compare schedule.name with the searchTerm
+          return schedule.name.toLowerCase().includes(searchTerm.toLowerCase());
+        });
       }
-
-      state.filteredSchedules = filteredSchedules;
-    },
+    
+      state.filteredSchedules = fltreSchedule;
+    }
+,    
     toggleSelectedOffer: (state, action) => {
       const existingOfferIndex = state.selectedOffers.findIndex(
         (offer) => offer.offer.id === action.payload.offer.id

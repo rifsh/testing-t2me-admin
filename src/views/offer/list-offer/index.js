@@ -15,6 +15,7 @@ import {
   SearchOutlined,
   FormOutlined,
   MoreOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
@@ -86,8 +87,8 @@ const OfferList = () => {
       key: "remark",
       label: (
         <Flex alignItems="center">
-          <PlusCircleOutlined />
-          <span className="ml-2">Add to remark</span>
+          <EditOutlined />
+          <span className="ml-2">Edit Offer</span>
         </Flex>
       ),
     },

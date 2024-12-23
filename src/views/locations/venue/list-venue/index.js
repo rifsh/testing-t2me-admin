@@ -21,11 +21,12 @@ import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 
 const { Option } = Select;
 
-
 const VenueList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredVenues, loading,message } = useSelector((state) => state.locations);
+  const { filteredVenues, loading, message } = useSelector(
+    (state) => state.locations
+  );
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -41,19 +42,26 @@ const VenueList = () => {
   };
 
   const handleSelectPlace = async (id) => {
-    console.log("Selected Place ID:", id);
-    dispatch(getVenues(id));
+    if (id === 0) {
+      dispatch(getVenues());
+    } else {
+      dispatch(getVenues(id));
+    }
   };
+    const handleViewDetails = async (id) => {
+      // await dispatch(fetchEventDetails(id));
+      navigate(`${APP_PREFIX_PATH}/venue/details/${id}`);
+    };
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
 
     dispatch(setSelectedItem(data));
-  };  
+  };
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
-        <Flex alignItems="center">
+      <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
@@ -141,8 +149,8 @@ const VenueList = () => {
             style={{ width: "100%" }}
           >
             <Option value="All">All status</Option>
-            <Option value={true}>Active</Option>
-            <Option value={false}>Inactive</Option>
+            <Option value={"Active"}>Active</Option>
+            <Option value={"Inactive"}>Inactive</Option>
           </Select>
         </Col>
       </Row>

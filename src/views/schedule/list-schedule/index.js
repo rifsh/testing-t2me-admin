@@ -19,7 +19,7 @@ const { Option } = Select;
 const ScheduleList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredSchedules, message } = useSelector(
+  const { filteredSchedules, message ,loading} = useSelector(
     (state) => state.schedules
   );
   // const [form] = Form.useForm();
@@ -29,8 +29,13 @@ const ScheduleList = () => {
   }, [dispatch]);
 
   const handleSearch = (e) => {
-    dispatch(filterSchedules({ searchTerm: e.target.value }));
+    const searchTerm = e.target.value;
+    // Dispatch filterSchedules with searchTerm and the current status
+    console.log(searchTerm);
+    
+    dispatch(filterSchedules({ searchTerm, status: null }));
   };
+  
 
   const handleShowStatus = (status) => {
     dispatch(filterSchedules({ status }));
@@ -44,22 +49,22 @@ const ScheduleList = () => {
     {
       title: "Schedule Name",
       dataIndex: "name",
-      sorter: (a, b) => a.event.localeCompare(b.event),
+      sorter: (a, b) => Utils.antdTableSorter(a, b, 'name'),
     },
     {
       title: "Event",
       dataIndex: ["event", "event_name"],
-      sorter: (a, b) => Utils.antdTableSorter(a, b, ["event", "event_name"]),
+      sorter: (a, b) => Utils.antdTableObjectSorter(a, b, ["event", "event_name"]),
     },
     {
       title: "Start Time",
       dataIndex: "start_date",
-      sorter: (a, b) => a.startTime.localeCompare(b.startTime),
+      sorter: (a, b) => Utils.antdTableSorter(a, b, 'start_date'),
     },
     {
       title: "End Time",
       dataIndex: "end_date",
-      sorter: (a, b) => a.endTime.localeCompare(b.endTime),
+      sorter: (a, b) => Utils.antdTableSorter(a, b, 'end_date'),
     },
     Utils.statusColumnUtil(handleUpdateStatus),
   ];
@@ -97,7 +102,13 @@ const ScheduleList = () => {
         </Button>
       </Flex>
       <div>
-        <Table columns={tableColumns} dataSource={filteredSchedules} />
+        <Table
+          columns={tableColumns}
+          dataSource={filteredSchedules}
+          rowKey="id" 
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+        />
       </div>
 
       <UpdateStatusModal

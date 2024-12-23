@@ -10,6 +10,7 @@ const PlaceWithCountryForm = ({ form, onSelect, style, rules, label }) => {
     (state) => state.locations
   );
   console.warn(placeWithCountryList, loading, error, "...");
+
   useEffect(() => {
     if (error) {
       message.error(error);
@@ -17,21 +18,19 @@ const PlaceWithCountryForm = ({ form, onSelect, style, rules, label }) => {
   }, [error]);
 
   useEffect(() => {
-    dispatch(fetchPlaceWithCountry(""));
+    dispatch(fetchPlaceWithCountry(""));  
   }, [dispatch]);
 
   const handleSearch = (value) => {
     if (value) {
-      dispatch(fetchPlaceWithCountry(value));
+      dispatch(fetchPlaceWithCountry(value)); 
     }
   };
 
   const handleSelect = async (value, option) => {
-    // console.log(value, option)
     try {
       await form.setFieldsValue({
         place_id: option.id,
-
         place: option.label,
       });
 
@@ -43,23 +42,18 @@ const PlaceWithCountryForm = ({ form, onSelect, style, rules, label }) => {
     }
   };
 
-  const autoCompleteOptions = placeWithCountryList.length
-    ? placeWithCountryList.map((place) => ({
-        label: `${place.name}, ${place.country.name}`,
-        id: place.id,
-        value: place.id,
-      }))
-    : [{ label: "No places found", value: "" }];
+  const autoCompleteOptions = [
+    { label: "All Places", value: 0, id: 0 }, 
+    ...placeWithCountryList.map((place) => ({
+      label: `${place.name}, ${place.country.name}`,
+      id: place.id,
+      value: place.id,
+    })),
+  ];
 
   return (
     <Form form={form} layout="vertical">
-      <Form.Item
-        name="place"
-        label={label}
-        rules={rules}
-        // id="455"
-        style={style}
-      >
+      <Form.Item name="place" label={label} rules={rules} style={style}>
         <AutoComplete
           notFoundContent={loading ? "Loading Places..." : "No Place Available"}
           onSearch={handleSearch}

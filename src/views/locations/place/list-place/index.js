@@ -74,12 +74,12 @@ const PlaceList = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item>
+      {/* <Menu.Item>
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item> */}
       <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditPlace(row.id)}>
           <EditOutlined />
