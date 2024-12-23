@@ -30,7 +30,6 @@ const ScheduleList = () => {
 
   const handleSearch = (e) => {
     const searchTerm = e.target.value;
-    // Dispatch filterSchedules with searchTerm and the current status
     console.log(searchTerm);
     
     dispatch(filterSchedules({ searchTerm, status: null }));

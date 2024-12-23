@@ -65,10 +65,9 @@ const scheduleSlice = createSlice({
   reducers: {
     filterSchedules: (state, action) => {
       const { searchTerm, status } = action.payload;
-    
+
       let fltreSchedule = state.schedules;
-    
-      // Filter based on status (Active or Inactive)
+
       if (status && status !== "All") {
         fltreSchedule = fltreSchedule.filter(
           (schedule) =>
@@ -76,21 +75,16 @@ const scheduleSlice = createSlice({
             (status === "Inactive" && schedule.status === false)
         );
       }
-    
-      // Filter based on search term
+
       if (searchTerm) {
         fltreSchedule = fltreSchedule.filter((schedule) => {
-          // Skip schedules where the name is null or undefined
-          if (!schedule.name) return false; 
-    
-          // Compare schedule.name with the searchTerm
+          if (!schedule.name) return false;
           return schedule.name.toLowerCase().includes(searchTerm.toLowerCase());
         });
       }
-    
+
       state.filteredSchedules = fltreSchedule;
-    }
-,    
+    },
     toggleSelectedOffer: (state, action) => {
       const existingOfferIndex = state.selectedOffers.findIndex(
         (offer) => offer.offer.id === action.payload.offer.id
@@ -106,7 +100,7 @@ const scheduleSlice = createSlice({
       const existingOfferIndex = state.selectedOffers.findIndex(
         (offer) => offer.offer.id === action.payload.id
       );
-      
+
       if (existingOfferIndex !== -1) {
         state.selectedOffers[existingOfferIndex] = {
           ...state.selectedOffers[existingOfferIndex],
@@ -116,7 +110,7 @@ const scheduleSlice = createSlice({
             end_date: action.payload.end_date,
             date_required: true,
             wasAdjusted: true,
-          }
+          },
         };
       }
     },
@@ -124,7 +118,7 @@ const scheduleSlice = createSlice({
       const existingCouponsIndex = state.selectedCoupons.findIndex(
         (coupons) => coupons.coupons.id === action.payload.id
       );
-      
+
       if (existingCouponsIndex !== -1) {
         state.selectedCoupons[existingCouponsIndex] = {
           ...state.selectedCoupons[existingCouponsIndex],
@@ -133,7 +127,7 @@ const scheduleSlice = createSlice({
             start_date: action.payload.start_date,
             end_date: action.payload.end_date,
             wasAdjusted: true,
-          }
+          },
         };
       }
     },
@@ -151,10 +145,9 @@ const scheduleSlice = createSlice({
     setSelectedItemForModal: (state, action) => {
       state.selectedItemForModal = action.payload;
     },
-    resetSchedule:(state,action)=>{
-      return initialState
-    }
-   
+    resetSchedule: (state, action) => {
+      return initialState;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -203,9 +196,11 @@ const scheduleSlice = createSlice({
 });
 
 export const {
-  filterSchedules,resetSchedule,
+  filterSchedules,
+  resetSchedule,
   toggleSelectedOffer,
-  toggleSelectedCoupon,updateSelectedCoupons,
+  toggleSelectedCoupon,
+  updateSelectedCoupons,
   setSelectedItemForModal,
   updateSelectedOffer,
 } = scheduleSlice.actions;

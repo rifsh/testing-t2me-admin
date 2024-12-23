@@ -109,14 +109,14 @@ const dashBoardNavTree = [
         breadcrumb: false,
         submenu: []
       },
-      {
-        key: 'seat.list',
-        path: `${APP_PREFIX_PATH}/seat/list`,
-        title: 'sidenav.seat',
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: []
-      },
+      // {
+      //   key: 'seat.list',
+      //   path: `${APP_PREFIX_PATH}/seat/list`,
+      //   title: 'sidenav.seat',
+      //   icon: OrderedListOutlined,
+      //   breadcrumb: false,
+      //   submenu: []
+      // },
       {
         key: 'schedule.list',
         path: `${APP_PREFIX_PATH}/schedule/list`,
