@@ -126,40 +126,33 @@ const PlaceList = () => {
   return (
     <Card>
       <Row gutter={16} justify="space-between" align="" wrap={false}>
-        <Row>
-          <Col xs={24} sm={8}>
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              onChange={(e) => handleSearch(e.target.value)}
-            />
-          </Col>
-          <Col xs={24} sm={4}>
-            <Form.Item name="country_id">
-              <Select
-                className="w-100"
-                placeholder="Choose a Country"
-                loading={loading}
-                defaultValue={0}
-                onSelect={handleSelectCountry}
-              >
-                <Option key={0} value={0}>
-                  All Countries
+        <Col xs={24} sm={8}>
+          <Input
+            placeholder="Search"
+            prefix={<SearchOutlined />}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </Col>
+        <Col xs={24} sm={6}>
+          <Form.Item name="country_id">
+            <Select
+              className="w-100"
+              placeholder="Choose a Country"
+              loading={loading}
+              defaultValue={0}
+              onSelect={handleSelectCountry}
+            >
+              <Option key={0} value={0}>
+                All Countries
+              </Option>
+              {detailedCountryList.map((country) => (
+                <Option key={country.id} value={country.id}>
+                  {country.name}
                 </Option>
-                {detailedCountryList.map((country) => (
-                  <Option
-                    key={country.id}
-                    value={country.id}
-                    style={{ paddingBottom: "0px" }}
-                  >
-                    {country.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-        </Row>
-
+              ))}
+            </Select>
+          </Form.Item>
+        </Col>
         <Col xs={24} sm={8} style={{ textAlign: "right" }}>
           <Button
             type="primary"
