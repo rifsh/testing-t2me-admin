@@ -234,7 +234,8 @@ export const ticketSlice = createSlice({
       })
       .addCase(fetchAllTickets.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.filteredTickets = payload;
+        console.warn("payload",payload)
+        state.filteredTickets = payload[0].items;
       })
       .addCase(fetchAllTickets.rejected, (state, { payload }) => {
         state.loading = false;

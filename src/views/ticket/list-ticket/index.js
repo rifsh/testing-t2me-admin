@@ -89,7 +89,7 @@ const TicketList = () => {
       <Table
         rowKey="id"
         dataSource={filteredTickets}
-        pagination={false}
+        // pagination={true}
         // onRow={(record) => ({
         //   onClick: () => showDetails(record),
         // })}
