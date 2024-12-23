@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Button, Card, Input, Select, Table,  } from "antd";
+import { Button, Card, Input, Select, Table } from "antd";
 import Flex from "components/shared-components/Flex";
 import { FormOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -38,7 +38,6 @@ const ScheduleList = () => {
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
-
     dispatch(setSelectedItem(data));
   };
   const tableColumns = [

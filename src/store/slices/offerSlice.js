@@ -19,10 +19,10 @@ export const fetchAllOffers = createAsyncThunk(
     try {
       if (ALL_OFFERS_MOCK_API && ENABLE_MOCK_API) {
         const response = OfferMockData.fetchAllOffers;
-        return response.data;
+        return response.data[0];
       } else {
         const response = await OfferService.getAllOffer();
-        return response.data;
+        return response.data[0];
       }
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching offers");
@@ -104,8 +104,8 @@ const offerSlice = createSlice({
       })
       .addCase(fetchAllOffers.fulfilled, (state, action) => {
         state.loading = false;
-        state.offers = action.payload;
-        state.filteredOffers = action.payload;
+        state.offers = action.payload.items;
+        state.filteredOffers = action.payload.items;
       })
       .addCase(fetchAllOffers.rejected, (state, action) => {
         state.loading = false;

@@ -21,9 +21,10 @@
   import { SubmitAndConfirmModal } from "../../../components/util-components/ModalItems/SubmitConfirmModal";
   import { setSelectedItem, setSelectedSubmitItem } from "store/slices/modalSlice";
   import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import TaxField from "./TaxField";
 
   const MultyStepEventForm = () => {
-    const steps = ["Event Details", "Category", "Location", "Ticket", "Offers"];
+    const steps = ["Event Details", "Category", "Location", "Tax","Ticket", "Offers"];
     const {
       currentStep,
       selectedCoupons,
@@ -110,8 +111,10 @@
         case 3:
           return <LocationDetailsField form={form} />;
         case 4:
-          return <TicketField form={form} />;
+          return <TaxField form={form} />;
         case 5:
+          return <TicketField form={form} />;
+        case 6:
           return <OfferField form={form} />;
         default:
           return null;

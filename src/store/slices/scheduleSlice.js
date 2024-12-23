@@ -25,7 +25,7 @@ export const fetchAllSchedules = createAsyncThunk(
         return response.data;
       } else {
         const response = await ScheduleService.getAllSchedule();
-        return response.data;
+        return response.data[0];
       }
     } catch (error) {
       return rejectWithValue(
@@ -184,8 +184,8 @@ const scheduleSlice = createSlice({
       })
       .addCase(fetchAllSchedules.fulfilled, (state, action) => {
         state.loading = false;
-        state.schedules = action.payload;
-        state.filteredSchedules = action.payload;
+        state.schedules = action.payload.items;
+        state.filteredSchedules = action.payload.items;
       })
       .addCase(fetchAllSchedules.rejected, (state, action) => {
         state.loading = false;
