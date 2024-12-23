@@ -92,7 +92,14 @@ service.interceptors.response.use(
 
       // Handle unique constraint violation error (duplicate category)
       if (data.status && data.status.status_code) {
-          const errorMessage = data.status.message;       
+        if (unauthorizedCode.includes(status)) {
+            notificationParam.message = "Session Expired";
+            notificationParam.description =
+              "Your session has expired. Please log in again.";
+            localStorage.removeItem(AUTH_TOKEN);
+            store.dispatch(signOutSuccess());
+          }
+        const errorMessage = data.status.message;       
           notificationParam.message = data.status.status_code;
           notificationParam.description = errorMessage;       
       } else {
