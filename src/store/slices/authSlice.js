@@ -22,7 +22,7 @@ export const signIn = createAsyncThunk(
 		const response = await AuthService.login({ username, password });
 		console.log('response data');
 		
-		const token = response.access_token; 
+		const token = response.data.access_token; 
   
 		if (token) {
 		  localStorage.setItem(AUTH_TOKEN, token);
