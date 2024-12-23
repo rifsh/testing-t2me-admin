@@ -7,14 +7,10 @@ import {
 } from "configs/MockConfig";
 import EventMockData from "mock/data/eventData";
 import EventService from "services/EventService";
-import Utils from "utils";
 import { ActionType } from "utils/api/warning-submit-util";
 const initialState = {
   eventDetails: {},
-  events: {
-    items: [],
-    total: 0,
-  },
+  events: [],
   filteredEvents: [],
   loading: false,
   error: null,
@@ -31,12 +27,6 @@ const initialState = {
   warningMessage: null,
   responseData: null,
   responseMessage: null,
-  pagination: {
-    total: null,
-    page: 1,
-    size: 10,
-    pages: null,
-  },
 };
 
 export const fetchEventDetails = createAsyncThunk(
@@ -57,14 +47,13 @@ export const fetchEventDetails = createAsyncThunk(
 );
 export const fetchAllEvent = createAsyncThunk(
   "event/fetchAllEvent",
-  async ({ page, size }, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
       if (ENABLE_MOCK_API && ALL_EVENT_MOCK_API) {
         const response = EventMockData.fetchAllEvent;
         return response.data;
       } else {
-        const response = await EventService.getAllEvent(page, size);
-
+        const response = await EventService.getAllEvent();
         return response.data[0];
       }
     } catch (error) {
@@ -72,7 +61,6 @@ export const fetchAllEvent = createAsyncThunk(
     }
   }
 );
-
 export const checkEventValidation = createAsyncThunk(
   "event/validation",
   async (_, { rejectWithValue }) => {
@@ -127,36 +115,24 @@ const eventSlice = createSlice({
     },
     filterEvent: (state, action) => {
       const { searchTerm, status } = action.payload;
-      let filteredItems = [...state.events.items];
 
+      let event = state.events;
       if (status && status !== "All") {
-        filteredItems = filteredItems.filter(
-          (item) =>
-            (status === "Active" && item.status) ||
-            (status === "Inactive" && !item.status)
+        event = event.filter(
+          (offer) =>
+            (status === "Active" && offer.status === true) ||
+            (status === "Inactive" && offer.status === false)
         );
       }
 
       if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        filteredItems = filteredItems.filter(
-          (item) =>
-            [
-              "event_name",
-              "category.name",
-              "sub_category.name",
-              "venue.name",
-            ].some((key) =>
-              Utils.getObjectValue(item, key)
-                ?.toLowerCase()
-                .includes(searchLower)
-            ) || String(item.max_tickets).includes(searchLower)
+        event = event.filter((offer) =>
+          offer.event_name.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
 
-      state.filteredEvents = filteredItems;
+      state.filteredEvents = event;
     },
-
     setSubmitData(state, action) {
       state.submitData = { ...state.submitData, ...action.payload };
     },
@@ -203,12 +179,6 @@ const eventSlice = createSlice({
     setSelectedEvent(state, action) {
       state.selectedEvent = action.payload;
     },
-    setCurrentPage(state, action) {
-      state.currentPage = action.payload;
-    },
-    setPageSize(state, action) {
-      state.pageSize = action.payload;
-    },
   },
   extraReducers: (builder) => {
     builder
@@ -250,11 +220,8 @@ const eventSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchAllEvent.fulfilled, (state, action) => {
-        state.loading=false
-        state.events = {
-          items: action.payload.items,
-        };
-        state.pagination = action.payload;
+        state.loading = false;
+        state.events = action.payload.items;
         state.filteredEvents = action.payload.items;
       })
       .addCase(fetchAllEvent.rejected, (state, action) => {
@@ -315,9 +282,9 @@ const eventSlice = createSlice({
 
 export const {
   setDialogVisible,
-  setCurrentPage,
   setModalLoading,
   setSelectedEvent,
+
   filterEvent,
   setSubmitData,
   toggleSelectedCoupon,
@@ -325,7 +292,6 @@ export const {
   resetState,
   toggleSelectedOffer,
   resetSelected,
-  setPageSize,
   setCurrentStep,
   setSubmitLoading,
 } = eventSlice.actions;
