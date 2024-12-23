@@ -1,5 +1,5 @@
-import React, { useCallback } from "react";
-import { Card, Select, Input, Button, Menu } from "antd";
+import React, { useEffect } from "react";
+import { Card, Table, Select, Input, Button, Menu } from "antd";
 import {
   EyeOutlined,
   SearchOutlined,
@@ -9,63 +9,63 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
-  fetchAllEvent,
-  filterEvent,
-  setCurrentPage,
-  setPageSize,
   editEvent,
+  fetchAllEvent,
+  fetchEventDetails,
+  filterEvent,
+  handleShowStatus,
 } from "store/slices/eventSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import utils from "utils";
-import CommonPaginationTable from "components/shared-components/Table/CommonPaginationTable";
-import { usePagination } from "utils/hooks/usePagination";
-import { debounce } from "lodash";
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
 const { Option } = Select;
 
+const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
+
 const EventsList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const { filteredEvents, pagination, loading, message } = useSelector(
+  const { filteredEvents, message, loading } = useSelector(
     (state) => state.event
   );
 
-  const { page, size } = pagination || {};
+  useEffect(() => {
+    dispatch(fetchAllEvent());
+  }, [dispatch]);
 
-  const { handlePageChange, handlePageSizeChange } = usePagination({
-    fetchAction: fetchAllEvent,
-    setCurrentPageAction: setCurrentPage,
-    setPageSizeAction: setPageSize,
-    currentPage: page || 1,
-    pageSize: size || 10,
-    extraParams: {}
-  });
-
-  const handleViewDetails = (id) =>
+  const handleViewDetails = async (id) => {
+    await dispatch(fetchEventDetails(id));
     navigate(`${APP_PREFIX_PATH}/event/details/${id}`);
+  };
 
-  const handleEditEvent = (id) =>
+  const handleEditEvent = async (id) => {
     navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
+  };
 
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
-    dispatch(editEvent({ data }));
+
+    dispatch(setSelectedItem(data));
   };
 
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item onClick={() => handleViewDetails(row.id)}>
-        <EyeOutlined />
-        <span className="ml-2">View Details</span>
+      <Menu.Item>
+        <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+          <EyeOutlined />
+          <span className="ml-2">View Details</span>
+        </Flex>
       </Menu.Item>
-      <Menu.Item onClick={() => handleEditEvent(row.id)}>
-        <EditOutlined />
-        <span className="ml-2">Edit Event</span>
+      <Menu.Item>
+        <Flex alignItems="center" onClick={() => handleEditEvent(row.id)}>
+          <EditOutlined />
+          <span className="ml-2">Edit Event</span>
+        </Flex>
       </Menu.Item>
     </Menu>
   );
@@ -101,64 +101,72 @@ const EventsList = () => {
     {
       title: "",
       dataIndex: "actions",
-      render: (_, elm) => <EllipsisDropdown menu={dropdownMenu(elm)} />,
+      render: (_, elm) => (
+        <div className="text-right">
+          <EllipsisDropdown menu={dropdownMenu(elm)} />
+        </div>
+      ),
     },
   ];
 
-  const debouncedSearch = useCallback(
-    debounce((value) => {
-      dispatch(filterEvent({ searchTerm: value, status: null }));
-    }, 300),
-    [dispatch]
-  );
-
-  const handleSearchChange = (e) => debouncedSearch(e.target.value);
+  const handleSearch = (e) => {
+    dispatch(filterEvent({ searchTerm: e.target.value, status: null }));
+  };
 
   const handleShowStatus = (status) => {
     dispatch(filterEvent({ searchTerm: null, status }));
-    if (page !== 1) {
-      dispatch(setCurrentPage(1));
-    }
   };
 
   return (
     <Card>
-      <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
+      <Flex
+        alignItems="center"
+        justifyContent="space-between"
+        mobileFlex={false}
+      >
         <Flex className="mb-1" mobileFlex={false}>
-          <Input
-            placeholder="Search"
-            prefix={<SearchOutlined />}
-            onChange={handleSearchChange}
-            className="mr-md-3 mb-3"
-          />
-          <Select
-            defaultValue="All"
-            onChange={handleShowStatus}
-            className="mb-3 mr-2"
-          >
-            <Option value="All">All</Option>
-            <Option value="Active">Active</Option>
-            <Option value="Inactive">Inactive</Option>
-          </Select>
+          <div className="mr-md-3 mb-3">
+            <Input
+              placeholder="Search"
+              prefix={<SearchOutlined />}
+              onChange={handleSearch}
+            />
+          </div>
+          <div className="mb-3">
+            <Select
+              defaultValue="All"
+              onChange={handleShowStatus}
+              className="mr-2"
+            >
+              <Option value="All">All</Option>
+              <Option value="Active">Active</Option>
+              <Option value="Inactive">Inactive</Option>
+            </Select>
+          </div>
         </Flex>
-        <Button
-          type="primary"
-          icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
-        >
-          Add Event
-        </Button>
+        <div>
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            block
+            onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
+          >
+            Add Event
+          </Button>
+        </div>
       </Flex>
-      <CommonPaginationTable
-        columns={tableColumns}
-        dataSource={filteredEvents}
-        loading={loading}
-        total={pagination?.total || 0}
-        currentPage={page || 1}
-        pageSize={size || 10}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
+      <div className="table-responsive">
+        <Table
+         columns={tableColumns}
+         dataSource={filteredEvents}
+         rowKey="id"
+         loading={loading}
+         pagination={{ pageSize: 10 }}
+         
+       
+        />
+      </div>
+
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editEvent}
