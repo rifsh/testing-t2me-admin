@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Card, Table, Select, Input, Button, Menu } from "antd";
+import React, { useCallback } from "react";
+import { Card, Select, Input, Button, Menu } from "antd";
 import {
   EyeOutlined,
   SearchOutlined,
@@ -9,62 +9,63 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
-  editEvent,
   fetchAllEvent,
-  fetchEventDetails,
-  handleShowStatus,
+  filterEvent,
+  setCurrentPage,
+  setPageSize,
+  editEvent,
 } from "store/slices/eventSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import utils from "utils";
-import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
+import CommonPaginationTable from "components/shared-components/Table/CommonPaginationTable";
+import { usePagination } from "utils/hooks/usePagination";
+import { debounce } from "lodash";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
 const { Option } = Select;
 
-const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
-
 const EventsList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { allEvents, filteredEvents, message, loading } = useSelector(
+
+  const { filteredEvents, pagination, loading, message } = useSelector(
     (state) => state.event
   );
 
-  useEffect(() => {
-    dispatch(fetchAllEvent());
-  }, [dispatch]);
+  const { page, size } = pagination || {};
 
-  const handleViewDetails = async (id) => {
-    await dispatch(fetchEventDetails(id));
+  const { handlePageChange, handlePageSizeChange } = usePagination({
+    fetchAction: fetchAllEvent,
+    setCurrentPageAction: setCurrentPage,
+    setPageSizeAction: setPageSize,
+    currentPage: page || 1,
+    pageSize: size || 10,
+    extraParams: {}
+  });
+
+  const handleViewDetails = (id) =>
     navigate(`${APP_PREFIX_PATH}/event/details/${id}`);
-  };
 
-  const handleEditEvent = async (id) => {
+  const handleEditEvent = (id) =>
     navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
-  };
 
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
-
-    dispatch(setSelectedItem(data));
+    dispatch(editEvent({ data }));
   };
 
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item>
-        <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
+      <Menu.Item onClick={() => handleViewDetails(row.id)}>
+        <EyeOutlined />
+        <span className="ml-2">View Details</span>
       </Menu.Item>
-      <Menu.Item>
-        <Flex alignItems="center" onClick={() => handleEditEvent(row.id)}>
-          <EditOutlined />
-          <span className="ml-2">Edit Event</span>
-        </Flex>
+      <Menu.Item onClick={() => handleEditEvent(row.id)}>
+        <EditOutlined />
+        <span className="ml-2">Edit Event</span>
       </Menu.Item>
     </Menu>
   );
@@ -83,7 +84,8 @@ const EventsList = () => {
     {
       title: "Sub Category",
       dataIndex: ["sub_category", "name"],
-      sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["sub_category", "name"]),
+      sorter: (a, b) =>
+        utils.antdTableObjectSorter(a, b, ["sub_category", "name"]),
     },
     {
       title: "Venue",
@@ -99,75 +101,64 @@ const EventsList = () => {
     {
       title: "",
       dataIndex: "actions",
-      render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
-      ),
+      render: (_, elm) => <EllipsisDropdown menu={dropdownMenu(elm)} />,
     },
   ];
 
-  const onSearch = (e) => {
-    const value = e.currentTarget.value;
-    const data = utils.wildCardSearch(allEvents, value);
-    dispatch(handleShowStatus(data));
-  };
+  const debouncedSearch = useCallback(
+    debounce((value) => {
+      dispatch(filterEvent({ searchTerm: value, status: null }));
+    }, 300),
+    [dispatch]
+  );
 
-  const handleStatusChange = (value) => {
-    dispatch(handleShowStatus(value));
+  const handleSearchChange = (e) => debouncedSearch(e.target.value);
+
+  const handleShowStatus = (status) => {
+    dispatch(filterEvent({ searchTerm: null, status }));
+    if (page !== 1) {
+      dispatch(setCurrentPage(1));
+    }
   };
 
   return (
     <Card>
-      <Flex
-        alignItems="center"
-        justifyContent="space-between"
-        mobileFlex={false}
-      >
+      <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
         <Flex className="mb-1" mobileFlex={false}>
-          <div className="mr-md-3 mb-3">
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              onChange={onSearch}
-            />
-          </div>
-          <div className="mb-3">
-            <Select
-              defaultValue="All"
-              className="w-100"
-              style={{ minWidth: 180 }}
-              onChange={handleStatusChange}
-              placeholder="Status"
-            >
-              {scheduleStatusList.map((elm) => (
-                <Option key={elm} value={elm}>
-                  {elm}
-                </Option>
-              ))}
-            </Select>
-          </div>
-        </Flex>
-        <div>
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
+          <Input
+            placeholder="Search"
+            prefix={<SearchOutlined />}
+            onChange={handleSearchChange}
+            className="mr-md-3 mb-3"
+          />
+          <Select
+            defaultValue="All"
+            onChange={handleShowStatus}
+            className="mb-3 mr-2"
           >
-            Add Event
-          </Button>
-        </div>
+            <Option value="All">All</Option>
+            <Option value="Active">Active</Option>
+            <Option value="Inactive">Inactive</Option>
+          </Select>
+        </Flex>
+        <Button
+          type="primary"
+          icon={<FormOutlined />}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
+        >
+          Add Event
+        </Button>
       </Flex>
-      <div className="table-responsive">
-        <Table
-          loading={loading}
-          columns={tableColumns}
-          dataSource={filteredEvents || allEvents}
-          rowKey="id"
-        />
-      </div>
-
+      <CommonPaginationTable
+        columns={tableColumns}
+        dataSource={filteredEvents}
+        loading={loading}
+        total={pagination?.total || 0}
+        currentPage={page || 1}
+        pageSize={size || 10}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+      />
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editEvent}

@@ -4,8 +4,7 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const TaxService = {};
 
-
-TaxService.addTax = function (data,action) {
+TaxService.addTax = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.TAX_URL}?action=${encodedAction}&country_id=${data.country_id}`,
@@ -27,10 +26,15 @@ TaxService.fetchAvailableTaxCategory = function () {
     method: "get",
   });
 };
-TaxService.fetchAllTax = function (country_id) {
+TaxService.fetchAllTax = function (data) {
+  const params = {};
+  if (data.country_id !== null) params.country_id = data.country_id;
+  if (data.place_id !== null) params.place_id = data.place_id;
+
   return fetch({
-    url: `${ApiConstant.TAX_URL}?country_id=${country_id}`,
+    url: `${ApiConstant.TAX_URL}`,
     method: "get",
+    params: params,
   });
 };
 export default TaxService;

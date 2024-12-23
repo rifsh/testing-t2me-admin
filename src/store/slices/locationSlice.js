@@ -90,7 +90,7 @@ export const fetchPlaceWithCountry = createAsyncThunk(
   async (place, { rejectWithValue }) => {
     try {
       const response = await LocationService.placeWithCountry(place);
-      return response.data;
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch places");
     }
@@ -116,10 +116,10 @@ export const getVenues = createAsyncThunk(
     try {
       if (GET_VENUE_MOCK_API) {
         const response = LocationMockData.getAllVenues;
-        return response.data;
+        return response.data[0];
       } else {
         const response = await LocationService.getVenues(place_id);
-        return response.data;
+        return response.data[0];
       }
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch places");
@@ -135,7 +135,7 @@ export const getPlaces = createAsyncThunk(
         return response.data;
       } else {
         const response = await LocationService.getPlaces(country_id);
-        return response.data;
+        return response.data[0];
       }
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch places");
@@ -212,6 +212,26 @@ const locationSlice = createSlice({
 
       state.filteredVenues = filteredVenues;
     },
+    filterPlaceWithCountry(state, action) {
+      const { searchTerm, status } = action.payload;
+
+      let filteredVenues = state.placeWithCountryList ;
+      if (status && status !== "All") {
+        filteredVenues = filteredVenues.filter(
+          (venue) =>
+            (status === "Active" && venue.status === true) ||
+            (status === "Inactive" && venue.status === false)
+        );
+      }
+
+      if (searchTerm) {
+        filteredVenues = filteredVenues.filter((venue) =>
+          venue.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      state.filteredVenues = filteredVenues;
+    },
 
     filterPlaces(state, action) {
       const { searchTerm, status } = action.payload;
@@ -266,8 +286,8 @@ const locationSlice = createSlice({
       })
       .addCase(getVenues.fulfilled, (state, action) => {
         state.loading = false;
-        state.venues = action.payload;
-        state.filteredVenues = action.payload;
+        state.venues = action.payload.items;
+        state.filteredVenues = action.payload.items;
       })
       .addCase(getVenues.rejected, (state, action) => {
         state.loading = false;
@@ -292,8 +312,8 @@ const locationSlice = createSlice({
       })
       .addCase(getPlaces.fulfilled, (state, action) => {
         state.loading = false;
-        state.places = action.payload;
-        state.filteredPlaces = action.payload;
+        state.places = action.payload.items;
+        state.filteredPlaces = action.payload.items;
       })
       .addCase(getPlaces.rejected, (state, action) => {
         state.loading = false;

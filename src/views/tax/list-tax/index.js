@@ -32,7 +32,7 @@ const TaxList = () => {
   const { loading: locationLoading, selectedPlace, countries } = locationState;
 
   useEffect(() => {
-    dispatch(fetchAllTax(1));
+    dispatch(fetchAllTax({}));
     dispatch(fetchAllCountires());
   }, [dispatch]);
 
@@ -146,7 +146,7 @@ const TaxList = () => {
                 value={form.getFieldValue("country_id")}
                 onChange={(value) => {
                   form.setFieldsValue({ country_id: value });
-                  dispatch(fetchAllTax(value)); // Fetch tax data for the selected country
+                  dispatch(fetchAllTax({ country_id: value }));
                 }}
               >
                 {countries && countries.length > 0 ? (

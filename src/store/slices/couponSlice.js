@@ -21,7 +21,7 @@ export const fetchAllCoupons = createAsyncThunk(
         return response.data;
       } else {
         const response = await CouponService.getAllCoupon();
-        return response.data;
+        return response.data[0];
       }
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching coupons");
@@ -100,8 +100,8 @@ const couponSlice = createSlice({
       })
       .addCase(fetchAllCoupons.fulfilled, (state, action) => {
         state.loading = false;
-        state.coupons = action.payload;
-        state.filteredCoupons = action.payload;
+        state.coupons = action.payload.items;
+        state.filteredCoupons = action.payload.items;
       })
       .addCase(fetchAllCoupons.rejected, (state, action) => {
         state.loading = false;
