@@ -1,6 +1,9 @@
 import { Tag } from "antd";
 import dayjs from "dayjs";
-import { updateSelectedCoupons, updateSelectedOffer } from "store/slices/scheduleSlice";
+import {
+  updateSelectedCoupons,
+  updateSelectedOffer,
+} from "store/slices/scheduleSlice";
 class Utils {
   /**
    * Get first character from first & last sentences of a username
@@ -14,24 +17,39 @@ class Utils {
 
   /**
    * Get current path related object from Navigation Tree
-   * @param {Array} navTree - Navigation Tree from directory 'configs/NavigationConfig'
+   * @param {Function|Array} navTree - Navigation Tree from directory 'configs/NavigationConfig'
    * @param {String} path - Location path you looking for e.g '/app/dashboards/analytic'
    * @return {Object} object that contained the path string
    */
   static getRouteInfo(navTree, path) {
-    if (navTree.path === path) {
-      return navTree;
+    // Handle case where navTree is a function
+    const tree = typeof navTree === "function" ? navTree() : navTree;
+
+    // If tree is empty or not an array, return null
+    if (!tree || !Array.isArray(tree)) {
+      return null;
     }
-    let route;
-    for (let p in navTree) {
-      if (navTree.hasOwnProperty(p) && typeof navTree[p] === "object") {
-        route = this.getRouteInfo(navTree[p], path);
-        if (route) {
-          return route;
+
+    // Search through the navigation tree
+    const searchTree = (items) => {
+      for (const item of items) {
+        // Check if current item's path matches
+        if (item.path === path) {
+          return item;
+        }
+
+        // If item has submenu, search through it
+        if (item.submenu && Array.isArray(item.submenu)) {
+          const found = searchTree(item.submenu);
+          if (found) {
+            return found;
+          }
         }
       }
-    }
-    return route;
+      return null;
+    };
+
+    return searchTree(tree);
   }
 
   /**
@@ -268,28 +286,27 @@ class Utils {
 
   /**
    * Utility to handle rendering and sorting logic for the "Status" column in Ant Design Table.
-   * @param {Object} record - The record object for the current row.
    * @param {Function} handleUpdateStatus - Function to handle the status update on click.
+   * @param {string} dataIndex - The key for the column in the data source (default: 'status').
    * @returns {Object} - An object containing render and sorter logic for the "Status" column.
    */
-  static statusColumnUtil = (handleUpdateStatus) => ({
+  static statusColumnUtil = (handleUpdateStatus, dataIndex = "status") => ({
     title: "Status",
-    dataIndex: "status",
+    dataIndex: dataIndex,
     render: (_, record) => (
       <Tag
-        color={record.status ? "green" : "red"}
+        color={record[dataIndex] ? "green" : "red"}
         style={{ cursor: "pointer" }}
         onClick={() => handleUpdateStatus(record)}
       >
-        {record.status ? "Active" : "Inactive"}
+        {record[dataIndex] ? "Active" : "Inactive"}
       </Tag>
     ),
-    sorter: (a, b) => {
-      if (a.status === b.status) return 0;
-      return a.status ? -1 : 1;
-    },
+    sorter: (a, b) =>
+      a[dataIndex] === b[dataIndex] ? 0 : a[dataIndex] ? -1 : 1,
     sortDirections: ["ascend", "descend"],
   });
+
   /**
    * Validates if the end date is earlier than the start date.
    * @param {dayjs} startDate
@@ -350,7 +367,7 @@ class Utils {
     valid_to
   ) => {
     dispatch(
-		updateSelectedCoupons({
+      updateSelectedCoupons({
         id: selectedItem.coupons.id,
         start_date: valid_from ? valid_from.format("YYYY-MM-DD") : null,
         end_date: valid_to ? valid_to.format("YYYY-MM-DD") : null,

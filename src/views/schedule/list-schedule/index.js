@@ -19,7 +19,7 @@ const { Option } = Select;
 const ScheduleList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredSchedules, message ,loading} = useSelector(
+  const { filteredSchedules, message,editable_status ,loading} = useSelector(
     (state) => state.schedules
   );
   // const [form] = Form.useForm();
@@ -112,6 +112,7 @@ const ScheduleList = () => {
 
       <UpdateStatusModal
         responseMessage={message}
+        editable_status={editable_status}
         editFunction={editSchedule}
         getAllFunction={fetchAllSchedules}
       />

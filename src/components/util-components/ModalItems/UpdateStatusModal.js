@@ -13,6 +13,7 @@ import { TextConstants } from "constants/TextConstant";
 const UpdateStatusModal = ({
   editFunction,
   getAllFunction,
+  editable_status=true,
   onSubmitMessage = TextConstants.StatusUpdatedSuccess,
   onCloseMessage = TextConstants.StatusUpdateCanceled,
   responseMessage,
@@ -67,8 +68,13 @@ const UpdateStatusModal = ({
     <WarningModal
       visible={statusDialogVisible}
       title={TextConstants.Confirm_Action}
-      details={responseMessage || TextConstants.WantToProceed}
-      warningMessage={TextConstants.WantToProceed}
+      details={responseMessage || ""}
+      editable_status={editable_status}
+      warningMessage={
+        editable_status
+          ? TextConstants.WantToProceed
+          : TextConstants.CannotProceed
+      }
       onSubmit={handleModalSubmit}
       onCancel={handleModalCancel}
       confirmText={TextConstants.ProceedButton}

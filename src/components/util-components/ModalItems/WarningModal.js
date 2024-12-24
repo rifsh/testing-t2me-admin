@@ -8,6 +8,7 @@ const WarningModal = ({
   visible,
   title = "Warning",
   details = "",
+  editable_status=true,
   warningMessage = "Are you sure you want to proceed?",
   onSubmit,
   onCancel,
@@ -33,6 +34,7 @@ const WarningModal = ({
           key="submit"
           type="primary"
           danger
+          disabled={!editable_status}
           loading={loading}
           onClick={onSubmit}
         >
