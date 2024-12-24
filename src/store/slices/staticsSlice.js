@@ -1,15 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
-    ALL_EVENT_MOCK_API,
-    ENABLE_MOCK_API,
-    EVENT_DETAILS_MOCK_API,
+  ALL_EVENT_MOCK_API,
+  ENABLE_MOCK_API,
+  ENABLE_STATICS_MOCK_API,
+  EVENT_DETAILS_MOCK_API,
 } from "configs/MockConfig";
 import StaticsService from "services/StaticsService"; // Define your service to handle API calls
 import StaticsMockData from "mock/data/staticsData"; // If you have mock data available
 
 const initialState = {
   annualStatsForEvents: [],
-  annualStatsForUsers: [], 
+  annualStatsForUsers: [],
   annualStatsForSchedules: [],
   loading: false,
   loadingMembers: true,
@@ -23,7 +24,7 @@ export const fetchAnnualStatsforEvents = createAsyncThunk(
   "statistics/fetchAnnualStatsforEvents",
   async (_, { rejectWithValue }) => {
     try {
-      if (ENABLE_MOCK_API) {
+      if (ENABLE_MOCK_API & ENABLE_STATICS_MOCK_API) {
         const response = StaticsMockData.fetchAnnualStatsForEvents;
         return response.data; // Return mock data if mock API is enabled
       } else {
@@ -31,7 +32,9 @@ export const fetchAnnualStatsforEvents = createAsyncThunk(
         return response.data;
       }
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch annual statistics for events");
+      return rejectWithValue(
+        error.message || "Failed to fetch annual statistics for events"
+      );
     }
   }
 );
@@ -41,7 +44,7 @@ export const fetchUserStatsForUsers = createAsyncThunk(
   "statistics/fetchUserStatsForUsers",
   async (_, { rejectWithValue }) => {
     try {
-      if (ENABLE_MOCK_API) {
+      if (ENABLE_MOCK_API & ENABLE_STATICS_MOCK_API) {
         const response = StaticsMockData.fetchAnnualStatsForUsers;
         return response.data; // Return mock data if mock API is enabled
       } else {
@@ -49,7 +52,9 @@ export const fetchUserStatsForUsers = createAsyncThunk(
         return response.data;
       }
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch annual statistics for users");
+      return rejectWithValue(
+        error.message || "Failed to fetch annual statistics for users"
+      );
     }
   }
 );
@@ -59,7 +64,7 @@ export const fetchUserStatsForSchedules = createAsyncThunk(
   "statistics/fetchUserStatsForSchedules",
   async (_, { rejectWithValue }) => {
     try {
-      if (ENABLE_MOCK_API) {
+      if (ENABLE_MOCK_API & ENABLE_STATICS_MOCK_API) {
         const response = StaticsMockData.fetchUserStatsForSchedules;
         return response.data; // Return mock data if mock API is enabled
       } else {
@@ -67,7 +72,9 @@ export const fetchUserStatsForSchedules = createAsyncThunk(
         return response.data;
       }
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch annual statistics for users");
+      return rejectWithValue(
+        error.message || "Failed to fetch annual statistics for users"
+      );
     }
   }
 );
@@ -114,7 +121,7 @@ const staticsSlice = createSlice({
       .addCase(fetchUserStatsForUsers.rejected, (state, { payload }) => {
         state.loadingMembers = false;
         state.error = payload || "Failed to fetch annual statistics for users";
-      })       
+      })
       .addCase(fetchUserStatsForSchedules.pending, (state) => {
         state.loadingSchedules = true;
         state.error = null;
@@ -131,7 +138,8 @@ const staticsSlice = createSlice({
 });
 
 // Export actions
-export const { setAnnualStats, setUserStats, setScheduleStats, setMessage } = staticsSlice.actions;
+export const { setAnnualStats, setUserStats, setScheduleStats, setMessage } =
+  staticsSlice.actions;
 
 // Export reducer
 export default staticsSlice.reducer;
