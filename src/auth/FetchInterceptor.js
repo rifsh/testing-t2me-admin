@@ -9,7 +9,7 @@ const unauthorizedCode = [401, 403];
 
 const service = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 60000
+  timeout: 60000,
 });
 
 // Config
@@ -137,6 +137,10 @@ service.interceptors.response.use(
             "An unexpected error occurred. Please try again or contact support if the issue persists.";
         }
       }
+    } else {
+      notificationParam.message = "Unexpected Error";
+      notificationParam.description =
+        "An unexpected error occurred. Please try again or contact support if the issue persists.";
     }
 
     // Show the error notification
