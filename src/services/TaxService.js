@@ -28,9 +28,10 @@ TaxService.fetchAvailableTaxCategory = function () {
 };
 TaxService.fetchAllTax = function (data) {
   const params = {};
+  if(data){
   if (data.country_id !== null) params.country_id = data.country_id;
   if (data.place_id !== null) params.place_id = data.place_id;
-
+}
   return fetch({
     url: `${ApiConstant.TAX_URL}`,
     method: "get",

@@ -11,8 +11,8 @@ LocationService.getAllCountries = function () {
   });
 };
 
-LocationService.addPlace = function (data,action) {
-  const encodedAction = encodeURIComponent(handleAction(action)); 
+LocationService.addPlace = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.PLACE_URL}?country_id=${data.country_id}&action=${encodedAction}`,
     method: "post",
@@ -20,14 +20,14 @@ LocationService.addPlace = function (data,action) {
   });
 };
 
-  LocationService.editPlace = function (data, action) {
-    const encodedAction = encodeURIComponent(handleAction(action));
-    return fetch({
-      url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}?action=${encodedAction}`,
-      method: "put",
-      data: data,
-    });
-  };
+LocationService.editPlace = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+  });
+};
 LocationService.editVenue = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
@@ -37,8 +37,8 @@ LocationService.editVenue = function (data, action) {
   });
 };
 
-LocationService.addVenue =  function (data,action) {
-  const encodedAction = encodeURIComponent(handleAction(action)); 
+LocationService.addVenue = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.VENUE_URL}?place_id=${data.place_id}&action=${encodedAction}`,
     method: "post",
@@ -57,6 +57,12 @@ LocationService.getVenues = function (place_id) {
     url: place_id
       ? `${ApiConstant.VENUE_URL}?place_id=${place_id}`
       : `${ApiConstant.VENUE_URL}`,
+    method: "get",
+  });
+};
+LocationService.getSingleVenues = function (venue_id) {
+  return fetch({
+    url: `${ApiConstant.SINGLE_VENUE_URL}/${venue_id}`,
     method: "get",
   });
 };

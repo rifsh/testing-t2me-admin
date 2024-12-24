@@ -1,5 +1,4 @@
-
-import Flex from 'components/shared-components/Flex'
+import Flex from "components/shared-components/Flex";
 import React, { useEffect } from "react";
 import { Tabs, Form } from "antd";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
@@ -10,23 +9,23 @@ import { useSelector } from "react-redux";
 const ADD = "ADD";
 const EDIT = "EDIT";
 
-
 const CategoryForm = ({ mode = ADD, id }) => {
-	
-	const category = useSelector((state) =>
-		state.category.categories.find((cat) => cat.id === id)
-	  );
-	  	
-		  useEffect(() => {
-			if (mode === EDIT && id) {
-      
+  const { formTabKey } = useSelector((state) => state.category);
+  const category = useSelector((state) =>
+    state.category.categories.find((cat) => cat.id === id)
+  );
+
+  useEffect(() => {
+    if (mode === EDIT && id) {
     }
   }, [mode, id]);
 
-  
-
   return (
-    <Form layout="vertical" name="category-form" className="ant-advanced-search-form">
+    <Form
+      layout="vertical"
+      name="category-form"
+      className="ant-advanced-search-form"
+    >
       <PageHeaderAlt className="border-bottom" overlap>
         <div className="container">
           <Flex
@@ -35,13 +34,15 @@ const CategoryForm = ({ mode = ADD, id }) => {
             justifyContent="space-between"
             alignItems="center"
           >
-            <h2 className="mb-3">{mode === ADD ? "Add New Category" : "Edit Category"}</h2>
+            <h2 className="mb-3">
+              {mode === ADD ? "Add New Category" : "Edit Category"}
+            </h2>
           </Flex>
         </div>
       </PageHeaderAlt>
       <div className="container">
         <Tabs
-          defaultActiveKey="1"
+          defaultActiveKey={formTabKey}
           style={{ marginTop: 30 }}
           items={[
             {

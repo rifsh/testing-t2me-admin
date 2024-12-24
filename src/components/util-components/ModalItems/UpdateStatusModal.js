@@ -52,6 +52,7 @@ const UpdateStatusModal = ({
 
       message.success(onSubmitMessage);
     } else {
+      dispatch(resetStatusModalState());
       message.error(TextConstants.StatusUpdateError);
     }
   };

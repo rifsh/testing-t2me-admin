@@ -193,4 +193,24 @@ LocationMockData.fetchAllCountries = {
     status_code: 200,
   },
 };
+LocationMockData.singleVenue = {
+  data: [
+    {
+      status: false,
+      created_at: "2024-12-23T13:44:27",
+      updated_at: "2024-12-23T19:14:27.225956",
+      name: "asdasd",
+      capacity: 23,
+      indoor: false,
+      address: "aase",
+      latitude: 21.13,
+      longitude: 12.24,
+      id: 9,
+    },
+  ],
+  status: {
+    message: "success",
+    status_code: "00000",
+  },
+};
 export default LocationMockData;

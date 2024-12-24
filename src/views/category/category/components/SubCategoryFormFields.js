@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { Option } from "antd/es/mentions";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 
 const ADD = "ADD";
 // const EDIT = "EDIT";
@@ -23,7 +25,7 @@ const CategoryFormFields = ({ mode = ADD }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const { loading, error, categories } = useSelector((state) => state.category);
+  const { loading, error, categories , responseData, responseMessage } = useSelector((state) => state.category);
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -38,16 +40,16 @@ const CategoryFormFields = ({ mode = ADD }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
+   dispatch(setSelectedSubmitItem(values));
+      // const resultAction = await dispatch(
+      //   addSubCategory({ data: values, categoryId: values.category_id })
+      // );
   
-      const resultAction = await dispatch(
-        addSubCategory({ data: values, categoryId: values.category_id })
-      );
-  
-      if (addSubCategory.fulfilled.match(resultAction)) {
-        message.success(`Subcategory ${values.name} added successfully`);
-        form.resetFields();
-        navigate(`${APP_PREFIX_PATH}/category/list`);
-      }
+      // if (addSubCategory.fulfilled.match(resultAction)) {
+      //   message.success(`Subcategory ${values.name} added successfully`);
+      //   form.resetFields();
+      //   navigate(`${APP_PREFIX_PATH}/category/list`);
+      // }
     } catch (errorInfo) {
       console.log("Validation Failed:", errorInfo);
     }
@@ -102,6 +104,12 @@ const CategoryFormFields = ({ mode = ADD }) => {
           </Form>
         </Card>
       </Col>
+       <SubmitAndConfirmModal
+              responseData={responseData}
+              addFunction={addSubCategory}
+              navigationPath={`${APP_PREFIX_PATH}/category/list`}
+              responseMessage={responseMessage}
+            />
     </Row>
   );
 };

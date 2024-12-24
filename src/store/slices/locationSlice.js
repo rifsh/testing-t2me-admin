@@ -3,6 +3,7 @@ import {
   ALL_COUNTRIES_MOCK_API,
   ENABLE_MOCK_API,
   GET_PLACE_MOCK_API,
+  GET_SINGLE_VENUE_MOCK_API,
   GET_VENUE_MOCK_API,
 } from "configs/MockConfig";
 import LocationMockData from "mock/data/location";
@@ -15,6 +16,7 @@ export const initialState = {
   filteredPlaces: [],
   placeWithCountryList: [],
   error: null,
+  singleVenues: null,
   venues: [],
   detailedCountryList: [],
   places: [],
@@ -52,9 +54,8 @@ export const fetchAllCountires = createAsyncThunk(
 
 export const createPlace = createAsyncThunk(
   "place/create",
-  async ({data, action}, { rejectWithValue }) => {
+  async ({ data, action }, { rejectWithValue }) => {
     try {
-
       const response = await LocationService.addPlace(data, action);
       return response;
     } catch (error) {
@@ -101,7 +102,6 @@ export const addVenue = createAsyncThunk(
   "locations/addVenue",
   async ({ data, action }, { rejectWithValue }) => {
     try {
-
       const response = await LocationService.addVenue(data, action);
       return response;
     } catch (error) {
@@ -119,6 +119,22 @@ export const getVenues = createAsyncThunk(
         return response.data[0];
       } else {
         const response = await LocationService.getVenues(place_id);
+        return response.data[0];
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+export const getSingleVenues = createAsyncThunk(
+  "locations/getSingleVenues",
+  async (venue_id, { rejectWithValue }) => {
+    try {
+      if (GET_SINGLE_VENUE_MOCK_API && ENABLE_MOCK_API) {
+        const response = LocationMockData.singleVenue;
+        return response.data[0];
+      } else {
+        const response = await LocationService.getSingleVenues(venue_id);
         return response.data[0];
       }
     } catch (error) {
@@ -215,7 +231,7 @@ const locationSlice = createSlice({
     filterPlaceWithCountry(state, action) {
       const { searchTerm, status } = action.payload;
 
-      let filteredVenues = state.placeWithCountryList ;
+      let filteredVenues = state.placeWithCountryList;
       if (status && status !== "All") {
         filteredVenues = filteredVenues.filter(
           (venue) =>
@@ -290,6 +306,18 @@ const locationSlice = createSlice({
         state.filteredVenues = action.payload.items;
       })
       .addCase(getVenues.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getSingleVenues.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getSingleVenues.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleVenues = action.payload.items;
+      })
+      .addCase(getSingleVenues.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -372,7 +400,7 @@ const locationSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
-      .addCase(addVenue.fulfilled,(state, action) => {
+      .addCase(addVenue.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
         state.responseData = action.payload.data;
@@ -390,7 +418,8 @@ export const {
   setStatusFilter,
   setOptions,
   onSelect,
-  onchange,setLocationDialogVisible,
+  onchange,
+  setLocationDialogVisible,
   setLocationModalLoading,
   filterVenues,
   singleVenue,
@@ -398,7 +427,7 @@ export const {
   setCoordinates,
   filterPlaces,
   setSelectedVenue,
-  
+
   setSelectedPlace,
 } = locationSlice.actions;
 export const allLocations = (state) => state.location;
