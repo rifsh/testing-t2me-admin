@@ -7,7 +7,6 @@ import OfferField from "views/event/components/OfferField";
 import { jwtDecode } from "jwt-decode";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 
-// Function to get the current user from the token
 export const getCurrentUser = () => {
   const token = localStorage.getItem(AUTH_TOKEN);
 
@@ -25,8 +24,21 @@ export const getCurrentUser = () => {
     return null;
   }
 };
-
-// Function to get form items based on the user's role and current step
+export const getUserRole = () => {
+  const currentUser = getCurrentUser();
+  switch (currentUser.role_id) {
+    case 1:
+      return "Super Admin";
+    case 2:
+      return "Super Supporting Team";
+    case 3:
+      return "Event Organizer";
+    case 4:
+      return "Event Supporting Team";
+    default:
+      return null;
+  }
+};
 const getEventFormItems = (form, currentStep) => {
   const currentUser = getCurrentUser();
 
@@ -35,10 +47,7 @@ const getEventFormItems = (form, currentStep) => {
     return null;
   }
 
-  console.log(currentUser, "currentUser");
-
-  // Super Admin items
-  if (currentUser.is_superuser) {
+  if (currentUser.role_id === 1) {
     switch (currentStep) {
       case 1:
         return <EventDetailsField form={form} />;
@@ -57,7 +66,7 @@ const getEventFormItems = (form, currentStep) => {
     }
   }
 
-  if (!currentUser.is_superuser) {
+  if (currentUser.role_id === 3) {
     switch (currentStep) {
       case 1:
         return <EventDetailsField form={form} />;
@@ -74,26 +83,18 @@ const getEventFormItems = (form, currentStep) => {
 export default getEventFormItems;
 
 export const getEventFormSteps = () => {
-    const currentUser = getCurrentUser();
-  
-    if (!currentUser) {
-      console.error("User not authenticated. Cannot fetch form steps.");
-      return null;
-    }
-  
-    console.log(currentUser, "currentUser");
-  
-    if (currentUser.is_superuser) {
-      return [
-        "Event Details",
-        "Category",
-        "Location",
-        "Tax",
-        "Ticket",
-        "Offers",
-      ];
-    } else {
-      return ["Event Details"];
-    }
-  };
-  
+  const currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    console.error("User not authenticated. Cannot fetch form steps.");
+    return null;
+  }
+
+  if (currentUser.role_id === 1) {
+    return ["Event Details", "Category", "Location", "Tax", "Ticket", "Offers"];
+  } else if (currentUser.role_id === 3) {
+    return ["Event Details"];
+  } else {
+    return [];
+  }
+};

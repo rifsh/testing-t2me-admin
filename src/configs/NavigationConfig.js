@@ -174,9 +174,9 @@ const navigationConfig = () => {
   const decodedToken = jwtDecode(token);
   console.log(decodedToken, "decodedTOken");
 
-  if (decodedToken?.is_superuser) {
+  if (decodedToken?.role_id===1) {
     return superAdminDashBoardNavTree;
-  } else if (!decodedToken?.is_superuser) {
+  } else if (decodedToken?.role_id===3) {
     return eventOrganaizerDashBoardNavTree;
   }
 

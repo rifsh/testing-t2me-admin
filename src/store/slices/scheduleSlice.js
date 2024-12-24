@@ -11,7 +11,8 @@ export const initialState = {
   selectedOffers: [],
   selectedItemForModal: null,
   error: null,
-  message: null,editable_status:true,
+  message: null,
+  editable_status: true,
   responseData: null,
   responseMessage: null,
 };

@@ -61,7 +61,7 @@ const UserList = () => {
 
   const handleUpdateStatus = (item) => {
     const newStatus = !item.is_active;
-    const data = { is_active: newStatus, id: item.id };
+    const data = { status: newStatus, id: item.id };
 
     dispatch(setSelectedItem(data));
   };
@@ -104,7 +104,7 @@ const UserList = () => {
       dataIndex: ["role", "name"],
       sorter: (a, b) => Utils.antdTableSorter(a, b, ["role", "name"]),
     },
-    Utils.statusColumnUtil(handleUpdateStatus,"is_active"),
+    Utils.statusColumnUtil(handleUpdateStatus, "is_active"),
     {
       title: "",
       dataIndex: "actions",
@@ -172,10 +172,10 @@ const UserList = () => {
               {selectedUser.email}
             </Descriptions.Item>
             <Descriptions.Item label="Role">
-              {selectedUser.role}
+              {selectedUser.role?.name || "No role assigned"}
             </Descriptions.Item>
             <Descriptions.Item label="Status">
-              {selectedUser.status ? "Active" : "Inactive"}
+              {selectedUser.is_active ? "Active" : "Inactive"}
             </Descriptions.Item>
             <Descriptions.Item label="Additional Info">
               {selectedUser.info || "No additional information available"}
