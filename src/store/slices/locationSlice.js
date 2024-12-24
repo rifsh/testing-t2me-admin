@@ -315,7 +315,7 @@ const locationSlice = createSlice({
       })
       .addCase(getSingleVenues.fulfilled, (state, action) => {
         state.loading = false;
-        state.singleVenues = action.payload.items;
+        state.singleVenues = action.payload;
       })
       .addCase(getSingleVenues.rejected, (state, action) => {
         state.loading = false;

@@ -62,7 +62,7 @@ LocationService.getVenues = function (place_id) {
 };
 LocationService.getSingleVenues = function (venue_id) {
   return fetch({
-    url: `${ApiConstant.SINGLE_VENUE_URL}/${venue_id}`,
+    url: `${ApiConstant.SINGLE_VENUE_URL}?venue_id=${venue_id}`,
     method: "get",
   });
 };
