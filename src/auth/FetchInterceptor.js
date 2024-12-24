@@ -9,7 +9,7 @@ const unauthorizedCode = [401, 403];
 
 const service = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 60000,
+  timeout: 60000
 });
 
 // Config
@@ -40,6 +40,7 @@ service.interceptors.request.use(
     if (config.params) {
       console.log("[REQUEST] Query Params:", config.params);
     }
+    config.withCredentials = true;
     return config;
   },
   (error) => {
