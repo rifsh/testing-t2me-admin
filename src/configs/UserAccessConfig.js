@@ -6,6 +6,7 @@ import TicketField from "views/event/components/TicketsField";
 import OfferField from "views/event/components/OfferField";
 import { jwtDecode } from "jwt-decode";
 import { AUTH_TOKEN } from "constants/AuthConstant";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 
 export const getCurrentUser = () => {
   const token = localStorage.getItem(AUTH_TOKEN);
@@ -24,21 +25,23 @@ export const getCurrentUser = () => {
     return null;
   }
 };
+
 export const getUserRole = () => {
   const currentUser = getCurrentUser();
   switch (currentUser.role_id) {
     case 1:
-      return "Super Admin";
+      return UserRoleConstants.superAdmin;
     case 2:
-      return "Super Supporting Team";
+      return UserRoleConstants.superSupportingTeam;
     case 3:
-      return "Event Organizer";
+      return UserRoleConstants.eventOrganizer;
     case 4:
-      return "Event Supporting Team";
+      return UserRoleConstants.eventSupportingTeam;
     default:
-      return null;
+      return UserRoleConstants.defaultRole;
   }
 };
+
 const getEventFormItems = (form, currentStep) => {
   const currentUser = getCurrentUser();
 
