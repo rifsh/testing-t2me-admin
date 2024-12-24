@@ -1,8 +1,4 @@
-import {
-  DashboardOutlined,
-
-  OrderedListOutlined,
-} from "@ant-design/icons";
+import { DashboardOutlined, OrderedListOutlined } from "@ant-design/icons";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { jwtDecode } from "jwt-decode";

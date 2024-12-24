@@ -73,9 +73,10 @@ const userSlice = createSlice({
       let filteredUsers = state.list;
 
       if (status && status !== "All") {
-        const isActive = status === "Active";
         filteredUsers = filteredUsers.filter(
-          (user) => user.is_active === isActive
+          (user) =>
+            (status === "Active" && user.is_active === true) ||
+            (status === "Inactive" && user.is_active === false)
         );
       }
 

@@ -21,9 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllUsers, filterUsers, editUser } from "store/slices/userSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import {
-  setSelectedItem,
-} from "store/slices/modalSlice";
+import { setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
@@ -62,8 +60,8 @@ const UserList = () => {
   };
 
   const handleUpdateStatus = (item) => {
-    const newStatus = !item.status;
-    const data = { status: newStatus, id: item.id };
+    const newStatus = !item.is_active;
+    const data = { is_active: newStatus, id: item.id };
 
     dispatch(setSelectedItem(data));
   };
@@ -79,15 +77,15 @@ const UserList = () => {
       ),
       onClick: () => showModal(row),
     },
-    {
-      key: "remark",
-      label: (
-        <Flex alignItems="center">
-          <PlusCircleOutlined />
-          <span className="ml-2">Add to remark</span>
-        </Flex>
-      ),
-    },
+    // {
+    //   key: "remark",
+    //   label: (
+    //     <Flex alignItems="center">
+    //       <PlusCircleOutlined />
+    //       <span className="ml-2">Add to remark</span>
+    //     </Flex>
+    //   ),
+    // },
   ];
 
   const tableColumns = [
@@ -106,7 +104,7 @@ const UserList = () => {
       dataIndex: ["role", "name"],
       sorter: (a, b) => Utils.antdTableSorter(a, b, ["role", "name"]),
     },
-    Utils.statusColumnUtil(handleUpdateStatus),
+    Utils.statusColumnUtil(handleUpdateStatus,"is_active"),
     {
       title: "",
       dataIndex: "actions",

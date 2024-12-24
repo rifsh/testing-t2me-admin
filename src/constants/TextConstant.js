@@ -1,6 +1,7 @@
 export const TextConstants = {
   Confirm_Action: "Confirm Action",
   WantToProceed: "Are you sure you want to proceed?",
+  CannotProceed: "You cannot proceed. Please fix the warnings manually.",
   StatusUpdatedSuccess: "Status updated successfully.",
   ItemAddedSuccessfully: "Item added successfully.",
   StatusUpdateCanceled: "Status update canceled.",
