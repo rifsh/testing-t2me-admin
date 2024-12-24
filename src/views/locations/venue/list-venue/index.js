@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import utils from "utils";
-import { editVenue, filterVenues, getVenues } from "store/slices/locationSlice";
+import { editVenue, filterVenues, getSingleVenues, getVenues } from "store/slices/locationSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 
@@ -49,7 +49,7 @@ const VenueList = () => {
     }
   };
     const handleViewDetails = async (id) => {
-      // await dispatch(fetchEventDetails(id));
+      await dispatch(getSingleVenues(id));
       navigate(`${APP_PREFIX_PATH}/venue/details/${id}`);
     };
   const handleUpdateStatus = (item) => {
