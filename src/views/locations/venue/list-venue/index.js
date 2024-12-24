@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Card, Table, Select, Input, Button, Tag, Menu, Row, Col } from "antd";
+import { Card, Table, Select, Input, Button,  Menu, Row, Col } from "antd";
 import {
   EyeOutlined,
   PlusCircleOutlined,
@@ -17,7 +17,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import utils from "utils";
 import { editVenue, filterVenues, getSingleVenues, getVenues } from "store/slices/locationSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
-import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
+import {  setSelectedItem } from "store/slices/modalSlice";
 
 const { Option } = Select;
 

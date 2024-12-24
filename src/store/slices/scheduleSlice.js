@@ -12,6 +12,7 @@ export const initialState = {
   selectedItemForModal: null,
   error: null,
   message: null,
+  editable_status: true,
   responseData: null,
   responseMessage: null,
 };
@@ -159,6 +160,7 @@ const scheduleSlice = createSlice({
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
+          state.editable_status = payload.editable_status;
         }
       })
       .addCase(editSchedule.rejected, (state, { payload }) => {

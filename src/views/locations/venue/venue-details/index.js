@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Row, Col, Typography, Image, Button } from "antd";
+import { Card, Row, Col, Typography, Image,  } from "antd";
 import Loading from "components/shared-components/Loading";
 import { useSelector } from "react-redux";
 

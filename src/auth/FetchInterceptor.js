@@ -94,46 +94,50 @@ service.interceptors.response.use(
       // Handle unique constraint violation error (duplicate category)
       if (data.status && data.status.status_code) {
         if (unauthorizedCode.includes(status)) {
-            notificationParam.message = "Session Expired";
-            notificationParam.description =
-              "Your session has expired. Please log in again.";
-            localStorage.removeItem(AUTH_TOKEN);
-            store.dispatch(signOutSuccess());
-          }
-        const errorMessage = data.status.message;       
-          notificationParam.message = data.status.status_code;
-          notificationParam.description = errorMessage;       
+          notificationParam.message = "Session Expired";
+          notificationParam.description =
+            "Your session has expired. Please log in again.";
+          localStorage.removeItem(AUTH_TOKEN);
+          store.dispatch(signOutSuccess());
+        }
+        const errorMessage = data.status.message;
+        notificationParam.message = data.status.status_code;
+        notificationParam.description = errorMessage;
       } else {
-          // Custom Network errors handled if tickets2me server not giving any status code
-          if (unauthorizedCode.includes(status)) {
-            notificationParam.message = "Session Expired";
-            notificationParam.description =
-              "Your session has expired. Please log in again.";
-            localStorage.removeItem(AUTH_TOKEN);
-            store.dispatch(signOutSuccess());
-          } else if (status === 404) {
-            notificationParam.message = "Resource Not Found";
-            notificationParam.description =
-              "The requested resource could not be found. Please check the URL or try again later.";
-          } else if (status === 400) {
-            notificationParam.message = "Invalid Request";
-            notificationParam.description =
-              "The request could not be processed due to incorrect data. Please check your input and try again.";
-          } else if (status === 500) {
-            notificationParam.message = "Server Error";
-            notificationParam.description =
-              "An unexpected error occurred on the server. Please try again later.";
-          } else if (status === 508) {
-            notificationParam.message = "Timeout";
-            notificationParam.description =
-              "The server took too long to respond. Please check your internet connection or try again.";
-          } else {
-            notificationParam.message = "Unexpected Error";
-            notificationParam.description =
-              "An unexpected error occurred. Please try again or contact support if the issue persists.";
-          }
-        } 
+        // Custom Network errors handled if tickets2me server not giving any status code
+        if (unauthorizedCode.includes(status)) {
+          notificationParam.message = "Session Expired";
+          notificationParam.description =
+            "Your session has expired. Please log in again.";
+          localStorage.removeItem(AUTH_TOKEN);
+          store.dispatch(signOutSuccess());
+        } else if (status === 404) {
+          notificationParam.message = "Resource Not Found";
+          notificationParam.description =
+            "The requested resource could not be found. Please check the URL or try again later.";
+        } else if (status === 400) {
+          notificationParam.message = "Invalid Request";
+          notificationParam.description =
+            "The request could not be processed due to incorrect data. Please check your input and try again.";
+        } else if (status === 500) {
+          notificationParam.message = "Server Error";
+          notificationParam.description =
+            "An unexpected error occurred on the server. Please try again later.";
+        } else if (status === 503) {
+          notificationParam.message = "Service Unavailable";
+          notificationParam.description =
+            "The server is temporarily unavailable. Please try again later.";
+        } else if (status === 508) {
+          notificationParam.message = "Timeout";
+          notificationParam.description =
+            "The server took too long to respond. Please check your internet connection or try again.";
+        } else {
+          notificationParam.message = "Unexpected Error";
+          notificationParam.description =
+            "An unexpected error occurred. Please try again or contact support if the issue persists.";
+        }
       }
+    }
 
     // Show the error notification
     notification.error(notificationParam);

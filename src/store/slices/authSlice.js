@@ -9,33 +9,33 @@ export const initialState = {
   message: "",
   showMessage: false,
   redirect: "",
-  userData:localStorage.getItem(AUTH_TOKEN)
+  userData: localStorage.getItem(AUTH_TOKEN)
   ? jwtDecode(localStorage.getItem(AUTH_TOKEN))
   : null,
   token: localStorage.getItem(AUTH_TOKEN) || null,
 };
 export const signIn = createAsyncThunk(
-	"auth/login",
-	async (data, { rejectWithValue }) => {
-	  const { username, password } = data;
-	  try {
-		const response = await AuthService.login({ username, password });
-		console.log('response data');
-		
-		const token = response.data.access_token; 
-  
-		if (token) {
-		  localStorage.setItem(AUTH_TOKEN, token);
-		  return token;
-		} else {
-		  return rejectWithValue("Authentication failed, no token received.");
-		}
-	  } catch (err) {
-		return rejectWithValue(err.response?.data?.message || "Error");
-	  }
-	}
-  );
-  
+  "auth/login",
+  async (data, { rejectWithValue }) => {
+    const { username, password } = data;
+    try {
+      const response = await AuthService.login({ username, password });
+      console.log("response data");
+
+      const token = response.data.access_token;
+
+      if (token) {
+        localStorage.setItem(AUTH_TOKEN, token);
+        return token;
+      } else {
+        return rejectWithValue("Authentication failed, no token received.");
+      }
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Error");
+    }
+  }
+);
+
 export const signUp = createAsyncThunk(
   "auth/register",
   async (data, { rejectWithValue }) => {
@@ -84,6 +84,19 @@ export const signInWithFacebook = createAsyncThunk(
     }
   }
 );
+export const getUserdata = createAsyncThunk(
+  "auth/getUserData",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = localStorage.getItem(AUTH_TOKEN)
+        ? jwtDecode(localStorage.getItem(AUTH_TOKEN))
+        : null;
+      return response;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Error");
+    }
+  }
+);
 
 export const authSlice = createSlice({
   name: "auth",
@@ -127,6 +140,18 @@ export const authSlice = createSlice({
         state.token = action.payload;
       })
       .addCase(signIn.rejected, (state, action) => {
+        state.message = action.payload;
+        state.showMessage = true;
+        state.loading = false;
+      })
+      .addCase(getUserdata.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getUserdata.fulfilled, (state, action) => {
+        state.loading = false;
+        state.userData = action.payload;
+      })
+      .addCase(getUserdata.rejected, (state, action) => {
         state.message = action.payload;
         state.showMessage = true;
         state.loading = false;
