@@ -88,12 +88,11 @@ export const AppLayout = ({ navCollapsed, navType, direction, children }) => {
             </Layout>
             {isMobile && <MobileNav routeInfo={currentRouteInfo} />}
         </Layout>
-    )
-}
-
-const mapStateToProps = ({ theme }) => {
-    const { navCollapsed, navType, locale } =  theme;
-    return { navCollapsed, navType, locale }
+    );
 };
 
+const mapStateToProps = ({ theme }) => {
+    const { navCollapsed, navType, locale } = theme;
+    return { navCollapsed, navType, locale };
+};
 export default connect(mapStateToProps)(React.memo(AppLayout));

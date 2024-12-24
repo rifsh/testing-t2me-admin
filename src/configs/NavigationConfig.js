@@ -1,12 +1,17 @@
-import { DashboardOutlined, DotChartOutlined, FundOutlined, OrderedListOutlined } from '@ant-design/icons';
-import { APP_PREFIX_PATH } from 'configs/AppConfig'
+import {
+  DashboardOutlined,
 
+  OrderedListOutlined,
+} from "@ant-design/icons";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { AUTH_TOKEN } from "constants/AuthConstant";
+import { jwtDecode } from "jwt-decode";
 
-const dashBoardNavTree = [
+const superAdminDashBoardNavTree = [
   {
-    key: 'dashboards',
+    key: "dashboards",
     path: `${APP_PREFIX_PATH}/dashboards`,
-    title: 'sidenav.dashboard',
+    title: "sidenav.dashboard",
     icon: DashboardOutlined,
     breadcrumb: false,
     isGroupTitle: true,
@@ -20,13 +25,13 @@ const dashBoardNavTree = [
       //   submenu: []
       // },
       {
-        key: 'dashboards-statics',
+        key: "dashboards-statics",
         path: `${APP_PREFIX_PATH}/dashboards/statics`,
-        title: 'sidenav.dashboard.statics',
+        title: "sidenav.dashboard.statics",
         icon: DashboardOutlined,
         breadcrumb: false,
-        submenu: []
-      }
+        submenu: [],
+      },
       // {
       //   key: 'dashboards-analytic',
       //   path: `${APP_PREFIX_PATH}/dashboards/analytic`,
@@ -34,7 +39,7 @@ const dashBoardNavTree = [
       //   icon: DotChartOutlined,
       //   breadcrumb: false,
       //   submenu: []
-      // }, 
+      // },
       // {
       //   key: 'dashboards-sales',
       //   path: `${APP_PREFIX_PATH}/dashboards/sales`,
@@ -43,71 +48,71 @@ const dashBoardNavTree = [
       //   breadcrumb: false,
       //   submenu: []
       // }
-    ]
+    ],
   },
   {
-    key: 'Forms',
+    key: "Forms",
     path: `${APP_PREFIX_PATH}/forms`,
-    title: 'sidenav.forms',
+    title: "sidenav.forms",
     icon: DashboardOutlined,
     breadcrumb: false,
     isGroupTitle: false,
     submenu: [
       {
-        key: 'event.list',
+        key: "event.list",
         path: `${APP_PREFIX_PATH}/event/list`,
-        title: 'sidenav.event.list',
+        title: "sidenav.event.list",
         icon: OrderedListOutlined,
         breadcrumb: false,
-        submenu: []
+        submenu: [],
       },
       {
-        key: 'place.list',
+        key: "place.list",
         path: `${APP_PREFIX_PATH}/place/list`,
-        title: 'sidenav.place.list',
+        title: "sidenav.place.list",
         icon: OrderedListOutlined,
         breadcrumb: false,
-        submenu: []
+        submenu: [],
       },
       {
-        key: 'venue.list',
+        key: "venue.list",
         path: `${APP_PREFIX_PATH}/venue/list`,
-        title: 'sidenav.venue.list',
+        title: "sidenav.venue.list",
         icon: OrderedListOutlined,
         breadcrumb: false,
-        submenu: []
+        submenu: [],
       },
       {
-        key: 'category.list',
+        key: "category.list",
         path: `${APP_PREFIX_PATH}/category/list`,
-        title: 'sidenav.category',
+        title: "sidenav.category",
         icon: OrderedListOutlined,
         breadcrumb: false,
-        submenu: []
+        submenu: [],
       },
       {
-        key: 'offer.list',
+        key: "offer.list",
         path: `${APP_PREFIX_PATH}/offer/list`,
-        title: 'sidenav.offer',
+        title: "sidenav.offer",
         icon: OrderedListOutlined,
         breadcrumb: false,
-        submenu: []
+        submenu: [],
       },
       {
-        key: 'coupon.list',
+        key: "coupon.list",
         path: `${APP_PREFIX_PATH}/coupon/list`,
-        title: 'sidenav.coupon',
+        title: "sidenav.coupon",
         icon: OrderedListOutlined,
         breadcrumb: false,
-        submenu: []
+        submenu: [],
       },
       {
-        key: 'user.list',
+        key: "user.list",
         path: `${APP_PREFIX_PATH}/user/list`,
-        title: 'sidenav.user',
+        title: "sidenav.user",
         icon: OrderedListOutlined,
         breadcrumb: false,
-        submenu: []
+        submenu: [],
       },
       // {
       //   key: 'seat.list',
@@ -118,35 +123,68 @@ const dashBoardNavTree = [
       //   submenu: []
       // },
       {
-        key: 'schedule.list',
+        key: "schedule.list",
         path: `${APP_PREFIX_PATH}/schedule/list`,
-        title: 'sidenav.schedule',
+        title: "sidenav.schedule",
         icon: OrderedListOutlined,
         breadcrumb: false,
-        submenu: []
+        submenu: [],
       },
       {
-        key: 'ticket.list',
+        key: "ticket.list",
         path: `${APP_PREFIX_PATH}/ticket/list`,
-        title: 'sidenav.ticket',
+        title: "sidenav.ticket",
         icon: OrderedListOutlined,
         breadcrumb: false,
-        submenu: []
+        submenu: [],
       },
       {
-        key: 'tax.list',
+        key: "tax.list",
         path: `${APP_PREFIX_PATH}/tax/list`,
-        title: 'sidenav.tax',
+        title: "sidenav.tax",
         icon: OrderedListOutlined,
         breadcrumb: false,
-        submenu: []
+        submenu: [],
       },
-    ]
+    ],
+  },
+];
+const eventOrganaizerDashBoardNavTree = [
+  {
+    key: "Forms",
+    path: `${APP_PREFIX_PATH}/forms`,
+    title: "sidenav.forms",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    isGroupTitle: false,
+    submenu: [
+      {
+        key: "event.list",
+        path: `${APP_PREFIX_PATH}/event/list`,
+        title: "sidenav.event.list",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
+  },
+];
+const navigationConfig = () => {
+  const token = localStorage.getItem(AUTH_TOKEN);
+  if (!token) {
+    return [];
   }
-]
 
-const navigationConfig = [
-  ...dashBoardNavTree
-]
+  const decodedToken = jwtDecode(token);
+  console.log(decodedToken, "decodedTOken");
+
+  if (decodedToken?.is_superuser) {
+    return superAdminDashBoardNavTree;
+  } else if (!decodedToken?.is_superuser) {
+    return eventOrganaizerDashBoardNavTree;
+  }
+
+  return [];
+};
 
 export default navigationConfig;

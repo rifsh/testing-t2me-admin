@@ -12,27 +12,42 @@ class Utils {
     return ((initials.shift() || "") + (initials.pop() || "")).toUpperCase();
   }
 
-  /**
+    /**
    * Get current path related object from Navigation Tree
-   * @param {Array} navTree - Navigation Tree from directory 'configs/NavigationConfig'
+   * @param {Function|Array} navTree - Navigation Tree from directory 'configs/NavigationConfig'
    * @param {String} path - Location path you looking for e.g '/app/dashboards/analytic'
    * @return {Object} object that contained the path string
    */
-  static getRouteInfo(navTree, path) {
-    if (navTree.path === path) {
-      return navTree;
-    }
-    let route;
-    for (let p in navTree) {
-      if (navTree.hasOwnProperty(p) && typeof navTree[p] === "object") {
-        route = this.getRouteInfo(navTree[p], path);
-        if (route) {
-          return route;
-        }
+    static getRouteInfo(navTree, path) {
+      // Handle case where navTree is a function
+      const tree = typeof navTree === 'function' ? navTree() : navTree;
+      
+      // If tree is empty or not an array, return null
+      if (!tree || !Array.isArray(tree)) {
+        return null;
       }
+  
+      // Search through the navigation tree
+      const searchTree = (items) => {
+        for (const item of items) {
+          // Check if current item's path matches
+          if (item.path === path) {
+            return item;
+          }
+          
+          // If item has submenu, search through it
+          if (item.submenu && Array.isArray(item.submenu)) {
+            const found = searchTree(item.submenu);
+            if (found) {
+              return found;
+            }
+          }
+        }
+        return null;
+      };
+  
+      return searchTree(tree);
     }
-    return route;
-  }
 
   /**
    * Get accessible color contrast

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import { Button, Form, Input, Divider, Alert } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
@@ -11,7 +11,8 @@ import {
 	showAuthMessage, 
 	hideAuthMessage, 
 	signInWithGoogle, 
-	signInWithFacebook 
+	signInWithFacebook, 
+	getUserdata
 } from 'store/slices/authSlice';
 import { useNavigate } from 'react-router-dom'
 import { motion } from "framer-motion"
@@ -43,10 +44,11 @@ export const LoginForm = props => {
 	// 	username: 'shamil707@gmail.com',
 	// 	password: 'admin@321'
 	// }
-
+const dispatch=useDispatch()
 	const onLogin = values => {
 		showLoading()
 		signIn(values);
+		dispatch(getUserdata())
 		// signInSuccess()
 	};
 
