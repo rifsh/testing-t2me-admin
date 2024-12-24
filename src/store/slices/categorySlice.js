@@ -12,16 +12,18 @@ const initialState = {
   activeTab: "categories",
   subcategories: [],
   filteredCategories: [],
+  filteredSubCategories: [],
   searchTerm: "",
-  responseData:null,
-  responseMessage:null,
+  formTabKey: 2,
+  responseData: null,
+  responseMessage: null,
   selectedCategoryId: null,
   error: null,
   message: null,
 };
 export const addCategory = createAsyncThunk(
   "category/add",
-  async ({data, action}, { rejectWithValue }) => {
+  async ({ data, action }, { rejectWithValue }) => {
     try {
       const response = await CategoryService.addCategory(data, action);
       return response;
@@ -84,9 +86,9 @@ export const fetchSubcategories = createAsyncThunk(
 
 export const addSubCategory = createAsyncThunk(
   "category/addSubCategory",
-  async ({ data, categoryId }, { rejectWithValue }) => {
+  async ({ data, action }, { rejectWithValue }) => {
     try {
-      const response = await CategoryService.addSubCategory(data, categoryId);
+      const response = await CategoryService.addSubCategory(data, action);
       console.log("response data", response);
 
       return response;
@@ -113,11 +115,29 @@ const categorySlice = createSlice({
   name: "category",
   initialState,
   reducers: {
+    filterCategory: (state, action) => {
+      const { searchTerm, type } = action.payload;
+
+      if (type === "category") {
+        state.filteredCategories = state.categories.filter((category) =>
+          category.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      } else if (type === "subCategory") {
+        state.filteredSubCategories = state.subcategories.filter(
+          (subCategory) =>
+            subCategory.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+    },
+
     setSearchTerm: (state, action) => {
       state.searchTerm = action.payload;
       state.filteredCategories = state.categories.filter((cat) =>
         cat.name.toLowerCase().includes(action.payload.toLowerCase())
       );
+    },
+    setFormTabKey: (state, action) => {
+      state.formTabKey = action.payload;
     },
     setActiveTab: (state, action) => {
       state.activeTab = action.payload;
@@ -185,6 +205,7 @@ const categorySlice = createSlice({
       .addCase(fetchSubcategories.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.subcategories = payload.items;
+        state.filteredSubCategories = payload.items;
       })
       .addCase(fetchSubcategories.rejected, (state, { payload }) => {
         state.loading = false;
@@ -221,7 +242,11 @@ const categorySlice = createSlice({
   },
 });
 
-export const { setSearchTerm, setActiveTab, clearSubcategories } =
-  categorySlice.actions;
+export const {
+  filterCategory,
+  setFormTabKey,
+  setActiveTab,
+  clearSubcategories,
+} = categorySlice.actions;
 
 export default categorySlice.reducer;

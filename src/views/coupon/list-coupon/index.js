@@ -1,167 +1,222 @@
-/* eslint-disable no-unused-vars */
-import React, { useEffect } from "react";
-import { Card, Table, Select, Input, Button, Tag, Menu } from "antd";
+import React, { useEffect, useState } from "react";
+import {
+  Card,
+  Table,
+  Select,
+  Input,
+  Button,
+  Modal,
+  Descriptions,
+  Dropdown,
+} from "antd";
 import {
   EyeOutlined,
   PlusCircleOutlined,
   SearchOutlined,
   FormOutlined,
+  MoreOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
-import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { editCoupon, fetchAllCoupons, filterCoupons } from "store/slices/couponSlice";
+import {
+  editCoupon,
+  fetchAllCoupons,
+  filterCoupons,
+} from "store/slices/couponSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import {
+  setDialogVisible,
+  setSelectedItem,
+} from "store/slices/modalSlice";
 import Utils from "utils";
-import { setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+
 const { Option } = Select;
 
-const getStatusColor = (status) => {
-  if (status) {
-    return "green"; // Active
-  }
-  return "red"; // Inactive
-};
-
 const CouponList = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { filteredCoupons, loading , message} = useSelector((state) => state.coupons);
+  const dispatch = useDispatch();
+  const { filteredCoupons, loading, message } = useSelector(
+    (state) => state.coupons
+  );
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
 
   useEffect(() => {
     dispatch(fetchAllCoupons());
   }, [dispatch]);
 
-  const handleSearch = (value) => {
-    dispatch(filterCoupons({ searchTerm: value, status: null }));
+  const handleSearch = (e) => {
+    dispatch(filterCoupons({ searchTerm: e.target.value, status: null }));
   };
-  const handleUpdateStatus = (item) => {
-    const newStatus = !item.status;
-    const data = { status: newStatus, id: item.id };
 
-    dispatch(setSelectedItem(data));
-  };
   const handleShowStatus = (status) => {
     dispatch(filterCoupons({ searchTerm: null, status }));
   };
 
-  const dropdownMenu = (row) => (
-    <Menu>
-      <Menu.Item>
+  const showModal = (coupon) => {
+    setSelectedCoupon(coupon);
+    setIsModalVisible(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+    setSelectedCoupon(null);
+  };
+
+  const handleUpdateStatus = (item) => {
+    const newStatus = !item.status;
+    const data = { status: newStatus, id: item.id };
+    dispatch(setSelectedItem(data));
+    dispatch(setDialogVisible(true));
+  };
+
+  const getDropdownMenu = (row) => [
+    {
+      key: "view",
+      label: (
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
-      <Menu.Item>
+      ),
+      onClick: () => showModal(row),
+    },
+    {
+      key: "remark",
+      label: (
         <Flex alignItems="center">
-          <PlusCircleOutlined />
-          <span className="ml-2">Add to remark</span>
+          <EditOutlined />
+          <span className="ml-2">Edit Coupon</span>
         </Flex>
-      </Menu.Item>
-    </Menu>
-  );
+      ),
+    },
+  ];
 
   const tableColumns = [
     {
       title: "Coupon Name",
       dataIndex: "name",
-      render: (_, record) => <span>{record.name}</span>,
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
     },
     {
-      title: "Coupon Code",
-      dataIndex: "coupon_code",
-      render: (_, record) => <span>{record.coupon_code}</span>,
-      sorter: (a, b) => a.coupon_code.localeCompare(b.coupon_code),
-    },
-    {
-      title: "Discount (%)",
+      title: "Discount Percentage",
       dataIndex: "discount_percentage",
-      render: (_, record) => <span>{record.discount_percentage}</span>,
       sorter: (a, b) => a.discount_percentage - b.discount_percentage,
+      render: (value) => `${value}%`,
     },
     {
       title: "Start Date",
       dataIndex: "start_date",
-      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
       sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
     },
     {
       title: "End Date",
       dataIndex: "end_date",
-      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
       sorter: (a, b) => new Date(a.end_date) - new Date(b.end_date),
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
     },
     {
       title: "Max Uses",
       dataIndex: "max_uses",
-      render: (_, record) => <span>{record.max_uses}</span>,
       sorter: (a, b) => a.max_uses - b.max_uses,
     },
     Utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "",
       dataIndex: "actions",
-      render: (_, record) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(record)} />
-        </div>
+      render: (_, row) => (
+        <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
+          <Button type="text" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
     },
   ];
 
   return (
     <Card>
-      <Flex
-        alignItems="center"
-        justifyContent="space-between"
-        mobileFlex={false}
-      >
-        <Flex className="mb-1" mobileFlex={false}>
-          <div className="mr-md-3 mb-3">
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              onChange={(e) => handleSearch(e.target.value)}
-            />
-          </div>
-          <div className="mb-3">
-            <Select
-              defaultValue="All"
-              className="w-100"
-              style={{ minWidth: 180 }}
-              onChange={handleShowStatus}
-              placeholder="Status"
-            >
-              <Option value="All">All Offers</Option>
-              <Option value="Active">Active</Option>
-              <Option value="Inactive">Inactive</Option>
-            </Select>
-          </div>
-        </Flex>
-        <div>
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/coupon/add`)}
+      <Flex alignItems="center" className="mb-3" justifyContent="space-between">
+        <Flex>
+          <Input
+            placeholder="Search"
+            prefix={<SearchOutlined />}
+            onChange={handleSearch}
+            className="mr-2"
+          />
+          <Select
+            defaultValue="All"
+            onChange={handleShowStatus}
+            className="mr-2"
           >
-            Add Coupon
-          </Button>
-        </div>
+            <Option value="All">All</Option>
+            <Option value="Active">Active</Option>
+            <Option value="Inactive">Inactive</Option>
+          </Select>
+        </Flex>
+        <Button
+          type="primary"
+          icon={<FormOutlined />}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/coupon/add`)}
+        >
+          Add Coupon
+        </Button>
       </Flex>
-      <div className="table-responsive">
-        <Table
-          columns={tableColumns}
-          dataSource={filteredCoupons}
-          rowKey="id"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-        />
-      </div>
+      
+      <Table
+        columns={tableColumns}
+        dataSource={filteredCoupons}
+        rowKey="id"
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+      />
+
+      <Modal
+        title="Coupon Details"
+        open={isModalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        width={800}
+      >
+        {selectedCoupon && (
+          <Descriptions column={1} bordered>
+            <Descriptions.Item label="Coupon Name">
+              {selectedCoupon.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="Discount Percentage">
+              {selectedCoupon.discount_percentage}%
+            </Descriptions.Item>
+            <Descriptions.Item label="Start Date">
+              {selectedCoupon.start_date
+                ? new Date(selectedCoupon.start_date).toLocaleDateString()
+                : "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="End Date">
+              {selectedCoupon.end_date
+                ? new Date(selectedCoupon.end_date).toLocaleDateString()
+                : "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Max Uses">
+              {selectedCoupon.max_uses}
+            </Descriptions.Item>
+            <Descriptions.Item label="Status">
+              {selectedCoupon.status ? "Active" : "Inactive"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Keywords">
+              {selectedCoupon.key_words?.length > 0
+                ? selectedCoupon.key_words.join(", ")
+                : "None"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Coupon Description">
+              {selectedCoupon.description || "No description available"}
+            </Descriptions.Item>
+          </Descriptions>
+        )}
+      </Modal>
+
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editCoupon}

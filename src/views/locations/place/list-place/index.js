@@ -74,12 +74,12 @@ const PlaceList = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item>
+      {/* <Menu.Item>
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item> */}
       <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditPlace(row.id)}>
           <EditOutlined />
@@ -125,8 +125,15 @@ const PlaceList = () => {
 
   return (
     <Card>
-      <Row gutter={16} justify="space-between">
+      <Row gutter={16} justify="space-between" align="" wrap={false}>
         <Col xs={24} sm={8}>
+          <Input
+            placeholder="Search"
+            prefix={<SearchOutlined />}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </Col>
+        <Col xs={24} sm={6}>
           <Form.Item name="country_id">
             <Select
               className="w-100"
@@ -154,19 +161,6 @@ const PlaceList = () => {
           >
             Add Place
           </Button>
-        </Col>
-      </Row>
-      <Row
-        gutter={16}
-        justify="space-between"
-        style={{ paddingBottom: "15px" }}
-      >
-        <Col xs={24} sm={8}>
-          <Input
-            placeholder="Search"
-            prefix={<SearchOutlined />}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
         </Col>
       </Row>
 

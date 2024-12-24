@@ -35,6 +35,17 @@ export const addTax = createAsyncThunk(
     }
   }
 );
+export const editTax = createAsyncThunk(
+  "tax/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await TaxService.editTax(data, action);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 
 const taxSlice = createSlice({
   name: "tax",
@@ -42,11 +53,32 @@ const taxSlice = createSlice({
     loading: false,
     availableTaxCategory: [],
     allTax: [],
+    filteredTax: [],
     error: null,
+    message: null,
     responseData: null,
     responseMessage: null,
   },
-  reducers: {},
+  reducers: { filterTax: (state, action) => {
+    const { searchTerm, status } = action.payload;
+
+    let filteredTax = state.allTax;
+    if (status && status !== "All") {
+      filteredTax = filteredTax.filter(
+        (offer) =>
+          (status === "Active" && offer.status === true) ||
+          (status === "Inactive" && offer.status === false)
+      );
+    }
+
+    if (searchTerm) {
+      filteredTax = filteredTax.filter((tax) => {
+        if (!tax.tax_name) return false;
+        return tax.tax_name.toLowerCase().includes(searchTerm.toLowerCase());
+      });
+    }
+    state.filteredTax = filteredTax;
+  },},
   extraReducers: (builder) => {
     builder
       .addCase(fetchAvailableCategory.pending, (state) => {
@@ -66,8 +98,22 @@ const taxSlice = createSlice({
       .addCase(fetchAllTax.fulfilled, (state, action) => {
         state.loading = false;
         state.allTax = action.payload.items;
+        state.filteredTax = action.payload.items;
       })
       .addCase(fetchAllTax.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(editTax.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(editTax.fulfilled, (state, {payload}) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+        }
+      })
+      .addCase(editTax.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -86,5 +132,5 @@ const taxSlice = createSlice({
       });
   },
 });
-
+export const { filterTax } = taxSlice.actions;
 export default taxSlice.reducer;
