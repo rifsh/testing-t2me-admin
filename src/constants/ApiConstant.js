@@ -10,7 +10,7 @@ export const ApiConstant = {
   EDIT_PLACE_URL: "/api/v1/location/secured/edit_place",
   EDIT_VENUE_URL: "/api/v1/location/secured/edit_venue",
   VENUE_URL: "/api/v1/location/secured/venue",
-  SINGLE_VENUE_URL: "/api/v1/location/secured/venue",
+  SINGLE_VENUE_URL: "/api/v1/location/secured/singlevenue",
   COUNTRY_DETAILS_URL: "/api/v1/location/secured/country/details",
   EVENT_URL: "/api/v1/events/secured/event",
   EVENT_VALIDATION_URL: "/api/v1/events/secured/validation_event",
