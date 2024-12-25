@@ -22,19 +22,27 @@ CategoryService.updateCategory = function (data, action) {
   });
 };
 
-CategoryService.fetchCategory = function () {
+CategoryService.fetchCategory = function (pageData) { const params = {};
+if (pageData.page !== null) params.page = pageData.page;
+if (pageData.size !== null) params.size = pageData.size;
+
   return fetch({
     url: ApiConstant.CATEGORY_URL,
-    method: "get",
+    method: "get",params: params,
   });
 };
 
-CategoryService.fetchSubCategory = function (categoryId) {
+CategoryService.fetchSubCategory = function (categoryId, pageData) {
+  const params = {};
+  if (pageData.page !== null) params.page = pageData.page;
+  if (pageData.size !== null) params.size = pageData.size;
+
   return fetch({
     url: categoryId
       ? `${ApiConstant.SUB_CATEGORY_URL}?category_id=${categoryId}`
       : `${ApiConstant.SUB_CATEGORY_URL}`,
     method: "get",
+    params: params,
   });
 };
 

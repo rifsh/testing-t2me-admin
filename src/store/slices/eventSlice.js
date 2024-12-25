@@ -27,6 +27,7 @@ const initialState = {
   warningMessage: null,
   responseData: null,
   responseMessage: null,
+  pagination: {},
 };
 
 export const fetchEventDetails = createAsyncThunk(
@@ -47,13 +48,13 @@ export const fetchEventDetails = createAsyncThunk(
 );
 export const fetchAllEvent = createAsyncThunk(
   "event/fetchAllEvent",
-  async (_, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
       if (ENABLE_MOCK_API && ALL_EVENT_MOCK_API) {
         const response = EventMockData.fetchAllEvent;
         return response.data;
       } else {
-        const response = await EventService.getAllEvent();
+        const response = await EventService.getAllEvent(pageData);
         return response.data[0];
       }
     } catch (error) {
@@ -223,6 +224,7 @@ const eventSlice = createSlice({
         state.loading = false;
         state.events = action.payload.items;
         state.filteredEvents = action.payload.items;
+        state.pagination = action.payload;
       })
       .addCase(fetchAllEvent.rejected, (state, action) => {
         state.loading = false;
