@@ -5,6 +5,7 @@ import {
   SearchOutlined,
   EyeOutlined,
   PlusCircleOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
@@ -86,18 +87,18 @@ const CategoryList = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item
-        onClick={() => navigate(`${APP_PREFIX_PATH}/category/edit/${row.id}`)}
+      {/* <Menu.Item
+        // onClick={() => navigate(`${APP_PREFIX_PATH}/category/edit/${row.id}`)}
       >
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item> */}
       <Menu.Item>
         <Flex alignItems="center">
-          <PlusCircleOutlined />
-          <span className="ml-2">Add to remark</span>
+          <EditOutlined />
+          <span className="ml-2">Edit Category</span>
         </Flex>
       </Menu.Item>
     </Menu>
