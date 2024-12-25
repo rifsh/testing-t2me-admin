@@ -88,7 +88,7 @@ function CouponFormFields() {
           </Form.Item>
 
           {selectedRole === 3 && (
-            <Form.Item name="events" label="Events">
+            <Form.Item name="event_ids" label="Events">
               <Select mode="multiple"
                 loading={eventLoading}
                 style={{ width: "100%" }}
