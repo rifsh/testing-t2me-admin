@@ -26,12 +26,12 @@ const CategoryField = ({ form }) => {
   }, [dispatch]);
 
   const handleCategoryChange = (value) => {
+    form.setFieldsValue({ sub_category_id: null });
     if (value) {
       dispatch(fetchSubcategories(value));
     } else {
       dispatch(clearSubcategories());
     }
-    form.setFieldsValue({ sub_category_id: null });
   };
 
   return (
@@ -41,7 +41,7 @@ const CategoryField = ({ form }) => {
           <Select
             className="w-100"
             placeholder="Choose a Category"
-            onChange={handleCategoryChange}
+            onSelect={handleCategoryChange}
             loading={ loading}
             notFoundContent={
               loading ? "Loading Categories..." : "No Category Available"

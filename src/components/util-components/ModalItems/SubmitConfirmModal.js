@@ -65,6 +65,7 @@ export const SubmitAndConfirmModal = ({
       console.error(TextConstants.ConfirmationError, error);
       message.error(TextConstants.ConfirmationError);
     } finally {
+      dispatch(resetStatusModalState());
       dispatch(setModalLoading(false));
       dispatch(setResponseDialogVisible(false));
     }

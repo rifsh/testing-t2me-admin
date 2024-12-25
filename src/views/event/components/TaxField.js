@@ -23,15 +23,17 @@ const TaxField = ({ form }) => {
   return (
     <Col xs={24} sm={24} md={17}>
       <Card title="Tax (Optional)">
-        <Form.Item name="offer" label="Tax">
+        <Form.Item name="tax_ids" label="Tax">
           <Select
-            loading={loading}
+            loading={loading} mode="multiple"
             style={{ width: "100%" }}
             placeholder="Please select"
-           
+            notFoundContent={
+              loading ? "Loading Taxes..." : "No Taxes Available"
+            }
           >
             {allTax.map((offer) => (
-              <Option key={offer.id} value={offer.id}>
+              <Option key={offer.id} value={offer.id} >
                 {offer.tax_name}
               </Option>
             ))}
