@@ -11,7 +11,7 @@ export function ScheduleDetails() {
   const { filteredEvents = [], loading } = useSelector((state) => state.event);
 
   useEffect(() => {
-    dispatch(fetchAllEvent());
+    dispatch(fetchAllEvent({}));
   }, [dispatch]);
   const handleSelectEvent = () => {
     dispatch(resetSchedule());

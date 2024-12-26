@@ -18,7 +18,6 @@ export const getCurrentUser = () => {
 
   try {
     const decodedToken = jwtDecode(token);
-    console.log(decodedToken, "Decoded Token");
     return decodedToken;
   } catch (error) {
     console.error("Invalid token format. Unable to decode:", error);
@@ -29,13 +28,13 @@ export const getCurrentUser = () => {
 export const getUserRole = () => {
   const currentUser = getCurrentUser();
   switch (currentUser.role_id) {
-    case 1:
+    case UserRoleConstants.superAdminRoleId:
       return UserRoleConstants.superAdmin;
-    case 2:
+    case UserRoleConstants.superSupportingTeamRoleId:
       return UserRoleConstants.superSupportingTeam;
-    case 3:
+    case UserRoleConstants.eventOrganizerRoleId:
       return UserRoleConstants.eventOrganizer;
-    case 4:
+    case UserRoleConstants.eventSupportingTeamRoleId:
       return UserRoleConstants.eventSupportingTeam;
     default:
       return UserRoleConstants.defaultRole;
@@ -50,7 +49,7 @@ const getEventFormItems = (form, currentStep) => {
     return null;
   }
 
-  if (currentUser.role_id === 1) {
+  if (currentUser.role_id === UserRoleConstants.superAdminRoleId) {
     switch (currentStep) {
       case 1:
         return <EventDetailsField form={form} />;
@@ -69,7 +68,7 @@ const getEventFormItems = (form, currentStep) => {
     }
   }
 
-  if (currentUser.role_id === 3) {
+  if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
     switch (currentStep) {
       case 1:
         return <EventDetailsField form={form} />;
@@ -93,9 +92,9 @@ export const getEventFormSteps = () => {
     return null;
   }
 
-  if (currentUser.role_id === 1) {
+  if (currentUser.role_id === UserRoleConstants.superAdminRoleId) {
     return ["Event Details", "Category", "Location", "Tax", "Ticket", "Offers"];
-  } else if (currentUser.role_id === 3) {
+  } else if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
     return ["Event Details"];
   } else {
     return [];

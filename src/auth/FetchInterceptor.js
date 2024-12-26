@@ -4,6 +4,7 @@ import { signOutSuccess } from "store/slices/authSlice";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { notification } from "antd";
 import store from "../store";
+import Utils from "utils";
 
 const unauthorizedCode = [401, 403];
 
@@ -70,7 +71,7 @@ service.interceptors.response.use(
     console.log("[RESPONSE] Data:", response.data);
     return response.data;
   },
-  (error) => {
+  async (error) => {
     // Log the response error details
     console.error(
       "%c[RESPONSE ERROR]",
@@ -97,7 +98,8 @@ service.interceptors.response.use(
           notificationParam.message = "Session Expired";
           notificationParam.description =
             "Your session has expired. Please log in again.";
-          localStorage.removeItem(AUTH_TOKEN);
+       
+          await Utils.clearAllBrowserData();
           store.dispatch(signOutSuccess());
         }
         const errorMessage = data.status.message;

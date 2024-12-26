@@ -385,5 +385,45 @@ class Utils {
       })
     );
   };
+
+
+  static  clearAllBrowserData = async () => {
+    // Clear localStorage
+    localStorage.clear();
+  
+    // Clear sessionStorage
+    sessionStorage.clear();
+  
+    // Clear cookies
+    document.cookie
+      .split(";")
+      .forEach(
+        (cookie) =>
+          (document.cookie = cookie
+            .replace(/^ +/, "")
+            .replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/"))
+      );
+  
+    // Unregister Service Workers
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (let registration of registrations) {
+        await registration.unregister();
+      }
+      console.log("Service Workers unregistered.");
+    }
+  
+    // Clear cache storage
+    if ("caches" in window) {
+      const cacheKeys = await caches.keys();
+      for (let key of cacheKeys) {
+        await caches.delete(key);
+      }
+      console.log("Caches cleared.");
+    }
+  
+    console.log("All browser data (localStorage, sessionStorage, cookies, cache, and Service Workers) has been cleared.");
+  };
+  
 }
 export default Utils;

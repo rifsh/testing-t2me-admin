@@ -51,7 +51,7 @@ function CouponFormFields() {
   const handleSelectedRole = (role) => {
     dispatch(setSelectedRole(role));
     if (role === 3) {
-      dispatch(fetchAllEvent());
+      dispatch(fetchAllEvent({}));
     }
   };
 

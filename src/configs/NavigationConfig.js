@@ -1,6 +1,7 @@
 import { DashboardOutlined, OrderedListOutlined } from "@ant-design/icons";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { AUTH_TOKEN } from "constants/AuthConstant";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 import { jwtDecode } from "jwt-decode";
 
 const superAdminDashBoardNavTree = [
@@ -174,9 +175,9 @@ const navigationConfig = () => {
   const decodedToken = jwtDecode(token);
   console.log(decodedToken, "decodedTOken");
 
-  if (decodedToken?.role_id===1) {
+  if (decodedToken?.role_id===UserRoleConstants.superAdminRoleId) {
     return superAdminDashBoardNavTree;
-  } else if (decodedToken?.role_id===3) {
+  } else if (decodedToken?.role_id===UserRoleConstants.eventOrganizerRoleId) {
     return eventOrganaizerDashBoardNavTree;
   }
 
