@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Card, Table, Select, Input, Button,  Menu, Row, Col } from "antd";
+import { Card, Table, Select, Input, Button, Menu, Row, Col } from "antd";
 import {
   EyeOutlined,
   PlusCircleOutlined,
@@ -15,16 +15,21 @@ import { useNavigate } from "react-router-dom";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import utils from "utils";
-import { editVenue, filterVenues, getSingleVenues, getVenues } from "store/slices/locationSlice";
+import {
+  editVenue,
+  filterVenues,
+  getSingleVenues,
+  getVenues,
+} from "store/slices/locationSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
-import {  setSelectedItem } from "store/slices/modalSlice";
+import { setSelectedItem } from "store/slices/modalSlice";
 
 const { Option } = Select;
 
 const VenueList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredVenues, loading, message } = useSelector(
+  const { filteredVenues, loading, editable_status, message } = useSelector(
     (state) => state.locations
   );
   const [form] = Form.useForm();
@@ -48,10 +53,10 @@ const VenueList = () => {
       dispatch(getVenues(id));
     }
   };
-    const handleViewDetails = async (id) => {
-      await dispatch(getSingleVenues(id));
-      navigate(`${APP_PREFIX_PATH}/venue/details/${id}`);
-    };
+  const handleViewDetails = async (id) => {
+    await dispatch(getSingleVenues(id));
+    navigate(`${APP_PREFIX_PATH}/venue/details/${id}`);
+  };
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
@@ -61,7 +66,7 @@ const VenueList = () => {
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
-      <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+        <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
@@ -116,7 +121,8 @@ const VenueList = () => {
     <Card>
       <Row gutter={16} justify={"space-between"} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={8}>
-          <PlaceWithCountryForm allPlaceVisible={true}
+          <PlaceWithCountryForm
+            allPlaceVisible={true}
             form={form}
             onSelect={(id) => handleSelectPlace(id)}
           />
@@ -168,6 +174,7 @@ const VenueList = () => {
         responseMessage={message}
         editFunction={editVenue}
         getAllFunction={getVenues}
+        editable_status={editable_status}
       />
     </Card>
   );

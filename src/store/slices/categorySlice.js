@@ -14,7 +14,6 @@ const initialState = {
   filteredCategories: [],
   filteredSubCategories: [],
   searchTerm: "",
-  formTabKey: 2,
   responseData: null,
   responseMessage: null,
   selectedCategoryId: null,
@@ -139,9 +138,7 @@ const categorySlice = createSlice({
         cat.name.toLowerCase().includes(action.payload.toLowerCase())
       );
     },
-    setFormTabKey: (state, action) => {
-      state.formTabKey = action.payload;
-    },
+
     setActiveTab: (state, action) => {
       state.activeTab = action.payload;
       if (action.payload === "categories") {
@@ -249,11 +246,7 @@ const categorySlice = createSlice({
   },
 });
 
-export const {
-  filterCategory,
-  setFormTabKey,
-  setActiveTab,
-  clearSubcategories,
-} = categorySlice.actions;
+export const { filterCategory, setActiveTab, clearSubcategories } =
+  categorySlice.actions;
 
 export default categorySlice.reducer;

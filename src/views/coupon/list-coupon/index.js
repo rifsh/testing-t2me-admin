@@ -26,10 +26,7 @@ import {
   filterCoupons,
 } from "store/slices/couponSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import {
-  setDialogVisible,
-  setSelectedItem,
-} from "store/slices/modalSlice";
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
@@ -38,7 +35,7 @@ const { Option } = Select;
 const CouponList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredCoupons, loading, message } = useSelector(
+  const { filteredCoupons, editable_status,loading, message } = useSelector(
     (state) => state.coupons
   );
 
@@ -165,7 +162,7 @@ const CouponList = () => {
           Add Coupon
         </Button>
       </Flex>
-      
+
       <Table
         columns={tableColumns}
         dataSource={filteredCoupons}
@@ -220,6 +217,7 @@ const CouponList = () => {
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editCoupon}
+        editable_status={editable_status}
         getAllFunction={fetchAllCoupons}
       />
     </Card>

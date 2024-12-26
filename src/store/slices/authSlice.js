@@ -9,9 +9,7 @@ export const initialState = {
   message: "",
   showMessage: false,
   redirect: "",
-  userData: localStorage.getItem(AUTH_TOKEN)
-  ? jwtDecode(localStorage.getItem(AUTH_TOKEN))
-  : null,
+  userData:null,
   token: localStorage.getItem(AUTH_TOKEN) || null,
 };
 export const signIn = createAsyncThunk(

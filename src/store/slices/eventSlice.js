@@ -27,6 +27,7 @@ const initialState = {
   warningMessage: null,
   responseData: null,
   responseMessage: null,
+  editable_status: null,
   pagination: {},
 };
 
@@ -210,6 +211,7 @@ const eventSlice = createSlice({
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
+          state.editable_status = payload.editable_status;
         }
       })
       .addCase(editEvent.rejected, (state, { payload }) => {

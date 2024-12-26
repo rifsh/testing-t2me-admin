@@ -21,14 +21,14 @@ const rules = {
   description: [{ required: true, message: "Please enter sub category description" }],
 };
 
-const CategoryFormFields = ({ mode = ADD }) => {
+const SubCategoryFormFields = ({ mode = ADD }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const { loading, error, categories , responseData, responseMessage } = useSelector((state) => state.category);
 
   useEffect(() => {
-    dispatch(fetchCategories());
+    dispatch(fetchCategories({}));
   }, [dispatch]);
 
   useEffect(() => {
@@ -114,4 +114,4 @@ const CategoryFormFields = ({ mode = ADD }) => {
   );
 };
 
-export default CategoryFormFields;
+export default SubCategoryFormFields;

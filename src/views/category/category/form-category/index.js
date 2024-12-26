@@ -10,15 +10,10 @@ const ADD = "ADD";
 const EDIT = "EDIT";
 
 const CategoryForm = ({ mode = ADD, id }) => {
-  const { formTabKey } = useSelector((state) => state.category);
+  const { activeTab } = useSelector((state) => state.category);
   const category = useSelector((state) =>
     state.category.categories.find((cat) => cat.id === id)
   );
-
-  useEffect(() => {
-    if (mode === EDIT && id) {
-    }
-  }, [mode, id]);
 
   return (
     <Form
@@ -42,17 +37,17 @@ const CategoryForm = ({ mode = ADD, id }) => {
       </PageHeaderAlt>
       <div className="container">
         <Tabs
-          defaultActiveKey={formTabKey}
+          defaultActiveKey={activeTab}
           style={{ marginTop: 30 }}
           items={[
             {
               label: "Category",
-              key: "1",
+              key: "categories",
               children: <CategoryFormFields mode={mode} category={category} />,
             },
             {
               label: "Sub Category",
-              key: "2",
+              key: "subcategories",
               children: <SubCategoryFormFields mode={mode} />,
             },
           ]}
