@@ -58,6 +58,7 @@ const taxSlice = createSlice({
     message: null,
     responseData: null,
     responseMessage: null,
+    selectedTax:null
   },
   reducers: { filterTax: (state, action) => {
     const { searchTerm, status } = action.payload;
@@ -78,7 +79,11 @@ const taxSlice = createSlice({
       });
     }
     state.filteredTax = filteredTax;
+  },
+  setSelectedTaxDetails: (state, action) => {
+    state.selectedTax = action.payload;
   },},
+
   extraReducers: (builder) => {
     builder
       .addCase(fetchAvailableCategory.pending, (state) => {
@@ -132,5 +137,5 @@ const taxSlice = createSlice({
       });
   },
 });
-export const { filterTax } = taxSlice.actions;
+export const { filterTax,setSelectedTaxDetails } = taxSlice.actions;
 export default taxSlice.reducer;
