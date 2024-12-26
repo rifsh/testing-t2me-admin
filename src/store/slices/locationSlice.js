@@ -31,6 +31,7 @@ export const initialState = {
   createPlaceLoading: false,
   responseData: null,
   responseMessage: null,
+  editable_status: null,
 };
 
 export const fetchAllCountires = createAsyncThunk(
@@ -355,6 +356,7 @@ const locationSlice = createSlice({
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
+          state.editable_status = payload.editable_status;
         }
       })
       .addCase(editPlace.rejected, (state, { payload }) => {
@@ -369,6 +371,7 @@ const locationSlice = createSlice({
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
+          state.editable_status = payload.editable_status;
         }
       })
       .addCase(editVenue.rejected, (state, { payload }) => {

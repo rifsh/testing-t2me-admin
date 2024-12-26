@@ -58,7 +58,8 @@ const taxSlice = createSlice({
     message: null,
     responseData: null,
     responseMessage: null,
-    selectedTax:null
+    selectedTax:null,
+    editable_status: null,
   },
   reducers: { filterTax: (state, action) => {
     const { searchTerm, status } = action.payload;
@@ -116,6 +117,7 @@ const taxSlice = createSlice({
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
+          state.editable_status = payload.editable_status;
         }
       })
       .addCase(editTax.rejected, (state, action) => {

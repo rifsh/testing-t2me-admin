@@ -26,10 +26,7 @@ import {
   filterOffers,
 } from "store/slices/offerSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import {
-  setDialogVisible,
-  setSelectedItem,
-} from "store/slices/modalSlice";
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
@@ -38,7 +35,7 @@ const { Option } = Select;
 const OfferList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredOffers, loading, message } = useSelector(
+  const { filteredOffers, loading, editable_status, message } = useSelector(
     (state) => state.offers
   );
 
@@ -216,6 +213,7 @@ const OfferList = () => {
         responseMessage={message}
         editFunction={editOffer}
         getAllFunction={fetchAllOffers}
+        editable_status={editable_status}
       />
     </Card>
   );

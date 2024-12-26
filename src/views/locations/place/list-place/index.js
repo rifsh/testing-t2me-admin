@@ -41,7 +41,7 @@ const { Option } = Select;
 const PlaceList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { filteredPlaces, detailedCountryList, message, loading } = useSelector(
+  const { filteredPlaces, detailedCountryList,editable_status, message, loading } = useSelector(
     (state) => state.locations
   );
 
@@ -176,7 +176,7 @@ const PlaceList = () => {
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editPlace}
-        getAllFunction={getPlaces}
+        getAllFunction={getPlaces}editable_status={editable_status}
       />
     </Card>
   );

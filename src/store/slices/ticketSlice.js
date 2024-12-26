@@ -24,7 +24,8 @@ export const initialState = {
   currentStepSaved: false,
   isModalVisible: false,
   ticketTypes: [],
-  message:null,
+  message: null,
+  editable_status: null,
   responseData: null,
   responseMessage: null,
 };
@@ -50,7 +51,7 @@ export const addTicket = createAsyncThunk(
   "ticket/addTicket",
   async ({ data, action }, { rejectWithValue }) => {
     try {
-      const response = await TicketsService.addTicket(data,action);
+      const response = await TicketsService.addTicket(data, action);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating ticket");
@@ -210,31 +211,32 @@ export const ticketSlice = createSlice({
       state.selectedTicketSet = selectedSet || null;
     },
     resetTicketSelection(state) {
-     return initialState;
+      return initialState;
     },
   },
   extraReducers: (builder) => {
     builder
-     .addCase(editTicket.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-          })
-          .addCase(editTicket.fulfilled, (state, { payload }) => {
-            state.loading = false;
-            if (payload.message) {
-              state.message = payload.message;
-            }
-          })
-          .addCase(editTicket.rejected, (state, { payload }) => {
-            state.loading = false;
-            state.error = payload || "Failed to edit event";
-          })
+      .addCase(editTicket.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editTicket.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+          state.editable_status = payload.editable_status;
+        }
+      })
+      .addCase(editTicket.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
       .addCase(fetchAllTickets.pending, (state) => {
         state.loading = true;
       })
       .addCase(fetchAllTickets.fulfilled, (state, { payload }) => {
         state.loading = false;
-        console.warn("payload",payload)
+        console.warn("payload", payload);
         state.filteredTickets = payload[0].items;
       })
       .addCase(fetchAllTickets.rejected, (state, { payload }) => {
@@ -260,7 +262,7 @@ export const ticketSlice = createSlice({
         state.loading = false;
         state.error = null;
         state.responseData = action.payload.data;
-        console.error(action.payload.data)
+        console.error(action.payload.data);
         state.responseMessage = action.payload.status.message;
       })
       .addCase(addTicket.rejected, (state, { payload }) => {

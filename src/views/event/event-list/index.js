@@ -29,9 +29,8 @@ const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
 const EventsList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { pagination, filteredEvents, message, loading } = useSelector(
-    (state) => state.event
-  );
+  const { pagination, editable_status, filteredEvents, message, loading } =
+    useSelector((state) => state.event);
 
   useEffect(() => {
     dispatch(fetchAllEvent({ page: 1, size: 10 }));
@@ -176,6 +175,7 @@ const EventsList = () => {
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editEvent}
+        editable_status={editable_status}
         getAllFunction={fetchAllEvent}
       />
     </Card>
