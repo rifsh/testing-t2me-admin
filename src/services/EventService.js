@@ -13,10 +13,10 @@ EventsService.addEvent = function (data, action) {
   });
 };
 
-EventsService.getAllEvent = function (page, pageSize) {
+EventsService.getAllEvent = function (pageData) {
   const params = {};
-  if (page !== null) params.page = page;
-  if (pageSize !== null) params.size = pageSize;
+  if (pageData.page !== null) params.page = pageData.page;
+  if (pageData.size !== null) params.size = pageData.size;
 
   return fetch({
     url: ApiConstant.EVENT_URL,

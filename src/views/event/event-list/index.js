@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Table, Select, Input, Button, Menu } from "antd";
 import {
   EyeOutlined,
@@ -29,12 +29,12 @@ const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
 const EventsList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { filteredEvents, message, loading } = useSelector(
+  const { pagination, filteredEvents, message, loading } = useSelector(
     (state) => state.event
   );
 
   useEffect(() => {
-    dispatch(fetchAllEvent());
+    dispatch(fetchAllEvent({ page: 1, size: 10 }));
   }, [dispatch]);
 
   const handleViewDetails = async (id) => {
@@ -53,6 +53,9 @@ const EventsList = () => {
     dispatch(setSelectedItem(data));
   };
 
+  const handlePagination = (page, size) => {
+    dispatch(fetchAllEvent({ page: page, size: size }));
+  };
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
@@ -157,13 +160,16 @@ const EventsList = () => {
       </Flex>
       <div className="table-responsive">
         <Table
-         columns={tableColumns}
-         dataSource={filteredEvents}
-         rowKey="id"
-         loading={loading}
-         pagination={{ pageSize: 10 }}
-         
-       
+          columns={tableColumns}
+          dataSource={filteredEvents}
+          rowKey="id"
+          loading={loading}
+          pagination={{
+            current: pagination.page,
+            pageSize: pagination.size,
+            total: pagination.total,
+            onChange: (page, pageSize) => handlePagination(page, pageSize),
+          }}
         />
       </div>
 
