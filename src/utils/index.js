@@ -338,6 +338,17 @@ class Utils {
   static isEndDateAfterSchedule = (scheduleEndDate, endDate) => {
     return scheduleEndDate && endDate.isAfter(dayjs(scheduleEndDate), "day");
   };
+  /**
+   * Validates if the end date is after the schedule end date.
+   * @param {string} text
+   * @param {number} maxLength
+   */
+  static truncateText = (text, maxLength = 50) => {
+      if (!text) return "";
+      return text.length > maxLength
+        ? `${text.substring(0, maxLength)}...`
+        : text;
+    };
 
   /**
    * Dispatches the updated offer dates.

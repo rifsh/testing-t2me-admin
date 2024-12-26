@@ -13,10 +13,11 @@ import { TextConstants } from "constants/TextConstant";
 const UpdateStatusModal = ({
   editFunction,
   getAllFunction,
-  editable_status=true,
+  editable_status = true,
   onSubmitMessage = TextConstants.StatusUpdatedSuccess,
   onCloseMessage = TextConstants.StatusUpdateCanceled,
   responseMessage,
+  pageData,
 }) => {
   const dispatch = useDispatch();
   const { statusDialogVisible, selectedItem, modalLoading } = useSelector(
@@ -37,6 +38,10 @@ const UpdateStatusModal = ({
           message.error(TextConstants.ErrorLoadingItem);
         }
       });
+
+    } else {
+      dispatch(resetStatusModalState());
+      dispatch(setDialogVisible(false));
     }
   }, [statusDialogVisible, dispatch, editFunction, selectedItem]);
 
@@ -48,7 +53,7 @@ const UpdateStatusModal = ({
     dispatch(setModalLoading(false));
     dispatch(setDialogVisible(false));
     if (editFunction.fulfilled.match(result)) {
-      dispatch(getAllFunction());
+      dispatch(getAllFunction(pageData));
       dispatch(resetStatusModalState());
 
       message.success(onSubmitMessage);

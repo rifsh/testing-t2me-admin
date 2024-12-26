@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table, Input, Tabs, Button, Select, Menu } from "antd";
-import {
-  FormOutlined,
-  SearchOutlined,
-  EyeOutlined,
-  PlusCircleOutlined,
-  EditOutlined,
-} from "@ant-design/icons";
+import { FormOutlined, SearchOutlined, EditOutlined } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,10 +11,8 @@ import { setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import {
   fetchSubcategories,
-  setSearchTerm,
   setActiveTab,
   updateCategory,
-  filterCategories,
   fetchCategories,
   editSubCategory,
   filterCategory,
@@ -30,23 +22,19 @@ import {
 const { TabPane } = Tabs;
 const { Option } = Select;
 
-// Inline truncateText function as fallback
-const truncateText = (text, maxLength = 50) => {
-  if (!text) return "";
-  return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
-};
-
 const CategoryList = () => {
+  
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [modalType, setModalType] = useState("category");
 
   const {
     filteredCategories,
     filteredSubCategories,
     pagination,
     subPagination,
-    loading,
+    loading,editable_status,
     message: responseMessage,
     activeTab,
   } = useSelector((state) => state.category);
@@ -67,6 +55,7 @@ const CategoryList = () => {
       filterCategory({ searchTerm: value, status: null, type: "subCategory" })
     );
   };
+
   const handlePagination = (page, size, type) => {
     if (type === "category") {
       dispatch(fetchCategories({ page: page, size: size }));
@@ -83,6 +72,14 @@ const CategoryList = () => {
 
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
+    setModalType("category");
+    const data = { status: newStatus, id: item.id };
+    dispatch(setSelectedItem(data));
+  };
+
+  const handleUpdateSubStatus = (item) => {
+    const newStatus = !item.status;
+    setModalType("subcategory");
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
   };
@@ -107,14 +104,6 @@ const CategoryList = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
-      {/* <Menu.Item
-        // onClick={() => navigate(`${APP_PREFIX_PATH}/category/edit/${row.id}`)}
-      >
-        <Flex alignItems="center">
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
-      </Menu.Item> */}
       <Menu.Item>
         <Flex alignItems="center">
           <EditOutlined />
@@ -134,7 +123,7 @@ const CategoryList = () => {
     {
       title: "Description",
       dataIndex: "description",
-      render: (_, record) => <span>{truncateText(record.description)}</span>,
+      render: (_, record) => <span>{Utils.truncateText(record.description)}</span>,
       sorter: (a, b) =>
         (a.description || "").localeCompare(b.description || ""),
     },
@@ -162,7 +151,7 @@ const CategoryList = () => {
       dataIndex: ["category", "name"],
       sorter: (a, b) => Utils.antdTableSorter(a, b, ["category", "name"]),
     },
-    Utils.statusColumnUtil(handleUpdateStatus),
+    Utils.statusColumnUtil(handleUpdateSubStatus),
     {
       title: "",
       dataIndex: "actions",
@@ -173,6 +162,25 @@ const CategoryList = () => {
       ),
     },
   ];
+
+  const getModalProps = () => {
+    if (modalType === "category") {
+      return {
+        responseMessage:responseMessage,
+        editable_status:editable_status,
+        editFunction: updateCategory,
+        getAllFunction: (pageData) => fetchCategories(pageData),
+        pageData: { page: 1, size: 10 },
+      };
+    }
+    return {
+      responseMessage:responseMessage,
+      editable_status:editable_status,
+      editFunction: editSubCategory,
+      getAllFunction: (pageData) => fetchSubcategories(pageData),
+      pageData: { categoryId: null, data: { page: 1, size: 10 } },
+    };
+  };
 
   return (
     <Card>
@@ -211,12 +219,6 @@ const CategoryList = () => {
               onChange: (page, pageSize) =>
                 handlePagination(page, pageSize, "category"),
             }}
-          />
-
-          <UpdateStatusModal
-            responseMessage={responseMessage}
-            editFunction={updateCategory}
-            getAllFunction={fetchCategories}
           />
         </TabPane>
         <TabPane tab="Subcategories" key="subcategories">
@@ -273,13 +275,10 @@ const CategoryList = () => {
                 handlePagination(page, pageSize, "subCategory"),
             }}
           />
-          <UpdateStatusModal
-            responseMessage={responseMessage}
-            editFunction={editSubCategory}
-            getAllFunction={fetchSubcategories}
-          />
         </TabPane>
       </Tabs>
+
+      <UpdateStatusModal {...getModalProps()} />
     </Card>
   );
 };

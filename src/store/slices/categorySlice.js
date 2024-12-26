@@ -22,6 +22,7 @@ const initialState = {
   message: null,
   subPagination: {},
   pagination: {},
+  editable_status: null,
 };
 export const addCategory = createAsyncThunk(
   "category/add",
@@ -85,7 +86,6 @@ export const fetchSubcategories = createAsyncThunk(
     }
   }
 );
-
 
 export const addSubCategory = createAsyncThunk(
   "category/addSubCategory",
@@ -224,6 +224,7 @@ const categorySlice = createSlice({
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
+          state.editable_status = payload.editable_status;
         }
       })
       .addCase(updateCategory.rejected, (state, { payload }) => {
@@ -238,6 +239,7 @@ const categorySlice = createSlice({
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
+          state.editable_status = payload.editable_status;
         }
       })
       .addCase(editSubCategory.rejected, (state, { payload }) => {
