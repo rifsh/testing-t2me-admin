@@ -12,7 +12,7 @@ export const initialState = {
   message: null,
   roles: [],
   selectedRole: null,
-  responseData: null,
+  responseData: null, editable_status: null,
   responseMessage: null,
 };
 
@@ -147,6 +147,7 @@ const userSlice = createSlice({
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
+          state.editable_status = payload.editable_status;
         }
       })
       .addCase(editUser.rejected, (state, { payload }) => {

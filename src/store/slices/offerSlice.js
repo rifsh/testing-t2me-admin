@@ -12,6 +12,7 @@ export const initialState = {
   message: null,
   responseData: null,
   responseMessage: null,
+  editable_status: null,
 };
 export const fetchAllOffers = createAsyncThunk(
   "offer/fetchAll",
@@ -92,6 +93,7 @@ const offerSlice = createSlice({
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
+          state.editable_status = payload.editable_status;
         }
       })
       .addCase(editOffer.rejected, (state, { payload }) => {

@@ -57,13 +57,13 @@ const TicketField = ({ form }) => {
             <Input readOnly />
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             name="max_tickets"
             label="Max Ticket"
             rules={[{ validator: validateMaxTickets }]}
           >
             <Input placeholder="Enter Max Ticket" type="number" />
-          </Form.Item>
+          </Form.Item> */}
 
           <TicketTypeSelector form={form} />
           <TicketStructureSelector form={form} />

@@ -30,7 +30,7 @@ const { Option } = Select;
 const UserList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredUsers, loading, message } = useSelector(
+  const { filteredUsers, loading,editable_status, message } = useSelector(
     (state) => state.users
   );
 
@@ -186,7 +186,7 @@ const UserList = () => {
 
       <UpdateStatusModal
         responseMessage={message}
-        editFunction={editUser}
+        editFunction={editUser}editable_status={editable_status}
         getAllFunction={fetchAllUsers}
       />
     </Card>

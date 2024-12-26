@@ -22,13 +22,13 @@ const CategoryField = ({ form }) => {
   );
 
   useEffect(() => {
-    dispatch(fetchCategories());
+    dispatch(fetchCategories({}));
   }, [dispatch]);
 
   const handleCategoryChange = (value) => {
     form.setFieldsValue({ sub_category_id: null });
     if (value) {
-      dispatch(fetchSubcategories(value));
+      dispatch(fetchSubcategories({ categoryId: value, data: {} }));
     } else {
       dispatch(clearSubcategories());
     }
@@ -42,7 +42,7 @@ const CategoryField = ({ form }) => {
             className="w-100"
             placeholder="Choose a Category"
             onSelect={handleCategoryChange}
-            loading={ loading}
+            loading={loading}
             notFoundContent={
               loading ? "Loading Categories..." : "No Category Available"
             }

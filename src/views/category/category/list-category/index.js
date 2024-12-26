@@ -23,7 +23,6 @@ const { TabPane } = Tabs;
 const { Option } = Select;
 
 const CategoryList = () => {
-  
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -34,7 +33,8 @@ const CategoryList = () => {
     filteredSubCategories,
     pagination,
     subPagination,
-    loading,editable_status,
+    loading,
+    editable_status,
     message: responseMessage,
     activeTab,
   } = useSelector((state) => state.category);
@@ -123,7 +123,9 @@ const CategoryList = () => {
     {
       title: "Description",
       dataIndex: "description",
-      render: (_, record) => <span>{Utils.truncateText(record.description)}</span>,
+      render: (_, record) => (
+        <span>{Utils.truncateText(record.description)}</span>
+      ),
       sorter: (a, b) =>
         (a.description || "").localeCompare(b.description || ""),
     },
@@ -166,16 +168,16 @@ const CategoryList = () => {
   const getModalProps = () => {
     if (modalType === "category") {
       return {
-        responseMessage:responseMessage,
-        editable_status:editable_status,
+        responseMessage: responseMessage,
+        editable_status: editable_status,
         editFunction: updateCategory,
         getAllFunction: (pageData) => fetchCategories(pageData),
         pageData: { page: 1, size: 10 },
       };
     }
     return {
-      responseMessage:responseMessage,
-      editable_status:editable_status,
+      responseMessage: responseMessage,
+      editable_status: editable_status,
       editFunction: editSubCategory,
       getAllFunction: (pageData) => fetchSubcategories(pageData),
       pageData: { categoryId: null, data: { page: 1, size: 10 } },
@@ -199,7 +201,6 @@ const CategoryList = () => {
                 type="primary"
                 icon={<FormOutlined />}
                 onClick={() => {
-                  dispatch(setFormTabKey(1));
                   return navigate(`${APP_PREFIX_PATH}/category/add`);
                 }}
               >
@@ -254,7 +255,6 @@ const CategoryList = () => {
                 type="primary"
                 icon={<FormOutlined />}
                 onClick={() => {
-                  dispatch(setFormTabKey(2));
                   return navigate(`${APP_PREFIX_PATH}/category/add`);
                 }}
               >

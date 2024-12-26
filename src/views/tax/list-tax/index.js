@@ -28,7 +28,7 @@ const { Option } = Select;
 const TaxList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredTax, loading, message } =
+  const { filteredTax, loading,editable_status, message } =
     useSelector((state) => state.tax) || {};
   const [form] = Form.useForm();
   const locationState = useSelector((state) => state?.locations) || {};
@@ -223,7 +223,7 @@ const TaxList = () => {
       <UpdateStatusModal
         responseMessage={message}
         getAllFunction={fetchAllTax}
-        editFunction={editTax}
+        editFunction={editTax}editable_status={editable_status}
       />
     </Card>
   );

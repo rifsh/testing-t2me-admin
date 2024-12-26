@@ -58,6 +58,8 @@ const taxSlice = createSlice({
     message: null,
     responseData: null,
     responseMessage: null,
+    selectedTax:null,
+    editable_status: null,
   },
   reducers: { filterTax: (state, action) => {
     const { searchTerm, status } = action.payload;
@@ -78,7 +80,11 @@ const taxSlice = createSlice({
       });
     }
     state.filteredTax = filteredTax;
+  },
+  setSelectedTaxDetails: (state, action) => {
+    state.selectedTax = action.payload;
   },},
+
   extraReducers: (builder) => {
     builder
       .addCase(fetchAvailableCategory.pending, (state) => {
@@ -111,6 +117,7 @@ const taxSlice = createSlice({
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
+          state.editable_status = payload.editable_status;
         }
       })
       .addCase(editTax.rejected, (state, action) => {
@@ -132,5 +139,5 @@ const taxSlice = createSlice({
       });
   },
 });
-export const { filterTax } = taxSlice.actions;
+export const { filterTax,setSelectedTaxDetails } = taxSlice.actions;
 export default taxSlice.reducer;

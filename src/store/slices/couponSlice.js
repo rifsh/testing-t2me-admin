@@ -10,7 +10,7 @@ export const initialState = {
   error: null,
   message: null,
   responseData: null,
-  responseMessage: null,
+  responseMessage: null, editable_status: null,
 };
 export const fetchAllCoupons = createAsyncThunk(
   "coupon/fetchAll",
@@ -88,6 +88,8 @@ const couponSlice = createSlice({
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
+          state.editable_status = payload.editable_status;
+
         }
       })
       .addCase(editCoupon.rejected, (state, { payload }) => {
