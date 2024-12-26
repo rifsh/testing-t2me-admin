@@ -20,6 +20,8 @@ const initialState = {
   selectedCategoryId: null,
   error: null,
   message: null,
+  subPagination: {},
+  pagination: {},
 };
 export const addCategory = createAsyncThunk(
   "category/add",
@@ -49,13 +51,13 @@ export const updateCategory = createAsyncThunk(
 
 export const fetchCategories = createAsyncThunk(
   "category/fetchCategories",
-  async (_, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
       if (ALL_CATEGORY_MOCK_API) {
         const response = CategoryMockData.fetchAllCategory;
         return response.data;
       } else {
-        const response = await CategoryService.fetchCategory();
+        const response = await CategoryService.fetchCategory(pageData);
         return response.data[0];
       }
     } catch (error) {
@@ -66,7 +68,7 @@ export const fetchCategories = createAsyncThunk(
 
 export const fetchSubcategories = createAsyncThunk(
   "category/fetchSubcategories",
-  async (categoryId, { rejectWithValue }) => {
+  async ({ categoryId, data }, { rejectWithValue }) => {
     try {
       if (SUB_CATEGORY_MOCK_API) {
         const response = CategoryMockData.fetchSubCategory;
@@ -76,13 +78,14 @@ export const fetchSubcategories = createAsyncThunk(
         return { categoryId, subcategories: subCategory };
       }
 
-      const response = await CategoryService.fetchSubCategory(categoryId);
+      const response = await CategoryService.fetchSubCategory(categoryId, data);
       return response.data[0];
     } catch (error) {
       return rejectWithValue("Failed to fetch subcategories");
     }
   }
 );
+
 
 export const addSubCategory = createAsyncThunk(
   "category/addSubCategory",
@@ -193,6 +196,7 @@ const categorySlice = createSlice({
         state.loading = false;
         state.categories = payload.items;
         state.filteredCategories = payload.items;
+        state.pagination = payload;
       })
       .addCase(fetchCategories.rejected, (state, { payload }) => {
         state.loading = false;
@@ -206,6 +210,7 @@ const categorySlice = createSlice({
         state.loading = false;
         state.subcategories = payload.items;
         state.filteredSubCategories = payload.items;
+        state.subPagination = payload;
       })
       .addCase(fetchSubcategories.rejected, (state, { payload }) => {
         state.loading = false;

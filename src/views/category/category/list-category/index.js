@@ -44,15 +44,18 @@ const CategoryList = () => {
   const {
     filteredCategories,
     filteredSubCategories,
-
+    pagination,
+    subPagination,
     loading,
     message: responseMessage,
     activeTab,
   } = useSelector((state) => state.category);
 
   useEffect(() => {
-    dispatch(fetchCategories());
-    dispatch(fetchSubcategories());
+    dispatch(fetchCategories({ page: 1, size: 10 }));
+    dispatch(
+      fetchSubcategories({ categoryId: null, data: { page: 1, size: 10 } })
+    );
   }, [dispatch]);
 
   const handleSearch = (value) => {
@@ -63,6 +66,19 @@ const CategoryList = () => {
     dispatch(
       filterCategory({ searchTerm: value, status: null, type: "subCategory" })
     );
+  };
+  const handlePagination = (page, size, type) => {
+    if (type === "category") {
+      dispatch(fetchCategories({ page: page, size: size }));
+    }
+    if (type === "subCategory") {
+      dispatch(
+        fetchSubcategories({
+          categoryId: null,
+          data: { page: page, size: size },
+        })
+      );
+    }
   };
 
   const handleUpdateStatus = (item) => {
@@ -78,10 +94,14 @@ const CategoryList = () => {
   const handleCategorySelect = (value) => {
     if (value === 0) {
       setSelectedCategory(value);
-      dispatch(fetchSubcategories());
+      dispatch(
+        fetchSubcategories({ categoryId: null, data: { page: 1, size: 10 } })
+      );
     } else {
       setSelectedCategory(value);
-      dispatch(fetchSubcategories(value));
+      dispatch(
+        fetchSubcategories({ categoryId: value, data: { page: 1, size: 10 } })
+      );
     }
   };
 
@@ -184,6 +204,13 @@ const CategoryList = () => {
             dataSource={filteredCategories}
             rowKey="id"
             loading={loading}
+            pagination={{
+              current: pagination.page,
+              pageSize: pagination.size,
+              total: pagination.total,
+              onChange: (page, pageSize) =>
+                handlePagination(page, pageSize, "category"),
+            }}
           />
 
           <UpdateStatusModal
@@ -239,9 +266,11 @@ const CategoryList = () => {
             rowKey="subId"
             loading={loading}
             pagination={{
-              pageSize: 10,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} items`,
+              current: subPagination.page,
+              pageSize: subPagination.size,
+              total: subPagination.total,
+              onChange: (page, pageSize) =>
+                handlePagination(page, pageSize, "subCategory"),
             }}
           />
           <UpdateStatusModal
