@@ -202,9 +202,8 @@ const EventsList = () => {
         responseMessage={message}
         editFunction={editEvent}
         editable_status={editable_status}
-        getAllFunction={fetchAllEvent}
-        //  getAllFunction= (pageData) => fetchCategories(pageData)
-        //         pageData={ page: 1, size: 10 }
+        getAllFunction={(pageData) => fetchAllEvent(pageData)}
+        pageData={{ page: 1, size: 10 }}
       />
     </Card>
   );
