@@ -1,1 +1,1 @@
-// const PlaceWithCountryForm = ({function }) => {}
+const PlaceWithCountryForm = ({fetchFunction }) => {}

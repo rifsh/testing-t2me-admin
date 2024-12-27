@@ -5,9 +5,9 @@ export const UserRoleConstants = {
     eventSupportingTeam: "Event Supporting Team",
     defaultRole: null,
     superAdminRoleId: 5,
-    superSupportingTeamRoleId: 2,
+    superSupportingTeamRoleId: 7,
     eventOrganizerRoleId: 6,
-    eventSupportingTeamRoleId: 4,
+    eventSupportingTeamRoleId: 8,
     defaultRoleRoleId: null,
   };
   
