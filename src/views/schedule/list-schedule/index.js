@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Button, Card, Input, Select, Table } from "antd";
+import { Button, Card, Input, Select, Table, Tag } from "antd";
 import Flex from "components/shared-components/Flex";
 import { FormOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -66,6 +66,35 @@ const ScheduleList = () => {
       sorter: (a, b) => Utils.antdTableSorter(a, b, 'end_date'),
     },
     Utils.statusColumnUtil(handleUpdateStatus),
+    {
+      title: "Is Scheduled",
+      dataIndex: "is_scheduled",
+      render: (_, record) => {
+        let statusText;
+        let tagColor;
+    
+        if (record.is_scheduled && record.status) {
+          statusText = "Running";
+          tagColor = "blue";
+        } else if (!record.is_scheduled && record.status) {
+          statusText = "Upcoming";
+          tagColor = "green";
+        } else {
+          statusText = "Expired";
+          tagColor = "red";
+        }
+    
+        return (
+          <Tag color={tagColor} style={{ cursor: "pointer" }}>
+            {statusText}
+          </Tag>
+        );
+      },
+      sorter: (a, b) =>
+        a.is_scheduled === b.is_scheduled ? 0 : a.is_scheduled ? -1 : 1,
+      sortDirections: ["ascend", "descend"],
+    }
+    
   ];
 
   return (

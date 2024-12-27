@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
 
 const EventsService = {};
@@ -14,15 +15,15 @@ EventsService.addEvent = function (data, action) {
 };
 
 EventsService.getAllEvent = function (pageData) {
-  const params = {};
-  if (pageData.page !== null) params.page = pageData.page;
-  if (pageData.size !== null) params.size = pageData.size;
-  if (pageData.search !== null) params.search = pageData.search;
+  // const params = {};
+  // if (pageData.page !== null) params.page = pageData.page;
+  // if (pageData.size !== null) params.size = pageData.size;
+  // if (pageData.search !== null) params.search = pageData.search;
 
   return fetch({
     url: ApiConstant.EVENT_URL,
     method: "get",
-    params: params,
+    params: Utils.filterParams(pageData),
   });
 };
 

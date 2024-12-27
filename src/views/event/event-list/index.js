@@ -110,13 +110,38 @@ const EventsList = () => {
       ),
     },
   ];
-
+  const [searchTerm, setSearchTerm] = useState();
+  const [activeStatus, setactiveStatus] = useState();
   const handleSearch = (value) => {
-    dispatch(fetchAllEvent({ search: value, page: 1, size: 10 }));
+    if (value) {
+      setSearchTerm(value);
+      dispatch(
+        fetchAllEvent({
+          search: value,
+          page: 1,
+          size: 10,
+          active: activeStatus,
+        })
+      );
+    }
+  };
+  const handleSearchIsEmpty = (value) => {
+    console.log("enterd is empty search");
+    if (!value) {
+      console.log("is empty search");
+
+      dispatch(
+        fetchAllEvent({ search: null, page: 1, size: 10, active: activeStatus })
+      );
+    }
   };
 
   const handleShowStatus = (status) => {
-    dispatch(filterEvent({ searchTerm: null, status }));
+    setactiveStatus(status);
+    dispatch(
+      fetchAllEvent({ search: searchTerm, page: 1, size: 10, active: status })
+    );
+    // dispatch(filterEvent({ searchTerm: null, status }));
   };
   const { Search } = Input;
   return (
@@ -130,7 +155,8 @@ const EventsList = () => {
           <div className="mr-md-3 mb-3">
             <Search
               placeholder="Search Event"
-              onSearch={(value)=>{handleSearch(value)}}
+              onChange={(e) => handleSearchIsEmpty(e.target.value)}
+              onSearch={(value) => handleSearch(value)}
               style={{ width: 200 }}
             />
           </div>
@@ -140,9 +166,9 @@ const EventsList = () => {
               onChange={handleShowStatus}
               className="mr-2"
             >
-              <Option value="All">All</Option>
-              <Option value="Active">Active</Option>
-              <Option value="Inactive">Inactive</Option>
+              <Option value={null}>All</Option>
+              <Option value={true}>Active</Option>
+              <Option value={false}>Inactive</Option>
             </Select>
           </div>
         </Flex>
@@ -177,6 +203,8 @@ const EventsList = () => {
         editFunction={editEvent}
         editable_status={editable_status}
         getAllFunction={fetchAllEvent}
+        //  getAllFunction= (pageData) => fetchCategories(pageData)
+        //         pageData={ page: 1, size: 10 }
       />
     </Card>
   );
