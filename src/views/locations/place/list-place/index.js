@@ -35,18 +35,25 @@ import {
 } from "store/slices/locationSlice";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import UserForm from "views/user/form-user";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Option } = Select;
 
 const PlaceList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { filteredPlaces, detailedCountryList,editable_status, message, loading } = useSelector(
-    (state) => state.locations
-  );
+  const {
+    filteredPlaces,
+    detailedCountryList,
+    editable_status,
+    message,
+    loading,
+  } = useSelector((state) => state.locations);
 
   useEffect(() => {
-    dispatch(getPlaces());
+    dispatch(getPlaces(DEFAULT_PAGE_SIZE));
 
     dispatch(getCoutryDetails());
   }, [dispatch]);
@@ -58,7 +65,7 @@ const PlaceList = () => {
     if (id === 0) {
       dispatch(getPlaces());
     } else {
-      dispatch(getPlaces(id));
+      dispatch(getPlaces({ ...DEFAULT_PAGE_SIZE, country_id: id }));
     }
   };
 
@@ -122,37 +129,37 @@ const PlaceList = () => {
       ),
     },
   ];
-
+  const [form] = Form.useForm();
   return (
     <Card>
       <Row gutter={16} justify="space-between" align="" wrap={false}>
-        <Col xs={24} sm={8}>
-          <Input
-            placeholder="Search"
-            prefix={<SearchOutlined />}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-        </Col>
+        <SearchBarWithStatus
+          fetchFunction={getPlaces}
+          additionalParams={{ country_id: form.getFieldValue("country_id") }}
+        />
         <Col xs={24} sm={6}>
-          <Form.Item name="country_id">
-            <Select
-              className="w-100"
-              placeholder="Choose a Country"
-              loading={loading}
-              defaultValue={0}
-              onSelect={handleSelectCountry}
-            >
-              <Option key={0} value={0}>
-                All Countries
-              </Option>
-              {detailedCountryList.map((country) => (
-                <Option key={country.id} value={country.id}>
-                  {country.name}
+          <Form form={form}>
+            <Form.Item name="country_id">
+              <Select
+                className="w-100"
+                placeholder="Choose a Country"
+                loading={loading}
+                defaultValue={0}
+                onSelect={handleSelectCountry}
+              >
+                <Option key={0} value={0}>
+                  All Countries
                 </Option>
-              ))}
-            </Select>
-          </Form.Item>
+                {detailedCountryList.map((country) => (
+                  <Option key={country.id} value={country.id}>
+                    {country.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Form>
         </Col>
+
         <Col xs={24} sm={8} style={{ textAlign: "right" }}>
           <Button
             type="primary"
@@ -176,7 +183,8 @@ const PlaceList = () => {
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editPlace}
-        getAllFunction={getPlaces}editable_status={editable_status}
+        getAllFunction={getPlaces}
+        editable_status={editable_status}
       />
     </Card>
   );

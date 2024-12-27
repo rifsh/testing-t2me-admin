@@ -21,6 +21,7 @@ import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import utils from "utils";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Option } = Select;
 
@@ -33,7 +34,7 @@ const EventsList = () => {
     useSelector((state) => state.event);
 
   useEffect(() => {
-    dispatch(fetchAllEvent({ page: 1, size: 10 }));
+    dispatch(fetchAllEvent(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
   const handleViewDetails = async (id) => {

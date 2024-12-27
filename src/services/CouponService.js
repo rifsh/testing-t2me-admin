@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
 
 const CouponService = {};
@@ -21,10 +22,11 @@ CouponService.editCoupon = function (data, action) {
     data: data,
   });
 };
-CouponService.getAllCoupon = function (place) {
+CouponService.getAllCoupon = function (pageData) {
   return fetch({
     url: ApiConstant.COUPON_URL,
     method: "get",
+    params: Utils.filterParams(pageData),
   });
 };
 export default CouponService;

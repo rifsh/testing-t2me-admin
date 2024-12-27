@@ -23,6 +23,7 @@ import {
 } from "store/slices/locationSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { setSelectedItem } from "store/slices/modalSlice";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 
 const { Option } = Select;
 
@@ -138,7 +139,7 @@ const VenueList = () => {
         </Col>
       </Row>
 
-      <Row gutter={16} style={{ marginBottom: 16 }}>
+      {/* <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12}>
           <Input
             placeholder="Search"
@@ -159,7 +160,8 @@ const VenueList = () => {
             <Option value={"Inactive"}>Inactive</Option>
           </Select>
         </Col>
-      </Row>
+      </Row> */}
+      <SearchBarWithStatus fetchFunction={getVenues}/>
 
       <div className="table-responsive">
         <Table
