@@ -130,14 +130,22 @@ const PlaceList = () => {
     },
   ];
   const [form] = Form.useForm();
+
   return (
     <Card>
       <Row gutter={16} justify="space-between" align="" wrap={false}>
         <SearchBarWithStatus
           fetchFunction={getPlaces}
-          additionalParams={{ country_id: form.getFieldValue("country_id") }}
+          additionalFilters={[
+            {
+              options: detailedCountryList,
+              placeholder: "Please choose a country",
+              formName: "country_id",
+              isAutoComplete: true,
+            },
+          ]}
         />
-        <Col xs={24} sm={6}>
+        {/* <Col xs={24} sm={6}>
           <Form form={form}>
             <Form.Item name="country_id">
               <Select
@@ -158,7 +166,7 @@ const PlaceList = () => {
               </Select>
             </Form.Item>
           </Form>
-        </Col>
+        </Col> */}
 
         <Col xs={24} sm={8} style={{ textAlign: "right" }}>
           <Button
