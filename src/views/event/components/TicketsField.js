@@ -21,7 +21,7 @@ const TicketField = ({ form }) => {
     }
 
     dispatch(getAvailableTicketsType());
-    dispatch(fetchAllTickets(selectedVenue.id));
+    dispatch(fetchAllTickets({ venue_id: selectedVenue.id }));
 
     if (selectedVenue?.capacity) {
       form.setFieldsValue({
@@ -51,7 +51,7 @@ const TicketField = ({ form }) => {
 
   return (
     <Row gutter={16}>
-         <Col xs={24} sm={24} md={17}>
+      <Col xs={24} sm={24} md={17}>
         <Card title="Ticket Details">
           <Form.Item name="max_capacity" label="Max Capacity">
             <Input readOnly />
@@ -67,10 +67,9 @@ const TicketField = ({ form }) => {
 
           <TicketTypeSelector form={form} />
           <TicketStructureSelector form={form} />
-          
         </Card>
       </Col>
-      <TicketSetDetails/>
+      <TicketSetDetails />
     </Row>
   );
 };

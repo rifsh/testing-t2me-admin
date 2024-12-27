@@ -22,13 +22,15 @@ import {
   getPlaces,
 } from "store/slices/locationSlice";
 import Utils from "utils";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Option } = Select;
 
 const TaxList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredTax, loading,editable_status, message } =
+  const { filteredTax, loading, editable_status, message } =
     useSelector((state) => state.tax) || {};
   const [form] = Form.useForm();
   const locationState = useSelector((state) => state?.locations) || {};
@@ -39,31 +41,13 @@ const TaxList = () => {
   } = locationState;
 
   useEffect(() => {
-    dispatch(fetchAllTax());
-    dispatch(getCoutryDetails());
+    dispatch(fetchAllTax(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
-
-  const handleSearch = (e) => {
-    dispatch(filterTax({ searchTerm: e.target.value, status: null }));
-  };
-
-  const handleShowStatus = (status) => {
-    dispatch(filterTax({ searchTerm: null, status }));
-  };
 
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
-  };
-
-  const handleOnSelect = () => {
-    const place_id = form.getFieldValue("place_id");
-    const country_id = form.getFieldValue("country_id");
-    dispatch(fetchAllTax({ country_id, place_id }));
-    if (country_id) {
-      dispatch(getPlaces(country_id));
-    }
   };
 
   const dropdownMenu = (row) => (
@@ -74,12 +58,6 @@ const TaxList = () => {
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">Edit Tax</span>
-        </Flex>
-      </Menu.Item>
-      <Menu.Item onClick={() => handleUpdateStatus(row)}>
-        <Flex alignItems="center">
-          <DeleteOutlined />
-          <span className="ml-2">Change Status</span>
         </Flex>
       </Menu.Item>
     </Menu>
@@ -132,27 +110,31 @@ const TaxList = () => {
 
   return (
     <Card>
-      <Row gutter={16} justify="space-between" style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={8}>
-          <Flex>
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              onChange={handleSearch}
-              className="mr-2"
-            />
-            <Select
-              defaultValue="All"
-              onChange={handleShowStatus}
-              className="mr-2"
-            >
-              <Option value="All">All</Option>
-              <Option value="Active">Active</Option>
-              <Option value="Inactive">Inactive</Option>
-            </Select>
-          </Flex>
-        </Col>
-        <Col xs={24} sm={8} style={{ textAlign: "right" }}>
+      <Row justify="space-between" style={{ marginBottom: 16 }}>
+        <SearchBarWithStatus
+          fetchFunction={fetchAllTax}
+          additionalFilters={[
+            {
+              options: detailedCountryList,
+              placeholder: "Please choose a country",
+              formName: "country_id",
+              isAutoComplete: true,
+              onClick: () => {
+                dispatch(getCoutryDetails());
+              },
+            },
+            {
+              options: filteredPlaces,
+              placeholder: "Please choose a Place",
+              formName: "place_id",
+              isAutoComplete: true,
+              onClick: () => {
+                dispatch(getPlaces());
+              },
+            },
+          ]}
+        />
+        <Col style={{ textAlign: "right" }}>
           <Button
             type="primary"
             icon={<FormOutlined />}
@@ -163,7 +145,7 @@ const TaxList = () => {
         </Col>
       </Row>
 
-      <Flex>
+      {/* <Flex>
         <Form form={form}>
           <Row gutter={16} justify="space-between" style={{ marginBottom: 16 }}>
             <Col span={12}>
@@ -208,7 +190,7 @@ const TaxList = () => {
             </Col>
           </Row>
         </Form>
-      </Flex>
+      </Flex> */}
 
       <div className="table-responsive">
         <Table
@@ -223,7 +205,8 @@ const TaxList = () => {
       <UpdateStatusModal
         responseMessage={message}
         getAllFunction={fetchAllTax}
-        editFunction={editTax}editable_status={editable_status}
+        editFunction={editTax}
+        editable_status={editable_status}
       />
     </Card>
   );

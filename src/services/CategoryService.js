@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
 
 const CategoryService = {};
@@ -22,27 +23,22 @@ CategoryService.updateCategory = function (data, action) {
   });
 };
 
-CategoryService.fetchCategory = function (pageData) { const params = {};
-if (pageData.page !== null) params.page = pageData.page;
-if (pageData.size !== null) params.size = pageData.size;
+CategoryService.fetchCategory = function (pageData) {
+ 
 
   return fetch({
     url: ApiConstant.CATEGORY_URL,
-    method: "get",params: params,
+    method: "get",
+    params: Utils.filterParams(pageData),
   });
 };
 
-CategoryService.fetchSubCategory = function (categoryId, pageData) {
-  const params = {};
-  if (pageData.page !== null) params.page = pageData.page;
-  if (pageData.size !== null) params.size = pageData.size;
+CategoryService.fetchSubCategory = function (pageData) {
 
   return fetch({
-    url: categoryId
-      ? `${ApiConstant.SUB_CATEGORY_URL}?category_id=${categoryId}`
-      : `${ApiConstant.SUB_CATEGORY_URL}`,
+    url: ApiConstant.SUB_CATEGORY_URL,
     method: "get",
-    params: params,
+    params: Utils.filterParams(pageData),
   });
 };
 

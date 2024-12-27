@@ -27,8 +27,8 @@ const OfferField = () => {
   );
 
   useEffect(() => {
-    dispatch(fetchAllOffers());
-    dispatch(fetchAllCoupons());
+    dispatch(fetchAllOffers({}));
+    dispatch(fetchAllCoupons({}));
   }, [dispatch]);
 
   const handleCouponSelect = (couponId) => {

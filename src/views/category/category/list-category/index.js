@@ -18,6 +18,7 @@ import {
   filterCategory,
   setFormTabKey,
 } from "store/slices/categorySlice";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -46,15 +47,6 @@ const CategoryList = () => {
     );
   }, [dispatch]);
 
-  const handleSearch = (value) => {
-    dispatch(filterCategory({ searchTerm: value, type: "category" }));
-  };
-
-  const handleSubCategorySearch = (value) => {
-    dispatch(
-      filterCategory({ searchTerm: value, status: null, type: "subCategory" })
-    );
-  };
 
   const handlePagination = (page, size, type) => {
     if (type === "category") {
@@ -88,19 +80,7 @@ const CategoryList = () => {
     dispatch(setActiveTab(key));
   };
 
-  const handleCategorySelect = (value) => {
-    if (value === 0) {
-      setSelectedCategory(value);
-      dispatch(
-        fetchSubcategories({ categoryId: null, data: { page: 1, size: 10 } })
-      );
-    } else {
-      setSelectedCategory(value);
-      dispatch(
-        fetchSubcategories({ categoryId: value, data: { page: 1, size: 10 } })
-      );
-    }
-  };
+  
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -189,13 +169,7 @@ const CategoryList = () => {
       <Tabs activeKey={activeTab} onChange={handleTabChange}>
         <TabPane tab="Categories" key="categories">
           <Flex alignItems="center" justifyContent="space-between">
-            <div className="mr-md-3 mb-3">
-              <Input
-                placeholder="Search Categories"
-                prefix={<SearchOutlined />}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-            </div>
+            <SearchBarWithStatus fetchFunction={fetchCategories} />
             <div>
               <Button
                 type="primary"
@@ -224,32 +198,20 @@ const CategoryList = () => {
         </TabPane>
         <TabPane tab="Subcategories" key="subcategories">
           <Flex alignItems="center" justifyContent="space-between">
-            <Flex alignItems="center" justifyContent="start">
-              <div className="mb-3" style={{ paddingRight: "10px" }}>
-                <Input
-                  placeholder="Search Categories"
-                  prefix={<SearchOutlined />}
-                  onChange={(e) => handleSubCategorySearch(e.target.value)}
-                />
-              </div>
-              <div className="mb-3">
-                <Select
-                  placeholder="Select Category"
-                  style={{ minWidth: 180 }}
-                  onSelect={handleCategorySelect}
-                  value={selectedCategory}
-                >
-                  <Option key={0} value={0}>
-                    All Category
-                  </Option>
-                  {filteredCategories.map((category) => (
-                    <Option key={category.id} value={category.id}>
-                      {category.name}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </Flex>
+            <SearchBarWithStatus
+              fetchFunction={fetchSubcategories}
+              additionalFilters={[
+                {
+                  options: filteredCategories,
+                  placeholder: "Please choose a Category",
+                  formName: "category_id",
+                  isAutoComplete: true,
+                  onClick: () => {
+                    fetchCategories({});
+                  },
+                },
+              ]}
+            />
             <div>
               <Button
                 type="primary"

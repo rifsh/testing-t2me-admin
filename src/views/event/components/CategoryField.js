@@ -28,7 +28,7 @@ const CategoryField = ({ form }) => {
   const handleCategoryChange = (value) => {
     form.setFieldsValue({ sub_category_id: null });
     if (value) {
-      dispatch(fetchSubcategories({ categoryId: value, data: {} }));
+      dispatch(fetchSubcategories({ category_id: value }));
     } else {
       dispatch(clearSubcategories());
     }

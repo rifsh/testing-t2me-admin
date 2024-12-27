@@ -113,13 +113,13 @@ export const addVenue = createAsyncThunk(
 
 export const getVenues = createAsyncThunk(
   "locations/getVenues",
-  async (place_id, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
       if (GET_VENUE_MOCK_API) {
         const response = LocationMockData.getAllVenues;
         return response.data[0];
       } else {
-        const response = await LocationService.getVenues(place_id);
+        const response = await LocationService.getVenues(pageData);
         return response.data[0];
       }
     } catch (error) {
@@ -145,13 +145,13 @@ export const getSingleVenues = createAsyncThunk(
 );
 export const getPlaces = createAsyncThunk(
   "locations/getPlaces",
-  async (country_id, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
       if (GET_PLACE_MOCK_API && ENABLE_MOCK_API) {
         const response = LocationMockData.getAllPlaces;
         return response.data;
       } else {
-        const response = await LocationService.getPlaces(country_id);
+        const response = await LocationService.getPlaces(pageData);
         return response.data[0];
       }
     } catch (error) {

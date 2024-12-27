@@ -1,14 +1,16 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
 
 const TicketsService = {};
 
-TicketsService.getAllTickets = function (venueId) {
-  console.warn("venueId",venueId)
+TicketsService.getAllTickets = function (pageData) {
+
   return fetch({
-    url: `${ApiConstant.TICKET_URL}${venueId ? `?venue_id=${venueId}` : ""}`,
+    url: ApiConstant.TICKET_URL,
     method: "get",
+    params: Utils.filterParams(pageData),
   });
 };
 TicketsService.editTicket = function (data, action) {

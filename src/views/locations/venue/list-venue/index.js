@@ -18,24 +18,26 @@ import utils from "utils";
 import {
   editVenue,
   filterVenues,
+  getPlaces,
   getSingleVenues,
   getVenues,
 } from "store/slices/locationSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { setSelectedItem } from "store/slices/modalSlice";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Option } = Select;
 
 const VenueList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredVenues, loading, editable_status, message } = useSelector(
-    (state) => state.locations
-  );
+  const { filteredVenues, loading, filteredPlaces, editable_status, message } =
+    useSelector((state) => state.locations);
   const [form] = Form.useForm();
 
   useEffect(() => {
-    dispatch(getVenues());
+    dispatch(getVenues(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
   const handleSearch = (e) => {
@@ -120,13 +122,28 @@ const VenueList = () => {
   return (
     <Card>
       <Row gutter={16} justify={"space-between"} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={8}>
+        {/* <Col xs={24} sm={8}>
           <PlaceWithCountryForm
             allPlaceVisible={true}
             form={form}
             onSelect={(id) => handleSelectPlace(id)}
           />
-        </Col>
+        </Col> */}
+        <SearchBarWithStatus
+          fetchFunction={getVenues}
+          additionalFilters={[
+            {
+              options: filteredPlaces,
+              placeholder: "Please choose a Place",
+              formName: "place_id",
+              isAutoComplete: true,
+              onClick: () => {
+                getPlaces({});
+              },
+            },
+          ]}
+        />
+
         <Col xs={24} sm={8} style={{ textAlign: "right" }}>
           <Button
             type="primary"
@@ -138,7 +155,7 @@ const VenueList = () => {
         </Col>
       </Row>
 
-      <Row gutter={16} style={{ marginBottom: 16 }}>
+      {/* <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12}>
           <Input
             placeholder="Search"
@@ -159,7 +176,8 @@ const VenueList = () => {
             <Option value={"Inactive"}>Inactive</Option>
           </Select>
         </Col>
-      </Row>
+      </Row> */}
+      {/* <SearchBarWithStatus fetchFunction={getVenues} /> */}
 
       <div className="table-responsive">
         <Table

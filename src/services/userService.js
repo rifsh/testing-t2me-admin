@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
 
 const UserService = {};
@@ -9,10 +10,11 @@ UserService.getAllRoles = function () {
     method: "get",
   });
 };
-UserService.getAllUsers = function () {
+UserService.getAllUsers = function (pageData) {
   return fetch({
     url: "/api/v1/auth/secured/users/",
     method: "get",
+    params: Utils.filterParams(pageData),
   });
 };
 UserService.editUser = function (data, action) {

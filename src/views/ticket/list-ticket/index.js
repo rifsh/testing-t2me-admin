@@ -23,6 +23,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 const { Panel } = Collapse;
 
 const TicketList = () => {
@@ -33,7 +35,7 @@ const TicketList = () => {
 
   useEffect(() => {
     dispatch(resetTicketSets());
-    dispatch(fetchAllTickets());
+    dispatch(fetchAllTickets(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
   const handleSearch = (e) => {
@@ -70,13 +72,7 @@ const TicketList = () => {
           marginBottom: "20px",
         }}
       >
-        <Input
-          placeholder="Search Ticket Type"
-          prefix={<SearchOutlined />}
-          value={searchTerm}
-          onChange={handleSearch}
-          style={{ width: 250 }}
-        />
+        <SearchBarWithStatus fetchFunction={fetchAllTickets} />
         <Button
           type="primary"
           icon={<PlusCircleOutlined />}
@@ -171,9 +167,10 @@ const TicketList = () => {
                     </Panel>
                   ))
                 ) : (
-                  <Panel collapsible="disabled" header={'No ticket types available'}>
-                    
-                  </Panel>
+                  <Panel
+                    collapsible="disabled"
+                    header={"No ticket types available"}
+                  ></Panel>
                 )}
               </Collapse>
             ),

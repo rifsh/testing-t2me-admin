@@ -28,7 +28,7 @@ const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
-  pagination: {},
+  pagination: {size:10,page:1},
 };
 
 export const fetchEventDetails = createAsyncThunk(

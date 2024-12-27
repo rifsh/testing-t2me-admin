@@ -13,16 +13,17 @@ export const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
+  pagination: { size: 10, page: 1 },
 };
 export const fetchAllOffers = createAsyncThunk(
   "offer/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
       if (ALL_OFFERS_MOCK_API && ENABLE_MOCK_API) {
         const response = OfferMockData.fetchAllOffers;
         return response.data[0];
       } else {
-        const response = await OfferService.getAllOffer();
+        const response = await OfferService.getAllOffer(pageData);
         return response.data[0];
       }
     } catch (error) {
@@ -108,6 +109,7 @@ const offerSlice = createSlice({
         state.loading = false;
         state.offers = action.payload.items;
         state.filteredOffers = action.payload.items;
+        state.pagination = action.payload;
       })
       .addCase(fetchAllOffers.rejected, (state, action) => {
         state.loading = false;

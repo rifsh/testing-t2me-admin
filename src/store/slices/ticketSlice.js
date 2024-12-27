@@ -32,13 +32,13 @@ export const initialState = {
 
 export const fetchAllTickets = createAsyncThunk(
   "ticket/fetchAllTickets",
-  async (venueId, { rejectWithValue, getState }) => {
+  async (pageData, { rejectWithValue, getState }) => {
     try {
       if (GET_TICKET_MOCK_API && ENABLE_MOCK_API) {
         const response = TicketMockData.getAllTickets;
         return response.data;
       } else {
-        const response = await TicketsService.getAllTickets(venueId);
+        const response = await TicketsService.getAllTickets(pageData);
         return response.data;
       }
     } catch (error) {

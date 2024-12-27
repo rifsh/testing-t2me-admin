@@ -89,7 +89,7 @@ const TicketFormFields = () => {
           form={form}
           label={"Place"}
           onSelect={(id) => {
-            dispatch(getVenues(id));
+            dispatch(getVenues({place_id:id}));
             form.setFieldsValue({ venue_id: null });
           }}
           rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
