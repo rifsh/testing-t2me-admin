@@ -53,13 +53,11 @@ LocationService.placeWithCountry = function (place) {
     method: "get",
   });
 };
-LocationService.getVenues = function (place_id) {
+LocationService.getVenues = function (pageData) {
   return fetch({
-    url: place_id
-      ? `${ApiConstant.VENUE_URL}?place_id=${place_id}`
-      : `${ApiConstant.VENUE_URL}`,
+    url:ApiConstant.VENUE_URL,
     method: "get",
-
+    params: Utils.filterParams(pageData),
   });
 };
 LocationService.getSingleVenues = function (venue_id) {

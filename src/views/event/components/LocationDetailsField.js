@@ -15,7 +15,7 @@ const LocationDetailsField = ({ form }) => {
   };
 
   const handlePlaceSelect = (id) => {
-    dispatch(getVenues(id));
+    dispatch(getVenues({ place_id: id }));
     form.setFieldsValue({
       available_types: null,
       seat_structure_id: null,

@@ -24,6 +24,8 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Option } = Select;
 
@@ -38,7 +40,7 @@ const UserList = () => {
   const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchAllUsers());
+    dispatch(fetchAllUsers(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
   const handleSearch = (e) => {
@@ -123,23 +125,7 @@ const UserList = () => {
         justifyContent="space-between"
         style={{ paddingBottom: "30px" }}
       >
-        <Flex>
-          <Input
-            placeholder="Search"
-            prefix={<SearchOutlined />}
-            onChange={handleSearch}
-            className="mr-2"
-          />
-          <Select
-            defaultValue="All"
-            onChange={handleShowStatus}
-            className="mr-2"
-          >
-            <Option value="All">All</Option>
-            <Option value="Active">Active</Option>
-            <Option value="Inactive">Inactive</Option>
-          </Select>
-        </Flex>
+          <SearchBarWithStatus fetchFunction={fetchAllUsers} />
         <Button
           type="primary"
           icon={<FormOutlined />}

@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
 
 const TaxService = {};
@@ -26,16 +27,11 @@ TaxService.fetchAvailableTaxCategory = function () {
     method: "get",
   });
 };
-TaxService.fetchAllTax = function (data) {
-  const params = {};
-  if(data){
-  if (data.country_id !== null) params.country_id = data.country_id;
-  if (data.place_id !== null) params.place_id = data.place_id;
-}
+TaxService.fetchAllTax = function (pageData) {
   return fetch({
     url: `${ApiConstant.TAX_URL}`,
     method: "get",
-    params: params,
+    params: Utils.filterParams(pageData),
   });
 };
 export default TaxService;

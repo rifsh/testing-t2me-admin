@@ -203,7 +203,8 @@ const CouponList = () => {
         responseMessage={message}
         editFunction={editCoupon}
         editable_status={editable_status}
-        getAllFunction={fetchAllCoupons}
+        getAllFunction={(pageData) => fetchAllCoupons(pageData)}
+        pageData={{ page: 1, size: 10 }}
       />
     </Card>
   );

@@ -36,17 +36,15 @@ const { Option } = Select;
 const OfferList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredOffers,pagination, loading, editable_status, message } = useSelector(
-    (state) => state.offers
-  );
+  const { filteredOffers, pagination, loading, editable_status, message } =
+    useSelector((state) => state.offers);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchAllOffers({size:10,page:1}));
+    dispatch(fetchAllOffers({ size: 10, page: 1 }));
   }, [dispatch]);
-
 
   const showModal = (offer) => {
     setSelectedOffer(offer);
@@ -128,8 +126,7 @@ const OfferList = () => {
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
-      
-        <SearchBarWithStatus fetchFunction={fetchAllOffers}/>
+        <SearchBarWithStatus fetchFunction={fetchAllOffers} />
         <Button
           type="primary"
           icon={<FormOutlined />}
@@ -191,7 +188,8 @@ const OfferList = () => {
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editOffer}
-        getAllFunction={fetchAllOffers}
+        getAllFunction={(pageData) => fetchAllOffers(pageData)}
+        pageData={{ page: 1, size: 10 }}
         editable_status={editable_status}
       />
     </Card>

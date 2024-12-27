@@ -95,8 +95,8 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
 
         return {
           label: option.name,
-          id:option.id ? option.id.toString() : "",
-          value:option.name,
+          id: option.id ? option.id.toString() : "",
+          value: option.name,
         };
       })
       .filter(Boolean); // Remove any null values
@@ -104,12 +104,12 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
   const handleAutoCompleteSelect = (value, option, formName) => {
     const selectedLabel = option.label; // Displayed value
     const selectedId = option.id; // Actual ID used for filtering
-  
+
     setFilterValues((prev) => ({
       ...prev,
       [formName]: selectedId,
     }));
-  
+
     dispatch(
       fetchFunction({
         search: searchValue,
@@ -121,7 +121,7 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
       })
     );
   };
-  
+
   return (
     <Flex className="mb-1" mobileFlex={false}>
       {/* Search Input */}
@@ -157,19 +157,24 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
           <div key={index} className="mb-3 mr-md-3">
             {filter.isAutoComplete ? (
               <AutoComplete
-              options={getAutoCompleteOptions(filter.options)}
-              style={{ width: 180 }}
-              onChange={(e) => handleFilterItemIsEmpty(e)}
-              placeholder={filter.placeholder || "Select"}
-              onSelect={(value, option) => handleAutoCompleteSelect(value, option, filter.formName)}
-              filterOption={(inputValue, option) =>
-                option?.label?.toLowerCase().includes(inputValue.toLowerCase())
-              }
-            />
-            
+                options={getAutoCompleteOptions(filter.options)}
+                style={{ width: 180 }}
+                onClick={filter.onClick}
+                onChange={(e) => handleFilterItemIsEmpty(e)}
+                placeholder={filter.placeholder || "Select"}
+                onSelect={(value, option) =>
+                  handleAutoCompleteSelect(value, option, filter.formName)
+                }
+                filterOption={(inputValue, option) =>
+                  option?.label
+                    ?.toLowerCase()
+                    .includes(inputValue.toLowerCase())
+                }
+              />
             ) : (
               <Select
                 placeholder={filter.placeholder || "Select"}
+                onClick={filter.onClick}
                 // onChange={(e) => handleFilterItemIsEmpty(e)}
                 onSelect={(value) => handleFilterChange(value, filter.formName)}
                 style={{ minWidth: 180 }}

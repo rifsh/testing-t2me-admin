@@ -13,6 +13,8 @@ import {
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Option } = Select;
 
@@ -25,7 +27,7 @@ const ScheduleList = () => {
   // const [form] = Form.useForm();
 
   useEffect(() => {
-    dispatch(fetchAllSchedules());
+    dispatch(fetchAllSchedules(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
   const handleSearch = (e) => {
@@ -100,27 +102,7 @@ const ScheduleList = () => {
   return (
     <Card>
       <Flex alignItems="center" justifyContent="space-between">
-        <Flex className="mb-1">
-          <div className="mr-md-3 mb-3">
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              onChange={handleSearch}
-            />
-          </div>
-          <div className="mr-md-3 mb-3">
-            <Select
-              defaultValue="All"
-              placeholder="Status"
-              style={{ minWidth: 180 }}
-              onChange={handleShowStatus}
-            >
-              <Option value="All">All</Option>
-              <Option value="Active">Active</Option>
-              <Option value="Inactive">Inactive</Option>
-            </Select>
-          </div>
-        </Flex>
+      <SearchBarWithStatus fetchFunction={fetchAllSchedules} />
         <Button
           type="primary"
           icon={<FormOutlined />}

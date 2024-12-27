@@ -68,17 +68,17 @@ export const fetchCategories = createAsyncThunk(
 
 export const fetchSubcategories = createAsyncThunk(
   "category/fetchSubcategories",
-  async ({ categoryId, data }, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
       if (SUB_CATEGORY_MOCK_API) {
         const response = CategoryMockData.fetchSubCategory;
         const subCategory = response.data.filter(
-          (subcategory) => subcategory.category_id === categoryId
+          (subcategory) => subcategory.category_id === pageData.category_id
         );
-        return { categoryId, subcategories: subCategory };
+        return { categoryId:pageData.category_id, subcategories: subCategory };
       }
 
-      const response = await CategoryService.fetchSubCategory(categoryId, data);
+      const response = await CategoryService.fetchSubCategory(pageData);
       return response.data[0];
     } catch (error) {
       return rejectWithValue("Failed to fetch subcategories");

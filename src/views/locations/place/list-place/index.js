@@ -55,19 +55,8 @@ const PlaceList = () => {
   useEffect(() => {
     dispatch(getPlaces(DEFAULT_PAGE_SIZE));
 
-    dispatch(getCoutryDetails());
+    // dispatch(getCoutryDetails());
   }, [dispatch]);
-
-  const handleSearch = (value) => {
-    dispatch(filterPlaces({ searchTerm: value, status: null }));
-  };
-  const handleSelectCountry = async (id) => {
-    if (id === 0) {
-      dispatch(getPlaces());
-    } else {
-      dispatch(getPlaces({ ...DEFAULT_PAGE_SIZE, country_id: id }));
-    }
-  };
 
   const handleEditPlace = async (id) => {
     navigate(`${APP_PREFIX_PATH}/place/edit/${id}`);
@@ -97,12 +86,6 @@ const PlaceList = () => {
   );
 
   const tableColumns = [
-    // {
-    //   title: "Country ID",
-    //   dataIndex: "country_id",
-    //   sorter: (a, b) => utils.antdTableSorter(a, b, "country_id"),
-    // },
-    // Todo : it should be country name
     {
       title: "Place Name",
       dataIndex: "name",
@@ -142,31 +125,12 @@ const PlaceList = () => {
               placeholder: "Please choose a country",
               formName: "country_id",
               isAutoComplete: true,
+              onClick: () => {
+                dispatch(getCoutryDetails());
+              },
             },
           ]}
         />
-        {/* <Col xs={24} sm={6}>
-          <Form form={form}>
-            <Form.Item name="country_id">
-              <Select
-                className="w-100"
-                placeholder="Choose a Country"
-                loading={loading}
-                defaultValue={0}
-                onSelect={handleSelectCountry}
-              >
-                <Option key={0} value={0}>
-                  All Countries
-                </Option>
-                {detailedCountryList.map((country) => (
-                  <Option key={country.id} value={country.id}>
-                    {country.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Form>
-        </Col> */}
 
         <Col xs={24} sm={8} style={{ textAlign: "right" }}>
           <Button

@@ -14,9 +14,9 @@ export const fetchAvailableCategory = createAsyncThunk(
 );
 export const fetchAllTax = createAsyncThunk(
   "tax/fetchAllTax",
-  async (data, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
-      const response = await TaxService.fetchAllTax(data);
+      const response = await TaxService.fetchAllTax(pageData);
       return response.data[0];
     } catch (error) {
       return rejectWithValue(error.message);

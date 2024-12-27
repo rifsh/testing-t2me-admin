@@ -19,13 +19,13 @@ export const initialState = {
 
 export const fetchAllSchedules = createAsyncThunk(
   "schedule/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
       if (GET_SCHEDULE_MOCK_API && ENABLE_MOCK_API) {
         const response = ScheduleMockData.fetchAllSchedules;
         return response.data;
       } else {
-        const response = await ScheduleService.getAllSchedule();
+        const response = await ScheduleService.getAllSchedule(pageData);
         return response.data[0];
       }
     } catch (error) {

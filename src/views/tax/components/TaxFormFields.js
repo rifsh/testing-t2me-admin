@@ -72,7 +72,7 @@ const TaxFormFields = ({ mode }) => {
   const handleCountrySelect = (id) => {
     form.setFieldValue("place_id", null);
     // dispatch(getPlaces(form.getFieldValue("country_id")));
-    dispatch(getPlaces(id));
+    dispatch(getPlaces({ country_id: id }));
   };
 
   const handleCheckboxChange = (e) => {

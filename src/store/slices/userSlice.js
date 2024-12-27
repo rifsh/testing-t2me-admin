@@ -18,9 +18,9 @@ export const initialState = {
 
 export const fetchAllUsers = createAsyncThunk(
   "users/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
-      const response = await UserService.getAllUsers();
+      const response = await UserService.getAllUsers(pageData);
       return response.data[0];
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching users");

@@ -148,6 +148,24 @@ const superAdminDashBoardNavTree = [
 ];
 const eventOrganaizerDashBoardNavTree = [
   {
+    key: "dashboards",
+    path: `${APP_PREFIX_PATH}/dashboards`,
+    title: "sidenav.dashboard",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    isGroupTitle: true,
+    submenu: [
+      {
+        key: "dashboards-statics",
+        path: `${APP_PREFIX_PATH}/dashboards/sales`,
+        title: "sidenav.dashboard.statics",
+        icon: DashboardOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
+  },
+  {
     key: "Forms",
     path: `${APP_PREFIX_PATH}/forms`,
     title: "sidenav.forms",
@@ -174,10 +192,9 @@ const navigationConfig = () => {
 
   const decodedToken = jwtDecode(token);
 
-
-  if (decodedToken?.role_id===UserRoleConstants.superAdminRoleId) {
+  if (decodedToken?.role_id === UserRoleConstants.superAdminRoleId) {
     return superAdminDashBoardNavTree;
-  } else if (decodedToken?.role_id===UserRoleConstants.eventOrganizerRoleId) {
+  } else if (decodedToken?.role_id === UserRoleConstants.eventOrganizerRoleId) {
     return eventOrganaizerDashBoardNavTree;
   }
 
