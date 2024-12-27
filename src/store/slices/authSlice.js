@@ -9,7 +9,7 @@ export const initialState = {
   message: "",
   showMessage: false,
   redirect: "",
-  userData:null,
+  userData: null,
   token: localStorage.getItem(AUTH_TOKEN) || null,
 };
 export const signIn = createAsyncThunk(

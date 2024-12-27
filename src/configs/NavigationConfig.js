@@ -173,7 +173,7 @@ const navigationConfig = () => {
   }
 
   const decodedToken = jwtDecode(token);
-  console.log(decodedToken, "decodedTOken");
+
 
   if (decodedToken?.role_id===UserRoleConstants.superAdminRoleId) {
     return superAdminDashBoardNavTree;
