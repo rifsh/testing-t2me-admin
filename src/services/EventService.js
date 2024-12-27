@@ -17,6 +17,7 @@ EventsService.getAllEvent = function (pageData) {
   const params = {};
   if (pageData.page !== null) params.page = pageData.page;
   if (pageData.size !== null) params.size = pageData.size;
+  if (pageData.search !== null) params.search = pageData.search;
 
   return fetch({
     url: ApiConstant.EVENT_URL,

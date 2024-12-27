@@ -111,14 +111,14 @@ const EventsList = () => {
     },
   ];
 
-  const handleSearch = (e) => {
-    dispatch(filterEvent({ searchTerm: e.target.value, status: null }));
+  const handleSearch = (value) => {
+    dispatch(fetchAllEvent({ search: value, page: 1, size: 10 }));
   };
 
   const handleShowStatus = (status) => {
     dispatch(filterEvent({ searchTerm: null, status }));
   };
-
+  const { Search } = Input;
   return (
     <Card>
       <Flex
@@ -128,10 +128,10 @@ const EventsList = () => {
       >
         <Flex className="mb-1" mobileFlex={false}>
           <div className="mr-md-3 mb-3">
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              onChange={handleSearch}
+            <Search
+              placeholder="Search Event"
+              onSearch={(value)=>{handleSearch(value)}}
+              style={{ width: 200 }}
             />
           </div>
           <div className="mb-3">

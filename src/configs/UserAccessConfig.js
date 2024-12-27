@@ -7,6 +7,7 @@ import OfferField from "views/event/components/OfferField";
 import { jwtDecode } from "jwt-decode";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { UserRoleConstants } from "constants/UserRoleConstant";
+import { APP_PREFIX_PATH } from "./AppConfig";
 
 export const getCurrentUser = () => {
   const token = localStorage.getItem(AUTH_TOKEN);
@@ -98,5 +99,27 @@ export const getEventFormSteps = () => {
     return ["Event Details"];
   } else {
     return [];
+  }
+};
+
+export const AUTHENTICATED_ENTRY = () => {
+  const currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    console.error("User not authenticated. Cannot fetch form steps.");
+    return null;
+  }
+
+  switch (currentUser.role_id) {
+    case UserRoleConstants.superAdminRoleId:
+      return `${APP_PREFIX_PATH}/dashboards/statics`;
+    case UserRoleConstants.eventOrganizerRoleId:
+      return `${APP_PREFIX_PATH}/dashboards/sales`;
+    case UserRoleConstants.eventSupportingTeamRoleId:
+      return `${APP_PREFIX_PATH}/dashboards/default`;
+    case UserRoleConstants.superSupportingTeamRoleId:
+      return `${APP_PREFIX_PATH}/dashboards/default`;
+    default:
+      return `${APP_PREFIX_PATH}/dashboards/default`;
   }
 };
