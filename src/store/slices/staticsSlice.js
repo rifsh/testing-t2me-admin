@@ -17,6 +17,7 @@ const initialState = {
   loadingSchedules: false,
   error: null,
   message: null,
+  pagination:{size:10,page:1}
 };
 
 // Async thunk for fetching event stats
@@ -42,14 +43,16 @@ export const fetchAnnualStatsforEvents = createAsyncThunk(
 // Async thunk for fetching user stats
 export const fetchUserStatsForUsers = createAsyncThunk(
   "statistics/fetchUserStatsForUsers",
-  async (_, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
       if (ENABLE_MOCK_API & ENABLE_STATICS_MOCK_API) {
         const response = StaticsMockData.fetchAnnualStatsForUsers;
-        return response.data; // Return mock data if mock API is enabled
+        return response.data[0]; // Return mock data if mock API is enabled
       } else {
-        const response = await StaticsService.fetchAnnualStatsforUsers(); // Call the actual API
-        return response.data;
+        const response = await StaticsService.fetchAnnualStatsforUsers(
+          pageData
+        ); // Call the actual API
+        return response.data[0];
       }
     } catch (error) {
       return rejectWithValue(
@@ -116,7 +119,8 @@ const staticsSlice = createSlice({
       })
       .addCase(fetchUserStatsForUsers.fulfilled, (state, { payload }) => {
         state.loadingMembers = false;
-        state.annualStatsForUsers = payload[0].statistics;
+        state.pagination = payload;
+        state.annualStatsForUsers = payload.items[0].statistics;
       })
       .addCase(fetchUserStatsForUsers.rejected, (state, { payload }) => {
         state.loadingMembers = false;

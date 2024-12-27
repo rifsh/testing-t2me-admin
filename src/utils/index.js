@@ -5,6 +5,20 @@ import {
   updateSelectedOffer,
 } from "store/slices/scheduleSlice";
 class Utils {
+
+  /**
+ * Filters out properties with null or undefined values from an object
+ * and returns a new object with only valid properties.
+ *
+ * @param {Object} obj - The object to filter.
+ * @returns {Object} - A new object with only non-null/undefined values.
+ */
+static  filterParams = (obj) => {
+  return Object.fromEntries(
+    Object.entries(obj)
+      .filter(([_, value]) => value !== null && value !== undefined)
+  );
+};
   /**
    * Get first character from first & last sentences of a username
    * @param {String} name - Username

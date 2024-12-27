@@ -9,19 +9,23 @@ StaticsService.fetchAnnualStatsforEvents = function (place) {
   });
 };
 
-StaticsService.fetchAnnualStatsforUsers = function (place) {
+StaticsService.fetchAnnualStatsforUsers = function (pageData) {
+  const params = {};
+  if (pageData.page !== null) params.page = pageData.page;
+  if (pageData.size !== null) params.size = pageData.size;
+
   return fetch({
     url: ApiConstant.STATICS_USER_LIST,
     method: "get",
+    params: params,
   });
 };
 
-StaticsService.fetchAnnualStatsforSchedules = function (place) {
+StaticsService.fetchAnnualStatsforSchedules = function () {
   return fetch({
     url: ApiConstant.STATICS_SCHEDULES_LIST,
     method: "get",
   });
 };
-
 
 export default StaticsService;
