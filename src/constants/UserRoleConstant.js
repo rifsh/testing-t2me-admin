@@ -1,13 +1,12 @@
 export const UserRoleConstants = {
-    superAdmin: "Super Admin",
-    superSupportingTeam: "Super Supporting Team",
-    eventOrganizer: "Event Organizer",
-    eventSupportingTeam: "Event Supporting Team",
-    defaultRole: null,
-    superAdminRoleId: 1,
-    superSupportingTeamRoleId: 3,
-    eventOrganizerRoleId: 2,
-    eventSupportingTeamRoleId: 4,
-    defaultRoleRoleId: null,
-  };
-  
+  superAdmin: "Super Admin",
+  superSupportingTeam: "Super Supporting Team",
+  eventOrganizer: "Event Organizer",
+  eventSupportingTeam: "Event Supporting Team",
+  defaultRole: null,
+  superAdminRoleId: 1,
+  superSupportingTeamRoleId: 3,
+  eventOrganizerRoleId: 2,
+  eventSupportingTeamRoleId: 4,
+  defaultRoleRoleId: null,
+};
