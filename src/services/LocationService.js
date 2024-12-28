@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
 
 const LocationService = {};
@@ -52,12 +53,11 @@ LocationService.placeWithCountry = function (place) {
     method: "get",
   });
 };
-LocationService.getVenues = function (place_id) {
+LocationService.getVenues = function (pageData) {
   return fetch({
-    url: place_id
-      ? `${ApiConstant.VENUE_URL}?place_id=${place_id}`
-      : `${ApiConstant.VENUE_URL}`,
+    url:ApiConstant.VENUE_URL,
     method: "get",
+    params: Utils.filterParams(pageData),
   });
 };
 LocationService.getSingleVenues = function (venue_id) {
@@ -66,12 +66,11 @@ LocationService.getSingleVenues = function (venue_id) {
     method: "get",
   });
 };
-LocationService.getPlaces = function (country_id) {
+LocationService.getPlaces = function (pageData) {
   return fetch({
-    url: country_id
-      ? `${ApiConstant.PLACE_URL}?country_id=${country_id}`
-      : `${ApiConstant.PLACE_URL}`,
+    url: ApiConstant.PLACE_URL,
     method: "get",
+    params: Utils.filterParams(pageData),
   });
 };
 LocationService.getCoutryDetails = function () {

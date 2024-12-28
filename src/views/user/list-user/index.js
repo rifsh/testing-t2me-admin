@@ -24,13 +24,15 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Option } = Select;
 
 const UserList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredUsers, loading, editable_status, message } = useSelector(
+  const { filteredUsers, pagination,loading, editable_status, message } = useSelector(
     (state) => state.users
   );
 
@@ -38,15 +40,10 @@ const UserList = () => {
   const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchAllUsers());
+    dispatch(fetchAllUsers(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
-
-  const handleSearch = (e) => {
-    dispatch(filterUsers({ searchTerm: e.target.value, status: null }));
-  };
-
-  const handleShowStatus = (status) => {
-    dispatch(filterUsers({ searchTerm: null, status }));
+  const handlePagination = (page, size) => {
+    dispatch(fetchAllUsers({ page: page, size: size }));
   };
 
   const showModal = (user) => {
@@ -123,23 +120,7 @@ const UserList = () => {
         justifyContent="space-between"
         style={{ paddingBottom: "30px" }}
       >
-        <Flex>
-          <Input
-            placeholder="Search"
-            prefix={<SearchOutlined />}
-            onChange={handleSearch}
-            className="mr-2"
-          />
-          <Select
-            defaultValue="All"
-            onChange={handleShowStatus}
-            className="mr-2"
-          >
-            <Option value="All">All</Option>
-            <Option value="Active">Active</Option>
-            <Option value="Inactive">Inactive</Option>
-          </Select>
-        </Flex>
+          <SearchBarWithStatus fetchFunction={fetchAllUsers} />
         <Button
           type="primary"
           icon={<FormOutlined />}
@@ -153,7 +134,12 @@ const UserList = () => {
         dataSource={filteredUsers}
         rowKey="id"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={{
+          current: pagination.page,
+          pageSize: pagination.size,
+          total: pagination.total,
+          onChange: (page, pageSize) => handlePagination(page, pageSize),
+        }}
       />
 
       <Modal

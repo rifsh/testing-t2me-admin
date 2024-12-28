@@ -29,30 +29,23 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Option } = Select;
 
 const OfferList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredOffers, loading, editable_status, message } = useSelector(
-    (state) => state.offers
-  );
+  const { filteredOffers, pagination, loading, editable_status, message } =
+    useSelector((state) => state.offers);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchAllOffers());
+    dispatch(fetchAllOffers(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
-
-  const handleSearch = (e) => {
-    dispatch(filterOffers({ searchTerm: e.target.value, status: null }));
-  };
-
-  const handleShowStatus = (status) => {
-    dispatch(filterOffers({ searchTerm: null, status }));
-  };
 
   const showModal = (offer) => {
     setSelectedOffer(offer);
@@ -130,27 +123,14 @@ const OfferList = () => {
       ),
     },
   ];
+  const handlePagination = (page, size) => {
+    dispatch(fetchAllOffers({ page: page, size: size }));
+  };
 
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
-        <Flex>
-          <Input
-            placeholder="Search"
-            prefix={<SearchOutlined />}
-            onChange={handleSearch}
-            className="mr-2"
-          />
-          <Select
-            defaultValue="All"
-            onChange={handleShowStatus}
-            className="mr-2"
-          >
-            <Option value="All">All</Option>
-            <Option value="Active">Active</Option>
-            <Option value="Inactive">Inactive</Option>
-          </Select>
-        </Flex>
+        <SearchBarWithStatus fetchFunction={fetchAllOffers} />
         <Button
           type="primary"
           icon={<FormOutlined />}
@@ -164,7 +144,12 @@ const OfferList = () => {
         dataSource={filteredOffers}
         rowKey="id"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={{
+          current: pagination.page,
+          pageSize: pagination.size,
+          total: pagination.total,
+          onChange: (page, pageSize) => handlePagination(page, pageSize),
+        }}
       />
 
       <Modal
@@ -212,7 +197,8 @@ const OfferList = () => {
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editOffer}
-        getAllFunction={fetchAllOffers}
+        getAllFunction={(pageData) => fetchAllOffers(pageData)}
+        pageData={{ page: 1, size: 10 }}
         editable_status={editable_status}
       />
     </Card>

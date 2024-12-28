@@ -23,21 +23,23 @@ import { useDispatch, useSelector } from "react-redux";
 import { setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 const { Panel } = Collapse;
 
 const TicketList = () => {
   const dispatch = useDispatch();
-  const { filteredTickets, searchTerm, message } = useSelector(
+  const { filteredTickets, pagination, message } = useSelector(
     (state) => state.tickets
   );
 
   useEffect(() => {
     dispatch(resetTicketSets());
-    dispatch(fetchAllTickets());
+    dispatch(fetchAllTickets(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
-  const handleSearch = (e) => {
-    dispatch(filterTickets({ searchTerm: e.target.value, status: null }));
+  const handlePagination = (page, size) => {
+    dispatch(fetchAllTickets({ page: page, size: size }));
   };
 
   const [selectedVenue, setSelectedVenue] = useState(null);
@@ -70,13 +72,7 @@ const TicketList = () => {
           marginBottom: "20px",
         }}
       >
-        <Input
-          placeholder="Search Ticket Type"
-          prefix={<SearchOutlined />}
-          value={searchTerm}
-          onChange={handleSearch}
-          style={{ width: 250 }}
-        />
+        <SearchBarWithStatus fetchFunction={fetchAllTickets} />
         <Button
           type="primary"
           icon={<PlusCircleOutlined />}
@@ -89,10 +85,12 @@ const TicketList = () => {
       <Table
         rowKey="id"
         dataSource={filteredTickets}
-        // pagination={true}
-        // onRow={(record) => ({
-        //   onClick: () => showDetails(record),
-        // })}
+        pagination={{
+          current: pagination.page,
+          pageSize: pagination.size,
+          total: pagination.total,
+          onChange: (page, pageSize) => handlePagination(page, pageSize),
+        }}
         columns={[
           {
             title: "Ticket types",
@@ -171,9 +169,10 @@ const TicketList = () => {
                     </Panel>
                   ))
                 ) : (
-                  <Panel collapsible="disabled" header={'No ticket types available'}>
-                    
-                  </Panel>
+                  <Panel
+                    collapsible="disabled"
+                    header={"No ticket types available"}
+                  ></Panel>
                 )}
               </Collapse>
             ),

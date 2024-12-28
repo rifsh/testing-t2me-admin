@@ -12,15 +12,17 @@ export const initialState = {
   message: null,
   roles: [],
   selectedRole: null,
-  responseData: null, editable_status: null,
+  responseData: null,
+  editable_status: null,
   responseMessage: null,
+  pagination: { size: 10, page: 1 },
 };
 
 export const fetchAllUsers = createAsyncThunk(
   "users/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
-      const response = await UserService.getAllUsers();
+      const response = await UserService.getAllUsers(pageData);
       return response.data[0];
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching users");
@@ -120,6 +122,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.list = action.payload.items;
         state.filteredUsers = action.payload.items;
+        state.pagination = action.payload;
       })
       .addCase(fetchAllUsers.rejected, (state, action) => {
         state.loading = false;

@@ -3,6 +3,7 @@ import { Input, Row, Col, Card, Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllRoles, setSelectedRole } from "store/slices/userSlice";
 import { fetchAllEvent } from "store/slices/eventSlice";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 
 const { Option } = Select;
 
@@ -50,7 +51,7 @@ function CouponFormFields() {
 
   const handleSelectedRole = (role) => {
     dispatch(setSelectedRole(role));
-    if (role === 3) {
+    if (role === UserRoleConstants.eventOrganizerRoleId) {
       dispatch(fetchAllEvent({}));
     }
   };
@@ -80,14 +81,14 @@ function CouponFormFields() {
               onChange={(value) => handleSelectedRole(value)}
             >
               {roles.map((role) => (
-                <Option key={role.id} value={role.id}>
+                <Option key={role.position_id} value={role.position_id}>
                   {role.name}
                 </Option>
               ))}
             </Select>
           </Form.Item>
 
-          {selectedRole === 3 && (
+          {selectedRole === UserRoleConstants.eventOrganizerRoleId && (
             <Form.Item name="event_ids" label="Events">
               <Select mode="multiple"
                 loading={eventLoading}

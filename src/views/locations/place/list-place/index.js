@@ -35,33 +35,32 @@ import {
 } from "store/slices/locationSlice";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import UserForm from "views/user/form-user";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Option } = Select;
 
 const PlaceList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { filteredPlaces, detailedCountryList,editable_status, message, loading } = useSelector(
-    (state) => state.locations
-  );
+  const {
+    filteredPlaces,
+    detailedCountryList,
+    editable_status,
+    message,
+    loading,
+    pagination,
+  } = useSelector((state) => state.locations);
 
   useEffect(() => {
-    dispatch(getPlaces());
+    dispatch(getPlaces(DEFAULT_PAGE_SIZE));
 
-    dispatch(getCoutryDetails());
+    // dispatch(getCoutryDetails());
   }, [dispatch]);
-
-  const handleSearch = (value) => {
-    dispatch(filterPlaces({ searchTerm: value, status: null }));
+  const handlePagination = (page, size) => {
+    dispatch(getPlaces({ page: page, size: size }));
   };
-  const handleSelectCountry = async (id) => {
-    if (id === 0) {
-      dispatch(getPlaces());
-    } else {
-      dispatch(getPlaces(id));
-    }
-  };
-
   const handleEditPlace = async (id) => {
     navigate(`${APP_PREFIX_PATH}/place/edit/${id}`);
   };
@@ -90,12 +89,6 @@ const PlaceList = () => {
   );
 
   const tableColumns = [
-    // {
-    //   title: "Country ID",
-    //   dataIndex: "country_id",
-    //   sorter: (a, b) => utils.antdTableSorter(a, b, "country_id"),
-    // },
-    // Todo : it should be country name
     {
       title: "Place Name",
       dataIndex: "name",
@@ -122,37 +115,26 @@ const PlaceList = () => {
       ),
     },
   ];
+  const [form] = Form.useForm();
 
   return (
     <Card>
       <Row gutter={16} justify="space-between" align="" wrap={false}>
-        <Col xs={24} sm={8}>
-          <Input
-            placeholder="Search"
-            prefix={<SearchOutlined />}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-        </Col>
-        <Col xs={24} sm={6}>
-          <Form.Item name="country_id">
-            <Select
-              className="w-100"
-              placeholder="Choose a Country"
-              loading={loading}
-              defaultValue={0}
-              onSelect={handleSelectCountry}
-            >
-              <Option key={0} value={0}>
-                All Countries
-              </Option>
-              {detailedCountryList.map((country) => (
-                <Option key={country.id} value={country.id}>
-                  {country.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Col>
+        <SearchBarWithStatus
+          fetchFunction={getPlaces}
+          additionalFilters={[
+            {
+              options: detailedCountryList,
+              placeholder: "Please choose a country",
+              formName: "country_id",
+              isAutoComplete: true,
+              onClick: () => {
+                dispatch(getCoutryDetails());
+              },
+            },
+          ]}
+        />
+
         <Col xs={24} sm={8} style={{ textAlign: "right" }}>
           <Button
             type="primary"
@@ -170,13 +152,19 @@ const PlaceList = () => {
           dataSource={filteredPlaces}
           rowKey="id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{
+            current: pagination.page,
+            pageSize: pagination.size,
+            total: pagination.total,
+            onChange: (page, pageSize) => handlePagination(page, pageSize),
+          }}
         />
       </div>
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editPlace}
-        getAllFunction={getPlaces}editable_status={editable_status}
+        getAllFunction={getPlaces}
+        editable_status={editable_status}
       />
     </Card>
   );

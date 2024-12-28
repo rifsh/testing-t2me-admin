@@ -15,17 +15,18 @@ export const initialState = {
   editable_status: true,
   responseData: null,
   responseMessage: null,
+  pagination: { size: 10, page: 1 },
 };
 
 export const fetchAllSchedules = createAsyncThunk(
   "schedule/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
       if (GET_SCHEDULE_MOCK_API && ENABLE_MOCK_API) {
         const response = ScheduleMockData.fetchAllSchedules;
         return response.data;
       } else {
-        const response = await ScheduleService.getAllSchedule();
+        const response = await ScheduleService.getAllSchedule(pageData);
         return response.data[0];
       }
     } catch (error) {
@@ -189,6 +190,7 @@ const scheduleSlice = createSlice({
         state.loading = false;
         state.schedules = action.payload.items;
         state.filteredSchedules = action.payload.items;
+        state.pagination = action.payload;
       })
       .addCase(fetchAllSchedules.rejected, (state, action) => {
         state.loading = false;

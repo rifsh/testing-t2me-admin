@@ -10,17 +10,19 @@ export const initialState = {
   error: null,
   message: null,
   responseData: null,
-  responseMessage: null, editable_status: null,
+  responseMessage: null,
+  editable_status: null,
+  pagination: { size: 10, page: 1 },
 };
 export const fetchAllCoupons = createAsyncThunk(
   "coupon/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
       if (ALL_COUPONS_MOCK_API && ENABLE_MOCK_API) {
         const response = CouponMockData.fetchAllCoupons;
         return response.data;
       } else {
-        const response = await CouponService.getAllCoupon();
+        const response = await CouponService.getAllCoupon(pageData);
         return response.data[0];
       }
     } catch (error) {
@@ -89,7 +91,7 @@ const couponSlice = createSlice({
         if (payload.message) {
           state.message = payload.message;
           state.editable_status = payload.editable_status;
-
+       
         }
       })
       .addCase(editCoupon.rejected, (state, { payload }) => {
@@ -104,6 +106,7 @@ const couponSlice = createSlice({
         state.loading = false;
         state.coupons = action.payload.items;
         state.filteredCoupons = action.payload.items;
+        state.pagination = action.payload;
       })
       .addCase(fetchAllCoupons.rejected, (state, action) => {
         state.loading = false;

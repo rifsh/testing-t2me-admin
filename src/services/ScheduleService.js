@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
 
 const ScheduleService = {};
@@ -21,10 +22,11 @@ ScheduleService.editSchedule = function (data, action) {
     data: data,
   });
 };
-ScheduleService.getAllSchedule = function () {
+ScheduleService.getAllSchedule = function (pageData) {
   return fetch({
     url: ApiConstant.SCHEDULE_URL,
     method: "get",
+    params: Utils.filterParams(pageData),
   });
 };
 export default ScheduleService;

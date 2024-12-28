@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Dropdown, Avatar } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { LogoutOutlined } from "@ant-design/icons";
+import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
 import NavItem from "./NavItem";
 import Flex from "components/shared-components/Flex";
 import { getUserdata, signOut } from "store/slices/authSlice";
@@ -91,7 +91,12 @@ export const NavProfile = ({ mode }) => {
     <Dropdown placement="bottomRight" menu={{ items }} trigger={["click"]}>
       <NavItem mode={mode}>
         <Profile>
-          <Avatar src="/img/avatars/profile_thumb.png" />
+          <Avatar
+            style={{
+              backgroundColor: "#87d068",
+            }}
+            icon={<UserOutlined />}
+          />
           <UserInfo className="profile-text">
             <Name>{userData && userData.email}</Name>
             <Title>{userRole}</Title>

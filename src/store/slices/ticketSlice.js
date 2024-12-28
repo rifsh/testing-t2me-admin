@@ -28,17 +28,18 @@ export const initialState = {
   editable_status: null,
   responseData: null,
   responseMessage: null,
+  pagination: { size: 10, page: 1 },
 };
 
 export const fetchAllTickets = createAsyncThunk(
   "ticket/fetchAllTickets",
-  async (venueId, { rejectWithValue, getState }) => {
+  async (pageData, { rejectWithValue, getState }) => {
     try {
       if (GET_TICKET_MOCK_API && ENABLE_MOCK_API) {
         const response = TicketMockData.getAllTickets;
         return response.data;
       } else {
-        const response = await TicketsService.getAllTickets(venueId);
+        const response = await TicketsService.getAllTickets(pageData);
         return response.data;
       }
     } catch (error) {
@@ -238,6 +239,7 @@ export const ticketSlice = createSlice({
         state.loading = false;
         console.warn("payload", payload);
         state.filteredTickets = payload[0].items;
+        state.pagination = payload;
       })
       .addCase(fetchAllTickets.rejected, (state, { payload }) => {
         state.loading = false;
