@@ -32,7 +32,7 @@ const { Option } = Select;
 const UserList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredUsers, loading, editable_status, message } = useSelector(
+  const { filteredUsers, pagination,loading, editable_status, message } = useSelector(
     (state) => state.users
   );
 
@@ -42,13 +42,8 @@ const UserList = () => {
   useEffect(() => {
     dispatch(fetchAllUsers(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
-
-  const handleSearch = (e) => {
-    dispatch(filterUsers({ searchTerm: e.target.value, status: null }));
-  };
-
-  const handleShowStatus = (status) => {
-    dispatch(filterUsers({ searchTerm: null, status }));
+  const handlePagination = (page, size) => {
+    dispatch(fetchAllUsers({ page: page, size: size }));
   };
 
   const showModal = (user) => {
@@ -139,7 +134,12 @@ const UserList = () => {
         dataSource={filteredUsers}
         rowKey="id"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={{
+          current: pagination.page,
+          pageSize: pagination.size,
+          total: pagination.total,
+          onChange: (page, pageSize) => handlePagination(page, pageSize),
+        }}
       />
 
       <Modal

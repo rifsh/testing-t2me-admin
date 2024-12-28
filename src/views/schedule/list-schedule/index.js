@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Button, Card, Input, Select, Table, Tag } from "antd";
+import { Badge, Button, Card, Input, Select, Table, Tag } from "antd";
 import Flex from "components/shared-components/Flex";
 import { FormOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +21,7 @@ const { Option } = Select;
 const ScheduleList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredSchedules, message,editable_status ,loading} = useSelector(
+  const { filteredSchedules, message,pagination, editable_status, loading } = useSelector(
     (state) => state.schedules
   );
   // const [form] = Form.useForm();
@@ -30,42 +30,36 @@ const ScheduleList = () => {
     dispatch(fetchAllSchedules(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
-  const handleSearch = (e) => {
-    const searchTerm = e.target.value;
-    console.log(searchTerm);
-    
-    dispatch(filterSchedules({ searchTerm, status: null }));
-  };
-  
-
-  const handleShowStatus = (status) => {
-    dispatch(filterSchedules({ status }));
+  const handlePagination = (page, size) => {
+    dispatch(fetchAllSchedules({ page: page, size: size }));
   };
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
   };
+
   const tableColumns = [
     {
       title: "Schedule Name",
       dataIndex: "name",
-      sorter: (a, b) => Utils.antdTableSorter(a, b, 'name'),
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
     },
     {
       title: "Event",
       dataIndex: ["event", "event_name"],
-      sorter: (a, b) => Utils.antdTableObjectSorter(a, b, ["event", "event_name"]),
+      sorter: (a, b) =>
+        Utils.antdTableObjectSorter(a, b, ["event", "event_name"]),
     },
     {
       title: "Start Time",
       dataIndex: "start_date",
-      sorter: (a, b) => Utils.antdTableSorter(a, b, 'start_date'),
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "start_date"),
     },
     {
       title: "End Time",
       dataIndex: "end_date",
-      sorter: (a, b) => Utils.antdTableSorter(a, b, 'end_date'),
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "end_date"),
     },
     Utils.statusColumnUtil(handleUpdateStatus),
     {
@@ -73,36 +67,36 @@ const ScheduleList = () => {
       dataIndex: "is_scheduled",
       render: (_, record) => {
         let statusText;
-        let tagColor;
-    
+        let badgeStatus;
+
         if (record.is_scheduled && record.status) {
           statusText = "Running";
-          tagColor = "blue";
+          badgeStatus = "success";
         } else if (!record.is_scheduled && record.status) {
           statusText = "Upcoming";
-          tagColor = "green";
+          badgeStatus = "warning";
         } else {
           statusText = "Expired";
-          tagColor = "red";
+          badgeStatus = "error";
         }
-    
+
         return (
-          <Tag color={tagColor} style={{ cursor: "pointer" }}>
-            {statusText}
-          </Tag>
+          <div>
+            <Badge status={badgeStatus}></Badge>
+            <span className="mx-2">{statusText}</span>
+          </div>
         );
       },
       sorter: (a, b) =>
         a.is_scheduled === b.is_scheduled ? 0 : a.is_scheduled ? -1 : 1,
       sortDirections: ["ascend", "descend"],
-    }
-    
+    },
   ];
 
   return (
     <Card>
       <Flex alignItems="center" justifyContent="space-between">
-      <SearchBarWithStatus fetchFunction={fetchAllSchedules} />
+        <SearchBarWithStatus fetchFunction={fetchAllSchedules} />
         <Button
           type="primary"
           icon={<FormOutlined />}
@@ -115,9 +109,14 @@ const ScheduleList = () => {
         <Table
           columns={tableColumns}
           dataSource={filteredSchedules}
-          rowKey="id" 
+          rowKey="id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{
+            current: pagination.page,
+            pageSize: pagination.size,
+            total: pagination.total,
+            onChange: (page, pageSize) => handlePagination(page, pageSize),
+          }}
         />
       </div>
 

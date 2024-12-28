@@ -30,7 +30,7 @@ const { Option } = Select;
 const TaxList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredTax, loading, editable_status, message } =
+  const { filteredTax, loading, editable_status,pagination, message } =
     useSelector((state) => state.tax) || {};
   const [form] = Form.useForm();
   const locationState = useSelector((state) => state?.locations) || {};
@@ -49,7 +49,9 @@ const TaxList = () => {
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
   };
-
+  const handlePagination = (page, size) => {
+    dispatch(fetchAllTax({ page: page, size: size }));
+  };
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item
@@ -145,60 +147,19 @@ const TaxList = () => {
         </Col>
       </Row>
 
-      {/* <Flex>
-        <Form form={form}>
-          <Row gutter={16} justify="space-between" style={{ marginBottom: 16 }}>
-            <Col span={12}>
-              <Form.Item name="country_id">
-                <Select
-                  placeholder="Choose a Country"
-                  loading={locationLoading}
-                  defaultValue={0}
-                  onSelect={handleOnSelect}
-                  style={{ width: "150px" }}
-                >
-                  <Option key={0} value={0}>
-                    All Countries
-                  </Option>
-                  {detailedCountryList.map((country) => (
-                    <Option key={country.id} value={country.id}>
-                      {country.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col style={{ textAlign: "left" }}>
-              <Form.Item name="place_id">
-                <Select
-                  placeholder="Choose a Place"
-                  loading={locationLoading}
-                  defaultValue={0}
-                  onSelect={handleOnSelect}
-                  style={{ width: "150px" }} // Custom width for the place select
-                >
-                  <Option key={0} value={0}>
-                    All Places
-                  </Option>
-                  {filteredPlaces.map((place) => (
-                    <Option key={place.id} value={place.id}>
-                      {place.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-      </Flex> */}
-
+   
       <div className="table-responsive">
         <Table
           columns={tableColumns}
           dataSource={filteredTax}
           rowKey="id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{
+            current: pagination.page,
+            pageSize: pagination.size,
+            total: pagination.total,
+            onChange: (page, pageSize) => handlePagination(page, pageSize),
+          }}
         />
       </div>
 

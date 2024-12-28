@@ -81,7 +81,7 @@ function CouponFormFields() {
               onChange={(value) => handleSelectedRole(value)}
             >
               {roles.map((role) => (
-                <Option key={role.id} value={role.id}>
+                <Option key={role.position_id} value={role.position_id}>
                   {role.name}
                 </Option>
               ))}
