@@ -15,6 +15,7 @@ export const initialState = {
   editable_status: true,
   responseData: null,
   responseMessage: null,
+  pagination: { size: 10, page: 1 },
 };
 
 export const fetchAllSchedules = createAsyncThunk(
@@ -189,6 +190,7 @@ const scheduleSlice = createSlice({
         state.loading = false;
         state.schedules = action.payload.items;
         state.filteredSchedules = action.payload.items;
+        state.pagination = action.payload;
       })
       .addCase(fetchAllSchedules.rejected, (state, action) => {
         state.loading = false;

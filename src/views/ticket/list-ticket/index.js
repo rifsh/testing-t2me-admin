@@ -29,7 +29,7 @@ const { Panel } = Collapse;
 
 const TicketList = () => {
   const dispatch = useDispatch();
-  const { filteredTickets, searchTerm, message } = useSelector(
+  const { filteredTickets, pagination, message } = useSelector(
     (state) => state.tickets
   );
 
@@ -38,8 +38,8 @@ const TicketList = () => {
     dispatch(fetchAllTickets(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
-  const handleSearch = (e) => {
-    dispatch(filterTickets({ searchTerm: e.target.value, status: null }));
+  const handlePagination = (page, size) => {
+    dispatch(fetchAllTickets({ page: page, size: size }));
   };
 
   const [selectedVenue, setSelectedVenue] = useState(null);
@@ -85,10 +85,12 @@ const TicketList = () => {
       <Table
         rowKey="id"
         dataSource={filteredTickets}
-        // pagination={true}
-        // onRow={(record) => ({
-        //   onClick: () => showDetails(record),
-        // })}
+        pagination={{
+          current: pagination.page,
+          pageSize: pagination.size,
+          total: pagination.total,
+          onChange: (page, pageSize) => handlePagination(page, pageSize),
+        }}
         columns={[
           {
             title: "Ticket types",

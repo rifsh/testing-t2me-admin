@@ -32,6 +32,7 @@ export const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
+  pagination: {size:10,page:1},
 };
 
 export const fetchAllCountires = createAsyncThunk(
@@ -305,6 +306,7 @@ const locationSlice = createSlice({
         state.loading = false;
         state.venues = action.payload.items;
         state.filteredVenues = action.payload.items;
+        state.pagination = action.payload;
       })
       .addCase(getVenues.rejected, (state, action) => {
         state.loading = false;
@@ -343,6 +345,7 @@ const locationSlice = createSlice({
         state.loading = false;
         state.places = action.payload.items;
         state.filteredPlaces = action.payload.items;
+        state.pagination = action.payload;
       })
       .addCase(getPlaces.rejected, (state, action) => {
         state.loading = false;

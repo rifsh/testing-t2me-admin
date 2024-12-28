@@ -32,7 +32,7 @@ const { Option } = Select;
 const VenueList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredVenues, loading, filteredPlaces, editable_status, message } =
+  const { filteredVenues,pagination, loading, filteredPlaces, editable_status, message } =
     useSelector((state) => state.locations);
   const [form] = Form.useForm();
 
@@ -40,21 +40,7 @@ const VenueList = () => {
     dispatch(getVenues(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
-  const handleSearch = (e) => {
-    dispatch(filterVenues({ searchTerm: e.target.value }));
-  };
 
-  const handleShowStatus = (status) => {
-    dispatch(filterVenues({ status }));
-  };
-
-  const handleSelectPlace = async (id) => {
-    if (id === 0) {
-      dispatch(getVenues());
-    } else {
-      dispatch(getVenues(id));
-    }
-  };
   const handleViewDetails = async (id) => {
     await dispatch(getSingleVenues(id));
     navigate(`${APP_PREFIX_PATH}/venue/details/${id}`);
@@ -64,6 +50,9 @@ const VenueList = () => {
     const data = { status: newStatus, id: item.id };
 
     dispatch(setSelectedItem(data));
+  };
+  const handlePagination = (page, size) => {
+    dispatch(getVenues({ page: page, size: size }));
   };
   const dropdownMenu = (row) => (
     <Menu>
@@ -88,6 +77,12 @@ const VenueList = () => {
       dataIndex: "name",
       render: (name) => <span>{name || "N/A"}</span>,
       sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
+    },
+    {
+      title: "Place",
+      dataIndex: ["place","name"],
+      render: (name) => <span>{name || "N/A"}</span>,
+      sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["place","name"]),
     },
     {
       title: "Address",
@@ -185,7 +180,12 @@ const VenueList = () => {
           dataSource={filteredVenues}
           rowKey="id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{
+            current: pagination.page,
+            pageSize: pagination.size,
+            total: pagination.total,
+            onChange: (page, pageSize) => handlePagination(page, pageSize),
+          }}
         />
       </div>
       <UpdateStatusModal

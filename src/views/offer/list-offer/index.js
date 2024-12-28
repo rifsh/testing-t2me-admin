@@ -30,6 +30,7 @@ import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Option } = Select;
 
@@ -43,7 +44,7 @@ const OfferList = () => {
   const [selectedOffer, setSelectedOffer] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchAllOffers({ size: 10, page: 1 }));
+    dispatch(fetchAllOffers(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
   const showModal = (offer) => {
@@ -122,6 +123,9 @@ const OfferList = () => {
       ),
     },
   ];
+  const handlePagination = (page, size) => {
+    dispatch(fetchAllOffers({ page: page, size: size }));
+  };
 
   return (
     <Card>
@@ -140,7 +144,12 @@ const OfferList = () => {
         dataSource={filteredOffers}
         rowKey="id"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={{
+          current: pagination.page,
+          pageSize: pagination.size,
+          total: pagination.total,
+          onChange: (page, pageSize) => handlePagination(page, pageSize),
+        }}
       />
 
       <Modal

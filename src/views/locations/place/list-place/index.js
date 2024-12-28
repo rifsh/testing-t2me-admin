@@ -50,6 +50,7 @@ const PlaceList = () => {
     editable_status,
     message,
     loading,
+    pagination,
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
@@ -57,7 +58,9 @@ const PlaceList = () => {
 
     // dispatch(getCoutryDetails());
   }, [dispatch]);
-
+  const handlePagination = (page, size) => {
+    dispatch(getPlaces({ page: page, size: size }));
+  };
   const handleEditPlace = async (id) => {
     navigate(`${APP_PREFIX_PATH}/place/edit/${id}`);
   };
@@ -149,7 +152,12 @@ const PlaceList = () => {
           dataSource={filteredPlaces}
           rowKey="id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{
+            current: pagination.page,
+            pageSize: pagination.size,
+            total: pagination.total,
+            onChange: (page, pageSize) => handlePagination(page, pageSize),
+          }}
         />
       </div>
       <UpdateStatusModal

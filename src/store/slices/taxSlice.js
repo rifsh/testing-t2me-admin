@@ -58,32 +58,35 @@ const taxSlice = createSlice({
     message: null,
     responseData: null,
     responseMessage: null,
-    selectedTax:null,
+    selectedTax: null,
     editable_status: null,
+    pagination: { size: 10, page: 1 },
   },
-  reducers: { filterTax: (state, action) => {
-    const { searchTerm, status } = action.payload;
+  reducers: {
+    filterTax: (state, action) => {
+      const { searchTerm, status } = action.payload;
 
-    let filteredTax = state.allTax;
-    if (status && status !== "All") {
-      filteredTax = filteredTax.filter(
-        (offer) =>
-          (status === "Active" && offer.status === true) ||
-          (status === "Inactive" && offer.status === false)
-      );
-    }
+      let filteredTax = state.allTax;
+      if (status && status !== "All") {
+        filteredTax = filteredTax.filter(
+          (offer) =>
+            (status === "Active" && offer.status === true) ||
+            (status === "Inactive" && offer.status === false)
+        );
+      }
 
-    if (searchTerm) {
-      filteredTax = filteredTax.filter((tax) => {
-        if (!tax.tax_name) return false;
-        return tax.tax_name.toLowerCase().includes(searchTerm.toLowerCase());
-      });
-    }
-    state.filteredTax = filteredTax;
+      if (searchTerm) {
+        filteredTax = filteredTax.filter((tax) => {
+          if (!tax.tax_name) return false;
+          return tax.tax_name.toLowerCase().includes(searchTerm.toLowerCase());
+        });
+      }
+      state.filteredTax = filteredTax;
+    },
+    setSelectedTaxDetails: (state, action) => {
+      state.selectedTax = action.payload;
+    },
   },
-  setSelectedTaxDetails: (state, action) => {
-    state.selectedTax = action.payload;
-  },},
 
   extraReducers: (builder) => {
     builder
@@ -105,6 +108,7 @@ const taxSlice = createSlice({
         state.loading = false;
         state.allTax = action.payload.items;
         state.filteredTax = action.payload.items;
+        state.pagination = action.payload;
       })
       .addCase(fetchAllTax.rejected, (state, action) => {
         state.loading = false;
@@ -113,7 +117,7 @@ const taxSlice = createSlice({
       .addCase(editTax.pending, (state) => {
         state.loading = true;
       })
-      .addCase(editTax.fulfilled, (state, {payload}) => {
+      .addCase(editTax.fulfilled, (state, { payload }) => {
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
@@ -139,5 +143,5 @@ const taxSlice = createSlice({
       });
   },
 });
-export const { filterTax,setSelectedTaxDetails } = taxSlice.actions;
+export const { filterTax, setSelectedTaxDetails } = taxSlice.actions;
 export default taxSlice.reducer;

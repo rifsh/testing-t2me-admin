@@ -12,8 +12,10 @@ export const initialState = {
   message: null,
   roles: [],
   selectedRole: null,
-  responseData: null, editable_status: null,
+  responseData: null,
+  editable_status: null,
   responseMessage: null,
+  pagination: { size: 10, page: 1 },
 };
 
 export const fetchAllUsers = createAsyncThunk(
@@ -120,6 +122,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.list = action.payload.items;
         state.filteredUsers = action.payload.items;
+        state.pagination = action.payload;
       })
       .addCase(fetchAllUsers.rejected, (state, action) => {
         state.loading = false;

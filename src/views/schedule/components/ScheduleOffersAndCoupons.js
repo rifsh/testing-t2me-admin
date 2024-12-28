@@ -314,7 +314,7 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
             <Form.Item
               name="offer"
               label="Offer"
-              rules={[{ required: true, message: "Please select an offer" }]}
+             
             >
               <Select
                 className="w-100"
@@ -345,7 +345,7 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
             <Form.Item
               name="coupon"
               label="Coupon"
-              rules={[{ required: true, message: "Please select a coupon" }]}
+            
             >
               <Select
                 className="w-100"
