@@ -163,7 +163,8 @@ const PlaceList = () => {
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editPlace}
-        getAllFunction={getPlaces}
+        getAllFunction={(pageData) => getPlaces(pageData)}
+        pageData={{ page: 1, size: 10 }}
         editable_status={editable_status}
       />
     </Card>

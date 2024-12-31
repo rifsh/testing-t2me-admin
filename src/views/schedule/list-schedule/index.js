@@ -124,7 +124,8 @@ const ScheduleList = () => {
         responseMessage={message}
         editable_status={editable_status}
         editFunction={editSchedule}
-        getAllFunction={fetchAllSchedules}
+         getAllFunction={(pageData) => fetchAllSchedules(pageData)}
+               pageData={{ page: 1, size: 10 }}
       />
     </Card>
   );

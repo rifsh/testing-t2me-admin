@@ -41,6 +41,7 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
       );
     }
   };
+  
   const handleFilterItemIsEmpty = (value) => {
     if (!value) {
       dispatch(
@@ -51,6 +52,7 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
           active: statusFilter,
         })
       );
+      setFilterValues({})
     }
   };
 

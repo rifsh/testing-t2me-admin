@@ -16,6 +16,7 @@ const initialState = {
   error: null,
   selectedCoupons: [],
   selectedOffers: [],
+ 
   validationData: [],
   submitData: {},
   message: null,

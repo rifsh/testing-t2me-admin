@@ -9,6 +9,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { createUser } from "store/slices/userSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 
 const ADD = "ADD";
 
@@ -58,12 +59,7 @@ const UserForm = (props) => {
                 {mode === "ADD" ? "Add New User" : `Edit User`}
               </h2>
               <div className="mb-3">
-                <Button
-                  className="mr-2"
-                  onClick={() => navigate(`${APP_PREFIX_PATH}/user/list`)}
-                >
-                  Discard
-                </Button>
+              <DiscardButton form={form} />
                 <Button
                   type="primary"
                   onClick={() => onFinish()}

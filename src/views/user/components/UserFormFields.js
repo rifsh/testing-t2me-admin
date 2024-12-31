@@ -1,44 +1,17 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select } from "antd";
+import { Input, Row, Col, Card, Form, Select, Tooltip } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllRoles, setSelectedRole } from "store/slices/userSlice";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { UserRoleConstants } from "constants/UserRoleConstant";
+import { InfoCircleOutlined } from '@ant-design/icons';
+import { userRules } from "../constants/RuleConstants";
 
 const { Option } = Select;
 
-const rules = {
-  email: [
-    {
-      required: true,
-      message: "Please enter an email address",
-    },
-    {
-      type: "email",
-      message: "Please enter a valid email address",
-    },
-  ],
-  password: [
-    {
-      required: true,
-      message: "Please enter password",
-    },
-  ],
-  name: [
-    {
-      required: true,
-      message: "Please enter user name",
-    },
-  ],
-  role: [
-    {
-      required: true,
-      message: "Please select a role",
-    },
-  ],
-};
 
-function CouponFormFields() {
+
+function UserFormFields() {
   const dispatch = useDispatch();
   const { roles, loading, selectedRole } = useSelector((state) => state.users);
   const { filteredEvents, loading: eventLoading } = useSelector(
@@ -60,20 +33,70 @@ function CouponFormFields() {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="User Details">
-          <Form.Item name="username" label="User Name" rules={rules.name}>
-            <Input placeholder="Enter User Name" />
+          <Form.Item 
+            name="username" 
+            label={
+              <span>
+                Username&nbsp;
+                <Tooltip title="Username must contain only letters, be 3-30 characters long, and not start/end with spaces">
+                  <InfoCircleOutlined />
+                </Tooltip>
+              </span>
+            }
+            rules={userRules.username}
+            validateTrigger={['onChange', 'onBlur']}
+            hasFeedback
+          >
+            <Input 
+              placeholder="Enter Username"
+              maxLength={30}
+            />
           </Form.Item>
+
           <Form.Item
             name="email"
-            label="Email Address"
-            rules={rules.email}
+            label={
+              <span>
+                Email Address&nbsp;
+                <Tooltip title="Enter a valid email address (e.g., example@domain.com)">
+                  <InfoCircleOutlined />
+                </Tooltip>
+              </span>
+            }
+            rules={userRules.email}
+            validateTrigger={['onChange', 'onBlur']}
+            hasFeedback
           >
             <Input placeholder="Enter Email Address" />
           </Form.Item>
-          <Form.Item name="password" label="Password" rules={rules.password}>
-            <Input placeholder="Enter Password" />
+
+          <Form.Item
+            name="password"
+            label={
+              <span>
+                Password&nbsp;
+                <Tooltip title="Password must be 8-30 characters and include uppercase, lowercase, number, and special character">
+                  <InfoCircleOutlined />
+                </Tooltip>
+              </span>
+            }
+            rules={userRules.password}
+            validateTrigger={['onChange', 'onBlur']}
+            hasFeedback
+          >
+            <Input.Password 
+              placeholder="Enter Password"
+              maxLength={30}
+            />
           </Form.Item>
-          <Form.Item name="role_id" label="Role" rules={rules.role}>
+
+          <Form.Item 
+            name="role_id" 
+            label="Role" 
+         
+            validateTrigger={['onChange', 'onBlur']}
+            hasFeedback
+          >
             <Select
               className="w-100"
               placeholder="Select a Role"
@@ -89,11 +112,27 @@ function CouponFormFields() {
           </Form.Item>
 
           {selectedRole === UserRoleConstants.eventOrganizerRoleId && (
-            <Form.Item name="event_ids" label="Events">
-              <Select mode="multiple"
+            <Form.Item 
+              name="event_ids" 
+              label={
+                <span>
+                  Events&nbsp;
+                  <Tooltip title="You can select up to 5 events">
+                    <InfoCircleOutlined />
+                  </Tooltip>
+                </span>
+              }
+              
+              validateTrigger={['onChange']}
+              hasFeedback
+            >
+              <Select
+                mode="multiple"
                 loading={eventLoading}
                 style={{ width: "100%" }}
-                placeholder="Please select"
+                placeholder="Please select (max 5 events)"
+                maxTagCount={5}
+                showArrow
               >
                 {filteredEvents.map((event) => (
                   <Option key={event.id} value={event.id}>
@@ -105,9 +144,8 @@ function CouponFormFields() {
           )}
         </Card>
       </Col>
-
     </Row>
   );
 }
 
-export default CouponFormFields;
+export default UserFormFields;
