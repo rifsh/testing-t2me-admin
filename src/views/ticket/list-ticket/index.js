@@ -29,7 +29,7 @@ const { Panel } = Collapse;
 
 const TicketList = () => {
   const dispatch = useDispatch();
-  const { filteredTickets, pagination, message } = useSelector(
+  const { filteredTickets, pagination,editable_status, message } = useSelector(
     (state) => state.tickets
   );
 
@@ -183,7 +183,9 @@ const TicketList = () => {
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editTicket}
-        getAllFunction={fetchAllTickets}
+       getAllFunction={(pageData) => fetchAllTickets(pageData)}
+             pageData={{ page: 1, size: 10 }}
+             editable_status={editable_status}
       />
       <Modal
         title="Venue Details"

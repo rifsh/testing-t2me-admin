@@ -68,7 +68,6 @@ const OfferDateModal = ({
   };
 
   const disabledDate = (current) => {
-
     const isPastDate =
       current && current.isBefore(dayjs().startOf("day"), "day");
 

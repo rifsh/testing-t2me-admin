@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Card, Form, Select, Input } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllEvent } from "store/slices/eventSlice";
+import { fetchAllEvent, setSelectedEvent } from "store/slices/eventSlice";
 import { resetSchedule } from "store/slices/scheduleSlice";
 
 const { Option } = Select;
@@ -13,7 +13,9 @@ export function ScheduleDetails() {
   useEffect(() => {
     dispatch(fetchAllEvent({}));
   }, [dispatch]);
-  const handleSelectEvent = () => {
+  const handleSelectEvent = (id) => {
+  
+    dispatch(  setSelectedEvent(id));
     dispatch(resetSchedule());
   };
   return (

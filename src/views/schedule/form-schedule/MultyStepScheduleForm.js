@@ -24,13 +24,13 @@ import OfferDateModal from "../components/OfferDateModal";
 import Utils from "utils";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
-
+import dayjs from "dayjs";
 const { Option } = Select;
 const { Text } = Typography;
 
 const MultyStepScheduleForm = () => {
   const steps = ["Schedule Details", "Time Slots", "Confirmation"];
-  const { currentStep, submitLoading } = useSelector((state) => state.event);
+  const { currentStep,eventDetails, submitLoading } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -64,18 +64,26 @@ const MultyStepScheduleForm = () => {
     try {
       const values = form.getFieldValue();
 
-      const startDate = Utils.formatDate(values.start_date);
-      const endDate = Utils.formatDate(values.end_date);
-      const startTime = Utils.formatDate(values.start_date,"HH:mm:ss");
-      const endTime = Utils.formatDate(values.end_date,"HH:mm:ss");
+      const timeZone =
+        eventDetails?.venue?.place?.country?.time_zone || dayjs.tz.guess();
+
+      // Convert dates to the event's timezone and format them for API
+      const startDateInTZ = dayjs(values.start_date).tz(timeZone, true);
+      const endDateInTZ = dayjs(values.end_date).tz(timeZone, true);
+
+      const startDate = startDateInTZ.format("YYYY-MM-DD");
+      const endDate = endDateInTZ.format("YYYY-MM-DD");
+      const startTime = startDateInTZ.format("HH:mm:ss");
+      const endTime = endDateInTZ.format("HH:mm:ss");
 
       const submitData = {
         start_date: startDate,
         end_date: endDate,
         start_time: startTime,
         end_time: endTime,
-        name:values.name,
+        name: values.name,
         event_id: values.event_id,
+        // timezone: timeZone, 
         offer_ids:
           selectedOffers.map((e) => ({
             offer_id: e.offer.id,

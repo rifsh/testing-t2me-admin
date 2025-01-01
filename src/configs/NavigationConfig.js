@@ -55,14 +55,7 @@ const superAdminDashBoardNavTree = [
     breadcrumb: false,
     isGroupTitle: false,
     submenu: [
-      {
-        key: "event.list",
-        path: `${APP_PREFIX_PATH}/event/list`,
-        title: "sidenav.event.list",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
+     
       {
         key: "place.list",
         path: `${APP_PREFIX_PATH}/place/list`,
@@ -75,6 +68,14 @@ const superAdminDashBoardNavTree = [
         key: "venue.list",
         path: `${APP_PREFIX_PATH}/venue/list`,
         title: "sidenav.venue.list",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "tax.list",
+        path: `${APP_PREFIX_PATH}/tax/list`,
+        title: "sidenav.tax",
         icon: OrderedListOutlined,
         breadcrumb: false,
         submenu: [],
@@ -120,14 +121,6 @@ const superAdminDashBoardNavTree = [
       //   submenu: []
       // },
       {
-        key: "schedule.list",
-        path: `${APP_PREFIX_PATH}/schedule/list`,
-        title: "sidenav.schedule",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
         key: "ticket.list",
         path: `${APP_PREFIX_PATH}/ticket/list`,
         title: "sidenav.ticket",
@@ -135,14 +128,24 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
+      
       {
-        key: "tax.list",
-        path: `${APP_PREFIX_PATH}/tax/list`,
-        title: "sidenav.tax",
+        key: "event.list",
+        path: `${APP_PREFIX_PATH}/event/list`,
+        title: "sidenav.event.list",
         icon: OrderedListOutlined,
         breadcrumb: false,
         submenu: [],
       },
+      {
+        key: "schedule.list",
+        path: `${APP_PREFIX_PATH}/schedule/list`,
+        title: "sidenav.schedule",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      
     ],
   },
 ];

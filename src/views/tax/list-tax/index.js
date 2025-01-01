@@ -165,9 +165,11 @@ const TaxList = () => {
 
       <UpdateStatusModal
         responseMessage={message}
-        getAllFunction={fetchAllTax}
+       
         editFunction={editTax}
-        editable_status={editable_status}
+          getAllFunction={(pageData) => fetchAllTax(pageData)}
+                pageData={{ page: 1, size: 10 }}
+                editable_status={editable_status}
       />
     </Card>
   );
