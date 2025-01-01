@@ -174,7 +174,8 @@ const UserList = () => {
         responseMessage={message}
         editFunction={editUser}
         editable_status={editable_status}
-        getAllFunction={fetchAllUsers}
+  getAllFunction={(pageData) => fetchAllUsers(pageData)}
+        pageData={{ page: 1, size: 10 }}
       />
     </Card>
   );

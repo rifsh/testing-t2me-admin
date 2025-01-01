@@ -29,6 +29,7 @@ export const initialState = {
   responseData: null,
   responseMessage: null,
   pagination: { size: 10, page: 1 },
+  editable_status: null,
 };
 
 export const fetchAllTickets = createAsyncThunk(
@@ -240,6 +241,7 @@ export const ticketSlice = createSlice({
         console.warn("payload", payload);
         state.filteredTickets = payload[0].items;
         state.pagination = payload;
+        state.editable_status = payload.editable_status;
       })
       .addCase(fetchAllTickets.rejected, (state, { payload }) => {
         state.loading = false;

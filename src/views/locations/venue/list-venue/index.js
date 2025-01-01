@@ -191,8 +191,9 @@ const VenueList = () => {
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editVenue}
-        getAllFunction={getVenues}
-        editable_status={editable_status}
+          getAllFunction={(pageData) => getVenues(pageData)}
+                pageData={{ page: 1, size: 10 }}
+                editable_status={editable_status}
       />
     </Card>
   );
