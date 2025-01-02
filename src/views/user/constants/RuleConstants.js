@@ -12,9 +12,9 @@ export const userRules = {
       message: USER_VALIDATION_MESSAGES.username.length,
     },
     {
-      pattern: /^[a-zA-Z0-9]+$/,  // Only allows letters and numbers
+      pattern: /^[a-zA-Z0-9]+$/, // Only allows letters and numbers
       message: USER_VALIDATION_MESSAGES.username.format,
-    }
+    },
   ],
   email: [
     {
@@ -53,17 +53,6 @@ export const userRules = {
     {
       required: true,
       message: USER_VALIDATION_MESSAGES.role.required,
-    },
-  ],
-  events: [
-    {
-      validator: (_, value) => {
-        if (!value) return Promise.resolve();
-        if (value.length > 5) {
-          return Promise.reject(USER_VALIDATION_MESSAGES.events.maxCount);
-        }
-        return Promise.resolve();
-      },
     },
   ],
 };
