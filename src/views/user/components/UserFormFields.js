@@ -91,7 +91,7 @@ function UserFormFields() {
           </Form.Item>
 
           <Form.Item 
-            name="role_id" 
+            name="position_id" 
             label="Role" 
          
             validateTrigger={['onChange', 'onBlur']}
