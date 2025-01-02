@@ -29,12 +29,11 @@ export function ScheduleTimeSlots({ form }) {
   const dispatch = useDispatch();
   const { eventDetails, selectedEvent } = useSelector((state) => state.event);
 
-  // Fetch event details when selectedEvent changes
   useEffect(() => {
     if (selectedEvent) {
       dispatch(fetchEventDetails(selectedEvent));
     }
-  }, [dispatch, selectedEvent]); // Added selectedEvent to dependency array
+  }, [dispatch, selectedEvent]);
 
   const getTimeZone = useMemo(() => {
     const timeZone = eventDetails?.venue?.place?.country?.time_zone;
@@ -45,15 +44,14 @@ export function ScheduleTimeSlots({ form }) {
     convertToTimeZone(dayjs(), getTimeZone),
   [getTimeZone]);
 
-  // Initialize form with current time in correct timezone
   useEffect(() => {
     if (eventDetails && form) {
       const initialDate = convertToTimeZone(dayjs(), getTimeZone);
       if (initialDate) {
         form.setFieldsValue({
           start_date: initialDate,
-          timezone:getTimeZone,
-          end_date: initialDate.add(1, 'hour') // Set default end time to 1 hour after start
+          timezone: getTimeZone,
+          end_date: initialDate.add(1, 'hour')
         });
       }
     }
@@ -62,7 +60,6 @@ export function ScheduleTimeSlots({ form }) {
   const handleTimeChange = (field) => (value) => {
     dispatch(resetSchedule());
     
-    // If changing start time, adjust end time if necessary
     if (field === 'start_date') {
       const endDate = form.getFieldValue('end_date');
       if (endDate && value && endDate.isBefore(value)) {
@@ -73,9 +70,13 @@ export function ScheduleTimeSlots({ form }) {
     }
   };
 
-  const disabledMinutes = () => {
-    // Disable past minutes for current hour
-    if (dayjs().isSame(currentDateInTimeZone, 'hour')) {
+  const disabledMinutes = (hour, type) => {
+    const selectedDate = form.getFieldValue(type === 'start_date' ? 'start_date' : 'end_date');
+    
+    // Only disable minutes if it's today and the current hour
+    if (selectedDate && 
+        selectedDate.isSame(currentDateInTimeZone, 'day') && 
+        hour === currentDateInTimeZone.hour()) {
       const currentMinute = currentDateInTimeZone.minute();
       return Array.from({ length: currentMinute }, (_, i) => i);
     }
@@ -109,8 +110,7 @@ export function ScheduleTimeSlots({ form }) {
       >
         <DatePicker
           showTime={{
-            disabledMinutes,
-            // minuteStep: 15,  // Round to nearest 15 minutes
+            // disabledMinutes: (hour) => disabledMinutes(hour, 'start_date'),
             format: "HH:mm"
           }}
           onChange={handleTimeChange('start_date')}
@@ -155,8 +155,7 @@ export function ScheduleTimeSlots({ form }) {
       >
         <DatePicker
           showTime={{
-            disabledMinutes,
-            // minuteStep: 15, // Round to nearest 15 minutes
+            // disabledMinutes: (hour) => disabledMinutes(hour, 'end_date'),
             format: "HH:mm"
           }}
           onChange={handleTimeChange('end_date')}
