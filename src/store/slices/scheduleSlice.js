@@ -10,6 +10,7 @@ export const initialState = {
   selectedCoupons: [],
   selectedOffers: [],
   selectedItemForModal: null,
+  isSelectTime: false,
   error: null,
   message: null,
   editable_status: true,
@@ -147,6 +148,9 @@ const scheduleSlice = createSlice({
     setSelectedItemForModal: (state, action) => {
       state.selectedItemForModal = action.payload;
     },
+    setScheduleSelectTime: (state, action) => {
+      state.isSelectTime = action.payload;
+    },
     resetSchedule: (state, action) => {
       return initialState;
     },
@@ -206,6 +210,7 @@ export const {
   toggleSelectedCoupon,
   updateSelectedCoupons,
   setSelectedItemForModal,
+  setScheduleSelectTime,
   updateSelectedOffer,
 } = scheduleSlice.actions;
 export default scheduleSlice.reducer;
