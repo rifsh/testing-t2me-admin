@@ -85,7 +85,21 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
       originalDates: null,
     };
   };
+  const renderValidationMessage = (validationResult) => {
+    if (!validationResult) return null;
 
+    return (
+      <Text
+        style={{
+          color: validationResult.type === "error" ? "red" : "#52c41a",
+          padding: "2px 0px",
+          fontSize: "11px",
+        }}
+      >
+        {validationResult.message}
+      </Text>
+    );
+  };
   const isDateValid = (
     scheduleStartDate,
     scheduleEndDate,
@@ -262,21 +276,18 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
       end: new Date(item.end_date).setHours(23, 59, 59, 999),
     };
 
-    // If dates were adjusted, show success message with original dates
     if (item.original_start_date || item.wasAdjusted) {
       if (!item.original_start_date) {
         return {
           type: "success",
           message: "The date has been successfully adjusted.",
         };
-      } else {
-        return {
-          type: "success",
-          message: `The schedule was adjusted from ${item.original_start_date} to ${item.original_end_date}.`,
-        };
       }
+      return {
+        type: "success",
+        message: `The schedule was adjusted from ${item.original_start_date} to ${item.original_end_date}.`,
+      };
     }
-    
 
     if (schedule.end < itemDates.start) {
       return {
@@ -298,6 +309,9 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
   };
 
   const handleDeleteCoupon = (coupon) => {
+    form.setFieldsValue({
+      coupon: 1,
+    });
     dispatch(toggleSelectedCoupon(coupon));
   };
 
@@ -311,11 +325,7 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
       <Col xs={24} sm={24} md={17}>
         <Card title="Offers & Coupons (Optional)">
           <Form layout="vertical">
-            <Form.Item
-              name="offer"
-              label="Offer"
-             
-            >
+            <Form.Item name="offer" label="Offer">
               <Select
                 className="w-100"
                 placeholder="Select Offer"
@@ -342,11 +352,7 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
               </Select>
             </Form.Item>
 
-            <Form.Item
-              name="coupon"
-              label="Coupon"
-            
-            >
+            <Form.Item name="coupon" label="Coupon">
               <Select
                 className="w-100"
                 placeholder="Select Coupon"
@@ -488,10 +494,10 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
                   }}
                 />
                 <div
-                  onClick={() => {
-                    setIsOffer(false);
-                    return showItemDetails(coupon);
-                  }}
+                // onClick={() => {
+                //   setIsOffer(false);
+                //   showItemDetails(coupon);
+                // }}
                 >
                   <Row justify="space-between" align="middle">
                     <Text strong>{coupon.coupons.name}</Text>
@@ -509,24 +515,12 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
                     <Text>Start: {coupon.coupons.start_date}</Text>
                     <Text>End: {coupon.coupons.end_date}</Text>
                   </Row>
-                  {getDateValidationMessage(
-                    coupon.coupons,
-                    form.getFieldValue("start_date"),
-                    form.getFieldValue("end_date")
-                  ) && (
-                    <Text
-                      style={{
-                        color: "red",
-                        padding: "2px 0px",
-                        fontSize: "11px",
-                      }}
-                    >
-                      {getDateValidationMessage(
-                        coupon.coupons,
-                        form.getFieldValue("start_date"),
-                        form.getFieldValue("end_date")
-                      )}
-                    </Text>
+                  {renderValidationMessage(
+                    getDateValidationMessage(
+                      coupon.coupons,
+                      form.getFieldValue("start_date"),
+                      form.getFieldValue("end_date")
+                    )
                   )}
                 </div>
               </Card>

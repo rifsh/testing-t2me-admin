@@ -6,7 +6,7 @@ import timezone from "dayjs/plugin/timezone";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import { useDispatch, useSelector } from "react-redux";
-import { resetSchedule } from "store/slices/scheduleSlice";
+import { resetSchedule, setScheduleSelectTime } from "store/slices/scheduleSlice";
 import { fetchEventDetails } from "store/slices/eventSlice";
 
 // Extend dayjs with required plugins
@@ -28,32 +28,34 @@ const convertToTimeZone = (date, timeZone) => {
 export function ScheduleTimeSlots({ form }) {
   const dispatch = useDispatch();
   const { eventDetails, selectedEvent } = useSelector((state) => state.event);
+  const { isSelectTime } = useSelector((state) => state.schedules);
 
-  // Fetch event details when selectedEvent changes
   useEffect(() => {
     if (selectedEvent) {
       dispatch(fetchEventDetails(selectedEvent));
     }
-  }, [dispatch, selectedEvent]); // Added selectedEvent to dependency array
+  }, [dispatch, selectedEvent]);
 
   const getTimeZone = useMemo(() => {
     const timeZone = eventDetails?.venue?.place?.country?.time_zone;
     return timeZone || dayjs.tz.guess();
   }, [eventDetails]);
 
-  const currentDateInTimeZone = useMemo(() => 
-    convertToTimeZone(dayjs(), getTimeZone),
-  [getTimeZone]);
+  const currentDateInTimeZone = useMemo(
+    () => convertToTimeZone(dayjs(), getTimeZone),
+    [getTimeZone]
+  );
 
-  // Initialize form with current time in correct timezone
   useEffect(() => {
-    if (eventDetails && form) {
+    console.log(isSelectTime);
+    
+    if (eventDetails && form && !isSelectTime) {
       const initialDate = convertToTimeZone(dayjs(), getTimeZone);
       if (initialDate) {
         form.setFieldsValue({
           start_date: initialDate,
-          timezone:getTimeZone,
-          end_date: initialDate.add(1, 'hour') // Set default end time to 1 hour after start
+          timezone: getTimeZone,
+          end_date: initialDate.add(1, "hour"),
         });
       }
     }
@@ -61,21 +63,30 @@ export function ScheduleTimeSlots({ form }) {
 
   const handleTimeChange = (field) => (value) => {
     dispatch(resetSchedule());
-    
-    // If changing start time, adjust end time if necessary
-    if (field === 'start_date') {
-      const endDate = form.getFieldValue('end_date');
+
+    if (field === "start_date") {
+      dispatch(setScheduleSelectTime(true))
+      console.log(isSelectTime);
+      const endDate = form.getFieldValue("end_date");
       if (endDate && value && endDate.isBefore(value)) {
         form.setFieldsValue({
-          end_date: dayjs(value).add(1, 'hour')
+          end_date: dayjs(value).add(1, "hour"),
         });
       }
     }
   };
 
-  const disabledMinutes = () => {
-    // Disable past minutes for current hour
-    if (dayjs().isSame(currentDateInTimeZone, 'hour')) {
+  const disabledMinutes = (hour, type) => {
+    const selectedDate = form.getFieldValue(
+      type === "start_date" ? "start_date" : "end_date"
+    );
+
+    // Only disable minutes if it's today and the current hour
+    if (
+      selectedDate &&
+      selectedDate.isSame(currentDateInTimeZone, "day") &&
+      hour === currentDateInTimeZone.hour()
+    ) {
       const currentMinute = currentDateInTimeZone.minute();
       return Array.from({ length: currentMinute }, (_, i) => i);
     }
@@ -99,7 +110,9 @@ export function ScheduleTimeSlots({ form }) {
               }
 
               if (convertedValue.isBefore(currentDateInTimeZone, "minute")) {
-                return Promise.reject(new Error("Start time cannot be in the past"));
+                return Promise.reject(
+                  new Error("Start time cannot be in the past")
+                );
               }
 
               return Promise.resolve();
@@ -109,15 +122,14 @@ export function ScheduleTimeSlots({ form }) {
       >
         <DatePicker
           showTime={{
-            disabledMinutes,
-            // minuteStep: 15,  // Round to nearest 15 minutes
-            format: "HH:mm"
+            // disabledMinutes: (hour) => disabledMinutes(hour, 'start_date'),
+            format: "HH:mm",
           }}
-          onChange={handleTimeChange('start_date')}
+          onChange={handleTimeChange("start_date")}
           className="w-full"
           placeholder="Select start time"
-          disabledDate={(current) => 
-            current && current.isBefore(currentDateInTimeZone, 'day')
+          disabledDate={(current) =>
+            current && current.isBefore(currentDateInTimeZone, "day")
           }
           showNow={false}
         />
@@ -138,14 +150,22 @@ export function ScheduleTimeSlots({ form }) {
               }
 
               const startDate = form.getFieldValue("start_date");
-              const convertedStartDate = startDate && convertToTimeZone(startDate, getTimeZone);
+              const convertedStartDate =
+                startDate && convertToTimeZone(startDate, getTimeZone);
 
               if (convertedValue.isBefore(currentDateInTimeZone, "minute")) {
-                return Promise.reject(new Error("End time cannot be in the past"));
+                return Promise.reject(
+                  new Error("End time cannot be in the past")
+                );
               }
 
-              if (convertedStartDate && convertedValue.isSameOrBefore(convertedStartDate)) {
-                return Promise.reject(new Error("End time must be after start time"));
+              if (
+                convertedStartDate &&
+                convertedValue.isSameOrBefore(convertedStartDate)
+              ) {
+                return Promise.reject(
+                  new Error("End time must be after start time")
+                );
               }
 
               return Promise.resolve();
@@ -155,18 +175,18 @@ export function ScheduleTimeSlots({ form }) {
       >
         <DatePicker
           showTime={{
-            disabledMinutes,
-            // minuteStep: 15, // Round to nearest 15 minutes
-            format: "HH:mm"
+            // disabledMinutes: (hour) => disabledMinutes(hour, 'end_date'),
+            format: "HH:mm",
           }}
-          onChange={handleTimeChange('end_date')}
+          onChange={handleTimeChange("end_date")}
           className="w-full"
           placeholder="Select end time"
           disabledDate={(current) => {
             const startDate = form.getFieldValue("start_date");
-            return current && (
-              current.isBefore(currentDateInTimeZone, 'day') ||
-              (startDate && current.isBefore(startDate, 'day'))
+            return (
+              current &&
+              (current.isBefore(currentDateInTimeZone, "day") ||
+                (startDate && current.isBefore(startDate, "day")))
             );
           }}
           showNow={false}
