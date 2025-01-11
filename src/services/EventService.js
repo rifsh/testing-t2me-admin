@@ -7,10 +7,48 @@ const EventsService = {};
 
 EventsService.addEvent = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = new FormData();
+
+
+  const appendIfExists = (key, value) => {
+    if (value) formData.append(key, value);
+  };
+
+
+  formData.append("event_name", data.event_name);
+  formData.append("description", data.description);
+  formData.append("available_types", data.available_types);
+  formData.append("max_tickets", data.max_tickets);
+  formData.append("venue_id", data.venue_id);
+  formData.append("category_id", data.category_id);
+  formData.append("sub_category_id", data.sub_category_id);
+
+
+  appendIfExists("ticket_structure_id", data.ticket_structure_id);
+  appendIfExists("ticket_set", data.ticket_set);
+  appendIfExists("seat_structure_id", data.seat_structure_id);
+  appendIfExists("offer_ids", data.offer_ids);
+  appendIfExists("coupon_ids", data.coupon_ids);
+  if (data.tax_ids && Array.isArray(data.tax_ids)) {
+    data.tax_ids.forEach(id => {
+      formData.append("tax_ids", id);
+    });
+  }
+
+
+  if (data.thumbnail_image && data.thumbnail_image[0]) {
+    formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
+  }
+  if (data.banner_images && Array.isArray(data.banner_images)) {
+    data.banner_images.forEach((image) => {
+      formData.append("banner_images", image.originFileObj);
+    });
+  }
+
   return fetch({
     url: `${ApiConstant.EVENT_URL}?action=${encodedAction}`,
-    method: "post",
-    data: data,
+    method: "POST",
+    data: formData,
   });
 };
 

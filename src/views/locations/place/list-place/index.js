@@ -32,6 +32,7 @@ import {
   filterPlaces,
   getCoutryDetails,
   getPlaces,
+  getSinglePlace,
 } from "store/slices/locationSlice";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
@@ -61,6 +62,10 @@ const PlaceList = () => {
   const handlePagination = (page, size) => {
     dispatch(getPlaces({ page: page, size: size }));
   };
+  const handleViewDetails = async (id) => {
+      await dispatch(getSinglePlace(id));
+      navigate(`${APP_PREFIX_PATH}/place/details/${id}`);
+    };
   const handleEditPlace = async (id) => {
     navigate(`${APP_PREFIX_PATH}/place/edit/${id}`);
   };
@@ -73,12 +78,12 @@ const PlaceList = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
-      {/* <Menu.Item>
-        <Flex alignItems="center">
+      <Menu.Item>
+        <Flex alignItems="center"   onClick={() => handleViewDetails(row.id)}>
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item> */}
+      </Menu.Item>
       <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditPlace(row.id)}>
           <EditOutlined />

@@ -42,7 +42,14 @@ const OfferForm = (props) => {
       }
       values.key_words = values.key_words ?? [];
       values.date_required = values.date_required ?? isDateRequired;
-       dispatch(setSelectedSubmitItem(values));
+      //  dispatch(setSelectedSubmitItem(values));
+      const formData = {
+                      ...values,
+                      
+      
+                    };
+                
+                dispatch(setSelectedSubmitItem(formData));
       // const resultAction = await dispatch(addOffer(values));
       // if (addOffer.fulfilled.match(resultAction)) {
       //   message.success(`Offer ${values.name} added successfully`);

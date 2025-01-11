@@ -7,12 +7,26 @@ const CategoryService = {};
 
 CategoryService.addCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = new FormData();
+
+  formData.append("name", data.name);
+  formData.append("description", data.description); 
+  if (data.thumbnail_image && data.thumbnail_image[0]) {
+    formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
+  }
+
+
   return fetch({
     url: `${ApiConstant.CATEGORY_URL}?action=${encodedAction}`,
-    method: "post",
-    data: data,
+    method: "POST",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
 };
+
+
 
 CategoryService.updateCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
@@ -32,7 +46,18 @@ CategoryService.fetchCategory = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
-
+CategoryService.getSingleCateory = function (category_id) {
+  return fetch({
+    url: `${ApiConstant.SINGLE_CATEGORY_URL}?category_id=${category_id}`,
+    method: "get",
+  });
+};
+CategoryService.getSingleSubCateory = function (subcategory_id) {
+  return fetch({
+    url: `${ApiConstant.SUB_SINGLE_CATEGORY_URL}?subcategory=${subcategory_id}`,
+    method: "get",
+  });
+};
 CategoryService.fetchSubCategory = function (pageData) {
 
   return fetch({
@@ -42,12 +67,32 @@ CategoryService.fetchSubCategory = function (pageData) {
   });
 };
 
+// CategoryService.addSubCategory = function (data, action) {
+//   const encodedAction = encodeURIComponent(handleAction(action));
+//   return fetch({
+//     url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${data.category_id}&action=${encodedAction}`,
+//     method: "post",
+//     data: data,
+//   });
+// };
 CategoryService.addSubCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = new FormData();
+
+  formData.append("name", data.name);
+  formData.append("description", data.description); 
+  if (data.thumbnail_image && data.thumbnail_image[0]) {
+    formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
+  }
+
+
   return fetch({
     url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${data.category_id}&action=${encodedAction}`,
-    method: "post",
-    data: data,
+    method: "POST",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
 };
 CategoryService.editSubCategory = function (data, action) {

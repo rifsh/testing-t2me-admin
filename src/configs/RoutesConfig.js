@@ -98,11 +98,26 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/locations/venue/venue-details")),
   },
   {
+    key: "place.details",
+    path: `${APP_PREFIX_PATH}/place/details/:placeId`,
+    component: React.lazy(() => import("views/locations/place/place-details")),
+  },
+  {
     key: "category.list",
     path: `${APP_PREFIX_PATH}/category/list`,
     component: React.lazy(() =>
       import("views/category/category/list-category")
     ),
+  },
+  {
+    key: "category.details",
+    path: `${APP_PREFIX_PATH}/category/details/:categoryId`,
+    component: React.lazy(() => import("views/category/category/category-detials")),
+  },
+  {
+    key: "subcategory.details",
+    path: `${APP_PREFIX_PATH}/subcategory/details/:subcategoryId`,
+    component: React.lazy(() => import("views/category/category/subcategory-details")),
   },
   {
     key: "category.add",

@@ -12,12 +12,49 @@ LocationService.getAllCountries = function () {
   });
 };
 
+// LocationService.addPlace = function (data, action) {
+//   const encodedAction = encodeURIComponent(handleAction(action));
+  
+//   // Create FormData instance
+//   const formData = new FormData();
+
+//   // Append data fields to FormData
+//   formData.append("country_id", data.country_id);
+//   formData.append("name", data.name);
+
+//   return fetch({
+//     url: `${ApiConstant.PLACE_URL}?country_id=${data.country_id}&action=${encodedAction}`,
+//     method: "POST",
+//     data: formData,  // Pass the FormData as the request body
+//   });
+// };
+
 LocationService.addPlace = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+
+  const formData = new FormData();
+
+  formData.append("country_id", data.country_id);
+  formData.append("name", data.name);
+
+
+  if (data.thumbnail_image && data.thumbnail_image[0]) {
+    formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
+  }
+  if (data.banner_images && Array.isArray(data.banner_images)) {
+    data.banner_images.forEach((image) => {
+      formData.append("banner_images", image.originFileObj);
+    });
+  }
+
+
   return fetch({
     url: `${ApiConstant.PLACE_URL}?country_id=${data.country_id}&action=${encodedAction}`,
-    method: "post",
-    data: data,
+    method: "POST",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
 };
 
@@ -38,14 +75,50 @@ LocationService.editVenue = function (data, action) {
   });
 };
 
+// LocationService.addVenue = function (data, action) {
+//   const encodedAction = encodeURIComponent(handleAction(action));
+//   return fetch({
+//     url: `${ApiConstant.VENUE_URL}?place_id=${data.place_id}&action=${encodedAction}`,
+//     method: "post",
+//     data: data,
+//   });
+// };
 LocationService.addVenue = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+
+  const formData = new FormData();
+
+  // Ensure address is appended to the formData
+  formData.append("address", data.address);  // Add this line
+
+  formData.append("place_id", data.place_id);
+  formData.append("name", data.name);
+  formData.append("capacity", data.capacity);
+  formData.append("indoor", data.indoor);
+  formData.append("description", data.description);
+  formData.append("latitude", data.latitude);
+  formData.append("longitude", data.longitude);
+
+  if (data.thumbnail_image && data.thumbnail_image[0]) {
+    formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
+  }
+
+  if (data.banner_images && Array.isArray(data.banner_images)) {
+    data.banner_images.forEach((image) => {
+      formData.append("banner_images", image.originFileObj);
+    });
+  }
+
   return fetch({
     url: `${ApiConstant.VENUE_URL}?place_id=${data.place_id}&action=${encodedAction}`,
-    method: "post",
-    data: data,
+    method: "POST",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
 };
+
 
 LocationService.placeWithCountry = function (place) {
   return fetch({
@@ -63,6 +136,12 @@ LocationService.getVenues = function (pageData) {
 LocationService.getSingleVenues = function (venue_id) {
   return fetch({
     url: `${ApiConstant.SINGLE_VENUE_URL}?venue_id=${venue_id}`,
+    method: "get",
+  });
+};
+LocationService.getSinglePlace = function (place_id) {
+  return fetch({
+    url: `${ApiConstant.SINGLE_PLACE_URL}?place_id=${place_id}`,
     method: "get",
   });
 };

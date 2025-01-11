@@ -109,8 +109,12 @@ const TicketList = () => {
           {
             title: "Base Price",
             dataIndex: "base_price",
-            render: (price) => `$${price}`,
+            render: (price, record) => {
+              const currencyCode = record?.venue?.place?.country?.currency_code;
+              return `${currencyCode ? currencyCode : ''} ${price}`;
+            },
           },
+          
           {
             title: "Ticket Sub Types",
             dataIndex: "ticket_types",

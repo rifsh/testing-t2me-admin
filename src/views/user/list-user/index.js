@@ -166,6 +166,17 @@ const UserList = () => {
             <Descriptions.Item label="Additional Info">
               {selectedUser.info || "No additional information available"}
             </Descriptions.Item>
+            {selectedUser.thumbnail_image && selectedUser.thumbnail_image !== "images" ? (
+              <Descriptions.Item label="Thumbnail Image">
+                <img
+                  src={selectedUser.thumbnail_image}
+                  alt="Offer Thumbnail"
+                  style={{ maxWidth: "100%", maxHeight: "200px", objectFit: "contain" }}
+                />
+              </Descriptions.Item>
+            ) : (
+              <Descriptions.Item label="Thumbnail Image">No image available</Descriptions.Item>
+            )}
           </Descriptions>
         )}
       </Modal>
