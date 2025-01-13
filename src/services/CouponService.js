@@ -8,24 +8,10 @@ const CouponService = {};
 
 CouponService.addCoupon = function (data,action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  const formData = new FormData();
-
-  formData.append("name", data.name);
-  formData.append("discount_percentage", data.discount_percentage);
-  formData.append("min_purchase_amount", data.min_purchase_amount);
-  
-  if (data.start_date) {
-    formData.append("start_date", data.start_date);
-  }
-  if (data.end_date) {
-    formData.append("end_date", data.end_date);
-  }
-  formData.append("max_uses", data.max_uses);
-  formData.append("coupon_code", data.coupon_code);
-
-  if (data.thumbnail_image && data.thumbnail_image[0]) {
-    formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
-  }
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
   return fetch({
     url: `${ApiConstant.COUPON_URL}?action=${encodedAction}`,
     method: "post",

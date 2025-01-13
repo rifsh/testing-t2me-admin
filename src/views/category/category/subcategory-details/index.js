@@ -5,14 +5,14 @@ import { useSelector } from "react-redux";
 
 const { Title, Text } = Typography;
 // singleCategory
-const CategoryDetails = () => {
+const SubCategoryDetails = () => {
   const {singleSubcategory, loading, error } = useSelector(
     (state) => state.category
   );
 
   if (loading) return <Loading />;
   if (error) return <Alert message={`Error: ${error}`} type="error" />;
-  if (!singleSubcategory) return <div>No Category Details Found</div>;
+  if (!singleSubcategory) return <div>No SubCategory Details Found</div>;
 
 
   const isNoImage =
@@ -39,7 +39,7 @@ const CategoryDetails = () => {
               </div>
             ) : (
               <Image
-                alt="Category thumbnail"
+                alt="SubCategory thumbnail"
                 src={singleSubcategory.thumbnail_image}
                 height={300}
                 style={{ objectFit: "cover" }}
@@ -54,7 +54,7 @@ const CategoryDetails = () => {
       </Col>
 
       <Col span={24}>
-        <Card title={<span style={{ color: "#1890ff" }}>Category Overview</span>} bordered={false}>
+        <Card title={<span style={{ color: "#1890ff" }}>SubCategory Overview</span>} bordered={false}>
           <Row gutter={[16, 16]}>
             <Col span={12}>
               <Text strong>Description:</Text> {singleSubcategory.description || "Not Available"}
@@ -68,4 +68,4 @@ const CategoryDetails = () => {
   );
 };
 
-export default CategoryDetails;
+export default SubCategoryDetails;

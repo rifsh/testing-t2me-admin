@@ -7,14 +7,11 @@ const CategoryService = {};
 
 CategoryService.addCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  const formData = new FormData();
-
-  formData.append("name", data.name);
-  formData.append("description", data.description); 
-  if (data.thumbnail_image && data.thumbnail_image[0]) {
-    formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
-  }
-
+  
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
 
   return fetch({
     url: `${ApiConstant.CATEGORY_URL}?action=${encodedAction}`,
@@ -25,8 +22,6 @@ CategoryService.addCategory = function (data, action) {
     },
   });
 };
-
-
 
 CategoryService.updateCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
@@ -77,13 +72,11 @@ CategoryService.fetchSubCategory = function (pageData) {
 // };
 CategoryService.addSubCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  const formData = new FormData();
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
 
-  formData.append("name", data.name);
-  formData.append("description", data.description); 
-  if (data.thumbnail_image && data.thumbnail_image[0]) {
-    formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
-  }
 
 
   return fetch({

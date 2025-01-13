@@ -54,6 +54,7 @@ const CategoryList = () => {
     };
   const handleViewDetailsub = async (id) => {
       await dispatch(getSingleSubCateory(id));
+      console.log("Subcategory details fetched:", id);
       navigate(`${APP_PREFIX_PATH}/subcategory/details/${id}`);
     };
 
@@ -105,7 +106,7 @@ const CategoryList = () => {
         <Menu.Item>
           <Flex alignItems="center" onClick={() => handleViewDetailsub(row.id)}>
             <EyeOutlined />
-            <span className="ml-2">View Details</span>
+            <span className="ml-2">View subDetails</span>
           </Flex>
         </Menu.Item>
       )}

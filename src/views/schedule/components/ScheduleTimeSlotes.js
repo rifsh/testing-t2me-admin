@@ -63,9 +63,9 @@ export function ScheduleTimeSlots({ form }) {
 
   const handleTimeChange = (field) => (value) => {
     dispatch(resetSchedule());
+    dispatch(setScheduleSelectTime(true))
 
     if (field === "start_date") {
-      dispatch(setScheduleSelectTime(true))
       console.log(isSelectTime);
       const endDate = form.getFieldValue("end_date");
       if (endDate && value && endDate.isBefore(value)) {

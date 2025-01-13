@@ -27,21 +27,10 @@ UserService.editUser = function (data, action) {
 };
 UserService.createUser = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  const formData = new FormData();
-
-  formData.append("username", data.username);
-  formData.append("email", data.email);
-  formData.append("password", data.password);
-  if (data.event_ids) {
-    formData.append("event_ids", data.event_ids);
-  }
-  if (data.position_id){
-    formData.append("position_id", data.position_id);
-  }
-
-  if (data.thumbnail_image && data.thumbnail_image[0]) {
-    formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
-  }
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
   return fetch({
     url: `${ApiConstant.REGISTER_USER_URL}?action=${encodedAction}`,
     method: "post",

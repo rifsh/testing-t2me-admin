@@ -9,23 +9,10 @@ const OfferService = {};
 
 OfferService.addOffer = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  const formData = new FormData();
-
-  formData.append("name", data.name);
-  formData.append("discount_percentage", data.discount_percentage);
-  if (data.start_date) {
-    formData.append("start_date", data.start_date);
-  }
-  if (data.end_date) {
-    formData.append("end_date", data.end_date);
-  }
-  formData.append("max_uses", data.max_uses);
-  formData.append("key_words", data.key_words);
-  formData.append("date_required", data.date_required ? "true" : "false"); 
-  if (data.thumbnail_image && data.thumbnail_image[0]) {
-    formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
-  }
-
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  }); 
   return fetch({
     url: `${ApiConstant.OFFER_URL}?action=${encodedAction}`,
     method: "post",

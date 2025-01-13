@@ -32,15 +32,10 @@ LocationService.getAllCountries = function () {
 LocationService.addPlace = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const formData = new FormData();
-
-  formData.append("country_id", data.country_id);
-  formData.append("name", data.name);
-
-
-  if (data.thumbnail_image && data.thumbnail_image[0]) {
-    formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
-  }
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
   if (data.banner_images && Array.isArray(data.banner_images)) {
     data.banner_images.forEach((image) => {
       formData.append("banner_images", image.originFileObj);
