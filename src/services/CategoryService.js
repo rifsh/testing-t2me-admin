@@ -7,10 +7,19 @@ const CategoryService = {};
 
 CategoryService.addCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
+
   return fetch({
     url: `${ApiConstant.CATEGORY_URL}?action=${encodedAction}`,
-    method: "post",
-    data: data,
+    method: "POST",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
 };
 
@@ -32,7 +41,18 @@ CategoryService.fetchCategory = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
-
+CategoryService.getSingleCateory = function (category_id) {
+  return fetch({
+    url: `${ApiConstant.SINGLE_CATEGORY_URL}?category_id=${category_id}`,
+    method: "get",
+  });
+};
+CategoryService.getSingleSubCateory = function (subcategory_id) {
+  return fetch({
+    url: `${ApiConstant.SUB_SINGLE_CATEGORY_URL}?subcategory=${subcategory_id}`,
+    method: "get",
+  });
+};
 CategoryService.fetchSubCategory = function (pageData) {
 
   return fetch({
@@ -42,12 +62,30 @@ CategoryService.fetchSubCategory = function (pageData) {
   });
 };
 
+// CategoryService.addSubCategory = function (data, action) {
+//   const encodedAction = encodeURIComponent(handleAction(action));
+//   return fetch({
+//     url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${data.category_id}&action=${encodedAction}`,
+//     method: "post",
+//     data: data,
+//   });
+// };
 CategoryService.addSubCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
+
+
+
   return fetch({
     url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${data.category_id}&action=${encodedAction}`,
-    method: "post",
-    data: data,
+    method: "POST",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
 };
 CategoryService.editSubCategory = function (data, action) {

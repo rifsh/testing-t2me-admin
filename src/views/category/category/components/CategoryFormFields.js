@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message } from "antd";
+import { Input, Row, Col, Card, Form, Button, message,Upload } from "antd";
 import { addCategory, updateCategory } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import { UploadOutlined } from "@ant-design/icons";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -43,13 +44,27 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
       });
     }
   }, [mode, category, form]);
+  const normFile = (e) => {
+    if (Array.isArray(e)) {
+      return e;
+    }
+    return e?.fileList;
+  };
+
 
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
 
       if (mode === ADD) {
-        dispatch(setSelectedSubmitItem(values));
+        const formData = {
+                ...values,
+                
+
+              };
+          
+          dispatch(setSelectedSubmitItem(formData));
+          
 
         // const resultAction = await dispatch(addCategory(values));
         // if (addCategory.fulfilled.match(resultAction)) {
@@ -89,6 +104,17 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
                 placeholder="Enter category description"
               />
             </Form.Item>
+            <Form.Item
+              name="thumbnail_image"
+              label="Thumbnail Image"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+              rules={rules.thumbnail_image}
+            >
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+              <Button icon={<UploadOutlined />}>Click to upload</Button>
+            </Upload>
+          </Form.Item>
             <div
               style={{
                 display: "flex",

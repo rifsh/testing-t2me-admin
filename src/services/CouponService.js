@@ -8,10 +8,17 @@ const CouponService = {};
 
 CouponService.addCoupon = function (data,action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
   return fetch({
     url: `${ApiConstant.COUPON_URL}?action=${encodedAction}`,
     method: "post",
-    data: data,
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
 };
 CouponService.editCoupon = function (data, action) {

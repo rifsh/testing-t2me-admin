@@ -1,6 +1,7 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker } from "antd";
+import { Input, Row, Col, Card, Form, DatePicker,Upload,Button } from "antd";
 import moment from "moment";
+import { UploadOutlined } from "@ant-design/icons";
 
 const rules = {
   country: [
@@ -71,6 +72,12 @@ function CouponFormFields(props) {
 
   const handleStartDateChange = () => {
     form.setFieldValue('end_date', null);
+  };
+  const normFile = (e) => {
+    if (Array.isArray(e)) {
+      return e;
+    }
+    return e?.fileList;
   };
 
   return (
@@ -158,6 +165,18 @@ function CouponFormFields(props) {
               showToday={false}
             />
           </Form.Item>
+          <Form.Item
+              name="thumbnail_image"
+              label="Thumbnail Image"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+              rules={rules.thumbnail_image}
+            >
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+              <Button icon={<UploadOutlined />}>Click to upload</Button>
+            </Upload>
+          </Form.Item>
+
 
           <Form.Item 
             name="max_uses" 

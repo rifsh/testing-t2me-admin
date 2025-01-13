@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Button, message } from "antd";
+import { Input, Row, Col, Card, Form, Select, Button, message ,Upload} from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { addVenue, setSelectedPlace } from "store/slices/locationSlice";
@@ -13,6 +13,7 @@ import { RulesMessageConstants } from "constants/RulesConstant";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import { UploadOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 
@@ -38,31 +39,40 @@ const VenueFormFields = ({ mode }) => {
   const handlePlaceSelect = (id) => {
     dispatch(setSelectedPlace(id));
   };
+  const normFile = (e) => {
+    if (Array.isArray(e)) {
+      return e;
+    }
+    return e?.fileList;
+  };
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
+      console.log("Form valuexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs:", values); 
+  
       if (!selectedPlace) {
         message.error("Place ID is missing. Please select a place.");
         return;
       }
-
-      dispatch(setSelectedSubmitItem({ ...values, place_id: selectedPlace }));
-      // const resultAction = await dispatch(
-      //   addVenue({
-      //     data: { ...values, place_id: selectedPlace },
-      //     placeId: selectedPlace,
-      //   })
-      // );
-
-      // if (addVenue.fulfilled.match(resultAction)) {
-      //   message.success(`Venue ${values.name} added successfully`);
-      //   form.resetFields();
-      //   navigate(`${APP_PREFIX_PATH}/venue/list`);
-      // }
+  
+      // Provide default values for missing fields
+      const formData = {
+        ...values,
+        place_id: selectedPlace,
+        latitude: coordinates.lat || 0, // Use 0 if undefined
+        longitude: coordinates.lng || 0, // Use 0 if undefined
+        capacity: values.capacity || 0, // Ensure capacity is always a number
+        indoor: values.indoor !== undefined ? values.indoor : false, // Ensure indoor is boolean
+        address: values.address,
+      };
+  
+      dispatch(setSelectedSubmitItem(formData));
+  
     } catch (errorInfo) {
       console.error("Validation Failed:", errorInfo);
     }
   };
+  
 
   return (
     <Row gutter={16}>
@@ -79,12 +89,13 @@ const VenueFormFields = ({ mode }) => {
             </h2>
 
             <Form.Item
-              name="address"
-              label="Address"
-              rules={[{ required: true, message: "Please enter the address" }]}
-            >
-              <Input placeholder="Enter the address" />
-            </Form.Item>
+  name="address"
+  label="Address"
+  rules={[{ required: true, message: "Please enter the address" }]}
+>
+  <Input placeholder="Enter the address" />
+</Form.Item>
+
 
             <PlaceWithCountryForm
               form={form}
@@ -156,6 +167,28 @@ const VenueFormFields = ({ mode }) => {
             >
               <Input value={coordinates.lng} readOnly />
             </Form.Item>
+            <Form.Item
+            name="thumbnail_image"
+            label="Thumbnail Image"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+  
+          >
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+              <Button icon={<UploadOutlined />}>Click to upload</Button>
+            </Upload>
+          </Form.Item>
+          <Form.Item
+            name="banner_images"
+            label="Banner Images"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+   
+          >
+            <Upload name="banner_images" listType="picture" multiple beforeUpload={() => false}>
+              <Button icon={<UploadOutlined />}>Click to upload banners</Button>
+            </Upload>
+          </Form.Item>
 
             <div className="mb-3">
               <h3>Pick Location</h3>

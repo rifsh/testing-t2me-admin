@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table, Input, Tabs, Button, Select, Menu } from "antd";
-import { FormOutlined, SearchOutlined, EditOutlined } from "@ant-design/icons";
+import { FormOutlined, SearchOutlined, EditOutlined,EyeOutlined, } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,6 +17,8 @@ import {
   editSubCategory,
   filterCategory,
   setFormTabKey,
+  getSingleCateory,
+  getSingleSubCateory,
 } from "store/slices/categorySlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 
@@ -46,6 +48,15 @@ const CategoryList = () => {
       fetchSubcategories({ categoryId: null, data: { page: 1, size: 10 } })
     );
   }, [dispatch]);
+  const handleViewDetails = async (id) => {
+      await dispatch(getSingleCateory(id));
+      navigate(`${APP_PREFIX_PATH}/category/details/${id}`);
+    };
+  const handleViewDetailsub = async (id) => {
+      await dispatch(getSingleSubCateory(id));
+      console.log("Subcategory details fetched:", id);
+      navigate(`${APP_PREFIX_PATH}/subcategory/details/${id}`);
+    };
 
 
   const handlePagination = (page, size, type) => {
@@ -84,14 +95,32 @@ const CategoryList = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
+      {activeTab === "categories" ? (
+        <Menu.Item>
+          <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+            <EyeOutlined />
+            <span className="ml-2">View Details</span>
+          </Flex>
+        </Menu.Item>
+      ) : (
+        <Menu.Item>
+          <Flex alignItems="center" onClick={() => handleViewDetailsub(row.id)}>
+            <EyeOutlined />
+            <span className="ml-2">View subDetails</span>
+          </Flex>
+        </Menu.Item>
+      )}
       <Menu.Item>
         <Flex alignItems="center">
           <EditOutlined />
-          <span className="ml-2">Edit Category</span>
+          <span className="ml-2">
+            {activeTab === "categories" ? "Edit Category" : "Edit Subcategory"}
+          </span>
         </Flex>
       </Menu.Item>
     </Menu>
   );
+  
 
   const categoryColumns = [
     {

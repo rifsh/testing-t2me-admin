@@ -1,5 +1,6 @@
-import { Card, Col, Form, Input, } from "antd";
+import { Card, Col, Form, Input,Button, Upload } from "antd";
 import React from "react";
+import { UploadOutlined } from "@ant-design/icons";
 
 const EventDetailsField = () => {
   const rules = {
@@ -11,6 +12,13 @@ const EventDetailsField = () => {
       },
     ],
   };
+  const normFile = (e) => {
+    if (Array.isArray(e)) {
+      return e;
+    }
+    return e?.fileList;
+  };
+
   return (
     <div>
       <Col xs={24} sm={24} md={17}>
@@ -25,6 +33,28 @@ const EventDetailsField = () => {
             rules={rules.description}
           >
             <Input.TextArea rows={4} />
+          </Form.Item>
+          <Form.Item
+            name="thumbnail_image"
+            label="Thumbnail Image"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+            rules={rules.thumbnail_image}
+          >
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+              <Button icon={<UploadOutlined />}>Click to upload</Button>
+            </Upload>
+          </Form.Item>
+          <Form.Item
+            name="banner_images"
+            label="Banner Images"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+            rules={rules.banner_images}
+          >
+            <Upload name="banner_images" listType="picture" multiple beforeUpload={() => false}>
+              <Button icon={<UploadOutlined />}>Click to upload banners</Button>
+            </Upload>
           </Form.Item>
         </Card>
       </Col>

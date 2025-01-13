@@ -23,12 +23,23 @@ TicketsService.editTicket = function (data, action) {
 };
 TicketsService.addTicket = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
+
+
   return fetch({
     url: `${ApiConstant.TICKET_URL}?venue_id=${data.venue_id}&action=${encodedAction}`,
     method: "post",
-    data: data,
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
   });
 };
+
 export default TicketsService;
 
 TicketsService.getAvailableTicketsType = function () {
