@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Tooltip } from "antd";
+import { Input, Row, Col, Card, Form, Select, Tooltip, Upload,Button } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllRoles, setSelectedRole } from "store/slices/userSlice";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { UserRoleConstants } from "constants/UserRoleConstant";
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { userRules } from "../constants/RuleConstants";
 
 const { Option } = Select;
@@ -27,6 +27,12 @@ function UserFormFields() {
     if (role === UserRoleConstants.eventOrganizerRoleId) {
       dispatch(fetchAllEvent({}));
     }
+  };
+  const normFile = (e) => {
+    if (Array.isArray(e)) {
+      return e;
+    }
+    return e?.fileList;
   };
 
   return (
@@ -142,6 +148,17 @@ function UserFormFields() {
               </Select>
             </Form.Item>
           )}
+           <Form.Item
+              name="thumbnail_image"
+              label="Thumbnail Image"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+            
+            >
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+              <Button icon={<UploadOutlined />}>Click to upload</Button>
+            </Upload>
+          </Form.Item>
         </Card>
       </Col>
     </Row>

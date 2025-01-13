@@ -22,6 +22,8 @@ const initialState = {
   subPagination: {},
   pagination: {},
   editable_status: null,
+  singleCategory:null,
+  singleSubcategory:null
 };
 export const addCategory = createAsyncThunk(
   "category/add",
@@ -65,7 +67,38 @@ export const fetchCategories = createAsyncThunk(
     }
   }
 );
-
+export const getSingleCateory = createAsyncThunk(
+  "category/getSingleCateory",
+  async (category_id, { rejectWithValue }) => {
+    try {
+      if (ALL_CATEGORY_MOCK_API) {
+        const response = CategoryMockData.fetchAllCategory;
+        return response.data;
+      } else {
+        const response = await CategoryService.getSingleCateory(category_id);
+        return response.data[0];
+      }
+    } catch (error) {
+      return rejectWithValue("Failed to fetch single categories");
+    }
+  }
+);
+export const getSingleSubCateory = createAsyncThunk(
+  "category/getSingleSubCateory",
+  async (subcategory_id, { rejectWithValue }) => {
+    try {
+      if (ALL_CATEGORY_MOCK_API) {
+        const response = CategoryMockData.fetchAllCategory;
+        return response.data;
+      } else {
+        const response = await CategoryService.getSingleSubCateory(subcategory_id);
+        return response.data[0];
+      }
+    } catch (error) {
+      return rejectWithValue("Failed to fetch single categories");
+    }
+  }
+);
 export const fetchSubcategories = createAsyncThunk(
   "category/fetchSubcategories",
   async (pageData, { rejectWithValue }) => {
@@ -152,6 +185,30 @@ const categorySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(getSingleCateory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getSingleCateory.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleCategory = action.payload;
+      })
+      .addCase(getSingleCateory.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getSingleSubCateory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getSingleSubCateory.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleSubcategory = action.payload;
+      })
+      .addCase(getSingleSubCateory.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(addCategory.pending, (state) => {
         state.loading = true;
         state.error = null;

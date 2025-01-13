@@ -66,38 +66,39 @@ const CountryForm = ({ placeId }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-
+      console.log({ values });
+  
+      const formData = new FormData();
+  
+      // Loop through values and append each key-value pair to FormData
+      Object.keys(values).forEach((key) => {
+        formData.append(key, values[key]);
+      });
+  
       if (!placeId) {
+        // If placeId is not present, it's a new place (Add mode)
         dispatch(setSelectedSubmitItem(values));
-        // form.resetFields();
-        // const resultAction = await dispatch(
-        //   createPlace({ placeData: values, action: ActionType.SUBMIT })
-        // );
-
-        // if (createPlace.fulfilled.match(resultAction)) {
-        //   message.success(`Place ${values.name} added successfully`);
-        //   navigate(`${APP_PREFIX_PATH}/place/list`);
-        // }
+  
+        const resultAction = await dispatch(
+          createPlace({ formData, action: ActionType.SUBMIT })
+        );
+  
+        if (createPlace.fulfilled.match(resultAction)) {
+          antdMessage.success(`Place ${values.name} added successfully`);
+          navigate(`${APP_PREFIX_PATH}/place/list`);
+        }
       } else {
-        // Editing an existing place
-        // if (!selectedPlace) {
-        //   console.error("No selected place found for editing.");
-        //   antdMessage.error(
-        //     "Unable to find the selected place. Please try again."
-        //   );
-        //   return;
-        // }
-
+        // If placeId exists, it's an edit (Edit mode)
         const data = {
           ...values,
           id: placeId,
         };
         console.log("Edit Data:", data);
-
+  
         const resultAction = await dispatch(
-          editPlace({ data, action: ActionType.WARNING })
+          editPlace({ formData, action: ActionType.WARNING })
         );
-
+  
         if (editPlace.fulfilled.match(resultAction)) {
           dispatch(setSelectedPlace(data));
           dispatch(setLocationDialogVisible(true));
@@ -107,6 +108,7 @@ const CountryForm = ({ placeId }) => {
       console.error("Validation Failed:", errorInfo);
     }
   };
+    
 
   const handleModalSubmit = async () => {
     dispatch(setLocationModalLoading(true));

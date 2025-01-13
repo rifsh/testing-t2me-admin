@@ -195,6 +195,17 @@ const CouponList = () => {
             <Descriptions.Item label="Coupon Description">
               {selectedCoupon.description || "No description available"}
             </Descriptions.Item>
+            {selectedCoupon.thumbnail_image && selectedCoupon.thumbnail_image !== "images" ? (
+              <Descriptions.Item label="Thumbnail Image">
+                <img
+                  src={selectedCoupon.thumbnail_image}
+                  alt="Offer Thumbnail"
+                  style={{ maxWidth: "100%", maxHeight: "200px", objectFit: "contain" }}
+                />
+              </Descriptions.Item>
+            ) : (
+              <Descriptions.Item label="Thumbnail Image">No image available</Descriptions.Item>
+            )}
           </Descriptions>
         )}
       </Modal>

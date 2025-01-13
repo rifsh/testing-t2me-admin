@@ -5,14 +5,24 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const OfferService = {};
 
+
+
 OfferService.addOffer = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  }); 
   return fetch({
     url: `${ApiConstant.OFFER_URL}?action=${encodedAction}`,
     method: "post",
-    data: data,
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
 };
+
 OfferService.editOffer = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({

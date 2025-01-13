@@ -438,6 +438,94 @@ static  filterParams = (obj) => {
   
     console.log("All browser data (localStorage, sessionStorage, cookies, cache, and Service Workers) has been cleared.");
   };
+
+  // ----------------------------------------Form data converion----------------------------------------------->
+/**
+ * @param {Object} data - 
+ * @param {Object} options
+ * @param {Array<string>} options.fileKeys 
+ * @param {boolean} options.skipEmpty 
+ * @returns {FormData} -
+ */
+static createFormData(data, options = { fileKeys: [], skipEmpty: false }) {
+  const formData = new FormData();
+
+  const appendToFormData = (value, key) => {
+    if (options.skipEmpty && (value === null || value === undefined || value === '')) {
+      return;
+    }
+    if (Array.isArray(value)) {
+      if (key === 'tax_ids' || key === 'coupon_ids' || key === 'offer_ids') {
+        value.forEach(id => formData.append(key, id));
+        return;
+      }
   
+      if (key === 'banner_images') {
+        value.forEach(image => formData.append(key, image.originFileObj));
+        return;
+      }
+   
+      if (key === 'key_words' && value.length > 0) {
+        value.forEach(word => formData.append("key_words", word));
+        return;
+      } else if (key === 'key_words') {
+    
+        return;
+      }
+      if (key === 'event_ids' && Array.isArray(value)) {
+        formData.append(key, value.join(','));
+        return;
+      }
+      
+    }
+    
+    if (key === 'ticket_types' && Array.isArray(value)) {
+      value.forEach(ticket => {
+        if (ticket.name) formData.append('ticket_type_names', ticket.name);
+        if (ticket.price != null) formData.append('ticket_type_prices', ticket.price);
+        if (ticket.number_of_tickets != null) formData.append('ticket_type_numbers', ticket.number_of_tickets);
+        if (ticket.ticket_set) formData.append('ticket_set', ticket.ticket_set);
+      });
+      return;
+    }
+
+    
+    if (options.fileKeys.includes(key) && value?.[0]) {
+      formData.append(key, value[0].originFileObj || value[0]);
+      return;
+    }
+
+    // // Handle arrays
+    // if (Array.isArray(value)) {
+    //   value.forEach((item, index) => {
+    //     if (typeof item === 'object' && item !== null) {
+    //       Object.entries(item).forEach(([objKey, objValue]) => {
+    //         formData.append(`${key}[${index}][${objKey}]`, objValue);
+    //       });
+    //     } else {
+    //       formData.append(`${key}[]`, item);
+    //     }
+    //   });
+    //   return;
+    // }
+
+    if (typeof value === 'object' && value !== null && !(value instanceof File)) {
+      Object.entries(value).forEach(([objKey, objValue]) => {
+        formData.append(`${key}[${objKey}]`, objValue);
+      });
+      return;
+    }
+
+    formData.append(key, value);
+  };
+
+  Object.entries(data).forEach(([key, value]) => {
+    appendToFormData(value, key);
+  });
+
+  return formData;
 }
+
+}
+
 export default Utils;

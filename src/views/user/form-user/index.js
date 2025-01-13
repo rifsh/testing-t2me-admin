@@ -32,7 +32,12 @@ const UserForm = (props) => {
     try {
       const values = await form.validateFields();
 
-      dispatch(setSelectedSubmitItem(values));
+      // dispatch(setSelectedSubmitItem(values));
+      const formData = {
+                      ...values,    
+                    };
+                
+                dispatch(setSelectedSubmitItem(formData));
     } catch (info) {
       console.error("Validation Failed:", info);
       message.error("Please enter all required fields.");

@@ -27,10 +27,17 @@ UserService.editUser = function (data, action) {
 };
 UserService.createUser = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
   return fetch({
     url: `${ApiConstant.REGISTER_USER_URL}?action=${encodedAction}`,
     method: "post",
-    data: data,
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
 };
 

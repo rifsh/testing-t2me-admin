@@ -191,6 +191,17 @@ const OfferList = () => {
             <Descriptions.Item label="Offer Description">
               {selectedOffer.description || "No description available"}
             </Descriptions.Item>
+            {selectedOffer.thumbnail_image && selectedOffer.thumbnail_image !== "images" ? (
+              <Descriptions.Item label="Thumbnail Image">
+                <img
+                  src={selectedOffer.thumbnail_image}
+                  alt="Offer Thumbnail"
+                  style={{ maxWidth: "100%", maxHeight: "200px", objectFit: "contain" }}
+                />
+              </Descriptions.Item>
+            ) : (
+              <Descriptions.Item label="Thumbnail Image">No image available</Descriptions.Item>
+            )}
           </Descriptions>
         )}
       </Modal>

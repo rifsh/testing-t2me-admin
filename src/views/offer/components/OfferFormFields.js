@@ -1,8 +1,9 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker, Checkbox, Button, Space } from "antd";
+import { Input, Row, Col, Card, Form, DatePicker, Checkbox, Button, Space, Upload } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsDateRequired } from "store/slices/offerSlice";
 import moment from "moment";
+import { UploadOutlined } from "@ant-design/icons";
 
 const rules = {
   name: [
@@ -72,6 +73,12 @@ function OfferFormFields() {
     form.setFieldsValue({
       end_date: null
     });
+  };
+  const normFile = (e) => {
+    if (Array.isArray(e)) {
+      return e;
+    }
+    return e?.fileList;
   };
 
   return (
@@ -150,6 +157,17 @@ function OfferFormFields() {
               </Form.Item>
             </>
           )}
+          <Form.Item
+              name="thumbnail_image"
+              label="Thumbnail Image"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+              rules={rules.thumbnail_image}
+            >
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+              <Button icon={<UploadOutlined />}>Click to upload</Button>
+            </Upload>
+          </Form.Item>
 
           <Form.List name="key_words">
             {(fields, { add, remove }) => (

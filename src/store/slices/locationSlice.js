@@ -17,6 +17,7 @@ export const initialState = {
   placeWithCountryList: [],
   error: null,
   singleVenues: null,
+  singlePlace: null,
   venues: [],
   detailedCountryList: [],
   places: [],
@@ -137,6 +138,22 @@ export const getSingleVenues = createAsyncThunk(
         return response.data[0];
       } else {
         const response = await LocationService.getSingleVenues(venue_id);
+        return response.data[0];
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+export const getSinglePlace = createAsyncThunk(
+  "locations/getSinglePlace",
+  async (place_id, { rejectWithValue }) => {
+    try {
+      if (GET_SINGLE_VENUE_MOCK_API && ENABLE_MOCK_API) {
+        const response = LocationMockData.singleVenue;
+        return response.data[0];
+      } else {
+        const response = await LocationService.getSinglePlace(place_id);
         return response.data[0];
       }
     } catch (error) {
@@ -324,6 +341,18 @@ const locationSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      .addCase(getSinglePlace.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getSinglePlace.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singlePlace = action.payload;
+      })
+      .addCase(getSinglePlace.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(getCoutryDetails.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -416,6 +445,7 @@ const locationSlice = createSlice({
         state.loading = false;
         state.error = payload;
       });
+
   },
 });
 

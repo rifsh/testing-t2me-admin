@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message, Select } from "antd";
+import { Input, Row, Col, Card, Form, Button, message, Select,Upload } from "antd";
 import {
   addSubCategory,
   fetchCategories,
@@ -11,6 +11,7 @@ import { Option } from "antd/es/mentions";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
+import { UploadOutlined } from "@ant-design/icons";
 
 const ADD = "ADD";
 // const EDIT = "EDIT";
@@ -36,11 +37,23 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
       message.error(error);
     }
   }, [error]);
+  const normFile = (e) => {
+    if (Array.isArray(e)) {
+      return e;
+    }
+    return e?.fileList;
+  };
+
 
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-   dispatch(setSelectedSubmitItem(values));
+      const formData = {
+                      ...values,            
+                    };
+                
+        dispatch(setSelectedSubmitItem(formData));
+  //  dispatch(setSelectedSubmitItem(values));
       // const resultAction = await dispatch(
       //   addSubCategory({ data: values, categoryId: values.category_id })
       // );
@@ -83,6 +96,17 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
                 placeholder="Enter category description"
               />
             </Form.Item>
+            <Form.Item
+              name="thumbnail_image"
+              label="Thumbnail Image"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+              rules={rules.thumbnail_image}
+            >
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+              <Button icon={<UploadOutlined />}>Click to upload</Button>
+            </Upload>
+          </Form.Item>
             <div
               style={{
                 display: "flex",

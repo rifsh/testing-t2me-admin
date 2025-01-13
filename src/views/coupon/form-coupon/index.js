@@ -36,7 +36,12 @@ const CouponForm = (props) => {
       const values = await form.validateFields();
       values.start_date =Utils.formatDate(values.start_date);
         values.end_date = Utils.formatDate(values.end_date);
-      dispatch(setSelectedSubmitItem(values));
+      // dispatch(setSelectedSubmitItem(values));
+      const formData = {
+                            ...values,
+                          };
+                      
+      dispatch(setSelectedSubmitItem(formData));
       //   const resultAction = await dispatch(addCoupon(values));
       //   if (addCoupon.fulfilled.match(resultAction)) {
       //     message.success(`Offer ${values.name} added successfully`);
