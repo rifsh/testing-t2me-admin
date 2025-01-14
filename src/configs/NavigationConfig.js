@@ -148,6 +148,25 @@ const superAdminDashBoardNavTree = [
       
     ],
   },
+  {
+    key: "",
+    path: ``,
+    title: "Track Your Team",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    submenu: [
+      {
+        key: "org.update",
+        path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+        title: "sidenav.eventcoordinatorupdates",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      
+    ],
+  },
+ 
 ];
 const eventOrganaizerDashBoardNavTree = [
   {

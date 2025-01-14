@@ -204,4 +204,9 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/tax/add`,
     component: React.lazy(() => import("views/tax/add-tax")),
   },
+  {
+    key: "org.update",
+    path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+    component: React.lazy(() => import("views/track-team/event-organizer/update-list/index.js")),
+  },
 ];

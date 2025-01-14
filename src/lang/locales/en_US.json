@@ -1,6 +1,7 @@
 {
 	"home": "Home",
 	"sidenav.dashboard": "Dashboard",
+	"sidenav.eventcoordinatorupdates": "Event Organiser updates",
 	"sidenav.dashboard.default": "Default",
 	"sidenav.dashboard.statics": "Statics",
 	"sidenav.dashboard.analytic": "Analytic",
