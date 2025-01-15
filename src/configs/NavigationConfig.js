@@ -148,6 +148,40 @@ const superAdminDashBoardNavTree = [
       
     ],
   },
+  {
+    key: "advertisement",
+    path: `${APP_PREFIX_PATH}/advertisement`,
+    title: "sidenav.advertisements",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    isGroupTitle: false,
+    submenu: [
+      {
+        key: "advertisement.category.list",
+        path: `${APP_PREFIX_PATH}/advertisement/category/list`,
+        title: "advertisement.category",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "advertisement.banner.list",
+        path: `${APP_PREFIX_PATH}/advertisement/banner/list`,
+        title: "advertisement.banner",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "advertisement.schedule.list",
+        path: `${APP_PREFIX_PATH}/advertisement/schedule/list`,
+        title: "advertisement.schedule",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
+  },
 ];
 const eventOrganaizerDashBoardNavTree = [
   {

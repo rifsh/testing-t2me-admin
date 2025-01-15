@@ -29,4 +29,9 @@ export const ApiConstant = {
   STATICS_EVENT_LIST: "/api/v1/statics/secured/events",
   STATICS_USER_LIST: "/api/v1/statics/secured/users",
   STATICS_SCHEDULES_LIST: "/api/v1/statics/secured/schedules",
+
+  // ADVERTISEMENT ENDPOINTS
+
+  ADVERTISEMENT_CATEGORY_URL: "/api/v1/banners/secured/bannercategory",
+
 };
