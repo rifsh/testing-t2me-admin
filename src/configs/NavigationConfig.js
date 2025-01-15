@@ -149,14 +149,14 @@ const superAdminDashBoardNavTree = [
     ],
   },
   {
-    key: "",
-    path: ``,
-    title: "Track Your Team",
+    key: "TrackRequest",
+    path: `${APP_PREFIX_PATH}/forms`,
+    title: "Track Request",
     icon: DashboardOutlined,
     breadcrumb: false,
     submenu: [
       {
-        key: "org.update",
+        key: "eventOrganiser.update",
         path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
         title: "sidenav.eventcoordinatorupdates",
         icon: OrderedListOutlined,
