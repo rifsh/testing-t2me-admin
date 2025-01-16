@@ -14,6 +14,7 @@ import tickets from "./slices/ticketSlice";
 import schedules from "./slices/scheduleSlice";
 import modalSlice from "./slices/modalSlice";
 import tax from "./slices/taxSlice"; 
+import issue from "./slices/IssueSlice"; 
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -30,8 +31,9 @@ const rootReducer = (asyncReducers = {}) => {
       tickets,
       schedules,
       modalSlice,     
-      tax,
-      adCategory, 
+      tax,  
+      issue,    
+      adCategory,
       ...asyncReducers, 
     });
 
