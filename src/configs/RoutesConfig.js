@@ -205,6 +205,16 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/tax/add-tax")),
   },
   {
+
+    key: "tapp.management.layout.footer.list",
+    path: `${APP_PREFIX_PATH}/app/management/layout/footer/list`,
+    component: React.lazy(() => import("views/app-managment/layout/footer/list-footer")),
+  },
+  {
+    key: "tapp.management.layout.footer.add",
+    path: `${APP_PREFIX_PATH}/app/management/layout/footer/add`,
+    component: React.lazy(() => import("views/app-managment/layout/footer/add-footer")),
+  },{
     key: "advertisement.category.list",
     path: `${APP_PREFIX_PATH}/advertisement/category/list`,
     component: React.lazy(() => import("views/advertisement/category/list-ad-category")),
@@ -247,5 +257,6 @@ export const protectedRoutes = [
     key: "org.update",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
     component: React.lazy(() => import("views/track-team/event-organizer/update-list/index.js")),
+
   },
 ];

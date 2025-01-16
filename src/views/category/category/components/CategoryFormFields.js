@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message,Upload } from "antd";
+import { Input, Row, Col, Card, Form, Button, message, Upload } from "antd";
 import { addCategory, updateCategory } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -51,20 +51,16 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
     return e?.fileList;
   };
 
-
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
 
       if (mode === ADD) {
         const formData = {
-                ...values,
-                
+          ...values,
+        };
 
-              };
-          
-          dispatch(setSelectedSubmitItem(formData));
-          
+        dispatch(setSelectedSubmitItem(formData));
 
         // const resultAction = await dispatch(addCategory(values));
         // if (addCategory.fulfilled.match(resultAction)) {
@@ -111,10 +107,15 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
               getValueFromEvent={normFile}
               rules={rules.thumbnail_image}
             >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
-              <Button icon={<UploadOutlined />}>Click to upload</Button>
-            </Upload>
-          </Form.Item>
+              <Upload
+                name="thumbnail_image"
+                listType="picture"
+                maxCount={1}
+                beforeUpload={() => false}
+              >
+                <Button icon={<UploadOutlined />}>Click to upload</Button>
+              </Upload>
+            </Form.Item>
             <div
               style={{
                 display: "flex",
