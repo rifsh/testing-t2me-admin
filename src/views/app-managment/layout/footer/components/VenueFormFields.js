@@ -21,10 +21,10 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import WorkingPeriodForm from "./WorkingPeriodForm";
+import PaymentLogoForm from "./PaymentLogoForm";
 
-const { RangePicker } = DatePicker;
-
-const VenueFormFields = ({ mode }) => {
+const FooterFormFields = ({ mode }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -88,10 +88,7 @@ const VenueFormFields = ({ mode }) => {
           name="venue_form"
           className="ant-advanced-search-form"
         >
-          <Card>
-            <h2 className="mb-3">
-              {mode === "ADD" ? "Add Venue" : "Edit Venue"}
-            </h2>
+          <Card title="Footer Details">
 
             <PlaceWithCountryForm
               form={form}
@@ -133,148 +130,9 @@ const VenueFormFields = ({ mode }) => {
             >
               <Input type="number" placeholder="Enter phone number" />
             </Form.Item>
-
-            {/* Working Dates and Times as Nested Design */}
-            <Form.Item label="Working Period">
-              <Input.Group compact>
-                <Form.Item
-                  name="start_day"
-                  // label="Working Days"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please select the working days.",
-                    },
-                  ]}
-                >
-                  <Select
-                    // mode=""
-                    placeholder="Select End Day"
-                    allowClear
-                  >
-                    {WEEK_DAYS.map((day) => (
-                      <Option key={day} value={day}>
-                        {day}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-                <Form.Item
-                  name="end_day"
-                  // label="Working Days"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please select the working days.",
-                    },
-                  ]}
-                >
-                  <Select
-                    // mode=""
-                    placeholder="Select Start Day"
-                    allowClear
-                  >
-                    {WEEK_DAYS.map((day) => (
-                      <Option key={day} value={day}>
-                        {day}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-                <Form.Item
-                  name="start_time"
-                  noStyle
-                  rules={[
-                    { required: true, message: "Please select start time" },
-                  ]}
-                >
-                  <TimePicker
-                    className="w-25"
-                    format="HH:mm"
-                    placeholder="Start Time"
-                  />
-                </Form.Item>
-                <Form.Item
-                  name="end_time"
-                  noStyle
-                  rules={[
-                    { required: true, message: "Please select end time" },
-                  ]}
-                >
-                  <TimePicker
-                    className="w-25"
-                    format="HH:mm"
-                    placeholder="End Time"
-                  />
-                </Form.Item>
-              </Input.Group>
-            </Form.Item>
-
-            {/* App Logo */}
-            <Form.Item
-              name="app_logo"
-              label="App Logo"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-            >
-              <Upload
-                name="app_logo"
-                listType="picture"
-                maxCount={1}
-                beforeUpload={() => false}
-              >
-                <Button icon={<UploadOutlined />}>Upload App Logo</Button>
-              </Upload>
-            </Form.Item>
-
-            {/* Payment Logos */}
-            <Form.List name="payment_logos">
-              {(fields, { add, remove }) => (
-                <>
-                  {fields.map(({ key, name, fieldKey, ...restField }) => (
-                    <div key={key} style={{ display: "flex", marginBottom: 8 }}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, "logo"]}
-                        fieldKey={[fieldKey, "logo"]}
-                        valuePropName="fileList"
-                        getValueFromEvent={normFile}
-                        rules={[{ required: true, message: "Upload required" }]}
-                        style={{ flex: 2 }}
-                      >
-                        <Upload
-                          name="payment_logo"
-                          listType="picture"
-                          maxCount={1}
-                          beforeUpload={() => false}
-                        >
-                          <Button icon={<UploadOutlined />}>Upload Logo</Button>
-                        </Upload>
-                      </Form.Item>
-                      <Form.Item
-                        {...restField}
-                        name={[name, "name"]}
-                        fieldKey={[fieldKey, "name"]}
-                        rules={[
-                          { required: true, message: "Enter payment name" },
-                        ]}
-                        style={{ flex: 1, marginLeft: "8px" }}
-                      >
-                        <Input placeholder="Payment Name" />
-                      </Form.Item>
-                      <Button type="link" danger onClick={() => remove(name)}>
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                  <Button type="dashed" onClick={() => add()} block>
-                    Add Payment Logo
-                  </Button>
-                </>
-              )}
-            </Form.List>
-
-            <Flex
+          </Card> <WorkingPeriodForm />
+          <PaymentLogoForm/>
+          <Flex
               className="py-2"
               mobileFlex={false}
               justifyContent="space-between"
@@ -284,7 +142,6 @@ const VenueFormFields = ({ mode }) => {
                 {mode === "ADD" ? "Add" : "Save"}
               </Button>
             </Flex>
-          </Card>
         </Form>
       </Col>
       <SubmitAndConfirmModal
@@ -297,4 +154,4 @@ const VenueFormFields = ({ mode }) => {
   );
 };
 
-export default VenueFormFields;
+export default FooterFormFields;

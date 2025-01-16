@@ -3,7 +3,7 @@ import PageHeaderAlt from 'components/layout-components/PageHeaderAlt'
 import { Form } from 'antd';
 
 import ProductListData from "assets/data/product-list.data.json"
-import VenueFormFields from '../components/VenueFormFields';
+import FooterFormFields from '../components/VenueFormFields';
 
 
 
@@ -33,7 +33,7 @@ const FooterForm = props => {
 					</div>
 				</PageHeaderAlt>
 				<div className="container" style={{ marginTop: 100 }}>
-					<VenueFormFields
+					<FooterFormFields
 					
 					/>
 				</div>
