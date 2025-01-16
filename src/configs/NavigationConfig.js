@@ -311,9 +311,9 @@ const eventOrganaizerDashBoardNavTree = [
 ];
 const SuperSupportingTeamDashBoardNavTree = [
   {
-    key: "Apps",
+    key: "Issue",
     path: `${APP_PREFIX_PATH}/apps`,
-    title: "sidenav.apps",
+    title: "sidenav.apps.issue",
     icon: DashboardOutlined,
     breadcrumb: false,
     isGroupTitle: false,
@@ -339,9 +339,9 @@ const SuperSupportingTeamDashBoardNavTree = [
 ];
 const EventSupportingTeamDashBoardNavTree = [
   {
-    key: "Apps",
+    key: "Issue",
     path: `${APP_PREFIX_PATH}/apps`,
-    title: "sidenav.apps",
+    title: "sidenav.apps.issue",
     icon: DashboardOutlined,
     breadcrumb: false,
     isGroupTitle: false,
@@ -374,19 +374,18 @@ const navigationConfig = () => {
   const decodedToken = jwtDecode(token);
 
   if (decodedToken?.role_id === UserRoleConstants.superAdminRoleId) {
+
     return superAdminDashBoardNavTree;
   } else if (decodedToken?.role_id === UserRoleConstants.eventOrganizerRoleId) {
+
     return eventOrganaizerDashBoardNavTree;
   } else if (
     decodedToken.role_id === UserRoleConstants.eventSupportingTeamRoleId
   ) {
     return [];
-  } else if (
-    decodedToken.role_id === UserRoleConstants.superSupportingTeamRoleId
-  ) {
-    return [];
-  }
+  } 
    else if (decodedToken?.role_id === UserRoleConstants.superSupportingTeamRoleId) {
+    
     return SuperSupportingTeamDashBoardNavTree;
   }
    else if (decodedToken?.role_id === UserRoleConstants.eventSupportingTeamRoleId) {

@@ -34,6 +34,13 @@ IssuesService.fetchIssueDetails = function (IssueId) {
     method: "get",
   });
 };
+IssuesService.fetchCommentDetails = function (pageData) {
+  return fetch({
+    url: ApiConstant.ISSUE_REASSIGN_COMMENT_URL,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
 IssuesService.IssueStatusUpdate = function (IssueId, data ) {
 //   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
