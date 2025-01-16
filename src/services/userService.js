@@ -17,6 +17,13 @@ UserService.getAllUsers = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+UserService.getSingleUsers = function (pageData) {
+  return fetch({
+    url: `${ApiConstant.SINGLE_USER_URL}`,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
 UserService.editUser = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({

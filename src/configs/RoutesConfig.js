@@ -259,4 +259,9 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/track-team/event-organizer/update-list/index.js")),
 
   },
+  {
+    key: "org.details",
+    path: `${APP_PREFIX_PATH}/track-team/event-organizer/details`,
+    component: React.lazy(() => import("views/track-team/event-organizer/update-list-deatails/index.js")),
+  }
 ];
