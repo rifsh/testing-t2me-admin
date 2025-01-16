@@ -148,6 +148,25 @@ const superAdminDashBoardNavTree = [
       
     ],
   },
+  {
+    key: "TrackRequest",
+    path: `${APP_PREFIX_PATH}/forms`,
+    title: "Track Request",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    submenu: [
+      {
+        key: "eventOrganiser.update",
+        path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+        title: "sidenav.eventcoordinatorupdates",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      
+    ],
+  },
+ 
 ];
 const eventOrganaizerDashBoardNavTree = [
   {
