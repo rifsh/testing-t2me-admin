@@ -9,20 +9,11 @@ import { useSelector } from "react-redux";
 const ADD = "ADD";
 const EDIT = "EDIT";
 
-const CategoryForm = ({ mode, id }) => {
-  const { activeTab, filteredAdCategories } = useSelector((state) => state.adCategory);
-  console.log('ID:', id, typeof id);
-  console.log('Filtered Categories:', filteredAdCategories);
-
-  let categoryData;
-  if (filteredAdCategories && filteredAdCategories.length > 0) {
-    const numericCatId = parseInt(id, 10);
-    const foundData = filteredAdCategories.find(cat => cat.id === numericCatId);
-    console.log('Category Data:', foundData);
-    categoryData=foundData
-  } else {
-    console.log('filteredAdCategories is empty or undefined.');
-  }
+const CategoryForm = ({ mode = ADD, id }) => {
+  const { activeTab } = useSelector((state) => state.category);
+  const category = useSelector((state) =>
+    state.category.categories.find((cat) => cat.id === id)
+  );
 
   return (
     <Form
@@ -39,7 +30,7 @@ const CategoryForm = ({ mode, id }) => {
             alignItems="center"
           >
             <h2 className="mb-3">
-              {mode === ADD ? "Add New Category" : "Edit Category"}
+              {mode === ADD ? "Add New Banner" : "Edit Banner"}
             </h2>
           </Flex>
         </div>
@@ -50,11 +41,11 @@ const CategoryForm = ({ mode, id }) => {
           style={{ marginTop: 30 }}
           items={[
             {
-              label: "Category",
-              key: "categories",
-              children: <CategoryFormFields mode={mode} category={categoryData} />,
+              label: "Banner",
+              key: "banner",
+              children: <CategoryFormFields mode={mode} category={category} />,
             },
-
+            
           ]}
         />
       </div>

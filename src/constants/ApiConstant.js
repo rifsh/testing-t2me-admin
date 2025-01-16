@@ -39,5 +39,6 @@ export const ApiConstant = {
   // ADVERTISEMENT ENDPOINTS
 
   ADVERTISEMENT_CATEGORY_URL: "/api/v1/banners/secured/bannercategory",
+  ADVERTISEMENT_CATEGORY_UPDATE_URL: "/api/v1/banners/secured/bannercategoryupdate",
 
 };
