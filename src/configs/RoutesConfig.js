@@ -204,4 +204,19 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/tax/add`,
     component: React.lazy(() => import("views/tax/add-tax")),
   },
+  {
+    key: "mail.list",
+    path: `${APP_PREFIX_PATH}/mail/list`,
+    component: React.lazy(() => import("views/app-views/apps/mail/mail-list")),
+  },
+  {
+    key: "issue.list",
+    path: `${APP_PREFIX_PATH}/issue/list`,
+    component: React.lazy(() => import("views/app-views/apps/issues/issue-list")),
+  },
+  {
+    key: "issue.details",
+    path: `${APP_PREFIX_PATH}/issue/details/:issueId`,
+    component: React.lazy(() => import("views/app-views/apps/issues/issue-details")),
+  },
 ];
