@@ -11,7 +11,7 @@ import IssuesService from "services/IssueService";
 const initialState = {
   IssueDetails: {},
   issues: [],
-  commentData : [],
+  CommentDetails : [],
   loading: false,
   error: null,
   submitData: {},
@@ -36,6 +36,22 @@ export const fetchIssueDetails = createAsyncThunk(
         return response.data;
       } else {
         const response = await IssuesService.fetchIssueDetails(IssueId);
+        return response.data;
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+export const fetchCommentDetails = createAsyncThunk(
+  "event/fetchCommentDetails",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      if (EVENT_DETAILS_MOCK_API && ENABLE_MOCK_API) {
+        const response = EventMockData.fetchCommentDetails;
+        return response.data;
+      } else {
+        const response = await IssuesService.fetchCommentDetails(pageData);
         return response.data;
       }
     } catch (error) {
@@ -306,6 +322,19 @@ const eventSlice = createSlice({
         state.IssueDetails = issueData;
       })
       .addCase(fetchIssueDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchCommentDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCommentDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        const commentData = { ...action.payload[0] };
+        state.CommentDetails = commentData;
+      })
+      .addCase(fetchCommentDetails.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
