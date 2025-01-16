@@ -205,6 +205,7 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/tax/add-tax")),
   },
   {
+
     key: "tapp.management.layout.footer.list",
     path: `${APP_PREFIX_PATH}/app/management/layout/footer/list`,
     component: React.lazy(() => import("views/app-managment/layout/footer/list-footer")),
@@ -213,5 +214,49 @@ export const protectedRoutes = [
     key: "tapp.management.layout.footer.add",
     path: `${APP_PREFIX_PATH}/app/management/layout/footer/add`,
     component: React.lazy(() => import("views/app-managment/layout/footer/add-footer")),
+  },{
+    key: "advertisement.category.list",
+    path: `${APP_PREFIX_PATH}/advertisement/category/list`,
+    component: React.lazy(() => import("views/advertisement/category/list-ad-category")),
+  },
+  {
+    key: "advertisement.category.add",
+    path: `${APP_PREFIX_PATH}/advertisement/category/add`,
+    component: React.lazy(() => import("views/advertisement/category/add-ad-category")),
+  },
+  {
+    key: "advertisement.banner.list",
+    path: `${APP_PREFIX_PATH}/advertisement/banner/list`,
+    component: React.lazy(() => import("views/advertisement/banner/list-ad-banner")),
+  },
+  {
+    key: "advertisement.schedule.list",
+    path: `${APP_PREFIX_PATH}/advertisement/schedule/list`,
+    component: React.lazy(() => import("views/advertisement/schedule/list-ad-schedule")),
+  },
+  {
+    key: "advertisement.schedule.add",
+    path: `${APP_PREFIX_PATH}/advertisement/schedule/add`,
+    component: React.lazy(() => import("views/advertisement/schedule/add-ad-schedule")),
+  },
+  {
+    key: "mail.list",
+    path: `${APP_PREFIX_PATH}/mail/list`,
+    component: React.lazy(() => import("views/app-views/apps/mail/mail-list")),
+  },
+  {
+    key: "issue.list",
+    path: `${APP_PREFIX_PATH}/issue/list`,
+    component: React.lazy(() => import("views/app-views/apps/issues/issue-list")),
+  },
+  {
+    key: "issue.details",
+    path: `${APP_PREFIX_PATH}/issue/details/:issueId`,
+    component: React.lazy(() => import("views/app-views/apps/issues/issue-details")),
+  },{
+    key: "org.update",
+    path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+    component: React.lazy(() => import("views/track-team/event-organizer/update-list/index.js")),
+
   },
 ];

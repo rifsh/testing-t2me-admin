@@ -29,4 +29,15 @@ export const ApiConstant = {
   STATICS_EVENT_LIST: "/api/v1/statics/secured/events",
   STATICS_USER_LIST: "/api/v1/statics/secured/users",
   STATICS_SCHEDULES_LIST: "/api/v1/statics/secured/schedules",
+  ISSUE_LIST_URL: "/api/v1/issue/secured/issues",
+  ISSUE_DETAILS_URL: "/api/v1/issue/secured/issues/details",
+  ISSUE_STATUS_UPDATE_URL: "/api/v1/issue/secured/issues/status",
+  ISSUE_CLOSE_URL: "/api/v1/issue/secured/issues/close",
+  ISSUE_REASSIGN_URL: "/api/v1/issue/secured/issues/assign",
+  ISSUE_REASSIGN_COMMENT_URL: "/api/v1/issue/secured/issues/comment",
+
+  // ADVERTISEMENT ENDPOINTS
+
+  ADVERTISEMENT_CATEGORY_URL: "/api/v1/banners/secured/bannercategory",
+
 };

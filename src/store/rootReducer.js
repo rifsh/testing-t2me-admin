@@ -3,6 +3,7 @@ import { combineReducers } from "redux";
 import theme from "./slices/themeSlice";
 import auth from "./slices/authSlice";
 import category from "./slices/categorySlice";
+import adCategory from "./slices/adCategorySlice";
 import users from "./slices/userSlice";
 import locations from "./slices/locationSlice";
 import event from "./slices/eventSlice";
@@ -13,8 +14,10 @@ import tickets from "./slices/ticketSlice";
 import schedules from "./slices/scheduleSlice";
 import modalSlice from "./slices/modalSlice";
 import tax from "./slices/taxSlice"; 
+
 import layout from "./slices/layoutSlice"; 
 
+import issue from "./slices/IssueSlice"; 
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -31,8 +34,10 @@ const rootReducer = (asyncReducers = {}) => {
       tickets,
       schedules,
       modalSlice,     
-      tax,   
       layout,   
+      tax,  
+      issue,    
+      adCategory,
       ...asyncReducers, 
     });
 

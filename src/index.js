@@ -5,12 +5,19 @@ import * as serviceWorker from './serviceWorker';
 import 'antd/dist/reset.css'
 
 const container = document.getElementById('root');
-const root = createRoot(container); // createRoot(container!) if you use TypeScript
-root.render(
+// Enable StrictMode in both development and production
+const enableStrictMode = process.env.NODE_ENV !== 'production';
+const root = createRoot(document.getElementById('root'));
+if (enableStrictMode) {
+  root.render(
     <React.StrictMode>
-        <App />
+      <App />
     </React.StrictMode>
-);
+  );
+} else {
+  root.render(<App />);
+}
+
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
