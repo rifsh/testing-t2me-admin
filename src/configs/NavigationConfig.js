@@ -147,6 +147,31 @@ const superAdminDashBoardNavTree = [
       },
       
     ],
+  },{
+    key: "Apps",
+    path: `${APP_PREFIX_PATH}/apps`,
+    title: "sidenav.apps",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    isGroupTitle: false,
+    submenu: [
+      {
+        key: "issue.list",
+        path: `${APP_PREFIX_PATH}/issue/list`,
+        title: "sidenav.apps.issue",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "mail.list",
+        path: `${APP_PREFIX_PATH}/mail/list`,
+        title: "sidenav.apps.mail",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
   },
   {
     key: "TrackRequest",
@@ -206,6 +231,62 @@ const eventOrganaizerDashBoardNavTree = [
     ],
   },
 ];
+const SuperSupportingTeamDashBoardNavTree = [
+  {
+    key: "Apps",
+    path: `${APP_PREFIX_PATH}/apps`,
+    title: "sidenav.apps",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    isGroupTitle: false,
+    submenu: [
+      {
+        key: "issue.list",
+        path: `${APP_PREFIX_PATH}/issue/list`,
+        title: "sidenav.apps.issue",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "mail.list",
+        path: `${APP_PREFIX_PATH}/mail/list`,
+        title: "sidenav.apps.mail",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
+  },
+];
+const EventSupportingTeamDashBoardNavTree = [
+  {
+    key: "Apps",
+    path: `${APP_PREFIX_PATH}/apps`,
+    title: "sidenav.apps",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    isGroupTitle: false,
+    submenu: [
+      {
+        key: "issue.list",
+        path: `${APP_PREFIX_PATH}/issue/list`,
+        title: "sidenav.apps.issue",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "mail.list",
+        path: `${APP_PREFIX_PATH}/mail/list`,
+        title: "sidenav.apps.mail",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
+  },
+];
 const navigationConfig = () => {
   const token = localStorage.getItem(AUTH_TOKEN);
   if (!token) {
@@ -218,6 +299,12 @@ const navigationConfig = () => {
     return superAdminDashBoardNavTree;
   } else if (decodedToken?.role_id === UserRoleConstants.eventOrganizerRoleId) {
     return eventOrganaizerDashBoardNavTree;
+  }
+   else if (decodedToken?.role_id === UserRoleConstants.superSupportingTeamRoleId) {
+    return SuperSupportingTeamDashBoardNavTree;
+  }
+   else if (decodedToken?.role_id === UserRoleConstants.eventSupportingTeamRoleId) {
+    return EventSupportingTeamDashBoardNavTree;
   }
 
   return [];

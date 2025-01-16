@@ -6,20 +6,16 @@ import {
   EVENT_DETAILS_MOCK_API,
 } from "configs/MockConfig";
 import EventMockData from "mock/data/eventData";
-import EventService from "services/EventService";
+import IssuesService from "services/IssueService";
+
 const initialState = {
-  eventDetails: {},
-  events: [],
-  filteredEvents: [],
+  IssueDetails: {},
+  issues: [],
+  commentData : [],
   loading: false,
   error: null,
-  selectedCoupons: [],
-  selectedOffers: [],
- 
-  validationData: [],
   submitData: {},
   message: null,
-  currentStep: 1,
   submitLoading: false,
   dialogVisible: false,
   modalLoading: false,
@@ -31,15 +27,15 @@ const initialState = {
   pagination: {size:10,page:1},
 };
 
-export const fetchEventDetails = createAsyncThunk(
-  "event/fetchEventDetails",
-  async (eventId, { rejectWithValue }) => {
+export const fetchIssueDetails = createAsyncThunk(
+  "event/fetchIssueDetails",
+  async (IssueId, { rejectWithValue }) => {
     try {
       if (EVENT_DETAILS_MOCK_API && ENABLE_MOCK_API) {
-        const response = EventMockData.fetchEventDetails;
+        const response = EventMockData.fetchIssueDetails;
         return response.data;
       } else {
-        const response = await EventService.fetchEventDetails(eventId);
+        const response = await IssuesService.fetchIssueDetails(IssueId);
         return response.data;
       }
     } catch (error) {
@@ -47,27 +43,29 @@ export const fetchEventDetails = createAsyncThunk(
     }
   }
 );
-export const fetchAllEvent = createAsyncThunk(
-  "event/fetchAllEvent",
-  async (pageData, { rejectWithValue }) => {
-    try {
-      if (ENABLE_MOCK_API && ALL_EVENT_MOCK_API) {
-        const response = EventMockData.fetchAllEvent;
-        return response.data;
-      } else {
-        const response = await EventService.getAllEvent(pageData);
-        return response.data[0];
+
+
+export const fetchAllissues = createAsyncThunk(
+    "issue/fetchAllIssue",
+    async (pageData, { rejectWithValue }) => {
+      try {
+        if (ENABLE_MOCK_API && ALL_EVENT_MOCK_API) {
+          const response = EventMockData.fetchAllissues;
+          return response.data;
+        } else {
+          const response = await IssuesService.getAllIssue(pageData);
+          return response.data[0];
+        }
+      } catch (error) {
+        return rejectWithValue(error.message || "Failed to fetch event details");
       }
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch event details");
     }
-  }
-);
+  );
 export const checkEventValidation = createAsyncThunk(
   "event/validation",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await EventService.checkValidation();
+      const response = await IssuesService.checkValidation();
       if (response.status.status_code === "00000") {
         return response.data;
       } else {
@@ -84,22 +82,50 @@ export const checkEventValidation = createAsyncThunk(
   }
 );
 
-export const addEvent = createAsyncThunk(
-  "event/addEvent",
-  async ({ data, action }, { rejectWithValue }) => {
+export const IssueReasignComment = createAsyncThunk(
+  "issue/IssueReasignComment",
+  async ({ IssueId, data }, { rejectWithValue }) => {
     try {
-      const response = await EventService.addEvent(data, action);
+      const response = await IssuesService.IssueReasignComment(IssueId, data);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to process event");
     }
   }
 );
-export const editEvent = createAsyncThunk(
-  "event/edit",
-  async ({ data, action }, { rejectWithValue }) => {
+export const IssueStatusUpdate = createAsyncThunk(
+  "issue/IssueStatusUpdate",
+  async ({ IssueId, data }, { rejectWithValue }) => {
     try {
-      const response = await EventService.updateEvent(data, action);
+        console.warn(IssueId, data,'.....')
+      const response = await IssuesService.IssueStatusUpdate(IssueId,data);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+
+
+export const IssueCloseUpdate = createAsyncThunk(
+  "issue/IssueCloseUpdate",
+  async ({ IssueId, data }, { rejectWithValue }) => {
+    try {
+        console.warn(IssueId, data,'.....')
+      const response = await IssuesService.IssueCloseUpdate(IssueId, data);
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+
+export const IssueReasignUpdate = createAsyncThunk(
+  "issue/IssueReasignUpdate",
+  async ({ IssueId, data }, { rejectWithValue }) => {
+    try {
+        console.warn(IssueId, data,'.....')
+      const response = await IssuesService.IssueReasignUpdate(IssueId, data);
       return response.status;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -108,7 +134,7 @@ export const editEvent = createAsyncThunk(
 );
 
 const eventSlice = createSlice({
-  name: "event",
+  name: "issue",
   initialState,
 
   reducers: {
@@ -184,51 +210,77 @@ const eventSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(addEvent.pending, (state) => {
+      .addCase(IssueReasignComment.pending, (state) => {
         console.log("AddEvent - Pending State");
         state.loading = true;
         state.error = null;
         state.responseMessage = null;
       })
-      .addCase(addEvent.fulfilled, (state, action) => {
+      .addCase(IssueReasignComment.fulfilled, (state, action) => {
         console.log("AddEvent - Fulfilled", action.payload);
         state.loading = false;
         state.error = null;
         state.responseData = action.payload.data;
         state.responseMessage = action.payload.status.message;
       })
-      .addCase(addEvent.rejected, (state, action) => {
+      .addCase(IssueReasignComment.rejected, (state, action) => {
         console.error("AddEvent - Rejected", action.payload);
         state.loading = false;
         state.error = action.payload.data;
         state.responseMessage = action.payload.status.message;
       })
-      .addCase(editEvent.pending, (state) => {
+      .addCase(IssueStatusUpdate.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(editEvent.fulfilled, (state, { payload }) => {
+      .addCase(IssueStatusUpdate.fulfilled, (state, { payload }) => {
         state.loading = false;
         if (payload.message) {
           state.message = payload.message;
-          state.editable_status = payload.editable_status;
         }
       })
-      .addCase(editEvent.rejected, (state, { payload }) => {
+      .addCase(IssueReasignUpdate.rejected, (state, { payload }) => {
         state.loading = false;
-        state.error = payload || "Failed to edit event";
+        state.error = payload || "Failed to reassign the issue";
       })
-      .addCase(fetchAllEvent.pending, (state) => {
+      .addCase(IssueReasignUpdate.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchAllEvent.fulfilled, (state, action) => {
+      .addCase(IssueReasignUpdate.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.events = action.payload.items;
-        state.filteredEvents = action.payload.items;
+        if (payload.message) {
+          state.message = payload.message;
+        }
+      })
+      .addCase(IssueCloseUpdate.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to accept the issue";
+      })
+      .addCase(IssueCloseUpdate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(IssueCloseUpdate.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+        }
+      })
+      .addCase(IssueStatusUpdate.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to update status";
+      })
+      .addCase(fetchAllissues.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllissues.fulfilled, (state, action) => {
+        state.loading = false;
+        state.issues = action.payload.items;
         state.pagination = action.payload;
       })
-      .addCase(fetchAllEvent.rejected, (state, action) => {
+      .addCase(fetchAllissues.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -244,40 +296,16 @@ const eventSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(fetchEventDetails.pending, (state) => {
+      .addCase(fetchIssueDetails.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchEventDetails.fulfilled, (state, action) => {
+      .addCase(fetchIssueDetails.fulfilled, (state, action) => {
         state.loading = false;
-        const eventData = { ...action.payload[0] };
-
-        const uniqueOffers = eventData.event_offers.reduce((acc, current) => {
-          const isDuplicate = acc.find(
-            (item) => item.offer.id === current.offer.id
-          );
-          if (!isDuplicate) {
-            acc.push(current);
-          }
-          return acc;
-        }, []);
-
-        const uniqueCoupons = eventData.event_coupons.reduce((acc, current) => {
-          const isDuplicate = acc.find(
-            (item) => item.coupons.id === current.coupons.id
-          );
-          if (!isDuplicate) {
-            acc.push(current);
-          }
-          return acc;
-        }, []);
-
-        eventData.event_offers = uniqueOffers;
-        eventData.event_coupons = uniqueCoupons;
-
-        state.eventDetails = eventData;
+        const issueData = { ...action.payload[0] };
+        state.IssueDetails = issueData;
       })
-      .addCase(fetchEventDetails.rejected, (state, action) => {
+      .addCase(fetchIssueDetails.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
