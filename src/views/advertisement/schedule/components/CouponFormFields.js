@@ -1,10 +1,11 @@
-import React from "react";
-import { Input, Row, Col, Card, Form, Select,DatePicker,Upload,Button } from "antd";
+import React, { useEffect, useState } from "react";
+import { Input, Row, Col, Card, Form, Select, DatePicker, Upload, Button, message } from "antd";
 import moment from "moment";
-import { UploadOutlined } from "@ant-design/icons";
+import { UploadOutlined, InboxOutlined,FileImageOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 
 const { Option } = Select;
+const { Dragger } = Upload;
 
 const rules = {
   country: [
@@ -62,6 +63,7 @@ function CouponFormFields(props) {
   const [form] = Form.useForm();
   const startDate = Form.useWatch('start_date', form);
   const dispatch = useDispatch();
+  const [fileList, setFileList] = useState([]);
   const { loading, countries, error } = useSelector((state) => state.locations);
 
   const disablePastDates = (current) => {
@@ -85,9 +87,80 @@ function CouponFormFields(props) {
     return e?.fileList;
   };
 
+  const uploadProps = {
+    name: 'file',
+    multiple: false,
+    action: 'your-upload-endpoint',
+    onChange(info) {
+      const { status } = info.file;
+      if (status !== 'uploading') {
+        console.log(info.file, info.fileList);
+      }
+      if (status === 'done') {
+        message.success(`${info.file.name} file uploaded successfully.`);
+      } else if (status === 'error') {
+        message.error(`${info.file.name} file upload failed.`);
+      }
+    },
+    beforeUpload(file) {
+      const isValidFileType = file.type === 'application/pdf' || file.type === 'image/jpeg' || file.type === 'image/png';
+      if (!isValidFileType) {
+        message.error('You can only upload PDF, JPEG, or PNG files!');
+      }
+      const isLt2M = file.size / 1024 / 1024 < 2;
+      if (!isLt2M) {
+        message.error('File must be smaller than 2MB!');
+      }
+      return isValidFileType && isLt2M;
+    }
+  };
+
+  const onDragStart = (e, file) => {
+    e.dataTransfer.setData('fileData', JSON.stringify(file));
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    try {
+      const fileData = JSON.parse(e.dataTransfer.getData('fileData'));
+      form.setFieldsValue({
+        file: [fileData]
+      });
+      message.success(`${fileData.name} selected successfully`);
+    } catch (error) {
+      message.error('Failed to select file');
+    }
+  };
+
   return (
     <Row gutter={16}>
-      <Col xs={24} sm={24} md={17}>
+      <Col xs={24} sm={29} md={11}>
+        <Card title="File Gallery" className="h-full">
+          <div className="file-gallery" style={{ minHeight: '400px' }}>
+            {fileList.map(file => (
+              <div
+                key={file.uid}
+                draggable
+                onDragStart={(e) => onDragStart(e, file)}
+                className="file-item p-2 mb-2 border rounded cursor-move hover:bg-gray-50"
+              >
+                <div className="flex items-center">
+                  <FileImageOutlined className="mr-2" />
+                  <span className="text-sm">{file.name}</span>
+                </div>
+                {file.thumbUrl && (
+                  <img
+                    src={file.thumbUrl}
+                    alt={file.name}
+                    className="mt-2 w-full h-20 object-cover rounded"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+      </Col>
+      <Col xs={24} sm={24} md={13}>
         <Card title="Coupon Details">
           <Form.Item
             name="name"
@@ -97,22 +170,26 @@ function CouponFormFields(props) {
             <Input placeholder="Enter Schedule Name" />
           </Form.Item>
           <Form.Item
-              name="banner_image"
-              label="Banner Media"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-              rules={rules.thumbnail_image}
-            >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
-              <Button icon={<UploadOutlined />}>Click to upload</Button>
-            </Upload>
-          </Form.Item>
-          <Form.Item
-            name="banner_url"
-            label="Banner Redirect Url"
-            rules={rules.name}
+            name="file"
+            label="Upload File"
+            rules={rules.file}
+            valuePropName="fileList"
+            getValueFromEvent={e => {
+              if (Array.isArray(e)) {
+                return e;
+              }
+              return e?.fileList;
+            }}
           >
-            <Input placeholder="Enter banner url" />
+            <Dragger {...uploadProps}>
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">Click or drag file to this area to upload</p>
+              <p className="ant-upload-hint">
+                Support for PDF, JPEG, or PNG files. File size should be less than 2MB.
+              </p>
+            </Dragger>
           </Form.Item>
           <Form.Item
             name="start_date"
@@ -129,9 +206,9 @@ function CouponFormFields(props) {
             />
           </Form.Item>
 
-          <Form.Item 
-            name="end_date" 
-            label="End Date" 
+          <Form.Item
+            name="end_date"
+            label="End Date"
             rules={[
               ...rules.endDate,
               ({ getFieldValue }) => ({
@@ -158,9 +235,9 @@ function CouponFormFields(props) {
           </Form.Item>
 
 
-          <Form.Item 
-            name="duration" 
-            label="Duration" 
+          <Form.Item
+            name="duration"
+            label="Duration"
             rules={[
               {
                 required: true,
@@ -176,45 +253,7 @@ function CouponFormFields(props) {
           >
             <Input type="number" placeholder="Enter banner duration" />
           </Form.Item>
-          <Form.Item name="country_id" label="Category" rules={rules.country}>
-            <Select className="w-100" placeholder="Choose a Category" loading={loading}>
-              {countries && countries.length > 0 ? (
-                countries.map((country) => (
-                  <Option key={country.id} value={country.id}>
-                    {country.country}
-                  </Option>
-                ))
-              ) : (
-                <Option disabled>No category available</Option>
-              )}
-            </Select>
-          </Form.Item>
-          <Form.Item name="country_id" label="Place" rules={rules.country}>
-            <Select className="w-100" placeholder="Choose a Place" loading={loading}>
-              {countries && countries.length > 0 ? (
-                countries.map((country) => (
-                  <Option key={country.id} value={country.id}>
-                    {country.country}
-                  </Option>
-                ))
-              ) : (
-                <Option disabled>No Place available</Option>
-              )}
-            </Select>
-          </Form.Item>
-          <Form.Item name="country_id" label="Event" rules={rules.country}>
-            <Select className="w-100" placeholder="Choose a Event" loading={loading}>
-              {countries && countries.length > 0 ? (
-                countries.map((country) => (
-                  <Option key={country.id} value={country.id}>
-                    {country.country}
-                  </Option>
-                ))
-              ) : (
-                <Option disabled>No Event available</Option>
-              )}
-            </Select>
-          </Form.Item>
+
         </Card>
       </Col>
     </Row>

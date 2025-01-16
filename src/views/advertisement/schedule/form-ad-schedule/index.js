@@ -37,19 +37,12 @@ const CouponForm = (props) => {
       values.start_date =Utils.formatDate(values.start_date);
         values.end_date = Utils.formatDate(values.end_date);
       // dispatch(setSelectedSubmitItem(values));
-      const formData = {
-                            ...values,
-                          };
+      // const formData = {
+      //                       ...values,
+      //                     };
                       
-      dispatch(setSelectedSubmitItem(formData));
-      //   const resultAction = await dispatch(addCoupon(values));
-      //   if (addCoupon.fulfilled.match(resultAction)) {
-      //     message.success(`Offer ${values.name} added successfully`);
-      //     form.resetFields();
-      //     navigate(`${APP_PREFIX_PATH}/coupon/list`);
-      //   } else {
-      //     message.error("Failed to add the coupon. Please try again.");
-      //   }
+      // dispatch(setSelectedSubmitItem(formData));
+
     } catch (info) {
       console.error("Validation Failed:", info);
       message.error("Please enter all required fields.");

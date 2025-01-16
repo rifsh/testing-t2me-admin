@@ -14,6 +14,7 @@ import {
 } from "constants/ThemeConstant";
 import { getUserRole } from "configs/UserAccessConfig";
 import Utils from "utils";
+import { fetchSingleUsers } from "store/slices/userSlice";
 
 const Icon = styled.div(() => ({
   fontSize: FONT_SIZES.LG,
@@ -77,12 +78,17 @@ const items = [
 export const NavProfile = ({ mode }) => {
   const dispatch = useDispatch();
   const { userData } = useSelector((state) => state.auth);
+  const { singleUser } = useSelector((state) => state.users);
   const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     if (!userData) {
       dispatch(getUserdata());
+
     } else {
+      dispatch(fetchSingleUsers({ "user_id": userData.id }));
+      //  console.log(userData,'fghjkhghjkjh');
+        console.log(singleUser,'fghjkhghjkjh');
       const role = getUserRole(userData);
       setUserRole(role);
     }
@@ -95,9 +101,12 @@ export const NavProfile = ({ mode }) => {
             style={{
               backgroundColor: "#87d068",
             }}
-            icon={<UserOutlined />}
+            src={singleUser && singleUser.thumbnail_image && singleUser.thumbnail_image !== 'images' ? singleUser.thumbnail_image : null} 
+            icon={!singleUser || !singleUser.thumbnail_image || singleUser.thumbnail_image === 'images' ? <UserOutlined /> : null} 
           />
-          <UserInfo className="profile-text">
+
+
+          <UserInfo className="profile-text"> 
             <Name>{userData && userData.email}</Name>
             <Title>{userRole}</Title>
           </UserInfo>
