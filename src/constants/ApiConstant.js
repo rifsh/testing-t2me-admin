@@ -35,4 +35,9 @@ export const ApiConstant = {
   ISSUE_CLOSE_URL: "/api/v1/issue/secured/issues/close",
   ISSUE_REASSIGN_URL: "/api/v1/issue/secured/issues/assign",
   ISSUE_REASSIGN_COMMENT_URL: "/api/v1/issue/secured/issues/comment",
+
+  // ADVERTISEMENT ENDPOINTS
+
+  ADVERTISEMENT_CATEGORY_URL: "/api/v1/banners/secured/bannercategory",
+
 };

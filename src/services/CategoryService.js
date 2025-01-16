@@ -79,7 +79,7 @@ CategoryService.addSubCategory = function (data, action) {
 
 
 
-  return fetch({
+  return fetch({  
     url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${data.category_id}&action=${encodedAction}`,
     method: "POST",
     data: formData,

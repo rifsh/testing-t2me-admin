@@ -4,7 +4,7 @@ const dev = {
   // API_ENDPOINT_URL: 'http://192.168.29.223:8000'
   // API_ENDPOINT_URL: 'http://192.168.47.187:8000'
   //  API_ENDPOINT_URL: 'http://192.168.1.21:8000'
-  // API_ENDPOINT_URL: "http://127.0.0.1:8000",
+  // // API_ENDPOINT_URL: "http://127.0.0.1:8000",
   //API_ENDPOINT_URL: "http://192.168.29.222:8000"
 };
 const prod = {
