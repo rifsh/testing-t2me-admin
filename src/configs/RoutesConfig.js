@@ -204,4 +204,14 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/tax/add`,
     component: React.lazy(() => import("views/tax/add-tax")),
   },
+  {
+    key: "tapp.management.layout.footer.list",
+    path: `${APP_PREFIX_PATH}/app/management/layout/footer/list`,
+    component: React.lazy(() => import("views/app-managment/layout/footer/list-footer")),
+  },
+  {
+    key: "tapp.management.layout.footer.add",
+    path: `${APP_PREFIX_PATH}/app/management/layout/footer/add`,
+    component: React.lazy(() => import("views/app-managment/layout/footer/add-footer")),
+  },
 ];

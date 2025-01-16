@@ -1,4 +1,10 @@
-import { DashboardOutlined, OrderedListOutlined } from "@ant-design/icons";
+import {
+  DashboardOutlined,
+  LayoutOutlined,
+  MoreOutlined,
+  OrderedListOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { UserRoleConstants } from "constants/UserRoleConstant";
@@ -55,7 +61,6 @@ const superAdminDashBoardNavTree = [
     breadcrumb: false,
     isGroupTitle: false,
     submenu: [
-     
       {
         key: "place.list",
         path: `${APP_PREFIX_PATH}/place/list`,
@@ -128,7 +133,7 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
-      
+
       {
         key: "event.list",
         path: `${APP_PREFIX_PATH}/event/list`,
@@ -145,7 +150,33 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
-      
+    ],
+  },
+  {
+    key: "app.management",
+    path: `${APP_PREFIX_PATH}/app/management`,
+    title: "sidenav.app.management",
+    icon: SettingOutlined,
+    breadcrumb: true,
+    isGroupTitle: true,
+    submenu: [
+      {
+        key: "app.management.layout",
+        path: `${APP_PREFIX_PATH}/dashboards/statics`,
+        title: "sidenav.app.management.layout",
+        icon: LayoutOutlined,
+        breadcrumb: false,
+        submenu: [
+          {
+            key: "app.management.layout.footer.list",
+            path: `${APP_PREFIX_PATH}/app/management/layout/footer/list`,
+            title: "sidenav.app.management.layout.footer",
+            icon: LayoutOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+        ],
+      },
     ],
   },
 ];
@@ -199,6 +230,14 @@ const navigationConfig = () => {
     return superAdminDashBoardNavTree;
   } else if (decodedToken?.role_id === UserRoleConstants.eventOrganizerRoleId) {
     return eventOrganaizerDashBoardNavTree;
+  } else if (
+    decodedToken.role_id === UserRoleConstants.eventSupportingTeamRoleId
+  ) {
+    return [];
+  } else if (
+    decodedToken.role_id === UserRoleConstants.superSupportingTeamRoleId
+  ) {
+    return [];
   }
 
   return [];
