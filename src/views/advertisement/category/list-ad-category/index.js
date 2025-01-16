@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table, Input, Tabs, Button, Select, Menu } from "antd";
-import { FormOutlined, SearchOutlined, EditOutlined,EyeOutlined, } from "@ant-design/icons";
+import { FormOutlined, SearchOutlined, EditOutlined, EyeOutlined, } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
@@ -51,27 +51,23 @@ const CategoryList = () => {
     dispatch(setSelectedItem(data));
   };
 
-  
 
+  const handleEditAdCategory = async (id) => {
+    return navigate(`${APP_PREFIX_PATH}/advertisement/category/edit/${id}`);
+  };
   const dropdownMenu = (row) => (
     <Menu>
-        <Menu.Item>
-          <Flex alignItems="center" >
-            <EyeOutlined />
-            <span className="ml-2">View Details</span>
-          </Flex>
-        </Menu.Item>
       <Menu.Item>
-        <Flex alignItems="center">
+        <Flex alignItems="center" onClick={() => handleEditAdCategory(row.id)}>
           <EditOutlined />
           <span className="ml-2">
-           Edit Category
+            Edit Category
           </span>
         </Flex>
       </Menu.Item>
     </Menu>
   );
-  
+
 
   const categoryColumns = [
     {
@@ -114,34 +110,34 @@ const CategoryList = () => {
   };
 
   return (
-    <Card>  
-          <Flex alignItems="center" justifyContent="space-between">
-            <SearchBarWithStatus fetchFunction={fetchAdCategories} />
-            <div>
-              <Button
-                type="primary"
-                icon={<FormOutlined />}
-                onClick={() => {
-                  return navigate(`${APP_PREFIX_PATH}/advertisement/category/add`);
-                }}
-              >
-                Add Category
-              </Button>
-            </div>
-          </Flex>
-          <Table
-            columns={categoryColumns}
-            dataSource={filteredAdCategories}
-            rowKey="id"
-            loading={loading}
-            pagination={{
-              current: pagination.page,
-              pageSize: pagination.size,
-              total: pagination.total,
-              onChange: (page, pageSize) =>
-                handlePagination(page, pageSize, "category"),
+    <Card>
+      <Flex alignItems="center" justifyContent="space-between">
+        <SearchBarWithStatus fetchFunction={fetchAdCategories} />
+        <div>
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            onClick={() => {
+              return navigate(`${APP_PREFIX_PATH}/advertisement/category/add`);
             }}
-          />
+          >
+            Add Category
+          </Button>
+        </div>
+      </Flex>
+      <Table
+        columns={categoryColumns}
+        dataSource={filteredAdCategories}
+        rowKey="id"
+        loading={loading}
+        pagination={{
+          current: pagination.page,
+          pageSize: pagination.size,
+          total: pagination.total,
+          onChange: (page, pageSize) =>
+            handlePagination(page, pageSize, "category"),
+        }}
+      />
       <UpdateStatusModal {...getModalProps()} />
     </Card>
   );
