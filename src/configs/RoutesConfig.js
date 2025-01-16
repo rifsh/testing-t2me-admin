@@ -205,6 +205,31 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/tax/add-tax")),
   },
   {
+    key: "advertisement.category.list",
+    path: `${APP_PREFIX_PATH}/advertisement/category/list`,
+    component: React.lazy(() => import("views/advertisement/category/list-ad-category")),
+  },
+  {
+    key: "advertisement.category.add",
+    path: `${APP_PREFIX_PATH}/advertisement/category/add`,
+    component: React.lazy(() => import("views/advertisement/category/add-ad-category")),
+  },
+  {
+    key: "advertisement.banner.list",
+    path: `${APP_PREFIX_PATH}/advertisement/banner/list`,
+    component: React.lazy(() => import("views/advertisement/banner/list-ad-banner")),
+  },
+  {
+    key: "advertisement.schedule.list",
+    path: `${APP_PREFIX_PATH}/advertisement/schedule/list`,
+    component: React.lazy(() => import("views/advertisement/schedule/list-ad-schedule")),
+  },
+  {
+    key: "advertisement.schedule.add",
+    path: `${APP_PREFIX_PATH}/advertisement/schedule/add`,
+    component: React.lazy(() => import("views/advertisement/schedule/add-ad-schedule")),
+  },
+  {
     key: "mail.list",
     path: `${APP_PREFIX_PATH}/mail/list`,
     component: React.lazy(() => import("views/app-views/apps/mail/mail-list")),
