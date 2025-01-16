@@ -30,6 +30,7 @@
 	"sidenav.apps": "Apps",
 	"sidenav.apps.mail": "Mail",
 	"sidenav.apps.issue": "Issue",
+	"sidenav.apps.issues": "Issues",
 	"sidenav.apps.chat": "Chat",
 	"sidenav.apps.calendar": "Calendar",
 	"sidenav.apps.project": "Project",

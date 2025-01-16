@@ -3,6 +3,7 @@ export const ApiConstant = {
   CATEGORY_URL: "/api/v1/events/secured/category",
   SINGLE_CATEGORY_URL: "/api/v1/events/secured/singlecategory",
   USER_URL: "/api/v1/auth/secured/users",
+  SINGLE_USER_URL: "/api/v1/auth/secured/singleuser",
   REGISTER_USER_URL: "/api/v1/auth/secured/register",
   ROLES_URL: "/api/v1/auth/secured/role",
   SUB_CATEGORY_URL: "/api/v1/events/secured/subcategory",
