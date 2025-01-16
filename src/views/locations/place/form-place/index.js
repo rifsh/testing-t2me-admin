@@ -9,6 +9,7 @@ import {
   createPlace,
   editPlace,
   getPlaces,
+  setLoading,
   setLocationDialogVisible,
   setLocationModalLoading,
   setSelectedPlace,
@@ -65,24 +66,26 @@ const CountryForm = ({ placeId }) => {
 
   const onFinish = async () => {
     try {
+      // dispatch(setLoading(true));
+      dispatch(setLoading(true))
       const values = await form.validateFields();
       console.log({ values });
-  
+      
       const formData = new FormData();
-  
+      
       // Loop through values and append each key-value pair to FormData
       Object.keys(values).forEach((key) => {
         formData.append(key, values[key]);
       });
-  
+      
       if (!placeId) {
         // If placeId is not present, it's a new place (Add mode)
         dispatch(setSelectedSubmitItem(values));
-  
+        
         const resultAction = await dispatch(
           createPlace({ formData, action: ActionType.SUBMIT })
         );
-  
+        
         if (createPlace.fulfilled.match(resultAction)) {
           antdMessage.success(`Place ${values.name} added successfully`);
           navigate(`${APP_PREFIX_PATH}/place/list`);
@@ -94,11 +97,11 @@ const CountryForm = ({ placeId }) => {
           id: placeId,
         };
         console.log("Edit Data:", data);
-  
+        
         const resultAction = await dispatch(
           editPlace({ formData, action: ActionType.WARNING })
         );
-  
+        
         if (editPlace.fulfilled.match(resultAction)) {
           dispatch(setSelectedPlace(data));
           dispatch(setLocationDialogVisible(true));
@@ -106,6 +109,10 @@ const CountryForm = ({ placeId }) => {
       }
     } catch (errorInfo) {
       console.error("Validation Failed:", errorInfo);
+    }finally {
+      // Stop loader
+      // dispatch(setLocationModalLoading(false));
+      dispatch(setLoading(false))
     }
   };
     
@@ -128,6 +135,7 @@ const CountryForm = ({ placeId }) => {
   const handleModalCancel = () => {
     dispatch(setLocationDialogVisible(false));
   };
+  
 
   return (
     <>

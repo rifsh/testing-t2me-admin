@@ -15,6 +15,7 @@ export const initialState = {
   responseData: null,
   editable_status: null,
   responseMessage: null,
+  singleUser: null,
   pagination: { size: 10, page: 1 },
 };
 
@@ -26,6 +27,17 @@ export const fetchAllUsers = createAsyncThunk(
       return response.data[0];
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching users");
+    }
+  }
+);
+export const fetchSingleUsers = createAsyncThunk(
+  "users/fetchsingleuser",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await UserService.getSingleUsers(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Error fetching single users");
     }
   }
 );
@@ -111,6 +123,18 @@ const userSlice = createSlice({
         state.roles = action.payload;
       })
       .addCase(fetchAllRoles.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchSingleUsers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchSingleUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleUser = action.payload;
+      })
+      .addCase(fetchSingleUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

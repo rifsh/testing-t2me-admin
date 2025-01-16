@@ -192,6 +192,9 @@ const locationSlice = createSlice({
   name: "locations",
   initialState,
   reducers: {
+    setLoading: (state, action) => {
+      state.loading = action.payload;
+    },
     setCoordinates: (state, action) => {
       state.coordinates = action.payload;
     },
@@ -463,7 +466,7 @@ export const {
   setCoordinates,
   filterPlaces,
   setSelectedVenue,
-
+  setLoading,
   setSelectedPlace,
 } = locationSlice.actions;
 export const allLocations = (state) => state.location;
