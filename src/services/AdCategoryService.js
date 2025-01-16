@@ -15,10 +15,17 @@ AdCategoryService.fetchAdCategory = function (pageData) {
 
   AdCategoryService.updateAdCategory = function (data, action) {
     const encodedAction = encodeURIComponent(handleAction(action));
+    const formData = Utils.createFormData(data, {
+      fileKeys: ['thumbnail_image'],
+      skipEmpty: true
+    });
     return fetch({
-      url: `${ApiConstant.ADVERTISEMENT_CATEGORY_URL}/${data.id}?action=${encodedAction}`,
+      url: `${ApiConstant.ADVERTISEMENT_CATEGORY_UPDATE_URL}?ad_category_id=${data.id}&action=${encodedAction}`,
       method: "put",
-      data: data,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
   };
   

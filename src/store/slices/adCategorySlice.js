@@ -11,6 +11,7 @@ const initialState = {
   filteredAdCategories: [],
   searchTerm: "",
   responseData: null,
+  selectedAdCategory: null,
   responseMessage: null,
   selectedCategoryId: null,
   error: null,
@@ -72,6 +73,15 @@ const AdcategorySlice = createSlice({
   name: "adCategory",
   initialState,
   reducers: {
+    setAdCategoryDialogVisible(state, action) {
+      state.dialogVisible = action.payload;
+    },
+    setAdCategoryModalLoading(state, action) {
+      state.modalLoading = action.payload;
+    },
+    setSelectedAdCategory(state, action) {
+      state.selectedAdCategory = action.payload;
+    },
     filterCategory: (state, action) => {
       const { searchTerm, type } = action.payload;
 
@@ -134,10 +144,12 @@ const AdcategorySlice = createSlice({
         state.loading = false;
         state.error = payload || "Failed to edit event";
       })
+
   },
 });
 
-export const { filterCategory } =
+export const { filterCategory, setAdCategoryDialogVisible,
+  setAdCategoryModalLoading, setSelectedAdCategory } =
   AdcategorySlice.actions;
 
 export default AdcategorySlice.reducer;

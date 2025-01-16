@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table, Input, Tabs, Button, Select, Menu } from "antd";
-import { FormOutlined, SearchOutlined, EditOutlined,EyeOutlined, } from "@ant-design/icons";
+import { FormOutlined, SearchOutlined, EditOutlined, EyeOutlined, } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
@@ -49,14 +49,14 @@ const CategoryList = () => {
     );
   }, [dispatch]);
   const handleViewDetails = async (id) => {
-      await dispatch(getSingleCateory(id));
-      navigate(`${APP_PREFIX_PATH}/category/details/${id}`);
-    };
+    await dispatch(getSingleCateory(id));
+    navigate(`${APP_PREFIX_PATH}/category/details/${id}`);
+  };
   const handleViewDetailsub = async (id) => {
-      await dispatch(getSingleSubCateory(id));
-      console.log("Subcategory details fetched:", id);
-      navigate(`${APP_PREFIX_PATH}/subcategory/details/${id}`);
-    };
+    await dispatch(getSingleSubCateory(id));
+    console.log("Subcategory details fetched:", id);
+    navigate(`${APP_PREFIX_PATH}/subcategory/details/${id}`);
+  };
 
 
   const handlePagination = (page, size, type) => {
@@ -91,27 +91,27 @@ const CategoryList = () => {
     dispatch(setActiveTab(key));
   };
 
-  
+
 
   const dropdownMenu = (row) => (
     <Menu>
-        <Menu.Item>
-          <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
-            <EyeOutlined />
-            <span className="ml-2">View Details</span>
-          </Flex>
-        </Menu.Item>
+      <Menu.Item>
+        <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+          <EyeOutlined />
+          <span className="ml-2">View Details</span>
+        </Flex>
+      </Menu.Item>
       <Menu.Item>
         <Flex alignItems="center">
           <EditOutlined />
           <span className="ml-2">
-           Edit Category
+            Edit Category
           </span>
         </Flex>
       </Menu.Item>
     </Menu>
   );
-  
+
 
   const categoryColumns = [
     {
@@ -147,8 +147,8 @@ const CategoryList = () => {
       sorter: (a, b) =>
         (a.description || "").localeCompare(b.description || ""),
     },
-   
-   
+
+
   ];
 
   const getModalProps = () => {
@@ -171,27 +171,38 @@ const CategoryList = () => {
   };
 
   return (
-    <Card>  
-          <Flex alignItems="center" justifyContent="space-between">
-            <SearchBarWithStatus fetchFunction={fetchCategories} />
-            
-          </Flex>
-          <Table
-            columns={categoryColumns}
-            dataSource={filteredCategories}
-            rowKey="id"
-            loading={loading}
-            pagination={{
-              current: pagination.page,
-              pageSize: pagination.size,
-              total: pagination.total,
-              onChange: (page, pageSize) =>
-                handlePagination(page, pageSize, "category"),
+    <Card>
+      <Flex alignItems="center" justifyContent="space-between">
+        <SearchBarWithStatus fetchFunction={fetchCategories} />
+        <div>
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            onClick={() => {
+              return navigate(`${APP_PREFIX_PATH}/advertisement/banner/add`);
             }}
-          />
+          >
+            Add Banner
+          </Button>
+        </div>
+      </Flex>
+      <Table
+        columns={categoryColumns}
+        dataSource={filteredCategories}
+        rowKey="id"
+        loading={loading}
+        pagination={{
+          current: pagination.page,
+          pageSize: pagination.size,
+          total: pagination.total,
+          onChange: (page, pageSize) =>
+            handlePagination(page, pageSize, "category"),
+        }}
+      />
       <UpdateStatusModal {...getModalProps()} />
     </Card>
   );
+
 };
 
 export default CategoryList;

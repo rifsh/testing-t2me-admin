@@ -240,6 +240,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/advertisement/schedule/add-ad-schedule")),
   },
   {
+    key: "advertisement.banner.add",
+    path: `${APP_PREFIX_PATH}/advertisement/banner/add`,
+    component: React.lazy(() => import("views/advertisement/banner/add-ad-banner")),
+  },
+  {
     key: "mail.list",
     path: `${APP_PREFIX_PATH}/mail/list`,
     component: React.lazy(() => import("views/app-views/apps/mail/mail-list")),
@@ -258,6 +263,11 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
     component: React.lazy(() => import("views/track-team/event-organizer/update-list/index.js")),
 
+  },
+  {
+    key: "advertisement.category.edit",
+    path: `${APP_PREFIX_PATH}/advertisement/category/edit/:adCategoryId`,
+    component: React.lazy(() => import("views/advertisement/category/edit-ad-category")),
   },
   {
     key: "organiser.details",
