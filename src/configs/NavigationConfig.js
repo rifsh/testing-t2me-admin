@@ -1,4 +1,10 @@
-import { DashboardOutlined, OrderedListOutlined } from "@ant-design/icons";
+import {
+  DashboardOutlined,
+  LayoutOutlined,
+  MoreOutlined,
+  OrderedListOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { UserRoleConstants } from "constants/UserRoleConstant";
@@ -47,107 +53,117 @@ const superAdminDashBoardNavTree = [
       // }
     ],
   },
+  
   {
-    key: "Forms",
-    path: `${APP_PREFIX_PATH}/forms`,
-    title: "sidenav.forms",
+    key: "Applications",
+    path: `${APP_PREFIX_PATH}/apps`,
+    title: "sidenav.applications",
     icon: DashboardOutlined,
     breadcrumb: false,
-    isGroupTitle: false,
+    isGroupTitle: true,
     submenu: [
-     
       {
-        key: "place.list",
-        path: `${APP_PREFIX_PATH}/place/list`,
-        title: "sidenav.place.list",
-        icon: OrderedListOutlined,
+        key: "Forms",
+        path: `${APP_PREFIX_PATH}/forms`,
+        title: "sidenav.forms",
+        icon: DashboardOutlined,
         breadcrumb: false,
-        submenu: [],
+        isGroupTitle: false,
+        
+        submenu: [
+          {
+            key: "place.list",
+            path: `${APP_PREFIX_PATH}/place/list`,
+            title: "sidenav.place.list",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "venue.list",
+            path: `${APP_PREFIX_PATH}/venue/list`,
+            title: "sidenav.venue.list",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "tax.list",
+            path: `${APP_PREFIX_PATH}/tax/list`,
+            title: "sidenav.tax",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "category.list",
+            path: `${APP_PREFIX_PATH}/category/list`,
+            title: "sidenav.category",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "offer.list",
+            path: `${APP_PREFIX_PATH}/offer/list`,
+            title: "sidenav.offer",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "coupon.list",
+            path: `${APP_PREFIX_PATH}/coupon/list`,
+            title: "sidenav.coupon",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "user.list",
+            path: `${APP_PREFIX_PATH}/user/list`,
+            title: "sidenav.user",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          // {
+          //   key: 'seat.list',
+          //   path: `${APP_PREFIX_PATH}/seat/list`,
+          //   title: 'sidenav.seat',
+          //   icon: OrderedListOutlined,
+          //   breadcrumb: false,
+          //   submenu: []
+          // },
+          {
+            key: "ticket.list",
+            path: `${APP_PREFIX_PATH}/ticket/list`,
+            title: "sidenav.ticket",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+    
+          {
+            key: "event.list",
+            path: `${APP_PREFIX_PATH}/event/list`,
+            title: "sidenav.event.list",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "schedule.list",
+            path: `${APP_PREFIX_PATH}/schedule/list`,
+            title: "sidenav.schedule",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+        ],
       },
-      {
-        key: "venue.list",
-        path: `${APP_PREFIX_PATH}/venue/list`,
-        title: "sidenav.venue.list",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "tax.list",
-        path: `${APP_PREFIX_PATH}/tax/list`,
-        title: "sidenav.tax",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "category.list",
-        path: `${APP_PREFIX_PATH}/category/list`,
-        title: "sidenav.category",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "offer.list",
-        path: `${APP_PREFIX_PATH}/offer/list`,
-        title: "sidenav.offer",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "coupon.list",
-        path: `${APP_PREFIX_PATH}/coupon/list`,
-        title: "sidenav.coupon",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "user.list",
-        path: `${APP_PREFIX_PATH}/user/list`,
-        title: "sidenav.user",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      // {
-      //   key: 'seat.list',
-      //   path: `${APP_PREFIX_PATH}/seat/list`,
-      //   title: 'sidenav.seat',
-      //   icon: OrderedListOutlined,
-      //   breadcrumb: false,
-      //   submenu: []
-      // },
-      {
-        key: "ticket.list",
-        path: `${APP_PREFIX_PATH}/ticket/list`,
-        title: "sidenav.ticket",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      
-      {
-        key: "event.list",
-        path: `${APP_PREFIX_PATH}/event/list`,
-        title: "sidenav.event.list",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "schedule.list",
-        path: `${APP_PREFIX_PATH}/schedule/list`,
-        title: "sidenav.schedule",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      
-    ],
-  },{
+    ]},
+  {
     key: "Apps",
     path: `${APP_PREFIX_PATH}/apps`,
     title: "sidenav.apps",
@@ -223,6 +239,34 @@ const superAdminDashBoardNavTree = [
         icon: OrderedListOutlined,
         breadcrumb: false,
         submenu: [],
+      },
+    ],
+  },
+
+  {
+    key: "app.management",
+    path: `${APP_PREFIX_PATH}/app/management`,
+    title: "sidenav.app.management",
+    icon: SettingOutlined,
+    breadcrumb: true,
+    isGroupTitle: true,
+    submenu: [
+      {
+        key: "app.management.layout",
+        path: `${APP_PREFIX_PATH}/dashboards/statics`,
+        title: "sidenav.app.management.layout",
+        icon: LayoutOutlined,
+        breadcrumb: false,
+        submenu: [
+          {
+            key: "app.management.layout.footer.list",
+            path: `${APP_PREFIX_PATH}/app/management/layout/footer/list`,
+            title: "sidenav.app.management.layout.footer",
+            icon: LayoutOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+        ],
       },
     ],
   },
@@ -333,6 +377,14 @@ const navigationConfig = () => {
     return superAdminDashBoardNavTree;
   } else if (decodedToken?.role_id === UserRoleConstants.eventOrganizerRoleId) {
     return eventOrganaizerDashBoardNavTree;
+  } else if (
+    decodedToken.role_id === UserRoleConstants.eventSupportingTeamRoleId
+  ) {
+    return [];
+  } else if (
+    decodedToken.role_id === UserRoleConstants.superSupportingTeamRoleId
+  ) {
+    return [];
   }
    else if (decodedToken?.role_id === UserRoleConstants.superSupportingTeamRoleId) {
     return SuperSupportingTeamDashBoardNavTree;

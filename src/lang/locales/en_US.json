@@ -136,5 +136,9 @@
 	"sidenav.docs.documentation": "Documentation",
 	"sidenav.docs.changelog": "Changelog",
 	"form.item.username.label": "User Name",
-	"form.item.username.placeholder": "Enter User Name"
+	"form.item.username.placeholder": "Enter User Name",
+	"sidenav.app.management": "App Management",
+	"sidenav.app.management.layout": "Layout",
+	"sidenav.app.management.layout.footer": "Footer",
+	"sidenav.applications":"Applications"
 }
