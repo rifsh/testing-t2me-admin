@@ -1,6 +1,7 @@
 {
 	"home": "Home",
 	"sidenav.dashboard": "Dashboard",
+	"sidenav.eventcoordinatorupdates": "Event Organiser updates",
 	"sidenav.dashboard.default": "Default",
 	"sidenav.dashboard.statics": "Statics",
 	"sidenav.dashboard.analytic": "Analytic",
@@ -24,6 +25,7 @@
 	"sidenav.tax": "Tax",
 	"sidenav.apps": "Apps",
 	"sidenav.apps.mail": "Mail",
+	"sidenav.apps.issue": "Issue",
 	"sidenav.apps.chat": "Chat",
 	"sidenav.apps.calendar": "Calendar",
 	"sidenav.apps.project": "Project",
