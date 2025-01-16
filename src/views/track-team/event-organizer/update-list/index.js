@@ -58,6 +58,12 @@ const EventOrganiseUpdateList = () => {
       await dispatch(getSinglePlace(id));
       navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/details`);
   };
+  const handleUpdateStatus = (item) => {
+      const newStatus = !item.status;
+      const data = { status: newStatus, id: item.id };
+  
+      dispatch(setSelectedItem(data));
+    };
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -101,16 +107,16 @@ const EventOrganiseUpdateList = () => {
       sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
     },
     
-     //utils.statusColumnUtil(handleUpdateStatus),
-     {
-      title: "Status",
-      dataIndex: "actions",
-      render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownStatus(elm)} />
-        </div>
-      ),
-    },
+    utils.statusColumnUtil(handleUpdateStatus),
+    //  {
+    //   title: "Status",
+    //   dataIndex: "actions",
+    //   render: (_, elm) => (
+    //     <div className="text-right">
+    //       <EllipsisDropdown menu={dropdownStatus(elm)} />
+    //     </div>
+    //   ),
+    // },
      
 
     {
