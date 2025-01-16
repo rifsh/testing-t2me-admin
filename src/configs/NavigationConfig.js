@@ -166,7 +166,7 @@ const superAdminDashBoardNavTree = [
   {
     key: "Issue",
     path: `${APP_PREFIX_PATH}/apps`,
-    title: "sidenav.apps.issue",
+    title: "sidenav.apps.issues",
     icon: DashboardOutlined,
     breadcrumb: false,
     isGroupTitle: false,
