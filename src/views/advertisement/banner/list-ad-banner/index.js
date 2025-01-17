@@ -10,16 +10,8 @@ import Utils from "utils";
 import { setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import {
-  fetchSubcategories,
-  setActiveTab,
-  updateCategory,
-  fetchCategories,
-  editSubCategory,
-  filterCategory,
-  setFormTabKey,
-  getSingleCateory,
-  getSingleSubCateory,
-} from "store/slices/categorySlice";
+  fetchAdBanners,
+} from "store/slices/advertisementSlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 
 const { TabPane } = Tabs;
@@ -28,84 +20,42 @@ const { Option } = Select;
 const CategoryList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [modalType, setModalType] = useState("category");
+  const [selectedBanner, setSelectedBanner] = useState(null);
+  const [modalType, setModalType] = useState("banner");
 
   const {
-    filteredCategories,
-    filteredSubCategories,
+    filteredAdBanner,
     pagination,
     subPagination,
     loading,
     editable_status,
     message: responseMessage,
-    activeTab,
-  } = useSelector((state) => state.category);
+  } = useSelector((state) => state.advertisement);
 
   useEffect(() => {
-    dispatch(fetchCategories({ page: 1, size: 10 }));
-    dispatch(
-      fetchSubcategories({ categoryId: null, data: { page: 1, size: 10 } })
-    );
+    dispatch(fetchAdBanners({ page: 1, size: 10 }));
+    console.log(filteredAdBanner.length, "-------------------------ssss");
+
   }, [dispatch]);
-  const handleViewDetails = async (id) => {
-    await dispatch(getSingleCateory(id));
-    navigate(`${APP_PREFIX_PATH}/category/details/${id}`);
-  };
-  const handleViewDetailsub = async (id) => {
-    await dispatch(getSingleSubCateory(id));
-    console.log("Subcategory details fetched:", id);
-    navigate(`${APP_PREFIX_PATH}/subcategory/details/${id}`);
-  };
+
 
 
   const handlePagination = (page, size, type) => {
-    if (type === "category") {
-      dispatch(fetchCategories({ page: page, size: size }));
-    }
-    if (type === "subCategory") {
-      dispatch(
-        fetchSubcategories({
-          categoryId: null,
-          data: { page: page, size: size },
-        })
-      );
-    }
+
+    dispatch(fetchAdBanners({ page: page, size: size }));
+
   };
 
-  const handleUpdateStatus = (item) => {
-    const newStatus = !item.status;
-    setModalType("category");
-    const data = { status: newStatus, id: item.id };
-    dispatch(setSelectedItem(data));
-  };
-
-  const handleUpdateSubStatus = (item) => {
-    const newStatus = !item.status;
-    setModalType("subcategory");
-    const data = { status: newStatus, id: item.id };
-    dispatch(setSelectedItem(data));
-  };
-
-  const handleTabChange = (key) => {
-    dispatch(setActiveTab(key));
-  };
 
 
 
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
-        <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
-      </Menu.Item>
-      <Menu.Item>
         <Flex alignItems="center">
           <EditOutlined />
           <span className="ml-2">
-            Edit Category
+            Edit Banner
           </span>
         </Flex>
       </Menu.Item>
@@ -116,8 +66,8 @@ const CategoryList = () => {
   const categoryColumns = [
     {
       title: "Banner Image",
-      dataIndex: "name",
-      render: (_, record) => <span>{record.name}</span>,
+      dataIndex: "media_path",
+      render: (logo) => <img src={logo} alt="Logo" style={{ width: 80,height:50 }} />,
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
@@ -128,52 +78,44 @@ const CategoryList = () => {
     },
     {
       title: "Place",
-      dataIndex: "name",
-      render: (_, record) => <span>{record.name}</span>,
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      dataIndex: "place.name",
+      render: (_, record) => <span>{record.place.name}</span>,
+      sorter: (a, b) => a.place.name.localeCompare(b.place.name),
     },
     {
       title: "Event",
-      dataIndex: "name",
-      render: (_, record) => <span>{record.name}</span>,
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      dataIndex: "event.event_name",
+      render: (_, record) => <span>{record.event.event_name}</span>,
+      sorter: (a, b) => a.event.event_name.localeCompare(b.event.event_name),
     },
     {
       title: "Url",
-      dataIndex: "description",
+      dataIndex: "ads_url",
       render: (_, record) => (
-        <span>{Utils.truncateText(record.description)}</span>
+        <a href={record.ads_url} target="_blank" rel="noopener noreferrer">
+          {record.ads_url}
+        </a>
       ),
-      sorter: (a, b) =>
-        (a.description || "").localeCompare(b.description || ""),
+      sorter: (a, b) => a.ads_url.localeCompare(b.ads_url),
+    },
+    {
+      title: "",
+      dataIndex: "actions",
+      render: (_, record) => (
+        <div className="text-right">
+          <EllipsisDropdown menu={dropdownMenu(record)} />
+        </div>
+      ),
     },
 
 
   ];
 
-  const getModalProps = () => {
-    if (modalType === "category") {
-      return {
-        responseMessage: responseMessage,
-        editable_status: editable_status,
-        editFunction: updateCategory,
-        getAllFunction: (pageData) => fetchCategories(pageData),
-        pageData: { page: 1, size: 10 },
-      };
-    }
-    return {
-      responseMessage: responseMessage,
-      editable_status: editable_status,
-      editFunction: editSubCategory,
-      getAllFunction: (pageData) => fetchSubcategories(pageData),
-      pageData: { categoryId: null, data: { page: 1, size: 10 } },
-    };
-  };
 
   return (
     <Card>
       <Flex alignItems="center" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={fetchCategories} />
+        <SearchBarWithStatus fetchFunction={fetchAdBanners} />
         <div>
           <Button
             type="primary"
@@ -188,7 +130,7 @@ const CategoryList = () => {
       </Flex>
       <Table
         columns={categoryColumns}
-        dataSource={filteredCategories}
+        dataSource={filteredAdBanner}
         rowKey="id"
         loading={loading}
         pagination={{
@@ -199,7 +141,6 @@ const CategoryList = () => {
             handlePagination(page, pageSize, "category"),
         }}
       />
-      <UpdateStatusModal {...getModalProps()} />
     </Card>
   );
 

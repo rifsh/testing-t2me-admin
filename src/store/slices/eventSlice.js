@@ -15,7 +15,7 @@ const initialState = {
   error: null,
   selectedCoupons: [],
   selectedOffers: [],
- 
+  eventOnPlaces:[],
   validationData: [],
   submitData: {},
   message: null,
@@ -28,7 +28,7 @@ const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
-  pagination: {size:10,page:1},
+  pagination: { size: 10, page: 1 },
 };
 
 export const fetchEventDetails = createAsyncThunk(
@@ -42,6 +42,21 @@ export const fetchEventDetails = createAsyncThunk(
         const response = await EventService.fetchEventDetails(eventId);
         return response.data;
       }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+export const fetchEventOnPlaces = createAsyncThunk(
+  "event/fetchEventOnPlaces",
+  async (placeId, { rejectWithValue }) => {
+    try {
+      console.log("-------------EventsOn PLaces")
+      const response = await EventService.fetchEventsOnPlace(placeId);
+      console.log("-------------EventsOn PLaces", response.data)
+
+      return response.data[0];
+
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
     }
@@ -73,7 +88,7 @@ export const checkEventValidation = createAsyncThunk(
       } else {
         return rejectWithValue(
           response.status.message ||
-            "Event validation failed. Please try again."
+          "Event validation failed. Please try again."
         );
       }
     } catch (error) {
@@ -229,6 +244,20 @@ const eventSlice = createSlice({
         state.pagination = action.payload;
       })
       .addCase(fetchAllEvent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchEventOnPlaces.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchEventOnPlaces.fulfilled, (state, action) => {
+        state.loading = false;
+        state.eventOnPlaces = action.payload.items;
+        state.filteredEvents = action.payload.items;
+        state.pagination = action.payload;
+      })
+      .addCase(fetchEventOnPlaces.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
