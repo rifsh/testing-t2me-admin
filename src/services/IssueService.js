@@ -7,6 +7,7 @@ const IssuesService = {};
 
 IssuesService.IssueReasignComment = function (IssueId, data) {
 //   const encodedAction = encodeURIComponent(handleAction(action));
+console.warn(IssueId,data)
   return fetch({
     url: `${ApiConstant.ISSUE_REASSIGN_COMMENT_URL}?issue_id=${IssueId}`,
     method: "post",
