@@ -44,6 +44,12 @@ EventsService.fetchEventDetails = function (eventId) {
     method: "get",
   });
 };
+EventsService.fetchEventsOnPlace = function (placeId) {
+  return fetch({
+    url: `${ApiConstant.PLACE_EVENTS_URL}?place_id=${placeId}`,
+    method: "get",
+  });
+};
 EventsService.updateEvent = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
