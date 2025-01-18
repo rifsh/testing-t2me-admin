@@ -17,7 +17,8 @@ import tax from "./slices/taxSlice";
 
 import layout from "./slices/layoutSlice"; 
 
-import issue from "./slices/IssueSlice"; 
+import issue from "./slices/IssueSlice";
+//import organiserUpdate from "./slices/organiserUpadateSlice"; 
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -38,6 +39,7 @@ const rootReducer = (asyncReducers = {}) => {
       tax,  
       issue,    
       adCategory,
+      //organiserUpdate,
       ...asyncReducers, 
     });
 

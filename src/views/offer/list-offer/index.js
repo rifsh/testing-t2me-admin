@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Card,
   Table,
-  Select,
-  Input,
   Button,
   Modal,
   Descriptions,
@@ -11,8 +9,8 @@ import {
 } from "antd";
 import {
   EyeOutlined,
-  PlusCircleOutlined,
-  SearchOutlined,
+
+
   FormOutlined,
   MoreOutlined,
   EditOutlined,
@@ -23,16 +21,14 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   editOffer,
   fetchAllOffers,
-  filterOffers,
 } from "store/slices/offerSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
+import {  setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
-const { Option } = Select;
 
 const OfferList = () => {
   const navigate = useNavigate();
@@ -188,9 +184,9 @@ const OfferList = () => {
                 ? selectedOffer.key_words.join(", ")
                 : "None"}
             </Descriptions.Item>
-            <Descriptions.Item label="Offer Description">
-              {selectedOffer.description || "No description available"}
-            </Descriptions.Item>
+            {/* <Descriptions.Item label="Offer Description">
+            {selectedOffer.description || "No description available"}
+            </Descriptions.Item> */}
             {selectedOffer.thumbnail_image && selectedOffer.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">
                 <img
