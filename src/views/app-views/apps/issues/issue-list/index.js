@@ -58,7 +58,7 @@ const IssueList = () => {
   };
 
   const handlePagination = (page, size) => {
-    dispatch(fetchAllEvent({ page: page, size: size }));
+    dispatch(fetchAllissues({ page: page, size: size }));
   };
   const dropdownMenu = (row) => (
     <Menu>
