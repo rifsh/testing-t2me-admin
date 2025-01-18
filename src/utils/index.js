@@ -224,6 +224,21 @@ static  filterParams = (obj) => {
     }
     return null; // Return null if an unsupported format is provided
   };
+
+  static formatTime = (inputTime) => {
+
+    console.log("-------INPUT TIME------",inputTime);
+    
+    const date = new Date(inputTime);
+  
+    // Extract hours, minutes, and seconds
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+    // Format the time as HH:mm:ss
+    return `${hours}:${minutes}:${seconds}`;
+  };
   /**
    * Filter array of object
    * @param {Array} list - array of objects that need to filter

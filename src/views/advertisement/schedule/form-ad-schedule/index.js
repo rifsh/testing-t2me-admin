@@ -2,24 +2,24 @@ import React, { useEffect } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import { Tabs, Form, Button, message } from "antd";
 import Flex from "components/shared-components/Flex";
-import CouponFormFields from "../components/CouponFormFields";
+import AdScheduleFormFields from "../components/AdScheduleFormFields";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { addCoupon } from "store/slices/couponSlice";
+import { createAdSchedule } from "store/slices/advertisementSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
 
 const ADD = "ADD";
-// const EDIT = 'EDIT'
+const EDIT = 'EDIT'
 
-const CouponForm = (props) => {
-  const { mode = ADD } = props;
+const AdScheduleForm = ({ mode }) => {
+
   const { loading, error, responseData, responseMessage } = useSelector(
-    (state) => state.coupons
+    (state) => state.advertisement
   );
   const [form] = Form.useForm();
   const dispatch = useDispatch();
@@ -33,15 +33,26 @@ const CouponForm = (props) => {
 
   const onFinish = async () => {
     try {
+      console.log("HEREEEEEEEEEEEEEEEEEEEEE");
+      
       const values = await form.validateFields();
-      values.start_date =Utils.formatDate(values.start_date);
-        values.end_date = Utils.formatDate(values.end_date);
-      // dispatch(setSelectedSubmitItem(values));
-      // const formData = {
-      //                       ...values,
-      //                     };
-                      
-      // dispatch(setSelectedSubmitItem(formData));
+      let formattedStartDate = Utils.formatDate(values.start_date);
+      let formattedEndDate = Utils.formatDate(values.end_date);
+      let formattedStartTime = Utils.formatTime(values.start_date)
+      let formattedEndTime = Utils.formatTime(values.end_date)
+      
+      values.start_date = formattedStartDate
+      values.start_time = formattedStartTime
+      values.end_date = formattedEndDate
+      values.end_time = formattedEndTime
+      
+
+      if (mode === ADD) {
+      console.log("ENTEREDDDDDDDDDDDDDDDD");
+
+        dispatch(setSelectedSubmitItem(values));
+
+      }
 
     } catch (info) {
       console.error("Validation Failed:", info);
@@ -71,10 +82,10 @@ const CouponForm = (props) => {
               alignItems="center"
             >
               <h2 className="mb-3">
-                {mode === "ADD" ? "Add New Offer" : `Edit Offer`}{" "}
+                {mode === "ADD" ? "Add New Schedule" : `Edit Schedule`}{" "}
               </h2>
               <div className="mb-3">
-              <DiscardButton form={form} />
+                <DiscardButton form={form} />
                 <Button
                   type="primary"
                   onClick={() => onFinish()}
@@ -95,7 +106,7 @@ const CouponForm = (props) => {
               {
                 label: "General",
                 key: "1",
-                children: <CouponFormFields />,
+                children: <AdScheduleFormFields form={form} />,
               },
             ]}
           />
@@ -103,12 +114,12 @@ const CouponForm = (props) => {
       </Form>
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={addCoupon}
-        navigationPath={`${APP_PREFIX_PATH}/coupon/list`}
+        addFunction={createAdSchedule}
+        navigationPath={`${APP_PREFIX_PATH}/advertisement/schedule/list`}
         responseMessage={responseMessage}
       />
     </>
   );
 };
 
-export default CouponForm;
+export default AdScheduleForm;
