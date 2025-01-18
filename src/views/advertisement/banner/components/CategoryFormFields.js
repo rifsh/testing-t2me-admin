@@ -1,17 +1,15 @@
 import React, { useEffect } from "react";
 import { Input, Row, Col, Card, Form, Button, Select, message, Upload } from "antd";
-import { addAdCategory, fetchAdCategories } from "store/slices/adCategorySlice";
+import { fetchAdCategories } from "store/slices/adCategorySlice";
 import { createAdBanner } from "store/slices/advertisementSlice";
 import { getPlaces } from "store/slices/locationSlice";
 import { fetchEventOnPlaces } from "store/slices/eventSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
-import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Option } = Select;
 const ADD = "ADD";
@@ -30,9 +28,8 @@ const rules = {
 const CategoryFormFields = ({ mode = ADD, category }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
-  const { countries, places } = useSelector((state) => state.locations);
+  const { places } = useSelector((state) => state.locations);
   const { eventOnPlaces } = useSelector((state) => state.event);
   const { filteredAdCategories } = useSelector(
     (state) => state.adCategory

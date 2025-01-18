@@ -1,35 +1,28 @@
-import React, { useEffect, useState } from "react";
-import { Card, Table, Input, Tabs, Button, Select, Menu } from "antd";
-import { FormOutlined, SearchOutlined, EditOutlined, EyeOutlined, } from "@ant-design/icons";
+import React, { useEffect } from "react";
+import { Card, Table, Button,  Menu } from "antd";
+import { FormOutlined, EditOutlined } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import Utils from "utils";
-import { setSelectedItem } from "store/slices/modalSlice";
-import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+
 import {
   fetchAdBanners,
 } from "store/slices/advertisementSlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 
-const { TabPane } = Tabs;
-const { Option } = Select;
 
 const CategoryList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [selectedBanner, setSelectedBanner] = useState(null);
-  const [modalType, setModalType] = useState("banner");
+
 
   const {
     filteredAdBanner,
     pagination,
-    subPagination,
     loading,
-    editable_status,
-    message: responseMessage,
+
   } = useSelector((state) => state.advertisement);
 
   useEffect(() => {

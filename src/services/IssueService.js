@@ -1,7 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
 import Utils from "utils";
-import { handleAction } from "utils/api/warning-submit-util";
 
 const IssuesService = {};
 

@@ -100,7 +100,7 @@ function OfferFormFields() {
             label="Maximum Uses"
             rules={rules.maxUsers}
           >
-            <Input type="number" placeholder="Enter maximum uses" />
+            <Input type="number" placeholder="Enter maximum uses" onWheel={(e)=>e.target.blur()}/>
           </Form.Item>
           <Form.Item
             name="date_required"

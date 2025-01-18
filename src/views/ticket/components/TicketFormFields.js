@@ -44,7 +44,7 @@ const TicketFormFields = () => {
         venue_id: values.venue_id,
         number_of_tickets: values.number_of_tickets,
         base_price: values.base_price,
-        name:values.name,
+        name: values.name,
         ticket_types: [],
       };
       // const resultAction = await dispatch(addTicket({ ticketData, venue_id: values.venue_id }));
@@ -119,11 +119,11 @@ const TicketFormFields = () => {
         >
           <Input
             placeholder={VenueData ? `Venue Capacity: ${VenueData.capacity || 0}` : "Number of tickets"}
-            type="number"
+            type="number" onWheel={(e)=>e.target.blur()}
           />
         </Form.Item>
         <Form.Item name="base_price" label="Price">
-          <Input placeholder="Enter Ticket Price" type="number" />
+          <Input placeholder="Enter Ticket Price" type="number" onWheel={(e)=>e.target.blur()}/>
         </Form.Item>
         <div className="container" style={{ padding: "0px" }}>
           <Flex className="py-2" mobileFlex={false} justifyContent="space-between">

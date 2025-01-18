@@ -192,9 +192,9 @@ const CouponList = () => {
                 ? selectedCoupon.key_words.join(", ")
                 : "None"}
             </Descriptions.Item>
-            <Descriptions.Item label="Coupon Description">
+            {/* <Descriptions.Item label="Coupon Description">
               {selectedCoupon.description || "No description available"}
-            </Descriptions.Item>
+            </Descriptions.Item> */}
             {selectedCoupon.thumbnail_image && selectedCoupon.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">
                 <img
