@@ -3,7 +3,7 @@ import { Modal, Button, Typography, Input, Space, Upload, message } from "antd";
 import { ExclamationCircleOutlined, UploadOutlined } from "@ant-design/icons";
 
 const { TextArea } = Input;
-const { Title, Text } = Typography;
+const {  Text } = Typography;
 
 const CommentShowModal = ({
   visible,
