@@ -50,6 +50,13 @@ EventsService.fetchEventsOnPlace = function (placeId) {
     method: "get",
   });
 };
+
+EventsService.fetchOrganizerEvents = function (userId) {
+  return fetch({
+    url: `${ApiConstant.ORGANIZER_EVENTS_URL}?user_id=${userId}`,
+    method: "get",
+  });
+};
 EventsService.updateEvent = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({

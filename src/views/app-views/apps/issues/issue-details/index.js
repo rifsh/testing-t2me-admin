@@ -34,15 +34,22 @@ const IssueDetails = () => {
   const [uploadingFiles, setUploadingFiles] = useState(null)
   const { IssueDetails, loading, error, CommentDetails } = useSelector((state) => state.issue);
 
+
   useEffect(() => {
     if (issueId) {
-      dispatch(fetchCommentDetails({...{ size: 5, page: 1 },"issue_id":issueId})); // Fetch comments separately
-      if (!IssueDetails) {
-        dispatch(fetchIssueDetails(issueId)); // Fetch issue details if not already present
+      dispatch(fetchCommentDetails({ size: 5, page: 1, issue_id: issueId }));
+  
+      dispatch(fetchIssueDetails(issueId));
+    }
+
+    return()=>{
+      if (!IssueDetails){
+        navigate(`${APP_PREFIX_PATH}/issue/list`);
       }
+
     }
   }, [dispatch, issueId]);
-
+  
   const renderCommentList = () => {
     if (!CommentDetails?.items|| CommentDetails.items.length === 0) {
       return <Text type="secondary">No comments yet</Text>;
@@ -287,8 +294,8 @@ const IssueDetails = () => {
                 style={{
                   color:
                     IssueDetails?.ticket_assigned?.id && 
-                    getCurrentUser().id === IssueDetails.re_assigned_to?.id || 
-                    (IssueDetails.ticket_assigned.id && IssueDetails.re_assigned_to == null)
+                    getCurrentUser().id === IssueDetails?.re_assigned_to?.id || 
+                    (getCurrentUser().id === IssueDetails?.ticket_assigned?.id && IssueDetails?.re_assigned_to == null)
                                           ? 'rgb(7, 201, 4)'
                       : '',
                 }}

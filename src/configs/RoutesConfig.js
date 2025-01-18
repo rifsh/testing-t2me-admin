@@ -255,6 +255,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/app-views/apps/issues/issue-list")),
   },
   {
+    key: "issue.add",
+    path: `${APP_PREFIX_PATH}/issue/add`,
+    component: React.lazy(() => import("views/app-views/apps/issues/add-issue")),
+  },
+  {
     key: "issue.details",
     path: `${APP_PREFIX_PATH}/issue/details/:issueId`,
     component: React.lazy(() => import("views/app-views/apps/issues/issue-details")),

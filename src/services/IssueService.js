@@ -14,6 +14,15 @@ console.warn(IssueId,data)
   });
 };
 
+IssuesService.AddNewIssue = function ( data) {
+//   const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.ISSUE_CREATION_URL}`,
+    method: "post",
+    data: data,
+  });
+};
+
 IssuesService.getAllIssue = function (pageData) {
   return fetch({
     url: ApiConstant.ISSUE_LIST_URL,
