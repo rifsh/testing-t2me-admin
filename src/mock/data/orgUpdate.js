@@ -1,6 +1,6 @@
-const LocationMockData = {};
-LocationMockData.getOrgUpdates = {
-    "data": [
+const OrganizerUpdateMockData = {};
+OrganizerUpdateMockData.getOrgUpdates = {
+    data: [
         {
             "items": [
                 {
@@ -156,4 +156,4 @@ LocationMockData.getOrgUpdates = {
     }
 };
 
-export default getOrgUpdates;
+export default OrganizerUpdateMockData;

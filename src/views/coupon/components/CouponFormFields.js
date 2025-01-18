@@ -120,7 +120,7 @@ function CouponFormFields(props) {
               }
             ]}
           >
-            <Input placeholder="Enter discount percentage" type="number" />
+            <Input placeholder="Enter discount percentage" type="number" onWheel={(e)=>e.target.blur()}/>
           </Form.Item>
 
           <Form.Item
@@ -194,7 +194,7 @@ function CouponFormFields(props) {
               }
             ]}
           >
-            <Input type="number" placeholder="Enter maximum users" />
+            <Input type="number" placeholder="Enter maximum users" onWheel={(e)=>e.target.blur()} />
           </Form.Item>
 
           <Form.Item 
@@ -213,7 +213,7 @@ function CouponFormFields(props) {
               }
             ]}
           >
-            <Input type="number" placeholder="Enter min purchase amount" />
+            <Input type="number" placeholder="Enter min purchase amount"  onWheel={(e)=>e.target.blur()}/>
           </Form.Item>
           
         </Card>

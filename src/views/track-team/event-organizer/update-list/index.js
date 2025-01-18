@@ -31,6 +31,7 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import UserForm from "views/user/form-user";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import { fetchOrgUpdates } from "store/slices/organiserUpadateSlice";
 
 const { Option } = Select;
 
@@ -39,6 +40,7 @@ const EventOrganiseUpdateList = () => {
   const navigate = useNavigate();
   const {
     filteredPlaces,
+    orgUpdates,
     detailedCountryList,
     editable_status,
     message,
@@ -47,7 +49,8 @@ const EventOrganiseUpdateList = () => {
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
-    dispatch(getPlaces(DEFAULT_PAGE_SIZE));
+    // dispatch(fetchOrgUpdates());
+   dispatch(getPlaces(DEFAULT_PAGE_SIZE));
 
     // dispatch(getCoutryDetails());
   }, [dispatch]);
@@ -58,6 +61,15 @@ const EventOrganiseUpdateList = () => {
       await dispatch(getSinglePlace(id));
       navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/details`);
   };
+  const handleUpdateStatus = (item) => {
+      const newStatus = !item.status;
+      const data = { status: newStatus, id: item.id };
+  
+      dispatch(setSelectedItem(data));
+    };
+
+    //updates 
+
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -98,19 +110,19 @@ const EventOrganiseUpdateList = () => {
     {
       title: "Event",
      dataIndex: "name",
-      sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
+      //sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
     },
     
-     //utils.statusColumnUtil(handleUpdateStatus),
-     {
-      title: "Status",
-      dataIndex: "actions",
-      render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownStatus(elm)} />
-        </div>
-      ),
-    },
+    utils.statusColumnUtil(handleUpdateStatus),
+    //  {
+    //   title: "Status",
+    //   dataIndex: "actions",
+    //   render: (_, elm) => (
+    //     <div className="text-right">
+    //       <EllipsisDropdown menu={dropdownStatus(elm)} />
+    //     </div>
+    //   ),
+    // },
      
 
     {
@@ -140,7 +152,7 @@ const EventOrganiseUpdateList = () => {
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={filteredPlaces}
+          dataSource={filteredPlaces}//{orgUpdates}//{filteredPlaces}
           rowKey="id"
           loading={loading}
           pagination={{

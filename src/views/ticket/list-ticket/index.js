@@ -93,7 +93,7 @@ const TicketList = () => {
         }}
         columns={[
           {
-            title: "Ticket types",
+            title: "Ticket Types",
             dataIndex: "name",
             render: (venue) => <strong>{venue}</strong>,
           },

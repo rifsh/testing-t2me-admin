@@ -96,9 +96,9 @@ const EventsList = () => {
       sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["venue", "name"]),
     },
     {
-      title: "Max Tickets",
-      dataIndex: "max_tickets",
-      sorter: (a, b) => utils.antdTableSorter(a, b, "max_tickets"),
+      title: "Place",
+      dataIndex: ["venue", "place", "name"],
+      sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["venue", "place", "name"]),
     },
     utils.statusColumnUtil(handleUpdateStatus),
     {
