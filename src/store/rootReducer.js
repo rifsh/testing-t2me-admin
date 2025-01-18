@@ -4,6 +4,7 @@ import theme from "./slices/themeSlice";
 import auth from "./slices/authSlice";
 import category from "./slices/categorySlice";
 import adCategory from "./slices/adCategorySlice";
+import advertisement from "./slices/advertisementSlice";
 import users from "./slices/userSlice";
 import locations from "./slices/locationSlice";
 import event from "./slices/eventSlice";
@@ -39,7 +40,7 @@ const rootReducer = (asyncReducers = {}) => {
       tax,  
       issue,    
       adCategory,
-      //organiserUpdate,
+      advertisement,
       ...asyncReducers, 
     });
 

@@ -61,9 +61,11 @@ export const fetchAdCategories = createAsyncThunk(
         return response.data;
       } else {
         const response = await AdCategoryService.fetchAdCategory(pageData);
+        console.log("-----------Fetching categories",response.data[0])
         return response.data[0];
       }
     } catch (error) {
+      console.log(error,"-------------")
       return rejectWithValue("Failed to fetch categories");
     }
   }

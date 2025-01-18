@@ -19,6 +19,7 @@ export const ApiConstant = {
   EVENT_URL: "/api/v1/events/secured/event",
   EVENT_VALIDATION_URL: "/api/v1/events/secured/validation_event",
   EVENT_DETAILS_URL: "/api/v1/events/secured/events/detail",
+  PLACE_EVENTS_URL:"/api/v1/events/public/event",
   EDIT_EVENT_URL: "/api/v1/events/secured/edit_event",
   OFFER_URL: "/api/v1/offers/secured/offers",
   COUPON_URL: "/api/v1/offers/secured/coupons",
@@ -40,6 +41,7 @@ export const ApiConstant = {
   // ADVERTISEMENT ENDPOINTS
 
   ADVERTISEMENT_CATEGORY_URL: "/api/v1/banners/secured/bannercategory",
+  ADVERTISEMENT_BANNER_URL: "/api/v1/banners/secured/advertisementbanner",
   ADVERTISEMENT_CATEGORY_UPDATE_URL: "/api/v1/banners/secured/bannercategoryupdate",
 
 };

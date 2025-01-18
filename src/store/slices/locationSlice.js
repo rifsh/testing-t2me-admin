@@ -169,10 +169,15 @@ export const getPlaces = createAsyncThunk(
         const response = LocationMockData.getAllPlaces;
         return response.data;
       } else {
+        console.log("Entered------------------")
+
         const response = await LocationService.getPlaces(pageData);
+        console.log("places fetched===============================>",response.data[0])
         return response.data[0];
       }
     } catch (error) {
+      console.log("places Failes",error)
+
       return rejectWithValue(error.message || "Failed to fetch places");
     }
   }
