@@ -16,6 +16,7 @@ const initialState = {
   selectedCoupons: [],
   selectedOffers: [],
   eventOnPlaces:[],
+  organizerEvents:[],
   validationData: [],
   submitData: {},
   message: null,
@@ -57,6 +58,23 @@ export const fetchEventOnPlaces = createAsyncThunk(
 
       return response.data[0];
 
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+)
+
+export const fetchOrganizerEvents = createAsyncThunk(
+  "event/fetchOrganizerEvents",
+  async (userId, { rejectWithValue }) => {
+    try {
+      if (EVENT_DETAILS_MOCK_API && ENABLE_MOCK_API) {
+        const response = EventMockData.fetchOrganizerEvents;
+        return response.data;
+      } else {
+        const response = await EventService.fetchOrganizerEvents(userId);
+        return response.data;
+      }
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
     }
@@ -307,6 +325,21 @@ const eventSlice = createSlice({
         state.eventDetails = eventData;
       })
       .addCase(fetchEventDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchOrganizerEvents.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchOrganizerEvents.fulfilled, (state, action) => {
+        console.log(action.payload[0].items)
+        state.loading = false;
+        state.organizerEvents = action.payload[0].items;
+        state.pagination = action.payload;
+
+      })
+      .addCase(fetchOrganizerEvents.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

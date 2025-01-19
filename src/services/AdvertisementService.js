@@ -13,6 +13,34 @@ AdvertisementService.fetchAdBanners = function (pageData) {
   });
 };
 
+AdvertisementService.fetchAdSchedules = function (pageData) {
+  return fetch({
+    url: ApiConstant.ADVERTISEMENT_SCHEDULE_URL,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
+
+AdvertisementService.addAdSchedule = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  console.log("----------------", data);
+
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['media_path'],
+    skipEmpty: true
+  });
+
+  console.log("----------------", formData);
+  return fetch({
+    url: `${ApiConstant.ADVERTISEMENT_SCHEDULE_URL}?action=${encodedAction}`,
+    method: "POST",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
 AdvertisementService.addAdBanner = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
@@ -26,12 +54,34 @@ AdvertisementService.addAdBanner = function (data, action) {
     });
   }
 
-  console.log("----------------",formData);
-  
+  console.log("----------------", formData);
+
 
   return fetch({
     url: `${ApiConstant.ADVERTISEMENT_BANNER_URL}?action=${encodedAction}`,
     method: "POST",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+AdvertisementService.updateAdBanner = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['media_path'],
+    skipEmpty: true
+  });
+  if (data.media_path && Array.isArray(data.media_path)) {
+    data.media_path.forEach((image) => {
+      formData.append("media_path", image.originFileObj);
+    });
+  }
+
+  return fetch({
+    url: `${ApiConstant.ADVERTISEMENT_BANNER_UPDATE_URL}?advertisement_id=${data.id}&action=${encodedAction}`,
+    method: "put",
     data: formData,
     headers: {
       'Content-Type': 'multipart/form-data',

@@ -1,7 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
 import Utils from "utils";
-import { handleAction } from "utils/api/warning-submit-util";
 
 const IssuesService = {};
 
@@ -10,6 +9,15 @@ IssuesService.IssueReasignComment = function (IssueId, data) {
 console.warn(IssueId,data)
   return fetch({
     url: `${ApiConstant.ISSUE_REASSIGN_COMMENT_URL}?issue_id=${IssueId}`,
+    method: "post",
+    data: data,
+  });
+};
+
+IssuesService.AddNewIssue = function ( data) {
+//   const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.ISSUE_CREATION_URL}`,
     method: "post",
     data: data,
   });

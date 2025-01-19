@@ -24,6 +24,7 @@ import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { getCurrentUser, getUserRole } from "configs/UserAccessConfig";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 
 const { Option } = Select;
 
@@ -57,7 +58,7 @@ const IssueList = () => {
   };
 
   const handlePagination = (page, size) => {
-    dispatch(fetchAllEvent({ page: page, size: size }));
+    dispatch(fetchAllissues({ page: page, size: size }));
   };
   const dropdownMenu = (row) => (
     <Menu>
@@ -192,16 +193,16 @@ const IssueList = () => {
             </Select>
           </div>
         </Flex>
-        {/* <div>
+        { getCurrentUser().role_id == UserRoleConstants.eventOrganizerRoleId &&<div>
           <Button
             type="primary"
             icon={<FormOutlined />}
             block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/issue/add`)}
           >
-            Add Event
+            Add Issue
           </Button>
-        </div> */}
+        </div> }
       </Flex>
       <div className="table-responsive">
         <Table

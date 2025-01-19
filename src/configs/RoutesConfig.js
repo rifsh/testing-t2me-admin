@@ -255,6 +255,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/app-views/apps/issues/issue-list")),
   },
   {
+    key: "issue.add",
+    path: `${APP_PREFIX_PATH}/issue/add`,
+    component: React.lazy(() => import("views/app-views/apps/issues/add-issue")),
+  },
+  {
     key: "issue.details",
     path: `${APP_PREFIX_PATH}/issue/details/:issueId`,
     component: React.lazy(() => import("views/app-views/apps/issues/issue-details")),
@@ -270,7 +275,12 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/advertisement/category/edit-ad-category")),
   },
   {
-    key: "organiser.details",
+    key: "advertisement.banner.edit",
+    path: `${APP_PREFIX_PATH}/advertisement/banner/edit/:adBannerId`,
+    component: React.lazy(() => import("views/advertisement/banner/edit-ad-banner")),
+  },
+  {
+    key: "org.details",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/details`,
     component: React.lazy(() => import("views/track-team/event-organizer/update-list-deatails/index.js")),
   }

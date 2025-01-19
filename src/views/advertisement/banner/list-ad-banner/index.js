@@ -1,35 +1,28 @@
-import React, { useEffect, useState } from "react";
-import { Card, Table, Input, Tabs, Button, Select, Menu } from "antd";
-import { FormOutlined, SearchOutlined, EditOutlined, EyeOutlined, } from "@ant-design/icons";
+import React, { useEffect } from "react";
+import { Card, Table, Button,  Menu } from "antd";
+import { FormOutlined, EditOutlined } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import Utils from "utils";
-import { setSelectedItem } from "store/slices/modalSlice";
-import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+
 import {
   fetchAdBanners,
 } from "store/slices/advertisementSlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 
-const { TabPane } = Tabs;
-const { Option } = Select;
 
-const CategoryList = () => {
+const AdBannerlist = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [selectedBanner, setSelectedBanner] = useState(null);
-  const [modalType, setModalType] = useState("banner");
+
 
   const {
     filteredAdBanner,
     pagination,
-    subPagination,
     loading,
-    editable_status,
-    message: responseMessage,
+
   } = useSelector((state) => state.advertisement);
 
   useEffect(() => {
@@ -46,13 +39,17 @@ const CategoryList = () => {
 
   };
 
+   const handleEditAdBanner = async (id) => {
+      return navigate(`${APP_PREFIX_PATH}/advertisement/banner/edit/${id}`);
+    };
+
 
 
 
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
-        <Flex alignItems="center">
+        <Flex alignItems="center" onClick={() => handleEditAdBanner(row.id)}>
           <EditOutlined />
           <span className="ml-2">
             Edit Banner
@@ -67,7 +64,27 @@ const CategoryList = () => {
     {
       title: "Banner Image",
       dataIndex: "media_path",
-      render: (logo) => <img src={logo} alt="Logo" style={{ width: 80,height:50 }} />,
+      render: (mediaPath) => {
+        const isVideo = /\.(mp4|webm|ogg)$/i.test(mediaPath);
+        return isVideo ? (
+          <video
+            src={mediaPath}
+            style={{ width: 80, height: 50 }}
+            muted
+            playsInline
+            onLoadedData={(e) => {
+              const videoElement = e.target;
+              videoElement.currentTime = 4;
+            }}
+          />
+        ) : (
+          <img
+            src={mediaPath}
+            alt="Image Thumbnail"
+            style={{ width: 80, height: 50 }}
+          />
+        );
+      },
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
@@ -85,8 +102,10 @@ const CategoryList = () => {
     {
       title: "Event",
       dataIndex: "event.event_name",
-      render: (_, record) => <span>{record.event.event_name}</span>,
-      sorter: (a, b) => a.event.event_name.localeCompare(b.event.event_name),
+      render: (_, record) => (
+        <span>{record.event?.event_name || "Not Available"}</span>
+      ),
+      sorter: (a, b) => (a.event?.event_name || "").localeCompare(b.event?.event_name || ""),
     },
     {
       title: "Url",
@@ -146,4 +165,4 @@ const CategoryList = () => {
 
 };
 
-export default CategoryList;
+export default AdBannerlist;

@@ -197,7 +197,7 @@ const TaxFormFields = ({ mode }) => {
                 { required: true, message: RulesMessageConstants.CAPACITY },
               ]}
             >
-              <Input type="number" placeholder="Enter percentage" />
+              <Input type="number" placeholder="Enter percentage" onWheel={(e)=>e.target.blur()}/>
             </Form.Item>
 
             <Flex

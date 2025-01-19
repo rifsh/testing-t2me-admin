@@ -2,30 +2,30 @@ import React, { useEffect } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import { Tabs, Form, Button, message } from "antd";
 import Flex from "components/shared-components/Flex";
-import AdScheduleFormFields from "../components/AdScheduleFormFields";
 import { useDispatch, useSelector } from "react-redux";
+import { addOffer, setIsDateRequired } from "store/slices/offerSlice";
 import { useNavigate } from "react-router-dom";
-import moment from "moment";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { createAdSchedule } from "store/slices/advertisementSlice";
+import moment from "moment/moment";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
-
+import IssueFormFields from "../IssueFormFields";
+import { AddNewIssue } from "store/slices/IssueSlice";
 const ADD = "ADD";
-const EDIT = 'EDIT'
+// const EDIT = "EDIT";
 
-const AdScheduleForm = ({ mode }) => {
-
-  const { loading, error, responseData, responseMessage } = useSelector(
-    (state) => state.advertisement
-  );
+const IssueForm = (props) => {
+  const { mode = ADD } = props;
+  const { loading, error, isDateRequired, responseData, responseMessage } =
+    useSelector((state) => state.offers);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
+    dispatch(setIsDateRequired(false));
     if (error) {
       message.error(error);
     }
@@ -33,30 +33,28 @@ const AdScheduleForm = ({ mode }) => {
 
   const onFinish = async () => {
     try {
-      console.log("HEREEEEEEEEEEEEEEEEEEEEE");
-      
       const values = await form.validateFields();
-      let formattedStartDate = Utils.formatDate(values.start_date);
-      let formattedEndDate = Utils.formatDate(values.end_date);
-      let formattedStartTime = Utils.formatTime(values.start_date)
-      let formattedEndTime = Utils.formatTime(values.end_date)
-      
-      values.start_date = formattedStartDate
-      values.start_time = formattedStartTime
-      values.end_date = formattedEndDate
-      values.end_time = formattedEndTime
-      
+     
 
-      if (mode === ADD) {
-      console.log("ENTEREDDDDDDDDDDDDDDDD");
-
-        dispatch(setSelectedSubmitItem(values));
+    const formData = new FormData();
+    Object.keys(values).forEach((key) => {
+      if (key === "files") {
+        values.files.forEach((file) => {
+          formData.append("files", file.originFileObj);
+        });
+      } else {
+        formData.append(key, values[key]);
+      }
+    });
+  
+      const resultAction = await dispatch(AddNewIssue(formData))
+      if (AddNewIssue.fulfilled.match(resultAction)) {
+        message.success(`Isse created succesfully`);
+        navigate(`${APP_PREFIX_PATH}/issue/list`);
 
       }
-
-    } catch (info) {
-      console.error("Validation Failed:", info);
-      message.error("Please enter all required fields.");
+    } catch (error) {
+      console.error("Error during submission:", error);
     }
   };
 
@@ -82,10 +80,10 @@ const AdScheduleForm = ({ mode }) => {
               alignItems="center"
             >
               <h2 className="mb-3">
-                {mode === "ADD" ? "Add New Schedule" : `Edit Schedule`}{" "}
+                {mode === "ADD" ? "Add Issue" : `Edit Issue`}{" "}
               </h2>
               <div className="mb-3">
-                <DiscardButton form={form} />
+              <DiscardButton form={form} />
                 <Button
                   type="primary"
                   onClick={() => onFinish()}
@@ -106,7 +104,7 @@ const AdScheduleForm = ({ mode }) => {
               {
                 label: "General",
                 key: "1",
-                children: <AdScheduleFormFields form={form} />,
+                children: <IssueFormFields />,
               },
             ]}
           />
@@ -114,12 +112,12 @@ const AdScheduleForm = ({ mode }) => {
       </Form>
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={createAdSchedule}
-        navigationPath={`${APP_PREFIX_PATH}/advertisement/schedule/list`}
+        addFunction={addOffer}
+        navigationPath={`${APP_PREFIX_PATH}/offer/list`}
         responseMessage={responseMessage}
       />
     </>
   );
 };
 
-export default AdScheduleForm;
+export default IssueForm;

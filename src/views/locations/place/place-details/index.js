@@ -59,10 +59,11 @@ const PlaceDetails = () => {
         >
           <Row gutter={[16, 16]}>
             <Col span={12}>
-              <Text strong>Address:</Text> {singlePlace.address || "Not Available"}
+            <Text strong>Country:</Text> {singlePlace.country?.name || "Not Available"}
+              {/* <Text strong>Address:</Text> {singlePlace.address || "Not Available"} */}
             </Col>
             <Col span={12}>
-              <Text strong>Country:</Text> {singlePlace.country?.name || "Not Available"}
+              {/* <Text strong>Country:</Text> {singlePlace.country?.name || "Not Available"} */}
             </Col>
           </Row>
         </Card>
