@@ -77,23 +77,14 @@ export const fetchAllissues = createAsyncThunk(
       }
     }
   );
-export const checkEventValidation = createAsyncThunk(
-  "event/validation",
-  async (_, { rejectWithValue }) => {
+export const AddNewIssue = createAsyncThunk(
+  "issue/AddNewIssue",
+  async ( data , { rejectWithValue }) => {
     try {
-      const response = await IssuesService.checkValidation();
-      if (response.status.status_code === "00000") {
-        return response.data;
-      } else {
-        return rejectWithValue(
-          response.status.message ||
-            "Event validation failed. Please try again."
-        );
-      }
+      const response = await IssuesService.AddNewIssue( data);
+      return response;
     } catch (error) {
-      return rejectWithValue(
-        error.message || "Failed to validate event. Please try again."
-      );
+      return rejectWithValue(error.message || "Failed to process event");
     }
   }
 );
@@ -239,7 +230,20 @@ const eventSlice = createSlice({
         state.responseData = action.payload.data;
         state.responseMessage = action.payload.status.message;
       })
-      .addCase(IssueReasignComment.rejected, (state, action) => {
+      .addCase(AddNewIssue.pending, (state) => {
+        console.log("AddEvent - Pending State");
+        state.loading = true;
+        state.error = null;
+        state.responseMessage = null;
+      })
+      .addCase(AddNewIssue.fulfilled, (state, action) => {
+        console.log("AddEvent - Fulfilled", action.payload);
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(AddNewIssue.rejected, (state, action) => {
         console.error("AddEvent - Rejected", action.payload);
         state.loading = false;
         state.error = action.payload.data;
@@ -297,18 +301,6 @@ const eventSlice = createSlice({
         state.pagination = action.payload;
       })
       .addCase(fetchAllissues.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(checkEventValidation.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(checkEventValidation.fulfilled, (state, action) => {
-        state.loading = false;
-        state.validationData = action.payload;
-      })
-      .addCase(checkEventValidation.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
