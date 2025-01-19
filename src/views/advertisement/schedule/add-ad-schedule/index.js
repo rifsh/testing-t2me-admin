@@ -1,10 +1,10 @@
 import React from 'react';
-import CouponForm from '../form-ad-schedule';
+import AdScheduleForm from '../form-ad-schedule';
 
-const AddCoupon = () => {
+const AddAdSchedule = () => {
 	return (
-		<CouponForm mode="ADD"/>
+		<AdScheduleForm mode="ADD"/>
 	)
 }
 
-export default AddCoupon
+export default AddAdSchedule

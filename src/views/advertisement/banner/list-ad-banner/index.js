@@ -13,7 +13,7 @@ import {
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 
 
-const CategoryList = () => {
+const AdBannerlist = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -39,13 +39,17 @@ const CategoryList = () => {
 
   };
 
+   const handleEditAdBanner = async (id) => {
+      return navigate(`${APP_PREFIX_PATH}/advertisement/banner/edit/${id}`);
+    };
+
 
 
 
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
-        <Flex alignItems="center">
+        <Flex alignItems="center" onClick={() => handleEditAdBanner(row.id)}>
           <EditOutlined />
           <span className="ml-2">
             Edit Banner
@@ -60,7 +64,27 @@ const CategoryList = () => {
     {
       title: "Banner Image",
       dataIndex: "media_path",
-      render: (logo) => <img src={logo} alt="Logo" style={{ width: 80,height:50 }} />,
+      render: (mediaPath) => {
+        const isVideo = /\.(mp4|webm|ogg)$/i.test(mediaPath);
+        return isVideo ? (
+          <video
+            src={mediaPath}
+            style={{ width: 80, height: 50 }}
+            muted
+            playsInline
+            onLoadedData={(e) => {
+              const videoElement = e.target;
+              videoElement.currentTime = 4;
+            }}
+          />
+        ) : (
+          <img
+            src={mediaPath}
+            alt="Image Thumbnail"
+            style={{ width: 80, height: 50 }}
+          />
+        );
+      },
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
@@ -78,8 +102,10 @@ const CategoryList = () => {
     {
       title: "Event",
       dataIndex: "event.event_name",
-      render: (_, record) => <span>{record.event.event_name}</span>,
-      sorter: (a, b) => a.event.event_name.localeCompare(b.event.event_name),
+      render: (_, record) => (
+        <span>{record.event?.event_name || "Not Available"}</span>
+      ),
+      sorter: (a, b) => (a.event?.event_name || "").localeCompare(b.event?.event_name || ""),
     },
     {
       title: "Url",
@@ -139,4 +165,4 @@ const CategoryList = () => {
 
 };
 
-export default CategoryList;
+export default AdBannerlist;

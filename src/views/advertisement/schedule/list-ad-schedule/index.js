@@ -21,10 +21,10 @@ import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  editCoupon,
-  fetchAllCoupons,
-  filterCoupons,
-} from "store/slices/couponSlice";
+  fetchAdSchedules,
+  setSelectedMedia,
+  setModalVisible,
+} from "store/slices/advertisementSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
@@ -37,28 +37,43 @@ const { Option } = Select;
 const CouponList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredCoupons, pagination, editable_status, loading, message } =
-    useSelector((state) => state.coupons);
+  const {
+    filteredAdSchedules,
+    pagination,
+    subPagination,
+    loading,
+    editable_status,
+    message: responseMessage,
+    modalVisible,
+    selectedMedia,
+  } = useSelector((state) => state.advertisement);
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedCoupon, setSelectedCoupon] = useState(null);
+
 
   useEffect(() => {
-    dispatch(fetchAllCoupons(DEFAULT_PAGE_SIZE));
+    dispatch(fetchAdSchedules({ page: 1, size: 10 }));
+    console.log(filteredAdSchedules.length, "-------------------------ssss");
+
   }, [dispatch]);
 
-  const handlePagination = (page, size) => {
-    dispatch(fetchAllCoupons({ page: page, size: size }));
+  const handlePagination = (page, size, type) => {
+
+    dispatch(fetchAdSchedules({ page: page, size: size }));
+
   };
-  const showModal = (coupon) => {
-    setSelectedCoupon(coupon);
-    setIsModalVisible(true);
+  const handleMediaClick = (mediaPath) => {
+    dispatch(setSelectedMedia(mediaPath));
+    dispatch(setModalVisible(true));
   };
 
   const handleModalClose = () => {
-    setIsModalVisible(false);
-    setSelectedCoupon(null);
+    const videoElement = document.querySelector("video");
+    if (videoElement) videoElement.pause();
+    dispatch(setModalVisible(false));
+    dispatch(setSelectedMedia(null));
   };
+
+
 
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
@@ -68,16 +83,15 @@ const CouponList = () => {
   };
 
   const getDropdownMenu = (row) => [
-    {
-      key: "view",
-      label: (
-        <Flex alignItems="center">
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
-      ),
-      onClick: () => showModal(row),
-    },
+    // {
+    //   key: "view",
+    //   label: (
+    //     <Flex alignItems="center">
+    //       <EyeOutlined />
+    //       <span className="ml-2">View Details</span>
+    //     </Flex>
+    //   ),
+    // },
     {
       key: "remark",
       label: (
@@ -92,49 +106,84 @@ const CouponList = () => {
   const tableColumns = [
     {
       title: "File",
-      dataIndex: "name",
-      sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
+      dataIndex: ["advertisement_banner", "media_path"],
+      render: (mediaPath) => {
+        const isVideo = /\.(mp4|webm|ogg)$/i.test(mediaPath);
+        return isVideo ? (
+          <video
+            src={mediaPath}
+            style={{ width: 80, height: 50, cursor: "pointer" }}
+            muted
+            playsInline
+            onClick={() => handleMediaClick(mediaPath)}
+          />
+        ) : (
+          <img
+            src={mediaPath}
+            alt="Image Thumbnail"
+            style={{ width: 80, height: 50, cursor: "pointer" }}
+            onClick={() => handleMediaClick(mediaPath)}
+          />
+        );
+      },
     },
     {
       title: "Name",
       dataIndex: "name",
-      sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
-    },
-    {
-      title: "Category",
-      dataIndex: "name",
-      sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "name")
     },
     {
       title: "Start Date",
       dataIndex: "start_date",
       sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
-      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A")
     },
     {
       title: "End Date",
       dataIndex: "end_date",
       sorter: (a, b) => new Date(a.end_date) - new Date(b.end_date),
-      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A")
+    },
+    {
+      title: "Start Time",
+      dataIndex: "start_time",
+      render: (time) => time || "N/A"
+    },
+    {
+      title: "End Time",
+      dataIndex: "end_time",
+      render: (time) => time || "N/A"
     },
     {
       title: "Duration",
-      dataIndex: "name",
-      sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
+      dataIndex: "duration",
+      sorter: (a, b) => a.duration - b.duration,
+      render: (duration) => `${duration} seconds`
+    },
+    {
+      title: "Category",
+      dataIndex: ["advertisement_banner", "banner_category_id"],
+      sorter: (a, b) => a.advertisement_banner.banner_category_id - b.advertisement_banner.banner_category_id
     },
     {
       title: "Place",
-      dataIndex: "name",
-      sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
+      dataIndex: ["advertisement_banner", "place", "name"],
+      render: (name) => name || "N/A",
+      sorter: (a, b) =>
+        a.advertisement_banner.place.name.localeCompare(b.advertisement_banner.place.name)
     },
     {
       title: "Event",
-      dataIndex: "name",
-      sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
+      dataIndex: ["advertisement_banner", "event", "event_name"],
+      render: (name) => name || "N/A",
+      sorter: (a, b) =>
+        a.advertisement_banner.event?.event_name.localeCompare(b.advertisement_banner.event?.event_name)
     },
-   
-    
-    Utils.statusColumnUtil(handleUpdateStatus),
+
+    // -------------STATUS COLUMN COMPLETE AFTER ADDING STATUS FIELD IN API-----------------
+    // Utils.statusColumnUtil(handleUpdateStatus),
+    // -------------STATUS COLUMN COMPLETE AFTER ADDING STATUS FIELD IN API-----------------
+
     {
       title: "",
       dataIndex: "actions",
@@ -142,14 +191,14 @@ const CouponList = () => {
         <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
           <Button type="text" icon={<MoreOutlined />} />
         </Dropdown>
-      ),
-    },
+      )
+    }
   ];
 
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={fetchAllCoupons} />
+        <SearchBarWithStatus fetchFunction={fetchAdSchedules} />
         <Button
           type="primary"
           icon={<FormOutlined />}
@@ -161,7 +210,7 @@ const CouponList = () => {
 
       <Table
         columns={tableColumns}
-        dataSource={filteredCoupons}
+        dataSource={filteredAdSchedules}
         rowKey="id"
         loading={loading}
         pagination={{
@@ -171,68 +220,36 @@ const CouponList = () => {
           onChange: (page, pageSize) => handlePagination(page, pageSize),
         }}
       />
-
       <Modal
-        title="Coupon Details"
-        open={isModalVisible}
+        visible={modalVisible}
         onCancel={handleModalClose}
         footer={null}
-        width={800}
+        centered
+        width="50%"
+        bodyStyle={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          background: "rgba(255, 255, 255, 0.5)",
+        }}
+        maskStyle={{
+          backdropFilter: "blur(10px)",
+          backgroundColor: "rgba(0, 0, 0, 0.4)",
+        }}
+        destroyOnClose={true}
       >
-        {selectedCoupon && (
-          <Descriptions column={1} bordered>
-            <Descriptions.Item label="Coupon Name">
-              {selectedCoupon.name}
-            </Descriptions.Item>
-            <Descriptions.Item label="Discount Percentage">
-              {selectedCoupon.discount_percentage}%
-            </Descriptions.Item>
-            <Descriptions.Item label="Start Date">
-              {selectedCoupon.start_date
-                ? new Date(selectedCoupon.start_date).toLocaleDateString()
-                : "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="End Date">
-              {selectedCoupon.end_date
-                ? new Date(selectedCoupon.end_date).toLocaleDateString()
-                : "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Max Uses">
-              {selectedCoupon.max_uses}
-            </Descriptions.Item>
-            <Descriptions.Item label="Status">
-              {selectedCoupon.status ? "Active" : "Inactive"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Keywords">
-              {selectedCoupon.key_words?.length > 0
-                ? selectedCoupon.key_words.join(", ")
-                : "None"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Coupon Description">
-              {selectedCoupon.description || "No description available"}
-            </Descriptions.Item>
-            {selectedCoupon.thumbnail_image && selectedCoupon.thumbnail_image !== "images" ? (
-              <Descriptions.Item label="Thumbnail Image">
-                <img
-                  src={selectedCoupon.thumbnail_image}
-                  alt="Offer Thumbnail"
-                  style={{ maxWidth: "100%", maxHeight: "200px", objectFit: "contain" }}
-                />
-              </Descriptions.Item>
-            ) : (
-              <Descriptions.Item label="Thumbnail Image">No image available</Descriptions.Item>
-            )}
-          </Descriptions>
-        )}
+        {selectedMedia &&
+          (/\.(mp4|webm|ogg)$/i.test(selectedMedia) ? (
+            <video src={selectedMedia} controls autoPlay style={{ width: "100%", height: "auto", borderRadius: "8px" }} />
+          ) : (
+            <img src={selectedMedia} alt="Media Preview" style={{
+              width: "50%",
+              height: "auto",
+              borderRadius: "8px",
+              objectFit: "cover",
+            }} />
+          ))}
       </Modal>
-
-      <UpdateStatusModal
-        responseMessage={message}
-        editFunction={editCoupon}
-        editable_status={editable_status}
-        getAllFunction={(pageData) => fetchAllCoupons(pageData)}
-        pageData={{ page: 1, size: 10 }}
-      />
     </Card>
   );
 };

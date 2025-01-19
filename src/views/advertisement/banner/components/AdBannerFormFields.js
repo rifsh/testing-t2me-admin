@@ -1,15 +1,18 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, Select, message, Upload } from "antd";
-import { fetchAdCategories } from "store/slices/adCategorySlice";
-import { createAdBanner } from "store/slices/advertisementSlice";
+import { Input, Row, Col, Card, Form, Button, Select, message, message as antdMessage, Upload } from "antd";
+import {  fetchAdCategories } from "store/slices/adCategorySlice";
+import { createAdBanner, updateAdBanner, setSelectedAdBanner, setAdBannerDialogVisible, setAdBannerModalLoading } from "store/slices/advertisementSlice";
 import { getPlaces } from "store/slices/locationSlice";
 import { fetchEventOnPlaces } from "store/slices/eventSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { ActionType } from "utils/api/warning-submit-util";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
 
 const { Option } = Select;
 const ADD = "ADD";
@@ -25,16 +28,17 @@ const rules = {
   ],
 };
 
-const CategoryFormFields = ({ mode = ADD, category }) => {
+const AdBannerFormFields = ({ mode, banner }) => {
+
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
-  const { places } = useSelector((state) => state.locations);
+  const {  places } = useSelector((state) => state.locations);
   const { eventOnPlaces } = useSelector((state) => state.event);
   const { filteredAdCategories } = useSelector(
     (state) => state.adCategory
   );
-  const { loading, error, responseData, responseMessage, } = useSelector(
+  const { loading, error, responseData, responseMessage, dialogVisible, modalLoading, message: warningMessage, selectedAdBanner } = useSelector(
     (state) => state.advertisement
   );
 
@@ -49,22 +53,36 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
     }
   }, [dispatch, filteredAdCategories, places]);
 
-  // Handle error message
   useEffect(() => {
     if (error) {
       message.error(error);
     }
   }, [error]);
 
-  // Populate form fields if editing
   useEffect(() => {
-    if (mode === EDIT && category) {
+    if (mode === EDIT && banner) {
       form.setFieldsValue({
-        name: category.name,
-        description: category.description,
+        name: banner.name,
+        description: banner.description,
+        ads_url: banner.ads_url,
+        banner_category_id: banner.banner_category_id,
+        place_id: banner.place?.id,
+        // event_id: banner.event?.id,
+        media_path: banner.media_path
+          ? [
+            {
+              uid: "-1",
+              name: banner.media_path.split("/").pop(),
+              status: "done",
+              url: banner.media_path,
+            },
+          ]
+          : [],
       });
     }
-  }, [mode, category, form]);
+  }, [mode, banner, form]);
+
+
   const normFile = (e) => {
     if (Array.isArray(e)) {
       return e;
@@ -83,17 +101,26 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
     try {
       const values = await form.validateFields();
       console.log({ values });
-
-      // const formData = new FormData();
-      // Object.keys(values).forEach((key) => {
-      //   formData.append(key, values[key]);
-      // });
-      
       if (mode === ADD) {
 
         dispatch(setSelectedSubmitItem(values));
 
       } else if (mode === EDIT) {
+
+        const data = {
+          ...values,
+          id: banner.id,
+        };
+        console.log("Edit Data:", data);
+
+        const resultAction = await dispatch(
+          updateAdBanner({ data, action: ActionType.WARNING })
+        );
+
+        if (updateAdBanner.fulfilled.match(resultAction)) {
+          dispatch(setSelectedAdBanner(data));
+          dispatch(setAdBannerDialogVisible(true));
+        }
       }
 
       form.resetFields();
@@ -101,6 +128,24 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
       console.log("Validation Failed:", errorInfo);
     }
   };
+  const handleModalSubmit = async () => {
+    dispatch(setAdBannerModalLoading(true));
+    const resultAction = await dispatch(
+      updateAdBanner({ data: selectedAdBanner, action: ActionType.SUBMIT })
+    );
+    dispatch(setAdBannerModalLoading(false));
+    dispatch(setAdBannerDialogVisible(false));
+    if (updateAdBanner.fulfilled.match(resultAction)) {
+      antdMessage.success(`Category ${selectedAdBanner.name} updated successfully`);
+      form.resetFields();
+      navigate(`${APP_PREFIX_PATH}/advertisement/banner/list`);
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setAdBannerDialogVisible(false));
+  };
+
 
   return (
     <Row gutter={16}>
@@ -190,6 +235,17 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
           </Form>
         </Card>
       </Col>
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={warningMessage}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={modalLoading}
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={createAdBanner}
@@ -200,4 +256,4 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
   );
 };
 
-export default CategoryFormFields;
+export default AdBannerFormFields;

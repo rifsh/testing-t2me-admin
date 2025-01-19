@@ -2,18 +2,24 @@ import Flex from "components/shared-components/Flex";
 import React, { useEffect } from "react";
 import { Tabs, Form } from "antd";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
-import CategoryFormFields from "../components/CategoryFormFields";
-import SubCategoryFormFields from "../components/SubCategoryFormFields";
+import AdBannerFormFields from "../components/AdBannerFormFields";
 import { useSelector } from "react-redux";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
 
-const CategoryForm = ({ mode = ADD, id }) => {
-  const { activeTab } = useSelector((state) => state.category);
-  const category = useSelector((state) =>
-    state.category.categories.find((cat) => cat.id === id)
-  );
+const AdBannerForm = ({ mode , id }) => {
+  const { filteredAdBanner } = useSelector((state) => state.advertisement);
+  console.log(id);
+  let bannerData;
+  if (filteredAdBanner&&filteredAdBanner.length>0) {
+    const numericBannerId = parseInt(id, 10);
+    const foundData = filteredAdBanner.find(banner => banner.id === numericBannerId);
+    bannerData=foundData;
+    console.log(bannerData,"FOUND DATA------------");
+  }else{
+    console.log('filteredAdBanner is empty or undefined.');
+  }
 
   return (
     <Form
@@ -37,13 +43,12 @@ const CategoryForm = ({ mode = ADD, id }) => {
       </PageHeaderAlt>
       <div className="container">
         <Tabs
-          defaultActiveKey={activeTab}
           style={{ marginTop: 30 }}
           items={[
             {
               label: "Banner",
               key: "banner",
-              children: <CategoryFormFields mode={mode} category={category} />,
+              children: <AdBannerFormFields mode={mode} banner={bannerData} />,
             },
             
           ]}
@@ -53,4 +58,4 @@ const CategoryForm = ({ mode = ADD, id }) => {
   );
 };
 
-export default CategoryForm;
+export default AdBannerForm;
