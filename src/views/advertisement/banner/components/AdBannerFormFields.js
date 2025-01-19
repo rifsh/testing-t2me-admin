@@ -32,6 +32,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
 
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const {  places } = useSelector((state) => state.locations);
   const { eventOnPlaces } = useSelector((state) => state.event);
