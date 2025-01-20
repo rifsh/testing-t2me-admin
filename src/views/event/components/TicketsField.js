@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllTickets,
   getAvailableTicketsType,
-  setSelectedTicketSet,
 } from "store/slices/ticketSlice";
 import { TicketTypeSelector } from "./TicketTypeSelector";
 import { TicketStructureSelector } from "./TicketStructureSelector";

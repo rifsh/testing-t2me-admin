@@ -16,7 +16,6 @@ const UpdateStatusModal = ({
   editable_status = true,
   onSubmitMessage = TextConstants.StatusUpdatedSuccess,
   onCloseMessage = TextConstants.StatusUpdateCanceled,
-  responseMessage,
   pageData,
 }) => {
   const dispatch = useDispatch();
@@ -73,7 +72,9 @@ const UpdateStatusModal = ({
     <WarningModal
       visible={statusDialogVisible}
       title={TextConstants.Confirm_Action}
-      details={responseMessage || ""}
+      details= {
+        editable_status ? "Once deactivated, you won't be able to reactivate it. Please activate it manually if needed." : ""
+      }//{responseMessage || ""}
       editable_status={editable_status}
       warningMessage={
         editable_status
