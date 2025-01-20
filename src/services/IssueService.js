@@ -30,6 +30,13 @@ IssuesService.getAllIssue = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+IssuesService.getAllAlertissues = function (pageData) {
+  return fetch({
+    url: ApiConstant.ISSUE_ALERT_LIST_URL,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
 
 IssuesService.checkValidation = function () {
   return fetch({

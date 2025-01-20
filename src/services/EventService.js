@@ -51,9 +51,15 @@ EventsService.fetchEventsOnPlace = function (placeId) {
   });
 };
 
-EventsService.fetchOrganizerEvents = function (userId) {
+EventsService.fetchOrganizerEvents = function (eventId) {
   return fetch({
-    url: `${ApiConstant.ORGANIZER_EVENTS_URL}?user_id=${userId}`,
+    url: `${ApiConstant.ORGANIZER_EVENTS_URL}?user_id=${eventId}`,
+    method: "get",
+  });
+};
+EventsService.fetchEventSupportAvailable = function (userId) {
+  return fetch({
+    url: `${ApiConstant.EVENT_SUPPORT_AVAILABLE}?event_id=${userId}`,
     method: "get",
   });
 };
