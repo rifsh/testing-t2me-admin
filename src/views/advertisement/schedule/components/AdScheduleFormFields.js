@@ -1,17 +1,23 @@
-import React, { useEffect, useState } from "react";
-import { Input, Row, Col, Card, Form, DatePicker, Upload, message, Button, InputNumber } from "antd";
+import React, { useEffect } from "react";
+import { Input, Row, Col, Card, Form, DatePicker, Upload, message, Button, InputNumber,Typography } from "antd";
 import moment from "moment";
-import { InboxOutlined, FileImageOutlined, PlayCircleOutlined } from "@ant-design/icons";
+import { InboxOutlined, FileImageOutlined, PlayCircleOutlined, SearchOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import FileGallery from "./FilegalleryComponent";
 import {
   fetchAdBanners,
   setDraggedFile,
   setVideoPlayingStatus,
-  setDraggedFileState
+  setDraggedFileState,
+  setSelectedDroppedFile,
+  filterBanner,
 } from "store/slices/advertisementSlice";
 import { ScheduleTimeSlots } from "views/schedule/components/ScheduleTimeSlotes";
 
 const { Dragger } = Upload;
+const { Title, Text, Paragraph } = Typography;
+const { Search } = Input;
 
 const rules = {
   name: [
@@ -34,34 +40,56 @@ const rules = {
   ],
 };
 
-function AdScheduleFormFields({form}) {
+function AdScheduleFormFields({ form }) {
   // const [form] = Form.useForm();
   const startDate = Form.useWatch('start_date', form);
   const dispatch = useDispatch();
   const videoRef = React.useRef(null);
 
-  const { filteredAdBanner, draggedFile,
+  const { filteredAdBanner, draggedFile, selectedDroppedFile,
     isVideoPlaying, } = useSelector((state) => state.advertisement);
 
   useEffect(() => {
     dispatch(setDraggedFileState(null));
+    dispatch(setSelectedDroppedFile(null));
     dispatch(fetchAdBanners({ page: 1, size: 10 }));
   }, [dispatch]);
 
 
-  const onDragStart = (file) => {
+  const onDragStart = (e, file) => {
+    e.stopPropagation();
     dispatch(setDraggedFile(file));
   };
 
-  const onDrop = () => {
-    if (draggedFile) {
+  const onDragEnd = (e) => {
+    // Clear the dragged file if drop wasn't successful
+    const dropTarget = document.querySelector('.ant-upload-drag');
+    if (!dropTarget || !dropTarget.contains(document.elementFromPoint(e.clientX, e.clientY))) {
+      dispatch(setDraggedFile(null));
+    }
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const dropTarget = document.querySelector('.ant-upload-drag');
+    if (draggedFile && dropTarget && dropTarget.contains(document.elementFromPoint(e.clientX, e.clientY))) {
       form.setFieldsValue({
         advertisement_banner_id: draggedFile.id,
       });
+      dispatch(setSelectedDroppedFile(draggedFile));
       message.success(`${draggedFile.name} added to upload field.`);
+
     } else {
+      dispatch(setDraggedFile(null)); // Clear dragged file if drop was unsuccessful
       message.error("Failed to add file to upload field.");
     }
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const toggleVideoPlayback = () => {
@@ -75,36 +103,10 @@ function AdScheduleFormFields({form}) {
     }
   };
 
-  const renderMedia = (mediaPath) => {
-    const isVideo = /\.(mp4|webm|ogg)$/i.test(mediaPath);
-    return isVideo ? (
-      <video
-        src={mediaPath}
-        style={{
-          width: "60%",
-          height: "60%",
-          objectFit: "cover",
-        }}
-        muted
-        playsInline
-      />
-    ) : (
-      <img
-        src={mediaPath}
-        alt="Image Thumbnail"
-        style={{
-          width: "60%",
-          height: "60%",
-          objectFit: "cover",
-        }}
-      />
-    );
-  };
-
   const renderPreview = () => {
-    if (!draggedFile) return null;
+    if (!selectedDroppedFile) return null;
 
-    const isVideo = /\.(mp4|webm|ogg)$/i.test(draggedFile.media_path);
+    const isVideo = /\.(mp4|webm|ogg)$/i.test(selectedDroppedFile.media_path);
 
     return (
       <div className="mt-4 flex justify-center items-center">
@@ -113,7 +115,7 @@ function AdScheduleFormFields({form}) {
             <>
               <video
                 ref={videoRef}
-                src={draggedFile.media_path}
+                src={selectedDroppedFile.media_path}
                 style={{
                   width: '100%',
                   height: 'auto',
@@ -127,16 +129,16 @@ function AdScheduleFormFields({form}) {
               />
               <Button
                 type="primary"
-                icon={isVideoPlaying  ? null : <PlayCircleOutlined />}
+                icon={isVideoPlaying ? null : <PlayCircleOutlined />}
                 className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
                 onClick={toggleVideoPlayback}
               >
-                {isVideoPlaying  ? 'Pause' : 'Play'}
+                {isVideoPlaying ? 'Pause' : 'Play'}
               </Button>
             </>
           ) : (
             <img
-              src={draggedFile.media_path}
+              src={selectedDroppedFile.media_path}
               alt="Preview"
               style={{
                 width: '100%',
@@ -150,8 +152,45 @@ function AdScheduleFormFields({form}) {
       </div>
     );
   };
+  const renderBannerDetails = () => {
+    if (!selectedDroppedFile) return null;
 
-  // Custom click handler to prevent file selection dialog
+
+    return (
+      <Card style={{ marginTop: 16 }}>
+        {/* <Title level={4}>Event Information</Title> */}
+        <Row gutter={[24, 24]}>
+          <Col xs={24} md={8}>
+            <Text type="secondary">Category Name</Text>
+            <div>
+              <Text strong>{selectedDroppedFile.banner_category?.name ?? 'N/A'}</Text>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <Text type="secondary">Place Name</Text>
+            <div>
+              <Text strong>{selectedDroppedFile.place?.name ?? 'N/A'}</Text>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <Text type="secondary">Event Name</Text>
+            <div>
+              {/* <Text strong>{IssueDetails?.issue_status?.charAt(0).toUpperCase() + IssueDetails?.issue_status?.slice(1)}</Text> */}
+              <Text strong>{selectedDroppedFile.event?.event_name ?? 'N/A'}</Text>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <Text type="secondary">Country Name</Text>
+            <div>
+              <Text strong>{selectedDroppedFile.place?.country?.name ?? 'N/A' }</Text>
+            </div>
+          </Col>
+        </Row>
+      </Card>
+    );
+  };
+
+
   const preventDefault = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -161,38 +200,10 @@ function AdScheduleFormFields({form}) {
     <Row gutter={16}>
       {/* File Gallery */}
       <Col xs={24} sm={12}>
-        <Card title="File Gallery" className="h-full">
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
-              gap: "16px",
-            }}
-          >
-            {filteredAdBanner.map((banner) => (
-              <div
-                key={banner.id}
-                draggable
-                onDragStart={() => onDragStart(banner)}
-                className="p-2 border rounded cursor-move hover:bg-gray-50"
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-              >
-                <div className="d-flex align-items-center mb-2">
-                  <FileImageOutlined className="me-2" />
-                  <span className="text-sm">{banner.name}</span>
-                </div>
-                {renderMedia(banner.media_path)}
-              </div>
-            ))}
-          </div>
-        </Card>
+        <FileGallery
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+        />
       </Col>
 
       {/* Form Section */}
@@ -209,12 +220,13 @@ function AdScheduleFormFields({form}) {
               >
                 <Dragger
                   className="h-48"
-                  onDrop={onDrop}
+                  onDrop={(e) => onDrop(e)}
+                  onDragOver={(e) => onDragOver(e)}
                   beforeUpload={() => false}
                   showUploadList={false}
                   openFileDialogOnClick={false}
                 >
-                  {draggedFile ? (
+                  {selectedDroppedFile ? (
                     renderPreview()
                   ) : (
                     <>
@@ -228,6 +240,7 @@ function AdScheduleFormFields({form}) {
                 </Dragger>
               </div>
             </Form.Item>
+            {renderBannerDetails()}
             <ScheduleTimeSlots form={form} />
             <Form.Item
               name="duration"
