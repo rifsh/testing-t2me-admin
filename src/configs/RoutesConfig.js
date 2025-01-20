@@ -263,6 +263,11 @@ export const protectedRoutes = [
     key: "issue.details",
     path: `${APP_PREFIX_PATH}/issue/details/:issueId`,
     component: React.lazy(() => import("views/app-views/apps/issues/issue-details")),
+  },
+  {
+    key: "alerts.list",
+    path: `${APP_PREFIX_PATH}/alerts/list`,
+    component: React.lazy(() => import("views/app-views/apps/alerts/alerts-list")),
   },{
     key: "organiser.update",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,

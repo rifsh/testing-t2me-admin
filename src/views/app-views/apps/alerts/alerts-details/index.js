@@ -281,7 +281,7 @@ const IssueDetails = () => {
           <Space size="large" wrap>
             <Space>
               <ClockCircleOutlined />
-              <Text type="secondary">Created {IssueDetails?.created_at.slice(0,10)}</Text>
+              <Text type="secondary">Created {IssueDetails?.item?.created_at}</Text>
             </Space>
             <Space>
               <UserOutlined />
