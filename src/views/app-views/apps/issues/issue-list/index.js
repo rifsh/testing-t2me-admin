@@ -46,16 +46,16 @@ const IssueList = () => {
     navigate(`${APP_PREFIX_PATH}/issue/details/${id}`);
   };
 
-  const handleEditEvent = async (id) => {
-    navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
-  };
+  // const handleEditEvent = async (id) => {
+  //   navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
+  // };
 
-  const handleUpdateStatus = (item) => {
-    const newStatus = !item.status;
-    const data = { status: newStatus, id: item.id };
+  // const handleUpdateStatus = (item) => {
+  //   const newStatus = !item.status;
+  //   const data = { status: newStatus, id: item.id };
 
-    dispatch(setSelectedItem(data));
-  };
+  //   dispatch(setSelectedItem(data));
+  // };
 
   const handlePagination = (page, size) => {
     dispatch(fetchAllissues({ page: page, size: size }));

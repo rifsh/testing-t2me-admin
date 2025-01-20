@@ -117,17 +117,17 @@ function UserFormFields() {
             </Select>
           </Form.Item>
 
-          {selectedRole === UserRoleConstants.eventOrganizerRoleId && (
-            <Form.Item 
-              name="event_ids" 
-              label={
-                <span>
-                  Events&nbsp;
-                  <Tooltip title="You can select up to 5 events">
-                    <InfoCircleOutlined />
-                  </Tooltip>
-                </span>
-              }
+          {(selectedRole === UserRoleConstants.eventOrganizerRoleId || selectedRole === UserRoleConstants.eventSupportingTeamRoleId) && (
+          <Form.Item 
+            name="event_ids" 
+            label={
+              <span>
+                Events&nbsp;
+                <Tooltip title="You can select up to 5 events">
+                  <InfoCircleOutlined />
+                </Tooltip>
+              </span>
+            }
               
               validateTrigger={['onChange']}
               hasFeedback
