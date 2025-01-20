@@ -187,6 +187,14 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
+      {
+        key: "alerts.list",
+        path: `${APP_PREFIX_PATH}/alerts/list`,
+        title: "sidenav.apps.alerts",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
     ],
   },
   {

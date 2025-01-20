@@ -15,7 +15,7 @@ import {
   filterEvent,
   handleShowStatus,
 } from "store/slices/eventSlice";
-import { fetchAllissues, fetchIssueDetails } from "store/slices/IssueSlice";
+import { fetchAllissues, fetchIssueDetails, fetchAllAlertissues } from "store/slices/IssueSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
@@ -37,7 +37,7 @@ const IssueList = () => {
     useSelector((state) => state.issue);
   useEffect(() => {
     console.warn('tholi..........', getCurrentUser().role_id)
-    dispatch(fetchAllissues({...DEFAULT_PAGE_SIZE,'role_id':getCurrentUser().role_id}));
+    dispatch(fetchAllAlertissues({...DEFAULT_PAGE_SIZE,'role_id':getCurrentUser().role_id}));
   }, [dispatch]);
 
   const handleViewDetails = async (id) => {
@@ -58,7 +58,7 @@ const IssueList = () => {
   // };
 
   const handlePagination = (page, size) => {
-    dispatch(fetchAllissues({ page: page, size: size }));
+    dispatch(fetchAllAlertissues({ page: page, size: size }));
   };
   const dropdownMenu = (row) => (
     <Menu>
@@ -85,20 +85,16 @@ const IssueList = () => {
     {
       title: "Issue",
       dataIndex: "issue",
-      sorter: (a, b) => {
-        const issueA = a.issue || ""; // Fallback to empty string if null/undefined
-        const issueB = b.issue || "";
-        return issueA.localeCompare(issueB);
-      },
+      sorter: (a, b) =>
+        (a, b) => a.issue.localeCompare(b.issue),
     },
-    
     {
       title: "from",
       dataIndex: "email",
       sorter: (a, b) => a.email.localeCompare(b.email),
     },
     {
-      title: "assigned to",
+      title: "assigned_to",
       dataIndex: ["ticket_assigned", "email"], // Fallback index
       render: (text, record) => {
         // If assigned_role is null, display ticket_assigned.email, otherwise display assigned_role.email
@@ -124,42 +120,50 @@ const IssueList = () => {
           {text.charAt(0).toUpperCase() + text.slice(1)}
         </Tag>
       ),
-      sorter: (a, b) => {
-        const statusA = a.issue_status || ""; // Fallback to empty string if null/undefined
-        const statusB = b.issue_status || "";
-        return statusA.localeCompare(statusB);
-      },
+      sorter: (a, b) =>
+        a.issue_status.localeCompare(b.issue_status), // Sort alphabetically by status
       sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: "Closed",
-      dataIndex: "ticket_status",
-      sorter: (a, b) => {
-        // Ensure comparison values are always defined and normalized
-        const statusA = a.ticket_status === true ? "closed" : "open";
-        const statusB = b.ticket_status === true ? "closed" : "open";
-        return statusA.localeCompare(statusB);
-      },
-      render: (ticket_status) =>
-        ticket_status ? (
-          <span style={{ color: "green" }}>✔️</span>
-        ) : (
-          <span style={{ color: "red" }}>❌</span>
-        ),
-    },
-    
-    
-    {
-      title: "",
-      dataIndex: "actions",
-      render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown 
-          menu={dropdownMenu(elm)}
-           />
-        </div>
-      ),
-    },
+    }
+,    
+{
+  title: "Created On",
+  dataIndex: "created_at",
+  sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at),
+  render: (created_at) => {
+    if (!created_at) {
+      return <div style={{ color: "#888" }}>No date available</div>;
+    }
+
+    const date = new Date(created_at);
+    if (isNaN(date)) {
+      return <div style={{ color: "#888" }}>Invalid date</div>;
+    }
+
+    const formattedDate = date.toISOString().split("T")[0]; // Extract only the date part
+    const daysAgo = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24)); // Calculate days ago
+
+    return (
+      <>
+        <div>{formattedDate}</div>
+        <div style={{ color: "#888" }}>{daysAgo} days ago</div>
+      </>
+    );
+  },
+}
+
+
+    // ,
+    // {
+    //   title: "",
+    //   dataIndex: "actions",
+    //   render: (_, elm) => (
+    //     <div className="text-right">
+    //       <EllipsisDropdown 
+    //       menu={dropdownMenu(elm)}
+    //        />
+    //     </div>
+    //   ),
+    // },
   ];
   const [searchTerm, setSearchTerm] = useState();
   const [activeStatus, setactiveStatus] = useState();

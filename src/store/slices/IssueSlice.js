@@ -77,6 +77,24 @@ export const fetchAllissues = createAsyncThunk(
       }
     }
   );
+
+
+export const fetchAllAlertissues = createAsyncThunk(
+    "issue/fetchAllIssue",
+    async (pageData, { rejectWithValue }) => {
+      try {
+        if (ENABLE_MOCK_API && ALL_EVENT_MOCK_API) {
+          const response = EventMockData.fetchAllAlertissues;
+          return response.data;
+        } else {
+          const response = await IssuesService.getAllAlertissues(pageData);
+          return response.data[0];
+        }
+      } catch (error) {
+        return rejectWithValue(error.message || "Failed to fetch event details");
+      }
+    }
+  );
 export const AddNewIssue = createAsyncThunk(
   "issue/AddNewIssue",
   async ( data , { rejectWithValue }) => {
