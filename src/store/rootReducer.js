@@ -14,6 +14,7 @@ import coupons from "./slices/couponSlice";
 import tickets from "./slices/ticketSlice";
 import schedules from "./slices/scheduleSlice";
 import modalSlice from "./slices/modalSlice";
+import organizerUpdates from "./slices/EventOrganizerSlice";
 import tax from "./slices/taxSlice"; 
 
 import layout from "./slices/layoutSlice"; 
@@ -40,6 +41,7 @@ const rootReducer = (asyncReducers = {}) => {
       issue,    
       adCategory,
       advertisement,
+      organizerUpdates,
       ...asyncReducers, 
     });
 

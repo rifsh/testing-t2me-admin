@@ -162,8 +162,8 @@ const CouponList = () => {
     },
     {
       title: "Category",
-      dataIndex: ["advertisement_banner", "banner_category_id"],
-      sorter: (a, b) => a.advertisement_banner.banner_category_id - b.advertisement_banner.banner_category_id
+      dataIndex: ["advertisement_banner", "banner_category", "name"],
+      sorter: (a, b) => a.advertisement_banner.banner_category.name - b.advertisement_banner.banner_category.name
     },
     {
       title: "Place",

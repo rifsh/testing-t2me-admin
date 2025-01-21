@@ -5,12 +5,12 @@ import {
   Table,
   Select,
   Menu,
-  Row,Dropdown,
+  Row, Dropdown,
   Form,
+  Tag
 } from "antd";
 import {
   EyeOutlined,
-
   EditOutlined,
 } from "@ant-design/icons";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
@@ -26,12 +26,15 @@ import {
   getPlaces,
   getSinglePlace,
 } from "store/slices/locationSlice";
+import {
+  fetchOrganizerUpdates,
+  fetchSingleOrganizerUpdate,
+} from "store/slices/EventOrganizerSlice";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import UserForm from "views/user/form-user";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
-import { fetchOrgUpdates } from "store/slices/organiserUpadateSlice";
 
 const { Option } = Select;
 
@@ -39,42 +42,34 @@ const EventOrganiseUpdateList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {
-    filteredPlaces,
-    orgUpdates,
-    detailedCountryList,
+    filteredOrganizerUpdates,
     editable_status,
     message,
     loading,
     pagination,
-  } = useSelector((state) => state.locations);
+  } = useSelector((state) => state.organizerUpdates);
 
   useEffect(() => {
     // dispatch(fetchOrgUpdates());
-   dispatch(getPlaces(DEFAULT_PAGE_SIZE));
-
-    // dispatch(getCoutryDetails());
+    dispatch(fetchOrganizerUpdates(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
+
   const handlePagination = (page, size) => {
-    dispatch(getPlaces({ page: page, size: size }));
+    dispatch(fetchOrganizerUpdates({ page: page, size: size }));
   };
   const handleViewDetails = async (id) => {
-      await dispatch(getSinglePlace(id));
-      navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/details`);
+    console.log(id);
+    navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/details/${id}`);
   };
-  const handleUpdateStatus = (item) => {
-      const newStatus = !item.status;
-      const data = { status: newStatus, id: item.id };
-  
-      dispatch(setSelectedItem(data));
-    };
 
-    //updates 
+
+  //updates 
 
 
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
-        <Flex alignItems="center"   onClick={() => handleViewDetails(row.id)}>
+        <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
@@ -82,49 +77,42 @@ const EventOrganiseUpdateList = () => {
     </Menu>
   );
 
-  const dropdownStatus = () => (
-    <Dropdown>
-      <Dropdown.Button>Actions</Dropdown.Button>
-      <Dropdown.Contents>
-        <Dropdown.List>
-          <Dropdown.Item>
-            Approve
-          </Dropdown.Item>
-          <Dropdown.Item>
-            Reject
-          </Dropdown.Item>
-         
-        </Dropdown.List>
-      </Dropdown.Contents>
-    </Dropdown>
-  );
-  
 
   const tableColumns = [
     {
       title: "Organiser Name",
-      dataIndex: "name",
-      sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
+      dataIndex: ["organizer","username"],
+      sorter: (a, b) => a.organizer?.username - b.organizer?.username
+
     },
 
     {
       title: "Event",
-     dataIndex: "name",
-      //sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
+      dataIndex: ["events", "event_name"],
+      sorter: (a, b) => a.events?.event_name - a.events?.event_name
     },
-    
-    utils.statusColumnUtil(handleUpdateStatus),
-    //  {
-    //   title: "Status",
-    //   dataIndex: "actions",
-    //   render: (_, elm) => (
-    //     <div className="text-right">
-    //       <EllipsisDropdown menu={dropdownStatus(elm)} />
-    //     </div>
-    //   ),
-    // },
-     
-
+    {
+      title: "Status",
+      dataIndex: "approval_status",
+      render: (text) => {
+        const color =
+          text.toLowerCase() === "approved"
+            ? "green"
+            : text.toLowerCase() === "rejected"
+              ? "red"
+              : text.toLowerCase() === "update"
+                ? "blue"
+                : "orange";
+        return (
+          <Tag color={color}>
+            {text.charAt(0).toUpperCase() + text.slice(1)}
+          </Tag>
+        );
+      },
+      sorter: (a, b) =>
+        a.approval_status.localeCompare(b.approval_status),
+      sortDirections: ["ascend", "descend"],
+    },
     {
       title: "",
       dataIndex: "actions",
@@ -135,24 +123,35 @@ const EventOrganiseUpdateList = () => {
       ),
     },
   ];
+
   const [form] = Form.useForm();
 
   return (
     <Card>
       <Row gutter={16} justify="space-between" align="" wrap={false}>
         <SearchBarWithStatus
-          fetchFunction={getPlaces}
+          fetchFunction={fetchOrganizerUpdates}
+          isStatus={false}
           additionalFilters={[
-        
+            {
+              options: filteredOrganizerUpdates,
+              placeholder: "Please choose a item",
+              formName: "approval_status",
+              additionalField: "approval_status",
+              isAutoComplete: false,
+              onClick: () => {
+                dispatch(fetchOrganizerUpdates());
+              },
+            },
           ]}
         />
-       
+
       </Row>
 
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={filteredPlaces}//{orgUpdates}//{filteredPlaces}
+          dataSource={filteredOrganizerUpdates}//{orgUpdates}//{filteredPlaces}
           rowKey="id"
           loading={loading}
           pagination={{

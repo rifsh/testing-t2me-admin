@@ -276,7 +276,7 @@ export const protectedRoutes = [
   },
   {
     key: "org.details",
-    path: `${APP_PREFIX_PATH}/track-team/event-organizer/details`,
-    component: React.lazy(() => import("views/track-team/event-organizer/update-list-deatails/index.js")),
+    path: `${APP_PREFIX_PATH}/track-team/event-organizer/details/:eventUpId`,
+    component: React.lazy(() => import("views/track-team/event-organizer/update-list-details/index.js")),
   }
 ];
