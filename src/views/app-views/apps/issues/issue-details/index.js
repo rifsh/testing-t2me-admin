@@ -337,10 +337,11 @@ const IssueDetails = () => {
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '24px' }}>
       {IssueDetails.event_support_available === false && (
         <Alert
-          message="No event support available"
+          message="There are no event supporting team members available for this specific event."
           type="warning"
           showIcon
           closable
+          style={{padding:"20px"}}
         />
       )}
 
@@ -372,7 +373,7 @@ const IssueDetails = () => {
             <Space>
               <ClockCircleOutlined />
               <Text type="secondary">
-                Created {moment(IssueDetails?.created_at).format('MMM DD, YYYY')}
+                Created {moment(IssueDetails?.created_at).format('MMM DD, YYYY')} 
               </Text>
             </Space>
 
