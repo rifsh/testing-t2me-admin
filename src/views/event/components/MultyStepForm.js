@@ -1,7 +1,10 @@
-import { Button, Form, message } from "antd";
+import { Button, Form, message, message as antdMessage, } from "antd";
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
 import { BLUE_BASE, GRAY_LIGHTER } from "constants/ThemeConstant";
+import { ActionType } from "utils/api/warning-submit-util";
+// import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import {
   addEvent,
   setSubmitData,
@@ -9,18 +12,28 @@ import {
   setSubmitLoading,
   resetState,
   checkEventValidation,
+
 } from "store/slices/eventSlice";
+import {
+  updateOrganizerEvent,
+  setUpdateEventDialogVisible,
+  setSelectedUpdateEvent,
+  setUpdateEventLoading,
+} from "store/slices/EventOrganizerSlice";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
-
+import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { SubmitAndConfirmModal } from "../../../components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-
+import { getCurrentUser } from "configs/UserAccessConfig";
 import { getEventFormSteps } from "configs/UserAccessConfig";
 import getEventFormItems from "configs/UserAccessConfig";
 
-const MultyStepEventForm = () => {
+const MultyStepEventForm = ({ eventId, mode }) => {
+  const navigate = useNavigate();
+  const currentUser = getCurrentUser();
   const {
     currentStep,
     selectedCoupons,
@@ -29,9 +42,47 @@ const MultyStepEventForm = () => {
     submitLoading,
     responseData,
     responseMessage,
+    filteredEvents,
   } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const [form] = Form.useForm();
+  const {  responseDataEvent, responseMessageEvent, message } = useSelector((state) => state.organizerUpdates);
+
+
+  console.log("------------------", eventId)
+  console.log("------------------", mode)
+  let eventData;
+  if (mode === "EDIT") {
+    if (filteredEvents && filteredEvents.length > 0) {
+      const numericBannerId = parseInt(eventId, 10);
+      const foundData = filteredEvents.find(event => event.id === numericBannerId);
+      eventData = foundData;
+      console.log(eventData, "FOUND DATA------------");
+    } else {
+      console.log('filteredevent is empty or undefined.');
+    }
+  }
+
+  useEffect(() => {
+    if (mode === "EDIT" && eventData) {
+      form.setFieldsValue({
+        event_name: eventData.event_name,
+        description: eventData.description,
+        thumbnail_image: eventData.thumbnail_image
+          ? [
+            {
+              uid: "-1",
+              name: eventData.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: eventData.thumbnail_image,
+            },
+          ]
+          : [],
+      });
+    }
+  }, [mode, eventData, form]);
+
+
   useEffect(() => {
     dispatch(resetState());
   }, [dispatch]);
@@ -66,26 +117,56 @@ const MultyStepEventForm = () => {
   };
 
   const onFinish = async () => {
-    try {
-      dispatch(setSubmitLoading(true));
-      const offers = {
-        offer_ids: selectedOffers?.map((offer) => offer.id) || [],
-        coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
-      };
+    const values = await form.validateFields();
 
-      const finalData = {
-        ...submitData,
-        ...offers,
-        max_tickets: parseInt(submitData.max_tickets || "0", 10),
-      };
+    if (mode === "EDIT") {
+      if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
 
-      dispatch(setSelectedSubmitItem(finalData));
-    } catch (error) {
-      console.error("Submission Error:", error);
-      message.error("An error occurred during submission.");
-    } finally {
-      dispatch(setSubmitLoading(false));
+
+        const data = {
+          ...values,
+          id: eventId,
+        };
+        console.log("Edit Data:", data);
+
+        dispatch(setSelectedSubmitItem(data));
+
+
+        // const resultAction = await dispatch(
+        //   updateOrganizerEvent({ data, action: ActionType.SUBMIT })
+        // );
+
+        // if (updateOrganizerEvent.fulfilled.match(resultAction)) {
+        //   dispatch(setSelectedUpdateEvent(data));
+        //   dispatch(setUpdateEventDialogVisible(true));
+        // }
+
+      }
+
+    } else {
+      try {
+        dispatch(setSubmitLoading(true));
+        const offers = {
+          offer_ids: selectedOffers?.map((offer) => offer.id) || [],
+          coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
+        };
+
+        const finalData = {
+          ...submitData,
+          ...offers,
+          max_tickets: parseInt(submitData.max_tickets || "0", 10),
+        };
+
+        dispatch(setSelectedSubmitItem(finalData));
+      } catch (error) {
+        console.error("Submission Error:", error);
+        message.error("An error occurred during submission.");
+      } finally {
+        dispatch(setSubmitLoading(false));
+      }
     }
+
+
   };
 
   const prevStep = () => {
@@ -166,10 +247,10 @@ const MultyStepEventForm = () => {
         )}
       </div>
       <SubmitAndConfirmModal
-        responseData={responseData}
-        addFunction={addEvent}
+        responseData={mode === "EDIT" ? responseDataEvent : responseData}
+        addFunction={mode === "EDIT" ? updateOrganizerEvent : addEvent}
         navigationPath={`${APP_PREFIX_PATH}/event/list`}
-        responseMessage={responseMessage}
+        responseMessage={mode === "EDIT" ? responseMessageEvent : responseMessage}
       />
     </div>
   );

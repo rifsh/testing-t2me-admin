@@ -19,7 +19,7 @@ export const ApiConstant = {
   EVENT_URL: "/api/v1/events/secured/event",
   EVENT_VALIDATION_URL: "/api/v1/events/secured/validation_event",
   EVENT_DETAILS_URL: "/api/v1/events/secured/events/detail",
-  PLACE_EVENTS_URL:"/api/v1/events/public/event",
+  PLACE_EVENTS_URL: "/api/v1/events/public/event",
   ORGANIZER_EVENTS_URL: "/api/v1/events/secured/event/organizer",
   EVENT_SUPPORT_AVAILABLE: "/api/v1/events/secured/events/support",
   EDIT_EVENT_URL: "/api/v1/events/secured/edit_event",
@@ -50,5 +50,12 @@ export const ApiConstant = {
   ADVERTISEMENT_SCHEDULE_URL: "/api/v1/banners/secured/advertisementschedule",
   ADVERTISEMENT_BANNER_UPDATE_URL: "/api/v1/banners/secured/advertisementbannerupdate",
   ADVERTISEMENT_CATEGORY_UPDATE_URL: "/api/v1/banners/secured/bannercategoryupdate",
+
+  // EVENT ORGANIZER ENDPOINTS
+
+  EVENT_ORGANIZER_UPDATES: "/api/v1/events/secured/neweventupdates",
+  EVENT_ORGANIZER_SINGLE_UPDATE: "/api/v1/events/secured/singleeventupdate",
+  EVENT_ORGANIZER_SINGLE_UPDATE_PUT: "/api/v1/events/secured/superadminapproval",
+  EVENT_ORGANIZER_EVENT_UPDATE: "/api/v1/events/secured/organizer_event_update"
 
 };

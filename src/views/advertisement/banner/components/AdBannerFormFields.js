@@ -66,7 +66,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
         name: banner.name,
         description: banner.description,
         ads_url: banner.ads_url,
-        banner_category_id: banner.banner_category_id,
+        banner_category_id: banner.banner_category.id,
         place_id: banner.place?.id,
         // event_id: banner.event?.id,
         media_path: banner.media_path

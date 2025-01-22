@@ -9,7 +9,8 @@ const { Search } = Input;
 const SearchBarWithStatus = ({
   fetchFunction,
   additionalFilters = [],
-  isStatus = true
+  isStatus = true,
+
 }) => {
   const dispatch = useDispatch();
   const [searchValue, setSearchValue] = useState(null);
@@ -131,7 +132,7 @@ const SearchBarWithStatus = ({
     <Flex className="mb-1" mobileFlex={false} >
       {/* Search Input */}
       <div className="mr-md-3 mb-3"
-        style={{ width: !isStatus && "100%"  }}
+        style={{ width: !isStatus && "100%" }}
       >
         <Search
           placeholder="Search"
@@ -188,13 +189,16 @@ const SearchBarWithStatus = ({
                 className="mr-2"
               >
                 <Option value={null}>All</Option>
-                {filter.options.map((option) =>
-                  option && option.id && option.name ? (
-                    <Option key={option.id} value={option.id}>
-                      {option.name}
+                {filter.options.map((option) => {
+                  if (!option) return null; 
+                  const value = option.id;
+                  const label = filter.additionalField ? option[filter.additionalField] : option.name;
+                  return value && label ? (
+                    <Option key={value} value={value}>
+                      {label}
                     </Option>
-                  ) : null
-                )}
+                  ) : null;
+                })}
               </Select>
             )}
           </div>
