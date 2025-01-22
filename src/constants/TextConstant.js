@@ -17,4 +17,5 @@ export const TextConstants = {
   ConfirmItemDetails: "Confirm Item Details",
   ConfirmItem: "Confirm Item",
   Cancel: "Cancel",
+  Pending: "pending",
 };

@@ -19,7 +19,7 @@ function UserFormFields() {
   );
 
   useEffect(() => {
-    dispatch(fetchAllRoles());
+    dispatch(fetchAllRoles({}));
   }, [dispatch]);
 
   const handleSelectedRole = (role) => {

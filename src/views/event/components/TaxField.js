@@ -1,7 +1,7 @@
 import { Card, Col, Form, Select, Row, Typography, List } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllTax, setSelectedTaxDetails } from "store/slices/taxSlice";
-import { useEffect, useState } from "react";
+import { useEffect, } from "react";
 import { RulesMessageConstants } from "constants/RulesConstant";
 
 const { Text } = Typography;
@@ -37,11 +37,11 @@ const TaxField = ({ form }) => {
               loading={loading}
               mode="multiple"
               style={{ width: "100%" }}
-              placeholder="Please select"
+              placeholder="Please select..."
               notFoundContent={
                 loading ? "Loading Taxes..." : "No Taxes Available"
               }
-              onChange={handleTaxChange} // Handle tax selection change
+              onChange={handleTaxChange}  // Handle tax selection changes
             >
               {allTax.map((tax) => (
                 <Option key={tax.id} value={tax.id}>

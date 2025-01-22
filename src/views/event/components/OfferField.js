@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Row, Col, Card, Form, Select, Typography, Button } from "antd";
-import { ClockCircleFilled, CloseCircleOutlined, CloseOutlined } from "@ant-design/icons";
+import {  CloseCircleOutlined, } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllOffers } from "store/slices/offerSlice";
 import { fetchAllCoupons } from "store/slices/couponSlice";
@@ -27,7 +27,7 @@ const OfferField = () => {
   );
 
   useEffect(() => {
-    dispatch(fetchAllOffers({}));
+    dispatch(fetchAllOffers({active: true}));
     dispatch(fetchAllCoupons({}));
   }, [dispatch]);
 

@@ -36,6 +36,7 @@ export const ApiConstant = {
   ISSUE_LIST_URL: "/api/v1/issue/secured/issues",
   ISSUE_ALERT_LIST_URL: "/api/v1/issue/secured/issues/alert",
   ISSUE_CREATION_URL: "/api/v1/issue/public/issues",
+  TICKET_ASSIGN_DETAILS_URL: "/api/v1/issue/secured/issues/assign/details",
   ISSUE_DETAILS_URL: "/api/v1/issue/secured/issues/details",
   ISSUE_STATUS_UPDATE_URL: "/api/v1/issue/secured/issues/status",
   ISSUE_CLOSE_URL: "/api/v1/issue/secured/issues/close",
