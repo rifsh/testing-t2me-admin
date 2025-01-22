@@ -14,9 +14,25 @@ console.warn(IssueId,data)
   });
 };
 
+IssuesService.AddNewIssue = function ( data) {
+//   const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.ISSUE_CREATION_URL}`,
+    method: "post",
+    data: data,
+  });
+};
+
 IssuesService.getAllIssue = function (pageData) {
   return fetch({
     url: ApiConstant.ISSUE_LIST_URL,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
+IssuesService.getAllAlertissues = function (pageData) {
+  return fetch({
+    url: ApiConstant.ISSUE_ALERT_LIST_URL,
     method: "get",
     params: Utils.filterParams(pageData),
   });
@@ -31,6 +47,12 @@ IssuesService.checkValidation = function () {
 IssuesService.fetchIssueDetails = function (IssueId) {
   return fetch({
     url: `${ApiConstant.ISSUE_DETAILS_URL}?issue_id=${IssueId}`,
+    method: "get",
+  });
+};
+IssuesService.FetchAssignmentDetails = function (IssueId) {
+  return fetch({
+    url: `${ApiConstant.TICKET_ASSIGN_DETAILS_URL}?issue_id=${IssueId}`,
     method: "get",
   });
 };
@@ -57,10 +79,11 @@ IssuesService.IssueCloseUpdate = function (IssueId, data ) {
     data: data,
   });
 };
-IssuesService.IssueReasignUpdate = function (IssueId, data ) {
+IssuesService.IssueReasignUpdate = function (IssueId, CommentId,UserId, data ) {
 //   const encodedAction = encodeURIComponent(handleAction(action));
+console.log(IssueId, CommentId, data)
   return fetch({
-    url: `${ApiConstant.ISSUE_REASSIGN_URL}?issue_id=${IssueId}`,
+    url: `${ApiConstant.ISSUE_REASSIGN_URL}?issue_id=${IssueId}&comment_id=${parseInt(CommentId)}&user_id=${UserId}`,
     method: "put",
     data: data,
   });

@@ -16,6 +16,7 @@ const initialState = {
   selectedCoupons: [],
   selectedOffers: [],
   eventOnPlaces:[],
+  organizerEvents:[],
   validationData: [],
   submitData: {},
   message: null,
@@ -28,6 +29,7 @@ const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
+  eventsupport : null,
   pagination: { size: 10, page: 1 },
 };
 
@@ -57,6 +59,39 @@ export const fetchEventOnPlaces = createAsyncThunk(
 
       return response.data[0];
 
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+)
+
+export const fetchOrganizerEvents = createAsyncThunk(
+  "event/fetchOrganizerEvents",
+  async (userId, { rejectWithValue }) => {
+    try {
+      if (EVENT_DETAILS_MOCK_API && ENABLE_MOCK_API) {
+        const response = EventMockData.fetchOrganizerEvents;
+        return response.data;
+      } else {
+        const response = await EventService.fetchOrganizerEvents(userId);
+        return response.data;
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+export const fetchEventSupportAvailable = createAsyncThunk(
+  "event/fetchEventSupportAvailable",
+  async (eventId, { rejectWithValue }) => {
+    try {
+      if (EVENT_DETAILS_MOCK_API && ENABLE_MOCK_API) {
+        const response = EventMockData.fetchOrganizerEvents;
+        return response.data;
+      } else {
+        const response = await EventService.fetchEventSupportAvailable(eventId);
+        return response.data;
+      }
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
     }
@@ -307,6 +342,35 @@ const eventSlice = createSlice({
         state.eventDetails = eventData;
       })
       .addCase(fetchEventDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchOrganizerEvents.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchOrganizerEvents.fulfilled, (state, action) => {
+        console.log(action.payload[0].items)
+        state.loading = false;
+        state.organizerEvents = action.payload[0].items;
+        state.pagination = action.payload;
+
+      })
+      .addCase(fetchOrganizerEvents.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchEventSupportAvailable.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchEventSupportAvailable.fulfilled, (state, action) => {
+        console.log(action.payload)
+        state.loading = false;
+        state.eventsupport = action.payload[0].event_support;
+
+      })
+      .addCase(fetchEventSupportAvailable.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

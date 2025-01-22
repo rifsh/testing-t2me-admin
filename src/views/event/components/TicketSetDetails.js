@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Typography, Divider, List, Col, Row } from "antd";
+import { Card, Typography, Divider, List, Col } from "antd";
 import { useSelector } from "react-redux";
 
 const { Title, Text } = Typography;

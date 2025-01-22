@@ -187,6 +187,14 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
+      {
+        key: "alerts.list",
+        path: `${APP_PREFIX_PATH}/alerts/list`,
+        title: "sidenav.apps.alerts",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
     ],
   },
   {
@@ -308,6 +316,32 @@ const eventOrganaizerDashBoardNavTree = [
       },
     ],
   },
+  {
+    key: "Issue",
+    path: `${APP_PREFIX_PATH}/apps`,
+    title: "sidenav.apps.issue",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    isGroupTitle: false,
+    submenu: [
+      {
+        key: "issue.list",
+        path: `${APP_PREFIX_PATH}/issue/list`,
+        title: "sidenav.apps.issue",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "mail.list",
+        path: `${APP_PREFIX_PATH}/mail/list`,
+        title: "sidenav.apps.mail",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
+  },
 ];
 const SuperSupportingTeamDashBoardNavTree = [
   {
@@ -379,10 +413,6 @@ const navigationConfig = () => {
   } else if (decodedToken?.role_id === UserRoleConstants.eventOrganizerRoleId) {
 
     return eventOrganaizerDashBoardNavTree;
-  } else if (
-    decodedToken.role_id === UserRoleConstants.eventSupportingTeamRoleId
-  ) {
-    return [];
   } 
    else if (decodedToken?.role_id === UserRoleConstants.superSupportingTeamRoleId) {
     

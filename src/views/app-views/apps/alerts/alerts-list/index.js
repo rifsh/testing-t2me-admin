@@ -15,7 +15,7 @@ import {
   filterEvent,
   handleShowStatus,
 } from "store/slices/eventSlice";
-import { fetchAllissues, fetchIssueDetails } from "store/slices/IssueSlice";
+import { fetchAllissues, fetchIssueDetails, fetchAllAlertissues } from "store/slices/IssueSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
@@ -36,12 +36,12 @@ const IssueList = () => {
   const { pagination, editable_status, issues, message, loading } =
     useSelector((state) => state.issue);
   useEffect(() => {
-    // console.warn( getCurrentUser().role_id)
-    dispatch(fetchAllissues({...DEFAULT_PAGE_SIZE}));
+    console.warn('tholi..........', getCurrentUser().role_id)
+    dispatch(fetchAllAlertissues({...DEFAULT_PAGE_SIZE,'role_id':getCurrentUser().role_id}));
   }, [dispatch]);
 
   const handleViewDetails = async (id) => {
-    // console.warn(id)
+    console.warn(id)
     await dispatch(fetchIssueDetails(id));
     navigate(`${APP_PREFIX_PATH}/issue/details/${id}`);
   };
@@ -58,7 +58,7 @@ const IssueList = () => {
   // };
 
   const handlePagination = (page, size) => {
-    dispatch(fetchAllissues({ page: page, size: size }));
+    dispatch(fetchAllAlertissues({ page: page, size: size }));
   };
   const dropdownMenu = (row) => (
     <Menu>
@@ -85,28 +85,30 @@ const IssueList = () => {
     {
       title: "Issue",
       dataIndex: "issue",
-      sorter: (a, b) => {
-        const issueA = a.issue || ""; // Fallback to empty string if null/undefined
-        const issueB = b.issue || "";
-        return issueA.localeCompare(issueB);
-      },
+      sorter: (a, b) =>
+        (a, b) => a.issue.localeCompare(b.issue),
     },
-    
     {
       title: "from",
       dataIndex: "email",
       sorter: (a, b) => a.email.localeCompare(b.email),
     },
     {
-      title: "assigned to",
+      title: "assigned_to",
       dataIndex: ["ticket_assigned", "email"], // Fallback index
-      // render: (text, record) => {
-
-      //      record.ticket_assigned?.email 
-      // },
+      render: (text, record) => {
+        // If assigned_role is null, display ticket_assigned.email, otherwise display assigned_role.email
+        return record.re_assigned_to
+          ? record.re_assigned_to?.email
+          : record.ticket_assigned?.email || "N/A";
+      },
       sorter: (a, b) => {
-        const assignedA = a.ticket_assigned?.email 
-        const assignedB = b.ticket_assigned?.email 
+        const assignedA = a.re_assigned_to
+          ? a.re_assigned_to.email
+          : a.ticket_assigned?.email || "";
+        const assignedB = b.re_assigned_to
+          ? b.re_assigned_to.email
+          : b.ticket_assigned?.email || "";
         return assignedA.localeCompare(assignedB);
       },
     },
@@ -118,42 +120,50 @@ const IssueList = () => {
           {text.charAt(0).toUpperCase() + text.slice(1)}
         </Tag>
       ),
-      sorter: (a, b) => {
-        const statusA = a.issue_status || ""; // Fallback to empty string if null/undefined
-        const statusB = b.issue_status || "";
-        return statusA.localeCompare(statusB);
-      },
+      sorter: (a, b) =>
+        a.issue_status.localeCompare(b.issue_status), // Sort alphabetically by status
       sortDirections: ["ascend", "descend"],
-    },
-    {
-      title: "Closed",
-      dataIndex: "ticket_status",
-      sorter: (a, b) => {
-        // Ensure comparison values are always defined and normalized
-        const statusA = a.ticket_status === true ? "closed" : "open";
-        const statusB = b.ticket_status === true ? "closed" : "open";
-        return statusA.localeCompare(statusB);
-      },
-      render: (ticket_status) =>
-        ticket_status ? (
-          <span style={{ color: "green" }}>✔️</span>
-        ) : (
-          <span style={{ color: "red" }}>❌</span>
-        ),
-    },
-    
-    
-    {
-      title: "",
-      dataIndex: "actions",
-      render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown 
-          menu={dropdownMenu(elm)}
-           />
-        </div>
-      ),
-    },
+    }
+,    
+{
+  title: "Created On",
+  dataIndex: "created_at",
+  sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at),
+  render: (created_at) => {
+    if (!created_at) {
+      return <div style={{ color: "#888" }}>No date available</div>;
+    }
+
+    const date = new Date(created_at);
+    if (isNaN(date)) {
+      return <div style={{ color: "#888" }}>Invalid date</div>;
+    }
+
+    const formattedDate = date.toISOString().split("T")[0]; // Extract only the date part
+    const daysAgo = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24)); // Calculate days ago
+
+    return (
+      <>
+        <div>{formattedDate}</div>
+        <div style={{ color: "#888" }}>{daysAgo} days ago</div>
+      </>
+    );
+  },
+}
+
+
+    // ,
+    // {
+    //   title: "",
+    //   dataIndex: "actions",
+    //   render: (_, elm) => (
+    //     <div className="text-right">
+    //       <EllipsisDropdown 
+    //       menu={dropdownMenu(elm)}
+    //        />
+    //     </div>
+    //   ),
+    // },
   ];
   const [searchTerm, setSearchTerm] = useState();
   const [activeStatus, setactiveStatus] = useState();
@@ -161,12 +171,11 @@ const IssueList = () => {
     if (value) {
       setSearchTerm(value);
       dispatch(
-        fetchAllissues({
+        fetchAllEvent({
           search: value,
           page: 1,
           size: 10,
           active: activeStatus,
-          // role_id:getCurrentUser().role_id
         })
       );
     }
@@ -177,7 +186,7 @@ const IssueList = () => {
       console.log("is empty search");
 
       dispatch(
-        fetchAllissues({ search: null, page: 1, size: 10, active: activeStatus })
+        fetchAllEvent({ search: null, page: 1, size: 10, active: activeStatus })
       );
     }
   };
@@ -235,9 +244,6 @@ const IssueList = () => {
           dataSource={issues}
           rowKey="id"
           loading={loading}
-          rowClassName={(record) =>
-            record.ticket_assigned?.id !== getCurrentUser().id ? { opacity: 0.6 }: {opacity: 0.6 }
-          }
           pagination={{
             current: pagination.page,
             pageSize: pagination.size,
