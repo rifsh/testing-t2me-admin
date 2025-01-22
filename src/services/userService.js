@@ -4,10 +4,11 @@ import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
 
 const UserService = {};
-UserService.getAllRoles = function () {
+UserService.getAllRoles = function (pageData) {
   return fetch({
     url: `${ApiConstant.ROLES_URL}`,
     method: "get",
+    params: Utils.filterParams(pageData),
   });
 };
 UserService.getAllUsers = function (pageData) {

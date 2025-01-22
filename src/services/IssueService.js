@@ -50,6 +50,12 @@ IssuesService.fetchIssueDetails = function (IssueId) {
     method: "get",
   });
 };
+IssuesService.FetchAssignmentDetails = function (IssueId) {
+  return fetch({
+    url: `${ApiConstant.TICKET_ASSIGN_DETAILS_URL}?issue_id=${IssueId}`,
+    method: "get",
+  });
+};
 IssuesService.fetchCommentDetails = function (pageData) {
   return fetch({
     url: ApiConstant.ISSUE_REASSIGN_COMMENT_URL,
@@ -73,10 +79,11 @@ IssuesService.IssueCloseUpdate = function (IssueId, data ) {
     data: data,
   });
 };
-IssuesService.IssueReasignUpdate = function (IssueId, data ) {
+IssuesService.IssueReasignUpdate = function (IssueId, CommentId,UserId, data ) {
 //   const encodedAction = encodeURIComponent(handleAction(action));
+console.log(IssueId, CommentId, data)
   return fetch({
-    url: `${ApiConstant.ISSUE_REASSIGN_URL}?issue_id=${IssueId}`,
+    url: `${ApiConstant.ISSUE_REASSIGN_URL}?issue_id=${IssueId}&comment_id=${parseInt(CommentId)}&user_id=${UserId}`,
     method: "put",
     data: data,
   });

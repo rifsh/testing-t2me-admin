@@ -24,6 +24,7 @@ const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
+  AssignmentDetails:[],
   pagination: {size:10,page:1},
 };
 
@@ -36,6 +37,22 @@ export const fetchIssueDetails = createAsyncThunk(
         return response.data;
       } else {
         const response = await IssuesService.fetchIssueDetails(IssueId);
+        return response.data;
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+export const FetchAssignmentDetails = createAsyncThunk(
+  "event/FetchAssignmentDetails",
+  async (IssueId, { rejectWithValue }) => {
+    try {
+      if (EVENT_DETAILS_MOCK_API && ENABLE_MOCK_API) {
+        const response = EventMockData.FetchAssignmentDetails;
+        return response.data;
+      } else {
+        const response = await IssuesService.FetchAssignmentDetails(IssueId);
         return response.data;
       }
     } catch (error) {
@@ -109,9 +126,9 @@ export const AddNewIssue = createAsyncThunk(
 
 export const IssueReasignComment = createAsyncThunk(
   "issue/IssueReasignComment",
-  async ({ IssueId, data }, { rejectWithValue }) => {
+  async ({ IssueId, data, UserId }, { rejectWithValue }) => {
     try {
-      const response = await IssuesService.IssueReasignComment(IssueId, data);
+      const response = await IssuesService.IssueReasignComment(IssueId, data, UserId);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to process event");
@@ -147,10 +164,10 @@ export const IssueCloseUpdate = createAsyncThunk(
 
 export const IssueReasignUpdate = createAsyncThunk(
   "issue/IssueReasignUpdate",
-  async ({ IssueId, data }, { rejectWithValue }) => {
+  async ({ IssueId, CommentId,UserId, data }, { rejectWithValue }) => {
     try {
         console.warn(IssueId, data,'.....')
-      const response = await IssuesService.IssueReasignUpdate(IssueId, data);
+      const response = await IssuesService.IssueReasignUpdate(IssueId,CommentId,UserId, data);
       return response.status;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -280,13 +297,16 @@ const eventSlice = createSlice({
       .addCase(IssueReasignUpdate.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to reassign the issue";
+
       })
       .addCase(IssueReasignUpdate.pending, (state) => {
         state.loading = true;
+
         state.error = null;
       })
       .addCase(IssueReasignUpdate.fulfilled, (state, { payload }) => {
         state.loading = false;
+     
         if (payload.message) {
           state.message = payload.message;
         }
@@ -332,6 +352,19 @@ const eventSlice = createSlice({
         state.IssueDetails = issueData;
       })
       .addCase(fetchIssueDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(FetchAssignmentDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(FetchAssignmentDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        const issueData = { ...action.payload[0] };
+        state.AssignmentDetails = issueData.items;
+      })
+      .addCase(FetchAssignmentDetails.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
