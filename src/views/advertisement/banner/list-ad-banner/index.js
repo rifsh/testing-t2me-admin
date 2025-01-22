@@ -88,10 +88,16 @@ const AdBannerlist = () => {
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: "Category Name",
+      title: "Banner Name",
       dataIndex: "name",
       render: (_, record) => <span>{record.name}</span>,
       sorter: (a, b) => a.name.localeCompare(b.name),
+    },
+    {
+      title: "Category Name",
+      dataIndex: ["banner_category","name"],
+      render: (_, record) => <span>{record.banner_category.name}</span>,
+      sorter: (a, b) => a.record.banner_category.name.localeCompare(b.record.banner_category.name),
     },
     {
       title: "Place",
@@ -134,7 +140,7 @@ const AdBannerlist = () => {
   return (
     <Card>
       <Flex alignItems="center" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={fetchAdBanners} />
+        <SearchBarWithStatus fetchFunction={fetchAdBanners} isStatus={false} />
         <div>
           <Button
             type="primary"

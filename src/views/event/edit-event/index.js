@@ -1,12 +1,14 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import MultyStepEventForm from '../components/MultyStepForm';
 
 const EditEvent = () => {
-  const params = useParams();
+  const location = useLocation();
+  const { eventId } = useParams();
+  const { mode = "EDIT", id = eventId } = location.state || {};
 
   return (
-    <MultyStepEventForm eventId={params.eventId} />
+    <MultyStepEventForm eventId={id} mode="EDIT" />
   );
 }
 
