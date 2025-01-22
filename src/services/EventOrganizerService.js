@@ -36,6 +36,29 @@ EventOrganizerService.submitOrganizerUpdate = function (data, action) {
   });
 };
 
+EventOrganizerService.updateOrganizerEvent = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
+  if (data.thumbnail_image && Array.isArray(data.thumbnail_image)) {
+    data.thumbnail_image.forEach((image) => {
+      formData.append("thumbnail_image", image.originFileObj);
+    });
+  }
+
+  return fetch({
+    url: `${ApiConstant.EVENT_ORGANIZER_EVENT_UPDATE}?event_id=${data.id}&action=${encodedAction}`,
+    method: "post",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+
 
 
 

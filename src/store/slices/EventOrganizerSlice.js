@@ -6,15 +6,17 @@ const initialState = {
     organizerUpdates: [],
     filteredOrganizerUpdates: [],
     searchTerm: "",
-    responseData: null,
+    responseDataEvent: null,
     selectedOrganizerUpdate: null,
-    responseMessage: null,
+    responseMessageEvent: null,
     selectedOrganizerUpdateId: null,
+    selectedUpdateEvent: null,
     error: null,
     message: null,
     subPagination: {},
     pagination: {},
     editable_status: null,
+    modalVisible: false,
     singleOrganizerUpdate: {},
 };
 
@@ -62,6 +64,19 @@ export const fetchSingleOrganizerUpdate = createAsyncThunk(
     }
 );
 
+export const updateOrganizerEvent = createAsyncThunk(
+    "organizerUpdates/updateOrganizerEvent",
+    async ({ data, action }, { rejectWithValue }) => {
+        try {
+            const response = await EventOrganizerService.updateOrganizerEvent(data, action);
+            return response.status;
+        } catch (error) {
+            return rejectWithValue(error.message || "Failed to update Event");
+        }
+    }
+);
+
+
 const OrganizerUpdateSlice = createSlice({
     name: "organizerUpdates",
     initialState,
@@ -69,11 +84,20 @@ const OrganizerUpdateSlice = createSlice({
         setOrganizerUpdateDialogVisible(state, action) {
             state.dialogVisible = action.payload;
         },
+        setUpdateEventDialogVisible(state, action) {
+            state.dialogVisible = action.payload;
+        },
         setOrganizerUpdateModalLoading(state, action) {
             state.modalLoading = action.payload;
         },
         setSelectedOrganizerUpdate(state, action) {
             state.selectedOrganizerUpdate = action.payload;
+        },
+        setSelectedUpdateEvent(state, action) {
+            state.selectedUpdateEvent = action.payload;
+        },
+        setUpdateEventLoading(state, action) {
+            state.modalLoading = action.payload;
         },
         filterOrganizerUpdate: (state, action) => {
             const { searchTerm, type } = action.payload;
@@ -136,11 +160,29 @@ const OrganizerUpdateSlice = createSlice({
                 state.loading = false;
                 state.error = payload || "Faileds";
             })
+            .addCase(updateOrganizerEvent.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateOrganizerEvent.fulfilled, (state, { payload }) => {
+                state.loading = false;
+                if (payload.message) {
+                    state.message = payload.message;
+                    state.editable_status = payload.editable_status;
+                }
+            })
+            .addCase(updateOrganizerEvent.rejected, (state, { payload }) => {
+                state.loading = false;
+                state.error = payload || "Failed to edit event";
+            })
 
     },
 });
 
 export const { filterOrganizerUpdate, setOrganizerUpdateDialogVisible,
+    setUpdateEventDialogVisible,
+    setSelectedUpdateEvent,
+    setUpdateEventLoading,
     setOrganizerUpdateModalLoading, setSelectedOrganizerUpdate } =
     OrganizerUpdateSlice.actions;
 

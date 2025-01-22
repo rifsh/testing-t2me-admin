@@ -8,8 +8,9 @@ import {
   TagOutlined,
   FileTextOutlined,
   CommentOutlined,
+  PictureOutlined,
 } from '@ant-design/icons';
-import { Button, Row, Col, Card, Typography, Space, List, Avatar, message, Tag } from "antd";
+import { Button, Row, Col, Card, Typography, Space, List, Avatar, message, Tag, Image } from "antd";
 import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
 import { useParams, useNavigate } from "react-router-dom";
 import { ActionType } from "utils/api/warning-submit-util";
@@ -29,6 +30,7 @@ const DummyDataExample = () => {
   const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
   const [comment, setComment] = useState('');
   const [actionType, setActionType] = useState('');
+  const [showAllComments, setShowAllComments] = useState(false);
 
   useEffect(() => {
     if (eventUpId) {
@@ -88,19 +90,27 @@ const DummyDataExample = () => {
 
     setComment('');
     setIsCommentModalVisible(false);
+
+
+  };
+  const toggleComments = () => {
+    setShowAllComments(!showAllComments);
   };
 
   const renderCommentList = () => {
     if (!singleOrganizerUpdate?.related_comments || singleOrganizerUpdate?.related_comments.length === 0) {
       return <Text type="secondary">No comments yet</Text>;
     }
-    const isMoreCommentsAvailable = singleOrganizerUpdate?.related_comments.size < singleOrganizerUpdate?.related_comments.total;
+
+    const comments = singleOrganizerUpdate?.related_comments;
+    const displayComments = showAllComments ? comments : comments.slice(0, 3);
+    const hasMoreComments = comments.length > 3;
 
     return (
       <div>
         <List
           itemLayout="horizontal"
-          dataSource={singleOrganizerUpdate?.related_comments}
+          dataSource={displayComments}
           renderItem={(item) => (
             <List.Item>
               <List.Item.Meta
@@ -121,9 +131,18 @@ const DummyDataExample = () => {
             </List.Item>
           )}
         />
+        {hasMoreComments && (
+          <Button
+            style={{ marginTop: '16px' }}
+            onClick={toggleComments}
+          >
+            {showAllComments ? "Show Less Comments" : "Show More Comments"}
+          </Button>
+        )}
       </div>
     );
   };
+
   const getStatusTagColor = (status) => {
     const statusLower = status?.toLowerCase();
     switch (statusLower) {
@@ -183,7 +202,7 @@ const DummyDataExample = () => {
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '24px' }}>
       <Card style={{ marginTop: 16 }}>
-        <Title level={4}>Update Information</Title>
+        <Title level={4}>Request Information</Title>
         <Row gutter={[24, 24]}>
           <Col xs={24} md={8}>
             <Text type="secondary">Organizer Name</Text>
@@ -210,10 +229,12 @@ const DummyDataExample = () => {
           </Col>
         </Row>
       </Card>
+      {renderActionButtons()}
+
 
       {singleOrganizerUpdate?.updated_fields && (
         <Card style={{ marginTop: 16 }}>
-          <Title level={4}>Updated Field</Title>
+          <Title level={4}>Updated Information</Title>
           <Row gutter={[24, 24]}>
             {singleOrganizerUpdate.updated_fields?.event_name && (
               <Col xs={24} md={8}>
@@ -232,10 +253,66 @@ const DummyDataExample = () => {
               </Col>
             )}
           </Row>
+
         </Card>
       )}
 
-      {renderActionButtons()}
+      {singleOrganizerUpdate?.updated_fields?.thumbnail_image && (
+        <Card style={{ marginTop: 16 }}>
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <Space>
+
+              <Title level={4} style={{ margin: 0 }}>
+                Updated Thumbnail
+              </Title>
+            </Space>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <Image
+                src={singleOrganizerUpdate.updated_fields.thumbnail_image}
+                alt="Updated Event Thumbnail"
+                style={{
+                  width: '100%',
+                  height: '300px',
+                  objectFit: 'cover',
+                  borderRadius: '8px'
+                }}
+                fallback="/api/placeholder/400/300"
+              />
+            </div>
+          </Space>
+        </Card>
+      )}
+
+      {singleOrganizerUpdate?.updated_fields?.banner_images &&
+        singleOrganizerUpdate.updated_fields.banner_images.length > 0 && (
+          <Card style={{ marginTop: 16 }}>
+            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+              <Space>
+
+                <Title level={4} style={{ margin: 0 }}>
+                  Updated Banner Images
+                </Title>
+              </Space>
+              <Row gutter={[16, 16]}>
+                {singleOrganizerUpdate.updated_fields.banner_images.map((bannerUrl, index) => (
+                  <Col xs={12} sm={8} md={6} lg={4} key={index}>
+                    <Image
+                      src={bannerUrl}
+                      alt={`Banner Image ${index + 1}`}
+                      style={{
+                        width: '100%',
+                        height: '120px',
+                        objectFit: 'cover',
+                        borderRadius: '8px'
+                      }}
+                    />
+                  </Col>
+                ))}
+              </Row>
+            </Space>
+          </Card>
+        )}
+
 
       <Card style={{ marginTop: 16 }}>
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
