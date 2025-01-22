@@ -73,7 +73,7 @@ const UpdateStatusModal = ({
     <WarningModal
       visible={statusDialogVisible}
       title={TextConstants.Confirm_Action}
-      details={responseMessage || ""}
+      details= {responseMessage || ""}
       editable_status={editable_status}
       warningMessage={
         editable_status

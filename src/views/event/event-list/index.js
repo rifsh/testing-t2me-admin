@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Card, Table, Select, Input, Button, Menu } from "antd";
 import {
   EyeOutlined,
-  SearchOutlined,
   FormOutlined,
   EditOutlined,
 } from "@ant-design/icons";
@@ -12,14 +11,12 @@ import {
   editEvent,
   fetchAllEvent,
   fetchEventDetails,
-  filterEvent,
-  handleShowStatus,
 } from "store/slices/eventSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import utils from "utils";
-import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
+import { setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
