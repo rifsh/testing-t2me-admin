@@ -163,8 +163,17 @@ const UserList = () => {
             <Descriptions.Item label="Status">
               {selectedUser.is_active ? "Active" : "Inactive"}
             </Descriptions.Item>
-            <Descriptions.Item label="Additional Info">
-              {selectedUser.info || "No additional information available"}
+            {/* <Descriptions.Item label="Event Name">"Additional Info" */}
+            <Descriptions.Item label="Event Name">
+              {/* {selectedUser.events || "No additional information available"} */}
+              {selectedUser.events && Array.isArray(selectedUser.events)
+    ? selectedUser.events.map((event, index) => (
+        <span key={event.id}>
+          {event.event_name}
+          {index < selectedUser.events.length - 1 && ", "}
+        </span>
+      ))
+    : "No additional information available"}
             </Descriptions.Item>
             {selectedUser.thumbnail_image && selectedUser.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">

@@ -1,6 +1,6 @@
 export const USER_VALIDATION_MESSAGES = {
   username: {
-    format: "Username must contain only letters and spaces",
+    format: "Username only contain letters and underscore",
     length: "Username must be between 3 and 10 characters",
     spaces: "Username should not start or end with spaces",
   },

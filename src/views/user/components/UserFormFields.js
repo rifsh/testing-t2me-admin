@@ -123,7 +123,9 @@ function UserFormFields() {
             label={
               <span>
                 Events&nbsp;
-                <Tooltip title="You can select up to 5 events">
+                {/* <Tooltip title="You can select up to 5 events"> */}
+                <Tooltip title="Please select your events">
+                
                   <InfoCircleOutlined />
                 </Tooltip>
               </span>
@@ -136,7 +138,7 @@ function UserFormFields() {
                 mode="multiple"
                 loading={eventLoading}
                 style={{ width: "100%" }}
-                placeholder="Please select (max 5 events)"
+                placeholder="Please select your events"
                 maxTagCount={5}
                 showArrow
               >
