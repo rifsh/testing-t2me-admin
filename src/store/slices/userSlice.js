@@ -43,9 +43,9 @@ export const fetchSingleUsers = createAsyncThunk(
 );
 export const fetchAllRoles = createAsyncThunk(
   "users/roles",
-  async (_, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
-      const response = await UserService.getAllRoles();
+      const response = await UserService.getAllRoles(pageData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching users");
@@ -110,6 +110,12 @@ const userSlice = createSlice({
     },
     setSelectedRole: (state, action) => {
       state.selectedRole = action.payload;
+    },
+    resetUserstate: (state, action) => {
+      state.list = initialState.list;
+    },
+    resetRoleState: (state, action) => {
+      state.roles = initialState.roles;
     },
   },
   extraReducers: (builder) => {
@@ -184,7 +190,7 @@ const userSlice = createSlice({
   },
 });
 
-export const { filterUsers, setSelectedRole, setStatusFilter, setSearchTerm } =
+export const { filterUsers, setSelectedRole, setStatusFilter, setSearchTerm ,resetUserstate, resetRoleState} =
   userSlice.actions;
 
 export default userSlice.reducer;

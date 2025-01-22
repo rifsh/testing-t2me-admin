@@ -36,12 +36,12 @@ const IssueList = () => {
   const { pagination, editable_status, issues, message, loading } =
     useSelector((state) => state.issue);
   useEffect(() => {
-    console.warn('tholi..........', getCurrentUser().role_id)
-    dispatch(fetchAllissues({...DEFAULT_PAGE_SIZE,'role_id':getCurrentUser().role_id}));
+    // console.warn( getCurrentUser().role_id)
+    dispatch(fetchAllissues({...DEFAULT_PAGE_SIZE}));
   }, [dispatch]);
 
   const handleViewDetails = async (id) => {
-    console.warn(id)
+    // console.warn(id)
     await dispatch(fetchIssueDetails(id));
     navigate(`${APP_PREFIX_PATH}/issue/details/${id}`);
   };
@@ -100,19 +100,13 @@ const IssueList = () => {
     {
       title: "assigned to",
       dataIndex: ["ticket_assigned", "email"], // Fallback index
-      render: (text, record) => {
-        // If assigned_role is null, display ticket_assigned.email, otherwise display assigned_role.email
-        return record.re_assigned_to
-          ? record.re_assigned_to?.email
-          : record.ticket_assigned?.email || "N/A";
-      },
+      // render: (text, record) => {
+
+      //      record.ticket_assigned?.email 
+      // },
       sorter: (a, b) => {
-        const assignedA = a.re_assigned_to
-          ? a.re_assigned_to.email
-          : a.ticket_assigned?.email || "";
-        const assignedB = b.re_assigned_to
-          ? b.re_assigned_to.email
-          : b.ticket_assigned?.email || "";
+        const assignedA = a.ticket_assigned?.email 
+        const assignedB = b.ticket_assigned?.email 
         return assignedA.localeCompare(assignedB);
       },
     },
@@ -167,11 +161,12 @@ const IssueList = () => {
     if (value) {
       setSearchTerm(value);
       dispatch(
-        fetchAllEvent({
+        fetchAllissues({
           search: value,
           page: 1,
           size: 10,
           active: activeStatus,
+          // role_id:getCurrentUser().role_id
         })
       );
     }
@@ -182,7 +177,7 @@ const IssueList = () => {
       console.log("is empty search");
 
       dispatch(
-        fetchAllEvent({ search: null, page: 1, size: 10, active: activeStatus })
+        fetchAllissues({ search: null, page: 1, size: 10, active: activeStatus })
       );
     }
   };
@@ -240,6 +235,9 @@ const IssueList = () => {
           dataSource={issues}
           rowKey="id"
           loading={loading}
+          rowClassName={(record) =>
+            record.ticket_assigned?.id !== getCurrentUser().id ? { opacity: 0.6 }: {opacity: 0.6 }
+          }
           pagination={{
             current: pagination.page,
             pageSize: pagination.size,
