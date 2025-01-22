@@ -6,7 +6,11 @@ import Flex from "components/shared-components/Flex";
 const { Option } = Select;
 const { Search } = Input;
 
-const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
+const SearchBarWithStatus = ({
+  fetchFunction,
+  additionalFilters = [],
+  isStatus = true
+}) => {
   const dispatch = useDispatch();
   const [searchValue, setSearchValue] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null);
@@ -20,7 +24,7 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
           search: value || null,
           page: 1,
           size: 10,
-          active: statusFilter,
+          ...(isStatus && { active: statusFilter }),
           ...filterValues,
         })
       );
@@ -35,13 +39,13 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
           search: null,
           page: 1,
           size: 10,
-          active: statusFilter,
+          ...(isStatus && { active: statusFilter }),
           ...filterValues,
         })
       );
     }
   };
-  
+
   const handleFilterItemIsEmpty = (value) => {
     if (!value) {
       dispatch(
@@ -49,10 +53,10 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
           search: searchValue,
           page: 1,
           size: 10,
-          active: statusFilter,
+          ...(isStatus && { active: statusFilter }),
         })
       );
-      setFilterValues({})
+      setFilterValues({});
     }
   };
 
@@ -81,7 +85,7 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
         search: searchValue,
         page: 1,
         size: 10,
-        active: statusFilter,
+        ...(isStatus && { active: statusFilter }),
         ...newFilterValues,
       })
     );
@@ -92,7 +96,6 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
 
     return options
       .map((option) => {
-        // Ensure option and required properties exist
         if (!option || !option.name) return null;
 
         return {
@@ -101,11 +104,11 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
           value: option.name,
         };
       })
-      .filter(Boolean); // Remove any null values
+      .filter(Boolean);
   };
+
   const handleAutoCompleteSelect = (value, option, formName) => {
-    const selectedLabel = option.label; // Displayed value
-    const selectedId = option.id; // Actual ID used for filtering
+    const selectedId = option.id;
 
     setFilterValues((prev) => ({
       ...prev,
@@ -117,7 +120,7 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
         search: searchValue,
         page: 1,
         size: 10,
-        active: statusFilter,
+        ...(isStatus && { active: statusFilter }),
         ...filterValues,
         [formName]: selectedId,
       })
@@ -125,34 +128,37 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
   };
 
   return (
-    <Flex className="mb-1" mobileFlex={false}>
+    <Flex className="mb-1" mobileFlex={false} >
       {/* Search Input */}
-      <div className="mr-md-3 mb-3">
+      <div className="mr-md-3 mb-3"
+        style={{ width: !isStatus && "100%"  }}
+      >
         <Search
           placeholder="Search"
           onChange={(e) => handleSearchIsEmpty(e.target.value)}
           onSearch={handleSearch}
-          style={{ width: 200 }}
+          style={{ width: isStatus ? 200 : "100%" }}
         />
       </div>
 
-      {/* Status Dropdown */}
-      <div className="mb-3 mr-md-3">
-        <Select
-          defaultValue="All"
-          onChange={handleStatusChange}
-          className="mr-2"
-          style={{ minWidth: 180 }}
-        >
-          <Option value={null}>All</Option>
-          <Option value={true}>Active</Option>
-          <Option value={false}>Inactive</Option>
-        </Select>
-      </div>
+      {/* Status Dropdown - Only shown if isStatus is true */}
+      {isStatus && (
+        <div className="mb-3 mr-md-3">
+          <Select
+            defaultValue="All"
+            onChange={handleStatusChange}
+            className="mr-2"
+            style={{ minWidth: 180 }}
+          >
+            <Option value={null}>All</Option>
+            <Option value={true}>Active</Option>
+            <Option value={false}>Inactive</Option>
+          </Select>
+        </div>
+      )}
 
       {/* Dynamic Additional Filters */}
       {additionalFilters.map((filter, index) => {
-        // Ensure filter has required properties
         if (!filter || !Array.isArray(filter.options)) return null;
 
         return (
@@ -177,7 +183,6 @@ const SearchBarWithStatus = ({ fetchFunction, additionalFilters = [] }) => {
               <Select
                 placeholder={filter.placeholder || "Select"}
                 onClick={filter.onClick}
-                // onChange={(e) => handleFilterItemIsEmpty(e)}
                 onSelect={(value) => handleFilterChange(value, filter.formName)}
                 style={{ minWidth: 180 }}
                 className="mr-2"

@@ -16,6 +16,7 @@ const initialState = {
   responseData: null,
   selectedAdBanner: null,
   selectedAdSchedule: null,
+  selectedDroppedFile: null,
   responseMessage: null,
   selectedAdBannerId: null,
   selectedAdScheduleId: null,
@@ -36,6 +37,14 @@ export const setDraggedFile = createAsyncThunk(
     return file;
   }
 );
+
+export const setSelectedDroppedFile = createAsyncThunk(
+  "advertisement/setSelectedDroppedFile",
+  async (file) => {
+    return file;
+  }
+);
+
 
 export const setVideoPlayingStatus = createAsyncThunk(
   "advertisement/setVideoPlayingStatus",
@@ -88,7 +97,7 @@ export const createAdSchedule = createAsyncThunk(
   async ({ data, action }, { rejectWithValue }) => {
     try {
       console.log("inside-=-------------------")
-      console.log(data,"030303030303030")
+      console.log(data, "030303030303030")
       const response = await AdvertisementService.addAdSchedule(data, action);
       console.log(response)
       return response;
@@ -116,6 +125,9 @@ const AdvertisementSlice = createSlice({
   name: "advertisement",
   initialState,
   reducers: {
+    setSelectedDroppedFileState: (state, action) => {
+      state.selectedDroppedFile = action.payload;
+    },
     setModalVisible(state, action) {
       state.modalVisible = action.payload;
     },
@@ -176,6 +188,9 @@ const AdvertisementSlice = createSlice({
     builder
       .addCase(setDraggedFile.fulfilled, (state, action) => {
         state.draggedFile = action.payload;
+      })
+      .addCase(setSelectedDroppedFile.fulfilled, (state, action) => {
+        state.selectedDroppedFile = action.payload;
       })
       .addCase(setVideoPlayingStatus.fulfilled, (state, action) => {
         state.isVideoPlaying = action.payload;
@@ -268,8 +283,9 @@ export const {
   setAdBannerDialogVisible,
   setAdBannerModalLoading,
   setSelectedAdBanner,
-  setModalVisible, 
-  setSelectedMedia, 
+  setModalVisible,
+  setSelectedMedia,
+  setSelectedDroppedFileState,
 } =
   AdvertisementSlice.actions;
 

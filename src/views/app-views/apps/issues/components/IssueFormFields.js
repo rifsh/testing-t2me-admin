@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, Upload, Select, message } from "antd";
+import { Input, Row, Col, Card, Form, Button, Upload, Select, message, Alert  } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchOrganizerEvents } from "store/slices/eventSlice";
+import { fetchOrganizerEvents, fetchEventSupportAvailable } from "store/slices/eventSlice";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { AddNewIssue } from "store/slices/IssueSlice";
 import { useNavigate } from "react-router-dom";
@@ -41,9 +41,13 @@ function IssueFormFields() {
   const [form] = Form.useForm();
   const dispatch = useDispatch()
   const navigate= useNavigate()
-  const { organizerEvents } = useSelector(state=>state.event)
+  const { organizerEvents, eventsupport } = useSelector(state=>state.event)
   
 
+  const handleEventSingleDetails = (eventId)=>{
+    console.log("lll")
+      dispatch(fetchEventSupportAvailable(eventId))
+  }
 
 
   useEffect(()=>{
@@ -57,7 +61,6 @@ function IssueFormFields() {
     }
     return e?.fileList;
   };
-
 
   return (
     <Row gutter={16}>
@@ -76,15 +79,24 @@ function IssueFormFields() {
 
             {/* Event Selection */}
             <Form.Item name="event_id" label="Select Event" rules={rules.eventId}>
-              <Select placeholder="Select an event">
-                {organizerEvents&&organizerEvents?.map((event) => (
-                  <Option key={event.id} value={event.id}>
-                    {console.log(event)}
-                    {event.event_name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
+          <Select placeholder="Select an event" onChange={handleEventSingleDetails}>
+            {organizerEvents &&
+              organizerEvents.map((event) => (
+                <Option key={event.id} value={event.id}>
+                  {event.event_name}
+                </Option>
+              ))}
+          </Select>
+        </Form.Item>
+        {eventsupport === false && (
+              <Alert
+                message="No event support available"
+                description="The event will be assigned to Super Support."
+                type="warning"
+                showIcon
+                closable
+              />
+            )}
 
             {/* Files Upload */}
             <Form.Item

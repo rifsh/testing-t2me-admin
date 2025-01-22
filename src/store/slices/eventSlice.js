@@ -29,6 +29,7 @@ const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
+  eventsupport : null,
   pagination: { size: 10, page: 1 },
 };
 
@@ -73,6 +74,22 @@ export const fetchOrganizerEvents = createAsyncThunk(
         return response.data;
       } else {
         const response = await EventService.fetchOrganizerEvents(userId);
+        return response.data;
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+export const fetchEventSupportAvailable = createAsyncThunk(
+  "event/fetchEventSupportAvailable",
+  async (eventId, { rejectWithValue }) => {
+    try {
+      if (EVENT_DETAILS_MOCK_API && ENABLE_MOCK_API) {
+        const response = EventMockData.fetchOrganizerEvents;
+        return response.data;
+      } else {
+        const response = await EventService.fetchEventSupportAvailable(eventId);
         return response.data;
       }
     } catch (error) {
@@ -340,6 +357,20 @@ const eventSlice = createSlice({
 
       })
       .addCase(fetchOrganizerEvents.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchEventSupportAvailable.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchEventSupportAvailable.fulfilled, (state, action) => {
+        console.log(action.payload)
+        state.loading = false;
+        state.eventsupport = action.payload[0].event_support;
+
+      })
+      .addCase(fetchEventSupportAvailable.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
