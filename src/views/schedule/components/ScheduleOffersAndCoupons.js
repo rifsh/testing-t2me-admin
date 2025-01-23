@@ -376,12 +376,12 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
         </Card>
       </Col>
       <Text
-                      type="warning"
-                      style={{ padding: "10px 30px", fontSize: "11px" }}
-                    >
-                     Warning:  Please select a valid date to use a valid coupon.
-                      {" "}
-                    </Text>
+        type="warning"
+        style={{ padding: "10px 30px", fontSize: "11px" }}
+      >
+        Warning:  Please select a valid date to use a valid coupon.
+        {" "}
+      </Text>
 
       <Col xs={24} sm={24} md={7}>
         {selectedOffers.length > 0 && (
