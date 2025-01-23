@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Typography, Space, List, Avatar, Button, Spin, Alert, Select, message, Image } from 'antd';
+import { Card, Row,Collapse, Col, Typography, Space, List, Avatar, Button, Spin, Alert, Select, message, Image } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchAllUsers, resetRoleState, resetUserstate } from 'store/slices/userSlice';
@@ -29,6 +29,7 @@ import { TextConstants } from 'constants/TextConstant';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+const { Panel } = Collapse;
 
 const IssueDetails = () => {
   const { issueId } = useParams();
@@ -233,7 +234,7 @@ const IssueDetails = () => {
 
   const renderAssignmentTimeline = () => {
     if (!AssignmentDetails?.length) return null;
-
+  
     return (
       <Space direction="horizontal" size="small" style={{ width: '100%' }}>
         {AssignmentDetails.map((assignment, index) => (
@@ -452,10 +453,15 @@ const IssueDetails = () => {
       {/* Assignment Timeline Card */}
       {AssignmentDetails?.length > 0 && (
         <Card style={{ marginTop: 16 }}>
+           <Collapse ghost>
+           <Panel header={<Title level={4}>Assignment History</Title>} key="1">
           <Title level={4}>Assignment History</Title>
           {renderAssignmentTimeline()}
+          </Panel>
+        </Collapse>
         </Card>
       )}
+
 
       {/* Action Buttons */}
       <Row justify="center" style={{ marginTop: 24 }} gutter={[16, 16]}>
