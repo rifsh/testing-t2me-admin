@@ -18,4 +18,6 @@ export const TextConstants = {
   ConfirmItem: "Confirm Item",
   Cancel: "Cancel",
   Pending: "pending",
+  Done: "done",
+  CurrentUser:-1
 };
