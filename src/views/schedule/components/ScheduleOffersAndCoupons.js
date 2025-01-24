@@ -375,6 +375,13 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
           </Form>
         </Card>
       </Col>
+      <Text
+        type="warning"
+        style={{ padding: "10px 30px", fontSize: "11px" }}
+      >
+        Warning:  Please select a valid date to use a valid coupon.
+        {" "}
+      </Text>
 
       <Col xs={24} sm={24} md={7}>
         {selectedOffers.length > 0 && (
@@ -511,6 +518,7 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
                       Max Uses: {coupon.coupons.max_uses}
                     </Text>
                   </Row>
+                  
                   <Row justify="space-between">
                     <Text>Start: {coupon.coupons.start_date}</Text>
                     <Text>End: {coupon.coupons.end_date}</Text>
@@ -522,11 +530,16 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
                       form.getFieldValue("end_date")
                     )
                   )}
+                 
+
                 </div>
+               
               </Card>
             ))}
+            
           </div>
         )}
+        
       </Col>
 
       <OfferDateModal
