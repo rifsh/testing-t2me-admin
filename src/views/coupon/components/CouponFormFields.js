@@ -1,7 +1,10 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker,Upload,Button } from "antd";
+import { Input, Row, Col, Card, Form, DatePicker,Upload,Button, Typography } from "antd";
 import moment from "moment";
 import { UploadOutlined } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+
+const { Text } = Typography;
 
 const rules = {
   country: [
@@ -175,6 +178,14 @@ function CouponFormFields(props) {
             <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
           </Form.Item>
 
 

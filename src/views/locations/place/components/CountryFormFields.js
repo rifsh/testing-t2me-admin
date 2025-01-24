@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button } from "antd";
+import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button, Typography } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { fetchAllCountires } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 
 const { Option } = Select;
+const { Text } = Typography;
 
 const rules = {
   country: [
@@ -90,6 +92,7 @@ const CountryFormFields = (props) => {
           <Form.Item name="name" label="Place" rules={rules.name}>
             <Input placeholder="Place Name" />
           </Form.Item>
+          
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
@@ -97,9 +100,18 @@ const CountryFormFields = (props) => {
             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
           >
+            
             <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}:{" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
           </Form.Item>
           <Form.Item
             name="banner_images"
@@ -111,7 +123,16 @@ const CountryFormFields = (props) => {
             <Upload name="banner_images" listType="picture" multiple beforeUpload={() => false}>
               <Button icon={<UploadOutlined />}>Click to upload banners</Button>
             </Upload>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
           </Form.Item>
+          
 
         </Card>
       </Col>

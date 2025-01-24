@@ -1,6 +1,9 @@
-import { Card, Col, Form, Input,Button, Upload } from "antd";
+import { Card, Col, Form, Input,Button, Upload, Typography } from "antd";
 import React from "react";
 import { UploadOutlined } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+
+const { Text } = Typography;
 
 const EventDetailsField = () => {
   const rules = {
@@ -44,6 +47,14 @@ const EventDetailsField = () => {
             <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}:{" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
           </Form.Item>
           <Form.Item
             name="banner_images"
@@ -55,6 +66,14 @@ const EventDetailsField = () => {
             <Upload name="banner_images" listType="picture" multiple beforeUpload={() => false}>
               <Button icon={<UploadOutlined />}>Click to upload banners</Button>
             </Upload>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}:{" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
           </Form.Item>
         </Card>
       </Col>

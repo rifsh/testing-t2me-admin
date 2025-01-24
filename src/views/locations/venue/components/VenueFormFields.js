@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Button, message ,Upload} from "antd";
+import { Input, Row, Col, Card, Form, Select, Button, message ,Upload, Typography} from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { addVenue, setSelectedPlace } from "store/slices/locationSlice";
@@ -14,8 +14,10 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 
 const { Option } = Select;
+const { Text } = Typography;
 
 const VenueFormFields = ({ mode }) => {
   const [form] = Form.useForm();
@@ -177,7 +179,16 @@ const VenueFormFields = ({ mode }) => {
             <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
+              <Text
+                type="warning"
+                style={{ padding: "00px 00px", fontSize: "11px" }}
+              >
+                {SupportFormatContent.join(",")}: {" "}
+                {SupportImageFormat.join(", ")}.
+                {" "}
+              </Text>
           </Form.Item>
+          
           <Form.Item
             name="banner_images"
             label="Banner Images"
@@ -188,6 +199,14 @@ const VenueFormFields = ({ mode }) => {
             <Upload name="banner_images" listType="picture" multiple beforeUpload={() => false}>
               <Button icon={<UploadOutlined />}>Click to upload banners</Button>
             </Upload>
+              <Text
+                type="warning"
+                style={{ padding: "00px 00px", fontSize: "11px" }}
+              >
+                {SupportFormatContent.join(",")}: {" "}
+                {SupportImageFormat.join(", ")}.
+                {" "}
+              </Text>
           </Form.Item>
 
             <div className="mb-3">
