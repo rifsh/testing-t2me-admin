@@ -1,10 +1,12 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker, Checkbox, Button, Space, Upload } from "antd";
+import { Input, Row, Col, Card, Form, DatePicker, Checkbox, Button, Space, Upload, Typography } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsDateRequired } from "store/slices/offerSlice";
 import moment from "moment";
 import { UploadOutlined } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 
+const { Text } = Typography;
 const rules = {
   name: [
     {
@@ -167,6 +169,14 @@ function OfferFormFields() {
             <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
           </Form.Item>
 
           <Form.List name="key_words">

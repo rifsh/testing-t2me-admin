@@ -28,7 +28,7 @@ const rules = {
   category_code: [{ required: true, message: "Please enter category code"}],
   min_size : [{ required: true, message: "please enter min size"}],
   max_size: [{ required: true, message: "please enter max size"}],
-  resolution: [{ required: true, message: "please enter resolution"}]
+  resolution: [{ required: false, message: "please enter resolution"}]
 };
 
 const CategoryFormFields = ({ mode, category }) => {
@@ -144,7 +144,7 @@ const CategoryFormFields = ({ mode, category }) => {
             <Form.Item name="max_size" label="Max size" rules={rules.max_size}>
               <Input placeholder="Max Size  " />
             </Form.Item>
-            <Form.Item name="resolution " label="resolution " rules={rules.resolution}>
+            <Form.Item name="resolution" label="resolution" rules={rules.resolution}>
               <Input placeholder="resolution" />
             </Form.Item>
             <div
