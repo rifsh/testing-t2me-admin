@@ -25,41 +25,107 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { getCurrentUser, getUserRole } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
+import { TextConstants } from "constants/TextConstant";
 
 const { Option } = Select;
-
-const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
 
 const IssueList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { pagination, editable_status, issues, message, loading } =
     useSelector((state) => state.issue);
+  const [searchTerm, setSearchTerm] = useState();
+  const [activeStatus, setactiveStatus] = useState();
+  const [userFilter, setUserFilter] = useState();
+  const CurrentUser = getCurrentUser();
+
   useEffect(() => {
-    // console.warn( getCurrentUser().role_id)
-    dispatch(fetchAllissues({...DEFAULT_PAGE_SIZE}));
+    dispatch(fetchAllissues({ ...DEFAULT_PAGE_SIZE }));
   }, [dispatch]);
 
   const handleViewDetails = async (id) => {
-    // console.warn(id)
     await dispatch(fetchIssueDetails(id));
     navigate(`${APP_PREFIX_PATH}/issue/details/${id}`);
   };
 
-  // const handleEditEvent = async (id) => {
-  //   navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
-  // };
-
-  // const handleUpdateStatus = (item) => {
-  //   const newStatus = !item.status;
-  //   const data = { status: newStatus, id: item.id };
-
-  //   dispatch(setSelectedItem(data));
-  // };
-
   const handlePagination = (page, size) => {
-    dispatch(fetchAllissues({ page: page, size: size }));
+    dispatch(
+      fetchAllissues({
+        page: page,
+        size: size,
+        filter: activeStatus,
+        role_id: userFilter,
+      })
+    );
   };
+
+  const handleSearch = (value) => {
+    if (value) {
+      setSearchTerm(value);
+      dispatch(
+        fetchAllissues({
+          search: value,
+          page: 1,
+          size: 10,
+          active: activeStatus,
+        })
+      );
+    }
+  };
+
+  const handleSearchIsEmpty = (value) => {
+    if (!value) {
+      dispatch(
+        fetchAllissues({ search: null, page: 1, size: 10, active: activeStatus })
+      );
+    }
+  };
+
+  const handleShowStatus = (status) => {
+    setactiveStatus(status);
+    dispatch(
+      fetchAllissues({
+        search: searchTerm,
+        page: 1,
+        size: 10,
+        filter: status,
+        role_id: userFilter,
+      })
+    );
+  };
+
+  const handleUserFilterStatus = (value) => {
+    setUserFilter(value);
+    dispatch(
+      fetchAllissues({
+        search: searchTerm,
+        page: 1,
+        size: 10,
+        filter: activeStatus,
+        role_id: value,
+      })
+    );
+  };
+
+  const getRowStyle = (record) => {
+    const isAssignedToMe = record.ticket_assigned?.id === CurrentUser.id;
+    const isDone = record?.issue_status === TextConstants.Done;
+    
+    let style = {
+      // cursor: 'pointer',
+      transition: 'all 0.3s ease'
+    };
+    
+    if (isAssignedToMe) {
+      style.backgroundColor = isDone ? '#f6ffed' : '#f6ffed';
+      style.opacity = 1;
+    } else {
+      style.opacity = 0.8;
+    }
+    
+    return style;
+  };
+
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
@@ -81,115 +147,118 @@ const IssueList = () => {
       title: "Issue Title",
       dataIndex: "subject",
       sorter: (a, b) => a.subject.localeCompare(b.subject),
+      render: (text, record) => (
+        <span style={{ 
+          fontWeight: record.ticket_assigned?.id === CurrentUser.id ? '500' : 'normal'
+        }}>
+          {text}
+        </span>
+      ),
     },
     {
       title: "Issue",
       dataIndex: "issue",
       sorter: (a, b) => {
-        const issueA = a.issue || ""; // Fallback to empty string if null/undefined
+        const issueA = a.issue || "";
         const issueB = b.issue || "";
         return issueA.localeCompare(issueB);
       },
     },
-    
     {
-      title: "from",
+      title: "From",
       dataIndex: "email",
       sorter: (a, b) => a.email.localeCompare(b.email),
     },
     {
-      title: "assigned to",
-      dataIndex: ["ticket_assigned", "email"], // Fallback index
-      // render: (text, record) => {
-
-      //      record.ticket_assigned?.email 
-      // },
+      title: "Assigned To",
+      dataIndex: ["ticket_assigned", "email"],
+      render: (text, record) => {
+        const isAssignedToMe = record.ticket_assigned?.id === CurrentUser.id;
+        return (
+          <span style={{ 
+            color: isAssignedToMe ? '#52c41a' : 'inherit',
+            fontWeight: isAssignedToMe ? '500' : 'normal'
+          }}>
+            {text || 'Unassigned'}
+          </span>
+        );
+      },
       sorter: (a, b) => {
-        const assignedA = a.ticket_assigned?.email 
-        const assignedB = b.ticket_assigned?.email 
-        return assignedA.localeCompare(assignedB);
+        const assignedA = a.ticket_assigned?.email;
+        const assignedB = b.ticket_assigned?.email;
+        return (assignedA || '').localeCompare(assignedB || '');
       },
     },
     {
       title: "Status",
       dataIndex: "issue_status",
-      render: (text) => (
-        <Tag color={text.toLowerCase() === "done" ? "green" : "red"}>
-          {text.charAt(0).toUpperCase() + text.slice(1)}
-        </Tag>
-      ),
+      render: (text) => {
+        const status = text?.toLowerCase();
+        let color = 'default';
+        let statusText = text;
+    
+        if (status === TextConstants.Done) {
+          color = 'success';
+        } else if (status === TextConstants.Pending) {
+          color = 'warning';
+        } else if (status === 'in progress') {
+          color = 'processing';
+        }
+    
+        return (
+          <Tag 
+            color={color}
+            style={{ 
+              color: '#000000',  // Force black text
+              fontWeight: '400'  // Normal font weight
+            }}
+          >
+            {statusText?.charAt(0).toUpperCase() + statusText?.slice(1) || 'Unknown'}
+          </Tag>
+        );
+      },
       sorter: (a, b) => {
-        const statusA = a.issue_status || ""; // Fallback to empty string if null/undefined
+        const statusA = a.issue_status || "";
         const statusB = b.issue_status || "";
         return statusA.localeCompare(statusB);
       },
-      sortDirections: ["ascend", "descend"],
     },
     {
-      title: "Closed",
+      title: "Ticket Status",
       dataIndex: "ticket_status",
+      render: (ticket_status) => (
+        <Tag 
+          color={ticket_status ? "success" : "error"}
+          style={{ 
+            color: '#000000',  // Force black text
+            fontWeight: '400'  // Normal font weight
+          }}
+        >
+          {ticket_status ? "Closed" : "Open"}
+        </Tag>
+      ),
       sorter: (a, b) => {
-        // Ensure comparison values are always defined and normalized
         const statusA = a.ticket_status === true ? "closed" : "open";
         const statusB = b.ticket_status === true ? "closed" : "open";
         return statusA.localeCompare(statusB);
       },
-      render: (ticket_status) =>
-        ticket_status ? (
-          <span style={{ color: "green" }}>✔️</span>
-        ) : (
-          <span style={{ color: "red" }}>❌</span>
-        ),
     },
-    
-    
     {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        <div className="text-right">
+        <div className="text-right" style={{ color: '#000000' }}>
           <EllipsisDropdown 
-          menu={dropdownMenu(elm)}
-           />
+            menu={dropdownMenu(elm)} 
+            menuStyle={{ color: '#000000' }}
+          />
         </div>
       ),
     },
   ];
-  const [searchTerm, setSearchTerm] = useState();
-  const [activeStatus, setactiveStatus] = useState();
-  const handleSearch = (value) => {
-    if (value) {
-      setSearchTerm(value);
-      dispatch(
-        fetchAllissues({
-          search: value,
-          page: 1,
-          size: 10,
-          active: activeStatus,
-          // role_id:getCurrentUser().role_id
-        })
-      );
-    }
-  };
-  const handleSearchIsEmpty = (value) => {
-    console.log("enterd is empty search");
-    if (!value) {
-      console.log("is empty search");
 
-      dispatch(
-        fetchAllissues({ search: null, page: 1, size: 10, active: activeStatus })
-      );
-    }
-  };
-
-  const handleShowStatus = (status) => {
-    setactiveStatus(status);
-    dispatch(
-      fetchAllEvent({ search: searchTerm, page: 1, size: 10, active: status })
-    );
-    // dispatch(filterEvent({ searchTerm: null, status }));
-  };
   const { Search } = Input;
+
   return (
     <Card>
       <Flex
@@ -213,21 +282,49 @@ const IssueList = () => {
               className="mr-2"
             >
               <Option value={null}>All</Option>
-              <Option value={true}>Active</Option>
-              <Option value={false}>Inactive</Option>
+              <Option value={true}>Closed</Option>
+              <Option value={false}>Open</Option>
             </Select>
           </div>
+          {CurrentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
+            <div className="mb-3">
+              <Select
+                defaultValue="All"
+                onChange={handleUserFilterStatus}
+                className="mr-2"
+                style={{ width: 150 }}
+              >
+                <Option value={null}>All</Option>
+                <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
+                {CurrentUser.role_id === UserRoleConstants.superAdminRoleId && (
+                  <>
+                    <Option value={UserRoleConstants.superAdminRoleId}>
+                      Super Admin
+                    </Option>
+                    <Option value={UserRoleConstants.superSupportingTeamRoleId}>
+                      Super Supporting Team
+                    </Option>
+                    <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
+                      Event Supporting Team
+                    </Option>
+                  </>
+                )}
+              </Select>
+            </div>
+          )}
         </Flex>
-        { getCurrentUser().role_id == UserRoleConstants.eventOrganizerRoleId &&<div>
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/issue/add`)}
-          >
-            Add Issue
-          </Button>
-        </div> }
+        {CurrentUser.role_id === UserRoleConstants.eventOrganizerRoleId && (
+          <div>
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              block
+              onClick={() => navigate(`${APP_PREFIX_PATH}/issue/add`)}
+            >
+              Add Issue
+            </Button>
+          </div>
+        )}
       </Flex>
       <div className="table-responsive">
         <Table
@@ -235,9 +332,10 @@ const IssueList = () => {
           dataSource={issues}
           rowKey="id"
           loading={loading}
-          rowClassName={(record) =>
-            record.ticket_assigned?.id !== getCurrentUser().id ? { opacity: 0.6 }: {opacity: 0.6 }
-          }
+          onRow={(record) => ({
+            style: getRowStyle(record),
+            // onClick: () => handleViewDetails(record.id)
+          })}
           pagination={{
             current: pagination.page,
             pageSize: pagination.size,

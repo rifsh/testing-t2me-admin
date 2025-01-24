@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message, Upload } from "antd";
+import { Input, Row, Col, Card, Form, Button, message, Upload, Typography } from "antd";
 import { addCategory, updateCategory } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,9 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 
+const { Text } = Typography;
 const ADD = "ADD";
 const EDIT = "EDIT";
 
@@ -115,6 +117,14 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
+              <Text
+                type="warning"
+                style={{ padding: "00px 00px", fontSize: "11px" }}
+              >
+                {SupportFormatContent.join(",")}: {" "}
+                {SupportImageFormat.join(", ")}.
+                {" "}
+              </Text>
             </Form.Item>
             <div
               style={{

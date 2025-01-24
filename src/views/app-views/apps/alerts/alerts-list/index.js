@@ -25,6 +25,7 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { getCurrentUser, getUserRole } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
+import { TextConstants } from "constants/TextConstant";
 
 const { Option } = Select;
 
@@ -37,7 +38,7 @@ const IssueList = () => {
     useSelector((state) => state.issue);
   useEffect(() => {
     console.warn('tholi..........', getCurrentUser().role_id)
-    dispatch(fetchAllAlertissues({...DEFAULT_PAGE_SIZE,'role_id':getCurrentUser().role_id}));
+    dispatch(fetchAllAlertissues({...DEFAULT_PAGE_SIZE}));
   }, [dispatch]);
 
   const handleViewDetails = async (id) => {
@@ -171,7 +172,7 @@ const IssueList = () => {
     if (value) {
       setSearchTerm(value);
       dispatch(
-        fetchAllEvent({
+        fetchAllAlertissues({
           search: value,
           page: 1,
           size: 10,
@@ -186,17 +187,21 @@ const IssueList = () => {
       console.log("is empty search");
 
       dispatch(
-        fetchAllEvent({ search: null, page: 1, size: 10, active: activeStatus })
+        fetchAllAlertissues({ search: null, page: 1, size: 10, active: activeStatus })
       );
     }
   };
 
-  const handleShowStatus = (status) => {
-    setactiveStatus(status);
+  const handleShowStatus = (value) => {
+    setactiveStatus(value);
     dispatch(
-      fetchAllEvent({ search: searchTerm, page: 1, size: 10, active: status })
+      fetchAllAlertissues({
+        search: searchTerm,
+        page: 1,
+        size: 10,
+        role_id: value,
+      })
     );
-    // dispatch(filterEvent({ searchTerm: null, status }));
   };
   const { Search } = Input;
   return (
@@ -222,8 +227,17 @@ const IssueList = () => {
               className="mr-2"
             >
               <Option value={null}>All</Option>
-              <Option value={true}>Active</Option>
-              <Option value={false}>Inactive</Option>
+                <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
+                    <Option value={UserRoleConstants.superAdminRoleId}>
+                      Super Admin
+                    </Option>
+                    <Option value={UserRoleConstants.superSupportingTeamRoleId}>
+                      Super Supporting Team
+                    </Option>
+                    <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
+                      Event Supporting Team
+                    </Option>
+      
             </Select>
           </div>
         </Flex>
@@ -244,6 +258,7 @@ const IssueList = () => {
           dataSource={issues}
           rowKey="id"
           loading={loading}
+          
           pagination={{
             current: pagination.page,
             pageSize: pagination.size,
