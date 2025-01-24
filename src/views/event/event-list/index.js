@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Select, Input, Button, Menu } from "antd";
+import { Card, Table, Select, Input, Button, Menu, message } from "antd";
 import {
   EyeOutlined,
   FormOutlined,
@@ -19,7 +19,8 @@ import utils from "utils";
 import { setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
-
+import { getCurrentUser } from "configs/UserAccessConfig";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 const { Option } = Select;
 
 const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
@@ -27,7 +28,8 @@ const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
 const EventsList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { pagination, editable_status, filteredEvents, message, loading } =
+  const currentUser = getCurrentUser();
+  const { pagination, editable_status, filteredEvents, messages, loading } =
     useSelector((state) => state.event);
 
   useEffect(() => {
@@ -40,6 +42,22 @@ const EventsList = () => {
   };
 
   const handleEditEvent = async (id) => {
+    if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
+      // Check if any updates have pending or 'updates' status
+      const hasPendingUpdates = filteredEvents
+        .find(event => event.id === id)?.updates
+        .some(update =>
+          update.approval_status === 'pending' ||
+          update.approval_status === 'updates'
+        );
+
+      if (hasPendingUpdates) {
+        message.warning('This Event have already pending edit approval');
+        return;
+      }
+    }
+
+    // If no pending updates or not an event organizer, navigate to edit page
     navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
   };
 
@@ -49,7 +67,6 @@ const EventsList = () => {
 
     dispatch(setSelectedItem(data));
   };
-
   const handlePagination = (page, size) => {
     dispatch(fetchAllEvent({ page: page, size: size }));
   };
@@ -170,16 +187,18 @@ const EventsList = () => {
             </Select>
           </div>
         </Flex>
-        <div>
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
-          >
-            Add Event
-          </Button>
-        </div>
+        {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
+          <div>
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              block
+              onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
+            >
+              Add Event
+            </Button>
+          </div>
+        )}
       </Flex>
       <div className="table-responsive">
         <Table
@@ -197,7 +216,7 @@ const EventsList = () => {
       </div>
 
       <UpdateStatusModal
-        responseMessage={message}
+        responseMessage={messages}
         editFunction={editEvent}
         editable_status={editable_status}
         getAllFunction={(pageData) => fetchAllEvent(pageData)}

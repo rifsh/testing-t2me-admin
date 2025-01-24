@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   Table,
@@ -47,7 +47,10 @@ const EventOrganiseUpdateList = () => {
     message,
     loading,
     pagination,
+    searchTerm,
   } = useSelector((state) => state.organizerUpdates);
+  const [activeStatus, setactiveStatus] = useState();
+
 
   useEffect(() => {
     // dispatch(fetchOrgUpdates());
@@ -61,6 +64,18 @@ const EventOrganiseUpdateList = () => {
     console.log(id);
     navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/details/${id}`);
   };
+
+  const handleShowStatus = (status) => {
+    setactiveStatus(status);
+    dispatch(
+      fetchOrganizerUpdates({
+        page: 1,
+        size: 10,
+        filter: status,
+      })
+    );
+  };
+
 
 
   //updates 
@@ -81,7 +96,7 @@ const EventOrganiseUpdateList = () => {
   const tableColumns = [
     {
       title: "Organiser Name",
-      dataIndex: ["organizer","username"],
+      dataIndex: ["organizer", "username"],
       sorter: (a, b) => a.organizer?.username - b.organizer?.username
 
     },
@@ -95,6 +110,13 @@ const EventOrganiseUpdateList = () => {
       title: "Status",
       dataIndex: "approval_status",
       render: (text) => {
+        const mappedText = {
+          'pending': 'Pending Approval',
+          'rejected': 'Rejected',
+          'approved': 'Approved',
+          'update': 'Change Requested'
+        };
+
         const color =
           text.toLowerCase() === "approved"
             ? "green"
@@ -103,9 +125,10 @@ const EventOrganiseUpdateList = () => {
               : text.toLowerCase() === "update"
                 ? "blue"
                 : "orange";
+
         return (
           <Tag color={color}>
-            {text.charAt(0).toUpperCase() + text.slice(1)}
+            {mappedText[text.toLowerCase()] || text}
           </Tag>
         );
       },
@@ -128,25 +151,28 @@ const EventOrganiseUpdateList = () => {
 
   return (
     <Card>
-      <Row gutter={16} justify="space-between" align="" wrap={false}>
+      <Row gutter={16} justify="start" align="" wrap={false}>
         <SearchBarWithStatus
           fetchFunction={fetchOrganizerUpdates}
           isStatus={false}
-          additionalFilters={[
-            {
-              options: filteredOrganizerUpdates,
-              placeholder: "Please choose a item",
-              formName: "approval_status",
-              additionalField: "approval_status",
-              isAutoComplete: false,
-              onClick: () => {
-                dispatch(fetchOrganizerUpdates());
-              },
-            },
-          ]}
         />
 
+        <div className="mb-3">
+          <Select
+            defaultValue="All"
+            onChange={handleShowStatus}
+             className="mr-2 wide-select"
+          >
+            <Option value={null}>All</Option>
+            <Option value="REJECTED">Rejected</Option>
+            <Option value="PENDING">Pending</Option>
+            <Option value="APPROVED">Approved</Option>
+            <Option value="UPDATES">Update Requested</Option>
+          </Select>
+        </div>
+
       </Row>
+
 
       <div className="table-responsive">
         <Table
