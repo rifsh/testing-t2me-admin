@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message, Select,Upload } from "antd";
+import { Input, Row, Col, Card, Form, Button, message, Select,Upload, Typography } from "antd";
 import {
   addSubCategory,
   fetchCategories,
@@ -12,9 +12,11 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { UploadOutlined } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 
 const ADD = "ADD";
 // const EDIT = "EDIT";
+const { Text } = Typography;
 
 const rules = {
   category: [{ required: true, message: "Please Select a category" }],
@@ -106,6 +108,15 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
             <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
+              <Text
+                type="warning"
+                style={{ padding: "00px 00px", fontSize: "11px" }}
+              >
+                {SupportFormatContent.join(",")}: {" "}
+                {SupportImageFormat.join(", ")}.
+                {" "}
+              </Text>
+
           </Form.Item>
             <div
               style={{
