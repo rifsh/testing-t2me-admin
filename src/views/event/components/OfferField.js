@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Row, Col, Card, Form, Select, Typography, Button } from "antd";
+import { Row, Col, Card, Form, Select, Typography, Button, Alert } from "antd";
 import {  CloseCircleOutlined, } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllOffers } from "store/slices/offerSlice";
@@ -90,6 +90,14 @@ const OfferField = () => {
             </Select>
           </Form.Item>
         </Card>
+      </Col>
+      <Col xs={24} sm={24} md={17}>
+        <Alert
+          message="Warning"
+          description="The Expired offers can be updated while scheduling events, should match the scheduled time."
+          type="warning"
+          showIcon
+        />
       </Col>
       <Col xs={24} sm={24} md={7}>
         <div style={{ marginBottom: 16, marginTop: 0 }}>

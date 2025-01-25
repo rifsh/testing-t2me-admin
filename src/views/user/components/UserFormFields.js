@@ -43,8 +43,8 @@ function UserFormFields() {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="User Details">
-          <Form.Item
-            name="username"
+          <Form.Item 
+            name="username" 
             label={
               <span>
                 Username&nbsp;
@@ -57,7 +57,7 @@ function UserFormFields() {
             validateTrigger={['onChange', 'onBlur']}
             hasFeedback
           >
-            <Input
+            <Input 
               placeholder="Enter Username"
               maxLength={30}
             />
@@ -94,16 +94,16 @@ function UserFormFields() {
             validateTrigger={['onChange', 'onBlur']}
             hasFeedback
           >
-            <Input.Password
+            <Input.Password 
               placeholder="Enter Password"
               maxLength={30}
             />
           </Form.Item>
 
-          <Form.Item
-            name="position_id"
-            label="Role"
-
+          <Form.Item 
+            name="position_id" 
+            label="Role" 
+         
             validateTrigger={['onChange', 'onBlur']}
             hasFeedback
           >
@@ -122,19 +122,19 @@ function UserFormFields() {
           </Form.Item>
 
           {(selectedRole === UserRoleConstants.eventOrganizerRoleId || selectedRole === UserRoleConstants.eventSupportingTeamRoleId) && (
-            <Form.Item
-              name="event_ids"
-              label={
-                <span>
-                  Events&nbsp;
-                  {/* <Tooltip title="You can select up to 5 events"> */}
-                  <Tooltip title="Please select your events">
-
-                    <InfoCircleOutlined />
-                  </Tooltip>
-                </span>
-              }
-
+          <Form.Item 
+            name="event_ids" 
+            label={
+              <span>
+                Events&nbsp;
+                {/* <Tooltip title="You can select up to 5 events"> */}
+                <Tooltip title="Please select your events">
+                
+                  <InfoCircleOutlined />
+                </Tooltip>
+              </span>
+            }
+              
               validateTrigger={['onChange']}
               hasFeedback
             >
@@ -154,13 +154,13 @@ function UserFormFields() {
               </Select>
             </Form.Item>
           )}
-          <Form.Item
-            name="thumbnail_image"
-            label="Thumbnail Image"
-            valuePropName="fileList"
-            getValueFromEvent={normFile}
-
-          >
+           <Form.Item
+              name="thumbnail_image"
+              label="Thumbnail Image"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+            
+            >
             <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
               accept={`.${SupportImageFormat.join(',.')}`}
             >
