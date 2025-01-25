@@ -10,7 +10,7 @@ EventOrganizerService.updateOrganizerReChanges = function (data, action) {
   console.log("DATE IN SERVICE -------------",data);
   console.log("Action IN SERVICE -------------",action);
   
-  const encodedAction = encodeURIComponent(handleAction(action));
+  const encodedAction = encodeURIComponent(handleAction(action)); 
   const formData = Utils.createFormData(data, {
     fileKeys: ['thumbnail_image'],
     skipEmpty: true

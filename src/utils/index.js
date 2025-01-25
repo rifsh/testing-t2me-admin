@@ -476,7 +476,7 @@ class Utils {
         }
 
         if (key === 'banner_images') {
-          value.forEach(image => formData.append(key, image.originFileObj || image));
+          value.forEach(image => formData.append(key, image.originFileObj));
           return;
         }
 

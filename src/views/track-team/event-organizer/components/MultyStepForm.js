@@ -82,7 +82,11 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
 
 
   useEffect(() => {
+    console.log(mode,"-----------------MODE");
+    
     if (mode === "EDIT" && eventDetails) {
+      console.log(eventDetails.thumbnail_image);
+      
       form.setFieldsValue({
         event_name: eventDetails.event_name,
         description: eventDetails.description,

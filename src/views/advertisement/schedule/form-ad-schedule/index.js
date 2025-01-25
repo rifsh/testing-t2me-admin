@@ -12,13 +12,14 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const ADD = "ADD";
 const EDIT = 'EDIT'
 
 const AdScheduleForm = ({ mode }) => {
 
-  const { loading, error, responseData, responseMessage } = useSelector(
+  const { loading, error, responseData, responseMessage,createScheduleLoading } = useSelector(
     (state) => state.advertisement
   );
   const [form] = Form.useForm();
@@ -90,7 +91,7 @@ const AdScheduleForm = ({ mode }) => {
                   type="primary"
                   onClick={() => onFinish()}
                   htmlType="submit"
-                  loading={loading}
+                  loading={createScheduleLoading}
                 >
                   {mode === "ADD" ? "Add" : `Save`}
                 </Button>
@@ -112,6 +113,9 @@ const AdScheduleForm = ({ mode }) => {
           />
         </div>
       </Form>
+      <LoadingOverlay 
+        loading={createScheduleLoading} 
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={createAdSchedule}

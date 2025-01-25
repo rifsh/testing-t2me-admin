@@ -73,7 +73,7 @@ export const updateOrganizerEvent = createAsyncThunk(
     async ({ data, action }, { rejectWithValue }) => {
         try {
             const response = await EventOrganizerService.updateOrganizerEvent(data, action);
-            return response.status;
+            return response;
         } catch (error) {
             return rejectWithValue(error.message || "Failed to update Event");
         }
@@ -84,15 +84,15 @@ export const updateOrganizerReChanges = createAsyncThunk(
     "organizerUpdates/updateOrganizerReChanges",
     async ({ data, action }, { rejectWithValue }) => {
         try {
-            console.log("------------------HEREEEEEEEEEEEEEEEEEE",data);
-            console.log("------------------HEREEEEEEEEEEEEEEEEEE",action);
+            console.log("------------------HEREEEEEEEEEEEEEEEEEE", data);
+            console.log("------------------HEREEEEEEEEEEEEEEEEEE", action);
             const response = await EventOrganizerService.updateOrganizerReChanges(data, action);
-            console.log("responsssssssss",response);
-            
-            return response.status;
+            console.log("responsssssssss", response);
+
+            return response;
         } catch (error) {
-            console.log("ERorrrrrrrrr",error);
-            
+            console.log("ERorrrrrrrrr", error);
+
             return rejectWithValue(error.message || "Failed to update Banner");
         }
     }
@@ -201,8 +201,10 @@ const OrganizerUpdateSlice = createSlice({
             })
             .addCase(updateOrganizerEvent.fulfilled, (state, { payload }) => {
                 state.loading = false;
+                state.responseDataEvent = payload.data;
                 if (payload.message) {
-                    state.message = payload.message;
+                    state.message = payload.status.message;
+                    state.responseMessageEvent = payload.status.message;
                     state.editable_status = payload.editable_status;
                 }
             })
@@ -216,8 +218,10 @@ const OrganizerUpdateSlice = createSlice({
             })
             .addCase(updateOrganizerReChanges.fulfilled, (state, { payload }) => {
                 state.loading = false;
+                state.responseDataEvent = payload.data;
                 if (payload.message) {
                     state.message = payload.message;
+                    state.responseMessageEvent = payload.status.message;
                     state.editable_status = payload.editable_status;
                 }
             })
