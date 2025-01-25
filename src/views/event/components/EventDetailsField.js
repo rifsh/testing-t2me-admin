@@ -1,7 +1,8 @@
-import { Card, Col, Form, Input,Button, Upload, Typography } from "antd";
+import { Card, Col, Form, Input, Button, Upload, Typography, message } from "antd";
 import React from "react";
 import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index";
 
 const { Text } = Typography;
 
@@ -21,6 +22,7 @@ const EventDetailsField = () => {
     }
     return e?.fileList;
   };
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   return (
     <div>
@@ -44,10 +46,14 @@ const EventDetailsField = () => {
             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
           >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+              accept={`.${SupportImageFormat.join(',.')}`}
+            >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
-            <Text
+            
+          </Form.Item>
+          <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
@@ -55,7 +61,6 @@ const EventDetailsField = () => {
               {SupportImageFormat.join(", ")}.
               {" "}
             </Text>
-          </Form.Item>
           <Form.Item
             name="banner_images"
             label="Banner Images"
@@ -63,10 +68,14 @@ const EventDetailsField = () => {
             getValueFromEvent={normFile}
             rules={rules.banner_images}
           >
-            <Upload name="banner_images" listType="picture" multiple beforeUpload={() => false}>
+            <Upload name="banner_images" listType="picture" beforeUpload={handleBeforeUpload}
+              accept={`.${SupportImageFormat.join(',.')}`}
+            >
               <Button icon={<UploadOutlined />}>Click to upload banners</Button>
             </Upload>
-            <Text
+            
+          </Form.Item>
+          <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
@@ -74,7 +83,6 @@ const EventDetailsField = () => {
               {SupportImageFormat.join(", ")}.
               {" "}
             </Text>
-          </Form.Item>
         </Card>
       </Col>
     </div>

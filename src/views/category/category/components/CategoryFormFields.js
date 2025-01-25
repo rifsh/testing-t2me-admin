@@ -9,6 +9,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index";
 
 const { Text } = Typography;
 const ADD = "ADD";
@@ -52,6 +53,7 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
     }
     return e?.fileList;
   };
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   const onFinish = async () => {
     try {
@@ -113,19 +115,21 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
                 name="thumbnail_image"
                 listType="picture"
                 maxCount={1}
-                beforeUpload={() => false}
+                beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(',.')}`}
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
-              <Text
-                type="warning"
-                style={{ padding: "00px 00px", fontSize: "11px" }}
-              >
-                {SupportFormatContent.join(",")}: {" "}
-                {SupportImageFormat.join(", ")}.
-                {" "}
-              </Text>
+
             </Form.Item>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
             <div
               style={{
                 display: "flex",
