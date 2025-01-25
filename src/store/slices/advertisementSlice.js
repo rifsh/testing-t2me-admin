@@ -112,8 +112,12 @@ export const updateAdBanner = createAsyncThunk(
   "advertisement/updateAdBanners",
   async ({ data, action }, { rejectWithValue }) => {
     try {
+      
+      console.log("DATA IN SLICE-----",data);
+      
       const response = await AdvertisementService.updateAdBanner(data, action);
-      return response.status;
+      
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to update Banner");
     }
@@ -258,17 +262,21 @@ const AdvertisementSlice = createSlice({
       })
       .addCase(updateAdBanner.pending, (state) => {
         state.loading = true;
+        state.createBannerLoading=true;
         state.error = null;
       })
       .addCase(updateAdBanner.fulfilled, (state, { payload }) => {
         state.loading = false;
+        state.createBannerLoading=false;
+        state.responseData = payload.data;
         if (payload.message) {
-          state.message = payload.message;
+          state.message = payload.status.message;
           state.editable_status = payload.editable_status;
         }
       })
       .addCase(updateAdBanner.rejected, (state, { payload }) => {
         state.loading = false;
+        state.createBannerLoading=false;
         state.error = payload || "Failed to edit event";
       })
 
