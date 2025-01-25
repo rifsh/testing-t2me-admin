@@ -1,9 +1,10 @@
-import { Tag } from "antd";
+import { Tag, message, Upload } from "antd";
 import dayjs from "dayjs";
 import {
   updateSelectedCoupons,
   updateSelectedOffer,
 } from "store/slices/scheduleSlice";
+import { SupportImageFormat } from "constants/SupportFileConstants";
 class Utils {
 
   /**
@@ -13,6 +14,12 @@ class Utils {
  * @param {Object} obj - The object to filter.
  * @returns {Object} - A new object with only non-null/undefined values.
  */
+  static filterParams = (obj) => {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([_, value]) => value !== null && value !== undefined)
+    );
+  };
   static filterParams = (obj) => {
     return Object.fromEntries(
       Object.entries(obj)
@@ -539,6 +546,32 @@ class Utils {
     });
 
     return formData;
+  }
+
+  /**
+    * Validates the file format against supported image formats.
+    * @param {File} file - File to validate.
+    * @returns {boolean} - True if the file format is supported, otherwise false.
+    */
+  static validateFileFormat(file) {
+    const fileExtension = file.name.split(".").pop().toUpperCase();
+    return SupportImageFormat.includes(fileExtension);
+  }
+
+  /**
+   * Handles the validation before file upload.
+   * @param {File} file - File to validate before upload.
+   * @returns {boolean|string} - False if the file is valid, otherwise LIST_IGNORE.
+   */
+  static handleBeforeUpload(file) {
+    if (!this.validateFileFormat(file)) {
+      message.error(
+        `Only ${SupportImageFormat.join(", ")} files are allowed! 
+      Uploaded file "${file.name}" is not a supported format.`
+      );
+      return Upload.LIST_IGNORE; // Prevent upload
+    }
+    return false;
   }
 
 }
