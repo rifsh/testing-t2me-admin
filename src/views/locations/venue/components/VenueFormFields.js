@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Button, message ,Upload, Typography} from "antd";
+import { Input, Row, Col, Card, Form, Select, Button, message, Upload, Typography } from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { addVenue, setSelectedPlace } from "store/slices/locationSlice";
@@ -15,6 +15,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index"
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -47,31 +48,18 @@ const VenueFormFields = ({ mode }) => {
     }
     return e?.fileList;
   };
-  const validateFileFormat = (file) => {
-      const fileExtension = file.name.split(".").pop().toUpperCase();
-      return SupportImageFormat.includes(fileExtension);
-    };
-  
-    const handleBeforeUpload = (file) => {
-      if (!validateFileFormat(file)) {
-        message.error(
-          `Only ${SupportImageFormat.join(", ")} files are allowed! 
-          Uploaded file "${file.name}" is not a supported format.`
-        );
-        return Upload.LIST_IGNORE;
-      }
-      return false;
-    };
+
+  const handleBeforeUpload = Utils.handleBeforeUpload;
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      console.log("Form valuexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs:", values); 
-  
+      console.log("Form valuexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs:", values);
+
       if (!selectedPlace) {
         message.error("Place ID is missing. Please select a place.");
         return;
       }
-  
+
       // Provide default values for missing fields
       const formData = {
         ...values,
@@ -82,14 +70,14 @@ const VenueFormFields = ({ mode }) => {
         indoor: values.indoor !== undefined ? values.indoor : false, // Ensure indoor is boolean
         address: values.address,
       };
-  
+
       dispatch(setSelectedSubmitItem(formData));
-  
+
     } catch (errorInfo) {
       console.error("Validation Failed:", errorInfo);
     }
   };
-  
+
 
   return (
     <Row gutter={16}>
@@ -106,12 +94,12 @@ const VenueFormFields = ({ mode }) => {
             </h2>
 
             <Form.Item
-  name="address"
-  label="Address"
-  rules={[{ required: true, message: "Please enter the address" }]}
->
-  <Input placeholder="Enter the address" />
-</Form.Item>
+              name="address"
+              label="Address"
+              rules={[{ required: true, message: "Please enter the address" }]}
+            >
+              <Input placeholder="Enter the address" />
+            </Form.Item>
 
 
             <PlaceWithCountryForm
@@ -185,47 +173,49 @@ const VenueFormFields = ({ mode }) => {
               <Input value={coordinates.lng} readOnly />
             </Form.Item>
             <Form.Item
-            name="thumbnail_image"
-            label="Thumbnail Image"
-            valuePropName="fileList"
-            getValueFromEvent={normFile}
-  
-          >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
-            accept={`.${SupportImageFormat.join(',.')}`} 
+              name="thumbnail_image"
+              label="Thumbnail Image"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+
             >
-              <Button icon={<UploadOutlined />}>Click to upload</Button>
-            </Upload>
-              <Text
-                type="warning"
-                style={{ padding: "00px 00px", fontSize: "11px" }}
+              <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(',.')}`}
               >
-                {SupportFormatContent.join(",")}: {" "}
-                {SupportImageFormat.join(", ")}.
-                {" "}
-              </Text>
-          </Form.Item>
-          
-          <Form.Item
-            name="banner_images"
-            label="Banner Images"
-            valuePropName="fileList"
-            getValueFromEvent={normFile}
-          >
-            <Upload name="banner_images" listType="picture" beforeUpload={handleBeforeUpload}
-            accept={`.${SupportImageFormat.join(',.')}`} 
+                <Button icon={<UploadOutlined />}>Click to upload</Button>
+              </Upload>
+
+            </Form.Item>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
             >
-              <Button icon={<UploadOutlined />}>Click to upload banners</Button>
-            </Upload>
-              <Text
-                type="warning"
-                style={{ padding: "00px 00px", fontSize: "11px" }}
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
+
+            <Form.Item
+              name="banner_images"
+              label="Banner Images"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+            >
+              <Upload name="banner_images" listType="picture" beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(',.')}`}
               >
-                {SupportFormatContent.join(",")}: {" "}
-                {SupportImageFormat.join(", ")}.
-                {" "}
-              </Text>
-          </Form.Item>
+                <Button icon={<UploadOutlined />}>Click to upload banners</Button>
+              </Upload>
+
+            </Form.Item>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
 
             <div className="mb-3">
               <h3>Pick Location</h3>

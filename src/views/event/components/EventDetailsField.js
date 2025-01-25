@@ -1,7 +1,8 @@
-import { Card, Col, Form, Input,Button, Upload, Typography, message } from "antd";
+import { Card, Col, Form, Input, Button, Upload, Typography, message } from "antd";
 import React from "react";
 import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index";
 
 const { Text } = Typography;
 
@@ -21,21 +22,7 @@ const EventDetailsField = () => {
     }
     return e?.fileList;
   };
-  const validateFileFormat = (file) => {
-    const fileExtension = file.name.split(".").pop().toUpperCase();
-    return SupportImageFormat.includes(fileExtension);
-  };
-
-  const handleBeforeUpload = (file) => {
-    if (!validateFileFormat(file)) {
-      message.error(
-        `Only ${SupportImageFormat.join(", ")} files are allowed! 
-        Uploaded file "${file.name}" is not a supported format.`
-      );
-      return Upload.LIST_IGNORE; // Prevent upload
-    }
-    return false;
-  };
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   return (
     <div>

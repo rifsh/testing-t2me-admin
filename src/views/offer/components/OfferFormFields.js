@@ -5,6 +5,7 @@ import { setIsDateRequired } from "store/slices/offerSlice";
 import moment from "moment";
 import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index";
 
 const { Text } = Typography;
 const rules = {
@@ -82,21 +83,7 @@ function OfferFormFields() {
     }
     return e?.fileList;
   };
-  const validateFileFormat = (file) => {
-    const fileExtension = file.name.split(".").pop().toUpperCase();
-    return SupportImageFormat.includes(fileExtension);
-  };
-
-  const handleBeforeUpload = (file) => {
-    if (!validateFileFormat(file)) {
-      message.error(
-        `Only ${SupportImageFormat.join(", ")} files are allowed! 
-        Uploaded file "${file.name}" is not a supported format.`
-      );
-      return Upload.LIST_IGNORE; // Prevent upload
-    }
-    return false;
-  };
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   return (
     <Row gutter={16}>
@@ -117,7 +104,7 @@ function OfferFormFields() {
             label="Maximum Uses"
             rules={rules.maxUsers}
           >
-            <Input type="number" placeholder="Enter maximum uses" onWheel={(e)=>e.target.blur()}/>
+            <Input type="number" placeholder="Enter maximum uses" onWheel={(e) => e.target.blur()} />
           </Form.Item>
           <Form.Item
             name="date_required"
@@ -145,9 +132,9 @@ function OfferFormFields() {
                   showToday={false}
                 />
               </Form.Item>
-              <Form.Item 
-                name="end_date" 
-                label="End Date" 
+              <Form.Item
+                name="end_date"
+                label="End Date"
                 rules={[
                   ...rules.endDate,
                   ({ getFieldValue }) => ({
@@ -174,16 +161,19 @@ function OfferFormFields() {
               </Form.Item>
             </>
           )}
+
           <Form.Item
-              name="thumbnail_image"
-              label="Thumbnail Image"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-              rules={rules.thumbnail_image}
-            >
+            name="thumbnail_image"
+            label="Thumbnail Image"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+            rules={rules.thumbnail_image}
+          >
+
             <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
               accept={`.${SupportImageFormat.join(',.')}`}
             >
+
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
             <Text
@@ -194,6 +184,7 @@ function OfferFormFields() {
               {SupportImageFormat.join(", ")}.
               {" "}
             </Text>
+
           </Form.Item>
 
           <Form.List name="key_words">

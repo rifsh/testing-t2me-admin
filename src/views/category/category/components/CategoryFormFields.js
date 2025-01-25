@@ -9,6 +9,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index";
 
 const { Text } = Typography;
 const ADD = "ADD";
@@ -52,21 +53,7 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
     }
     return e?.fileList;
   };
-  const validateFileFormat = (file) => {
-      const fileExtension = file.name.split(".").pop().toUpperCase();
-      return SupportImageFormat.includes(fileExtension);
-    };
-  
-    const handleBeforeUpload = (file) => {
-      if (!validateFileFormat(file)) {
-        message.error(
-          `Only ${SupportImageFormat.join(", ")} files are allowed! 
-          Uploaded file "${file.name}" is not a supported format.`
-        );
-        return Upload.LIST_IGNORE; // Prevent upload
-      }
-      return false;
-    };
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   const onFinish = async () => {
     try {
@@ -133,15 +120,16 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
-              <Text
-                type="warning"
-                style={{ padding: "00px 00px", fontSize: "11px" }}
-              >
-                {SupportFormatContent.join(",")}: {" "}
-                {SupportImageFormat.join(", ")}.
-                {" "}
-              </Text>
+
             </Form.Item>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
             <div
               style={{
                 display: "flex",
