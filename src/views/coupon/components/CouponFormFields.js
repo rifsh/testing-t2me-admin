@@ -182,7 +182,9 @@ function CouponFormFields(props) {
             >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
-            <Text
+            
+          </Form.Item>
+          <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
@@ -190,9 +192,6 @@ function CouponFormFields(props) {
               {SupportImageFormat.join(", ")}.
               {" "}
             </Text>
-          </Form.Item>
-
-
           <Form.Item
             name="max_uses"
             label="Max Users"

@@ -51,7 +51,9 @@ const EventDetailsField = () => {
             >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
-            <Text
+            
+          </Form.Item>
+          <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
@@ -59,7 +61,6 @@ const EventDetailsField = () => {
               {SupportImageFormat.join(", ")}.
               {" "}
             </Text>
-          </Form.Item>
           <Form.Item
             name="banner_images"
             label="Banner Images"
@@ -72,7 +73,9 @@ const EventDetailsField = () => {
             >
               <Button icon={<UploadOutlined />}>Click to upload banners</Button>
             </Upload>
-            <Text
+            
+          </Form.Item>
+          <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
@@ -80,7 +83,6 @@ const EventDetailsField = () => {
               {SupportImageFormat.join(", ")}.
               {" "}
             </Text>
-          </Form.Item>
         </Card>
       </Col>
     </div>

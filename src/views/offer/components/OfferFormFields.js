@@ -101,7 +101,7 @@ function OfferFormFields() {
           </Form.Item>
           <Form.Item
             name="max_uses"
-            label="Maximum Uses"
+            label="Maximum Users"
             rules={rules.maxUsers}
           >
             <Input type="number" placeholder="Enter maximum uses" onWheel={(e) => e.target.blur()} />
@@ -176,7 +176,11 @@ function OfferFormFields() {
 
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
-            <Text
+            
+
+          </Form.Item>
+          <div>
+          <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
@@ -184,8 +188,7 @@ function OfferFormFields() {
               {SupportImageFormat.join(", ")}.
               {" "}
             </Text>
-
-          </Form.Item>
+            </div>
 
           <Form.List name="key_words">
             {(fields, { add, remove }) => (

@@ -188,7 +188,9 @@ const AdBannerFormFields = ({ mode, banner }) => {
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
-              <Text
+             
+            </Form.Item>
+            <Text
                 type="warning"
                 style={{ padding: "00px 00px", fontSize: "11px" }}
               >
@@ -196,7 +198,6 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 {SupportImageFormat.join(", ")}.
                 {" "}
               </Text>
-            </Form.Item>
             <Form.Item
               name="ads_url"
               label="Banner Redirect Url"

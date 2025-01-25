@@ -166,7 +166,9 @@ function UserFormFields() {
             >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
-            <Text
+            
+          </Form.Item>
+          <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
@@ -174,7 +176,6 @@ function UserFormFields() {
               {SupportImageFormat.join(", ")}.
               {" "}
             </Text>
-          </Form.Item>
         </Card>
       </Col>
     </Row>
