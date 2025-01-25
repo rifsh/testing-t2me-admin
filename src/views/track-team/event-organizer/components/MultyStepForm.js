@@ -222,6 +222,9 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
         dispatch(setSelectedSubmitItem(data));
       }
 
+
+      
+
     } else if (mode === "ORGEDIT") {
 
 

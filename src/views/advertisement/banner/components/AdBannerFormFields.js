@@ -43,7 +43,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
   const { filteredAdCategories } = useSelector(
     (state) => state.adCategory
   );
-  const { loading, error, responseData, responseMessage, dialogVisible, modalLoading, message: warningMessage, selectedAdBanner,createBannerLoading } = useSelector(
+  const { loading, error, responseData, responseMessage, dialogVisible, modalLoading, message: warningMessage, selectedAdBanner, createBannerLoading } = useSelector(
     (state) => state.advertisement
   );
 
@@ -120,7 +120,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
         console.log("Edit Data:", data);
 
         const resultAction = await dispatch(
-          updateAdBanner({ data, action: ActionType.WARNING })
+          updateAdBanner({ data, action: ActionType.SUBMIT })
         );
 
         if (updateAdBanner.fulfilled.match(resultAction)) {
@@ -136,7 +136,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
   const handleModalSubmit = async () => {
     dispatch(setAdBannerModalLoading(true));
     const resultAction = await dispatch(
-      updateAdBanner({ data: selectedAdBanner, action: ActionType.SUBMIT })
+      updateAdBanner({ data: selectedAdBanner, action: ActionType.CONFIRM })
     );
     dispatch(setAdBannerModalLoading(false));
     dispatch(setAdBannerDialogVisible(false));
@@ -188,16 +188,16 @@ const AdBannerFormFields = ({ mode, banner }) => {
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
-             
+
             </Form.Item>
             <Text
-                type="warning"
-                style={{ padding: "00px 00px", fontSize: "11px" }}
-              >
-                {SupportFormatContent.join(",")}:{" "}
-                {SupportImageFormat.join(", ")}.
-                {" "}
-              </Text>
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}:{" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
             <Form.Item
               name="ads_url"
               label="Banner Redirect Url"
@@ -251,8 +251,8 @@ const AdBannerFormFields = ({ mode, banner }) => {
           </Form>
         </Card>
       </Col>
-      <LoadingOverlay 
-        loading={createBannerLoading} 
+      <LoadingOverlay
+        loading={createBannerLoading}
       />
       <WarningModal
         visible={dialogVisible}
@@ -267,7 +267,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={createAdBanner}
+        addFunction={mode === ADD ? createAdBanner : updateAdBanner}
         navigationPath={`${APP_PREFIX_PATH}/advertisement/banner/list`}
         responseMessage={responseMessage}
       />
