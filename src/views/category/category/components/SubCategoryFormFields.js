@@ -46,20 +46,20 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
     return e?.fileList;
   };
   const validateFileFormat = (file) => {
-        const fileExtension = file.name.split(".").pop().toUpperCase();
-        return SupportImageFormat.includes(fileExtension);
-      };
-    
-      const handleBeforeUpload = (file) => {
-        if (!validateFileFormat(file)) {
-          message.error(
-            `Only ${SupportImageFormat.join(", ")} files are allowed! 
+    const fileExtension = file.name.split(".").pop().toUpperCase();
+    return SupportImageFormat.includes(fileExtension);
+  };
+
+  const handleBeforeUpload = (file) => {
+    if (!validateFileFormat(file)) {
+      message.error(
+        `Only ${SupportImageFormat.join(", ")} files are allowed! 
             Uploaded file "${file.name}" is not a supported format.`
-          );
-          return Upload.LIST_IGNORE; // Prevent upload
-        }
-        return false;
-      };
+      );
+      return Upload.LIST_IGNORE; // Prevent upload
+    }
+    return false;
+  };
 
   const onFinish = async () => {
     try {

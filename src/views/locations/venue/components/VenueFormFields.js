@@ -211,7 +211,6 @@ const VenueFormFields = ({ mode }) => {
             label="Banner Images"
             valuePropName="fileList"
             getValueFromEvent={normFile}
-   
           >
             <Upload name="banner_images" listType="picture" beforeUpload={handleBeforeUpload}
             accept={`.${SupportImageFormat.join(',.')}`} 
