@@ -54,9 +54,6 @@ const EventDetailsField = () => {
             
           </Form.Item>
           <Text
-            
-          </Form.Item>
-          <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
@@ -76,7 +73,7 @@ const EventDetailsField = () => {
             >
               <Button icon={<UploadOutlined />}>Click to upload banners</Button>
             </Upload>
-
+            
           </Form.Item>
           <Text
               type="warning"
