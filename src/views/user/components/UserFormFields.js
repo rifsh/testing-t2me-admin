@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Tooltip, Upload, Button, Typography } from "antd";
+import { Input, Row, Col, Card, Form, Select, Tooltip, Upload, Button, Typography, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllRoles, setSelectedRole } from "store/slices/userSlice";
 import { fetchAllEvent } from "store/slices/eventSlice";
@@ -37,6 +37,21 @@ function UserFormFields() {
     }
     return e?.fileList;
   };
+  const validateFileFormat = (file) => {
+      const fileExtension = file.name.split(".").pop().toUpperCase();
+      return SupportImageFormat.includes(fileExtension);
+    };
+  
+    const handleBeforeUpload = (file) => {
+      if (!validateFileFormat(file)) {
+        message.error(
+          `Only ${SupportImageFormat.join(", ")} files are allowed! 
+          Uploaded file "${file.name}" is not a supported format.`
+        );
+        return Upload.LIST_IGNORE; // Prevent upload
+      }
+      return false;
+    };
 
   return (
     <Row gutter={16}>
@@ -160,7 +175,9 @@ function UserFormFields() {
               getValueFromEvent={normFile}
             
             >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+              accept={`.${SupportImageFormat.join(',.')}`}
+            >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
             <Text

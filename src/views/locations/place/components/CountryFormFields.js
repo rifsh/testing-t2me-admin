@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button, Typography } from "antd";
+import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button, Typography, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { fetchAllCountires } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -35,6 +35,7 @@ const rules = {
   // ],
 };
 
+
 const CountryFormFields = (props) => {
   const dispatch = useDispatch();
   const { loading, countries, error } = useSelector((state) => state.locations);
@@ -50,6 +51,22 @@ const CountryFormFields = (props) => {
       return e;
     }
     return e?.fileList;
+  };
+
+  const validateFileFormat = (file) => {
+    const fileExtension = file.name.split(".").pop().toUpperCase();
+    return SupportImageFormat.includes(fileExtension);
+  };
+
+  const handleBeforeUpload = (file) => {
+    if (!validateFileFormat(file)) {
+      message.error(
+        `Only ${SupportImageFormat.join(", ")} files are allowed! 
+        Uploaded file "${file.name}" is not a supported format.`
+      );
+      return Upload.LIST_IGNORE; // Prevent upload
+    }
+    return false;
   };
 
   if (loading) {
@@ -97,11 +114,14 @@ const CountryFormFields = (props) => {
             name="thumbnail_image"
             label="Thumbnail Image"
             valuePropName="fileList"
-            getValueFromEvent={normFile}
+             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
           >
             
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload} 
+
+            accept={`.${SupportImageFormat.join(',.')}`} 
+            >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
             <Text
@@ -120,7 +140,9 @@ const CountryFormFields = (props) => {
             getValueFromEvent={normFile}
             rules={rules.banner_images}
           >
-            <Upload name="banner_images" listType="picture" multiple beforeUpload={() => false}>
+            <Upload name="banner_images" listType="picture" multiple beforeUpload={handleBeforeUpload}
+            accept={`.${SupportImageFormat.join(',.')}`}
+            >
               <Button icon={<UploadOutlined />}>Click to upload banners</Button>
             </Upload>
             <Text
@@ -132,8 +154,6 @@ const CountryFormFields = (props) => {
               {" "}
             </Text>
           </Form.Item>
-          
-
         </Card>
       </Col>
     </Row>

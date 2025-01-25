@@ -6,5 +6,5 @@ export const SupportVideoFormat = [
     "MKV", "MP4", "AVI", "WEBM"
 ]
 export const SupportFormatContent = [
-    "Please uploded supported format"
+    "Please upload supported format file"
 ]

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, Select, message, message as antdMessage, Upload } from "antd";
+import { Input, Row, Col, Card, Form, Button, Select, message, message as antdMessage, Upload, Typography } from "antd";
 import {  fetchAdCategories } from "store/slices/adCategorySlice";
 import { createAdBanner, updateAdBanner, setSelectedAdBanner, setAdBannerDialogVisible, setAdBannerModalLoading } from "store/slices/advertisementSlice";
 import { getPlaces } from "store/slices/locationSlice";
@@ -13,10 +13,12 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 
 const { Option } = Select;
 const ADD = "ADD";
 const EDIT = "EDIT";
+const { Text } = Typography;
 
 const rules = {
   name: [{ required: true, message: "Please enter category name" }],
@@ -90,7 +92,21 @@ const AdBannerFormFields = ({ mode, banner }) => {
     }
     return e?.fileList;
   };
-
+  const validateFileFormat = (file) => {
+      const fileExtension = file.name.split(".").pop().toUpperCase();
+      return SupportImageFormat.includes(fileExtension);
+    };
+  
+    const handleBeforeUpload = (file) => {
+      if (!validateFileFormat(file)) {
+        message.error(
+          `Only ${SupportImageFormat.join(", ")} files are allowed! 
+          Uploaded file "${file.name}" is not a supported format.`
+        );
+        return Upload.LIST_IGNORE; // Prevent upload
+      }
+      return false;
+    };
 
   const handleOnSelect = (placeId) => {
     console.log("Selected Place ID:", placeId);
@@ -153,6 +169,19 @@ const AdBannerFormFields = ({ mode, banner }) => {
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
           <Form form={form} layout="vertical">
+          <Form.Item name="banner_category_id" label="Category" rules={rules.category}>
+              <Select className="w-100" placeholder="Choose a Category" loading={loading} >
+                {filteredAdCategories && filteredAdCategories.length > 0 ? (
+                  filteredAdCategories.map((category) => (
+                    <Option key={category.id} value={category.id}>
+                      {category.name}
+                    </Option>
+                  ))
+                ) : (
+                  <Option disabled>No category available</Option>
+                )}
+              </Select>
+            </Form.Item>
             <Form.Item name="name" label="Name" rules={rules.name}>
               <Input placeholder="Name" />
             </Form.Item>
@@ -166,10 +195,19 @@ const AdBannerFormFields = ({ mode, banner }) => {
               getValueFromEvent={normFile}
               rules={rules.thumbnail_image}
             >
-              <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+              <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(',.')}`}
+              >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
-
               </Upload>
+              <Text
+                  type="warning"
+                  style={{ padding: "00px 00px", fontSize: "11px" }}
+                >
+                  {SupportFormatContent.join(",")}:{" "}
+                  {SupportImageFormat.join(", ")}.
+                  {" "}
+                </Text>
             </Form.Item>
             <Form.Item
               name="ads_url"
@@ -178,19 +216,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
             >
               <Input placeholder="Enter banner url" />
             </Form.Item>
-            <Form.Item name="banner_category_id" label="Category" rules={rules.category}>
-              <Select className="w-100" placeholder="Choose a Category" loading={loading} >
-                {filteredAdCategories && filteredAdCategories.length > 0 ? (
-                  filteredAdCategories.map((category) => (
-                    <Option key={category.id} value={category.id}>
-                      {category.name}
-                    </Option>
-                  ))
-                ) : (
-                  <Option disabled>No category available</Option>
-                )}
-              </Select>
-            </Form.Item>
+           
             <Form.Item name="place_id" label="Place" rules={rules.place}>
               <Select className="w-100" placeholder="Choose a Place" loading={loading} onSelect={(value) => handleOnSelect(value)}>
                 {places && places.length > 0 ? (

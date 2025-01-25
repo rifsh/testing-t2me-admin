@@ -1,5 +1,5 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker, Checkbox, Button, Space, Upload, Typography } from "antd";
+import { Input, Row, Col, Card, Form, DatePicker, Checkbox, Button, Space, Upload, Typography, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsDateRequired } from "store/slices/offerSlice";
 import moment from "moment";
@@ -81,6 +81,21 @@ function OfferFormFields() {
       return e;
     }
     return e?.fileList;
+  };
+  const validateFileFormat = (file) => {
+    const fileExtension = file.name.split(".").pop().toUpperCase();
+    return SupportImageFormat.includes(fileExtension);
+  };
+
+  const handleBeforeUpload = (file) => {
+    if (!validateFileFormat(file)) {
+      message.error(
+        `Only ${SupportImageFormat.join(", ")} files are allowed! 
+        Uploaded file "${file.name}" is not a supported format.`
+      );
+      return Upload.LIST_IGNORE; // Prevent upload
+    }
+    return false;
   };
 
   return (
@@ -166,7 +181,9 @@ function OfferFormFields() {
               getValueFromEvent={normFile}
               rules={rules.thumbnail_image}
             >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+              accept={`.${SupportImageFormat.join(',.')}`}
+            >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
             <Text

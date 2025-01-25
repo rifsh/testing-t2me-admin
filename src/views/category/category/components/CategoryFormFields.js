@@ -52,6 +52,21 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
     }
     return e?.fileList;
   };
+  const validateFileFormat = (file) => {
+      const fileExtension = file.name.split(".").pop().toUpperCase();
+      return SupportImageFormat.includes(fileExtension);
+    };
+  
+    const handleBeforeUpload = (file) => {
+      if (!validateFileFormat(file)) {
+        message.error(
+          `Only ${SupportImageFormat.join(", ")} files are allowed! 
+          Uploaded file "${file.name}" is not a supported format.`
+        );
+        return Upload.LIST_IGNORE; // Prevent upload
+      }
+      return false;
+    };
 
   const onFinish = async () => {
     try {
@@ -113,7 +128,8 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
                 name="thumbnail_image"
                 listType="picture"
                 maxCount={1}
-                beforeUpload={() => false}
+                beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(',.')}`}
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
