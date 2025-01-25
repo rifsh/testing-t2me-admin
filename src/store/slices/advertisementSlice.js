@@ -240,16 +240,19 @@ const AdvertisementSlice = createSlice({
         state.error = action.payload.data;
       })
       .addCase(createAdSchedule.pending, (state) => {
+        state.loading=true;
         state.createScheduleLoading = true;
         state.error = null;
       })
       .addCase(createAdSchedule.fulfilled, (state, action) => {
         state.loading = false;
+        state.createScheduleLoading = false;
         state.error = null;
         state.responseData = action.payload.data;
         state.responseMessage = action.payload.status.message;
       })
       .addCase(createAdSchedule.rejected, (state, action) => {
+        state.loading = false;
         state.createScheduleLoading = false;
         state.error = action.payload.data;
       })

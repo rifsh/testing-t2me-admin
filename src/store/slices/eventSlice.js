@@ -19,7 +19,7 @@ const initialState = {
   organizerEvents:[],
   validationData: [],
   submitData: {},
-  message: null,
+  messages: null,
   currentStep: 1,
   submitLoading: false,
   dialogVisible: false,
@@ -260,7 +260,7 @@ const eventSlice = createSlice({
       .addCase(editEvent.fulfilled, (state, { payload }) => {
         state.loading = false;
         if (payload.message) {
-          state.message = payload.message;
+          state.messages = payload.message;
           state.editable_status = payload.editable_status;
         }
       })

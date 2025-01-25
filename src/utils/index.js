@@ -20,6 +20,12 @@ class Utils {
         .filter(([_, value]) => value !== null && value !== undefined)
     );
   };
+  static filterParams = (obj) => {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([_, value]) => value !== null && value !== undefined)
+    );
+  };
   /**
    * Get first character from first & last sentences of a username
    * @param {String} name - Username
