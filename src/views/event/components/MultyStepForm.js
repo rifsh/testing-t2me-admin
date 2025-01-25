@@ -46,7 +46,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
   } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const {  responseDataEvent, responseMessageEvent, message } = useSelector((state) => state.organizerUpdates);
+  const { responseDataEvent, responseMessageEvent, message } = useSelector((state) => state.organizerUpdates);
 
 
   console.log("------------------", eventId)
@@ -120,50 +120,28 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     const values = await form.validateFields();
 
     if (mode === "EDIT") {
-      if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
-
-
-        const data = {
-          ...values,
-          id: eventId,
-        };
-        console.log("Edit Data:", data);
-
-        dispatch(setSelectedSubmitItem(data));
-
-
-        // const resultAction = await dispatch(
-        //   updateOrganizerEvent({ data, action: ActionType.SUBMIT })
-        // );
-
-        // if (updateOrganizerEvent.fulfilled.match(resultAction)) {
-        //   dispatch(setSelectedUpdateEvent(data));
-        //   dispatch(setUpdateEventDialogVisible(true));
-        // }
-
-      }
 
     } else {
-      try {
-        dispatch(setSubmitLoading(true));
-        const offers = {
-          offer_ids: selectedOffers?.map((offer) => offer.id) || [],
-          coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
-        };
+        try {
+          dispatch(setSubmitLoading(true));
+          const offers = {
+            offer_ids: selectedOffers?.map((offer) => offer.id) || [],
+            coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
+          };
 
-        const finalData = {
-          ...submitData,
-          ...offers,
-          max_tickets: parseInt(submitData.max_tickets || "0", 10),
-        };
+          const finalData = {
+            ...submitData,
+            ...offers,
+            max_tickets: parseInt(submitData.max_tickets || "0", 10),
+          };
 
-        dispatch(setSelectedSubmitItem(finalData));
-      } catch (error) {
-        console.error("Submission Error:", error);
-        message.error("An error occurred during submission.");
-      } finally {
-        dispatch(setSubmitLoading(false));
-      }
+          dispatch(setSelectedSubmitItem(finalData));
+        } catch (error) {
+          console.error("Submission Error:", error);
+          message.error("An error occurred during submission.");
+        } finally {
+          dispatch(setSubmitLoading(false));
+        }
     }
 
 

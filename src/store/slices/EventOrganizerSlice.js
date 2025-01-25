@@ -18,6 +18,10 @@ const initialState = {
     editable_status: null,
     modalVisible: false,
     singleOrganizerUpdate: {},
+    isCommentModalVisible: false,
+    comment: '',
+    actionType: '',
+    showAllComments: false,
 };
 
 
@@ -69,18 +73,49 @@ export const updateOrganizerEvent = createAsyncThunk(
     async ({ data, action }, { rejectWithValue }) => {
         try {
             const response = await EventOrganizerService.updateOrganizerEvent(data, action);
-            return response.status;
+            return response;
         } catch (error) {
             return rejectWithValue(error.message || "Failed to update Event");
         }
     }
 );
 
+export const updateOrganizerReChanges = createAsyncThunk(
+    "organizerUpdates/updateOrganizerReChanges",
+    async ({ data, action }, { rejectWithValue }) => {
+        try {
+            console.log("------------------HEREEEEEEEEEEEEEEEEEE", data);
+            console.log("------------------HEREEEEEEEEEEEEEEEEEE", action);
+            const response = await EventOrganizerService.updateOrganizerReChanges(data, action);
+            console.log("responsssssssss", response);
+
+            return response;
+        } catch (error) {
+            console.log("ERorrrrrrrrr", error);
+
+            return rejectWithValue(error.message || "Failed to update Banner");
+        }
+    }
+);
+
+
 
 const OrganizerUpdateSlice = createSlice({
     name: "organizerUpdates",
     initialState,
     reducers: {
+        toggleComments: (state) => {
+            state.showAllComments = !state.showAllComments;
+        },
+        setCommentModalVisibility: (state, action) => {
+            state.isCommentModalVisible = action.payload;
+        },
+        setComment: (state, action) => {
+            state.comment = action.payload;
+        },
+        setActionType: (state, action) => {
+            state.actionType = action.payload;
+        },
         setOrganizerUpdateDialogVisible(state, action) {
             state.dialogVisible = action.payload;
         },
@@ -166,8 +201,10 @@ const OrganizerUpdateSlice = createSlice({
             })
             .addCase(updateOrganizerEvent.fulfilled, (state, { payload }) => {
                 state.loading = false;
+                state.responseDataEvent = payload.data;
                 if (payload.message) {
-                    state.message = payload.message;
+                    state.message = payload.status.message;
+                    state.responseMessageEvent = payload.status.message;
                     state.editable_status = payload.editable_status;
                 }
             })
@@ -175,15 +212,40 @@ const OrganizerUpdateSlice = createSlice({
                 state.loading = false;
                 state.error = payload || "Failed to edit event";
             })
+            .addCase(updateOrganizerReChanges.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateOrganizerReChanges.fulfilled, (state, { payload }) => {
+                state.loading = false;
+                state.responseDataEvent = payload.data;
+                if (payload.message) {
+                    state.message = payload.message;
+                    state.responseMessageEvent = payload.status.message;
+                    state.editable_status = payload.editable_status;
+                }
+            })
+            .addCase(updateOrganizerReChanges.rejected, (state, { payload }) => {
+                state.loading = false;
+                state.error = payload || "Failed to edit event";
+            })
 
     },
 });
 
-export const { filterOrganizerUpdate, setOrganizerUpdateDialogVisible,
+export const {
+    filterOrganizerUpdate,
+    setOrganizerUpdateDialogVisible,
     setUpdateEventDialogVisible,
     setSelectedUpdateEvent,
     setUpdateEventLoading,
-    setOrganizerUpdateModalLoading, setSelectedOrganizerUpdate } =
+    setOrganizerUpdateModalLoading,
+    setSelectedOrganizerUpdate,
+    setCommentModalVisibility,
+    setComment,
+    setActionType,
+    toggleComments
+} =
     OrganizerUpdateSlice.actions;
 
 export default OrganizerUpdateSlice.reducer;

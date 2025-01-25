@@ -77,11 +77,11 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/place/add`,
     component: React.lazy(() => import("views/locations/place/add-place")),
   },
-    {
-      key: "place.edit",
-      path: `${APP_PREFIX_PATH}/place/edit/:placeId`,
-      component: React.lazy(() => import("views/locations/place/edit_place")),
-    },
+  {
+    key: "place.edit",
+    path: `${APP_PREFIX_PATH}/place/edit/:placeId`,
+    component: React.lazy(() => import("views/locations/place/edit_place")),
+  },
   {
     key: "venue.list",
     path: `${APP_PREFIX_PATH}/venue/list`,
@@ -214,7 +214,7 @@ export const protectedRoutes = [
     key: "tapp.management.layout.footer.add",
     path: `${APP_PREFIX_PATH}/app/management/layout/footer/add`,
     component: React.lazy(() => import("views/app-managment/layout/footer/add-footer")),
-  },{
+  }, {
     key: "advertisement.category.list",
     path: `${APP_PREFIX_PATH}/advertisement/category/list`,
     component: React.lazy(() => import("views/advertisement/category/list-ad-category")),
@@ -268,7 +268,7 @@ export const protectedRoutes = [
     key: "alerts.list",
     path: `${APP_PREFIX_PATH}/alerts/list`,
     component: React.lazy(() => import("views/app-views/apps/alerts/alerts-list")),
-  },{
+  }, {
     key: "organiser.update",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
     component: React.lazy(() => import("views/track-team/event-organizer/update-list/index.js")),
@@ -288,5 +288,10 @@ export const protectedRoutes = [
     key: "org.details",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/details/:eventUpId`,
     component: React.lazy(() => import("views/track-team/event-organizer/update-list-details/index.js")),
-  }
+  },
+  {
+    key: "org.event.edit",
+    path: `${APP_PREFIX_PATH}/track-team/event-organizer/update-edit/:eventId`,
+    component: React.lazy(() => import("views/track-team/event-organizer/update-edit/index")),
+  },
 ];
