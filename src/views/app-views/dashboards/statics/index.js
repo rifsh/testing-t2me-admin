@@ -6,7 +6,9 @@ import Card from "components/shared-components/Card";
 import Flex from "components/shared-components/Flex";
 import { RecentScheduleData } from "./StaticsDashboardData";
 import ApexChart from "react-apexcharts";
+import { useNavigate } from "react-router-dom";
 import { apexLineChartDefaultOption, COLOR_2 } from "constants/ChartConstant";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { SPACER } from "constants/ThemeConstant";
 import {
   UserAddOutlined,
@@ -56,24 +58,24 @@ const latestTransactionOption = [
 ];
 
 const newJoinMemberOptions = [
-  {
-    key: "Add all",
-    label: (
-      <Flex alignItems="center" gap={SPACER[2]}>
-        <PlusOutlined />
-        <span className="ml-2">Add all</span>
-      </Flex>
-    ),
-  },
-  {
-    key: "Disable all",
-    label: (
-      <Flex alignItems="center" gap={SPACER[2]}>
-        <StopOutlined />
-        <span className="ml-2">Disable all</span>
-      </Flex>
-    ),
-  },
+  // {
+  //   key: "Add all",
+  //   label: (
+  //     <Flex alignItems="center" gap={SPACER[2]}>
+  //       <PlusOutlined />
+  //       <span className="ml-2">Add all</span>
+  //     </Flex>
+  //   ),
+  // },
+  // {
+  //   key: "Disable all",
+  //   label: (
+  //     <Flex alignItems="center" gap={SPACER[2]}>
+  //       <StopOutlined />
+  //       <span className="ml-2">Disable all</span>
+  //     </Flex>
+  //   ),
+  // },
 ];
 
 const CardDropdown = ({ items }) => {
@@ -149,6 +151,7 @@ const tableColumns = [
 ];
 
 export const StaticsDashboard = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [recentScheduleData] = useState(RecentScheduleData);
   const {
@@ -214,10 +217,12 @@ export const StaticsDashboard = () => {
           </Col>
         ) : (
           <Col xs={24} sm={24} md={24} lg={7}>
-            <Card
+            {/* <Card
               title="Member's Data"
               extra={<CardDropdown items={newJoinMemberOptions} />}
-            >
+            > */}
+            <Card
+              title="Member's Data">
               <div className="mt-3">
                 {Array.isArray(annualStatsForUsers) &&
                 annualStatsForUsers.length > 0 ? (
@@ -245,6 +250,7 @@ export const StaticsDashboard = () => {
                             icon={<UserAddOutlined />}
                             type="default"
                             size="small"
+                            onClick={() => navigate(`${APP_PREFIX_PATH}/user/add`)}
                           >
                             Add
                           </Button>
