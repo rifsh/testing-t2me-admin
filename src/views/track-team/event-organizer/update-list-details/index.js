@@ -1,22 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, {  useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
-import moment from 'moment';
 import {
-  ClockCircleOutlined,
   UserOutlined,
-  TagOutlined,
-  FileTextOutlined,
   CommentOutlined,
-  PictureOutlined,
 } from '@ant-design/icons';
 import { Button, Row, Col, Card, Typography, Space, List, Avatar, message, Tag, Image } from "antd";
 import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
 import { useParams, useNavigate } from "react-router-dom";
 import { ActionType } from "utils/api/warning-submit-util";
+import { getCurrentUser } from "configs/UserAccessConfig";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 import {
   fetchSingleOrganizerUpdate,
-  submitOrganizerUpdate
+  submitOrganizerUpdate,
+  setCommentModalVisibility,
+  setActionType,
+  setComment,
+  toggleComments
 } from "store/slices/EventOrganizerSlice";
 
 const { Title, Text, Paragraph } = Typography;
@@ -25,12 +26,17 @@ const DummyDataExample = () => {
   const { eventUpId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const currentUser = getCurrentUser();
 
-  const { singleOrganizerUpdate, loading } = useSelector((state) => state.organizerUpdates);
-  const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
-  const [comment, setComment] = useState('');
-  const [actionType, setActionType] = useState('');
-  const [showAllComments, setShowAllComments] = useState(false);
+
+  const {
+    singleOrganizerUpdate,
+    loading,
+    isCommentModalVisible,
+    comment,
+    actionType,
+    showAllComments 
+  } = useSelector((state) => state.organizerUpdates);
 
   useEffect(() => {
     if (eventUpId) {
@@ -39,8 +45,13 @@ const DummyDataExample = () => {
   }, [dispatch, eventUpId]);
 
   const handleOpenModal = (action) => {
-    setActionType(action);
-    setIsCommentModalVisible(true);
+    dispatch(setActionType(action));
+    dispatch(setCommentModalVisibility(true));
+  };
+
+  const handleMakeChanges = () => {
+    navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/update-edit/${eventUpId}`);
+
   };
 
   const getApprovalStatus = (action) => {
@@ -88,21 +99,20 @@ const DummyDataExample = () => {
       message.error(`Failed to ${actionType} the update`);
     }
 
-    setComment('');
-    setIsCommentModalVisible(false);
+    dispatch(setComment(''));
+    dispatch(setCommentModalVisibility(false));
 
 
   };
-  const toggleComments = () => {
-    setShowAllComments(!showAllComments);
-  };
+
 
   const renderCommentList = () => {
-    if (!singleOrganizerUpdate?.related_comments || singleOrganizerUpdate?.related_comments.length === 0) {
+    const comments = singleOrganizerUpdate?.related_comments || [];
+    
+    if (comments.length === 0) {
       return <Text type="secondary">No comments yet</Text>;
     }
 
-    const comments = singleOrganizerUpdate?.related_comments;
     const displayComments = showAllComments ? comments : comments.slice(0, 3);
     const hasMoreComments = comments.length > 3;
 
@@ -134,7 +144,7 @@ const DummyDataExample = () => {
         {hasMoreComments && (
           <Button
             style={{ marginTop: '16px' }}
-            onClick={toggleComments}
+            onClick={() => dispatch(toggleComments())}
           >
             {showAllComments ? "Show Less Comments" : "Show More Comments"}
           </Button>
@@ -142,7 +152,6 @@ const DummyDataExample = () => {
       </div>
     );
   };
-
   const getStatusTagColor = (status) => {
     const statusLower = status?.toLowerCase();
     switch (statusLower) {
@@ -160,14 +169,37 @@ const DummyDataExample = () => {
   };
 
   const renderActionButtons = () => {
-    if (singleOrganizerUpdate?.approval_status?.toUpperCase() === 'PENDING') {
+    const approvalStatus = singleOrganizerUpdate?.approval_status?.toUpperCase();
+
+    if (
+      approvalStatus === 'UPDATES' &&
+      currentUser.role_id === UserRoleConstants.eventOrganizerRoleId
+    ) {
       return (
         <Row justify="center" style={{ marginTop: 24 }} gutter={[16, 16]}>
           <Col>
             <Button
               size="large"
               className="text-primary"
+              onClick={handleMakeChanges}
+            >
+              Make Changes
+            </Button>
+          </Col>
+        </Row>
+      );
+    }
 
+    if (
+      approvalStatus === 'PENDING' &&
+      currentUser.role_id === UserRoleConstants.superAdminRoleId
+    ) {
+      return (
+        <Row justify="center" style={{ marginTop: 24 }} gutter={[16, 16]}>
+          <Col>
+            <Button
+              size="large"
+              className="text-primary"
               onClick={() => handleOpenModal('reject')}
             >
               Reject
@@ -176,7 +208,6 @@ const DummyDataExample = () => {
           <Col>
             <Button
               className="text-primary"
-
               size="large"
               onClick={() => handleOpenModal('update')}
             >
@@ -195,8 +226,10 @@ const DummyDataExample = () => {
         </Row>
       );
     }
+
     return null;
   };
+
 
 
   return (
@@ -329,10 +362,10 @@ const DummyDataExample = () => {
       <CommentShowModal
         visible={isCommentModalVisible}
         onSubmit={handleSubmit}
-        onCancel={() => setIsCommentModalVisible(false)}
+        onCancel={() => dispatch(setCommentModalVisibility(false))}
         loading={loading}
         comment={comment}
-        setComment={setComment}
+        setComment={(value) => dispatch(setComment(value))}
         title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />

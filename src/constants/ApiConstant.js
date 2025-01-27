@@ -57,6 +57,7 @@ export const ApiConstant = {
   EVENT_ORGANIZER_UPDATES: "/api/v1/events/secured/neweventupdates",
   EVENT_ORGANIZER_SINGLE_UPDATE: "/api/v1/events/secured/singleeventupdate",
   EVENT_ORGANIZER_SINGLE_UPDATE_PUT: "/api/v1/events/secured/superadminapproval",
-  EVENT_ORGANIZER_EVENT_UPDATE: "/api/v1/events/secured/organizer_event_update"
+  EVENT_ORGANIZER_EVENT_UPDATE: "/api/v1/events/secured/organizer_event_update",
+  EVENT_ORGANIZER_EVENT_UPDATE_RECHANGES: "/api/v1/events/secured/organizer_event_secondary_update"
 
 };

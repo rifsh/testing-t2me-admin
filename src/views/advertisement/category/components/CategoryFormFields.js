@@ -14,6 +14,7 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 
 
@@ -167,6 +168,9 @@ const CategoryFormFields = ({ mode, category }) => {
           </Form>
         </Card>
       </Col>
+      <LoadingOverlay 
+        loading={loading} 
+      />
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"

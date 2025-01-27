@@ -5,6 +5,28 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const EventOrganizerService = {};
 
+EventOrganizerService.updateOrganizerReChanges = function (data, action) {
+
+  console.log("DATE IN SERVICE -------------",data);
+  console.log("Action IN SERVICE -------------",action);
+  
+  const encodedAction = encodeURIComponent(handleAction(action)); 
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
+  
+  return fetch({
+    url: `${ApiConstant.EVENT_ORGANIZER_EVENT_UPDATE_RECHANGES}?update_id=${data.id}&action=${encodedAction}`,
+    method: "put",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+
 EventOrganizerService.fetchOrganizerUpdates = function (pageData) {
   return fetch({
     url: ApiConstant.EVENT_ORGANIZER_UPDATES,
@@ -38,15 +60,14 @@ EventOrganizerService.submitOrganizerUpdate = function (data, action) {
 
 EventOrganizerService.updateOrganizerEvent = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+
+  console.log("DATE IN SERVICE -------------",data);
+
   const formData = Utils.createFormData(data, {
     fileKeys: ['thumbnail_image'],
     skipEmpty: true
   });
-  if (data.thumbnail_image && Array.isArray(data.thumbnail_image)) {
-    data.thumbnail_image.forEach((image) => {
-      formData.append("thumbnail_image", image.originFileObj);
-    });
-  }
+
 
   return fetch({
     url: `${ApiConstant.EVENT_ORGANIZER_EVENT_UPDATE}?event_id=${data.id}&action=${encodedAction}`,

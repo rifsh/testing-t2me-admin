@@ -76,6 +76,9 @@ AdvertisementService.addAdBanner = function (data, action) {
 
 AdvertisementService.updateAdBanner = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+
+  console.log("DATA in SERVICE--------",data);
+  
   const formData = Utils.createFormData(data, {
     fileKeys: ['media_path'],
     skipEmpty: true
