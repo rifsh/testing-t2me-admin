@@ -267,6 +267,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
         addFunction={createAdBanner}
         navigationPath={`${APP_PREFIX_PATH}/advertisement/banner/list`}
         responseMessage={responseMessage}
+        loading={modalLoading}
       />
     </Row>
   );

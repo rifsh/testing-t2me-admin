@@ -67,6 +67,20 @@ export const fetchAdBanners = createAsyncThunk(
     }
   }
 );
+export const fetchAdBanner = createAsyncThunk(
+  "advertisement/fetchAdBanner",
+  async (pageData, { rejectWithValue }) => {
+    try {
+
+      const response = await AdvertisementService.fetchAdBanner(pageData);
+      return response.data[0];
+
+    } catch (error) {
+      return rejectWithValue("Failed to fetch categories");
+    }
+  }
+);
+
 export const fetchAdSchedules = createAsyncThunk(
   "advertisement/fetchAdSchedules",
   async (pageData, { rejectWithValue }) => {
