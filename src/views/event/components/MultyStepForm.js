@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
 import { BLUE_BASE, GRAY_LIGHTER } from "constants/ThemeConstant";
 import { ActionType } from "utils/api/warning-submit-util";
+import LoadingOverlay from "components/util-components/Loader/index";
 // import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import {
   addEvent,
@@ -39,6 +40,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     selectedCoupons,
     selectedOffers,
     submitData,
+    loading,
     submitLoading,
     responseData,
     responseMessage,
@@ -224,6 +226,9 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           </Button>
         )}
       </div>
+      <LoadingOverlay 
+        loading={loading}
+      />
       <SubmitAndConfirmModal
         responseData={mode === "EDIT" ? responseDataEvent : responseData}
         addFunction={mode === "EDIT" ? updateOrganizerEvent : addEvent}
