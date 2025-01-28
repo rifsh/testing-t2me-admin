@@ -12,6 +12,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const ADD = "ADD";
 // const EDIT = 'EDIT'
@@ -117,6 +118,9 @@ const CouponForm = (props) => {
         />
       </Col>
       </Form>
+      <LoadingOverlay 
+        loading={loading}
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addCoupon}

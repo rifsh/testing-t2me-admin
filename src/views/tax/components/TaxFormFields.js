@@ -28,10 +28,10 @@ import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
-
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { addTax, fetchAvailableCategory } from "store/slices/taxSlice";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const { Option } = Select;
 
@@ -213,6 +213,10 @@ const TaxFormFields = ({ mode }) => {
           </Card>
         </Form>
       </Col>
+      <LoadingOverlay 
+        loading={loading} 
+      />
+      
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addTax}

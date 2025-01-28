@@ -16,6 +16,7 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 import Utils from "utils/index"
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -242,6 +243,9 @@ const VenueFormFields = ({ mode }) => {
           </Card>
         </Form>
       </Col>
+      <LoadingOverlay 
+        loading={loading} 
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addVenue}
