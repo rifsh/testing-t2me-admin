@@ -1,22 +1,18 @@
-/* eslint-disable no-unused-vars */
 import React, { useEffect } from "react";
 import {
   Card,
   Table,
-  Select,
-  Input,
-  Button,
   Menu,
-  Tag,
+  Button,
   Row,
   Col,
   Form,
 } from "antd";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import {TextConstants} from "constants/TextConstant";
 import {
   EyeOutlined,
   FormOutlined,
-  SearchOutlined,
-  PlusCircleOutlined,
   EditOutlined,
 } from "@ant-design/icons";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
@@ -29,22 +25,22 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import {
   editPlace,
-  filterPlaces,
-  getCoutryDetails,
   getPlaces,
   getSinglePlace,
+  setLocationDialogVisible,
+  setLocationModalLoading,
+  getCoutryDetails,
+  setEditItemId,
 } from "store/slices/locationSlice";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
-import UserForm from "views/user/form-user";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
-
-const { Option } = Select;
 
 const PlaceList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const {
     filteredPlaces,
     detailedCountryList,
@@ -52,34 +48,51 @@ const PlaceList = () => {
     message,
     loading,
     pagination,
+    dialogVisible,
+    modalLoading,
+    editItemId,
   } = useSelector((state) => state.locations);
+
 
   useEffect(() => {
     dispatch(getPlaces(DEFAULT_PAGE_SIZE));
-
-    // dispatch(getCoutryDetails());
   }, [dispatch]);
+
   const handlePagination = (page, size) => {
     dispatch(getPlaces({ page: page, size: size }));
   };
+
   const handleViewDetails = async (id) => {
-      await dispatch(getSinglePlace(id));
-      navigate(`${APP_PREFIX_PATH}/place/details/${id}`);
-    };
-  const handleEditPlace = async (id) => {
-    navigate(`${APP_PREFIX_PATH}/place/edit/${id}`);
+    await dispatch(getSinglePlace(id));
+    navigate(`${APP_PREFIX_PATH}/place/details/${id}`);
   };
+
+  const handleEditPlace = (id) => {
+    dispatch(setEditItemId(id));
+    dispatch(setLocationDialogVisible(true));
+  };
+
+  const handleModalSubmit = async () => {
+    dispatch(setLocationModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/place/edit/${editItemId}`);
+    dispatch(setLocationDialogVisible(false));
+    dispatch(setLocationModalLoading(false));
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setLocationDialogVisible(false));
+  };
+
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
-
     dispatch(setSelectedItem(data));
   };
 
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
-        <Flex alignItems="center"   onClick={() => handleViewDetails(row.id)}>
+        <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
@@ -99,7 +112,6 @@ const PlaceList = () => {
       dataIndex: "name",
       sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
     },
-
     {
       title: "Created Date",
       dataIndex: "created_at",
@@ -109,7 +121,6 @@ const PlaceList = () => {
       sorter: (a, b) => utils.antdTableSorter(a, b, "created_at"),
     },
     utils.statusColumnUtil(handleUpdateStatus),
-
     {
       title: "",
       dataIndex: "actions",
@@ -120,11 +131,12 @@ const PlaceList = () => {
       ),
     },
   ];
+
   const [form] = Form.useForm();
 
   return (
     <Card>
-      <Row gutter={16} justify="space-between" align="" wrap={false}>
+      <Row gutter={16} justify="space-between" align="middle" wrap={false}>
         <SearchBarWithStatus
           fetchFunction={getPlaces}
           additionalFilters={[
@@ -165,6 +177,18 @@ const PlaceList = () => {
           }}
         />
       </div>
+      <WarningModal
+        visible={dialogVisible}
+        title="Edit Place"
+        details={TextConstants.DefaultEditContent1}
+        warningMessage="Do you want to proceed to the edit page?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed to Edit"
+        cancelText="Cancel"
+        loading={modalLoading}
+      />
+
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editPlace}
@@ -172,6 +196,8 @@ const PlaceList = () => {
         pageData={{ page: 1, size: 10 }}
         editable_status={editable_status}
       />
+
+
     </Card>
   );
 };

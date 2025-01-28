@@ -50,6 +50,7 @@ export const ApiConstant = {
   ADVERTISEMENT_SCHEDULE_URL: "/api/v1/banners/secured/advertisementschedule",
   ADVERTISEMENT_BANNER_UPDATE_URL: "/api/v1/banners/secured/advertisementbannerupdate",
   ADVERTISEMENT_CATEGORY_UPDATE_URL: "/api/v1/banners/secured/bannercategoryupdate",
+  ADVERTISEMENT_CATEGORY_BANNER_URL: "/api/v1/banners/secured/category_banners",
 
   // EVENT ORGANIZER ENDPOINTS
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Select, Input, Button, Menu, Tag } from "antd";
+import { Card, Table, Select, Input, Button, Menu, Tag, Alert, Col } from "antd";
 import {
   EyeOutlined,
   SearchOutlined,
@@ -38,7 +38,7 @@ const IssueList = () => {
     useSelector((state) => state.issue);
   useEffect(() => {
     console.warn('tholi..........', getCurrentUser().role_id)
-    dispatch(fetchAllAlertissues({...DEFAULT_PAGE_SIZE}));
+    dispatch(fetchAllAlertissues({ ...DEFAULT_PAGE_SIZE }));
   }, [dispatch]);
 
   const handleViewDetails = async (id) => {
@@ -125,32 +125,32 @@ const IssueList = () => {
         a.issue_status.localeCompare(b.issue_status), // Sort alphabetically by status
       sortDirections: ["ascend", "descend"],
     }
-,    
-{
-  title: "Created On",
-  dataIndex: "created_at",
-  sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at),
-  render: (created_at) => {
-    if (!created_at) {
-      return <div style={{ color: "#888" }}>No date available</div>;
+    ,
+    {
+      title: "Created On",
+      dataIndex: "created_at",
+      sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at),
+      render: (created_at) => {
+        if (!created_at) {
+          return <div style={{ color: "#888" }}>No date available</div>;
+        }
+
+        const date = new Date(created_at);
+        if (isNaN(date)) {
+          return <div style={{ color: "#888" }}>Invalid date</div>;
+        }
+
+        const formattedDate = date.toISOString().split("T")[0]; // Extract only the date part
+        const daysAgo = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24)); // Calculate days ago
+
+        return (
+          <>
+            <div>{formattedDate}</div>
+            <div style={{ color: "#888" }}>{daysAgo} days ago</div>
+          </>
+        );
+      },
     }
-
-    const date = new Date(created_at);
-    if (isNaN(date)) {
-      return <div style={{ color: "#888" }}>Invalid date</div>;
-    }
-
-    const formattedDate = date.toISOString().split("T")[0]; // Extract only the date part
-    const daysAgo = Math.floor((new Date() - date) / (1000 * 60 * 60 * 24)); // Calculate days ago
-
-    return (
-      <>
-        <div>{formattedDate}</div>
-        <div style={{ color: "#888" }}>{daysAgo} days ago</div>
-      </>
-    );
-  },
-}
 
 
     // ,
@@ -205,77 +205,87 @@ const IssueList = () => {
   };
   const { Search } = Input;
   return (
-    <Card>
-      <Flex
-        alignItems="center"
-        justifyContent="space-between"
-        mobileFlex={false}
-      >
-        <Flex className="mb-1" mobileFlex={false}>
-          <div className="mr-md-3 mb-3">
-            <Search
-              placeholder="Search Issues"
-              onChange={(e) => handleSearchIsEmpty(e.target.value)}
-              onSearch={(value) => handleSearch(value)}
-              style={{ width: 200 }}
-            />
-          </div>
-          <div className="mb-3">
-            <Select
-              defaultValue="All"
-              onChange={handleShowStatus}
-              className="mr-2"
-            >
-              <Option value={null}>All</Option>
-                <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
-                    <Option value={UserRoleConstants.superAdminRoleId}>
-                      Super Admin
-                    </Option>
-                    <Option value={UserRoleConstants.superSupportingTeamRoleId}>
-                      Super Supporting Team
-                    </Option>
-                    <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
-                      Event Supporting Team
-                    </Option>
-      
-            </Select>
-          </div>
-        </Flex>
-        { getCurrentUser().role_id == UserRoleConstants.eventOrganizerRoleId &&<div>
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/issue/add`)}
-          >
-            Add Issue
-          </Button>
-        </div> }
-      </Flex>
-      <div className="table-responsive">
-        <Table
-          columns={tableColumns}
-          dataSource={issues}
-          rowKey="id"
-          loading={loading}
-          
-          pagination={{
-            current: pagination.page,
-            pageSize: pagination.size,
-            total: pagination.total,
-            onChange: (page, pageSize) => handlePagination(page, pageSize),
-          }}
+    <>
+      <Col xs={24} sm={24} md={17} className="mb-4">
+        <Alert
+          message="Warning"
+          description={TextConstants.IssuesContent}
+          type="warning"
+          showIcon
         />
-      </div>
+      </Col>
+      <Card>
+        <Flex
+          alignItems="center"
+          justifyContent="space-between"
+          mobileFlex={false}
+        >
+          <Flex className="mb-1" mobileFlex={false}>
+            <div className="mr-md-3 mb-3">
+              <Search
+                placeholder="Search Issues"
+                onChange={(e) => handleSearchIsEmpty(e.target.value)}
+                onSearch={(value) => handleSearch(value)}
+                style={{ width: 200 }}
+              />
+            </div>
+            <div className="mb-3">
+              <Select
+                defaultValue="All"
+                onChange={handleShowStatus}
+                className="mr-2"
+              >
+                <Option value={null}>All</Option>
+                <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
+                <Option value={UserRoleConstants.superAdminRoleId}>
+                  Super Admin
+                </Option>
+                <Option value={UserRoleConstants.superSupportingTeamRoleId}>
+                  Super Supporting Team
+                </Option>
+                <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
+                  Event Supporting Team
+                </Option>
+              </Select>
+            </div>
+          </Flex>
+          {getCurrentUser().role_id == UserRoleConstants.eventOrganizerRoleId && (
+            <div>
+              <Button
+                type="primary"
+                icon={<FormOutlined />}
+                block
+                onClick={() => navigate(`${APP_PREFIX_PATH}/issue/add`)}
+              >
+                Add Issue
+              </Button>
+            </div>
+          )}
+        </Flex>
+        <div className="table-responsive">
+          <Table
+            columns={tableColumns}
+            dataSource={issues}
+            rowKey="id"
+            loading={loading}
+            pagination={{
+              current: pagination.page,
+              pageSize: pagination.size,
+              total: pagination.total,
+              onChange: (page, pageSize) => handlePagination(page, pageSize),
+            }}
+          />
+        </div>
 
-      <UpdateStatusModal
-        responseMessage={message}
-        editFunction={editEvent}
-        editable_status={editable_status}
-        getAllFunction={(pageData) => fetchAllEvent(pageData)}
-        pageData={{ page: 1, size: 10 }}
-      />
-    </Card>
+        <UpdateStatusModal
+          responseMessage={message}
+          editFunction={editEvent}
+          editable_status={editable_status}
+          getAllFunction={(pageData) => fetchAllEvent(pageData)}
+          pageData={{ page: 1, size: 10 }}
+        />
+      </Card>
+    </>
   );
 };
 

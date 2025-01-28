@@ -483,7 +483,18 @@ class Utils {
         }
 
         if (key === 'banner_images') {
-          value.forEach(image => formData.append(key, image.originFileObj));
+          if (value.length === 0) {
+            formData.append(key, '');
+          } else {
+            value.forEach(image => {
+              if (image.url) {
+                formData.append('banner_images', image.url);
+              }
+              if (image.originFileObj) {
+                formData.append(key, image.originFileObj);
+              }
+            });
+          }
           return;
         }
 

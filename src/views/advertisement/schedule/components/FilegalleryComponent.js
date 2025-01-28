@@ -3,8 +3,8 @@ import { Card, Pagination } from 'antd';
 import { FileImageOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
-import { fetchAdBanners } from 'store/slices/advertisementSlice';
-
+import { fetchAdBanner, fetchAdBanners } from 'store/slices/advertisementSlice';
+import { fetchAdCategories } from "store/slices/adCategorySlice";
 const FileGallery = ({ onDragStart, onDragEnd }) => {
   const dispatch = useDispatch();
   const {
@@ -13,9 +13,18 @@ const FileGallery = ({ onDragStart, onDragEnd }) => {
     loading
   } = useSelector((state) => state.advertisement);
 
+  const {
+    filteredAdCategories,
+  
+    subPagination,
+    
+    editable_status,
+    message: responseMessage,
+  } = useSelector((state) => state.adCategory);
   const handlePagination = (page, size) => {
-    dispatch(fetchAdBanners({ page, size }));
+    dispatch(fetchAdBanner({ page, size }));
   };
+    
 
   const renderMedia = (mediaPath) => {
     const isVideo = /\.(mp4|webm|ogg)$/i.test(mediaPath);
@@ -51,21 +60,22 @@ const FileGallery = ({ onDragStart, onDragEnd }) => {
 
         // ADD FILTERATION FUNCTION AFTER API COMPLETED
 
-        // additionalFilters={[
-        //   {
-        //     options: filteredAdBanner,
-        //     placeholder: "Please choose a Category",
-        //     formName: "banner_category_id",
-        //     isAutoComplete: true,
-        //     onClick: () => {
-        //       // dispatch(getCoutryDetails());
-        //     },
-        //   },
-        // ]}
+        additionalFilters={[
+          {
+            options: filteredAdCategories,
+            placeholder: "Please choose a Category",
+            formName: "category_id",
+            isAutoComplete: true,
+            onClick: () => {
+              dispatch(fetchAdCategories());
+            },
+          },
+        ]}
 
         // ADD FILTERATION FUNCTION AFTER API COMPLETED
 
       />
+       {/* <SearchBarWithStatus fetchFunction={fetchAdBanner} /> */}
       <div
         style={{
           display: "grid",

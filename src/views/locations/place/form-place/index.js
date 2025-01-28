@@ -24,7 +24,7 @@ import {
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 
-const CountryForm = ({ placeId }) => {
+const CountryForm = ({ mode, placeId }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -70,22 +70,22 @@ const CountryForm = ({ placeId }) => {
       dispatch(setLoading(true))
       const values = await form.validateFields();
       console.log({ values });
-      
+
       const formData = new FormData();
-      
+
       // Loop through values and append each key-value pair to FormData
       Object.keys(values).forEach((key) => {
         formData.append(key, values[key]);
       });
-      
+
       if (!placeId) {
         // If placeId is not present, it's a new place (Add mode)
         dispatch(setSelectedSubmitItem(values));
-        
+
         const resultAction = await dispatch(
           createPlace({ formData, action: ActionType.SUBMIT })
         );
-        
+
         if (createPlace.fulfilled.match(resultAction)) {
           antdMessage.success(`Place ${values.name} added successfully`);
           navigate(`${APP_PREFIX_PATH}/place/list`);
@@ -97,11 +97,11 @@ const CountryForm = ({ placeId }) => {
           id: placeId,
         };
         console.log("Edit Data:", data);
-        
+
         const resultAction = await dispatch(
           editPlace({ formData, action: ActionType.WARNING })
         );
-        
+
         if (editPlace.fulfilled.match(resultAction)) {
           dispatch(setSelectedPlace(data));
           dispatch(setLocationDialogVisible(true));
@@ -109,13 +109,13 @@ const CountryForm = ({ placeId }) => {
       }
     } catch (errorInfo) {
       console.error("Validation Failed:", errorInfo);
-    }finally {
+    } finally {
       // Stop loader
       // dispatch(setLocationModalLoading(false));
       dispatch(setLoading(false))
     }
   };
-    
+
 
   const handleModalSubmit = async () => {
     dispatch(setLocationModalLoading(true));
@@ -135,7 +135,7 @@ const CountryForm = ({ placeId }) => {
   const handleModalCancel = () => {
     dispatch(setLocationDialogVisible(false));
   };
-  
+
 
   return (
     <>
@@ -162,7 +162,7 @@ const CountryForm = ({ placeId }) => {
                 {!placeId ? "Add New Place" : `Edit Place`}{" "}
               </h2>
               <div className="mb-3">
-             
+
                 <DiscardButton form={form} />
                 <Button
                   type="primary"
@@ -184,7 +184,7 @@ const CountryForm = ({ placeId }) => {
               {
                 label: "General",
                 key: "1",
-                children: <CountryFormFields />,
+                children: <CountryFormFields mode={mode} />,
               },
             ]}
           />

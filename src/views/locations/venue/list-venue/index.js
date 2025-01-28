@@ -5,6 +5,7 @@ import {
   PlusCircleOutlined,
   SearchOutlined,
   FormOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
@@ -21,18 +22,33 @@ import {
   getPlaces,
   getSingleVenues,
   getVenues,
+  setEditItemId,
+  setLocationDialogVisible,
+  setLocationModalLoading,
 } from "store/slices/locationSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { setSelectedItem } from "store/slices/modalSlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { TextConstants } from "constants/TextConstant";
 
 const { Option } = Select;
 
 const VenueList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredVenues,pagination, loading, filteredPlaces, editable_status, message } =
+  const {
+    filteredVenues,
+    pagination,
+    loading,
+    filteredPlaces,
+    editable_status,
+    message,
+    dialogVisible,
+    modalLoading,
+    editItemId,
+  } =
     useSelector((state) => state.locations);
   const [form] = Form.useForm();
 
@@ -54,6 +70,21 @@ const VenueList = () => {
   const handlePagination = (page, size) => {
     dispatch(getVenues({ page: page, size: size }));
   };
+  const handleEditVenue = (id) => {
+    dispatch(setEditItemId(id));
+    dispatch(setLocationDialogVisible(true));
+  };
+  const handleModalSubmit = async () => {
+    dispatch(setLocationModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/venue/edit/${editItemId}`);
+    dispatch(setLocationDialogVisible(false));
+    dispatch(setLocationModalLoading(false));
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setLocationDialogVisible(false));
+  };
+
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
@@ -62,12 +93,12 @@ const VenueList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       </Menu.Item>
-      {/* <Menu.Item>
-        <Flex alignItems="center">
-          <PlusCircleOutlined />
-          <span className="ml-2">Add to remark</span>
+      <Menu.Item>
+        <Flex alignItems="center" onClick={() => handleEditVenue(row.id)}>
+          <EditOutlined />
+          <span className="ml-2">Edit Venue</span>
         </Flex>
-      </Menu.Item> */}
+      </Menu.Item>
     </Menu>
   );
 
@@ -80,9 +111,9 @@ const VenueList = () => {
     },
     {
       title: "Place",
-      dataIndex: ["place","name"],
+      dataIndex: ["place", "name"],
       render: (name) => <span>{name || "N/A"}</span>,
-      sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["place","name"]),
+      sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["place", "name"]),
     },
     {
       title: "Address",
@@ -188,12 +219,23 @@ const VenueList = () => {
           }}
         />
       </div>
+      <WarningModal
+        visible={dialogVisible}
+        title="Edit Place"
+        details={TextConstants.DefaultEditContent1}
+        warningMessage="Do you want to proceed to the edit page?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed to Edit"
+        cancelText="Cancel"
+        loading={modalLoading}
+      />
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editVenue}
-          getAllFunction={(pageData) => getVenues(pageData)}
-                pageData={{ page: 1, size: 10 }}
-                editable_status={editable_status}
+        getAllFunction={(pageData) => getVenues(pageData)}
+        pageData={{ page: 1, size: 10 }}
+        editable_status={editable_status}
       />
     </Card>
   );
