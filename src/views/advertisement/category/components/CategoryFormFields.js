@@ -139,14 +139,17 @@ const CategoryFormFields = ({ mode, category }) => {
             <Form.Item name="category_code" label="Code" rules={rules.category_code}>
               <Input placeholder="Code" />
             </Form.Item>
-            <Form.Item name="min_size" label="Min size" rules={rules.min_size}>
+            <Form.Item name="min_size" label="Min Size" rules={rules.min_size}>
               <Input placeholder="Min Size  " />
             </Form.Item>
-            <Form.Item name="max_size" label="Max size" rules={rules.max_size}>
+            <Form.Item name="max_size" label="Max Size" rules={rules.max_size}>
               <Input placeholder="Max Size  " />
             </Form.Item>
-            <Form.Item name="resolution" label="resolution" rules={rules.resolution}>
-              <Input placeholder="resolution" />
+            <Form.Item name="resolution" label="Resolution" rules={rules.resolution}>
+              <Input placeholder="  " />
+            </Form.Item>
+            <Form.Item name="" label="File Type" rules={rules.resolution}>
+              <Input placeholder="File Type" />
             </Form.Item>
             <div
               style={{
