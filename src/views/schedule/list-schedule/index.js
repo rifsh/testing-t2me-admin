@@ -65,31 +65,8 @@ const ScheduleList = () => {
     {
       title: "Is Scheduled",
       dataIndex: "is_scheduled",
-      render: (_, record) => {
-        let statusText;
-        let badgeStatus;
-
-        if (record.is_scheduled && record.status) {
-          statusText = "Running";
-          badgeStatus = "success";
-        } else if (!record.is_scheduled && record.status) {
-          statusText = "Upcoming";
-          badgeStatus = "warning";
-        } else {
-          statusText = "Expired";
-          badgeStatus = "error";
-        }
-
-        return (
-          <div>
-            <Badge status={badgeStatus}></Badge>
-            <span className="mx-2">{statusText}</span>
-          </div>
-        );
-      },
-      sorter: (a, b) =>
-        a.is_scheduled === b.is_scheduled ? 0 : a.is_scheduled ? -1 : 1,
-      sortDirections: ["ascend", "descend"],
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "is_scheduled"),
+      
     },
   ];
 
