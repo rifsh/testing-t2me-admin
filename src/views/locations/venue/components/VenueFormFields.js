@@ -17,11 +17,15 @@ import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 import Utils from "utils/index"
 import LoadingOverlay from "components/util-components/Loader/index";
+import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 
 const { Option } = Select;
 const { Text } = Typography;
 
-const VenueFormFields = ({ mode }) => {
+const VenueFormFields = ({ mode, venue }) => {
+
+  console.log(venue, "VENUEEEEEEEEEE FOR EDIT -------------");
+
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -36,10 +40,44 @@ const VenueFormFields = ({ mode }) => {
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
+    if (venue && mode === "EDIT") {
+      form.setFieldsValue({
+        address: venue.address,
+        place_id: venue.place?.id,
+        name: venue.name,
+        capacity: venue.capacity,
+        indoor: venue.indoor,
+        latitude: venue.latitude,
+        longitude: venue.longitude,
+        banner_images: venue?.media
+          ? venue?.media?.map((banner, index) => ({
+            uid: `-banner-${index}`,
+            name: banner?.media_url.split("/").pop(),
+            status: "done",
+            url: banner?.media_url,
+          }))
+          : [],
+        thumbnail_image: venue.thumbnail_image
+          ? [
+            {
+              uid: "-1",
+              name: venue.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: venue.thumbnail_image,
+            },
+          ]
+          : [],
+      });
+
+    }
+  }, [form]);
+
+  useEffect(() => {
     if (error) {
       message.error(error);
     }
   }, [error]);
+
   const handlePlaceSelect = (id) => {
     dispatch(setSelectedPlace(id));
   };
@@ -52,31 +90,36 @@ const VenueFormFields = ({ mode }) => {
 
   const handleBeforeUpload = Utils.handleBeforeUpload;
   const onFinish = async () => {
-    try {
-      const values = await form.validateFields();
-      console.log("Form valuexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs:", values);
+    if (mode === "EDIT") {
 
-      if (!selectedPlace) {
-        message.error("Place ID is missing. Please select a place.");
-        return;
+    } else {
+      try {
+        const values = await form.validateFields();
+        console.log("Form valuexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs:", values);
+
+        if (!selectedPlace) {
+          message.error("Place ID is missing. Please select a place.");
+          return;
+        }
+
+        // Provide default values for missing fields
+        const formData = {
+          ...values,
+          place_id: selectedPlace,
+          latitude: coordinates.lat || 0, // Use 0 if undefined
+          longitude: coordinates.lng || 0, // Use 0 if undefined
+          capacity: values.capacity || 0, // Ensure capacity is always a number
+          indoor: values.indoor !== undefined ? values.indoor : false, // Ensure indoor is boolean
+          address: values.address,
+        };
+
+        dispatch(setSelectedSubmitItem(formData));
+
+      } catch (errorInfo) {
+        console.error("Validation Failed:", errorInfo);
       }
-
-      // Provide default values for missing fields
-      const formData = {
-        ...values,
-        place_id: selectedPlace,
-        latitude: coordinates.lat || 0, // Use 0 if undefined
-        longitude: coordinates.lng || 0, // Use 0 if undefined
-        capacity: values.capacity || 0, // Ensure capacity is always a number
-        indoor: values.indoor !== undefined ? values.indoor : false, // Ensure indoor is boolean
-        address: values.address,
-      };
-
-      dispatch(setSelectedSubmitItem(formData));
-
-    } catch (errorInfo) {
-      console.error("Validation Failed:", errorInfo);
     }
+
   };
 
 
@@ -241,6 +284,7 @@ const VenueFormFields = ({ mode }) => {
               </Button>
             </Flex>
           </Card>
+          {mode === "EDIT" && <EditWarningAlert />}
         </Form>
       </Col>
       <LoadingOverlay 

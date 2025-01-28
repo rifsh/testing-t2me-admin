@@ -93,6 +93,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/locations/venue/add-venue")),
   },
   {
+    key: "venue.edit",
+    path: `${APP_PREFIX_PATH}/venue/edit/:venueId`,
+    component: React.lazy(() => import("views/locations/venue/edit_venue")),
+  },
+  {
     key: "venue.details",
     path: `${APP_PREFIX_PATH}/venue/details/:venueId`,
     component: React.lazy(() => import("views/locations/venue/venue-details")),
@@ -203,6 +208,11 @@ export const protectedRoutes = [
     key: "tax.add",
     path: `${APP_PREFIX_PATH}/tax/add`,
     component: React.lazy(() => import("views/tax/add-tax")),
+  },
+  {
+    key: "tax.edit",
+    path: `${APP_PREFIX_PATH}/tax/edit/:taxId`,
+    component: React.lazy(() => import("views/tax/edit-tax/index")),
   },
   {
 

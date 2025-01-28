@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 const EditPlace = () => {
   const { placeId } = useParams();
 
-  return <CountryForm placeId={placeId} />;
+  return <CountryForm placeId={placeId} mode="EDIT" />;
 };
 
 export default EditPlace;

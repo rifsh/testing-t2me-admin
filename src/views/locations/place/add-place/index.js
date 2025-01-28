@@ -3,7 +3,7 @@ import CountryForm from '../form-place';
 
 const AddPlace = () => {
 	return (
-		<CountryForm mode="ADD"/>
+		<CountryForm mode="ADD" />
 	)
 }
 

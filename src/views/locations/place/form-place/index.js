@@ -25,7 +25,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import LoadingOverlay from "components/util-components/Loader/index";
 
-const CountryForm = ({ placeId }) => {
+const CountryForm = ({ mode, placeId }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -70,19 +70,19 @@ const CountryForm = ({ placeId }) => {
     try {
       const values = await form.validateFields();
       console.log({ values });
-      
+
       const formData = new FormData();
 
       Object.keys(values).forEach((key) => {
         formData.append(key, values[key]);
       });
-      
+
       if (!placeId) {
         dispatch(setSelectedSubmitItem(values));
         const resultAction = await dispatch(
           createPlace({ formData, action: ActionType.SUBMIT })
         );
-        
+
         if (createPlace.fulfilled.match(resultAction)) {
           antdMessage.success(`Place ${values.name} added successfully`);
           navigate(`${APP_PREFIX_PATH}/place/list`);
@@ -94,11 +94,11 @@ const CountryForm = ({ placeId }) => {
           id: placeId,
         };
         console.log("Edit Data:", data);
-        
+
         const resultAction = await dispatch(
           editPlace({ formData, action: ActionType.WARNING })
         );
-        
+
         if (editPlace.fulfilled.match(resultAction)) {
           dispatch(setSelectedPlace(data));
           dispatch(setLocationDialogVisible(true));
@@ -108,7 +108,7 @@ const CountryForm = ({ placeId }) => {
       console.error("Validation Failed:", errorInfo);
     }
   };
-    
+
 
   const handleModalSubmit = async () => {
     dispatch(setLocationModalLoading(true));
@@ -128,7 +128,7 @@ const CountryForm = ({ placeId }) => {
   const handleModalCancel = () => {
     dispatch(setLocationDialogVisible(false));
   };
-  
+
 
   return (
     <>
@@ -156,7 +156,7 @@ const CountryForm = ({ placeId }) => {
                 {!placeId ? "Add New Place" : `Edit Place`}{" "}
               </h2>
               <div className="mb-3">
-             
+
                 <DiscardButton form={form} />
                 <Button
                   type="primary"
@@ -178,7 +178,7 @@ const CountryForm = ({ placeId }) => {
               {
                 label: "General",
                 key: "1",
-                children: <CountryFormFields />,
+                children: <CountryFormFields mode={mode} />,
               },
             ]}
           />

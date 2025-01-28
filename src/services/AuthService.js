@@ -8,4 +8,10 @@ AuthService.login = function (data) {
 		data: data
 	})
 }
+AuthService.logout = function () {
+	return fetch({
+		url: `/api/v1/auth/public/logout`,
+		method: 'post',
+	})
+}
 export default AuthService;
