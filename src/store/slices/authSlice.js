@@ -33,6 +33,26 @@ export const signIn = createAsyncThunk(
     }
   }
 );
+// export const signOut = createAsyncThunk("auth/logout", async () => {
+//   const response = await FirebaseService.signOutRequest();
+//   localStorage.removeItem(AUTH_TOKEN);
+//   return response.data;
+// });
+export const signOut = createAsyncThunk(
+  "auth/logout",
+  async () => {
+    try {
+      console.log("LOGOUT STARTED-----------------");
+      const response = await AuthService.logout();
+      // console.log("response data", response.data);
+      console.log("LOGOUT SUCCESS-----------------");
+      localStorage.removeItem(AUTH_TOKEN);
+      return response.data;
+    } catch (err) {
+      return err.response?.data?.message || "Error";
+    }
+  }
+);
 
 export const signUp = createAsyncThunk(
   "auth/register",
@@ -49,11 +69,7 @@ export const signUp = createAsyncThunk(
   }
 );
 
-export const signOut = createAsyncThunk("auth/logout", async () => {
-  const response = await FirebaseService.signOutRequest();
-  localStorage.removeItem(AUTH_TOKEN);
-  return response.data;
-});
+
 
 export const signInWithGoogle = createAsyncThunk(
   "auth/signInWithGoogle",

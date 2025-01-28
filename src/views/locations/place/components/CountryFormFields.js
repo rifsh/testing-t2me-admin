@@ -4,6 +4,7 @@ import { UploadOutlined } from "@ant-design/icons";
 import { fetchAllCountires } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 import Utils from "utils/index";
 
 const { Option } = Select;
@@ -37,7 +38,7 @@ const rules = {
 };
 
 
-const CountryFormFields = (props) => {
+const CountryFormFields = ({mode}) => {
   const dispatch = useDispatch();
   const { loading, countries, error } = useSelector((state) => state.locations);
 
@@ -144,6 +145,7 @@ const CountryFormFields = (props) => {
               {" "}
             </Text>
         </Card>
+        {mode === "EDIT" && <EditWarningAlert/>}
       </Col>
     </Row>
   );
