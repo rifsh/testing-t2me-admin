@@ -74,16 +74,16 @@ const EventDetails = () => {
         >
           <Row gutter={[16, 16]}>
             <Col span={12}>
-              <Text strong>Venue:</Text> {eventDetails.venue.name}
+              <Text strong>Venue:</Text> {eventDetails.venue?.name??"N/A"}
             </Col>
             <Col span={12}>
               <Text strong>Available Seats:</Text> {eventDetails.max_tickets}
             </Col>
             <Col span={12}>
-              <Text strong>Category:</Text> {eventDetails.category.name}
+              <Text strong>Category:</Text> {eventDetails.category?.name??"N/A"}
             </Col>
             <Col span={12}>
-              <Text strong>Sub Category:</Text> {eventDetails.sub_category.name}
+              <Text strong>Sub Category:</Text> {eventDetails.sub_category?.name??"N/A"}
             </Col>
           </Row>
         </Card>

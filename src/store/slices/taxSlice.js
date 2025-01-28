@@ -59,8 +59,10 @@ const taxSlice = createSlice({
     responseData: null,
     responseMessage: null,
     selectedTax: null,
+    singleTax: null,
     editable_status: null,
     pagination: { size: 10, page: 1 },
+    editItemId: null,
   },
   reducers: {
     filterTax: (state, action) => {
@@ -85,6 +87,15 @@ const taxSlice = createSlice({
     },
     setSelectedTaxDetails: (state, action) => {
       state.selectedTax = action.payload;
+    },
+    setEditItemId: (state, action) => {
+      state.editItemId = action.payload;
+    },
+    setTaxDialogVisible(state, action) {
+      state.dialogVisible = action.payload;
+    },
+    setTaxModalLoading(state, action) {
+      state.modalLoading = action.payload;
     },
   },
 
@@ -143,5 +154,5 @@ const taxSlice = createSlice({
       });
   },
 });
-export const { filterTax, setSelectedTaxDetails } = taxSlice.actions;
+export const { filterTax, setSelectedTaxDetails, setTaxDialogVisible, setTaxModalLoading, setEditItemId } = taxSlice.actions;
 export default taxSlice.reducer;

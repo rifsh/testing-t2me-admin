@@ -71,14 +71,12 @@ const EventOrganiseUpdateList = () => {
       fetchOrganizerUpdates({
         page: 1,
         size: 10,
-        filter: status,
+        filters: status,
       })
     );
   };
 
 
-
-  //updates 
 
 
   const dropdownMenu = (row) => (

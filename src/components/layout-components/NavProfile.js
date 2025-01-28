@@ -52,8 +52,9 @@ const MenuItemSignOut = (props) => {
   const dispatch = useDispatch();
 
   const handleSignOut = async () => {
+    console.log("_____________LOGGING OUT ");
+    await dispatch(signOut());
     await Utils.clearAllBrowserData();
-    dispatch(signOut());
   };
 
   return (
@@ -88,7 +89,7 @@ export const NavProfile = ({ mode }) => {
     } else {
       dispatch(fetchSingleUsers({ "user_id": userData.id }));
       //  console.log(userData,'fghjkhghjkjh');
-        console.log(singleUser,'fghjkhghjkjh');
+      console.log(singleUser, 'fghjkhghjkjh');
       const role = getUserRole(userData);
       setUserRole(role);
     }
@@ -101,12 +102,12 @@ export const NavProfile = ({ mode }) => {
             style={{
               backgroundColor: "#87d068",
             }}
-            src={singleUser && singleUser.thumbnail_image && singleUser.thumbnail_image !== 'images' ? singleUser.thumbnail_image : null} 
-            icon={!singleUser || !singleUser.thumbnail_image || singleUser.thumbnail_image === 'images' ? <UserOutlined /> : null} 
+            src={singleUser && singleUser.thumbnail_image && singleUser.thumbnail_image !== 'images' ? singleUser.thumbnail_image : null}
+            icon={!singleUser || !singleUser.thumbnail_image || singleUser.thumbnail_image === 'images' ? <UserOutlined /> : null}
           />
 
 
-          <UserInfo className="profile-text"> 
+          <UserInfo className="profile-text">
             <Name>{userData && userData.email}</Name>
             <Title>{userRole}</Title>
           </UserInfo>

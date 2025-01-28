@@ -34,6 +34,7 @@ export const initialState = {
   responseMessage: null,
   editable_status: null,
   pagination: {size:10,page:1},
+  editItemId:null,
 };
 
 export const fetchAllCountires = createAsyncThunk(
@@ -197,6 +198,9 @@ const locationSlice = createSlice({
   name: "locations",
   initialState,
   reducers: {
+    setEditItemId: (state, action) => {
+      state.editItemId = action.payload;
+    },
     setLoading: (state, action) => {
       state.loading = action.payload;
     },
@@ -473,6 +477,7 @@ export const {
   setSelectedVenue,
   setLoading,
   setSelectedPlace,
+  setEditItemId,
 } = locationSlice.actions;
 export const allLocations = (state) => state.location;
 
