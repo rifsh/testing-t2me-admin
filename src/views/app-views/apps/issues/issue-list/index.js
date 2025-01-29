@@ -296,12 +296,13 @@ const IssueList = () => {
               >
                 <Option value={null}>All</Option>
                 <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
-                {CurrentUser.role_id === UserRoleConstants.superAdminRoleId && (
+                {(CurrentUser.role_id === UserRoleConstants.superAdminRoleId || 
+                  CurrentUser.role_id === UserRoleConstants.techAdminRoleId) && (
                   <>
-                    <Option value={UserRoleConstants.superAdminRoleId}>
-                      Super Admin
+                    <Option value={UserRoleConstants.techAdminRoleId}>
+                      Tech Admin
                     </Option>
-                    <Option value={UserRoleConstants.superSupportingTeamRoleId}>
+                    <Option value={UserRoleConstants.techSupportingTeamRoleId}>
                       Super Supporting Team
                     </Option>
                     <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
