@@ -237,45 +237,45 @@ const IssueList = () => {
               >
                 <Option value={null}>All</Option>
                 <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
-                <Option value={UserRoleConstants.superAdminRoleId}>
-                  Super Admin
-                </Option>
-                <Option value={UserRoleConstants.superSupportingTeamRoleId}>
-                  Super Supporting Team
-                </Option>
-                <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
-                  Event Supporting Team
-                </Option>
-              </Select>
-            </div>
-          </Flex>
-          {getCurrentUser().role_id == UserRoleConstants.eventOrganizerRoleId && (
-            <div>
-              <Button
-                type="primary"
-                icon={<FormOutlined />}
-                block
-                onClick={() => navigate(`${APP_PREFIX_PATH}/issue/add`)}
-              >
-                Add Issue
-              </Button>
-            </div>
-          )}
+                    <Option value={UserRoleConstants.techAdminRoleId}>
+                      Tech Admin
+                    </Option>
+                    <Option value={UserRoleConstants.techSupportingTeamRoleId}>
+                      Super Supporting Team
+                    </Option>
+                    <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
+                      Event Supporting Team
+                    </Option>
+      
+            </Select>
+          </div>
         </Flex>
-        <div className="table-responsive">
-          <Table
-            columns={tableColumns}
-            dataSource={issues}
-            rowKey="id"
-            loading={loading}
-            pagination={{
-              current: pagination.page,
-              pageSize: pagination.size,
-              total: pagination.total,
-              onChange: (page, pageSize) => handlePagination(page, pageSize),
-            }}
-          />
-        </div>
+        { getCurrentUser().role_id == UserRoleConstants.eventOrganizerRoleId &&<div>
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            block
+            onClick={() => navigate(`${APP_PREFIX_PATH}/issue/add`)}
+          >
+            Add Issue
+          </Button>
+        </div> }
+      </Flex>
+      <div className="table-responsive">
+        <Table
+          columns={tableColumns}
+          dataSource={issues}
+          rowKey="id"
+          loading={loading}
+          
+          pagination={{
+            current: pagination.page,
+            pageSize: pagination.size,
+            total: pagination.total,
+            onChange: (page, pageSize) => handlePagination(page, pageSize),
+          }}
+        />
+      </div>
 
         <UpdateStatusModal
           responseMessage={message}

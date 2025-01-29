@@ -13,7 +13,8 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
-import Utils from "utils/index"
+import Utils from "utils/index";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const ADD = "ADD";
 // const EDIT = "EDIT";
@@ -143,6 +144,10 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
           </Form>
         </Card>
       </Col>
+      <LoadingOverlay 
+        loading={loading} 
+      />
+
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addSubCategory}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, Pagination } from 'antd';
 import { FileImageOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,7 +14,7 @@ const FileGallery = ({ onDragStart, onDragEnd }) => {
   } = useSelector((state) => state.advertisement);
 
   const {
-    filteredAdCategories,
+    adCategories,
   
     subPagination,
     
@@ -24,7 +24,14 @@ const FileGallery = ({ onDragStart, onDragEnd }) => {
   const handlePagination = (page, size) => {
     dispatch(fetchAdBanner({ page, size }));
   };
-    
+  const preventFormSubmit = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  };
+  useEffect(() => {
+    // dispatch(fetchAdCategories());
+  }, [dispatch]);
 
   const renderMedia = (mediaPath) => {
     const isVideo = /\.(mp4|webm|ogg)$/i.test(mediaPath);
@@ -53,7 +60,7 @@ const FileGallery = ({ onDragStart, onDragEnd }) => {
   };
 
   return (
-    <Card title="File Gallery" className="h-full">
+    <Card title="File Gallery" className="h-full" onKeyDown={ preventFormSubmit }>
       <SearchBarWithStatus
         fetchFunction={fetchAdBanners}
         isStatus={false}
@@ -62,12 +69,12 @@ const FileGallery = ({ onDragStart, onDragEnd }) => {
 
         additionalFilters={[
           {
-            options: filteredAdCategories,
+            options: adCategories,
             placeholder: "Please choose a Category",
-            formName: "category_id",
+            formName: "ad_category_id",
             isAutoComplete: true,
             onClick: () => {
-              dispatch(fetchAdCategories());
+              dispatch(fetchAdCategories({}));
             },
           },
         ]}

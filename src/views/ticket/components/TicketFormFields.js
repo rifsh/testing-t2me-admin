@@ -13,6 +13,7 @@ import VenueListForm from "components/util-components/FormItems/VenueList";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const TicketFormFields = () => {
   const [form] = Form.useForm();
@@ -24,7 +25,7 @@ const TicketFormFields = () => {
   const VenueData = useSelector((state) =>
     state.locations.filteredVenues.find((venue) => venue.id === form.getFieldValue("venue_id"))
   );
-  const { responseData, responseMessage } =
+  const { loading, responseData, responseMessage } =
   useSelector((state) => state.tickets);
   const addTicketType = async () => {
     try {
@@ -144,6 +145,9 @@ const TicketFormFields = () => {
           </Flex>
         </div>
       </Card>
+       <LoadingOverlay 
+        loading={loading} 
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addTicket}

@@ -10,6 +10,7 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 import Utils from "utils/index";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const { Text } = Typography;
 const ADD = "ADD";
@@ -147,6 +148,9 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
           </Form>
         </Card>
       </Col>
+      <LoadingOverlay 
+        loading={loading} 
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addCategory}
