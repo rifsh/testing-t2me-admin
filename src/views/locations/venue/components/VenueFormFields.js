@@ -2,7 +2,10 @@ import React, { useEffect } from "react";
 import { Input, Row, Col, Card, Form, Select, Button, message, Upload, Typography } from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { addVenue, setSelectedPlace } from "store/slices/locationSlice";
+import {
+  addVenue, setSelectedPlace, editVenue, setSelectedVenue, setLocationDialogVisible,
+  setLocationModalLoading,
+} from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +20,8 @@ import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 import Utils from "utils/index"
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
+import { ActionType } from "utils/api/warning-submit-util";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -34,15 +39,21 @@ const VenueFormFields = ({ mode, venue }) => {
     loading,
     error,
     responseData,
+    dialogVisible,
     responseMessage,
     selectedPlace,
+    selectedVenue,
+    modalLoading,
+    responseImpactData,
+    message: warningMessage,
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
+
     if (venue && mode === "EDIT") {
       form.setFieldsValue({
         address: venue.address,
-        place_id: venue.place?.id,
+        place: venue.place?.name,
         name: venue.name,
         capacity: venue.capacity,
         indoor: venue.indoor,
@@ -56,7 +67,8 @@ const VenueFormFields = ({ mode, venue }) => {
             url: banner?.media_url,
           }))
           : [],
-        thumbnail_image: venue.thumbnail_image
+
+        thumbnail_image: venue.thumbnail_image && venue.thumbnail_image !== "images"
           ? [
             {
               uid: "-1",
@@ -69,7 +81,7 @@ const VenueFormFields = ({ mode, venue }) => {
       });
 
     }
-  }, [form]);
+  }, [form, venue, mode]);
 
   useEffect(() => {
     if (error) {
@@ -89,11 +101,37 @@ const VenueFormFields = ({ mode, venue }) => {
 
   const handleBeforeUpload = Utils.handleBeforeUpload;
   const onFinish = async () => {
+    const values = await form.validateFields();
+
     if (mode === "EDIT") {
+      console.log("ITS AN EDITTTTTTTTTTTTT");
+
+      // If placeId exists, it's an edit (Edit mode)
+      const data = {
+        ...values,
+        place_id: selectedPlace,
+        latitude: coordinates.lat || 0,
+        longitude: coordinates.lng || 0,
+        capacity: values.capacity || 0,
+        indoor: values.indoor !== undefined ? values.indoor : false,
+        address: values.address,
+        id: venue.id
+      };
+      console.log("Edit Data:", data);
+
+      const resultAction = await dispatch(
+        editVenue({ data, action: ActionType.WARNING, })
+      );
+
+      if (editVenue.fulfilled.match(resultAction)) {
+        dispatch(setSelectedVenue(data));
+        dispatch(setLocationDialogVisible(true));
+      }
+
+
 
     } else {
       try {
-        const values = await form.validateFields();
         console.log("Form valuexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs:", values);
 
         if (!selectedPlace) {
@@ -120,6 +158,27 @@ const VenueFormFields = ({ mode, venue }) => {
     }
 
   };
+
+
+  const handleModalSubmit = async () => {
+    dispatch(setLocationModalLoading(true));
+    const resultAction = await dispatch(
+      editVenue({ data: selectedVenue, action: ActionType.SUBMIT })
+    );
+    dispatch(setLocationModalLoading(false));
+    dispatch(setLocationDialogVisible(false));
+    if (editVenue.fulfilled.match(resultAction)) {
+      dispatch(setSelectedSubmitItem(selectedVenue));
+      // antdMessage.success(`Event ${selectedPlace.name} updated successfully`);
+      // form.resetFields();
+      // navigate(`${APP_PREFIX_PATH}/place/list`);
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setLocationDialogVisible(false));
+  };
+
 
 
   return (
@@ -180,15 +239,6 @@ const VenueFormFields = ({ mode, venue }) => {
                 <Option value={true}>Indoor</Option>
                 <Option value={false}>Outdoor</Option>
               </Select>
-            </Form.Item>
-            <Form.Item
-              name="description"
-              label="Description"
-              rules={[
-                { required: true, message: "Please enter a description" },
-              ]}
-            >
-              <Input.TextArea rows={4} placeholder="Enter a description" />
             </Form.Item>
             <Form.Item
               name="latitude"
@@ -286,9 +336,25 @@ const VenueFormFields = ({ mode, venue }) => {
           {mode === "EDIT" && <EditWarningAlert />}
         </Form>
       </Col>
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={warningMessage}
+        responseData={responseImpactData}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={modalLoading}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={addVenue}
+        addFunction={mode === "EDIT" ? editVenue : addVenue}
         navigationPath={`${APP_PREFIX_PATH}/venue/list`}
         responseMessage={responseMessage}
       />

@@ -1,14 +1,30 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, Row, Col, Typography, Image, Carousel, Alert } from "antd";
 import Loading from "components/shared-components/Loading";
-import { useSelector } from "react-redux";
-
+import { useSelector, useDispatch } from "react-redux";
+import { useParams } from "react-router-dom";
+import {
+  getSingleVenues,
+} from "store/slices/locationSlice";
 const { Title, Text } = Typography;
 
+
 const VenueDetails = () => {
+    const dispatch = useDispatch();
+  const { venueId } = useParams();
+
+  useEffect(() => {
+    console.log("FETCHING SINGLE VENUE");
+
+    if (venueId) {
+      dispatch(getSingleVenues(venueId))
+    }
+  }, [dispatch, venueId]);
   const { singleVenues, loading, error } = useSelector(
     (state) => state.locations
   );
+
+
 
   if (loading) return <Loading />;
   if (error) return <Alert message={`Error: ${error}`} type="error" />;
@@ -78,18 +94,18 @@ const VenueDetails = () => {
       </Col>
 
       {mediaImages.length > 0 && (
-      <Col span={24}>
-        <Card title={<span style={{ color: "#1890ff" }}>Media Gallery</span>} bordered={false}>
-          <Carousel autoplay autoplaySpeed={3000}>
-            {mediaImages.map((url, index) => (
-              <div key={index}>
-                <Image alt={`media image ${index + 1}`} src={url} height={300} />
-              </div>
-            ))}
-          </Carousel>
-        </Card>
-      </Col>
-    )}
+        <Col span={24}>
+          <Card title={<span style={{ color: "#1890ff" }}>Media Gallery</span>} bordered={false}>
+            <Carousel autoplay autoplaySpeed={3000}>
+              {mediaImages.map((url, index) => (
+                <div key={index}>
+                  <Image alt={`media image ${index + 1}`} src={url} height={300} />
+                </div>
+              ))}
+            </Carousel>
+          </Card>
+        </Col>
+      )}
 
     </Row>
   );

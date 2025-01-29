@@ -14,7 +14,7 @@ LocationService.getAllCountries = function () {
 
 // LocationService.addPlace = function (data, action) {
 //   const encodedAction = encodeURIComponent(handleAction(action));
-  
+
 //   // Create FormData instance
 //   const formData = new FormData();
 
@@ -55,12 +55,41 @@ LocationService.addPlace = function (data, action) {
 
 LocationService.editPlace = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
+
+
   return fetch({
     url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+LocationService.editPlaceStatus = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.EDIT_PLACE_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
   });
 };
+LocationService.editVenueStatus = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.EDIT_VENUE_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+  });
+};
+
+
 LocationService.editVenue = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
@@ -123,7 +152,7 @@ LocationService.placeWithCountry = function (place) {
 };
 LocationService.getVenues = function (pageData) {
   return fetch({
-    url:ApiConstant.VENUE_URL,
+    url: ApiConstant.VENUE_URL,
     method: "get",
     params: Utils.filterParams(pageData),
   });

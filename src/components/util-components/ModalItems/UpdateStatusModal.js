@@ -14,10 +14,15 @@ const UpdateStatusModal = ({
   editFunction,
   getAllFunction,
   editable_status = true,
+  responseData = null,
   onSubmitMessage = TextConstants.StatusUpdatedSuccess,
   onCloseMessage = TextConstants.StatusUpdateCanceled,
   responseMessage,
   pageData,
+  tableConfig = {
+    title: "Submission Details",
+    dataKey: "",
+  }
 }) => {
   const dispatch = useDispatch();
   const { statusDialogVisible, selectedItem, modalLoading } = useSelector(
@@ -85,6 +90,8 @@ const UpdateStatusModal = ({
       confirmText={TextConstants.ProceedButton}
       cancelText={TextConstants.BackButton}
       loading={modalLoading}
+      tableConfig={tableConfig}
+      responseData={responseData}
     />
   );
 };

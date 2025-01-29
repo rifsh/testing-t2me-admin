@@ -13,6 +13,7 @@ import {
   setLocationDialogVisible,
   setLocationModalLoading,
   setSelectedPlace,
+  getSinglePlace,
 } from "store/slices/locationSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
@@ -39,24 +40,53 @@ const CountryForm = ({ mode, placeId }) => {
     modalLoading,
     selectedPlace,
     filteredPlaces,
+    responseImpactData,
+    singlePlace,
     message: warningMessage,
   } = useSelector((state) => state.locations);
 
-  useEffect(() => {
-    if (placeId && filteredPlaces && filteredPlaces.length > 0) {
-      const numericPlaceId = parseInt(placeId, 10);
-      const place = filteredPlaces.find((p) => p.id === numericPlaceId);
 
-      if (place) {
-        form.setFieldsValue({
-          country_id: place.country_id,
-          name: place.name,
-        });
-      } else {
-        console.warn(`No place found with ID: ${numericPlaceId}`);
-      }
+  useEffect(() => {
+    console.log("FETCHING SINGLE PLACE");
+
+    if (placeId) {
+      dispatch(getSinglePlace(placeId))
     }
-  }, [placeId, filteredPlaces, form]);
+  }, [dispatch, placeId]);
+
+  useEffect(() => {
+    console.log(singlePlace, "_________________single place");
+
+    if (singlePlace) {
+      console.log(singlePlace, "PLACEEEEEEEEEEEEsss");
+
+      form.setFieldsValue({
+        country_id: singlePlace.country.name,
+        name: singlePlace.name,
+        banner_images: singlePlace?.media
+        ? singlePlace?.media?.map((banner, index) => ({
+          uid: `-banner-${index}`,
+          name: banner?.media_url.split("/").pop(),
+          status: "done",
+          url: banner?.media_url,
+        }))
+        : [],
+        thumbnail_image: singlePlace.thumbnail_image && singlePlace.thumbnail_image !== "images"
+          ? [
+            {
+              uid: "-1",
+              name: singlePlace.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: singlePlace.thumbnail_image,
+            },
+          ]
+          : [],
+      });
+    } else {
+      console.warn(`No place found with ID: ${placeId}`);
+    }
+
+  }, [singlePlace, form]);
 
   useEffect(() => {
     if (error) {
@@ -91,6 +121,8 @@ const CountryForm = ({ mode, placeId }) => {
           navigate(`${APP_PREFIX_PATH}/place/list`);
         }
       } else {
+        console.log("ITS AN EDITTTTTTTTTTTTT");
+
         // If placeId exists, it's an edit (Edit mode)
         const data = {
           ...values,
@@ -99,7 +131,7 @@ const CountryForm = ({ mode, placeId }) => {
         console.log("Edit Data:", data);
 
         const resultAction = await dispatch(
-          editPlace({ formData, action: ActionType.WARNING })
+          editPlace({ data, action: ActionType.WARNING, })
         );
 
         if (editPlace.fulfilled.match(resultAction)) {
@@ -126,9 +158,10 @@ const CountryForm = ({ mode, placeId }) => {
     dispatch(setLocationDialogVisible(false));
     dispatch(getPlaces());
     if (editPlace.fulfilled.match(resultAction)) {
-      antdMessage.success(`Event ${selectedPlace.name} updated successfully`);
-      form.resetFields();
-      navigate(`${APP_PREFIX_PATH}/place/list`);
+      dispatch(setSelectedSubmitItem(selectedPlace));
+      // antdMessage.success(`Event ${selectedPlace.name} updated successfully`);
+      // form.resetFields();
+      // navigate(`${APP_PREFIX_PATH}/place/list`);
     }
   };
 
@@ -194,16 +227,21 @@ const CountryForm = ({ mode, placeId }) => {
         visible={dialogVisible}
         title="Confirm Action"
         details={warningMessage}
+        responseData={responseImpactData}
         warningMessage="Do you want to continue?"
         onSubmit={handleModalSubmit}
         onCancel={handleModalCancel}
         confirmText="Proceed"
         cancelText="Back"
         loading={modalLoading}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={createPlace}
+        addFunction={mode === "EDIT" ? editPlace : createPlace}
         navigationPath={`${APP_PREFIX_PATH}/place/list`}
         responseMessage={responseMessage}
       />
