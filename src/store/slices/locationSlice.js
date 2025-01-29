@@ -490,10 +490,10 @@ const locationSlice = createSlice({
         state.error = null;
       })
       .addCase(createPlace.fulfilled, (state, action) => {
-        state.loading = false;
         state.error = null;
         state.responseData = action.payload.data;
         state.responseMessage = action.payload.status.message;
+        state.createPlaceLoading=false;
       })
       .addCase(createPlace.rejected, (state, action) => {
         state.createPlaceLoading = false;

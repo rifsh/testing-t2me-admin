@@ -19,6 +19,7 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 import Utils from "utils/index"
+import LoadingOverlay from "components/util-components/Loader/index";
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
@@ -351,6 +352,9 @@ const VenueFormFields = ({ mode, venue }) => {
           title: "Active Schedules",
           dataKey: "active_schedules"
         }}
+      />
+      <LoadingOverlay 
+        loading={loading} 
       />
       <SubmitAndConfirmModal
         responseData={responseData}

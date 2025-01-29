@@ -26,6 +26,8 @@ import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import { getCurrentUser } from "configs/UserAccessConfig";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 
 const { Option } = Select;
 
@@ -57,10 +59,13 @@ const UserList = () => {
   };
 
   const handleUpdateStatus = (item) => {
-    const newStatus = !item.is_active;
-    const data = { status: newStatus, id: item.id };
+    if (getCurrentUser().role_id==UserRoleConstants.superAdminRoleId){
 
-    dispatch(setSelectedItem(data));
+      const newStatus = !item.is_active;
+      const data = { status: newStatus, id: item.id };
+      
+      dispatch(setSelectedItem(data));
+    }
   };
 
   const getDropdownMenu = (row) => [

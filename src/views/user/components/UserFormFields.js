@@ -8,6 +8,8 @@ import { InfoCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { userRules } from "../constants/RuleConstants";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 import Utils from "utils/index";
+import { getCurrentUser } from "configs/UserAccessConfig";
+
 const { Text } = Typography;
 
 const { Option } = Select;
@@ -113,11 +115,16 @@ function UserFormFields() {
               loading={loading}
               onChange={(value) => handleSelectedRole(value)}
             >
-              {roles.map((role) => (
-                <Option key={role.position_id} value={role.position_id}>
-                  {role.name}
-                </Option>
-              ))}
+              {roles
+            .filter((role) => 
+              !(getCurrentUser().role_id === UserRoleConstants.techAdminRoleId && 
+                (role.position_id === 1 || role.position_id === 2))
+            )
+            .map((role) => (
+              <Option key={role.position_id} value={role.position_id}>
+                {role.name}
+              </Option>
+            ))}
             </Select>
           </Form.Item>
 

@@ -26,7 +26,7 @@ const rules = {
   name: [{ required: true, message: "Please enter category name" }],
   category: [{ required: true, message: "Please choose country" }],
   event: [{ required: false, message: "Please choose event" }],
-  place: [{ required: true, message: "Please choose place" }],
+  place: [{ required: false, message: "Please choose place" }],
   description: [
     { required: true, message: "Please enter category description" },
   ],
@@ -206,7 +206,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
               <Input placeholder="Enter banner url" />
             </Form.Item>
 
-            <Form.Item name="place_id" label="Place" rules={rules.place}>
+            <Form.Item name="place_id" label="Place (optional)" rules={rules.place}>
               <Select className="w-100" placeholder="Choose a Place" loading={loading} onSelect={(value) => handleOnSelect(value)}>
                 {places && places.length > 0 ? (
                   places.map((place) => (
@@ -270,6 +270,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
         addFunction={mode === ADD ? createAdBanner : updateAdBanner}
         navigationPath={`${APP_PREFIX_PATH}/advertisement/banner/list`}
         responseMessage={responseMessage}
+        loading={modalLoading}
       />
     </Row>
   );

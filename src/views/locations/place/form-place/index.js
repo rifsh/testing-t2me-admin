@@ -24,6 +24,7 @@ import {
 } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const CountryForm = ({ mode, placeId }) => {
   const [form] = Form.useForm();
@@ -37,6 +38,7 @@ const CountryForm = ({ mode, placeId }) => {
     dialogVisible,
     responseData,
     responseMessage,
+    createPlaceLoading,
     modalLoading,
     selectedPlace,
     filteredPlaces,
@@ -96,22 +98,17 @@ const CountryForm = ({ mode, placeId }) => {
 
   const onFinish = async () => {
     try {
-      // dispatch(setLoading(true));
-      dispatch(setLoading(true))
       const values = await form.validateFields();
       console.log({ values });
 
       const formData = new FormData();
 
-      // Loop through values and append each key-value pair to FormData
       Object.keys(values).forEach((key) => {
         formData.append(key, values[key]);
       });
 
       if (!placeId) {
-        // If placeId is not present, it's a new place (Add mode)
         dispatch(setSelectedSubmitItem(values));
-
         const resultAction = await dispatch(
           createPlace({ formData, action: ActionType.SUBMIT })
         );
@@ -141,10 +138,6 @@ const CountryForm = ({ mode, placeId }) => {
       }
     } catch (errorInfo) {
       console.error("Validation Failed:", errorInfo);
-    } finally {
-      // Stop loader
-      // dispatch(setLocationModalLoading(false));
-      dispatch(setLoading(false))
     }
   };
 
@@ -172,6 +165,7 @@ const CountryForm = ({ mode, placeId }) => {
 
   return (
     <>
+    
       <Form
         layout="vertical"
         form={form}
@@ -201,10 +195,10 @@ const CountryForm = ({ mode, placeId }) => {
                   type="primary"
                   onClick={onFinish}
                   htmlType="submit"
-                  loading={loading}
+                  loading={createPlaceLoading}
                 >
                   {!placeId ? "Add" : `Save`}
-                </Button>
+                </Button>  
               </div>
             </Flex>
           </div>
@@ -223,6 +217,10 @@ const CountryForm = ({ mode, placeId }) => {
           />
         </div>
       </Form>
+      <LoadingOverlay 
+        loading={createPlaceLoading} 
+      />
+      
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"

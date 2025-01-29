@@ -12,13 +12,14 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const ADD = "ADD";
 // const EDIT = "EDIT";
 
 const OfferForm = (props) => {
   const { mode = ADD } = props;
-  const { loading, error, isDateRequired, responseData, responseMessage } =
+  const {  loading, error, isDateRequired, responseData, responseMessage } =
     useSelector((state) => state.offers);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
@@ -116,6 +117,9 @@ const OfferForm = (props) => {
           />
         </div>
       </Form>
+      <LoadingOverlay 
+        loading={loading}
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addOffer}

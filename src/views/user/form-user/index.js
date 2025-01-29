@@ -10,6 +10,7 @@ import { createUser } from "store/slices/userSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const ADD = "ADD";
 
@@ -91,6 +92,9 @@ const UserForm = (props) => {
           />
         </div>
       </Form>
+      <LoadingOverlay 
+        loading={loading} 
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={createUser}
