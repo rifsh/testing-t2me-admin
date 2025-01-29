@@ -1,7 +1,11 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker,Upload,Button } from "antd";
+import { Input, Row, Col, Card, Form, DatePicker, Upload, Button, Typography } from "antd";
 import moment from "moment";
 import { UploadOutlined } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index";
+
+const { Text } = Typography;
 
 const rules = {
   country: [
@@ -79,6 +83,7 @@ function CouponFormFields(props) {
     }
     return e?.fileList;
   };
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   return (
     <Row gutter={16}>
@@ -120,7 +125,7 @@ function CouponFormFields(props) {
               }
             ]}
           >
-            <Input placeholder="Enter discount percentage" type="number" onWheel={(e)=>e.target.blur()}/>
+            <Input placeholder="Enter discount percentage" type="number" onWheel={(e) => e.target.blur()} />
           </Form.Item>
 
           <Form.Item
@@ -138,9 +143,9 @@ function CouponFormFields(props) {
             />
           </Form.Item>
 
-          <Form.Item 
-            name="end_date" 
-            label="End Date" 
+          <Form.Item
+            name="end_date"
+            label="End Date"
             rules={[
               ...rules.endDate,
               ({ getFieldValue }) => ({
@@ -166,21 +171,30 @@ function CouponFormFields(props) {
             />
           </Form.Item>
           <Form.Item
-              name="thumbnail_image"
-              label="Thumbnail Image"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-              rules={rules.thumbnail_image}
+            name="thumbnail_image"
+            label="Thumbnail Image"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+            rules={rules.thumbnail_image}
+          >
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+              accept={`.${SupportImageFormat.join(',.')}`}
             >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
+            
           </Form.Item>
-
-
-          <Form.Item 
-            name="max_uses" 
-            label="Max Users" 
+          <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
+          <Form.Item
+            name="max_uses"
+            label="Max Users"
             rules={[
               {
                 required: true,
@@ -194,12 +208,12 @@ function CouponFormFields(props) {
               }
             ]}
           >
-            <Input type="number" placeholder="Enter maximum users" onWheel={(e)=>e.target.blur()} />
+            <Input type="number" placeholder="Enter maximum users" onWheel={(e) => e.target.blur()} />
           </Form.Item>
 
-          <Form.Item 
-            name="min_purchase_amount" 
-            label="Min Purchase Amount" 
+          <Form.Item
+            name="min_purchase_amount"
+            label="Min Purchase Amount"
             rules={[
               {
                 required: true,
@@ -213,9 +227,9 @@ function CouponFormFields(props) {
               }
             ]}
           >
-            <Input type="number" placeholder="Enter min purchase amount"  onWheel={(e)=>e.target.blur()}/>
+            <Input type="number" placeholder="Enter min purchase amount" onWheel={(e) => e.target.blur()} />
           </Form.Item>
-          
+
         </Card>
       </Col>
     </Row>

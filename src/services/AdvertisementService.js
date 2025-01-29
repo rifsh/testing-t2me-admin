@@ -12,6 +12,13 @@ AdvertisementService.fetchAdBanners = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+AdvertisementService.fetchAdBanner = function (pageData) {
+  return fetch({
+    url: ApiConstant.ADVERTISEMENT_CATEGORY_BANNER_URL,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
 
 AdvertisementService.fetchAdSchedules = function (pageData) {
   return fetch({
@@ -69,6 +76,9 @@ AdvertisementService.addAdBanner = function (data, action) {
 
 AdvertisementService.updateAdBanner = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+
+  console.log("DATA in SERVICE--------",data);
+  
   const formData = Utils.createFormData(data, {
     fileKeys: ['media_path'],
     skipEmpty: true

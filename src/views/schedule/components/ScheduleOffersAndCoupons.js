@@ -7,7 +7,7 @@ import {
   Row,
   Col,
   Button,
-  message,
+  message, Alert
 } from "antd";
 import { CloseCircleOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -375,14 +375,14 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
           </Form>
         </Card>
       </Col>
-      <Text
-        type="warning"
-        style={{ padding: "10px 30px", fontSize: "11px" }}
-      >
-        Warning:  Please select a valid date to use a valid coupon.
-        {" "}
-      </Text>
-
+      <Col xs={24} sm={24} md={17}>
+        <Alert
+          message="Warning"
+          description="Offers and coupons  should be updated  here & should match with the scheduled time."
+          type="warning"
+          showIcon
+        />
+      </Col>
       <Col xs={24} sm={24} md={7}>
         {selectedOffers.length > 0 && (
           <div style={{ marginBottom: 16 }}>
@@ -518,7 +518,7 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
                       Max Uses: {coupon.coupons.max_uses}
                     </Text>
                   </Row>
-                  
+
                   <Row justify="space-between">
                     <Text>Start: {coupon.coupons.start_date}</Text>
                     <Text>End: {coupon.coupons.end_date}</Text>
@@ -530,16 +530,16 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
                       form.getFieldValue("end_date")
                     )
                   )}
-                 
+
 
                 </div>
-               
+
               </Card>
             ))}
-            
+
           </div>
         )}
-        
+
       </Col>
 
       <OfferDateModal

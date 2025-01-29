@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Button, message ,Upload} from "antd";
+import { Input, Row, Col, Card, Form, Select, Button, message, Upload, Typography } from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { addVenue, setSelectedPlace } from "store/slices/locationSlice";
@@ -14,10 +14,18 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index"
+import LoadingOverlay from "components/util-components/Loader/index";
+import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 
 const { Option } = Select;
+const { Text } = Typography;
 
-const VenueFormFields = ({ mode }) => {
+const VenueFormFields = ({ mode, venue }) => {
+
+  console.log(venue, "VENUEEEEEEEEEE FOR EDIT -------------");
+
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -32,10 +40,44 @@ const VenueFormFields = ({ mode }) => {
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
+    if (venue && mode === "EDIT") {
+      form.setFieldsValue({
+        address: venue.address,
+        place_id: venue.place?.id,
+        name: venue.name,
+        capacity: venue.capacity,
+        indoor: venue.indoor,
+        latitude: venue.latitude,
+        longitude: venue.longitude,
+        banner_images: venue?.media
+          ? venue?.media?.map((banner, index) => ({
+            uid: `-banner-${index}`,
+            name: banner?.media_url.split("/").pop(),
+            status: "done",
+            url: banner?.media_url,
+          }))
+          : [],
+        thumbnail_image: venue.thumbnail_image
+          ? [
+            {
+              uid: "-1",
+              name: venue.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: venue.thumbnail_image,
+            },
+          ]
+          : [],
+      });
+
+    }
+  }, [form]);
+
+  useEffect(() => {
     if (error) {
       message.error(error);
     }
   }, [error]);
+
   const handlePlaceSelect = (id) => {
     dispatch(setSelectedPlace(id));
   };
@@ -45,34 +87,41 @@ const VenueFormFields = ({ mode }) => {
     }
     return e?.fileList;
   };
+
+  const handleBeforeUpload = Utils.handleBeforeUpload;
   const onFinish = async () => {
-    try {
-      const values = await form.validateFields();
-      console.log("Form valuexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs:", values); 
-  
-      if (!selectedPlace) {
-        message.error("Place ID is missing. Please select a place.");
-        return;
+    if (mode === "EDIT") {
+
+    } else {
+      try {
+        const values = await form.validateFields();
+        console.log("Form valuexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs:", values);
+
+        if (!selectedPlace) {
+          message.error("Place ID is missing. Please select a place.");
+          return;
+        }
+
+        // Provide default values for missing fields
+        const formData = {
+          ...values,
+          place_id: selectedPlace,
+          latitude: coordinates.lat || 0, // Use 0 if undefined
+          longitude: coordinates.lng || 0, // Use 0 if undefined
+          capacity: values.capacity || 0, // Ensure capacity is always a number
+          indoor: values.indoor !== undefined ? values.indoor : false, // Ensure indoor is boolean
+          address: values.address,
+        };
+
+        dispatch(setSelectedSubmitItem(formData));
+
+      } catch (errorInfo) {
+        console.error("Validation Failed:", errorInfo);
       }
-  
-      // Provide default values for missing fields
-      const formData = {
-        ...values,
-        place_id: selectedPlace,
-        latitude: coordinates.lat || 0, // Use 0 if undefined
-        longitude: coordinates.lng || 0, // Use 0 if undefined
-        capacity: values.capacity || 0, // Ensure capacity is always a number
-        indoor: values.indoor !== undefined ? values.indoor : false, // Ensure indoor is boolean
-        address: values.address,
-      };
-  
-      dispatch(setSelectedSubmitItem(formData));
-  
-    } catch (errorInfo) {
-      console.error("Validation Failed:", errorInfo);
     }
+
   };
-  
+
 
   return (
     <Row gutter={16}>
@@ -89,12 +138,12 @@ const VenueFormFields = ({ mode }) => {
             </h2>
 
             <Form.Item
-  name="address"
-  label="Address"
-  rules={[{ required: true, message: "Please enter the address" }]}
->
-  <Input placeholder="Enter the address" />
-</Form.Item>
+              name="address"
+              label="Address"
+              rules={[{ required: true, message: "Please enter the address" }]}
+            >
+              <Input placeholder="Enter the address" />
+            </Form.Item>
 
 
             <PlaceWithCountryForm
@@ -168,27 +217,49 @@ const VenueFormFields = ({ mode }) => {
               <Input value={coordinates.lng} readOnly />
             </Form.Item>
             <Form.Item
-            name="thumbnail_image"
-            label="Thumbnail Image"
-            valuePropName="fileList"
-            getValueFromEvent={normFile}
-  
-          >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
-              <Button icon={<UploadOutlined />}>Click to upload</Button>
-            </Upload>
-          </Form.Item>
-          <Form.Item
-            name="banner_images"
-            label="Banner Images"
-            valuePropName="fileList"
-            getValueFromEvent={normFile}
-   
-          >
-            <Upload name="banner_images" listType="picture" multiple beforeUpload={() => false}>
-              <Button icon={<UploadOutlined />}>Click to upload banners</Button>
-            </Upload>
-          </Form.Item>
+              name="thumbnail_image"
+              label="Thumbnail Image"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+
+            >
+              <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(',.')}`}
+              >
+                <Button icon={<UploadOutlined />}>Click to upload</Button>
+              </Upload>
+
+            </Form.Item>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
+
+            <Form.Item
+              name="banner_images"
+              label="Banner Images"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+            >
+              <Upload name="banner_images" listType="picture" beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(',.')}`}
+              >
+                <Button icon={<UploadOutlined />}>Click to upload banners</Button>
+              </Upload>
+
+            </Form.Item>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
 
             <div className="mb-3">
               <h3>Pick Location</h3>
@@ -213,8 +284,12 @@ const VenueFormFields = ({ mode }) => {
               </Button>
             </Flex>
           </Card>
+          {mode === "EDIT" && <EditWarningAlert />}
         </Form>
       </Col>
+      <LoadingOverlay 
+        loading={loading} 
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addVenue}

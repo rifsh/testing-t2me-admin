@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-
+import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 import {
   addVenue,
   fetchAllCountires,
@@ -28,14 +28,17 @@ import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
-
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { addTax, fetchAvailableCategory } from "store/slices/taxSlice";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const { Option } = Select;
 
-const TaxFormFields = ({ mode }) => {
+const TaxFormFields = ({ mode, tax }) => {
+
+  console.log("TAX DATA FOR EDIT -----------", tax);
+
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -68,6 +71,19 @@ const TaxFormFields = ({ mode }) => {
       message.error(error);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (tax && mode === "EDIT") {
+      form.setFieldsValue({
+        country_id: tax.country?.id,
+        available_category: tax.available_category,
+        tax_name: tax.tax_name,
+        code: tax.code,
+        percentage: tax.percentage,
+      });
+
+    }
+  }, [form]);
 
   const handleCountrySelect = (id) => {
     form.setFieldValue("place_id", null);
@@ -197,7 +213,7 @@ const TaxFormFields = ({ mode }) => {
                 { required: true, message: RulesMessageConstants.CAPACITY },
               ]}
             >
-              <Input type="number" placeholder="Enter percentage" onWheel={(e)=>e.target.blur()}/>
+              <Input type="number" placeholder="Enter percentage" onWheel={(e) => e.target.blur()} />
             </Form.Item>
 
             <Flex
@@ -211,8 +227,13 @@ const TaxFormFields = ({ mode }) => {
               </Button>
             </Flex>
           </Card>
+          {mode === "EDIT" && <EditWarningAlert />}
         </Form>
       </Col>
+      <LoadingOverlay 
+        loading={loading} 
+      />
+      
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addTax}

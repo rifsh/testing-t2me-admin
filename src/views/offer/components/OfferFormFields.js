@@ -1,10 +1,13 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker, Checkbox, Button, Space, Upload } from "antd";
+import { Input, Row, Col, Card, Form, DatePicker, Checkbox, Button, Space, Upload, Typography, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsDateRequired } from "store/slices/offerSlice";
 import moment from "moment";
 import { UploadOutlined } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index";
 
+const { Text } = Typography;
 const rules = {
   name: [
     {
@@ -80,6 +83,7 @@ function OfferFormFields() {
     }
     return e?.fileList;
   };
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   return (
     <Row gutter={16}>
@@ -97,10 +101,10 @@ function OfferFormFields() {
           </Form.Item>
           <Form.Item
             name="max_uses"
-            label="Maximum Uses"
+            label="Maximum Users"
             rules={rules.maxUsers}
           >
-            <Input type="number" placeholder="Enter maximum uses" onWheel={(e)=>e.target.blur()}/>
+            <Input type="number" placeholder="Enter maximum uses" onWheel={(e) => e.target.blur()} />
           </Form.Item>
           <Form.Item
             name="date_required"
@@ -128,9 +132,9 @@ function OfferFormFields() {
                   showToday={false}
                 />
               </Form.Item>
-              <Form.Item 
-                name="end_date" 
-                label="End Date" 
+              <Form.Item
+                name="end_date"
+                label="End Date"
                 rules={[
                   ...rules.endDate,
                   ({ getFieldValue }) => ({
@@ -157,17 +161,34 @@ function OfferFormFields() {
               </Form.Item>
             </>
           )}
+
           <Form.Item
-              name="thumbnail_image"
-              label="Thumbnail Image"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-              rules={rules.thumbnail_image}
+            name="thumbnail_image"
+            label="Thumbnail Image"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+            rules={rules.thumbnail_image}
+          >
+
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+              accept={`.${SupportImageFormat.join(',.')}`}
             >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
+            
+
           </Form.Item>
+          <div>
+          <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
+            </div>
 
           <Form.List name="key_words">
             {(fields, { add, remove }) => (

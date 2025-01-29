@@ -1,10 +1,14 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button } from "antd";
+import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button, Typography } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { fetchAllCountires } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
+import Utils from "utils/index";
 
 const { Option } = Select;
+const { Text } = Typography;
 
 const rules = {
   country: [
@@ -33,7 +37,8 @@ const rules = {
   // ],
 };
 
-const CountryFormFields = (props) => {
+
+const CountryFormFields = ({mode}) => {
   const dispatch = useDispatch();
   const { loading, countries, error } = useSelector((state) => state.locations);
 
@@ -49,6 +54,8 @@ const CountryFormFields = (props) => {
     }
     return e?.fileList;
   };
+
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   if (loading) {
     return (
@@ -90,6 +97,7 @@ const CountryFormFields = (props) => {
           <Form.Item name="name" label="Place" rules={rules.name}>
             <Input placeholder="Place Name" />
           </Form.Item>
+
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
@@ -97,10 +105,23 @@ const CountryFormFields = (props) => {
             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
           >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+
+              accept={`.${SupportImageFormat.join(',.')}`}
+            >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
+            
           </Form.Item>
+          <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}:{" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
           <Form.Item
             name="banner_images"
             label="Banner Images"
@@ -108,14 +129,26 @@ const CountryFormFields = (props) => {
             getValueFromEvent={normFile}
             rules={rules.banner_images}
           >
-            <Upload name="banner_images" listType="picture" multiple beforeUpload={() => false}>
+            <Upload name="banner_images" listType="picture" multiple beforeUpload={handleBeforeUpload}
+              accept={`.${SupportImageFormat.join(',.')}`}
+            >
               <Button icon={<UploadOutlined />}>Click to upload banners</Button>
             </Upload>
+           
           </Form.Item>
-
+          <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
         </Card>
+        {mode === "EDIT" && <EditWarningAlert/>}
       </Col>
     </Row>
+    
   );
 };
 

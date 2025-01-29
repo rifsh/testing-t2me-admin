@@ -31,6 +31,7 @@ const ResponseShowModal = ({
       title: "Key",
       dataIndex: "columnKey",
       key: "columnKey",
+      width: 150, // or flex: '0 0 150px'
       render: (text) => <Text strong>{text}</Text>,
     },
     {
@@ -38,13 +39,12 @@ const ResponseShowModal = ({
       dataIndex: "value",
       key: "value",
       render: (text) => (
-        <Text ellipsis={{ tooltip: text }}>
+        <Text style={{ whiteSpace: 'pre-wrap' }} ellipsis={{ tooltip: text }}>
           {text}
         </Text>
       ),
     },
   ];
-
   return (
     <Modal
       open={visible}

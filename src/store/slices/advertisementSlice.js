@@ -67,6 +67,20 @@ export const fetchAdBanners = createAsyncThunk(
     }
   }
 );
+export const fetchAdBanner = createAsyncThunk(
+  "advertisement/fetchAdBanner",
+  async (pageData, { rejectWithValue }) => {
+    try {
+
+      const response = await AdvertisementService.fetchAdBanner(pageData);
+      return response.data[0];
+
+    } catch (error) {
+      return rejectWithValue("Failed to fetch categories");
+    }
+  }
+);
+
 export const fetchAdSchedules = createAsyncThunk(
   "advertisement/fetchAdSchedules",
   async (pageData, { rejectWithValue }) => {
@@ -112,8 +126,12 @@ export const updateAdBanner = createAsyncThunk(
   "advertisement/updateAdBanners",
   async ({ data, action }, { rejectWithValue }) => {
     try {
+      
+      console.log("DATA IN SLICE-----",data);
+      
       const response = await AdvertisementService.updateAdBanner(data, action);
-      return response.status;
+      
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to update Banner");
     }
@@ -240,32 +258,39 @@ const AdvertisementSlice = createSlice({
         state.error = action.payload.data;
       })
       .addCase(createAdSchedule.pending, (state) => {
+        state.loading=true;
         state.createScheduleLoading = true;
         state.error = null;
       })
       .addCase(createAdSchedule.fulfilled, (state, action) => {
         state.loading = false;
+        state.createScheduleLoading = false;
         state.error = null;
         state.responseData = action.payload.data;
         state.responseMessage = action.payload.status.message;
       })
       .addCase(createAdSchedule.rejected, (state, action) => {
+        state.loading = false;
         state.createScheduleLoading = false;
         state.error = action.payload.data;
       })
       .addCase(updateAdBanner.pending, (state) => {
         state.loading = true;
+        state.createBannerLoading=true;
         state.error = null;
       })
       .addCase(updateAdBanner.fulfilled, (state, { payload }) => {
         state.loading = false;
+        state.createBannerLoading=false;
+        state.responseData = payload.data;
         if (payload.message) {
-          state.message = payload.message;
+          state.message = payload.status.message;
           state.editable_status = payload.editable_status;
         }
       })
       .addCase(updateAdBanner.rejected, (state, { payload }) => {
         state.loading = false;
+        state.createBannerLoading=false;
         state.error = payload || "Failed to edit event";
       })
 

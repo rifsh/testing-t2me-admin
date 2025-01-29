@@ -53,7 +53,7 @@ const superAdminDashBoardNavTree = [
       // }
     ],
   },
-  
+
   {
     key: "Applications",
     path: `${APP_PREFIX_PATH}/apps`,
@@ -69,7 +69,7 @@ const superAdminDashBoardNavTree = [
         icon: DashboardOutlined,
         breadcrumb: false,
         isGroupTitle: false,
-        
+
         submenu: [
           {
             key: "place.list",
@@ -143,7 +143,7 @@ const superAdminDashBoardNavTree = [
             breadcrumb: false,
             submenu: [],
           },
-    
+
           {
             key: "event.list",
             path: `${APP_PREFIX_PATH}/event/list`,
@@ -162,7 +162,8 @@ const superAdminDashBoardNavTree = [
           },
         ],
       },
-    ]},
+    ]
+  },
   {
     key: "Issue",
     path: `${APP_PREFIX_PATH}/apps`,
@@ -212,10 +213,10 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
-      
+
     ],
   },
- 
+
   {
     key: "advertisement",
     path: `${APP_PREFIX_PATH}/advertisement`,
@@ -317,6 +318,24 @@ const eventOrganaizerDashBoardNavTree = [
     ],
   },
   {
+    key: "TrackRequest",
+    path: `${APP_PREFIX_PATH}/forms`,
+    title: "Track Request",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    submenu: [
+      {
+        key: "eventOrganiser.update",
+        path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+        title: "sidenav.eventcoordinatorupdates",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+
+    ],
+  },
+  {
     key: "Issue",
     path: `${APP_PREFIX_PATH}/apps`,
     title: "sidenav.apps.issue",
@@ -413,12 +432,12 @@ const navigationConfig = () => {
   } else if (decodedToken?.role_id === UserRoleConstants.eventOrganizerRoleId) {
 
     return eventOrganaizerDashBoardNavTree;
-  } 
-   else if (decodedToken?.role_id === UserRoleConstants.superSupportingTeamRoleId) {
-    
+  }
+  else if (decodedToken?.role_id === UserRoleConstants.superSupportingTeamRoleId) {
+
     return SuperSupportingTeamDashBoardNavTree;
   }
-   else if (decodedToken?.role_id === UserRoleConstants.eventSupportingTeamRoleId) {
+  else if (decodedToken?.role_id === UserRoleConstants.eventSupportingTeamRoleId) {
     return EventSupportingTeamDashBoardNavTree;
   }
 

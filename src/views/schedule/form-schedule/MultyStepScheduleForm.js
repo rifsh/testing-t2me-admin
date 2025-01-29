@@ -25,6 +25,7 @@ import Utils from "utils";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import dayjs from "dayjs";
+import LoadingOverlay from "components/util-components/Loader/index";
 const { Option } = Select;
 const { Text } = Typography;
 
@@ -150,6 +151,9 @@ const MultyStepScheduleForm = () => {
           </Button>
         )}
       </div>
+      <LoadingOverlay 
+        loading={loading}
+      />
       <SubmitAndConfirmModal
               responseData={responseData}
               addFunction={addSchedule}

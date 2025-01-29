@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message, Select,Upload } from "antd";
+import { Input, Row, Col, Card, Form, Button, message, Select, Upload, Typography } from "antd";
 import {
   addSubCategory,
   fetchCategories,
@@ -12,9 +12,13 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { UploadOutlined } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const ADD = "ADD";
 // const EDIT = "EDIT";
+const { Text } = Typography;
 
 const rules = {
   category: [{ required: true, message: "Please Select a category" }],
@@ -26,7 +30,7 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const { loading, error, categories , responseData, responseMessage } = useSelector((state) => state.category);
+  const { loading, error, categories, responseData, responseMessage } = useSelector((state) => state.category);
 
   useEffect(() => {
     dispatch(fetchCategories({}));
@@ -43,21 +47,21 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
     }
     return e?.fileList;
   };
-
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
       const formData = {
-                      ...values,            
-                    };
-                
-        dispatch(setSelectedSubmitItem(formData));
-  //  dispatch(setSelectedSubmitItem(values));
+        ...values,
+      };
+
+      dispatch(setSelectedSubmitItem(formData));
+      //  dispatch(setSelectedSubmitItem(values));
       // const resultAction = await dispatch(
       //   addSubCategory({ data: values, categoryId: values.category_id })
       // );
-  
+
       // if (addSubCategory.fulfilled.match(resultAction)) {
       //   message.success(`Subcategory ${values.name} added successfully`);
       //   form.resetFields();
@@ -67,7 +71,7 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
       console.log("Validation Failed:", errorInfo);
     }
   };
-  
+
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
@@ -89,10 +93,10 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
             <Form.Item name="name" label="Sub Category" rules={rules.name}>
               <Input placeholder="Sub Category" />
             </Form.Item>
-            <Form.Item name="description" label="Description"  rules={rules.description}>
+            <Form.Item name="description" label="Description" rules={rules.description}>
               <Input.TextArea
                 rows={4}
-               
+
                 placeholder="Enter category description"
               />
             </Form.Item>
@@ -103,10 +107,22 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
               getValueFromEvent={normFile}
               rules={rules.thumbnail_image}
             >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
-              <Button icon={<UploadOutlined />}>Click to upload</Button>
-            </Upload>
-          </Form.Item>
+              <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(',.')}`}
+              >
+                <Button icon={<UploadOutlined />}>Click to upload</Button>
+              </Upload>
+
+
+            </Form.Item>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
             <div
               style={{
                 display: "flex",
@@ -115,7 +131,7 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
                 gap: 10,
               }}
             >
-               <DiscardButton form={form} />
+              <DiscardButton form={form} />
               <Button
                 type="primary"
                 onClick={onFinish}
@@ -128,12 +144,16 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
           </Form>
         </Card>
       </Col>
-       <SubmitAndConfirmModal
-              responseData={responseData}
-              addFunction={addSubCategory}
-              navigationPath={`${APP_PREFIX_PATH}/category/list`}
-              responseMessage={responseMessage}
-            />
+      <LoadingOverlay 
+        loading={loading} 
+      />
+
+      <SubmitAndConfirmModal
+        responseData={responseData}
+        addFunction={addSubCategory}
+        navigationPath={`${APP_PREFIX_PATH}/category/list`}
+        responseMessage={responseMessage}
+      />
     </Row>
   );
 };

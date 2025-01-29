@@ -15,7 +15,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
-import { editTax, fetchAllTax, filterTax } from "store/slices/taxSlice";
+import { editTax, fetchAllTax, filterTax, setTaxDialogVisible, setTaxModalLoading, setEditItemId, } from "store/slices/taxSlice";
 import {
   fetchAllCountires,
   getCoutryDetails,
@@ -24,13 +24,24 @@ import {
 import Utils from "utils";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { TextConstants } from "constants/TextConstant";
 
 const { Option } = Select;
 
 const TaxList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredTax, loading, editable_status,pagination, message } =
+  const {
+    filteredTax,
+    loading,
+    editable_status,
+    pagination,
+    message,
+    dialogVisible,
+    modalLoading,
+    editItemId,
+  } =
     useSelector((state) => state.tax) || {};
   const [form] = Form.useForm();
   const locationState = useSelector((state) => state?.locations) || {};
@@ -52,10 +63,25 @@ const TaxList = () => {
   const handlePagination = (page, size) => {
     dispatch(fetchAllTax({ page: page, size: size }));
   };
+  const handleEditTax = (id) => {
+    dispatch(setEditItemId(id));
+    dispatch(setTaxDialogVisible(true));
+  };
+  const handleModalSubmit = async () => {
+    dispatch(setTaxModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/tax/edit/${editItemId}`)
+    console.log(editItemId,"9234239423490823498234098234908");
+    dispatch(setTaxDialogVisible(false));
+    dispatch(setTaxModalLoading(false));
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setTaxDialogVisible(false));
+  };
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item
-        onClick={() => navigate(`${APP_PREFIX_PATH}/tax/edit/${row.id}`)}
+        onClick={() => handleEditTax(row.id)}
       >
         <Flex alignItems="center">
           <EyeOutlined />
@@ -147,7 +173,7 @@ const TaxList = () => {
         </Col>
       </Row>
 
-   
+
       <div className="table-responsive">
         <Table
           columns={tableColumns}
@@ -162,14 +188,25 @@ const TaxList = () => {
           }}
         />
       </div>
+      <WarningModal
+        visible={dialogVisible}
+        title="Edit Place"
+        details={TextConstants.DefaultEditContent1}
+        warningMessage="Do you want to proceed to the edit page?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed to Edit"
+        cancelText="Cancel"
+        loading={modalLoading}
+      />
 
       <UpdateStatusModal
         responseMessage={message}
-       
+
         editFunction={editTax}
-          getAllFunction={(pageData) => fetchAllTax(pageData)}
-                pageData={{ page: 1, size: 10 }}
-                editable_status={editable_status}
+        getAllFunction={(pageData) => fetchAllTax(pageData)}
+        pageData={{ page: 1, size: 10 }}
+        editable_status={editable_status}
       />
     </Card>
   );

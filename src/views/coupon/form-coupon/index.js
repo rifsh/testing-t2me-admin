@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
-import { Tabs, Form, Button, message } from "antd";
+import { Tabs, Form, Button, message, Alert, Col } from "antd";
 import Flex from "components/shared-components/Flex";
 import CouponFormFields from "../components/CouponFormFields";
 import { useDispatch, useSelector } from "react-redux";
@@ -12,6 +12,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const ADD = "ADD";
 // const EDIT = 'EDIT'
@@ -106,8 +107,20 @@ const CouponForm = (props) => {
               },
             ]}
           />
+
         </div>
+        <Col xs={24} sm={24} md={17}>
+        <Alert
+          message="Warning"
+          description="expired coupons are non-editable."
+          type="warning"
+          showIcon
+        />
+      </Col>
       </Form>
+      <LoadingOverlay 
+        loading={loading}
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addCoupon}

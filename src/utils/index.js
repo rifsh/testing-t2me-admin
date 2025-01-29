@@ -1,9 +1,10 @@
-import { Tag } from "antd";
+import { Tag, message, Upload } from "antd";
 import dayjs from "dayjs";
 import {
   updateSelectedCoupons,
   updateSelectedOffer,
 } from "store/slices/scheduleSlice";
+import { SupportImageFormat } from "constants/SupportFileConstants";
 class Utils {
 
   /**
@@ -13,12 +14,18 @@ class Utils {
  * @param {Object} obj - The object to filter.
  * @returns {Object} - A new object with only non-null/undefined values.
  */
-static  filterParams = (obj) => {
-  return Object.fromEntries(
-    Object.entries(obj)
-      .filter(([_, value]) => value !== null && value !== undefined)
-  );
-};
+  static filterParams = (obj) => {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([_, value]) => value !== null && value !== undefined)
+    );
+  };
+  static filterParams = (obj) => {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([_, value]) => value !== null && value !== undefined)
+    );
+  };
   /**
    * Get first character from first & last sentences of a username
    * @param {String} name - Username
@@ -227,15 +234,15 @@ static  filterParams = (obj) => {
 
   static formatTime = (inputTime) => {
 
-    console.log("-------INPUT TIME------",inputTime);
-    
+    console.log("-------INPUT TIME------", inputTime);
+
     const date = new Date(inputTime);
-  
+
     // Extract hours, minutes, and seconds
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
-  
+
     // Format the time as HH:mm:ss
     return `${hours}:${minutes}:${seconds}`;
   };
@@ -373,11 +380,11 @@ static  filterParams = (obj) => {
    * @param {number} maxLength
    */
   static truncateText = (text, maxLength = 50) => {
-      if (!text) return "";
-      return text.length > maxLength
-        ? `${text.substring(0, maxLength)}...`
-        : text;
-    };
+    if (!text) return "";
+    return text.length > maxLength
+      ? `${text.substring(0, maxLength)}...`
+      : text;
+  };
 
   /**
    * Dispatches the updated offer dates.
@@ -416,23 +423,23 @@ static  filterParams = (obj) => {
   };
 
 
-  static  clearAllBrowserData = async () => {
+  static clearAllBrowserData = async () => {
     // Clear localStorage
     localStorage.clear();
-  
+
     // Clear sessionStorage
     sessionStorage.clear();
-  
+
     // Clear cookies
     document.cookie
       .split(";")
       .forEach(
         (cookie) =>
-          (document.cookie = cookie
-            .replace(/^ +/, "")
-            .replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/"))
+        (document.cookie = cookie
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/"))
       );
-  
+
     // Unregister Service Workers
     if ("serviceWorker" in navigator) {
       const registrations = await navigator.serviceWorker.getRegistrations();
@@ -441,7 +448,7 @@ static  filterParams = (obj) => {
       }
       console.log("Service Workers unregistered.");
     }
-  
+
     // Clear cache storage
     if ("caches" in window) {
       const cacheKeys = await caches.keys();
@@ -450,96 +457,133 @@ static  filterParams = (obj) => {
       }
       console.log("Caches cleared.");
     }
-  
+
     console.log("All browser data (localStorage, sessionStorage, cookies, cache, and Service Workers) has been cleared.");
   };
 
   // ----------------------------------------Form data converion----------------------------------------------->
-/**
- * @param {Object} data - 
- * @param {Object} options
- * @param {Array<string>} options.fileKeys 
- * @param {boolean} options.skipEmpty 
- * @returns {FormData} -
- */
-static createFormData(data, options = { fileKeys: [], skipEmpty: false }) {
-  const formData = new FormData();
+  /**
+   * @param {Object} data - 
+   * @param {Object} options
+   * @param {Array<string>} options.fileKeys 
+   * @param {boolean} options.skipEmpty 
+   * @returns {FormData} -
+   */
+  static createFormData(data, options = { fileKeys: [], skipEmpty: false }) {
+    const formData = new FormData();
 
-  const appendToFormData = (value, key) => {
-    if (options.skipEmpty && (value === null || value === undefined || value === '')) {
-      return;
-    }
-    if (Array.isArray(value)) {
-      if (key === 'tax_ids' || key === 'coupon_ids' || key === 'offer_ids') {
-        value.forEach(id => formData.append(key, id));
+    const appendToFormData = (value, key) => {
+      if (options.skipEmpty && (value === null || value === undefined || value === '')) {
         return;
       }
-  
-      if (key === 'banner_images') {
-        value.forEach(image => formData.append(key, image.originFileObj));
+      if (Array.isArray(value)) {
+        if (key === 'tax_ids' || key === 'coupon_ids' || key === 'offer_ids') {
+          value.forEach(id => formData.append(key, id));
+          return;
+        }
+
+        if (key === 'banner_images') {
+          if (value.length === 0) {
+            formData.append(key, '');
+          } else {
+            value.forEach(image => {
+              if (image.url) {
+                formData.append('banner_images', image.url);
+              }
+              if (image.originFileObj) {
+                formData.append(key, image.originFileObj);
+              }
+            });
+          }
+          return;
+        }
+
+        if (key === 'key_words' && value.length > 0) {
+          value.forEach(word => formData.append("key_words", word));
+          return;
+        } else if (key === 'key_words') {
+
+          return;
+        }
+        if (key === 'event_ids' && Array.isArray(value)) {
+          formData.append(key, value.join(','));
+          return;
+        }
+
+      }
+
+      if (key === 'ticket_types' && Array.isArray(value)) {
+        value.forEach(ticket => {
+          if (ticket.name) formData.append('ticket_type_names', ticket.name);
+          if (ticket.price != null) formData.append('ticket_type_prices', ticket.price);
+          if (ticket.number_of_tickets != null) formData.append('ticket_type_numbers', ticket.number_of_tickets);
+          if (ticket.ticket_set) formData.append('ticket_set', ticket.ticket_set);
+        });
         return;
       }
-   
-      if (key === 'key_words' && value.length > 0) {
-        value.forEach(word => formData.append("key_words", word));
-        return;
-      } else if (key === 'key_words') {
-    
+
+
+      if (options.fileKeys.includes(key) && value?.[0]) {
+        formData.append(key, value[0].originFileObj || value[0]);
         return;
       }
-      if (key === 'event_ids' && Array.isArray(value)) {
-        formData.append(key, value.join(','));
+
+      // // Handle arrays
+      // if (Array.isArray(value)) {
+      //   value.forEach((item, index) => {
+      //     if (typeof item === 'object' && item !== null) {
+      //       Object.entries(item).forEach(([objKey, objValue]) => {
+      //         formData.append(`${key}[${index}][${objKey}]`, objValue);
+      //       });
+      //     } else {
+      //       formData.append(`${key}[]`, item);
+      //     }
+      //   });
+      //   return;
+      // }
+
+      if (typeof value === 'object' && value !== null && !(value instanceof File)) {
+        Object.entries(value).forEach(([objKey, objValue]) => {
+          formData.append(`${key}[${objKey}]`, objValue);
+        });
         return;
       }
-      
+
+      formData.append(key, value);
+    };
+
+    Object.entries(data).forEach(([key, value]) => {
+      appendToFormData(value, key);
+    });
+
+    return formData;
+  }
+
+  /**
+    * Validates the file format against supported image formats.
+    * @param {File} file - File to validate.
+    * @returns {boolean} - True if the file format is supported, otherwise false.
+    */
+  static validateFileFormat(file) {
+    const fileExtension = file.name.split(".").pop().toUpperCase();
+    return SupportImageFormat.includes(fileExtension);
+  }
+
+  /**
+   * Handles the validation before file upload.
+   * @param {File} file - File to validate before upload.
+   * @returns {boolean|string} - False if the file is valid, otherwise LIST_IGNORE.
+   */
+  static handleBeforeUpload(file) {
+    if (!this.validateFileFormat(file)) {
+      message.error(
+        `Only ${SupportImageFormat.join(", ")} files are allowed! 
+      Uploaded file "${file.name}" is not a supported format.`
+      );
+      return Upload.LIST_IGNORE; // Prevent upload
     }
-    
-    if (key === 'ticket_types' && Array.isArray(value)) {
-      value.forEach(ticket => {
-        if (ticket.name) formData.append('ticket_type_names', ticket.name);
-        if (ticket.price != null) formData.append('ticket_type_prices', ticket.price);
-        if (ticket.number_of_tickets != null) formData.append('ticket_type_numbers', ticket.number_of_tickets);
-        if (ticket.ticket_set) formData.append('ticket_set', ticket.ticket_set);
-      });
-      return;
-    }
-
-    
-    if (options.fileKeys.includes(key) && value?.[0]) {
-      formData.append(key, value[0].originFileObj || value[0]);
-      return;
-    }
-
-    // // Handle arrays
-    // if (Array.isArray(value)) {
-    //   value.forEach((item, index) => {
-    //     if (typeof item === 'object' && item !== null) {
-    //       Object.entries(item).forEach(([objKey, objValue]) => {
-    //         formData.append(`${key}[${index}][${objKey}]`, objValue);
-    //       });
-    //     } else {
-    //       formData.append(`${key}[]`, item);
-    //     }
-    //   });
-    //   return;
-    // }
-
-    if (typeof value === 'object' && value !== null && !(value instanceof File)) {
-      Object.entries(value).forEach(([objKey, objValue]) => {
-        formData.append(`${key}[${objKey}]`, objValue);
-      });
-      return;
-    }
-
-    formData.append(key, value);
-  };
-
-  Object.entries(data).forEach(([key, value]) => {
-    appendToFormData(value, key);
-  });
-
-  return formData;
-}
+    return false;
+  }
 
 }
 

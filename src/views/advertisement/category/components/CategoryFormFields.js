@@ -14,6 +14,7 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 
 
@@ -25,6 +26,10 @@ const rules = {
   description: [
     { required: true, message: "Please enter category description" },
   ],
+  category_code: [{ required: true, message: "Please enter category code"}],
+  min_size : [{ required: true, message: "please enter min size"}],
+  max_size: [{ required: true, message: "please enter max size"}],
+  resolution: [{ required: false, message: "please enter resolution"}]
 };
 
 const CategoryFormFields = ({ mode, category }) => {
@@ -48,6 +53,10 @@ const CategoryFormFields = ({ mode, category }) => {
       form.setFieldsValue({
         name: category.name,
         description: category.description,
+        category_code: category.category_code,
+        min_size: category.min_size,
+        max_size: category.max_size,
+        resolution: category.resolution
       });
     }
   }, [mode, category, form]);
@@ -127,7 +136,21 @@ const CategoryFormFields = ({ mode, category }) => {
                 placeholder="Enter category description"
               />
             </Form.Item>
-
+            <Form.Item name="category_code" label="Code" rules={rules.category_code}>
+              <Input placeholder="Code" />
+            </Form.Item>
+            <Form.Item name="min_size" label="Min Size (MB)" rules={rules.min_size}>
+              <Input placeholder="Min Size  " />
+            </Form.Item>
+            <Form.Item name="max_size" label="Max Size (MB)" rules={rules.max_size}>
+              <Input placeholder="Max Size  " />
+            </Form.Item>
+            <Form.Item name="resolution" label="Resolution" rules={rules.resolution}>
+              <Input placeholder="  " />
+            </Form.Item>
+            <Form.Item name="" label="File Type" rules={rules.resolution}>
+              <Input placeholder="File Type" />
+            </Form.Item>
             <div
               style={{
                 display: "flex",
@@ -145,6 +168,9 @@ const CategoryFormFields = ({ mode, category }) => {
           </Form>
         </Card>
       </Col>
+      <LoadingOverlay 
+        loading={loading} 
+      />
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"

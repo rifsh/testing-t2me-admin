@@ -1,11 +1,14 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Tooltip, Upload,Button } from "antd";
+import { Input, Row, Col, Card, Form, Select, Tooltip, Upload, Button, Typography, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllRoles, setSelectedRole } from "store/slices/userSlice";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { InfoCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { userRules } from "../constants/RuleConstants";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index";
+const { Text } = Typography;
 
 const { Option } = Select;
 
@@ -34,6 +37,7 @@ function UserFormFields() {
     }
     return e?.fileList;
   };
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   return (
     <Row gutter={16}>
@@ -157,10 +161,21 @@ function UserFormFields() {
               getValueFromEvent={normFile}
             
             >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+              accept={`.${SupportImageFormat.join(',.')}`}
+            >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
+            
           </Form.Item>
+          <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
         </Card>
       </Col>
     </Row>

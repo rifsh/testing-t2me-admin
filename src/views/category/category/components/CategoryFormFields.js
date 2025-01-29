@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message, Upload } from "antd";
+import { Input, Row, Col, Card, Form, Button, message, Upload, Typography } from "antd";
 import { addCategory, updateCategory } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,11 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index";
+import LoadingOverlay from "components/util-components/Loader/index";
 
+const { Text } = Typography;
 const ADD = "ADD";
 const EDIT = "EDIT";
 
@@ -50,6 +54,7 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
     }
     return e?.fileList;
   };
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   const onFinish = async () => {
     try {
@@ -111,11 +116,21 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
                 name="thumbnail_image"
                 listType="picture"
                 maxCount={1}
-                beforeUpload={() => false}
+                beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(',.')}`}
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
+
             </Form.Item>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
             <div
               style={{
                 display: "flex",
@@ -133,6 +148,9 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
           </Form>
         </Card>
       </Col>
+      <LoadingOverlay 
+        loading={loading} 
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addCategory}

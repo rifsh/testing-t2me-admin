@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, Select, message, message as antdMessage, Upload } from "antd";
-import {  fetchAdCategories } from "store/slices/adCategorySlice";
+import { Input, Row, Col, Card, Form, Button, Select, message, message as antdMessage, Upload, Typography } from "antd";
+import { fetchAdCategories } from "store/slices/adCategorySlice";
 import { createAdBanner, updateAdBanner, setSelectedAdBanner, setAdBannerDialogVisible, setAdBannerModalLoading } from "store/slices/advertisementSlice";
 import { getPlaces } from "store/slices/locationSlice";
 import { fetchEventOnPlaces } from "store/slices/eventSlice";
@@ -13,16 +13,20 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
+import LoadingOverlay from "components/util-components/Loader/index";
+import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import Utils from "utils/index";
 
 const { Option } = Select;
 const ADD = "ADD";
 const EDIT = "EDIT";
+const { Text } = Typography;
 
 const rules = {
   name: [{ required: true, message: "Please enter category name" }],
   category: [{ required: true, message: "Please choose country" }],
   event: [{ required: false, message: "Please choose event" }],
-  place: [{ required: true, message: "Please choose place" }],
+  place: [{ required: false, message: "Please choose place" }],
   description: [
     { required: true, message: "Please enter category description" },
   ],
@@ -34,12 +38,12 @@ const AdBannerFormFields = ({ mode, banner }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const {  places } = useSelector((state) => state.locations);
+  const { places } = useSelector((state) => state.locations);
   const { eventOnPlaces } = useSelector((state) => state.event);
   const { filteredAdCategories } = useSelector(
     (state) => state.adCategory
   );
-  const { loading, error, responseData, responseMessage, dialogVisible, modalLoading, message: warningMessage, selectedAdBanner } = useSelector(
+  const { loading, error, responseData, responseMessage, dialogVisible, modalLoading, message: warningMessage, selectedAdBanner, createBannerLoading } = useSelector(
     (state) => state.advertisement
   );
 
@@ -90,6 +94,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
     }
     return e?.fileList;
   };
+  const handleBeforeUpload = Utils.handleBeforeUpload;
 
 
   const handleOnSelect = (placeId) => {
@@ -115,7 +120,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
         console.log("Edit Data:", data);
 
         const resultAction = await dispatch(
-          updateAdBanner({ data, action: ActionType.WARNING })
+          updateAdBanner({ data, action: ActionType.SUBMIT })
         );
 
         if (updateAdBanner.fulfilled.match(resultAction)) {
@@ -124,7 +129,6 @@ const AdBannerFormFields = ({ mode, banner }) => {
         }
       }
 
-      form.resetFields();
     } catch (errorInfo) {
       console.log("Validation Failed:", errorInfo);
     }
@@ -132,7 +136,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
   const handleModalSubmit = async () => {
     dispatch(setAdBannerModalLoading(true));
     const resultAction = await dispatch(
-      updateAdBanner({ data: selectedAdBanner, action: ActionType.SUBMIT })
+      updateAdBanner({ data: selectedAdBanner, action: ActionType.CONFIRM })
     );
     dispatch(setAdBannerModalLoading(false));
     dispatch(setAdBannerDialogVisible(false));
@@ -153,31 +157,6 @@ const AdBannerFormFields = ({ mode, banner }) => {
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
           <Form form={form} layout="vertical">
-            <Form.Item name="name" label="Name" rules={rules.name}>
-              <Input placeholder="Name" />
-            </Form.Item>
-            <Form.Item name="description" label="Description" rules={rules.description}>
-              <Input placeholder="Description" />
-            </Form.Item>
-            <Form.Item
-              name="media_path"
-              label="Banner Media"
-              valuePropName="fileList"
-              getValueFromEvent={normFile}
-              rules={rules.thumbnail_image}
-            >
-              <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={() => false}>
-                <Button icon={<UploadOutlined />}>Click to upload</Button>
-
-              </Upload>
-            </Form.Item>
-            <Form.Item
-              name="ads_url"
-              label="Banner Redirect Url"
-              rules={rules.name}
-            >
-              <Input placeholder="Enter banner url" />
-            </Form.Item>
             <Form.Item name="banner_category_id" label="Category" rules={rules.category}>
               <Select className="w-100" placeholder="Choose a Category" loading={loading} >
                 {filteredAdCategories && filteredAdCategories.length > 0 ? (
@@ -191,7 +170,43 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 )}
               </Select>
             </Form.Item>
-            <Form.Item name="place_id" label="Place" rules={rules.place}>
+            <Form.Item name="name" label="Name" rules={rules.name}>
+              <Input placeholder="Name" />
+            </Form.Item>
+            <Form.Item name="description" label="Description" rules={rules.description}>
+              <Input placeholder="Description" />
+            </Form.Item>
+            <Form.Item
+              name="media_path"
+              label="Banner Media"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+              rules={rules.thumbnail_image}
+            >
+              <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(',.')}`}
+              >
+                <Button icon={<UploadOutlined />}>Click to upload</Button>
+              </Upload>
+
+            </Form.Item>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}:{" "}
+              {SupportImageFormat.join(", ")}.
+              {" "}
+            </Text>
+            <Form.Item
+              name="ads_url"
+              label="Banner Redirect Url"
+              rules={rules.name}
+            >
+              <Input placeholder="Enter banner url" />
+            </Form.Item>
+
+            <Form.Item name="place_id" label="Place (optional)" rules={rules.place}>
               <Select className="w-100" placeholder="Choose a Place" loading={loading} onSelect={(value) => handleOnSelect(value)}>
                 {places && places.length > 0 ? (
                   places.map((place) => (
@@ -229,13 +244,16 @@ const AdBannerFormFields = ({ mode, banner }) => {
             >
               <DiscardButton form={form} />
 
-              <Button type="primary" onClick={onFinish} loading={loading}>
+              <Button type="primary" onClick={onFinish} loading={createBannerLoading}>
                 {mode === ADD ? "Add" : "Update"}
               </Button>
             </div>
           </Form>
         </Card>
       </Col>
+      <LoadingOverlay
+        loading={createBannerLoading}
+      />
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
@@ -249,9 +267,10 @@ const AdBannerFormFields = ({ mode, banner }) => {
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={createAdBanner}
+        addFunction={mode === ADD ? createAdBanner : updateAdBanner}
         navigationPath={`${APP_PREFIX_PATH}/advertisement/banner/list`}
         responseMessage={responseMessage}
+        loading={modalLoading}
       />
     </Row>
   );
