@@ -18,6 +18,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import utils from "utils";
 import {
   editVenue,
+  editVenueStatus,
   filterVenues,
   getPlaces,
   getSingleVenues,
@@ -48,6 +49,7 @@ const VenueList = () => {
     dialogVisible,
     modalLoading,
     editItemId,
+    responseImpactData,
   } =
     useSelector((state) => state.locations);
   const [form] = Form.useForm();
@@ -232,10 +234,15 @@ const VenueList = () => {
       />
       <UpdateStatusModal
         responseMessage={message}
-        editFunction={editVenue}
+        editFunction={editVenueStatus}
         getAllFunction={(pageData) => getVenues(pageData)}
         pageData={{ page: 1, size: 10 }}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
         editable_status={editable_status}
+        responseData={responseImpactData}
       />
     </Card>
   );
