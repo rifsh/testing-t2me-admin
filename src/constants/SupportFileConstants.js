@@ -27,7 +27,7 @@ export const ResolutionByServices={
 }
 
 export const SmallThumbnailresolution = [
-    "150X150"
+    "400X400"
 ]
 
 
