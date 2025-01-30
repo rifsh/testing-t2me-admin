@@ -5,6 +5,7 @@ import {
   updateSelectedOffer,
 } from "store/slices/scheduleSlice";
 import { SupportImageFormat } from "constants/SupportFileConstants";
+import {ENABLE_RESOLUTIONS} from "configs/AppConfig";
 class Utils {
 
   /**
@@ -576,21 +577,23 @@ class Utils {
    * @returns {Promise<boolean|string>} - False if valid, otherwise LIST_IGNORE.
    */
   static validateImageResolution(file, allowedResolutions) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
-      img.onload = () => {
-        const resolution = `${img.width}x${img.height}`;
-        if (!allowedResolutions.includes(resolution)) {
-          message.error(
-            `Invalid resolution: ${resolution}. Allowed resolutions: ${allowedResolutions.join(", ")}`
-          );
-          resolve(Upload.LIST_IGNORE);
-        } else {
-          resolve(false);
-        }
-      };
-    });
+   
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          const resolution = `${img.width}x${img.height}`;
+          if (!allowedResolutions.includes(resolution)) {
+            message.error(
+              `Invalid resolution: ${resolution}. Allowed resolutions: ${allowedResolutions.join(", ")}`
+            );
+            resolve(Upload.LIST_IGNORE);
+          } else {
+            resolve(false);
+          }
+        };
+      });
+    
   }
 
   /**
@@ -599,7 +602,7 @@ class Utils {
    * @param {Array} allowedResolutions - Allowed image resolutions.
    * @returns {boolean|string} - False if the file is valid, otherwise LIST_IGNORE.
    */
-  static async handleBeforeUpload(file, allowedResolutions, checkResolution = true) {
+  static async handleBeforeUpload(file, allowedResolutions,) {
     if (!this.validateFileFormat(file)) {
       message.error(
         `Only ${SupportImageFormat.join(", ")} files are allowed! 
@@ -607,10 +610,8 @@ class Utils {
       );
       return Upload.LIST_IGNORE; // Prevent upload
     }
-    if (!checkResolution) {
-      return false;
-    }
-    return await this.validateImageResolution(file, allowedResolutions);
+    if (ENABLE_RESOLUTIONS===true) {
+    return await this.validateImageResolution(file, allowedResolutions);}
   }
 
 }

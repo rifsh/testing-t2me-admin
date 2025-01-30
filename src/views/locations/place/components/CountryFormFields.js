@@ -132,7 +132,7 @@ const CountryFormFields = ({mode}) => {
             rules={rules.banner_images}
           >
             <Upload name="banner_images" listType="picture" multiple 
-            beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
+            beforeUpload={(file) => Utils.handleBeforeUpload(file, [SmallThumbnailresolution])}
             // beforeUpload={handleBeforeUpload}
               accept={`.${SupportImageFormat.join(',.')}`}
             >
