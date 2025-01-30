@@ -614,6 +614,60 @@ class Utils {
     return await this.validateImageResolution(file, allowedResolutions);}
   }
 
+  /**
+   * Validates the file size against min and max size limits.
+   * @param {File} file - File to validate.
+   * @param {number} minSize - Minimum file size in bytes.
+   * @param {number} maxSize - Maximum file size in bytes.
+   * @returns {boolean|string} - False if valid, otherwise LIST_IGNORE.
+   */
+  static validateBannerFileSize(file, minSize, maxSize) {
+    const fileSizeInBytes = file.size;
+    const bytesToMB = (bytes) => (bytes / (1024 * 1024)).toFixed(2);
+    if (minSize && fileSizeInBytes < minSize) {
+      message.error(`File is too small. Minimum size: ${bytesToMB(minSize)} mb.`);
+      return Upload.LIST_IGNORE;
+    }
+    if (maxSize && fileSizeInBytes > maxSize) {
+      message.error(`File is too large. Maximum size: ${bytesToMB(maxSize)} mb.`);
+      return Upload.LIST_IGNORE;
+    }
+    return false; // Allow upload
+  }
+
+  /**
+   * Handles the validation before file upload.
+   * @param {File} file - File to validate before upload.
+   * @param {string} allowedResolution - Allowed image resolution.
+   * @param {number} minSize - Minimum file size in bytes.
+   * @param {number} maxSize - Maximum file size in bytes.
+   * @returns {boolean|string} - False if the file is valid, otherwise LIST_IGNORE.
+   */
+  static async handleBannerBeforeUpload(file, allowedResolution, minSize, maxSize) {
+    // Validate file format
+    if (!this.validateFileFormat(file)) {
+      message.error(
+        `Only ${SupportImageFormat.join(", ")} files are allowed! 
+        Uploaded file "${file.name}" is not a supported format.`
+      );
+      return Upload.LIST_IGNORE; // Prevent upload
+    }
+
+    // Validate file size
+    const sizeValidation = this.validateBannerFileSize(file, minSize, maxSize);
+    if (sizeValidation === Upload.LIST_IGNORE) {
+      return Upload.LIST_IGNORE;
+    }
+
+    // Validate image resolution
+    if (allowedResolution) {
+      return await this.validateBannerFileSize(file, allowedResolution);
+    }
+
+    return false; // Allow upload if all validations pass
+  }
+  
+
 }
 
 export default Utils;
