@@ -3,7 +3,7 @@ import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button, Typography }
 import { UploadOutlined } from "@ant-design/icons";
 import { fetchAllCountires } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import { SupportImageFormat, SupportFormatContent, BannerImageresolution } from "constants/SupportFileConstants";
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 import Utils from "utils/index";
 
@@ -106,7 +106,9 @@ const CountryFormFields = ({mode}) => {
             rules={rules.thumbnail_image}
           >
 
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} 
+            // beforeUpload={handleBeforeUpload}
+            beforeUpload={(file) => Utils.handleBeforeUpload(file, BannerImageresolution )}
 
               accept={`.${SupportImageFormat.join(',.')}`}
             >
@@ -119,7 +121,7 @@ const CountryFormFields = ({mode}) => {
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}:{" "}
-              {SupportImageFormat.join(", ")}.
+              {SupportImageFormat.join(", ")} &{" resolution "}{BannerImageresolution.join(",")} pixels.
               {" "}
             </Text>
           <Form.Item
@@ -129,7 +131,9 @@ const CountryFormFields = ({mode}) => {
             getValueFromEvent={normFile}
             rules={rules.banner_images}
           >
-            <Upload name="banner_images" listType="picture" multiple beforeUpload={handleBeforeUpload}
+            <Upload name="banner_images" listType="picture" multiple 
+            beforeUpload={(file) => Utils.handleBeforeUpload(file, BannerImageresolution)}
+            // beforeUpload={handleBeforeUpload}
               accept={`.${SupportImageFormat.join(',.')}`}
             >
               <Button icon={<UploadOutlined />}>Click to upload banners</Button>
@@ -141,7 +145,7 @@ const CountryFormFields = ({mode}) => {
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")}.
+              {SupportImageFormat.join(", ")} &{" resolution "}{BannerImageresolution.join(",")} pixels.
               {" "}
             </Text>
         </Card>

@@ -162,7 +162,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 {filteredAdCategories && filteredAdCategories.length > 0 ? (
                   filteredAdCategories.map((category) => (
                     <Option key={category.id} value={category.id}>
-                      {category.name}
+                      {category.name} {category.fileType ? `(${category.fileType})` : ""}
                     </Option>
                   ))
                 ) : (
@@ -190,6 +190,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
               </Upload>
 
             </Form.Item>
+            
             <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
@@ -232,8 +233,6 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 )}
               </Select>
             </Form.Item>
-
-
             <div
               style={{
                 display: "flex",
@@ -243,7 +242,6 @@ const AdBannerFormFields = ({ mode, banner }) => {
               }}
             >
               <DiscardButton form={form} />
-
               <Button type="primary" onClick={onFinish} loading={createBannerLoading}>
                 {mode === ADD ? "Add" : "Update"}
               </Button>

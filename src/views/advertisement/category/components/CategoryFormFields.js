@@ -15,7 +15,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import LoadingOverlay from "components/util-components/Loader/index";
-import { FileTypeImageOptions } from "constants/SupportFileConstants";
+import { FileTypeImageOptions, FileTypeResolutions } from "constants/SupportFileConstants";
 
 
 const ADD = "ADD";
@@ -151,51 +151,45 @@ const CategoryFormFields = ({ mode, category }) => {
             <Form.Item name="max_size" label="Max Size (MB)" rules={rules.max_size}>
               <Input placeholder="Max Size  " />
             </Form.Item>
-            <Form.Item name="resolution" label="Resolution" rules={rules.resolution}>
-              <Input placeholder="  " />
-            </Form.Item>
+            {/* <Form.Item name="resolution" label="Resolution (Height x Width)" rules={rules.resolution}>
+              <Input placeholder="Resolution (1080 x 1920)" />
+            </Form.Item> */}
             {/* <Form.Item name="" label="File Type" rules={rules.resolution}>
               <Input placeholder="File Type" />
             </Form.Item> */}
-            <Form.List name="file_type">
-              {(fields, { add, remove }) => (
-                <>
-                  <label>File Type</label>
-                  {fields.map(({ key, name, fieldKey, ...restField }) => (
-                    <Space key={key} style={{ display: "flex", marginBottom: 8 }} align="baseline">
-                      <Form.Item
-                        {...restField}
-                        name={name}
-                        fieldKey={fieldKey}
-                        rules={[
-                          {
-                            required: true,
-                            message: "Please select a file type",
-                          },
-                        ]}
-                      >
-                        {/* <Input placeholder="Enter keyword" /> */}
-                        <Select
-                          placeholder="Select file type"
-                          style={{ width: 200 }}
-                          options={FileTypeImageOptions}
-                        />
-                      </Form.Item>
-                      <Button
-                        type="link"
-                        danger
-                        onClick={() => remove(name)}
-                      >
-                        Remove
-                      </Button>
-                    </Space>
-                  ))}
-                  <Button type="dashed" onClick={() => add()} block>
-                    Add Supported File Type
-                  </Button>
-                </>
-              )}
-            </Form.List>
+            <Form.Item name="resolution" label="Resolution (Height X Width)">
+            <Select
+              loading={loading}
+              mode="single"
+              style={{ width: "100%" }}
+              placeholder="Please select resoluion"
+              notFoundContent= {FileTypeResolutions.length ? null : "No File Types Available"}
+             
+            >
+              {FileTypeResolutions.map((resolution) => (
+                <Select.Option key={resolution.key} value={resolution.resolution}>
+                  {resolution.resolution}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+            
+            <Form.Item name="file_type" label="File Type">
+            <Select
+              loading={loading}
+              mode="multiple"
+              style={{ width: "100%" }}
+              placeholder="Please select file type"
+              notFoundContent= {FileTypeImageOptions.length ? null : "No File Types Available"}
+             
+            >
+              {FileTypeImageOptions.map((fileType) => (
+                <Select.Option key={fileType.value} value={fileType.value}>
+                  {fileType.label}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
             <div
               style={{
                 display: "flex",

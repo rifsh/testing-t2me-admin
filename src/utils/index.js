@@ -570,11 +570,36 @@ class Utils {
   }
 
   /**
+   * Checks image resolution against allowed resolutions.
+   * @param {File} file - Image file to validate.
+   * @param {Array} allowedResolutions - List of allowed resolutions (e.g., ["1920x1080", "1280x720"])
+   * @returns {Promise<boolean|string>} - False if valid, otherwise LIST_IGNORE.
+   */
+  static validateImageResolution(file, allowedResolutions) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        const resolution = `${img.width}x${img.height}`;
+        if (!allowedResolutions.includes(resolution)) {
+          message.error(
+            `Invalid resolution: ${resolution}. Allowed resolutions: ${allowedResolutions.join(", ")}`
+          );
+          resolve(Upload.LIST_IGNORE);
+        } else {
+          resolve(false);
+        }
+      };
+    });
+  }
+
+  /**
    * Handles the validation before file upload.
    * @param {File} file - File to validate before upload.
+   * @param {Array} allowedResolutions - Allowed image resolutions.
    * @returns {boolean|string} - False if the file is valid, otherwise LIST_IGNORE.
    */
-  static handleBeforeUpload(file) {
+  static async handleBeforeUpload(file, allowedResolutions, checkResolution = true) {
     if (!this.validateFileFormat(file)) {
       message.error(
         `Only ${SupportImageFormat.join(", ")} files are allowed! 
@@ -582,7 +607,10 @@ class Utils {
       );
       return Upload.LIST_IGNORE; // Prevent upload
     }
-    return false;
+    if (!checkResolution) {
+      return false;
+    }
+    return await this.validateImageResolution(file, allowedResolutions);
   }
 
 }
