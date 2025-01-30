@@ -198,7 +198,7 @@ const CouponList = () => {
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={fetchAdSchedules} />
+        <SearchBarWithStatus fetchFunction={fetchAdSchedules} isStatus= {false}/>
         <Button
           type="primary"
           icon={<FormOutlined />}

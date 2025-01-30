@@ -5,6 +5,7 @@ import {
   updateSelectedOffer,
 } from "store/slices/scheduleSlice";
 import { SupportImageFormat } from "constants/SupportFileConstants";
+import {ENABLE_RESOLUTIONS} from "configs/AppConfig";
 class Utils {
 
   /**
@@ -570,11 +571,38 @@ class Utils {
   }
 
   /**
+   * Checks image resolution against allowed resolutions.
+   * @param {File} file - Image file to validate.
+   * @param {string} allowedResolutions - List of allowed resolutions (e.g., ["1920x1080", "1280x720"])
+   * @returns {Promise<boolean|string>} - False if valid, otherwise LIST_IGNORE.
+   */
+  static validateImageResolution(file, allowedResolutions) {
+   
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          const resolution = `${img.width}x${img.height}`;
+          if (resolution !== allowedResolutions) {
+            message.error(
+              `Invalid resolution: ${resolution}. Allowed resolutions: ${allowedResolutions}`
+            );
+            resolve(Upload.LIST_IGNORE);
+          } else {
+            resolve(false);
+          }
+        };
+      });
+    
+  }
+
+  /**
    * Handles the validation before file upload.
    * @param {File} file - File to validate before upload.
+   * @param {string} allowedResolutions - Allowed image resolutions.
    * @returns {boolean|string} - False if the file is valid, otherwise LIST_IGNORE.
    */
-  static handleBeforeUpload(file) {
+  static async handleBeforeUpload(file, allowedResolutions,) {
     if (!this.validateFileFormat(file)) {
       message.error(
         `Only ${SupportImageFormat.join(", ")} files are allowed! 
@@ -582,7 +610,8 @@ class Utils {
       );
       return Upload.LIST_IGNORE; // Prevent upload
     }
-    return false;
+    if (ENABLE_RESOLUTIONS===true) {
+    return await this.validateImageResolution(file, allowedResolutions);}
   }
 
 }

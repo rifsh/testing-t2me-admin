@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setIsDateRequired } from "store/slices/offerSlice";
 import moment from "moment";
 import { UploadOutlined } from "@ant-design/icons";
-import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import { SupportImageFormat, SupportFormatContent, ResolutionByServices } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 
 const { Text } = Typography;
@@ -170,7 +170,9 @@ function OfferFormFields() {
             rules={rules.thumbnail_image}
           >
 
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+            <Upload name="thumbnail_image" listType="picture" maxCount={1} 
+            //beforeUpload={handleBeforeUpload}
+            beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
               accept={`.${SupportImageFormat.join(',.')}`}
             >
 
@@ -185,7 +187,7 @@ function OfferFormFields() {
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")}.
+              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
               {" "}
             </Text>
             </div>

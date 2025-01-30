@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message, message as antdMessage, Upload } from "antd";
+import { Input, Row, Col, Card, Form, Button, message, message as antdMessage, Upload, Space, Select } from "antd";
 import {
   addAdCategory, setAdCategoryModalLoading,
   setAdCategoryDialogVisible,
@@ -15,7 +15,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import LoadingOverlay from "components/util-components/Loader/index";
-
+import { FileTypeImageOptions, FileTypeResolutions } from "constants/SupportFileConstants";
 
 
 const ADD = "ADD";
@@ -26,10 +26,11 @@ const rules = {
   description: [
     { required: true, message: "Please enter category description" },
   ],
-  category_code: [{ required: true, message: "Please enter category code"}],
-  min_size : [{ required: true, message: "please enter min size"}],
-  max_size: [{ required: true, message: "please enter max size"}],
-  resolution: [{ required: false, message: "please enter resolution"}]
+  category_code: [{ required: true, message: "Please enter category code" }],
+  min_size: [{ required: true, message: "please enter min size" }],
+  max_size: [{ required: true, message: "please enter max size" }],
+  resolution: [{ required: false, message: "please enter resolution" }],
+  file_type: [{ required: true, message: "please enter file_type" }]
 };
 
 const CategoryFormFields = ({ mode, category }) => {
@@ -56,7 +57,9 @@ const CategoryFormFields = ({ mode, category }) => {
         category_code: category.category_code,
         min_size: category.min_size,
         max_size: category.max_size,
-        resolution: category.resolution
+        resolution: category.resolution,
+        // file_type: category.file_type
+        file_type: category.file_type ? category.file_type.split(', ') : []
       });
     }
   }, [mode, category, form]);
@@ -64,15 +67,16 @@ const CategoryFormFields = ({ mode, category }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      console.log("Form Values:", values); 
+      console.log("Form Values:", values);
 
       if (mode === ADD) {
         const formData = {
           ...values,
+          file_type: values.file_type ? values.file_type.join(', ') : ''
 
 
         };
-        console.log("Form Data to dispatch:", formData); 
+        console.log("Form Data to dispatch:", formData);
 
         dispatch(setSelectedSubmitItem(formData));
       } else if (mode === EDIT) {
@@ -84,6 +88,7 @@ const CategoryFormFields = ({ mode, category }) => {
         const data = {
           ...values,
           id: category.id,
+          file_type: values.file_type ? values.file_type.join(', ') : ''
         };
         console.log("Edit Data:", data);
 
@@ -100,6 +105,7 @@ const CategoryFormFields = ({ mode, category }) => {
       console.log("Validation Failed:", errorInfo);
     }
   };
+
   const handleModalSubmit = async () => {
     dispatch(setAdCategoryModalLoading(true));
     const resultAction = await dispatch(
@@ -145,12 +151,45 @@ const CategoryFormFields = ({ mode, category }) => {
             <Form.Item name="max_size" label="Max Size (MB)" rules={rules.max_size}>
               <Input placeholder="Max Size  " />
             </Form.Item>
-            <Form.Item name="resolution" label="Resolution" rules={rules.resolution}>
-              <Input placeholder="  " />
-            </Form.Item>
-            <Form.Item name="" label="File Type" rules={rules.resolution}>
+            {/* <Form.Item name="resolution" label="Resolution (Height x Width)" rules={rules.resolution}>
+              <Input placeholder="Resolution (1080 x 1920)" />
+            </Form.Item> */}
+            {/* <Form.Item name="" label="File Type" rules={rules.resolution}>
               <Input placeholder="File Type" />
-            </Form.Item>
+            </Form.Item> */}
+            <Form.Item name="resolution" label="Resolution (Height X Width)">
+            <Select
+              loading={loading}
+              mode="single"
+              style={{ width: "100%" }}
+              placeholder="Please select resoluion"
+              notFoundContent= {FileTypeResolutions.length ? null : "No File Types Available"}
+             
+            >
+              {FileTypeResolutions.map((resolution) => (
+                <Select.Option key={resolution.key} value={resolution.resolution}>
+                  {resolution.resolution}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+            
+            <Form.Item name="file_type" label="File Type">
+            <Select
+              loading={loading}
+              mode="multiple"
+              style={{ width: "100%" }}
+              placeholder="Please select file type"
+              notFoundContent= {FileTypeImageOptions.length ? null : "No File Types Available"}
+             
+            >
+              {FileTypeImageOptions.map((fileType) => (
+                <Select.Option key={fileType.value} value={fileType.value}>
+                  {fileType.label}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
             <div
               style={{
                 display: "flex",
@@ -168,8 +207,8 @@ const CategoryFormFields = ({ mode, category }) => {
           </Form>
         </Card>
       </Col>
-      <LoadingOverlay 
-        loading={loading} 
+      <LoadingOverlay
+        loading={loading}
       />
       <WarningModal
         visible={dialogVisible}
