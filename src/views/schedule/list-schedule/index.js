@@ -65,6 +65,23 @@ const ScheduleList = () => {
     {
       title: "Is Scheduled",
       dataIndex: "is_scheduled",
+      render: (_, record) => {
+        let statusText = record.is_scheduled;
+        let badgeStatus;
+
+        if (record.status) {
+          badgeStatus = "success";
+        } else {
+          badgeStatus = "error";
+        }
+
+        return (
+          <div>
+            <Badge status={badgeStatus}></Badge>
+            <span className="mx-2">{statusText}</span>
+          </div>
+        );
+      },
       sorter: (a, b) => Utils.antdTableSorter(a, b, "is_scheduled"),
       
     },

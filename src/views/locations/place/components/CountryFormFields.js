@@ -108,7 +108,7 @@ const CountryFormFields = ({mode}) => {
 
             <Upload name="thumbnail_image" listType="picture" maxCount={1} 
             // beforeUpload={handleBeforeUpload}
-            beforeUpload={(file) => Utils.handleBeforeUpload(file, [SmallThumbnailresolution], )}
+            beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place, )}
 
               accept={`.${SupportImageFormat.join(',.')}`}
             >
@@ -132,7 +132,7 @@ const CountryFormFields = ({mode}) => {
             rules={rules.banner_images}
           >
             <Upload name="banner_images" listType="picture" multiple 
-            beforeUpload={(file) => Utils.handleBeforeUpload(file, [SmallThumbnailresolution])}
+            beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
             // beforeUpload={handleBeforeUpload}
               accept={`.${SupportImageFormat.join(',.')}`}
             >

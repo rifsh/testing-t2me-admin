@@ -573,7 +573,7 @@ class Utils {
   /**
    * Checks image resolution against allowed resolutions.
    * @param {File} file - Image file to validate.
-   * @param {Array} allowedResolutions - List of allowed resolutions (e.g., ["1920x1080", "1280x720"])
+   * @param {string} allowedResolutions - List of allowed resolutions (e.g., ["1920x1080", "1280x720"])
    * @returns {Promise<boolean|string>} - False if valid, otherwise LIST_IGNORE.
    */
   static validateImageResolution(file, allowedResolutions) {
@@ -583,9 +583,9 @@ class Utils {
         img.src = URL.createObjectURL(file);
         img.onload = () => {
           const resolution = `${img.width}x${img.height}`;
-          if (!allowedResolutions.includes(resolution)) {
+          if (resolution !== allowedResolutions) {
             message.error(
-              `Invalid resolution: ${resolution}. Allowed resolutions: ${allowedResolutions.join(", ")}`
+              `Invalid resolution: ${resolution}. Allowed resolutions: ${allowedResolutions}`
             );
             resolve(Upload.LIST_IGNORE);
           } else {
@@ -599,7 +599,7 @@ class Utils {
   /**
    * Handles the validation before file upload.
    * @param {File} file - File to validate before upload.
-   * @param {Array} allowedResolutions - Allowed image resolutions.
+   * @param {string} allowedResolutions - Allowed image resolutions.
    * @returns {boolean|string} - False if the file is valid, otherwise LIST_IGNORE.
    */
   static async handleBeforeUpload(file, allowedResolutions,) {
