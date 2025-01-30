@@ -193,7 +193,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
             >
               <Upload name="thumbnail_image" listType="picture" 
               maxCount={1}
-              beforeUpload={handleBeforeUpload}
+               beforeUpload={handleBeforeUpload}
                 accept={`.${SupportImageFormat.join(',.')}`}
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
