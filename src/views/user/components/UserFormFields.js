@@ -6,7 +6,7 @@ import { fetchAllEvent } from "store/slices/eventSlice";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { InfoCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { userRules } from "../constants/RuleConstants";
-import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import { SupportImageFormat, SupportFormatContent, ResolutionByServices } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import { getCurrentUser } from "configs/UserAccessConfig";
 
@@ -168,7 +168,8 @@ function UserFormFields() {
               getValueFromEvent={normFile}
             
             >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+            <Upload name="thumbnail_image" listType="picture" maxCount={1}
+             beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
               accept={`.${SupportImageFormat.join(',.')}`}
             >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
@@ -180,7 +181,7 @@ function UserFormFields() {
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")}.
+              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
               {" "}
             </Text>
         </Card>

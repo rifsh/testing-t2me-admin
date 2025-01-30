@@ -17,7 +17,7 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
-import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import { SupportImageFormat, SupportFormatContent, ResolutionByServices } from "constants/SupportFileConstants";
 import Utils from "utils/index"
 import LoadingOverlay from "components/util-components/Loader/index";
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
@@ -273,7 +273,9 @@ const VenueFormFields = ({ mode, venue }) => {
               getValueFromEvent={normFile}
 
             >
-              <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+              <Upload name="thumbnail_image" listType="picture" maxCount={1} 
+              beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
+                // beforeUpload={handleBeforeUpload}
                 accept={`.${SupportImageFormat.join(',.')}`}
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
@@ -285,7 +287,7 @@ const VenueFormFields = ({ mode, venue }) => {
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")}.
+              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
               {" "}
             </Text>
 
@@ -295,7 +297,9 @@ const VenueFormFields = ({ mode, venue }) => {
               valuePropName="fileList"
               getValueFromEvent={normFile}
             >
-              <Upload name="banner_images" listType="picture" beforeUpload={handleBeforeUpload}
+              <Upload name="banner_images" listType="picture" 
+              beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
+              //beforeUpload={handleBeforeUpload}
                 accept={`.${SupportImageFormat.join(',.')}`}
               >
                 <Button icon={<UploadOutlined />}>Click to upload banners</Button>
@@ -307,7 +311,7 @@ const VenueFormFields = ({ mode, venue }) => {
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")}.
+              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
               {" "}
             </Text>
 

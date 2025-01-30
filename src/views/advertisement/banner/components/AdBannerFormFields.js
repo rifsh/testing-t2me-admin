@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Input, Row, Col, Card, Form, Button, Select, message, message as antdMessage, Upload, Typography } from "antd";
 import { fetchAdCategories } from "store/slices/adCategorySlice";
 import { createAdBanner, updateAdBanner, setSelectedAdBanner, setAdBannerDialogVisible, setAdBannerModalLoading } from "store/slices/advertisementSlice";
@@ -14,7 +14,7 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import LoadingOverlay from "components/util-components/Loader/index";
-import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import { SupportImageFormat, SupportFormatContent, parseSizeToBytes } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 
 const { Option } = Select;
@@ -37,6 +37,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const { places } = useSelector((state) => state.locations);
   const { eventOnPlaces } = useSelector((state) => state.event);
@@ -94,7 +95,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
     }
     return e?.fileList;
   };
-  const handleBeforeUpload = Utils.handleBeforeUpload;
+  const handleBannerBeforeUpload = Utils.handleBannerBeforeUpload;
 
 
   const handleOnSelect = (placeId) => {
@@ -158,11 +159,18 @@ const AdBannerFormFields = ({ mode, banner }) => {
         <Card title="Basic Info">
           <Form form={form} layout="vertical">
             <Form.Item name="banner_category_id" label="Category" rules={rules.category}>
-              <Select className="w-100" placeholder="Choose a Category" loading={loading} >
+              <Select className="w-100" placeholder="Choose a Category" loading={loading}
+                onChange={(value) => {
+                  const selected = filteredAdCategories.find(
+                    (category) => category.id === value
+                  );
+                  setSelectedCategory(selected || null);
+                }}
+              >
                 {filteredAdCategories && filteredAdCategories.length > 0 ? (
                   filteredAdCategories.map((category) => (
                     <Option key={category.id} value={category.id}>
-                      {category.name}
+                      {category.name} {category.fileType ? `(${category.fileType})` : ""}
                     </Option>
                   ))
                 ) : (
@@ -183,20 +191,39 @@ const AdBannerFormFields = ({ mode, banner }) => {
               getValueFromEvent={normFile}
               rules={rules.thumbnail_image}
             >
-              <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+              <Upload name="thumbnail_image" listType="picture"
+                maxCount={1}
+                //beforeUpload={handleBeforeUpload}
+                beforeUpload={(file) =>
+                  Utils.handleBannerBeforeUpload(
+                    file,
+                    selectedCategory?.resolution,
+                    parseSizeToBytes(selectedCategory?.min_size),
+                    parseSizeToBytes(selectedCategory?.max_size)
+                  )
+                }
                 accept={`.${SupportImageFormat.join(',.')}`}
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
 
             </Form.Item>
+
             <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
-              {SupportFormatContent.join(",")}:{" "}
+              {/* {selectedCategory?.file_types
+                ? `${SupportFormatContent.join(",")}: ${selectedCategory.file_types.join(", ")}`
+                : `Supported file types: ${SupportImageFormat.join(", ")}`} */}
+
+              {selectedCategory
+                ? `${SupportFormatContent.join(",")}: ${selectedCategory.file_types?.join(", ") || SupportImageFormat.join(", ")}, Resolution: ${selectedCategory.resolution || "N/A"}, Min size: ${selectedCategory.min_size || "N/A"}, Max size: ${selectedCategory.max_size || "N/A"}`
+                : `${SupportFormatContent.join(",")}: ${SupportImageFormat.join(", ")}`}
+
+              {/* {SupportFormatContent.join(",")}:{" "}
               {SupportImageFormat.join(", ")}.
-              {" "}
+              {" "} */}
             </Text>
             <Form.Item
               name="ads_url"
@@ -232,8 +259,6 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 )}
               </Select>
             </Form.Item>
-
-
             <div
               style={{
                 display: "flex",
@@ -243,7 +268,6 @@ const AdBannerFormFields = ({ mode, banner }) => {
               }}
             >
               <DiscardButton form={form} />
-
               <Button type="primary" onClick={onFinish} loading={createBannerLoading}>
                 {mode === ADD ? "Add" : "Update"}
               </Button>
