@@ -1,7 +1,7 @@
 import { Card, Col, Form, Input, Button, Upload, Typography, message } from "antd";
 import React from "react";
 import { UploadOutlined } from "@ant-design/icons";
-import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import { SupportImageFormat, SupportFormatContent, ResolutionByServices } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 
 const { Text } = Typography;
@@ -46,7 +46,9 @@ const EventDetailsField = () => {
             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
           >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
+            <Upload name="thumbnail_image" listType="picture" maxCount={1}
+            // beforeUpload={handleBeforeUpload}
+            beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
               accept={`.${SupportImageFormat.join(',.')}`}
             >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
@@ -58,7 +60,7 @@ const EventDetailsField = () => {
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}:{" "}
-              {SupportImageFormat.join(", ")}.
+              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
               {" "}
             </Text>
           <Form.Item
@@ -68,7 +70,9 @@ const EventDetailsField = () => {
             getValueFromEvent={normFile}
             rules={rules.banner_images}
           >
-            <Upload name="banner_images" listType="picture" beforeUpload={handleBeforeUpload}
+            <Upload name="banner_images" listType="picture" 
+            // beforeUpload={handleBeforeUpload}
+            beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
               accept={`.${SupportImageFormat.join(',.')}`}
             >
               <Button icon={<UploadOutlined />}>Click to upload banners</Button>
@@ -80,7 +84,7 @@ const EventDetailsField = () => {
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}:{" "}
-              {SupportImageFormat.join(", ")}.
+              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
               {" "}
             </Text>
         </Card>
