@@ -31,7 +31,9 @@ export const getUserRole = () => {
   switch (currentUser.role_id) {
     case UserRoleConstants.superAdminRoleId:
       return UserRoleConstants.superAdmin;
-    case UserRoleConstants.superSupportingTeamRoleId:
+    case UserRoleConstants.techAdminRoleId:
+      return UserRoleConstants.techAdmin;
+    case UserRoleConstants.techSupportingTeamRoleId:
       return UserRoleConstants.superSupportingTeam;
     case UserRoleConstants.eventOrganizerRoleId:
       return UserRoleConstants.eventOrganizer;
@@ -113,11 +115,13 @@ export const AUTHENTICATED_ENTRY = () => {
   switch (currentUser.role_id) {
     case UserRoleConstants.superAdminRoleId:
       return `${APP_PREFIX_PATH}/dashboards/statics`;
+    case UserRoleConstants.techAdminRoleId:
+      return `${APP_PREFIX_PATH}/dashboards/statics`;
     case UserRoleConstants.eventOrganizerRoleId:
       return `${APP_PREFIX_PATH}/dashboards/sales`;
     case UserRoleConstants.eventSupportingTeamRoleId:
       return `${APP_PREFIX_PATH}/dashboards/default`;
-    case UserRoleConstants.superSupportingTeamRoleId:
+    case UserRoleConstants.techSupportingTeamRoleId:
       return `${APP_PREFIX_PATH}/dashboards/default`;
     default:
       return `${APP_PREFIX_PATH}/dashboards/default`;
