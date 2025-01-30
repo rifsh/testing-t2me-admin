@@ -20,49 +20,16 @@ export const FileTypeVideoOptions = [
     { value: 'avi', label: 'AVI' },
     { value: 'webm', label: 'WEBM' },
 ]
+export const ResolutionByServices={
+    place:"400X400",
+    venue:"232X323",
+    
+}
+
 export const SmallThumbnailresolution = [
-    "150×150"
-]
-export const MediumThumbnailresolution = [
-    "300×300"
-]
-export const LargeThumbnailresolution = [
-    "600×600"
-]
-export const ProfilePictureresolution = [
-    "400×400"
-]
-export const BannerImageresolution = [
-     "1920×1080"
-]
-export const FullscreenBackgroundresolution = [
-    "2560×1440"
-]
-export const MobileHeaderresolution = [
-    "1080×1920"
+    "150X150"
 ]
 
-
-// export const fileTypeResolutions = {
-//     "small-thumbnail": ["150 × 150"],
-//     "medium-thumbnail": ["300 × 300"],
-//     "large-thumbnail": ["600 × 600"],
-//     "profile-picture": ["400 × 400"],
-//     "banner-image": ["1920 × 1080"],
-//     "fullscreen-background": ["2560 × 1440"],
-//     "mobile-header": ["1080 × 1920"],
-//   };
-  
-
-//  export const FileTypeImageResNames = [
-//     { value: "small-thumbnail", label: "Small Thumbnail" },
-//     { value: "medium-thumbnail", label: "Medium Thumbnail" },
-//     { value: "large-thumbnail", label: "Large Thumbnail" },
-//     { value: "profile-picture", label: "Profile Picture" },
-//     { value: "banner-image", label: "Banner Image" },
-//     { value: "fullscreen-background", label: "Fullscreen Background" },
-//     { value: "mobile-header", label: "Mobile Header" },
-//   ];
 
   export const FileTypeResolutions = [
     { key: "small-thumbnail", resolution: "150 × 150" },

@@ -3,7 +3,7 @@ import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button, Typography }
 import { UploadOutlined } from "@ant-design/icons";
 import { fetchAllCountires } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { SupportImageFormat, SupportFormatContent, BannerImageresolution } from "constants/SupportFileConstants";
+import { SupportImageFormat, SupportFormatContent, ResolutionByServices, SmallThumbnailresolution } from "constants/SupportFileConstants";
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 import Utils from "utils/index";
 
@@ -108,7 +108,7 @@ const CountryFormFields = ({mode}) => {
 
             <Upload name="thumbnail_image" listType="picture" maxCount={1} 
             // beforeUpload={handleBeforeUpload}
-            beforeUpload={(file) => Utils.handleBeforeUpload(file, BannerImageresolution )}
+            beforeUpload={(file) => Utils.handleBeforeUpload(file, [SmallThumbnailresolution], )}
 
               accept={`.${SupportImageFormat.join(',.')}`}
             >
@@ -121,7 +121,7 @@ const CountryFormFields = ({mode}) => {
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}:{" "}
-              {SupportImageFormat.join(", ")} &{" resolution "}{BannerImageresolution.join(",")} pixels.
+              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
               {" "}
             </Text>
           <Form.Item
@@ -132,7 +132,7 @@ const CountryFormFields = ({mode}) => {
             rules={rules.banner_images}
           >
             <Upload name="banner_images" listType="picture" multiple 
-            beforeUpload={(file) => Utils.handleBeforeUpload(file, BannerImageresolution)}
+            beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
             // beforeUpload={handleBeforeUpload}
               accept={`.${SupportImageFormat.join(',.')}`}
             >
@@ -145,7 +145,7 @@ const CountryFormFields = ({mode}) => {
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")} &{" resolution "}{BannerImageresolution.join(",")} pixels.
+              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
               {" "}
             </Text>
         </Card>
