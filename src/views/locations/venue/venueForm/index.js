@@ -23,15 +23,14 @@ const VenueForm = ({ mode, venueId }) => {
 	console.log("MODEEEEEEEEEEE", mode);
 	console.log("VENUEEEEEEIDDDDD", venueId);
 
-	const { filteredVenues, singleVenues } = useSelector((state) => state.locations);
+	const { singleVenues } = useSelector((state) => state.locations);
 
 	useEffect(() => {
 		if (venueId) {
 			console.log("fetching single venues--------");
-
 			dispatch(getSingleVenues(venueId));
 		}
-	}, [dispatch]);
+	}, [dispatch,venueId]);
 
 
 

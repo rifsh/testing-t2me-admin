@@ -7,7 +7,11 @@ import OfferField from "views/event/components/OfferField";
 import { jwtDecode } from "jwt-decode";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { UserRoleConstants } from "constants/UserRoleConstant";
-import { APP_PREFIX_PATH } from "./AppConfig";
+import {
+  APP_PREFIX_PATH,
+  AUTH_PREFIX_PATH,
+  UNAUTHENTICATED_ENTRY,
+} from "./AppConfig";
 
 export const getCurrentUser = () => {
   const token = localStorage.getItem(AUTH_TOKEN);
@@ -109,7 +113,7 @@ export const AUTHENTICATED_ENTRY = () => {
 
   if (!currentUser) {
     console.error("User not authenticated. Cannot fetch form steps.");
-    return null;
+    return `${APP_PREFIX_PATH}${AUTH_PREFIX_PATH}${UNAUTHENTICATED_ENTRY}`;
   }
 
   switch (currentUser.role_id) {
