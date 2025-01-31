@@ -168,6 +168,7 @@ function OfferFormFields() {
             valuePropName="fileList"
             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
+            style={{ marginBottom: "0px", padding:"0px"}}
           >
 
             <Upload name="thumbnail_image" listType="picture" maxCount={1} 

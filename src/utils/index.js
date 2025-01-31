@@ -660,7 +660,7 @@ class Utils {
     }
 
     // Validate image resolution
-    if (allowedResolution) {
+    if (ENABLE_RESOLUTIONS === true && allowedResolution) {
       return await this.validateBannerFileSize(file, allowedResolution);
     }
 
