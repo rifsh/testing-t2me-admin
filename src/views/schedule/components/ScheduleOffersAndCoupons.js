@@ -375,14 +375,7 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
           </Form>
         </Card>
       </Col>
-      <Col xs={24} sm={24} md={17}>
-        <Alert
-          message="Warning"
-          description="Offers and coupons  should be updated  here & should match with the scheduled time."
-          type="warning"
-          showIcon
-        />
-      </Col>
+      
       <Col xs={24} sm={24} md={7}>
         {selectedOffers.length > 0 && (
           <div style={{ marginBottom: 16 }}>
@@ -539,7 +532,16 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
 
           </div>
         )}
+       
 
+      </Col>
+      <Col xs={24} sm={24} md={17}>
+        <Alert
+          message="Warning"
+          description="Offers and coupons  should be updated  here & should match with the scheduled time."
+          type="warning"
+          showIcon
+        />
       </Col>
 
       <OfferDateModal
