@@ -603,6 +603,7 @@ class Utils {
    * @returns {boolean|string} - False if the file is valid, otherwise LIST_IGNORE.
    */
   static async handleBeforeUpload(file, allowedResolutions,) {
+    console.log("ENABLE_RESOLUTIONS:", ENABLE_RESOLUTIONS);
     if (!this.validateFileFormat(file)) {
       message.error(
         `Only ${SupportImageFormat.join(", ")} files are allowed! 
@@ -610,7 +611,7 @@ class Utils {
       );
       return Upload.LIST_IGNORE; // Prevent upload
     }
-    if (ENABLE_RESOLUTIONS===true) {
+    if (ENABLE_RESOLUTIONS===true && allowedResolutions) {
     return await this.validateImageResolution(file, allowedResolutions);}
   }
 
