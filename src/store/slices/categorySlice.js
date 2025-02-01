@@ -11,6 +11,7 @@ const initialState = {
   categories: [],
   activeTab: "categories",
   subcategories: [],
+  responseImpactData: null,
   filteredCategories: [],
   filteredSubCategories: [],
   searchTerm: "",
@@ -22,8 +23,10 @@ const initialState = {
   subPagination: {},
   pagination: {},
   editable_status: null,
-  singleCategory:null,
-  singleSubcategory:null
+  singleCategory: null,
+  singleSubcategory: null,
+  editItemId: null,
+  selectedCat: null,
 };
 export const addCategory = createAsyncThunk(
   "category/add",
@@ -108,7 +111,7 @@ export const fetchSubcategories = createAsyncThunk(
         const subCategory = response.data.filter(
           (subcategory) => subcategory.category_id === pageData.category_id
         );
-        return { categoryId:pageData.category_id, subcategories: subCategory };
+        return { categoryId: pageData.category_id, subcategories: subCategory };
       }
 
       const response = await CategoryService.fetchSubCategory(pageData);
@@ -134,14 +137,47 @@ export const addSubCategory = createAsyncThunk(
     }
   }
 );
+export const editCategory = createAsyncThunk(
+  "category/editCategory",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await CategoryService.editCategory(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+export const editCategoryStatus = createAsyncThunk(
+  "category/editCategoryStatus",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await CategoryService.editCatStatus(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 export const editSubCategory = createAsyncThunk(
   "category/editSubCategory",
   async ({ data, action }, { rejectWithValue }) => {
     try {
       const response = await CategoryService.editSubCategory(data, action);
-      return response.status;
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to update category");
+    }
+  }
+);
+export const editSubCategoryStatus = createAsyncThunk(
+  "category/editSubCategoryStatus",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await CategoryService.editSubCatStatus(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
     }
   }
 );
@@ -181,6 +217,18 @@ const categorySlice = createSlice({
     clearSubcategories: (state) => {
       state.subcategories = [];
       state.selectedCategoryId = null;
+    },
+    setSelectedCatDetails: (state, action) => {
+      state.selectedCat = action.payload;
+    },
+    setEditItemId: (state, action) => {
+      state.editItemId = action.payload;
+    },
+    setCatDialogVisible(state, action) {
+      state.dialogVisible = action.payload;
+    },
+    setCatModalLoading(state, action) {
+      state.modalLoading = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -285,15 +333,69 @@ const categorySlice = createSlice({
         state.loading = false;
         state.error = payload || "Failed to edit event";
       })
+      .addCase(editCategory.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(editCategory.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(editCategory.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(editCategoryStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editCategoryStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(editCategoryStatus.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
+      .addCase(editSubCategoryStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editSubCategoryStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(editSubCategoryStatus.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
       .addCase(editSubCategory.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(editSubCategory.fulfilled, (state, { payload }) => {
         state.loading = false;
-        if (payload.message) {
-          state.message = payload.message;
-          state.editable_status = payload.editable_status;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
         }
       })
       .addCase(editSubCategory.rejected, (state, { payload }) => {
@@ -303,7 +405,7 @@ const categorySlice = createSlice({
   },
 });
 
-export const { filterCategory, setActiveTab, clearSubcategories } =
+export const { filterCategory, setActiveTab, clearSubcategories, setSelectedCatDetails, setCatDialogVisible, setCatModalLoading, setEditItemId } =
   categorySlice.actions;
 
 export default categorySlice.reducer;

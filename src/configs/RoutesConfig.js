@@ -131,8 +131,13 @@ export const protectedRoutes = [
   },
   {
     key: "category.edit",
-    path: `${APP_PREFIX_PATH}/category/edit`,
-    component: React.lazy(() => import("views/category/category/add-category")),
+    path: `${APP_PREFIX_PATH}/category/edit/category/:catId`,
+    component: React.lazy(() => import("views/category/category/edit-category/category/index")),
+  },
+  {
+    key: "subcategory.edit",
+    path: `${APP_PREFIX_PATH}/category/edit/subcategory/:subcatId`,
+    component: React.lazy(() => import("views/category/category/edit-category/subcategory/index")),
   },
   {
     key: "offer.list",
