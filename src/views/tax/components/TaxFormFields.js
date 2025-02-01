@@ -8,7 +8,7 @@ import {
   Select,
   Button,
   message,
-  Checkbox,
+  Checkbox
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +34,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { addTax, fetchAvailableCategory, editTax, setSelectedTaxDetails, setTaxDialogVisible, setTaxModalLoading } from "store/slices/taxSlice";
 import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
+import {filterOption } from "components/util-components/FormItems/dropDownSearch";
 
 const { Option } = Select;
 
@@ -158,6 +159,9 @@ const TaxFormFields = ({ mode, tax }) => {
     dispatch(setTaxDialogVisible(false));
   };
 
+  // const filterOption = (input, option) => {
+  //   return option.children.toLowerCase().indexOf(input.toLowerCase()) >=0;
+  // }
 
   return (
     <Row gutter={16}>
@@ -171,10 +175,12 @@ const TaxFormFields = ({ mode, tax }) => {
           <Card>
             <h2 className="mb-3">Add Tax</h2>
 
-            <Form.Item name="country_id" label="Country name">
+            <Form.Item name="country_id" label="Country Name">
               <Select
                 className="w-100"
                 placeholder="Choose a Country"
+                showSearch
+                filterOption={filterOption} 
                 loading={locationLoading}
                 onChange={(id) => handleCountrySelect(id)}
               >
@@ -200,8 +206,10 @@ const TaxFormFields = ({ mode, tax }) => {
               <Form.Item name="place_id" label="Place name">
                 <Select
                   className="w-100"
-                  placeholder="Choose a Country"
+                  placeholder="Choose a Tax"
                   loading={locationLoading}
+                  showSearch
+                  filterOption={filterOption} 
                 >
                   {filteredPlaces && filteredPlaces.length > 0 ? (
                     filteredPlaces.map((country) => (
@@ -226,8 +234,10 @@ const TaxFormFields = ({ mode, tax }) => {
             <Form.Item name="available_category" label="Tax Category">
               <Select
                 className="w-100"
-                placeholder="Choose a Country"
+                placeholder="Choose a Category"
                 loading={loading}
+                showSearch
+                filterOption={filterOption} 
               >
                 {availableTaxCategory && availableTaxCategory.length > 0 ? (
                   availableTaxCategory.map((country) => (
