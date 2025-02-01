@@ -89,6 +89,11 @@ const EventDetailsField = () => {
               {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
               {" "}
             </Text>
+            
+            <Form.Item name="" label="Banner Images Url" rules=""
+            style={{ marginTop: "10px", padding:"0px"}}>
+            <Input placeholder="Banner Images Url" />
+          </Form.Item>
         </Card>
       </Col>
     </div>
