@@ -162,8 +162,6 @@ const AdBannerFormFields = ({ mode, banner }) => {
             <Form.Item name="banner_category_id" label="Category" rules={rules.category}>
               <Select 
               className="w-100" placeholder="Choose a Category" loading={loading}
-              showSearch
-              filterOption={filterOption}
                 onChange={(value) => {
                   console.log("Selected Category ID:", value); 
                   const selected = filteredAdCategories.find(
