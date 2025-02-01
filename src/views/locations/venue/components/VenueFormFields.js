@@ -271,6 +271,7 @@ const VenueFormFields = ({ mode, venue }) => {
               label="Thumbnail Image"
               valuePropName="fileList"
               getValueFromEvent={normFile}
+              style={{ marginBottom: "0px", padding:"0px"}}
 
             >
               <Upload name="thumbnail_image" listType="picture" maxCount={1} 
@@ -296,6 +297,7 @@ const VenueFormFields = ({ mode, venue }) => {
               label="Banner Images"
               valuePropName="fileList"
               getValueFromEvent={normFile}
+              style={{ marginBottom: "0px", padding:"0px"}}
             >
               <Upload name="banner_images" listType="picture" 
               beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}

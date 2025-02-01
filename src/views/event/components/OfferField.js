@@ -91,14 +91,14 @@ const OfferField = () => {
           </Form.Item>
         </Card>
       </Col>
-      <Col xs={24} sm={24} md={17}>
+      {/* <Col xs={24} sm={24} md={17}>
         <Alert
           message="Warning"
           description="The Expired offers can be updated while scheduling events, should match the scheduled time."
           type="warning"
           showIcon
         />
-      </Col>
+      </Col> */}
       <Col xs={24} sm={24} md={7}>
         <div style={{ marginBottom: 16, marginTop: 0 }}>
           {selectedOffers.length > 0 ? <Text>Selected Offers</Text> : null}
@@ -227,6 +227,14 @@ const OfferField = () => {
             </Card>
           ))}
         </div>
+      </Col>
+      <Col xs={24} sm={24} md={17}>
+        <Alert
+          message="Warning"
+          description="The Expired offers can be updated while scheduling events, should match the scheduled time."
+          type="warning"
+          showIcon
+        />
       </Col>
     </Row>
   );
