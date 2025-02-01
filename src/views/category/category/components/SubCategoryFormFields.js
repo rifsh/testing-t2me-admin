@@ -15,6 +15,7 @@ import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import LoadingOverlay from "components/util-components/Loader/index";
+import { filterOption } from "components/util-components/FormItems/dropDownSearch";
 
 const ADD = "ADD";
 // const EDIT = "EDIT";
@@ -72,17 +73,25 @@ const SubCategoryFormFields = ({ mode = ADD }) => {
     }
   };
 
+  // const filterOption = (input, option) => {
+  //   return option.children.toLowerCase().indexOf(input.toLowerCase()) >=0;
+  // }
+
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
           <Form form={form} layout="vertical">
             <Form.Item
+
               name="category_id"
-              label="Category name"
+              label="Category Name"
               rules={rules.category}
+              
             >
-              <Select className="w-100" placeholder="Choose a Category">
+              <Select className="w-100" placeholder="Choose a Category"
+              showSearch
+              filterOption={filterOption} >
                 {categories.map((elm) => (
                   <Option key={elm.name} value={elm.id}>
                     {elm.name}
