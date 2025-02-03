@@ -1,12 +1,26 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, Row, Col, Typography, Image, Alert, Carousel } from "antd";
 import Loading from "components/shared-components/Loading";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  getSinglePlace,
+} from "store/slices/locationSlice";
+import { useParams } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
 const PlaceDetails = () => {
+  const dispatch = useDispatch();
+  const { placeId } = useParams();
   const { singlePlace, loading, error } = useSelector((state) => state.locations);
+
+  useEffect(() => {
+    console.log("FETCHING SINGLE PLACE");
+
+    if (placeId) {
+      dispatch(getSinglePlace(placeId))
+    }
+  }, [dispatch, placeId]);
 
   if (loading) return <Loading />;
   if (error) return <Alert message={`Error: ${error}`} type="error" />;
@@ -59,7 +73,7 @@ const PlaceDetails = () => {
         >
           <Row gutter={[16, 16]}>
             <Col span={12}>
-            <Text strong>Country:</Text> {singlePlace.country?.name || "Not Available"}
+              <Text strong>Country:</Text> {singlePlace.country?.name || "Not Available"}
               {/* <Text strong>Address:</Text> {singlePlace.address || "Not Available"} */}
             </Col>
             <Col span={12}>

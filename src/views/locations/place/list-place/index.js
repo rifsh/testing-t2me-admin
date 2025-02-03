@@ -9,7 +9,7 @@ import {
   Form,
 } from "antd";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
-import {TextConstants} from "constants/TextConstant";
+import { TextConstants } from "constants/TextConstant";
 import {
   EyeOutlined,
   FormOutlined,
@@ -25,6 +25,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import {
   editPlace,
+  editPlaceStatus,
   getPlaces,
   getSinglePlace,
   setLocationDialogVisible,
@@ -50,6 +51,7 @@ const PlaceList = () => {
     pagination,
     dialogVisible,
     modalLoading,
+    responseImpactData,
     editItemId,
   } = useSelector((state) => state.locations);
 
@@ -191,10 +193,15 @@ const PlaceList = () => {
 
       <UpdateStatusModal
         responseMessage={message}
-        editFunction={editPlace}
+        editFunction={editPlaceStatus}
         getAllFunction={(pageData) => getPlaces(pageData)}
         pageData={{ page: 1, size: 10 }}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
         editable_status={editable_status}
+        responseData={responseImpactData}
       />
 
 

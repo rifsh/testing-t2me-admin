@@ -1,13 +1,5 @@
 const dev = {
-
   API_ENDPOINT_URL: "https://uat-tickets2me.mitetechnology.in",
-
-  // API_ENDPOINT_URL: 'http://192.168.29.223:8000'
-  // API_ENDPOINT_URL: 'http://192.168.47.187:8000'
-  //  API_ENDPOINT_URL: 'http://192.168.1.21:8000'
-  // // API_ENDPOINT_URL: "http://127.0.0.1:8000",
- //  API_ENDPOINT_URL: "http://127.0.0.1:8000",
-  //API_ENDPOINT_URL: "http://192.168.29.222:8000"
 };
 
 const uat = {
@@ -25,7 +17,6 @@ const test = {
   API_ENDPOINT_URL: "/api",
 };
 
-
 const getEnv = () => {
   switch (process.env.REACT_APP_ENV) {
     case "demo":
@@ -39,9 +30,8 @@ const getEnv = () => {
     case "test":
       return test;
     default:
-      return dev;  // Fallback to development
+      return dev; // Fallback to development
   }
 };
 
 export const env = getEnv();
-

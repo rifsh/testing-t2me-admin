@@ -22,7 +22,7 @@ const FileGallery = ({ onDragStart, onDragEnd }) => {
     message: responseMessage,
   } = useSelector((state) => state.adCategory);
   const handlePagination = (page, size) => {
-    dispatch(fetchAdBanner({ page, size }));
+    dispatch(fetchAdBanners({ page, size }));
   };
   const preventFormSubmit = (e) => {
     if (e.key === 'Enter') {

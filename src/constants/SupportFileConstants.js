@@ -21,7 +21,7 @@ export const FileTypeVideoOptions = [
     { value: 'webm', label: 'WEBM' },
 ]
 export const ResolutionByServices={
-    place:"400X400",
+    place:"1600x615",
     venue:"232X323",
     
 }

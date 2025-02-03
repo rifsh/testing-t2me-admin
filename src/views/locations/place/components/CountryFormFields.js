@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button, Typography } from "antd";
+import React, { useEffect, useState } from "react";
+import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button, Typography, Tooltip } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { fetchAllCountires } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -56,6 +56,24 @@ const CountryFormFields = ({mode}) => {
   };
 
   const handleBeforeUpload = Utils.handleBeforeUpload;
+  const [thumbnailImage, setThumbnailImage] = useState(null); // State for thumbnail image
+  const [bannerImages, setBannerImages] = useState([]); 
+  const handleThumbnailChange = (info) => {
+    if (info.file.status === "done") {
+      setThumbnailImage(info.file.originFileObj);
+    } else if (info.file.status === "removed") {
+      setThumbnailImage(null);
+    }
+  };
+
+  // Handle banner images selection
+  const handleBannerChange = (info) => {
+    if (info.file.status === "done") {
+      setBannerImages(info.fileList.map((file) => file.originFileObj));
+    } else if (info.file.status === "removed") {
+      setBannerImages(info.fileList.map((file) => file.originFileObj));
+    }
+  };
 
   if (loading) {
     return (
@@ -104,17 +122,29 @@ const CountryFormFields = ({mode}) => {
             valuePropName="fileList"
             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
+            style={{ marginBottom: "0px", padding:"0px"}}
           >
-
+             <Tooltip
+              title={
+                thumbnailImage ? (
+                  <img
+                    src={URL.createObjectURL(thumbnailImage)} // Preview selected image
+                    alt="Thumbnail Preview"
+                    style={{ width: "150px", height: "150px" }}
+                  />
+                ) : (
+                  "No image selected"
+                )
+              }
+            >
             <Upload name="thumbnail_image" listType="picture" maxCount={1} 
             // beforeUpload={handleBeforeUpload}
             beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place, )}
-
               accept={`.${SupportImageFormat.join(',.')}`}
             >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
-            
+            </Tooltip>
           </Form.Item>
           <Text
               type="warning"
@@ -130,6 +160,7 @@ const CountryFormFields = ({mode}) => {
             valuePropName="fileList"
             getValueFromEvent={normFile}
             rules={rules.banner_images}
+            style={{ marginBottom: "0px", padding:"0px"}}
           >
             <Upload name="banner_images" listType="picture" multiple 
             beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}

@@ -45,6 +45,7 @@ const EventDetailsField = () => {
             valuePropName="fileList"
             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
+            style={{ marginBottom: "0px", padding:"0px"}}
           >
             <Upload name="thumbnail_image" listType="picture" maxCount={1}
             // beforeUpload={handleBeforeUpload}
@@ -69,6 +70,7 @@ const EventDetailsField = () => {
             valuePropName="fileList"
             getValueFromEvent={normFile}
             rules={rules.banner_images}
+            style={{ marginBottom: "0px", padding:"0px"}}
           >
             <Upload name="banner_images" listType="picture" 
             // beforeUpload={handleBeforeUpload}
@@ -87,6 +89,11 @@ const EventDetailsField = () => {
               {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
               {" "}
             </Text>
+            
+            <Form.Item name="" label="Banner Images Url" rules=""
+            style={{ marginTop: "10px", padding:"0px"}}>
+            <Input placeholder="Banner Images Url" />
+          </Form.Item>
         </Card>
       </Col>
     </div>
