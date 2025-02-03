@@ -151,12 +151,6 @@ const CategoryFormFields = ({ mode, category }) => {
             <Form.Item name="max_size" label="Max Size (MB)" rules={rules.max_size}>
               <Input placeholder="Max Size  " />
             </Form.Item>
-            {/* <Form.Item name="resolution" label="Resolution (Height x Width)" rules={rules.resolution}>
-              <Input placeholder="Resolution (1080 x 1920)" />
-            </Form.Item> */}
-            {/* <Form.Item name="" label="File Type" rules={rules.resolution}>
-              <Input placeholder="File Type" />
-            </Form.Item> */}
             <Form.Item name="resolution" label="Resolution (Height X Width)">
             <Select
               loading={loading}

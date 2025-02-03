@@ -198,7 +198,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
               >
               <Upload name="thumbnail_image" listType="picture"
                 maxCount={1}
-                //beforeUpload={handleBeforeUpload}
+                // beforeUpload={handleBeforeUpload}
                 beforeUpload={(file) =>
                   Utils.handleBannerBeforeUpload(
                     file,
