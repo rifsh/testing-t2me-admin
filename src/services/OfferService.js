@@ -24,18 +24,45 @@ OfferService.addOffer = function (data, action) {
 };
 
 OfferService.editOffer = function (data, action) {
+  console.log(data,"DATA IN SERVICE");
+  
   const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
   return fetch({
     url: `${ApiConstant.OFFER_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+
+OfferService.editOfferStatus = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.OFFER_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
   });
 };
+
 OfferService.getAllOffer = function (pageData) {
   return fetch({
     url: ApiConstant.OFFER_URL,
     method: "get",
     params: Utils.filterParams(pageData),
+  });
+};
+
+OfferService.fetchOfferDetails = function (offerId) {
+  return fetch({
+    url: `${ApiConstant.OFFER_DETAIL_URL}?offer_id=${offerId}`,
+    method: "get",
   });
 };
 export default OfferService;

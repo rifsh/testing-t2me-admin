@@ -1,13 +1,20 @@
-import React from 'react'
-import EventForm from '../components';
-import { useParams } from 'react-router-dom';
+import React, { useEffect } from "react";
+import OfferForm from "../form-offer";
+import { useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOfferDetails } from "store/slices/offerSlice";
 
-const EditEvent = () => {
-	const params = useParams();
+const EditOffer = () => {
+  const dispatch = useDispatch();
+  const { offerId } = useParams();
+  const { offerDetails } = useSelector((state) => state.offers);
+  useEffect(() => {
+    if (offerId) {
+      dispatch(fetchOfferDetails(offerId));
+    }
+  }, [dispatch,offerId]);
 
-	return (
-		<EventForm mode="EDIT" param={params}/>
-	)
-}
+  return <OfferForm mode="EDIT" offer={offerDetails} />;
+};
 
-export default EditEvent
+export default EditOffer;

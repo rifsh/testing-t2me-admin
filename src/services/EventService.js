@@ -65,11 +65,27 @@ EventsService.fetchEventSupportAvailable = function (userId) {
 };
 EventsService.updateEvent = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
   return fetch({
     url: `${ApiConstant.EDIT_EVENT_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+EventsService.editEventStatus = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.EDIT_EVENT_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
   });
 };
+
 
 export default EventsService;

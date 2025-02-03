@@ -13,6 +13,10 @@ export const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
+  editItemId: null,
+  responseImpactData: null,
+  selectedOffer:null,
+  offerDetails: null,
   pagination: { size: 10, page: 1 },
 };
 export const fetchAllOffers = createAsyncThunk(
@@ -28,6 +32,18 @@ export const fetchAllOffers = createAsyncThunk(
       }
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching offers");
+    }
+  }
+);
+
+export const fetchOfferDetails = createAsyncThunk(
+  "offer/fetchOfferDetails",
+  async (offerId, { rejectWithValue }) => {
+    try {
+      const response = await OfferService.fetchOfferDetails(offerId);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
     }
   }
 );
@@ -48,8 +64,21 @@ export const editOffer = createAsyncThunk(
   "offer/edit",
   async ({ data, action }, { rejectWithValue }) => {
     try {
+      console.log(data,"DATA IN SERVICE");
       const response = await OfferService.editOffer(data, action);
-      return response.status;
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+
+export const editOfferStatus = createAsyncThunk(
+  "offer/editStatus",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await OfferService.editOfferStatus(data, action);
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
     }
@@ -83,21 +112,52 @@ const offerSlice = createSlice({
     setIsDateRequired: (state, action) => {
       state.isDateRequired = action.payload;
     },
+    setEditItemId: (state, action) => {
+      state.editItemId = action.payload;
+    },
+    setOfferDialogVisible(state, action) {
+      state.dialogVisible = action.payload;
+    },
+    setOfferModalLoading(state, action) {
+      state.modalLoading = action.payload;
+    },
+    setSelectedOffer: (state, action) => {
+      state.selectedOffer = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(editOffer.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(editOffer.fulfilled, (state, { payload }) => {
         state.loading = false;
-        if (payload.message) {
-          state.message = payload.message;
-          state.editable_status = payload.editable_status;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
         }
       })
-      .addCase(editOffer.rejected, (state, { payload }) => {
+      .addCase(editOffer.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(editOfferStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editOfferStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(editOfferStatus.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to edit event";
       })
@@ -112,6 +172,19 @@ const offerSlice = createSlice({
         state.pagination = action.payload;
       })
       .addCase(fetchAllOffers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchOfferDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchOfferDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        const offerData = { ...action.payload[0] };
+        state.offerDetails = offerData;
+      })
+      .addCase(fetchOfferDetails.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -132,5 +205,12 @@ const offerSlice = createSlice({
   },
 });
 
-export const { filterOffers, setIsDateRequired } = offerSlice.actions;
+export const {
+  filterOffers,
+  setIsDateRequired,
+  setEditItemId,
+  setOfferDialogVisible,
+  setOfferModalLoading,
+  setSelectedOffer,
+} = offerSlice.actions;
 export default offerSlice.reducer;

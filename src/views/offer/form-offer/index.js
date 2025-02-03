@@ -4,23 +4,43 @@ import { Tabs, Form, Button, message } from "antd";
 import Flex from "components/shared-components/Flex";
 import OfferFormFields from "../components/OfferFormFields";
 import { useDispatch, useSelector } from "react-redux";
-import { addOffer, setIsDateRequired } from "store/slices/offerSlice";
+import {
+  addOffer,
+  setIsDateRequired,
+  editOffer,
+  setSelectedOffer,
+  setOfferDialogVisible,
+  setOfferModalLoading,
+} from "store/slices/offerSlice";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import moment from "moment/moment";
+import dayjs from "dayjs";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
+import { ActionType } from "utils/api/warning-submit-util";
 import LoadingOverlay from "components/util-components/Loader/index";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
 
 const ADD = "ADD";
 // const EDIT = "EDIT";
 
-const OfferForm = (props) => {
-  const { mode = ADD } = props;
-  const {  loading, error, isDateRequired, responseData, responseMessage } =
-    useSelector((state) => state.offers);
+const OfferForm = ({ mode, offer }) => {
+  const {
+    loading,
+    error,
+    isDateRequired,
+    responseData,
+    responseMessage,
+    dialogVisible,
+    editable_status,
+    selectedOffer,
+    responseImpactData,
+    message: warningMessage,
+    modalLoading,
+  } = useSelector((state) => state.offers);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -32,37 +52,96 @@ const OfferForm = (props) => {
     }
   }, [error]);
 
-  const onFinish = async () => {
-    try {
-      const values = await form.validateFields();
-      if (isDateRequired) {
-        // values.start_date = moment(values.start_date).format("YYYY-MM-DD");
-        // values.end_date = moment(values.end_date).format("YYYY-MM-DD");
-        values.start_date =Utils.formatDate(values.start_date);
-        values.end_date = Utils.formatDate(values.end_date);
-      }
-      values.key_words = values.key_words ?? [];
-      values.date_required = values.date_required ?? isDateRequired;
-      //  dispatch(setSelectedSubmitItem(values));
+  useEffect(() => {
+    if (offer && mode === "EDIT") {
       const formData = {
-                      ...values,
-                      
-      
-                    };
-                
-                dispatch(setSelectedSubmitItem(formData));
-      // const resultAction = await dispatch(addOffer(values));
-      // if (addOffer.fulfilled.match(resultAction)) {
-      //   message.success(`Offer ${values.name} added successfully`);
-      //   form.resetFields();
-      //   navigate(`${APP_PREFIX_PATH}/offer/list`);
-      // } else {
-      //   message.error("Failed to add the offer. Please try again.");
-      // }
+        name: offer.name,
+        discount_percentage: offer.discount_percentage,
+        max_uses: offer.max_uses,
+        date_required: offer.date_required,
+        key_words: offer.key_words,
+        thumbnail_image:
+          offer.thumbnail_image && offer.thumbnail_image !== "images"
+            ? [
+                {
+                  uid: "-1",
+                  name: offer.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: offer.thumbnail_image,
+                },
+              ]
+            : [],
+      };
+
+      if (offer.date_required && offer.start_date && offer.end_date) {
+        formData.start_date = dayjs(offer.start_date);
+        formData.end_date = dayjs(offer.end_date);
+      }
+
+      form.setFieldsValue(formData);
+    }
+
+    dispatch(setIsDateRequired(offer?.date_required));
+  }, [form, offer]);
+
+  const onFinish = async () => {
+    const values = await form.validateFields();
+    try {
+      if (mode === "EDIT") {
+        if (isDateRequired) {
+          values.start_date = Utils.formatDate(values.start_date);
+          values.end_date = Utils.formatDate(values.end_date);
+        }
+        values.key_words = values.key_words ?? [];
+        values.date_required = values.date_required ?? isDateRequired;
+
+        const editData = {
+          ...values,
+          id: offer.id,
+        };
+        console.log("Edit Data:", editData);
+        const resultAction = await dispatch(
+          editOffer({ data:editData, action: ActionType.WARNING })
+        );
+
+        if (editOffer.fulfilled.match(resultAction)) {
+          dispatch(setSelectedOffer(editData));
+          dispatch(setOfferDialogVisible(true));
+        }
+      } else {
+        if (isDateRequired) {
+          values.start_date = Utils.formatDate(values.start_date);
+          values.end_date = Utils.formatDate(values.end_date);
+        }
+        values.key_words = values.key_words ?? [];
+        values.date_required = values.date_required ?? isDateRequired;
+        const formData = {
+          ...values,
+        };
+        console.log("DATA IS THIS", formData);
+
+        dispatch(setSelectedSubmitItem(formData));
+      }
     } catch (info) {
       console.error("Validation Failed:", info);
       message.error("Please enter all required fields.");
     }
+  };
+
+  const handleModalSubmit = async () => {
+    dispatch(setOfferModalLoading(true));
+    const resultAction = await dispatch(
+      editOffer({ data: selectedOffer, action: ActionType.SUBMIT })
+    );
+    dispatch(setOfferModalLoading(false));
+    dispatch(setOfferDialogVisible(false));
+    if (editOffer.fulfilled.match(resultAction)) {
+      dispatch(setSelectedSubmitItem(selectedOffer));
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setOfferDialogVisible(false));
   };
 
   return (
@@ -90,7 +169,7 @@ const OfferForm = (props) => {
                 {mode === "ADD" ? "Add New Offer" : `Edit Offer`}{" "}
               </h2>
               <div className="mb-3">
-              <DiscardButton form={form} />
+                <DiscardButton form={form} />
                 <Button
                   type="primary"
                   onClick={() => onFinish()}
@@ -117,12 +196,27 @@ const OfferForm = (props) => {
           />
         </div>
       </Form>
-      <LoadingOverlay 
-        loading={loading}
+      <LoadingOverlay loading={loading} />
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={warningMessage}
+        responseData={responseImpactData}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={modalLoading}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules",
+        }}
+        editable_status={editable_status}
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={addOffer}
+        addFunction={mode === "EDIT" ? editOffer : addOffer}
         navigationPath={`${APP_PREFIX_PATH}/offer/list`}
         responseMessage={responseMessage}
       />
