@@ -17,8 +17,7 @@ import LoadingOverlay from "components/util-components/Loader/index";
 const ADD = "ADD";
 // const EDIT = 'EDIT'
 
-const CouponForm = (props) => {
-  const { mode = ADD } = props;
+const CouponForm = ({ mode, coupon }) => {
   const { loading, error, responseData, responseMessage } = useSelector(
     (state) => state.coupons
   );
@@ -79,7 +78,7 @@ const CouponForm = (props) => {
               alignItems="center"
             >
               <h2 className="mb-3">
-                {mode === "ADD" ? "Add New Offer" : `Edit Offer`}{" "}
+                {mode === "ADD" ? "Add New Coupon" : `Edit Coupon`}{" "}
               </h2>
               <div className="mb-3">
               <DiscardButton form={form} />

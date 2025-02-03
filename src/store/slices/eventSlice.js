@@ -16,11 +16,12 @@ const initialState = {
   selectedCoupons: [],
   editItemId: null,
   selectedOffers: [],
-  eventOnPlaces:[],
-  organizerEvents:[],
+  eventOnPlaces: [],
+  organizerEvents: [],
   validationData: [],
   submitData: {},
   messages: null,
+  responseImpactData: null,
   currentStep: 1,
   submitLoading: false,
   dialogVisible: false,
@@ -30,7 +31,7 @@ const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
-  eventsupport : null,
+  eventsupport: null,
   pagination: { size: 10, page: 1 },
 };
 
@@ -54,17 +55,16 @@ export const fetchEventOnPlaces = createAsyncThunk(
   "event/fetchEventOnPlaces",
   async (placeId, { rejectWithValue }) => {
     try {
-      console.log("-------------EventsOn PLaces")
+      console.log("-------------EventsOn PLaces");
       const response = await EventService.fetchEventsOnPlace(placeId);
-      console.log("-------------EventsOn PLaces", response.data)
+      console.log("-------------EventsOn PLaces", response.data);
 
       return response.data[0];
-
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
     }
   }
-)
+);
 
 export const fetchOrganizerEvents = createAsyncThunk(
   "event/fetchOrganizerEvents",
@@ -124,7 +124,7 @@ export const checkEventValidation = createAsyncThunk(
       } else {
         return rejectWithValue(
           response.status.message ||
-          "Event validation failed. Please try again."
+            "Event validation failed. Please try again."
         );
       }
     } catch (error) {
@@ -151,7 +151,18 @@ export const editEvent = createAsyncThunk(
   async ({ data, action }, { rejectWithValue }) => {
     try {
       const response = await EventService.updateEvent(data, action);
-      return response.status;
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+export const editEventStatus = createAsyncThunk(
+  "event/editStatus",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await EventService.editEventStatus(data, action);
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
     }
@@ -171,7 +182,6 @@ const eventSlice = createSlice({
 
       let event = state.events;
       if (status && status !== "All") {
-
         event = event.filter(
           (offer) =>
             (status === "Active" && offer.status === true) ||
@@ -215,8 +225,8 @@ const eventSlice = createSlice({
         state.selectedOffers.splice(existingOfferIndex, 1);
       } else {
         console.log("ADEDDDDDDDDDDDDDD");
-        console.log(action.payload,"THISSSSSSSSSSSSSS");
-        
+        console.log(action.payload, "THISSSSSSSSSSSSSS");
+
         state.selectedOffers.push(action.payload);
       }
     },
@@ -263,16 +273,35 @@ const eventSlice = createSlice({
       })
       .addCase(editEvent.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(editEvent.fulfilled, (state, { payload }) => {
         state.loading = false;
-        if (payload.message) {
-          state.messages = payload.message;
-          state.editable_status = payload.editable_status;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.messages = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
         }
       })
-      .addCase(editEvent.rejected, (state, { payload }) => {
+      .addCase(editEvent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(editEventStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editEventStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.messages = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(editEventStatus.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to edit event";
       })
@@ -358,11 +387,10 @@ const eventSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchOrganizerEvents.fulfilled, (state, action) => {
-        console.log(action.payload[0].items)
+        console.log(action.payload[0].items);
         state.loading = false;
         state.organizerEvents = action.payload[0].items;
         state.pagination = action.payload;
-
       })
       .addCase(fetchOrganizerEvents.rejected, (state, action) => {
         state.loading = false;
@@ -373,10 +401,9 @@ const eventSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchEventSupportAvailable.fulfilled, (state, action) => {
-        console.log(action.payload)
+        console.log(action.payload);
         state.loading = false;
         state.eventsupport = action.payload[0].event_support;
-
       })
       .addCase(fetchEventSupportAvailable.rejected, (state, action) => {
         state.loading = false;
@@ -398,7 +425,7 @@ export const {
   resetSelected,
   setCurrentStep,
   setSubmitLoading,
-  setEditItemId
+  setEditItemId,
 } = eventSlice.actions;
 
 export default eventSlice.reducer;

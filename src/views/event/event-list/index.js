@@ -13,7 +13,8 @@ import {
   fetchEventDetails,
   setModalLoading,
   setDialogVisible,
-  setEditItemId
+  setEditItemId,
+  editEventStatus,
 } from "store/slices/eventSlice";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -248,9 +249,14 @@ const EventsList = () => {
 
       <UpdateStatusModal
         responseMessage={messages}
-        editFunction={editEvent}
+        editFunction={editEventStatus}
         editable_status={editable_status}
         getAllFunction={(pageData) => fetchAllEvent(pageData)}
+        responseData={responseImpactData}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
         pageData={{ page: 1, size: 10 }}
       />
     </Card>
