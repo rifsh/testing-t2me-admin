@@ -6,6 +6,7 @@ import {
   resetSchedule,
   setScheduleSelectTime,
 } from "store/slices/scheduleSlice";
+import { setSelectedVenue } from "store/slices/locationSlice";
 
 const { Option } = Select;
 
@@ -19,8 +20,16 @@ export function ScheduleDetails() {
   const handleSelectEvent = (id) => {
     dispatch(setScheduleSelectTime(false));
     dispatch(setSelectedEvent(id));
+
+    const selectedEvent = filteredEvents.find(event => event.id === id);
+
+    if (selectedEvent) {
+        dispatch(setSelectedVenue(selectedEvent.venue.id));
+    }
+
     dispatch(resetSchedule());
-  };
+};
+
   return (
     <Card title="Schedule Details">
       <Form.Item
