@@ -5,6 +5,8 @@ import { ExclamationCircleOutlined } from "@ant-design/icons";
 const { Title, Text } = Typography;
 
 const WarningModal = ({
+  editable_status = true,
+  mode = "responsemodal",
   visible,
   title = "Warning",
   details = "",
@@ -31,32 +33,56 @@ const WarningModal = ({
       return { columns: [], data: [], noSchedulesImpacted: true };
     }
 
-    const columns = Object.keys(items[0]).map(key => {
-      // Special handling for the event column
-      if (key === 'event') {
-        return {
-          title: 'Event Name',
-          dataIndex: 'event',
-          key: 'event',
-          render: (event) => (
-            <Text style={{ whiteSpace: "pre-wrap" }} ellipsis={{ tooltip: event?.event_name }}>
-              {event?.event_name ?? "N/A"}
-            </Text>
-          ),
-        };
-      }
-
-      return {
-        title: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
-        dataIndex: key,
-        key: key,
-        render: (text) => (
-          <Text style={{ whiteSpace: "pre-wrap" }} ellipsis={{ tooltip: text }}>
-            {text?.toString() ?? "N/A"}
+    const columnConfig = {
+      name: {
+        title: 'Schedule Name',
+        dataIndex: 'name',
+        key: 'name',
+      },
+      status: {
+        title: 'Status',
+        dataIndex: 'status',
+        key: 'status',
+      },
+      is_scheduled: {
+        title: 'Is Scheduled',
+        dataIndex: 'is_scheduled',
+        key: 'is_scheduled',
+      },
+      event: {
+        title: 'Event Name',
+        dataIndex: 'event',
+        key: 'event',
+        render: (event) => (
+          <Text style={{ whiteSpace: "pre-wrap" }} ellipsis={{ tooltip: event?.event_name }}>
+            {event?.event_name ?? "N/A"}
           </Text>
         ),
-      };
-    });
+      },
+      start_date: {
+        title: 'Start Date',
+        dataIndex: 'start_date',
+        key: 'start_date',
+      },
+      end_date: {
+        title: 'End Date',
+        dataIndex: 'end_date',
+        key: 'end_date',
+      }
+    };
+
+    const columns = Object.keys(items[0])
+      .filter(key => key !== 'id' && columnConfig[key]) // Exclude 'id' column
+      .map(key => ({
+        ...columnConfig[key],
+        render: key === 'event' 
+          ? columnConfig[key].render 
+          : (text) => (
+              <Text style={{ whiteSpace: "pre-wrap" }} ellipsis={{ tooltip: text?.toString() }}>
+                {text?.toString() ?? "N/A"}
+              </Text>
+            ),
+      }));
 
     const data = items.map((item, index) => ({
       key: index,
@@ -66,10 +92,30 @@ const WarningModal = ({
     return { columns, data, noSchedulesImpacted: false };
   }, [responseData, tableConfig.dataKey]);
 
+  const footerButtons = [
+    <Button key="cancel" onClick={onCancel}>
+      {cancelText}
+    </Button>
+  ];
+
+  if (editable_status) {
+    footerButtons.push(
+      <Button
+        key="submit"
+        type="primary"
+        danger
+        loading={loading}
+        onClick={onSubmit}
+      >
+        {confirmText}
+      </Button>
+    );
+  }
+
   return (
     <Modal
       open={visible}
-      width={800} // Increased width to accommodate horizontal data
+      width={800}
       title={
         <Space align="center">
           <ExclamationCircleOutlined style={{ color: "#faad14" }} />
@@ -77,24 +123,11 @@ const WarningModal = ({
         </Space>
       }
       onCancel={onCancel}
-      footer={[
-        <Button key="cancel" onClick={onCancel}>
-          {cancelText}
-        </Button>,
-        <Button
-          key="submit"
-          type="primary"
-          danger
-          loading={loading}
-          onClick={onSubmit}
-        >
-          {confirmText}
-        </Button>,
-      ]}
+      footer={footerButtons}
     >
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-        {noSchedulesImpacted && (
-          <Title level={4} >
+        {mode === "responsemodal" && noSchedulesImpacted && (
+          <Title level={4}>
             No Schedules impacted, Please confirm before you proceed.
           </Title>
         )}

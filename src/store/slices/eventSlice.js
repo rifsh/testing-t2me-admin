@@ -14,6 +14,7 @@ const initialState = {
   loading: false,
   error: null,
   selectedCoupons: [],
+  editItemId: null,
   selectedOffers: [],
   eventOnPlaces:[],
   organizerEvents:[],
@@ -170,6 +171,7 @@ const eventSlice = createSlice({
 
       let event = state.events;
       if (status && status !== "All") {
+
         event = event.filter(
           (offer) =>
             (status === "Active" && offer.status === true) ||
@@ -187,6 +189,9 @@ const eventSlice = createSlice({
     },
     setSubmitData(state, action) {
       state.submitData = { ...state.submitData, ...action.payload };
+    },
+    setEditItemId: (state, action) => {
+      state.editItemId = action.payload;
     },
     setCurrentStep(state, action) {
       state.currentStep = action.payload;
@@ -209,6 +214,9 @@ const eventSlice = createSlice({
       if (existingOfferIndex !== -1) {
         state.selectedOffers.splice(existingOfferIndex, 1);
       } else {
+        console.log("ADEDDDDDDDDDDDDDD");
+        console.log(action.payload,"THISSSSSSSSSSSSSS");
+        
         state.selectedOffers.push(action.payload);
       }
     },
@@ -381,7 +389,6 @@ export const {
   setDialogVisible,
   setModalLoading,
   setSelectedEvent,
-
   filterEvent,
   setSubmitData,
   toggleSelectedCoupon,
@@ -391,6 +398,7 @@ export const {
   resetSelected,
   setCurrentStep,
   setSubmitLoading,
+  setEditItemId
 } = eventSlice.actions;
 
 export default eventSlice.reducer;

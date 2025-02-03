@@ -1,6 +1,8 @@
 export const ApiConstant = {
   API_BASE_URL: "https://uat-tickets2me.mitetechnology.com",
   CATEGORY_URL: "/api/v1/events/secured/category",
+  CATEGORY_STATUS_URL: "/api/v1/events/secured/category_status",
+  SUB_CATEGORY_STATUS_URL: "/api/v1/events/secured/subcategory_status",
   SINGLE_CATEGORY_URL: "/api/v1/events/secured/singlecategory",
   USER_URL: "/api/v1/auth/secured/users",
   SINGLE_USER_URL: "/api/v1/auth/secured/singleuser",
@@ -28,6 +30,7 @@ export const ApiConstant = {
   OFFER_URL: "/api/v1/offers/secured/offers",
   COUPON_URL: "/api/v1/offers/secured/coupons",
   TAX_URL: "/api/v1/location/secured/taxes",
+  TAX_STATUS_URL: "/api/v1/location/secured/taxes_status",
   AVAILABLE_TAX_CATEGORY_URL: "/api/v1/location/secured/available_tax_category",
   TICKET_URL: "/api/v1/tickets/secured/ticketstructure",
   AVAILABLE_TICKET_TYPE_URL: "/api/v1/events/secured/available_types",

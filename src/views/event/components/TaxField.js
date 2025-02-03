@@ -25,7 +25,7 @@ const TaxField = ({ form }) => {
     const selectedTaxes = allTax.filter((tax) =>
       selectedTaxIds.includes(tax.id)
     );
-    dispatch(setSelectedTaxDetails(selectedTaxes)); // Dispatch the selected taxes
+    dispatch(setSelectedTaxDetails(selectedTaxes)); 
   };
 
   return (

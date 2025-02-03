@@ -11,16 +11,28 @@ import {
   setSubmitData,
   setCurrentStep,
   setSubmitLoading,
-  resetState,
   checkEventValidation,
-
+  fetchEventDetails,
+  toggleSelectedCoupon,
+  resetState,
+  toggleSelectedOffer,
 } from "store/slices/eventSlice";
+import { fetchAllTax, setSelectedTaxDetails } from "store/slices/taxSlice";
 import {
   updateOrganizerEvent,
   setUpdateEventDialogVisible,
   setSelectedUpdateEvent,
   setUpdateEventLoading,
 } from "store/slices/EventOrganizerSlice";
+import {
+  getVenues
+} from "store/slices/locationSlice";
+import {
+  fetchAllTickets
+} from "store/slices/ticketSlice";
+import {
+  fetchSubcategories,
+} from "store/slices/categorySlice";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
@@ -45,6 +57,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     responseData,
     responseMessage,
     filteredEvents,
+    eventDetails
   } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const [form] = Form.useForm();
@@ -53,41 +66,100 @@ const MultyStepEventForm = ({ eventId, mode }) => {
 
   console.log("------------------", eventId)
   console.log("------------------", mode)
-  let eventData;
-  if (mode === "EDIT") {
-    if (filteredEvents && filteredEvents.length > 0) {
-      const numericBannerId = parseInt(eventId, 10);
-      const foundData = filteredEvents.find(event => event.id === numericBannerId);
-      eventData = foundData;
-      console.log(eventData, "FOUND DATA------------");
-    } else {
-      console.log('filteredevent is empty or undefined.');
+  console.log("LENGTHHHHHHHHHH OFFER", selectedOffers.length)
+  console.log("LENGTHHHHHHHHHH COUPON", selectedCoupons.length)
+  useEffect(() => {
+    if (eventId) {
+      dispatch(fetchEventDetails(eventId));
     }
-  }
+  }, [dispatch]);
 
   useEffect(() => {
-    if (mode === "EDIT" && eventData) {
-      form.setFieldsValue({
-        event_name: eventData.event_name,
-        description: eventData.description,
-        thumbnail_image: eventData.thumbnail_image
+    if (mode === "EDIT" && eventDetails && !selectedOffers.length && !selectedCoupons.length) {
+      console.log("Setting form values and selected offers/coupons");
+      const formValues = {
+        event_name: eventDetails.event_name,
+        description: eventDetails.description,
+        category_id: eventDetails.category?.id,
+        sub_category_id: eventDetails.sub_category?.id,
+        place: eventDetails.venue?.place?.name,
+        venue_id: eventDetails.venue?.id,
+        tax_ids: eventDetails.taxs?.map((tax) => tax.id) || [],
+        available_types: eventDetails.available_types,
+        max_tickets: eventDetails.max_tickets || 0,
+        ticket_structure_id: eventDetails.ticket_structure_id,
+        offer: eventDetails.event_offers?.map((offer) => offer.offer.id) || [],
+        coupon: eventDetails.event_coupons?.map((coupon) => coupon.coupons.id) || [],
+        thumbnail_image: eventDetails.thumbnail_image
           ? [
             {
               uid: "-1",
-              name: eventData.thumbnail_image.split("/").pop(),
+              name: eventDetails.thumbnail_image.split("/").pop(),
               status: "done",
-              url: eventData.thumbnail_image,
+              url: eventDetails.thumbnail_image,
             },
           ]
           : [],
-      });
-    }
-  }, [mode, eventData, form]);
+        banner_images: eventDetails.media
+          ? eventDetails.media.map((image, index) => ({
+            uid: `-${index + 1}`,
+            name: image.media_url.split("/").pop(),
+            status: "done",
+            url: image.media_url,
+          }))
+          : [],
+      };
 
+      form.setFieldsValue(formValues);
+
+      if (eventDetails.taxs && eventDetails.taxs.length > 0) {
+        dispatch(setSelectedTaxDetails(eventDetails.taxs));
+      }
+
+      if (eventDetails.event_offers && eventDetails.event_offers.length > 0) {
+        eventDetails.event_offers.forEach((eventOffer) => {
+          dispatch(toggleSelectedOffer({
+            id: eventOffer.offer.id,
+            name: eventOffer.offer.name,
+            max_uses: eventOffer.offer.max_uses,
+            date_required: eventOffer.offer.date_required,
+            start_date: eventOffer.offer.start_date,
+            end_date: eventOffer.offer.end_date
+          }));
+        });
+      }
+
+      if (eventDetails.event_coupons && eventDetails.event_coupons.length > 0) {
+        eventDetails.event_coupons.forEach((eventCoupon) => {
+          dispatch(toggleSelectedCoupon({
+            id: eventCoupon.coupons.id,
+            name: eventCoupon.coupons.name,
+            max_uses: eventCoupon.coupons.max_uses,
+            start_date: eventCoupon.coupons.start_date,
+            end_date: eventCoupon.coupons.end_date
+          }));
+        });
+      }
+
+      if (eventDetails.category?.id) {
+        dispatch(fetchSubcategories({ category_id: eventDetails.category.id }));
+      }
+
+      if (eventDetails.venue?.place?.id) {
+        dispatch(getVenues({ place_id: eventDetails.venue.place.id }));
+      }
+
+      if (eventDetails.ticket_structure) {
+        dispatch(fetchAllTickets({ venue_id: eventDetails.venue.id }));
+      }
+    }
+  }, [eventDetails, mode, form, dispatch]);
 
   useEffect(() => {
     dispatch(resetState());
   }, [dispatch]);
+
+
 
   const nextStep = async () => {
     dispatch(setSubmitLoading(true));
@@ -124,32 +196,34 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     if (mode === "EDIT") {
 
     } else {
-        try {
-          dispatch(setSubmitLoading(true));
-          const offers = {
-            offer_ids: selectedOffers?.map((offer) => offer.id) || [],
-            coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
-          };
+      try {
+        dispatch(setSubmitLoading(true));
+        const offers = {
+          offer_ids: selectedOffers?.map((offer) => offer.id) || [],
+          coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
+        };
 
-          const finalData = {
-            ...submitData,
-            ...offers,
-            max_tickets: parseInt(submitData.max_tickets || "0", 10),
-          };
+        const finalData = {
+          ...submitData,
+          ...offers,
+          max_tickets: parseInt(submitData.max_tickets || "0", 10),
+        };
 
-          dispatch(setSelectedSubmitItem(finalData));
-        } catch (error) {
-          console.error("Submission Error:", error);
-          message.error("An error occurred during submission.");
-        } finally {
-          dispatch(setSubmitLoading(false));
-        }
+        dispatch(setSelectedSubmitItem(finalData));
+
+      } catch (error) {
+        console.error("Submission Error:", error);
+        message.error("An error occurred during submission.");
+      } finally {
+        dispatch(setSubmitLoading(false));
+      }
     }
 
 
   };
 
   const prevStep = () => {
+
     if (currentStep > 1) {
       dispatch(setCurrentStep(currentStep - 1));
     }
@@ -226,7 +300,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           </Button>
         )}
       </div>
-      <LoadingOverlay 
+      <LoadingOverlay
         loading={loading}
       />
       <SubmitAndConfirmModal
