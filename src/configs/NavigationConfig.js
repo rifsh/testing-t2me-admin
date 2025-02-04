@@ -278,7 +278,7 @@ const superAdminDashBoardNavTree = [
           },
           {
             key: "app.management.layout.faq.list",
-            path: `${APP_PREFIX_PATH}/app.management.layout.faq.list`,
+            path: `${APP_PREFIX_PATH}/app/management/layout/faq/list`,
             title: "sidenav.app.management.layout.faq",
             icon: LayoutOutlined,
             breadcrumb: false,
