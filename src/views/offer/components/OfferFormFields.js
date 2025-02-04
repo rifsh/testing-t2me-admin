@@ -60,9 +60,9 @@ function OfferFormFields() {
 
   // Disallow selecting dates before today
   const disablePastDates = (current) => {
-    return current && current < moment().startOf('day');
+    const startDate = form.getFieldValue('start_date'); 
+    return current && current < moment().startOf('day') && !moment(current).isSame(startDate, 'day');
   };
-
   // Validate end date based on start date
   const disableEndDate = (current) => {
     if (!startDate) {

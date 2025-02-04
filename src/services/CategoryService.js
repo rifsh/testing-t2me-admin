@@ -7,7 +7,7 @@ const CategoryService = {};
 
 CategoryService.addCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  
+
   const formData = Utils.createFormData(data, {
     fileKeys: ['thumbnail_image'],
     skipEmpty: true
@@ -33,7 +33,7 @@ CategoryService.updateCategory = function (data, action) {
 };
 
 CategoryService.fetchCategory = function (pageData) {
- 
+
 
   return fetch({
     url: ApiConstant.CATEGORY_URL,
@@ -79,7 +79,7 @@ CategoryService.addSubCategory = function (data, action) {
 
 
 
-  return fetch({  
+  return fetch({
     url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${data.category_id}&action=${encodedAction}`,
     method: "POST",
     data: formData,
@@ -88,10 +88,51 @@ CategoryService.addSubCategory = function (data, action) {
     },
   });
 };
+
+CategoryService.editCategory = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
+  return fetch({
+    url: `${ApiConstant.CATEGORY_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
 CategoryService.editSubCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
   return fetch({
     url: `${ApiConstant.SUB_CATEGORY_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+CategoryService.editCatStatus = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.CATEGORY_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+  });
+};
+CategoryService.editSubCatStatus = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.SUB_CATEGORY_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
   });

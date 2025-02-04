@@ -8,19 +8,21 @@ import {
   Select,
   Button,
   message,
-  Checkbox,
+  Checkbox
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
+import { ActionType } from "utils/api/warning-submit-util";
 import {
   addVenue,
   fetchAllCountires,
   getCoutryDetails,
   getPlaces,
   setSelectedPlace,
+  
 } from "store/slices/locationSlice";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 
@@ -30,8 +32,10 @@ import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWith
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { addTax, fetchAvailableCategory } from "store/slices/taxSlice";
+import { addTax, fetchAvailableCategory, editTax, setSelectedTaxDetails, setTaxDialogVisible, setTaxModalLoading } from "store/slices/taxSlice";
 import LoadingOverlay from "components/util-components/Loader/index";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import {filterOption } from "components/util-components/FormItems/dropDownSearch";
 
 const { Option } = Select;
 
@@ -49,7 +53,6 @@ const TaxFormFields = ({ mode, tax }) => {
 
   const {
     loading: locationLoading,
-
     detailedCountryList,
     filteredPlaces,
   } = locationState;
@@ -59,6 +62,12 @@ const TaxFormFields = ({ mode, tax }) => {
     error,
     responseData,
     responseMessage,
+    selectedTax,
+    dialogVisible,
+    responseImpactData,
+    message: warningMessage,
+    modalLoading,
+    editable_status,
     availableTaxCategory = [],
   } = taxState;
 
@@ -73,6 +82,8 @@ const TaxFormFields = ({ mode, tax }) => {
   }, [error]);
 
   useEffect(() => {
+    console.log("taxxxxxxxxxxxx",tax);
+    
     if (tax && mode === "EDIT") {
       form.setFieldsValue({
         country_id: tax.country?.id,
@@ -96,18 +107,62 @@ const TaxFormFields = ({ mode, tax }) => {
   };
 
   const onFinish = async () => {
-    try {
-      const values = await form.validateFields();
-      if (!form.getFieldValue("place_id") && isLocationBased) {
-        message.error("Place ID is missing. Please select a place.");
-        return;
+    const values = await form.validateFields();
+
+    if (mode === "EDIT") {
+      console.log("ITS AN EDITTTTTTTTTTTTT TAXXXXXXX");
+
+      const data = {
+        ...values,
+        id: tax.id
+      };
+      console.log("Edit Data:", data);
+
+      const resultAction = await dispatch(
+        editTax({ data, action: ActionType.WARNING, })
+      );
+
+      if (editTax.fulfilled.match(resultAction)) {
+        dispatch(setSelectedTaxDetails(data));
+        dispatch(setTaxDialogVisible(true));
       }
 
-      dispatch(setSelectedSubmitItem(values));
-    } catch (errorInfo) {
-      console.error("Validation Failed:", errorInfo);
+    } else {
+      try {
+
+        if (!form.getFieldValue("place_id") && isLocationBased) {
+          message.error("Place ID is missing. Please select a place.");
+          return;
+        }
+
+        dispatch(setSelectedSubmitItem(values));
+      } catch (errorInfo) {
+        console.error("Validation Failed:", errorInfo);
+      }
+    }
+
+  };
+
+
+  const handleModalSubmit = async () => {
+    dispatch(setTaxModalLoading(true));
+    const resultAction = await dispatch(
+      editTax({ data: selectedTax, action: ActionType.SUBMIT })
+    );
+    dispatch(setTaxModalLoading(false));
+    dispatch(setTaxDialogVisible(false));
+    if (editTax.fulfilled.match(resultAction)) {
+      dispatch(setSelectedSubmitItem(selectedTax));
     }
   };
+
+  const handleModalCancel = () => {
+    dispatch(setTaxDialogVisible(false));
+  };
+
+  // const filterOption = (input, option) => {
+  //   return option.children.toLowerCase().indexOf(input.toLowerCase()) >=0;
+  // }
 
   return (
     <Row gutter={16}>
@@ -121,10 +176,12 @@ const TaxFormFields = ({ mode, tax }) => {
           <Card>
             <h2 className="mb-3">Add Tax</h2>
 
-            <Form.Item name="country_id" label="Country name">
+            <Form.Item name="country_id" label="Country Name">
               <Select
                 className="w-100"
                 placeholder="Choose a Country"
+                showSearch
+                filterOption={filterOption} 
                 loading={locationLoading}
                 onChange={(id) => handleCountrySelect(id)}
               >
@@ -150,8 +207,10 @@ const TaxFormFields = ({ mode, tax }) => {
               <Form.Item name="place_id" label="Place name">
                 <Select
                   className="w-100"
-                  placeholder="Choose a Country"
+                  placeholder="Choose a Tax"
                   loading={locationLoading}
+                  showSearch
+                  filterOption={filterOption} 
                 >
                   {filteredPlaces && filteredPlaces.length > 0 ? (
                     filteredPlaces.map((country) => (
@@ -176,12 +235,14 @@ const TaxFormFields = ({ mode, tax }) => {
             <Form.Item name="available_category" label="Tax Category">
               <Select
                 className="w-100"
-                placeholder="Choose a Country"
+                placeholder="Choose a Category"
                 loading={loading}
+                showSearch
+                filterOption={filterOption} 
               >
                 {availableTaxCategory && availableTaxCategory.length > 0 ? (
                   availableTaxCategory.map((country) => (
-                    <Option key={country.id} value={country.id}>
+                    <Option key={country.id} value={country.name}>
                       {country.name}
                     </Option>
                   ))
@@ -230,13 +291,31 @@ const TaxFormFields = ({ mode, tax }) => {
           {mode === "EDIT" && <EditWarningAlert />}
         </Form>
       </Col>
-      <LoadingOverlay 
-        loading={loading} 
+
+      <LoadingOverlay
+        loading={loading}
       />
-      
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={warningMessage}
+        responseData={responseImpactData}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={modalLoading}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
+        editable_status={editable_status}
+      />
+
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={addTax}
+        addFunction={mode === "EDIT" ? editTax : addTax}
         navigationPath={`${APP_PREFIX_PATH}/tax/list`}
         responseMessage={responseMessage}
       />

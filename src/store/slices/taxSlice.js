@@ -40,7 +40,19 @@ export const editTax = createAsyncThunk(
   async ({ data, action }, { rejectWithValue }) => {
     try {
       const response = await TaxService.editTax(data, action);
-      return response.status;
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+
+export const editTaxStatus = createAsyncThunk(
+  "tax/editStatus",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await TaxService.editTaxStatus(data, action);
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
     }
@@ -51,6 +63,7 @@ const taxSlice = createSlice({
   name: "tax",
   initialState: {
     loading: false,
+    responseImpactData: null,
     availableTaxCategory: [],
     allTax: [],
     filteredTax: [],
@@ -130,14 +143,34 @@ const taxSlice = createSlice({
       })
       .addCase(editTax.fulfilled, (state, { payload }) => {
         state.loading = false;
-        if (payload.message) {
-          state.message = payload.message;
-          state.editable_status = payload.editable_status;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
         }
       })
       .addCase(editTax.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(editTaxStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editTaxStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(editTaxStatus.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
       })
       .addCase(addTax.pending, (state) => {
         state.loading = true;

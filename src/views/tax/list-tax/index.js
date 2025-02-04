@@ -15,7 +15,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
-import { editTax, fetchAllTax, filterTax, setTaxDialogVisible, setTaxModalLoading, setEditItemId, } from "store/slices/taxSlice";
+import { editTax, fetchAllTax, filterTax, setTaxDialogVisible, setTaxModalLoading, setEditItemId, editTaxStatus } from "store/slices/taxSlice";
 import {
   fetchAllCountires,
   getCoutryDetails,
@@ -41,6 +41,7 @@ const TaxList = () => {
     dialogVisible,
     modalLoading,
     editItemId,
+    responseImpactData,
   } =
     useSelector((state) => state.tax) || {};
   const [form] = Form.useForm();
@@ -70,7 +71,7 @@ const TaxList = () => {
   const handleModalSubmit = async () => {
     dispatch(setTaxModalLoading(true));
     navigate(`${APP_PREFIX_PATH}/tax/edit/${editItemId}`)
-    console.log(editItemId,"9234239423490823498234098234908");
+    console.log(editItemId, "9234239423490823498234098234908");
     dispatch(setTaxDialogVisible(false));
     dispatch(setTaxModalLoading(false));
   };
@@ -189,6 +190,7 @@ const TaxList = () => {
         />
       </div>
       <WarningModal
+        mode={"itemmodal"}
         visible={dialogVisible}
         title="Edit Place"
         details={TextConstants.DefaultEditContent1}
@@ -202,11 +204,15 @@ const TaxList = () => {
 
       <UpdateStatusModal
         responseMessage={message}
-
-        editFunction={editTax}
+        editFunction={editTaxStatus}
         getAllFunction={(pageData) => fetchAllTax(pageData)}
         pageData={{ page: 1, size: 10 }}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
         editable_status={editable_status}
+        responseData={responseImpactData}
       />
     </Card>
   );

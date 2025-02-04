@@ -80,6 +80,7 @@ LocationService.editPlaceStatus = function (data, action) {
     data: data,
   });
 };
+
 LocationService.editVenueStatus = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
@@ -92,10 +93,19 @@ LocationService.editVenueStatus = function (data, action) {
 
 LocationService.editVenue = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
+
   return fetch({
     url: `${ApiConstant.EDIT_VENUE_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
-    data: data,
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
 };
 

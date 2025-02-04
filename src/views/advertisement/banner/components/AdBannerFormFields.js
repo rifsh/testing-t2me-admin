@@ -16,6 +16,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import LoadingOverlay from "components/util-components/Loader/index";
 import { SupportImageFormat, SupportFormatContent, parseSizeToBytes } from "constants/SupportFileConstants";
 import Utils from "utils/index";
+import { filterOption } from "components/util-components/FormItems/dropDownSearch";
 
 const { Option } = Select;
 const ADD = "ADD";
@@ -159,11 +160,14 @@ const AdBannerFormFields = ({ mode, banner }) => {
         <Card title="Basic Info">
           <Form form={form} layout="vertical">
             <Form.Item name="banner_category_id" label="Category" rules={rules.category}>
-              <Select className="w-100" placeholder="Choose a Category" loading={loading}
+              <Select 
+              className="w-100" placeholder="Choose a Category" loading={loading}
                 onChange={(value) => {
+                  console.log("Selected Category ID:", value); 
                   const selected = filteredAdCategories.find(
                     (category) => category.id === value
                   );
+                  console.log("Selected Category:", selected);
                   setSelectedCategory(selected || null);
                 }}
               >
@@ -235,7 +239,10 @@ const AdBannerFormFields = ({ mode, banner }) => {
             </Form.Item>
 
             <Form.Item name="place_id" label="Place (optional)" rules={rules.place}>
-              <Select className="w-100" placeholder="Choose a Place" loading={loading} onSelect={(value) => handleOnSelect(value)}>
+              <Select className="w-100" placeholder="Choose a Place" loading={loading}
+              showSearch
+              filterOption={filterOption}
+              onSelect={(value) => handleOnSelect(value)}>
                 {places && places.length > 0 ? (
                   places.map((place) => (
                     <Option key={place.id} value={place.id}>
@@ -248,7 +255,9 @@ const AdBannerFormFields = ({ mode, banner }) => {
               </Select>
             </Form.Item>
             <Form.Item name="event_id" label="Event" rules={rules.event}>
-              <Select className="w-100" placeholder="Choose a Event" loading={loading}>
+              <Select className="w-100" placeholder="Choose a Event" loading={loading}
+              showSearch
+              filterOption={filterOption}>
                 {eventOnPlaces && eventOnPlaces.length > 0 ? (
                   eventOnPlaces.map((event) => (
                     <Option key={event.id} value={event.id}>
