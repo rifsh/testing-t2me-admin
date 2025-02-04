@@ -19,7 +19,7 @@ import {
   toggleSelectedOffer,
   setSelectedEvent,
   setDialogVisible,
-  setModalLoading
+  setModalLoading,
 } from "store/slices/eventSlice";
 import { fetchAllTax, setSelectedTaxDetails } from "store/slices/taxSlice";
 import {
@@ -60,8 +60,11 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     selectedEvent,
     modalLoading,
     editable_status,
-     message: warningMessage,
+    message: warningMessage,
   } = useSelector((state) => state.event);
+  const { selectedTicketStructure, ticketTypes } = useSelector(
+    (state) => state.tickets
+  );
   const dispatch = useDispatch();
   const [form] = Form.useForm();
   const { responseDataEvent, responseMessageEvent, message } = useSelector(
@@ -208,7 +211,6 @@ const MultyStepEventForm = ({ eventId, mode }) => {
       if (mode === "EDIT") {
         console.log("ITS AN EDITTTTTTTTTTTTT EVENT");
 
-      
         const offers = {
           offer_ids: selectedOffers?.map((offer) => offer.id) || [],
           coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
@@ -230,19 +232,29 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           dispatch(setDialogVisible(true));
         }
       } else {
-          dispatch(setSubmitLoading(true));
-          const offers = {
-            offer_ids: selectedOffers?.map((offer) => offer.id) || [],
-            coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
-          };
+        dispatch(setSubmitLoading(true));
+        const offers = {
+          offer_ids: selectedOffers?.map((offer) => offer.id) || [],
+          coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
+        };
+        const ticket_structure = {
+          ticket_structure: ticketTypes.reduce((acc, ticketType) => {
+            const structureItems = ticketType.ticket_types.map(ticket => ({
+              id: ticket.ticketStructureId,
+              ticket_set: ticket.ticket_set
+            }));
+            return [...acc, ...structureItems];
+          }, [])
+        };
 
-          const finalData = {
-            ...submitData,
-            ...offers,
-            max_tickets: parseInt(submitData.max_tickets || "0", 10),
-          };
+        const finalData = {
+          ...submitData,
+          ...ticket_structure,
+          ...offers,
+          max_tickets: parseInt(submitData.max_tickets || "0", 10),
+        };
 
-          dispatch(setSelectedSubmitItem(finalData));
+        dispatch(setSelectedSubmitItem(finalData));
       }
     } catch (error) {
       console.error("Submission Error:", error);
@@ -252,21 +264,21 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     }
   };
 
-    const handleModalSubmit = async () => {
-      dispatch(setModalLoading(true));
-      const resultAction = await dispatch(
-        editEvent({ data: selectedEvent, action: ActionType.SUBMIT })
-      );
-      dispatch(setModalLoading(false));
-      dispatch(setDialogVisible(false));
-      if (editEvent.fulfilled.match(resultAction)) {
-        dispatch(setSelectedSubmitItem(selectedEvent));
-      }
-    };
-  
-    const handleModalCancel = () => {
-      dispatch(setDialogVisible(false));
-    };
+  const handleModalSubmit = async () => {
+    dispatch(setModalLoading(true));
+    const resultAction = await dispatch(
+      editEvent({ data: selectedEvent, action: ActionType.SUBMIT })
+    );
+    dispatch(setModalLoading(false));
+    dispatch(setDialogVisible(false));
+    if (editEvent.fulfilled.match(resultAction)) {
+      dispatch(setSelectedSubmitItem(selectedEvent));
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setDialogVisible(false));
+  };
 
   const prevStep = () => {
     if (currentStep > 1) {
@@ -345,7 +357,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           </Button>
         )}
       </div>
-      <LoadingOverlay loading={loading} />
+      {/* <LoadingOverlay loading={loading} /> */}
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
@@ -359,17 +371,15 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         loading={modalLoading}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         }}
         editable_status={editable_status}
       />
       <SubmitAndConfirmModal
-        responseData={ responseData}
+        responseData={responseData}
         addFunction={mode === "EDIT" ? editEvent : addEvent}
         navigationPath={`${APP_PREFIX_PATH}/event/list`}
-        responseMessage={
-          responseMessage
-        }
+        responseMessage={responseMessage}
       />
     </div>
   );

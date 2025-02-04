@@ -20,7 +20,7 @@ const TicketField = ({ form }) => {
     // }
 
     dispatch(getAvailableTicketsType());
-    dispatch(fetchAllTickets({ venue_id: 37 }));
+    dispatch(fetchAllTickets({ venue_id: selectedVenue.id }));
 
     if (selectedVenue?.capacity) {
       form.setFieldsValue({

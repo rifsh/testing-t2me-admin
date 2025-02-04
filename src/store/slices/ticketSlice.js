@@ -133,12 +133,13 @@ export const ticketSlice = createSlice({
         ticket_set,
         tickets,
         id,
+        ticketStructureId
       } = action.payload;
-
+    
       const existingTypeIndex = state.ticketTypes.findIndex(
         (type) => type.venue_id === venue_id && type.name === name
       );
-
+    
       if (existingTypeIndex === -1) {
         // Add new ticket type
         state.ticketTypes.push({
@@ -151,7 +152,8 @@ export const ticketSlice = createSlice({
             {
               ticket_set,
               tickets,
-              id,
+              id: Date.now(), // Use Date.now() for the unique ID
+              ticketStructureId // Keep the structure ID separately
             },
           ],
         });
@@ -160,12 +162,13 @@ export const ticketSlice = createSlice({
         const existingTicketSetIndex = state.ticketTypes[
           existingTypeIndex
         ].ticket_types.findIndex((set) => set.id === id);
-
+    
         if (existingTicketSetIndex === -1) {
           state.ticketTypes[existingTypeIndex].ticket_types.push({
             ticket_set,
             tickets,
-            id,
+            id: Date.now(), // Use Date.now() for the unique ID
+            ticketStructureId // Keep the structure ID separately
           });
         } else {
           state.ticketTypes[existingTypeIndex].ticket_types[
@@ -173,7 +176,8 @@ export const ticketSlice = createSlice({
           ] = {
             ticket_set,
             tickets,
-            id,
+            id: Date.now(), // Use Date.now() for the unique ID
+            ticketStructureId // Keep the structure ID separately
           };
         }
       }

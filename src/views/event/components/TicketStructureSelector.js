@@ -27,7 +27,7 @@ export const TicketStructureSelector = ({ form }) => {
     const selectedSet = availableTicketSets.find(
       (set) => set.ticket_set === setName
     );
-
+  
     // Check if this ticket set already exists in any ticket type
     const isDuplicate = ticketTypes.some(type => 
       type.ticket_types?.some(set => 
@@ -35,7 +35,7 @@ export const TicketStructureSelector = ({ form }) => {
         type.name === selectedStructure?.name
       )
     );
-
+  
     if (!isDuplicate) {
       const ticketSetData = {
         venue_id: selectedStructure?.venue_id,
@@ -45,13 +45,13 @@ export const TicketStructureSelector = ({ form }) => {
         base_price: selectedStructure?.base_price,
         ticket_set: selectedSet?.ticket_set,
         tickets: selectedSet?.tickets,
-        id: Date.now(),
+        id: selectedStructure.id,  // Using the structure ID directly
+        ticketStructureId: selectedStructure.id
       };
-
+  
       dispatch(addOrUpdateTicketSet(ticketSetData));
       dispatch(setSelectedTicketSet(setName));
-
-      // Reset only the ticket_set field
+  
       form.setFieldsValue({
         ticket_set: null,
       });

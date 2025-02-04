@@ -14,16 +14,31 @@ const ResponseShowModal = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
   loading = false,
-  jsonData = null, 
+  jsonData = null,
 }) => {
-  
+  const formatValue = (value) => {
+    if (value === null || value === undefined) return "N/A";
+    if (Array.isArray(value)) {
+      if (value.length === 0) return "[]";
+      if (typeof value[0] === 'object') {
+        // For arrays of objects, show a summary
+        return `${value.length} items: ${JSON.stringify(value)}`;
+      }
+      return value.join(", ");
+    }
+    if (typeof value === 'object' && value !== null) {
+      // For objects, convert to string representation
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
 
   const tableData = useMemo(() => {
     if (!jsonData) return [];
     return Object.entries(jsonData).map(([key, value], index) => ({
       key: index,
       columnKey: key,
-      value: Array.isArray(value) ? value.join(", ") : value ?? "N/A",
+      value: formatValue(value),
     }));
   }, [jsonData]);
 
@@ -32,7 +47,7 @@ const ResponseShowModal = ({
       title: "Key",
       dataIndex: "columnKey",
       key: "columnKey",
-      width: 150, // or flex: '0 0 150px'
+      width: 150,
       render: (text) => <Text strong>{text}</Text>,
     },
     {
@@ -40,16 +55,17 @@ const ResponseShowModal = ({
       dataIndex: "value",
       key: "value",
       render: (text) => (
-        <Text style={{ whiteSpace: 'pre-wrap' }} ellipsis={{ tooltip: text }}>
+        <Text style={{ whiteSpace: 'pre-wrap' }}>
           {text}
         </Text>
       ),
     },
   ];
+
   return (
     <Modal
       open={visible}
-      width={600}
+      width={800}
       title={
         <Space align="center">
           <ExclamationCircleOutlined style={{ color: "#faad14" }} />

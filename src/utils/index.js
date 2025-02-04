@@ -510,6 +510,10 @@ class Utils {
           formData.append(key, value.join(','));
           return;
         }
+        if (key === 'ticket_structure') {
+          formData.append("ticket_structure", JSON.stringify(value));
+          return;
+        }
 
       }
 
