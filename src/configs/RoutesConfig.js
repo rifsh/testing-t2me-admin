@@ -216,12 +216,12 @@ export const protectedRoutes = [
   },
   {
 
-    key: "tapp.management.layout.footer.list",
+    key: "app.management.layout.footer.list",
     path: `${APP_PREFIX_PATH}/app/management/layout/footer/list`,
     component: React.lazy(() => import("views/app-managment/layout/footer/list-footer")),
   },
   {
-    key: "tapp.management.layout.footer.add",
+    key: "app.management.layout.footer.add",
     path: `${APP_PREFIX_PATH}/app/management/layout/footer/add`,
     component: React.lazy(() => import("views/app-managment/layout/footer/add-footer")),
   }, {
@@ -303,5 +303,10 @@ export const protectedRoutes = [
     key: "org.event.edit",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/update-edit/:eventId`,
     component: React.lazy(() => import("views/track-team/event-organizer/update-edit/index")),
+  },
+  {
+    key: "app.management.layout.faq.list",
+    path: `${APP_PREFIX_PATH}/app/management/layout/faq/list`,
+    component: React.lazy(() => import("views/app-managment/layout/faq/list-faq/index")),
   },
 ];
