@@ -24,6 +24,9 @@ import {
   editCoupon,
   fetchAllCoupons,
   filterCoupons,
+  setEditItemId,
+  setCouponDialogVisible,
+  setCouponModalLoading,
 } from "store/slices/couponSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
@@ -31,14 +34,24 @@ import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { TextConstants } from "constants/TextConstant";
 
 const { Option } = Select;
 
 const CouponList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredCoupons, pagination, editable_status, loading, message } =
-    useSelector((state) => state.coupons);
+  const {
+    filteredCoupons,
+    pagination,
+    editable_status,
+    loading,
+    message,
+    editItemId,
+    dialogVisible,
+    modalLoading,
+  } = useSelector((state) => state.coupons);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
@@ -66,6 +79,22 @@ const CouponList = () => {
     dispatch(setSelectedItem(data));
     dispatch(setDialogVisible(true));
   };
+  const handleEditTax = (id) => {
+    dispatch(setEditItemId(id));
+    dispatch(setCouponDialogVisible(true));
+  };
+  const handleModalSubmit = async () => {
+    dispatch(setCouponModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/coupon/edit/${editItemId}`);
+
+    console.log(editItemId, "9234239423490823498234098234908");
+    dispatch(setCouponDialogVisible(false));
+    dispatch(setCouponModalLoading(false));
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setCouponDialogVisible(false));
+  };
 
   const getDropdownMenu = (row) => [
     {
@@ -86,6 +115,7 @@ const CouponList = () => {
           <span className="ml-2">Edit Coupon</span>
         </Flex>
       ),
+      onClick: () => handleEditTax(row.id),
     },
   ];
 
@@ -195,21 +225,39 @@ const CouponList = () => {
             {/* <Descriptions.Item label="Coupon Description">
               {selectedCoupon.description || "No description available"}
             </Descriptions.Item> */}
-            {selectedCoupon.thumbnail_image && selectedCoupon.thumbnail_image !== "images" ? (
+            {selectedCoupon.thumbnail_image &&
+            selectedCoupon.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">
                 <img
                   src={selectedCoupon.thumbnail_image}
                   alt="Offer Thumbnail"
-                  style={{ maxWidth: "100%", maxHeight: "200px", objectFit: "contain" }}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "200px",
+                    objectFit: "contain",
+                  }}
                 />
               </Descriptions.Item>
             ) : (
-              <Descriptions.Item label="Thumbnail Image">No image available</Descriptions.Item>
+              <Descriptions.Item label="Thumbnail Image">
+                No image available
+              </Descriptions.Item>
             )}
           </Descriptions>
         )}
       </Modal>
-
+      <WarningModal
+        mode={"itemmodal"}
+        visible={dialogVisible}
+        title="Edit Place"
+        details={TextConstants.DefaultEditContent1}
+        warningMessage="Do you want to proceed to the edit page?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed to Edit"
+        cancelText="Cancel"
+        loading={modalLoading}
+      />
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editCoupon}

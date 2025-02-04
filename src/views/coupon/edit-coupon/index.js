@@ -1,13 +1,11 @@
-import React from 'react'
-import { useParams } from 'react-router-dom';
-import CouponForm from '../form-coupon';
+import React from "react";
+import { useParams } from "react-router-dom";
+import CouponForm from "../form-coupon";
 
 const EditEvent = () => {
-	const params = useParams();
+  const params = useParams();
 
-	return (
-		<CouponForm mode="EDIT" param={params}/>
-	)
-}
+  return <CouponForm mode={"EDIT"}  />;
+};
 
-export default EditEvent
+export default EditEvent;

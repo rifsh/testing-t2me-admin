@@ -45,6 +45,7 @@ const VenueFormFields = ({ mode, venue }) => {
     selectedPlace,
     selectedVenue,
     modalLoading,
+    editable_status,
     responseImpactData,
     message: warningMessage,
   } = useSelector((state) => state.locations);
@@ -358,6 +359,7 @@ const VenueFormFields = ({ mode, venue }) => {
           title: "Active Schedules",
           dataKey: "active_schedules"
         }}
+        editable_status={editable_status}
       />
       <LoadingOverlay 
         loading={loading} 

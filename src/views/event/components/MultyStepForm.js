@@ -1,4 +1,4 @@
-import { Button, Form, message, message as antdMessage, } from "antd";
+import { Button, Form, message, message as antdMessage } from "antd";
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
@@ -11,16 +11,26 @@ import {
   setSubmitData,
   setCurrentStep,
   setSubmitLoading,
-  resetState,
   checkEventValidation,
-
+  fetchEventDetails,
+  toggleSelectedCoupon,
+  resetState,
+  editEvent,
+  toggleSelectedOffer,
+  setSelectedEvent,
+  setDialogVisible,
+  setModalLoading
 } from "store/slices/eventSlice";
+import { fetchAllTax, setSelectedTaxDetails } from "store/slices/taxSlice";
 import {
   updateOrganizerEvent,
   setUpdateEventDialogVisible,
   setSelectedUpdateEvent,
   setUpdateEventLoading,
 } from "store/slices/EventOrganizerSlice";
+import { getVenues } from "store/slices/locationSlice";
+import { fetchAllTickets } from "store/slices/ticketSlice";
+import { fetchSubcategories } from "store/slices/categorySlice";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
@@ -44,46 +54,120 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     submitLoading,
     responseData,
     responseMessage,
-    filteredEvents,
+    responseImpactData,
+    dialogVisible,
+    eventDetails,
+    selectedEvent,
+    modalLoading,
+    editable_status,
+     message: warningMessage,
   } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const { responseDataEvent, responseMessageEvent, message } = useSelector((state) => state.organizerUpdates);
+  const { responseDataEvent, responseMessageEvent, message } = useSelector(
+    (state) => state.organizerUpdates
+  );
 
-
-  console.log("------------------", eventId)
-  console.log("------------------", mode)
-  let eventData;
-  if (mode === "EDIT") {
-    if (filteredEvents && filteredEvents.length > 0) {
-      const numericBannerId = parseInt(eventId, 10);
-      const foundData = filteredEvents.find(event => event.id === numericBannerId);
-      eventData = foundData;
-      console.log(eventData, "FOUND DATA------------");
-    } else {
-      console.log('filteredevent is empty or undefined.');
+  console.log("------------------", eventId);
+  console.log("------------------", mode);
+  console.log("LENGTHHHHHHHHHH OFFER", selectedOffers.length);
+  console.log("LENGTHHHHHHHHHH COUPON", selectedCoupons.length);
+  useEffect(() => {
+    if (eventId) {
+      dispatch(fetchEventDetails(eventId));
     }
-  }
+  }, [dispatch]);
 
   useEffect(() => {
-    if (mode === "EDIT" && eventData) {
-      form.setFieldsValue({
-        event_name: eventData.event_name,
-        description: eventData.description,
-        thumbnail_image: eventData.thumbnail_image
+    if (
+      mode === "EDIT" &&
+      eventDetails &&
+      !selectedOffers.length &&
+      !selectedCoupons.length
+    ) {
+      console.log("Setting form values and selected offers/coupons");
+      const formValues = {
+        event_name: eventDetails.event_name,
+        description: eventDetails.description,
+        category_id: eventDetails.category?.id,
+        sub_category_id: eventDetails.sub_category?.id,
+        place: eventDetails.venue?.place?.name,
+        venue_id: eventDetails.venue?.id,
+        tax_ids: eventDetails.taxs?.map((tax) => tax.id) || [],
+        available_types: eventDetails.available_types,
+        max_capacity: eventDetails.max_tickets || 0,
+        ticket_structure_id: eventDetails.ticket_structure_id,
+        offer: eventDetails.event_offers?.map((offer) => offer.offer.id) || [],
+        coupon:
+          eventDetails.event_coupons?.map((coupon) => coupon.coupons.id) || [],
+        thumbnail_image: eventDetails.thumbnail_image
           ? [
-            {
-              uid: "-1",
-              name: eventData.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: eventData.thumbnail_image,
-            },
-          ]
+              {
+                uid: "-1",
+                name: eventDetails.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: eventDetails.thumbnail_image,
+              },
+            ]
           : [],
-      });
-    }
-  }, [mode, eventData, form]);
+        banner_images: eventDetails.media
+          ? eventDetails.media.map((image, index) => ({
+              uid: `-${index + 1}`,
+              name: image.media_url.split("/").pop(),
+              status: "done",
+              url: image.media_url,
+            }))
+          : [],
+      };
 
+      form.setFieldsValue(formValues);
+
+      if (eventDetails.taxs && eventDetails.taxs.length > 0) {
+        dispatch(setSelectedTaxDetails(eventDetails.taxs));
+      }
+
+      if (eventDetails.event_offers && eventDetails.event_offers.length > 0) {
+        eventDetails.event_offers.forEach((eventOffer) => {
+          dispatch(
+            toggleSelectedOffer({
+              id: eventOffer.offer.id,
+              name: eventOffer.offer.name,
+              max_uses: eventOffer.offer.max_uses,
+              date_required: eventOffer.offer.date_required,
+              start_date: eventOffer.offer.start_date,
+              end_date: eventOffer.offer.end_date,
+            })
+          );
+        });
+      }
+
+      if (eventDetails.event_coupons && eventDetails.event_coupons.length > 0) {
+        eventDetails.event_coupons.forEach((eventCoupon) => {
+          dispatch(
+            toggleSelectedCoupon({
+              id: eventCoupon.coupons.id,
+              name: eventCoupon.coupons.name,
+              max_uses: eventCoupon.coupons.max_uses,
+              start_date: eventCoupon.coupons.start_date,
+              end_date: eventCoupon.coupons.end_date,
+            })
+          );
+        });
+      }
+
+      if (eventDetails.category?.id) {
+        dispatch(fetchSubcategories({ category_id: eventDetails.category.id }));
+      }
+
+      if (eventDetails.venue?.place?.id) {
+        dispatch(getVenues({ place_id: eventDetails.venue.place.id }));
+      }
+
+      if (eventDetails.ticket_structure) {
+        dispatch(fetchAllTickets({ venue_id: eventDetails.venue.id }));
+      }
+    }
+  }, [eventDetails, mode, form, dispatch]);
 
   useEffect(() => {
     dispatch(resetState());
@@ -120,11 +204,32 @@ const MultyStepEventForm = ({ eventId, mode }) => {
 
   const onFinish = async () => {
     const values = await form.validateFields();
+    try {
+      if (mode === "EDIT") {
+        console.log("ITS AN EDITTTTTTTTTTTTT EVENT");
 
-    if (mode === "EDIT") {
+      
+        const offers = {
+          offer_ids: selectedOffers?.map((offer) => offer.id) || [],
+          coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
+        };
+        const data = {
+          ...submitData,
+          ...offers,
+          max_tickets: parseInt(submitData.max_tickets || "0", 10),
+          id: eventId,
+        };
+        console.log("Edit Data:", data);
 
-    } else {
-        try {
+        const resultAction = await dispatch(
+          editEvent({ data, action: ActionType.WARNING })
+        );
+
+        if (editEvent.fulfilled.match(resultAction)) {
+          dispatch(setSelectedEvent(data));
+          dispatch(setDialogVisible(true));
+        }
+      } else {
           dispatch(setSubmitLoading(true));
           const offers = {
             offer_ids: selectedOffers?.map((offer) => offer.id) || [],
@@ -138,16 +243,30 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           };
 
           dispatch(setSelectedSubmitItem(finalData));
-        } catch (error) {
-          console.error("Submission Error:", error);
-          message.error("An error occurred during submission.");
-        } finally {
-          dispatch(setSubmitLoading(false));
-        }
+      }
+    } catch (error) {
+      console.error("Submission Error:", error);
+      message.error("An error occurred during submission.");
+    } finally {
+      dispatch(setSubmitLoading(false));
     }
-
-
   };
+
+    const handleModalSubmit = async () => {
+      dispatch(setModalLoading(true));
+      const resultAction = await dispatch(
+        editEvent({ data: selectedEvent, action: ActionType.SUBMIT })
+      );
+      dispatch(setModalLoading(false));
+      dispatch(setDialogVisible(false));
+      if (editEvent.fulfilled.match(resultAction)) {
+        dispatch(setSelectedSubmitItem(selectedEvent));
+      }
+    };
+  
+    const handleModalCancel = () => {
+      dispatch(setDialogVisible(false));
+    };
 
   const prevStep = () => {
     if (currentStep > 1) {
@@ -226,14 +345,31 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           </Button>
         )}
       </div>
-      <LoadingOverlay 
-        loading={loading}
+      <LoadingOverlay loading={loading} />
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={warningMessage}
+        responseData={responseImpactData}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={modalLoading}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
+        editable_status={editable_status}
       />
       <SubmitAndConfirmModal
-        responseData={mode === "EDIT" ? responseDataEvent : responseData}
-        addFunction={mode === "EDIT" ? updateOrganizerEvent : addEvent}
+        responseData={ responseData}
+        addFunction={mode === "EDIT" ? editEvent : addEvent}
         navigationPath={`${APP_PREFIX_PATH}/event/list`}
-        responseMessage={mode === "EDIT" ? responseMessageEvent : responseMessage}
+        responseMessage={
+          responseMessage
+        }
       />
     </div>
   );

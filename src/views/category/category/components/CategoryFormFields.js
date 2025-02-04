@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Input, Row, Col, Card, Form, Button, message, Upload, Typography } from "antd";
-import { addCategory, updateCategory } from "store/slices/categorySlice";
+import { addCategory, updateCategory, editCategory, setCatDialogVisible, setCatModalLoading,setSelectedCatDetails } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -10,7 +10,9 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
 import { SupportImageFormat, SupportFormatContent, ResolutionByServices } from "constants/SupportFileConstants";
 import Utils from "utils/index";
-import LoadingOverlay from "components/util-components/Loader/index";
+import LoadingOverlay from "components/util-components/Loader/index"
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { ActionType } from "utils/api/warning-submit-util";
 
 const { Text } = Typography;
 const ADD = "ADD";
@@ -23,14 +25,18 @@ const rules = {
   ],
 };
 
-const CategoryFormFields = ({ mode = ADD, category }) => {
+const CategoryFormFields = ({ mode, category }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { loading, error, responseData, responseMessage } = useSelector(
-    (state) => state.category
-  );
+  const { loading, error, responseData, responseMessage, dialogVisible, responseImpactData,
+    message: warningMessage,
+    selectedCat,
+    editable_status,
+    modalLoading, } = useSelector(
+      (state) => state.category
+    );
 
   // Handle error message
   useEffect(() => {
@@ -41,10 +47,23 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
 
   // Populate form fields if editing
   useEffect(() => {
+    console.log("MODEEEEEEEEEE", mode);
+    console.log("CATEGORYYYYYYYY", category);
+
     if (mode === EDIT && category) {
       form.setFieldsValue({
         name: category.name,
         description: category.description,
+        thumbnail_image: category.thumbnail_image && category.thumbnail_image !== "images"
+          ? [
+            {
+              uid: "-1",
+              name: category.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: category.thumbnail_image,
+            },
+          ]
+          : [],
       });
     }
   }, [mode, category, form]);
@@ -74,18 +93,44 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
         //   navigate(`${APP_PREFIX_PATH}/category/list`);
         // }
       } else if (mode === EDIT) {
+
+
+
+        const data = {
+          ...values,
+          id: category.id
+        };
+        console.log("Edit Data:", data);
+
         const resultAction = await dispatch(
-          updateCategory({ id: category.id, ...values })
+          editCategory({ data, action: ActionType.WARNING, })
         );
-        if (updateCategory.fulfilled.match(resultAction)) {
-          message.success(`Category ${values.name} updated successfully`);
-          navigate(`${APP_PREFIX_PATH}/category/list`);
+
+        if (editCategory.fulfilled.match(resultAction)) {
+          dispatch(setSelectedCatDetails(data));
+          dispatch(setCatDialogVisible(true));
         }
       }
     } catch (errorInfo) {
       console.log("Validation Failed:", errorInfo);
     }
   };
+  const handleModalSubmit = async () => {
+    dispatch(setCatModalLoading(true));
+    const resultAction = await dispatch(
+      editCategory({ data: selectedCat, action: ActionType.SUBMIT })
+    );
+    dispatch(setCatModalLoading(false));
+    dispatch(setCatDialogVisible(false));
+    if (editCategory.fulfilled.match(resultAction)) {
+      dispatch(setSelectedSubmitItem(selectedCat));
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setCatDialogVisible(false));
+  };
+
 
   return (
     <Row gutter={16}>
@@ -111,7 +156,7 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
               valuePropName="fileList"
               getValueFromEvent={normFile}
               rules={rules.thumbnail_image}
-              style={{ marginBottom: "0px", padding:"0px"}}
+              style={{ marginBottom: "0px", padding: "0px" }}
             >
               <Upload
                 name="thumbnail_image"
@@ -150,12 +195,29 @@ const CategoryFormFields = ({ mode = ADD, category }) => {
           </Form>
         </Card>
       </Col>
-      <LoadingOverlay 
-        loading={loading} 
+      <LoadingOverlay
+        loading={loading}
+      />
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={warningMessage}
+        responseData={responseImpactData}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={modalLoading}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
+        editable_status={editable_status}
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={addCategory}
+        addFunction={mode === EDIT ? editCategory : addCategory}
         navigationPath={`${APP_PREFIX_PATH}/category/list`}
         responseMessage={responseMessage}
       />

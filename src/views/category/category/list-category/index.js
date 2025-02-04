@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table, Input, Tabs, Button, Select, Menu } from "antd";
-import { FormOutlined, SearchOutlined, EditOutlined,EyeOutlined, } from "@ant-design/icons";
+import { FormOutlined, SearchOutlined, EditOutlined, EyeOutlined, } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,6 +9,8 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Utils from "utils";
 import { setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { TextConstants } from "constants/TextConstant";
 import {
   fetchSubcategories,
   setActiveTab,
@@ -19,6 +21,11 @@ import {
   setFormTabKey,
   getSingleCateory,
   getSingleSubCateory,
+  setEditItemId,
+  setCatDialogVisible,
+  setCatModalLoading,
+  editCategoryStatus,
+  editSubCategoryStatus,
 } from "store/slices/categorySlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 
@@ -39,7 +46,11 @@ const CategoryList = () => {
     loading,
     editable_status,
     message: responseMessage,
+    editItemId,
+    dialogVisible,
+    modalLoading,
     activeTab,
+    responseImpactData
   } = useSelector((state) => state.category);
 
   useEffect(() => {
@@ -49,14 +60,14 @@ const CategoryList = () => {
     );
   }, [dispatch]);
   const handleViewDetails = async (id) => {
-      await dispatch(getSingleCateory(id));
-      navigate(`${APP_PREFIX_PATH}/category/details/${id}`);
-    };
+    await dispatch(getSingleCateory(id));
+    navigate(`${APP_PREFIX_PATH}/category/details/${id}`);
+  };
   const handleViewDetailsub = async (id) => {
-      await dispatch(getSingleSubCateory(id));
-      console.log("Subcategory details fetched:", id);
-      navigate(`${APP_PREFIX_PATH}/subcategory/details/${id}`);
-    };
+    await dispatch(getSingleSubCateory(id));
+    console.log("Subcategory details fetched:", id);
+    navigate(`${APP_PREFIX_PATH}/subcategory/details/${id}`);
+  };
 
 
   const handlePagination = (page, size, type) => {
@@ -90,8 +101,30 @@ const CategoryList = () => {
   const handleTabChange = (key) => {
     dispatch(setActiveTab(key));
   };
+  const handleEditCategory = (id) => {
+    dispatch(setEditItemId(id));
+    dispatch(setCatDialogVisible(true));
+  };
+  const handleModalSubmit = async () => {
+    dispatch(setCatModalLoading(true));
+    if (activeTab === "categories") {
+      navigate(`${APP_PREFIX_PATH}/category/edit/category/${editItemId}`)
+    } else {
+      navigate(`${APP_PREFIX_PATH}/category/edit/subcategory/${editItemId}`)
+    }
 
-  
+    dispatch(setCatDialogVisible(false));
+    dispatch(setCatModalLoading(false));
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setCatDialogVisible(false));
+  };
+
+
+
+
+
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -111,7 +144,7 @@ const CategoryList = () => {
         </Menu.Item>
       )}
       <Menu.Item>
-        <Flex alignItems="center">
+        <Flex alignItems="center" onClick={() => handleEditCategory(row.id)}>
           <EditOutlined />
           <span className="ml-2">
             {activeTab === "categories" ? "Edit Category" : "Edit Subcategory"}
@@ -120,7 +153,7 @@ const CategoryList = () => {
       </Menu.Item>
     </Menu>
   );
-  
+
 
   const categoryColumns = [
     {
@@ -179,17 +212,27 @@ const CategoryList = () => {
       return {
         responseMessage: responseMessage,
         editable_status: editable_status,
-        editFunction: updateCategory,
+        editFunction: editCategoryStatus,
         getAllFunction: (pageData) => fetchCategories(pageData),
         pageData: { page: 1, size: 10 },
+        tableConfig: {
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        },
+        responseData: responseImpactData
       };
     }
     return {
       responseMessage: responseMessage,
       editable_status: editable_status,
-      editFunction: editSubCategory,
+      editFunction: editSubCategoryStatus,
       getAllFunction: (pageData) => fetchSubcategories(pageData),
       pageData: { categoryId: null, data: { page: 1, size: 10 } },
+      tableConfig: {
+        title: "Active Schedules",
+        dataKey: "active_schedules"
+      },
+      responseData: responseImpactData
     };
   };
 
@@ -268,7 +311,18 @@ const CategoryList = () => {
           />
         </TabPane>
       </Tabs>
-
+      <WarningModal
+        mode={"itemmodal"}
+        visible={dialogVisible}
+        title="Edit Place"
+        details={TextConstants.DefaultEditContent1}
+        warningMessage="Do you want to proceed to the edit page?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed to Edit"
+        cancelText="Cancel"
+        loading={modalLoading}
+      />
       <UpdateStatusModal {...getModalProps()} />
     </Card>
   );

@@ -20,7 +20,11 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   editOffer,
+  editOfferStatus,
   fetchAllOffers,
+  setEditItemId,
+  setOfferDialogVisible,
+  setOfferModalLoading
 } from "store/slices/offerSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import {  setSelectedItem } from "store/slices/modalSlice";
@@ -28,12 +32,14 @@ import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { TextConstants } from "constants/TextConstant";
 
 
 const OfferList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredOffers, pagination, loading, editable_status, message } =
+  const { filteredOffers, pagination, loading, editable_status, message,editItemId,dialogVisible,modalLoading ,responseImpactData} =
     useSelector((state) => state.offers);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -58,6 +64,21 @@ const OfferList = () => {
 
     dispatch(setSelectedItem(data));
   };
+    const handleEditTax = (id) => {
+      dispatch(setEditItemId(id));
+      dispatch(setOfferDialogVisible(true));
+    };
+    const handleModalSubmit = async () => {
+      dispatch(setOfferModalLoading(true));
+      navigate(`${APP_PREFIX_PATH}/offer/edit/${editItemId}`)
+      console.log(editItemId, "9234239423490823498234098234908");
+      dispatch(setOfferDialogVisible(false));
+      dispatch(setOfferModalLoading(false));
+    };
+  
+    const handleModalCancel = () => {
+      dispatch(setOfferDialogVisible(false));
+    };
   const getDropdownMenu = (row) => [
     {
       key: "view",
@@ -77,6 +98,7 @@ const OfferList = () => {
           <span className="ml-2">Edit Offer</span>
         </Flex>
       ),
+      onClick:() => handleEditTax(row.id)
     },
   ];
 
@@ -201,12 +223,29 @@ const OfferList = () => {
           </Descriptions>
         )}
       </Modal>
+      <WarningModal
+        mode={"itemmodal"}
+        visible={dialogVisible}
+        title="Edit Place"
+        details={TextConstants.DefaultEditContent1}
+        warningMessage="Do you want to proceed to the edit page?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed to Edit"
+        cancelText="Cancel"
+        loading={modalLoading}
+      />
       <UpdateStatusModal
         responseMessage={message}
-        editFunction={editOffer}
+        editFunction={editOfferStatus}
         getAllFunction={(pageData) => fetchAllOffers(pageData)}
         pageData={{ page: 1, size: 10 }}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
         editable_status={editable_status}
+        responseData={responseImpactData}
       />
     </Card>
   );
