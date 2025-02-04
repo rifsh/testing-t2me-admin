@@ -1,64 +1,86 @@
 import React, { useEffect } from "react";
-import { Card, Table, Button,  Menu } from "antd";
+import { Card, Table, Button, Menu, Modal } from "antd";
 import { FormOutlined, EditOutlined } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { TextConstants } from "constants/TextConstant";
 import {
   fetchAdBanners,
+  setSelectedMedia,
+  setModalVisible,
+  setEditItemId,
+  setAdBannerDialogVisible,
+  setAdBannerModalLoading,
 } from "store/slices/advertisementSlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
-
 
 const AdBannerlist = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-
   const {
     filteredAdBanner,
     pagination,
     loading,
-
+    modalVisible,
+    selectedMedia,
+    editItemId,
+    dialogVisible,
+    modalLoading,
   } = useSelector((state) => state.advertisement);
 
   useEffect(() => {
     dispatch(fetchAdBanners({ page: 1, size: 10 }));
     console.log(filteredAdBanner.length, "-------------------------ssss");
-
   }, [dispatch]);
 
-
-
   const handlePagination = (page, size, type) => {
-
     dispatch(fetchAdBanners({ page: page, size: size }));
-
+  };
+  const handleMediaClick = (mediaPath) => {
+    dispatch(setSelectedMedia(mediaPath));
+    dispatch(setModalVisible(true));
+  };
+  const handleModalClose = () => {
+    const videoElement = document.querySelector("video");
+    if (videoElement) videoElement.pause();
+    dispatch(setModalVisible(false));
+    dispatch(setSelectedMedia(null));
   };
 
-   const handleEditAdBanner = async (id) => {
-      return navigate(`${APP_PREFIX_PATH}/advertisement/banner/edit/${id}`);
-    };
+  // const handleEditAdBanner = async (id) => {
+  //   return navigate(`${APP_PREFIX_PATH}/advertisement/banner/edit/${id}`);
+  // };
+  const handleEditAdBanner = (id) => {
+    dispatch(setEditItemId(id));
+    dispatch(setAdBannerDialogVisible(true));
+  };
+  const handleModalSubmit = async () => {
+    dispatch(setAdBannerModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/advertisement/banner/edit/${editItemId}`);
+    console.log(editItemId, "9234239423490823498234098234908");
+    dispatch(setAdBannerDialogVisible(false));
+    dispatch(setAdBannerModalLoading(false));
+  };
 
-
-
+  const handleModalCancel = () => {
+    dispatch(setAdBannerDialogVisible(false));
+  };
 
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditAdBanner(row.id)}>
           <EditOutlined />
-          <span className="ml-2">
-            Edit Banner
-          </span>
+          <span className="ml-2">Edit Banner</span>
         </Flex>
       </Menu.Item>
     </Menu>
   );
-
 
   const categoryColumns = [
     {
@@ -72,6 +94,7 @@ const AdBannerlist = () => {
             style={{ width: 80, height: 50 }}
             muted
             playsInline
+            onClick={() => handleMediaClick(mediaPath)}
             onLoadedData={(e) => {
               const videoElement = e.target;
               videoElement.currentTime = 4;
@@ -81,6 +104,7 @@ const AdBannerlist = () => {
           <img
             src={mediaPath}
             alt="Image Thumbnail"
+            onClick={() => handleMediaClick(mediaPath)}
             style={{ width: 80, height: 50 }}
           />
         );
@@ -95,9 +119,12 @@ const AdBannerlist = () => {
     },
     {
       title: "Category Name",
-      dataIndex: ["banner_category","name"],
+      dataIndex: ["banner_category", "name"],
       render: (_, record) => <span>{record.banner_category.name}</span>,
-      sorter: (a, b) => a.record.banner_category.name.localeCompare(b.record.banner_category.name),
+      sorter: (a, b) =>
+        a.record.banner_category.name.localeCompare(
+          b.record.banner_category.name
+        ),
     },
     {
       title: "Place",
@@ -111,7 +138,8 @@ const AdBannerlist = () => {
       render: (_, record) => (
         <span>{record.event?.event_name || "Not Available"}</span>
       ),
-      sorter: (a, b) => (a.event?.event_name || "").localeCompare(b.event?.event_name || ""),
+      sorter: (a, b) =>
+        (a.event?.event_name || "").localeCompare(b.event?.event_name || ""),
     },
     {
       title: "Url",
@@ -132,10 +160,7 @@ const AdBannerlist = () => {
         </div>
       ),
     },
-
-
   ];
-
 
   return (
     <Card>
@@ -166,9 +191,59 @@ const AdBannerlist = () => {
             handlePagination(page, pageSize, "category"),
         }}
       />
+      <WarningModal
+        mode={"itemmodal"}
+        visible={dialogVisible}
+        title="Edit Place"
+        details={TextConstants.DefaultEditContent1}
+        warningMessage="Do you want to proceed to the edit page?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed to Edit"
+        cancelText="Cancel"
+        loading={modalLoading}
+      />
+      <Modal
+        visible={modalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        centered
+        width="50%"
+        bodyStyle={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          background: "rgba(255, 255, 255, 0.5)",
+        }}
+        maskStyle={{
+          backdropFilter: "blur(10px)",
+          backgroundColor: "rgba(0, 0, 0, 0.4)",
+        }}
+        destroyOnClose={true}
+      >
+        {selectedMedia &&
+          (/\.(mp4|webm|ogg)$/i.test(selectedMedia) ? (
+            <video
+              src={selectedMedia}
+              controls
+              autoPlay
+              style={{ width: "100%", height: "auto", borderRadius: "8px" }}
+            />
+          ) : (
+            <img
+              src={selectedMedia}
+              alt="Media Preview"
+              style={{
+                width: "50%",
+                height: "auto",
+                borderRadius: "8px",
+                objectFit: "cover",
+              }}
+            />
+          ))}
+      </Modal>
     </Card>
   );
-
 };
 
 export default AdBannerlist;

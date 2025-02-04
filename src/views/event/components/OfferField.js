@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Row, Col, Card, Form, Select, Typography, Button, Alert } from "antd";
-import {  CloseCircleOutlined, } from "@ant-design/icons";
+import { CloseCircleOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllOffers } from "store/slices/offerSlice";
 import { fetchAllCoupons } from "store/slices/couponSlice";
@@ -12,7 +12,7 @@ import {
 const { Option } = Select;
 const { Text } = Typography;
 
-const OfferField = () => {
+const OfferField = ({ mode }) => {
   const dispatch = useDispatch();
 
   // State from Redux
@@ -26,12 +26,11 @@ const OfferField = () => {
     (state) => state.coupons
   );
 
-  console.log("SELECTED OFFERSSSSSS",selectedOffers.length);
-  console.log("SELECTED COUPONSSSSS",selectedCoupons.length);
-  
+  console.log("SELECTED OFFERSSSSSS", selectedOffers.length);
+  console.log("SELECTED COUPONSSSSS", selectedCoupons.length);
 
   useEffect(() => {
-    dispatch(fetchAllOffers({active: true}));
+    dispatch(fetchAllOffers({ active: true }));
     dispatch(fetchAllCoupons({}));
   }, [dispatch]);
 
@@ -116,18 +115,19 @@ const OfferField = () => {
                 position: "relative",
               }}
             >
-              <Button
-                type="text"
-                icon={<CloseCircleOutlined />}
-                onClick={() => handleDeleteOffer(offer)}
-                
-                style={{
-                  position: "absolute",
-                  top: "15px",
-                  right: "-40px",
-                  zIndex: 10,
-                }}
-              />
+              {mode !== "EDIT" && (
+                <Button
+                  type="text"
+                  icon={<CloseCircleOutlined />}
+                  onClick={() => handleDeleteOffer(offer)}
+                  style={{
+                    position: "absolute",
+                    top: "15px",
+                    right: "-40px",
+                    zIndex: 10,
+                  }}
+                />
+              )}
               <Col style={{ padding: "0px" }}>
                 <Row
                   justify="space-between"
@@ -162,18 +162,30 @@ const OfferField = () => {
                   <Text
                     style={{
                       fontSize: "10px",
-                      lineHeight: "10px", 
+                      lineHeight: "10px",
                       margin: 0,
-                      padding: 0, 
+                      padding: 0,
                       color: "orange",
                     }}
                   >
-                    You can specify a date for this offer during scheduling, if needed.
+                    You can specify a date for this offer during scheduling, if
+                    needed.
                   </Text>
                 )}
               </Col>
             </Card>
           ))}
+          {mode === "EDIT" && selectedOffers.length > 0 && (
+            <Alert
+              message="You cannot delete an offer. We need this data for auditing purpose. You are allowed to add only the offer."
+              type="info"
+              style={{
+                marginTop: "8px",
+                fontSize: "12px",
+                padding: "8px",
+              }}
+            />
+          )}
         </div>
         <div style={{ marginBottom: 16, marginTop: 0 }}>
           {selectedCoupons.length > 0 ? <Text>Selected Coupons</Text> : null}

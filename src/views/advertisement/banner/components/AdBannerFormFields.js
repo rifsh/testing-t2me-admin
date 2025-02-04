@@ -1,7 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { Input, Row, Col, Card, Form, Button, Select, message, message as antdMessage, Upload, Typography } from "antd";
+import {
+  Input,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Select,
+  message,
+  message as antdMessage,
+  Upload,
+  Typography,
+} from "antd";
 import { fetchAdCategories } from "store/slices/adCategorySlice";
-import { createAdBanner, updateAdBanner, setSelectedAdBanner, setAdBannerDialogVisible, setAdBannerModalLoading } from "store/slices/advertisementSlice";
+import {
+  createAdBanner,
+  updateAdBanner,
+  setSelectedAdBanner,
+  setAdBannerDialogVisible,
+  setAdBannerModalLoading,
+} from "store/slices/advertisementSlice";
 import { getPlaces } from "store/slices/locationSlice";
 import { fetchEventOnPlaces } from "store/slices/eventSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,7 +32,11 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import LoadingOverlay from "components/util-components/Loader/index";
-import { SupportImageFormat, SupportFormatContent, parseSizeToBytes } from "constants/SupportFileConstants";
+import {
+  SupportImageFormat,
+  SupportFormatContent,
+  parseSizeToBytes,
+} from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import { filterOption } from "components/util-components/FormItems/dropDownSearch";
 
@@ -28,13 +50,13 @@ const rules = {
   category: [{ required: true, message: "Please choose country" }],
   event: [{ required: false, message: "Please choose event" }],
   place: [{ required: false, message: "Please choose place" }],
+  thumbnail_image: [{ required: true, message: "Please choose a banner image" }],
   description: [
     { required: true, message: "Please enter category description" },
   ],
 };
 
 const AdBannerFormFields = ({ mode, banner }) => {
-
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -42,21 +64,31 @@ const AdBannerFormFields = ({ mode, banner }) => {
 
   const { places } = useSelector((state) => state.locations);
   const { eventOnPlaces } = useSelector((state) => state.event);
-  const { filteredAdCategories } = useSelector(
-    (state) => state.adCategory
-  );
-  const { loading, error, responseData, responseMessage, dialogVisible, modalLoading, message: warningMessage, selectedAdBanner, createBannerLoading } = useSelector(
-    (state) => state.advertisement
-  );
+  const { filteredAdCategories } = useSelector((state) => state.adCategory);
+  const {
+    loading,
+    error,
+    responseData,
+    responseMessage,
+    dialogVisible,
+    modalLoading,
+    message: warningMessage,
+    selectedAdBanner,
+    createBannerLoading,
+    responseImpactData,
+    editable_status,
+  } = useSelector((state) => state.advertisement);
 
   useEffect(() => {
     if (filteredAdCategories.length === 0) {
       dispatch(fetchAdCategories({}));
-      console.log(filteredAdCategories.length)
+      console.log(filteredAdCategories.length);
     }
     if (places.length === 0) {
       dispatch(getPlaces({}));
-      console.log("fetching places ---------------------------------------------->")
+      console.log(
+        "fetching places ---------------------------------------------->"
+      );
     }
   }, [dispatch, filteredAdCategories, places]);
 
@@ -77,18 +109,17 @@ const AdBannerFormFields = ({ mode, banner }) => {
         // event_id: banner.event?.id,
         media_path: banner.media_path
           ? [
-            {
-              uid: "-1",
-              name: banner.media_path.split("/").pop(),
-              status: "done",
-              url: banner.media_path,
-            },
-          ]
+              {
+                uid: "-1",
+                name: banner.media_path.split("/").pop(),
+                status: "done",
+                url: banner.media_path,
+              },
+            ]
           : [],
       });
     }
   }, [mode, banner, form]);
-
 
   const normFile = (e) => {
     if (Array.isArray(e)) {
@@ -98,23 +129,18 @@ const AdBannerFormFields = ({ mode, banner }) => {
   };
   const handleBannerBeforeUpload = Utils.handleBannerBeforeUpload;
 
-
   const handleOnSelect = (placeId) => {
     console.log("Selected Place ID:", placeId);
-    dispatch(fetchEventOnPlaces(placeId))
-  }
-
+    dispatch(fetchEventOnPlaces(placeId));
+  };
 
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
       console.log({ values });
       if (mode === ADD) {
-
         dispatch(setSelectedSubmitItem(values));
-
       } else if (mode === EDIT) {
-
         const data = {
           ...values,
           id: banner.id,
@@ -122,7 +148,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
         console.log("Edit Data:", data);
 
         const resultAction = await dispatch(
-          updateAdBanner({ data, action: ActionType.SUBMIT })
+          updateAdBanner({ data, action: ActionType.WARNING })
         );
 
         if (updateAdBanner.fulfilled.match(resultAction)) {
@@ -130,22 +156,20 @@ const AdBannerFormFields = ({ mode, banner }) => {
           dispatch(setAdBannerDialogVisible(true));
         }
       }
-
     } catch (errorInfo) {
       console.log("Validation Failed:", errorInfo);
     }
   };
+
   const handleModalSubmit = async () => {
     dispatch(setAdBannerModalLoading(true));
     const resultAction = await dispatch(
-      updateAdBanner({ data: selectedAdBanner, action: ActionType.CONFIRM })
+      updateAdBanner({ data: selectedAdBanner, action: ActionType.SUBMIT })
     );
     dispatch(setAdBannerModalLoading(false));
     dispatch(setAdBannerDialogVisible(false));
     if (updateAdBanner.fulfilled.match(resultAction)) {
-      antdMessage.success(`Category ${selectedAdBanner.name} updated successfully`);
-      form.resetFields();
-      navigate(`${APP_PREFIX_PATH}/advertisement/banner/list`);
+      dispatch(setSelectedSubmitItem(selectedAdBanner));
     }
   };
 
@@ -153,17 +177,22 @@ const AdBannerFormFields = ({ mode, banner }) => {
     dispatch(setAdBannerDialogVisible(false));
   };
 
-
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
           <Form form={form} layout="vertical">
-            <Form.Item name="banner_category_id" label="Category" rules={rules.category}>
-              <Select 
-              className="w-100" placeholder="Choose a Category" loading={loading}
+            <Form.Item
+              name="banner_category_id"
+              label="Category"
+              rules={rules.category}
+            >
+              <Select
+                className="w-100"
+                placeholder="Choose a Category"
+                loading={loading}
                 onChange={(value) => {
-                  console.log("Selected Category ID:", value); 
+                  console.log("Selected Category ID:", value);
                   const selected = filteredAdCategories.find(
                     (category) => category.id === value
                   );
@@ -174,7 +203,8 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 {filteredAdCategories && filteredAdCategories.length > 0 ? (
                   filteredAdCategories.map((category) => (
                     <Option key={category.id} value={category.id}>
-                      {category.name} {category.fileType ? `(${category.fileType})` : ""}
+                      {category.name}{" "}
+                      {category.fileType ? `(${category.fileType})` : ""}
                     </Option>
                   ))
                 ) : (
@@ -185,7 +215,11 @@ const AdBannerFormFields = ({ mode, banner }) => {
             <Form.Item name="name" label="Name" rules={rules.name}>
               <Input placeholder="Name" />
             </Form.Item>
-            <Form.Item name="description" label="Description" rules={rules.description}>
+            <Form.Item
+              name="description"
+              label="Description"
+              rules={rules.description}
+            >
               <Input placeholder="Description" />
             </Form.Item>
             <Form.Item
@@ -194,9 +228,11 @@ const AdBannerFormFields = ({ mode, banner }) => {
               valuePropName="fileList"
               getValueFromEvent={normFile}
               rules={rules.thumbnail_image}
-              style={{ marginBottom: "0px", padding:"0px"}}
-              >
-              <Upload name="thumbnail_image" listType="picture"
+              style={{ marginBottom: "0px", padding: "0px" }}
+            >
+              <Upload
+                name="thumbnail_image"
+                listType="picture"
                 maxCount={1}
                 //beforeUpload={handleBeforeUpload}
                 beforeUpload={(file) =>
@@ -207,11 +243,10 @@ const AdBannerFormFields = ({ mode, banner }) => {
                     parseSizeToBytes(selectedCategory?.max_size)
                   )
                 }
-                accept={`.${SupportImageFormat.join(',.')}`}
+                accept={`.${SupportImageFormat.join(",.")}`}
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
-
             </Form.Item>
 
             <Text
@@ -223,8 +258,17 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 : `Supported file types: ${SupportImageFormat.join(", ")}`} */}
 
               {selectedCategory
-                ? `${SupportFormatContent.join(",")}: ${selectedCategory.file_types?.join(", ") || SupportImageFormat.join(", ")}, Resolution: ${selectedCategory.resolution || "N/A"}, Min size: ${selectedCategory.min_size || "N/A"}, Max size: ${selectedCategory.max_size || "N/A"}`
-                : `${SupportFormatContent.join(",")}: ${SupportImageFormat.join(", ")}`}
+                ? `${SupportFormatContent.join(",")}: ${
+                    selectedCategory.file_types?.join(", ") ||
+                    SupportImageFormat.join(", ")
+                  }, Resolution: ${
+                    selectedCategory.resolution || "N/A"
+                  }, Min size: ${
+                    selectedCategory.min_size || "N/A"
+                  }, Max size: ${selectedCategory.max_size || "N/A"}`
+                : `${SupportFormatContent.join(",")}: ${SupportImageFormat.join(
+                    ", "
+                  )}`}
 
               {/* {SupportFormatContent.join(",")}:{" "}
               {SupportImageFormat.join(", ")}.
@@ -238,11 +282,19 @@ const AdBannerFormFields = ({ mode, banner }) => {
               <Input placeholder="Enter banner url" />
             </Form.Item>
 
-            <Form.Item name="place_id" label="Place (optional)" rules={rules.place}>
-              <Select className="w-100" placeholder="Choose a Place" loading={loading}
-              showSearch
-              filterOption={filterOption}
-              onSelect={(value) => handleOnSelect(value)}>
+            <Form.Item
+              name="place_id"
+              label="Place (optional)"
+              rules={rules.place}
+            >
+              <Select
+                className="w-100"
+                placeholder="Choose a Place"
+                loading={loading}
+                showSearch
+                filterOption={filterOption}
+                onSelect={(value) => handleOnSelect(value)}
+              >
                 {places && places.length > 0 ? (
                   places.map((place) => (
                     <Option key={place.id} value={place.id}>
@@ -255,9 +307,13 @@ const AdBannerFormFields = ({ mode, banner }) => {
               </Select>
             </Form.Item>
             <Form.Item name="event_id" label="Event" rules={rules.event}>
-              <Select className="w-100" placeholder="Choose a Event" loading={loading}
-              showSearch
-              filterOption={filterOption}>
+              <Select
+                className="w-100"
+                placeholder="Choose a Event"
+                loading={loading}
+                showSearch
+                filterOption={filterOption}
+              >
                 {eventOnPlaces && eventOnPlaces.length > 0 ? (
                   eventOnPlaces.map((event) => (
                     <Option key={event.id} value={event.id}>
@@ -278,16 +334,18 @@ const AdBannerFormFields = ({ mode, banner }) => {
               }}
             >
               <DiscardButton form={form} />
-              <Button type="primary" onClick={onFinish} loading={createBannerLoading}>
+              <Button
+                type="primary"
+                onClick={onFinish}
+                loading={createBannerLoading}
+              >
                 {mode === ADD ? "Add" : "Update"}
               </Button>
             </div>
           </Form>
         </Card>
       </Col>
-      <LoadingOverlay
-        loading={createBannerLoading}
-      />
+      <LoadingOverlay loading={createBannerLoading} />
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
@@ -298,6 +356,12 @@ const AdBannerFormFields = ({ mode, banner }) => {
         confirmText="Proceed"
         cancelText="Back"
         loading={modalLoading}
+        responseData={responseImpactData}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules",
+        }}
+        editable_status={editable_status}
       />
       <SubmitAndConfirmModal
         responseData={responseData}

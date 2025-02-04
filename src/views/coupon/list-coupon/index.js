@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   editCoupon,
+  editCouponStatus,
   fetchAllCoupons,
   filterCoupons,
   setEditItemId,
@@ -51,6 +52,7 @@ const CouponList = () => {
     editItemId,
     dialogVisible,
     modalLoading,
+    responseImpactData
   } = useSelector((state) => state.coupons);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -260,10 +262,15 @@ const CouponList = () => {
       />
       <UpdateStatusModal
         responseMessage={message}
-        editFunction={editCoupon}
+        editFunction={editCouponStatus}
         editable_status={editable_status}
         getAllFunction={(pageData) => fetchAllCoupons(pageData)}
         pageData={{ page: 1, size: 10 }}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
+        responseData={responseImpactData}
       />
     </Card>
   );

@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table, Input, Tabs, Button, Select, Menu } from "antd";
-import { FormOutlined, SearchOutlined, EditOutlined, EyeOutlined, } from "@ant-design/icons";
+import {
+  FormOutlined,
+  SearchOutlined,
+  EditOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,9 +16,15 @@ import { setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import {
   fetchAdCategories,
-  updateAdCategory
+  updateAdCategory,
+  setEditItemId,
+  setAdCategoryDialogVisible,
+  setAdCategoryModalLoading,
+  updateAdCategoryStatus,
 } from "store/slices/adCategorySlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { TextConstants } from "constants/TextConstant";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -30,14 +41,16 @@ const CategoryList = () => {
     subPagination,
     loading,
     editable_status,
-    message: responseMessage,
+    editItemId,
+    modalLoading,
+    dialogVisible,
+    responseImpactData,
+    message,
   } = useSelector((state) => state.adCategory);
 
   useEffect(() => {
     dispatch(fetchAdCategories({ page: 1, size: 10 }));
   }, [dispatch]);
-
-
 
   const handlePagination = (page, size, type) => {
     if (type === "category") {
@@ -51,23 +64,31 @@ const CategoryList = () => {
     dispatch(setSelectedItem(data));
   };
 
+  const handleEditAdCategory = (id) => {
+    dispatch(setEditItemId(id));
+    dispatch(setAdCategoryDialogVisible(true));
+  };
+  const handleModalSubmit = async () => {
+    dispatch(setAdCategoryModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/advertisement/category/edit/${editItemId}`);
+    console.log(editItemId, "9234239423490823498234098234908");
+    dispatch(setAdCategoryDialogVisible(false));
+    dispatch(setAdCategoryModalLoading(false));
+  };
 
-  const handleEditAdCategory = async (id) => {
-    return navigate(`${APP_PREFIX_PATH}/advertisement/category/edit/${id}`);
+  const handleModalCancel = () => {
+    dispatch(setAdCategoryDialogVisible(false));
   };
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditAdCategory(row.id)}>
           <EditOutlined />
-          <span className="ml-2">
-            Edit Category
-          </span>
+          <span className="ml-2">Edit Category</span>
         </Flex>
       </Menu.Item>
     </Menu>
   );
-
 
   const categoryColumns = [
     {
@@ -85,6 +106,40 @@ const CategoryList = () => {
       sorter: (a, b) =>
         (a.description || "").localeCompare(b.description || ""),
     },
+    {
+      title: "Resolution",
+      dataIndex: "resolution",
+      render: (_, record) => <span>{record.resolution}</span>,
+      sorter: (a, b) => (a.resolution || "").localeCompare(b.resolution || ""),
+    },
+    {
+      title: "Category Code",
+      dataIndex: "category_code",
+      render: (_, record) => <span>{record.category_code}</span>,
+      sorter: (a, b) =>
+        (a.category_code || "").localeCompare(b.category_code || ""),
+    },
+    {
+      title: "Min Size",
+      dataIndex: "min_size",
+      render: (_, record) => <span>{record.min_size}</span>,
+      sorter: (a, b) => (a.min_size || "").localeCompare(b.min_size || ""),
+    },
+    {
+      title: "Max Size",
+      dataIndex: "max_size",
+      render: (_, record) => <span>{record.max_size}</span>,
+      sorter: (a, b) => (a.max_size || "").localeCompare(b.max_size || ""),
+    },
+    {
+      title: "File Types",
+      dataIndex: "file_types",
+      render: (_, record) => (
+        <span>{record.file_types?.join(", ") || "-"}</span>
+      ),
+      sorter: (a, b) =>
+        (a.file_types?.[0] || "").localeCompare(b.file_types?.[0] || ""),
+    },
     Utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "",
@@ -100,11 +155,16 @@ const CategoryList = () => {
   const getModalProps = () => {
     if (modalType === "category") {
       return {
-        responseMessage: responseMessage,
+        responseMessage: message,
         editable_status: editable_status,
-        editFunction: updateAdCategory,
+        editFunction: updateAdCategoryStatus,
         getAllFunction: (pageData) => fetchAdCategories(pageData),
         pageData: { page: 1, size: 10 },
+        tableConfig: {
+          title: "Active Schedules",
+          dataKey: "active_schedules",
+        },
+        responseData: responseImpactData,
       };
     }
   };
@@ -137,6 +197,18 @@ const CategoryList = () => {
           onChange: (page, pageSize) =>
             handlePagination(page, pageSize, "category"),
         }}
+      />
+      <WarningModal
+        mode={"itemmodal"}
+        visible={dialogVisible}
+        title="Edit Place"
+        details={TextConstants.DefaultEditContent1}
+        warningMessage="Do you want to proceed to the edit page?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed to Edit"
+        cancelText="Cancel"
+        loading={modalLoading}
       />
       <UpdateStatusModal {...getModalProps()} />
     </Card>

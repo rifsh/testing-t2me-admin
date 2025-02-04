@@ -1,8 +1,22 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker, Upload, Button, Typography } from "antd";
+import {
+  Input,
+  Row,
+  Col,
+  Card,
+  Form,
+  DatePicker,
+  Upload,
+  Button,
+  Typography,
+} from "antd";
 import moment from "moment";
 import { UploadOutlined } from "@ant-design/icons";
-import { SupportImageFormat, SupportFormatContent, ResolutionByServices } from "constants/SupportFileConstants";
+import {
+  SupportImageFormat,
+  SupportFormatContent,
+  ResolutionByServices,
+} from "constants/SupportFileConstants";
 import Utils from "utils/index";
 
 const { Text } = Typography;
@@ -49,33 +63,38 @@ const rules = {
     {
       required: true,
       message: "Please select the start date",
-    }
+    },
   ],
   endDate: [
     {
       required: true,
       message: "Please select the end date",
-    }
-  ]
+    },
+  ],
 };
 
 function CouponFormFields(props) {
   const [form] = Form.useForm();
-  const startDate = Form.useWatch('start_date', form);
+  const startDate = Form.useWatch("start_date", form);
 
   const disablePastDates = (current) => {
-    return current && current < moment().startOf('day');
+    const startDate = form.getFieldValue("start_date");
+    return (
+      current &&
+      current < moment().startOf("day") &&
+      !moment(current).isSame(startDate, "day")
+    );
   };
 
   const disableEndDate = (current) => {
     if (!startDate) {
       return false;
     }
-    return current && current < moment(startDate).startOf('day');
+    return current && current < moment(startDate).startOf("day");
   };
 
   const handleStartDateChange = () => {
-    form.setFieldValue('end_date', null);
+    form.setFieldValue("end_date", null);
   };
   const normFile = (e) => {
     if (Array.isArray(e)) {
@@ -89,11 +108,7 @@ function CouponFormFields(props) {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Coupon Details">
-          <Form.Item
-            name="name"
-            label="Coupon Name"
-            rules={rules.name}
-          >
+          <Form.Item name="name" label="Coupon Name" rules={rules.name}>
             <Input placeholder="Enter Coupon Name" />
           </Form.Item>
           <Form.Item
@@ -103,7 +118,7 @@ function CouponFormFields(props) {
               {
                 required: true,
                 message: "Please enter coupon code",
-              }
+              },
             ]}
           >
             <Input placeholder="Enter Coupon Code" />
@@ -117,15 +132,19 @@ function CouponFormFields(props) {
                 message: "Please enter discount percentage",
               },
               {
-                type: 'number',
+                type: "number",
                 transform: (value) => Number(value),
                 min: 0,
                 max: 100,
                 message: "Discount must be between 0 and 100",
-              }
+              },
             ]}
           >
-            <Input placeholder="Enter discount percentage" type="number" onWheel={(e) => e.target.blur()} />
+            <Input
+              placeholder="Enter discount percentage"
+              type="number"
+              onWheel={(e) => e.target.blur()}
+            />
           </Form.Item>
 
           <Form.Item
@@ -150,12 +169,14 @@ function CouponFormFields(props) {
               ...rules.endDate,
               ({ getFieldValue }) => ({
                 validator(_, value) {
-                  const startDate = getFieldValue('start_date');
+                  const startDate = getFieldValue("start_date");
                   if (!startDate || !value) {
                     return Promise.resolve();
                   }
-                  if (value.isBefore(startDate, 'day')) {
-                    return Promise.reject(new Error('End date must be after start date'));
+                  if (value.isBefore(startDate, "day")) {
+                    return Promise.reject(
+                      new Error("End date must be after start date")
+                    );
                   }
                   return Promise.resolve();
                 },
@@ -176,25 +197,29 @@ function CouponFormFields(props) {
             valuePropName="fileList"
             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
-            style={{ marginBottom: "0px", padding:"0px"}}
+            style={{ marginBottom: "0px", padding: "0px" }}
           >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} 
-            // beforeUpload={handleBeforeUpload}
-            beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
-              accept={`.${SupportImageFormat.join(',.')}`}
+            <Upload
+              name="thumbnail_image"
+              listType="picture"
+              maxCount={1}
+              // beforeUpload={handleBeforeUpload}
+              beforeUpload={(file) =>
+                Utils.handleBeforeUpload(file, ResolutionByServices.place)
+              }
+              accept={`.${SupportImageFormat.join(",.")}`}
             >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
-            
           </Form.Item>
           <Text
-              type="warning"
-              style={{ padding: "00px 00px", fontSize: "11px" }}
-            >
-              {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
-              {" "}
-            </Text>
+            type="warning"
+            style={{ padding: "00px 00px", fontSize: "11px" }}
+          >
+            {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
+            {" resolution "}
+            {ResolutionByServices.place} pixels.{" "}
+          </Text>
           <Form.Item
             name="max_uses"
             label="Max Users"
@@ -204,14 +229,18 @@ function CouponFormFields(props) {
                 message: "Please enter maximum users",
               },
               {
-                type: 'number',
+                type: "number",
                 transform: (value) => Number(value),
                 min: 1,
                 message: "Maximum users must be at least 1",
-              }
+              },
             ]}
           >
-            <Input type="number" placeholder="Enter maximum users" onWheel={(e) => e.target.blur()} />
+            <Input
+              type="number"
+              placeholder="Enter maximum users"
+              onWheel={(e) => e.target.blur()}
+            />
           </Form.Item>
 
           <Form.Item
@@ -223,16 +252,19 @@ function CouponFormFields(props) {
                 message: "Please enter minimum purchase amount",
               },
               {
-                type: 'number',
+                type: "number",
                 transform: (value) => Number(value),
                 min: 0,
                 message: "Minimum purchase amount cannot be negative",
-              }
+              },
             ]}
           >
-            <Input type="number" placeholder="Enter min purchase amount" onWheel={(e) => e.target.blur()} />
+            <Input
+              type="number"
+              placeholder="Enter min purchase amount"
+              onWheel={(e) => e.target.blur()}
+            />
           </Form.Item>
-
         </Card>
       </Col>
     </Row>

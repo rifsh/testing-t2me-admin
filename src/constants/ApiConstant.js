@@ -32,6 +32,9 @@ export const ApiConstant = {
   OFFER_STATUS_URL: "/api/v1/offers/secured/offers_status",
   OFFER_DETAIL_URL: "/api/v1/offers/secured/offers/detail",
   COUPON_URL: "/api/v1/offers/secured/coupons",
+  COUPON_STATUS_URL: "/api/v1/offers/secured/coupons_status",
+  COUPON_DETAILS_URL: "/api/v1/offers/secured/coupons/detail",
+
   TAX_URL: "/api/v1/location/secured/taxes",
   TAX_STATUS_URL: "/api/v1/location/secured/taxes_status",
   AVAILABLE_TAX_CATEGORY_URL: "/api/v1/location/secured/available_tax_category",
@@ -57,7 +60,9 @@ export const ApiConstant = {
   ADVERTISEMENT_BANNER_URL: "/api/v1/banners/secured/advertisementbanner",
   ADVERTISEMENT_SCHEDULE_URL: "/api/v1/banners/secured/advertisementschedule",
   ADVERTISEMENT_BANNER_UPDATE_URL: "/api/v1/banners/secured/advertisementbannerupdate",
+  ADVERTISEMENT_BANNER_STATUS_UPDATE_URL: "/api/v1/banners/secured/advertisement_banner_status",
   ADVERTISEMENT_CATEGORY_UPDATE_URL: "/api/v1/banners/secured/bannercategoryupdate",
+  ADVERTISEMENT_CATEGORY_STATUS_UPDATE_URL: "/api/v1/banners/secured/banner_category/status_update",
   ADVERTISEMENT_CATEGORY_BANNER_URL: "/api/v1/banners/secured/category_banners",
 
   // EVENT ORGANIZER ENDPOINTS
@@ -66,6 +71,10 @@ export const ApiConstant = {
   EVENT_ORGANIZER_SINGLE_UPDATE: "/api/v1/events/secured/singleeventupdate",
   EVENT_ORGANIZER_SINGLE_UPDATE_PUT: "/api/v1/events/secured/superadminapproval",
   EVENT_ORGANIZER_EVENT_UPDATE: "/api/v1/events/secured/organizer_event_update",
-  EVENT_ORGANIZER_EVENT_UPDATE_RECHANGES: "/api/v1/events/secured/organizer_event_secondary_update"
+  EVENT_ORGANIZER_EVENT_UPDATE_RECHANGES: "/api/v1/events/secured/organizer_event_secondary_update",
+
+  // VALIDATION API ENDPOINTS
+
+  PLACE_VALIDATE_URL:"/api/v1/validation/secured/validate_place"
 
 };

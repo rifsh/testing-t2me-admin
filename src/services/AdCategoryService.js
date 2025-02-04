@@ -6,11 +6,13 @@ import { handleAction } from "utils/api/warning-submit-util";
 const AdCategoryService = {};
 
 AdCategoryService.fetchAdCategory = function (pageData) {
+
     return fetch({
       url: ApiConstant.ADVERTISEMENT_CATEGORY_URL,
       method: "get",
       params: Utils.filterParams(pageData),
     });
+
   };
 
   AdCategoryService.updateAdCategory = function (data, action) {
@@ -28,6 +30,17 @@ AdCategoryService.fetchAdCategory = function (pageData) {
       },
     });
   };
+
+  
+  AdCategoryService.updateAdStatus = function (data, action) {
+    const encodedAction = encodeURIComponent(handleAction(action));
+    return fetch({
+      url: `${ApiConstant.ADVERTISEMENT_CATEGORY_STATUS_UPDATE_URL}?ad_category_id=${data.id}&action=${encodedAction}`,
+      method: "put",
+      data: data,
+    });
+  };
+  
   
 
 AdCategoryService.addAdCategory = function (data, action) {
