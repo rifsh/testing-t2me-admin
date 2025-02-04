@@ -43,6 +43,10 @@ const CategoryField = ({ form }) => {
             placeholder="Choose a Category"
             onSelect={handleCategoryChange}
             loading={loading}
+            showSearch
+            filterOption={(input, option) =>
+              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
             notFoundContent={
               loading ? "Loading Categories..." : "No Category Available"
             }
@@ -65,6 +69,10 @@ const CategoryField = ({ form }) => {
             placeholder="Choose a Sub Category"
             disabled={!subcategories}
             loading={loading}
+            showSearch
+            filterOption={(input, option) =>
+              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
             notFoundContent={
               loading ? "Loading Subcategories..." : `No Sub Category Available`
             }

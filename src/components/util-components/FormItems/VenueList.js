@@ -35,6 +35,10 @@ const VenueListForm = ({ form, label, rules, onSelect }) => {
         }
         loading={loading}
         placeholder="Select a venue"
+        showSearch
+        filterOption={(input, option) =>
+          option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+        } //
         options={filteredVenues.map((venue) => ({
           value: venue.id,
           label: venue.name,
