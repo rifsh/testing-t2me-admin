@@ -59,7 +59,9 @@ const getEventFormItems = (form, currentStep) => {
   if (currentUser.role_id === UserRoleConstants.superAdminRoleId) {
     switch (currentStep) {
       case 1:
-        return <EventDetailsField form={form} />;
+        // return <EventDetailsField form={form} />;
+
+        return <TicketField form={form} />;
       case 2:
         return <CategoryField form={form} />;
       case 3:

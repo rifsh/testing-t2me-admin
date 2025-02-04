@@ -25,7 +25,7 @@ const TaxField = ({ form }) => {
     const selectedTaxes = allTax.filter((tax) =>
       selectedTaxIds.includes(tax.id)
     );
-    dispatch(setSelectedTaxDetails(selectedTaxes)); // Dispatch the selected taxes
+    dispatch(setSelectedTaxDetails(selectedTaxes)); 
   };
 
   return (
@@ -41,7 +41,7 @@ const TaxField = ({ form }) => {
               notFoundContent={
                 loading ? "Loading Taxes..." : "No Taxes Available"
               }
-              onChange={handleTaxChange}  // Handle tax selection changes
+              onChange={handleTaxChange}  
             >
               {allTax.map((tax) => (
                 <Option key={tax.id} value={tax.id}>
