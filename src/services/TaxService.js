@@ -15,12 +15,29 @@ TaxService.addTax = function (data, action) {
 };
 TaxService.editTax = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ['thumbnail_image'],
+    skipEmpty: true
+  });
   return fetch({
     url: `${ApiConstant.TAX_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+TaxService.editTaxStatus = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.TAX_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
   });
 };
+
 TaxService.fetchAvailableTaxCategory = function () {
   return fetch({
     url: ApiConstant.AVAILABLE_TAX_CATEGORY_URL,

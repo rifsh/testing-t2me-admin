@@ -12,6 +12,8 @@ export const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
+  editItemId:null,
+  selectedCoupon:null,
   pagination: { size: 10, page: 1 },
 };
 export const fetchAllCoupons = createAsyncThunk(
@@ -79,6 +81,18 @@ const couponSlice = createSlice({
 
       state.filteredCoupons = filteredCoupons;
     },
+    setEditItemId: (state, action) => {
+      state.editItemId = action.payload;
+    },
+    setCouponDialogVisible(state, action) {
+      state.dialogVisible = action.payload;
+    },
+    setCouponModalLoading(state, action) {
+      state.modalLoading = action.payload;
+    },
+    setSelectedCoupon: (state, action) => {
+      state.selectedCoupon = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -129,5 +143,5 @@ const couponSlice = createSlice({
   },
 });
 
-export const { filterCoupons } = couponSlice.actions;
+export const { filterCoupons ,setEditItemId,setCouponDialogVisible,setCouponModalLoading,setSelectedCoupon,} = couponSlice.actions;
 export default couponSlice.reducer;

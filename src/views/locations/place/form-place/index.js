@@ -43,6 +43,7 @@ const CountryForm = ({ mode, placeId }) => {
     selectedPlace,
     filteredPlaces,
     responseImpactData,
+    editable_status,
     singlePlace,
     message: warningMessage,
   } = useSelector((state) => state.locations);
@@ -62,28 +63,30 @@ const CountryForm = ({ mode, placeId }) => {
     if (singlePlace) {
       console.log(singlePlace, "PLACEEEEEEEEEEEEsss");
 
-      form.setFieldsValue({
-        country_id: singlePlace.country.name,
-        name: singlePlace.name,
-        banner_images: singlePlace?.media
-        ? singlePlace?.media?.map((banner, index) => ({
-          uid: `-banner-${index}`,
-          name: banner?.media_url.split("/").pop(),
-          status: "done",
-          url: banner?.media_url,
-        }))
-        : [],
-        thumbnail_image: singlePlace.thumbnail_image && singlePlace.thumbnail_image !== "images"
-          ? [
-            {
-              uid: "-1",
-              name: singlePlace.thumbnail_image.split("/").pop(),
+      if (mode === "EDIT") {
+        form.setFieldsValue({
+          country_id: singlePlace.country.name,
+          name: singlePlace.name,
+          banner_images: singlePlace?.media
+            ? singlePlace?.media?.map((banner, index) => ({
+              uid: `-banner-${index}`,
+              name: banner?.media_url.split("/").pop(),
               status: "done",
-              url: singlePlace.thumbnail_image,
-            },
-          ]
-          : [],
-      });
+              url: banner?.media_url,
+            }))
+            : [],
+          thumbnail_image: singlePlace.thumbnail_image && singlePlace.thumbnail_image !== "images"
+            ? [
+              {
+                uid: "-1",
+                name: singlePlace.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: singlePlace.thumbnail_image,
+              },
+            ]
+            : [],
+        });
+      }
     } else {
       console.warn(`No place found with ID: ${placeId}`);
     }
@@ -149,7 +152,6 @@ const CountryForm = ({ mode, placeId }) => {
     );
     dispatch(setLocationModalLoading(false));
     dispatch(setLocationDialogVisible(false));
-    dispatch(getPlaces());
     if (editPlace.fulfilled.match(resultAction)) {
       dispatch(setSelectedSubmitItem(selectedPlace));
       // antdMessage.success(`Event ${selectedPlace.name} updated successfully`);
@@ -165,7 +167,7 @@ const CountryForm = ({ mode, placeId }) => {
 
   return (
     <>
-    
+
       <Form
         layout="vertical"
         form={form}
@@ -198,7 +200,7 @@ const CountryForm = ({ mode, placeId }) => {
                   loading={createPlaceLoading}
                 >
                   {!placeId ? "Add" : `Save`}
-                </Button>  
+                </Button>
               </div>
             </Flex>
           </div>
@@ -217,11 +219,12 @@ const CountryForm = ({ mode, placeId }) => {
           />
         </div>
       </Form>
-      <LoadingOverlay 
-        loading={createPlaceLoading} 
+      <LoadingOverlay
+        loading={createPlaceLoading}
       />
-      
+
       <WarningModal
+
         visible={dialogVisible}
         title="Confirm Action"
         details={warningMessage}
@@ -236,6 +239,7 @@ const CountryForm = ({ mode, placeId }) => {
           title: "Active Schedules",
           dataKey: "active_schedules"
         }}
+        editable_status={editable_status}
       />
       <SubmitAndConfirmModal
         responseData={responseData}

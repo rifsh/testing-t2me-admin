@@ -26,6 +26,10 @@ const OfferField = () => {
     (state) => state.coupons
   );
 
+  console.log("SELECTED OFFERSSSSSS",selectedOffers.length);
+  console.log("SELECTED COUPONSSSSS",selectedCoupons.length);
+  
+
   useEffect(() => {
     dispatch(fetchAllOffers({active: true}));
     dispatch(fetchAllCoupons({}));

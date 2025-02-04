@@ -180,6 +180,7 @@ const PlaceList = () => {
         />
       </div>
       <WarningModal
+        mode={"itemmodal"}
         visible={dialogVisible}
         title="Edit Place"
         details={TextConstants.DefaultEditContent1}

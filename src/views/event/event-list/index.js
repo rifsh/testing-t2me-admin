@@ -11,7 +11,12 @@ import {
   editEvent,
   fetchAllEvent,
   fetchEventDetails,
+  setModalLoading,
+  setDialogVisible,
+  setEditItemId,
+  editEventStatus,
 } from "store/slices/eventSlice";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
@@ -21,6 +26,7 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
+import { TextConstants } from "constants/TextConstant";
 const { Option } = Select;
 
 const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
@@ -29,7 +35,10 @@ const EventsList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
-  const { pagination, editable_status, filteredEvents, messages, loading } =
+  const { pagination, editable_status, filteredEvents, messages, loading, dialogVisible,
+    modalLoading,
+    editItemId,
+    responseImpactData, } =
     useSelector((state) => state.event);
 
   useEffect(() => {
@@ -42,8 +51,8 @@ const EventsList = () => {
   };
 
   const handleEditEvent = async (id) => {
+
     if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
-      // Check if any updates have pending or 'updates' status
       const hasPendingUpdates = filteredEvents
         .find(event => event.id === id)?.updates
         .some(update =>
@@ -56,9 +65,10 @@ const EventsList = () => {
         return;
       }
     }
+    dispatch(setEditItemId(id));
+    dispatch(setDialogVisible(true));
 
-    // If no pending updates or not an event organizer, navigate to edit page
-    navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
+
   };
 
   const handleUpdateStatus = (item) => {
@@ -69,6 +79,16 @@ const EventsList = () => {
   };
   const handlePagination = (page, size) => {
     dispatch(fetchAllEvent({ page: page, size: size }));
+  };
+  const handleModalSubmit = async () => {
+    dispatch(setModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/event/edit/${editItemId}`);
+    dispatch(setDialogVisible(false));
+    dispatch(setModalLoading(false));
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setDialogVisible(false));
   };
   const dropdownMenu = (row) => (
     <Menu>
@@ -214,12 +234,29 @@ const EventsList = () => {
           }}
         />
       </div>
+      <WarningModal
+        mode={"itemmodal"}
+        visible={dialogVisible}
+        title="Edit Place"
+        details={TextConstants.DefaultEditContent1}
+        warningMessage="Do you want to proceed to the edit page?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed to Edit"
+        cancelText="Cancel"
+        loading={modalLoading}
+      />
 
       <UpdateStatusModal
         responseMessage={messages}
-        editFunction={editEvent}
+        editFunction={editEventStatus}
         editable_status={editable_status}
         getAllFunction={(pageData) => fetchAllEvent(pageData)}
+        responseData={responseImpactData}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules"
+        }}
         pageData={{ page: 1, size: 10 }}
       />
     </Card>
