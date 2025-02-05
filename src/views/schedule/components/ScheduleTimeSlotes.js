@@ -34,6 +34,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllTickets } from "store/slices/ticketSlice";
 import { fetchEventDetails } from "store/slices/eventSlice";
 import { labels } from "views/app-views/apps/mail/MailLabels";
+import Utils from "utils";
+import {
+  createDateTimePickerProps,
+  createDateTimeValidation,
+} from "../../../utils/time_zone_util";
 
 const { Title } = Typography;
 
@@ -55,16 +60,16 @@ export function ScheduleTimeSlots({ form }) {
   const timeZone = dayjs.tz.guess();
   const currentDateInTimeZone = useMemo(() => dayjs().tz(timeZone), [timeZone]);
   const dispatch = useDispatch();
-
-  const { filteredTickets } = useSelector((state) => state.tickets);
-  const { selectedVenue } = useSelector((state) => state.locations);
-  const { eventDetails, submitLoading } = useSelector((state) => state.event);
   useEffect(() => {
     const eventId = form?.getFieldValue("event_id");
     if (eventId) {
       dispatch(fetchEventDetails(eventId));
     }
   }, [dispatch, form]);
+
+  const { filteredTickets } = useSelector((state) => state.tickets);
+  const { selectedVenue } = useSelector((state) => state.locations);
+  const { eventDetails, submitLoading } = useSelector((state) => state.event);
 
   useEffect(() => {
     const newSlotStatus = {};
@@ -176,7 +181,6 @@ export function ScheduleTimeSlots({ form }) {
       [dateStr]: prev[dateStr].filter((_, i) => i !== index),
     }));
   };
-
 
   const validateTimeSlots = (slots) => {
     if (!slots || slots.length === 0) return { valid: true };
@@ -327,7 +331,9 @@ export function ScheduleTimeSlots({ form }) {
           }, ` + `Ticket: ${getTicketTypeName(slot.ticketType)}`
       );
 
-    confirmDetails.push("This will overwrite all existing slots on other dates");
+    confirmDetails.push(
+      "This will overwrite all existing slots on other dates"
+    );
 
     Modal.confirm({
       title: "Confirm Apply to All Dates",
@@ -360,9 +366,7 @@ export function ScheduleTimeSlots({ form }) {
                 : null;
 
               const targetEnd = slot.end
-                ? dayjs(date)
-                    .hour(slot.end.hour())
-                    .minute(slot.end.minute())
+                ? dayjs(date).hour(slot.end.hour()).minute(slot.end.minute())
                 : null;
 
               return {
@@ -440,8 +444,8 @@ export function ScheduleTimeSlots({ form }) {
         event_times: {
           start_date: values.start_date.format(),
           end_date: values.end_date.format(),
-          adv_start_time: values.adv_start_time?.format(),
-          booking_start_time: values.booking_start_time.format(),
+          ad_start_date_time: values.ad_start_date_time?.format(),
+          booking_start_date_time: values.booking_start_date_time.format(),
         },
         time_slots: Object.entries(timeSlots).map(([date, slots]) => ({
           date,
@@ -575,7 +579,7 @@ export function ScheduleTimeSlots({ form }) {
           </Col>
 
           {/* Action Buttons */}
-          <Col span={4} style={{ marginTop: "45px" }}>
+          <Col span={4}>
             <Space>
               <Button
                 type="default"
@@ -606,6 +610,37 @@ export function ScheduleTimeSlots({ form }) {
     </div>
   );
 
+  const getEventTimezone = () => {
+    return eventDetails?.venue?.place?.country?.time_zone || "America/New_York";
+  };
+  const handleDateChange = (field) => (value) => {
+    if (value) {
+      form.setFieldsValue({
+        [field]: value.tz(getEventTimezone())
+      });
+
+      // Clear dependent fields when parent field changes
+      const fieldOrder = [
+        'ad_start_date_time',
+        'booking_start_date_time',
+        'start_date',
+        'end_date'
+      ];
+      
+      const currentIndex = fieldOrder.indexOf(field);
+      if (currentIndex !== -1) {
+        const fieldsToReset = fieldOrder.slice(currentIndex + 1);
+        const resetValues = {};
+        fieldsToReset.forEach(fieldName => {
+          resetValues[fieldName] = undefined;
+        });
+        form.setFieldsValue(resetValues);
+      }
+      if(field==="end_date"||field==="start_date"){
+        updateDateRange(form.getFieldValue("start_date"),form.getFieldValue("end_date"))
+      }
+    }
+  };
   return (
     <Form form={form} layout="vertical">
       <Title level={4}>Schedule Time Slots</Title>
@@ -615,93 +650,59 @@ export function ScheduleTimeSlots({ form }) {
         <Row gutter={[24]}>
           <Col xs={24} sm={12}>
             <Form.Item
-              name="adv_start_time"
+              name="ad_start_date_time"
               label="Ad Start Time"
-              rules={[
-                {
-                  validator(_, value) {
-                    if (!value) return Promise.resolve();
-                    const startDate = form.getFieldValue("start_date");
-                    if (value.isAfter(startDate)) {
-                      return Promise.reject(
-                        new Error("Ad start must be before event start")
-                      );
-                    }
-                    return Promise.resolve();
-                  },
-                },
-              ]}
+              rules={[{ required: true }]}
             >
               <DatePicker
-                showTime={{ format: "HH:mm" }}
-                format="YYYY-MM-DD HH:mm"
-                style={{ width: "100%" }}
-                placeholder="Select advanced start time"
+                {...createDateTimePickerProps({
+                  timezone: getEventTimezone(),
+                  allowPast: false,
+                  includeTime: true,
+                  form
+                })}
+                onChange={handleDateChange('ad_start_date_time')}
+                placeholder="Select ad start time"
               />
             </Form.Item>
           </Col>
 
           <Col xs={24} sm={12}>
             <Form.Item
-              name="booking_start_time"
+              name="booking_start_date_time"
               label="Booking Start Time"
-              rules={[
-                { required: true, message: "Please select booking start time" },
-                {
-                  validator(_, value) {
-                    if (!value) return Promise.resolve();
-                    const startDate = form.getFieldValue("start_date");
-                    if (startDate && value.isAfter(startDate)) {
-                      return Promise.reject(
-                        new Error("Booking start must be before event start")
-                      );
-                    }
-                    return Promise.resolve();
-                  },
-                },
-              ]}
+              rules={[{ required: true }]}
             >
               <DatePicker
-                showTime={{ format: "HH:mm" }}
-                format="YYYY-MM-DD HH:mm"
-                style={{ width: "100%" }}
+                {...createDateTimePickerProps({
+                  timezone: getEventTimezone(),
+                  allowPast: false,
+                  includeTime: true,
+                  dependsOn: 'ad_start_date_time',
+                  form
+                })}
+                onChange={handleDateChange('booking_start_date_time')}
                 placeholder="Select booking start time"
               />
             </Form.Item>
           </Col>
+
           <Col xs={24} sm={12}>
             <Form.Item
               name="start_date"
               label="Event Start Time"
-              rules={[
-                { required: true, message: "Please select start time" },
-                {
-                  validator(_, value) {
-                    if (!value) return Promise.resolve();
-                    if (value.isBefore(currentDateInTimeZone, "minute")) {
-                      return Promise.reject(
-                        new Error("Start time cannot be in the past")
-                      );
-                    }
-                    return Promise.resolve();
-                  },
-                },
-              ]}
+              rules={[{ required: true }]}
             >
               <DatePicker
-                showTime={{ format: "HH:mm" }}
-                format="YYYY-MM-DD HH:mm"
-                style={{ width: "100%" }}
-                placeholder="Select start time"
-                onChange={(date) => {
-                  const endDate = form.getFieldValue("end_date");
-                  if (date && endDate) {
-                    updateDateRange(date, endDate);
-                  }
-                }}
-                disabledDate={(current) =>
-                  current && current.isBefore(currentDateInTimeZone, "day")
-                }
+                {...createDateTimePickerProps({
+                  timezone: getEventTimezone(),
+                  allowPast: false,
+                  includeTime: false,
+                  dependsOn: 'booking_start_date_time',
+                  form
+                })}
+                onChange={handleDateChange('start_date')}
+                placeholder="Select event start date"
               />
             </Form.Item>
           </Col>
@@ -710,44 +711,23 @@ export function ScheduleTimeSlots({ form }) {
             <Form.Item
               name="end_date"
               label="Event End Time"
-              rules={[
-                { required: true, message: "Please select end time" },
-                {
-                  validator(_, value) {
-                    if (!value) return Promise.resolve();
-                    const startDate = form.getFieldValue("start_date");
-                    if (!startDate) {
-                      return Promise.reject(
-                        new Error("Please select start time first")
-                      );
-                    }
-                    if (value.isSameOrBefore(startDate)) {
-                      return Promise.reject(
-                        new Error("End time must be after start time")
-                      );
-                    }
-                    return Promise.resolve();
-                  },
-                },
-              ]}
+              rules={[{ required: true }]}
             >
               <DatePicker
-                showTime={{ format: "HH:mm" }}
-                format="YYYY-MM-DD HH:mm"
-                style={{ width: "100%" }}
-                placeholder="Select end time"
-                onChange={(date) => {
-                  const startDate = form.getFieldValue("start_date");
-                  if (startDate && date) {
-                    updateDateRange(startDate, date);
-                  }
-                }}
+                {...createDateTimePickerProps({
+                  timezone: getEventTimezone(),
+                  allowPast: false,
+                  includeTime: false,
+                  dependsOn: 'start_date',
+                  form
+                })}
+                onChange={handleDateChange('end_date')}
+                placeholder="Select event end date"
               />
             </Form.Item>
           </Col>
         </Row>
       </Card>
-
       {dates.length > 0 && (
         <Card style={{ marginTop: 16 }}>
           <Space
