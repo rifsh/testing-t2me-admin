@@ -13,11 +13,11 @@ dayjs.extend(isSameOrAfter);
 
 export const createDateTimeValidation = ({
   compareToField,
-  compareType = 'after',
+  compareType = 'before',
   timezone = dayjs.tz.guess(),
   allowPast = false,
-  includeTime = true,
-  customMessage
+  customMessage,
+  includeTime = true
 }) => {
   return {
     validator: async (_, value) => {
@@ -29,6 +29,7 @@ export const createDateTimeValidation = ({
       
       const nowInTimezone = dayjs().tz(timezone);
 
+      // Past date validation
       if (!allowPast && dateInTimezone.isBefore(nowInTimezone, includeTime ? 'minute' : 'day')) {
         return Promise.reject(new Error('Cannot select a past date'));
       }
@@ -42,15 +43,34 @@ export const createDateTimeValidation = ({
 
         const compareDate = compareValue.tz(timezone);
 
+        // For date-only comparisons, set time to start of day
         const dateToCompare = includeTime ? dateInTimezone : dateInTimezone.startOf('day');
         const compareDateTime = includeTime ? compareDate : compareDate.startOf('day');
 
-        if (compareType === 'after' && !dateToCompare.isAfter(compareDateTime)) {
-          return Promise.reject(new Error(customMessage || `Must be after ${compareToField}`));
-        }
+        const comparisonMap = {
+          before: {
+            condition: dateToCompare.isBefore(compareDateTime),
+            defaultMessage: `Must be before ${compareToField}`
+          },
+          after: {
+            condition: dateToCompare.isAfter(compareDateTime),
+            defaultMessage: `Must be after ${compareToField}`
+          },
+          same_or_before: {
+            condition: dateToCompare.isSameOrBefore(compareDateTime),
+            defaultMessage: `Must be same as or before ${compareToField}`
+          },
+          same_or_after: {
+            condition: dateToCompare.isSameOrAfter(compareDateTime),
+            defaultMessage: `Must be same as or after ${compareToField}`
+          }
+        };
 
-        if (compareType === 'same_or_after' && !dateToCompare.isSameOrAfter(compareDateTime)) {
-          return Promise.reject(new Error(customMessage || `Must be same as or after ${compareToField}`));
+        const comparison = comparisonMap[compareType];
+        if (!comparison.condition) {
+          return Promise.reject(
+            new Error(customMessage || comparison.defaultMessage)
+          );
         }
       }
 
@@ -63,8 +83,8 @@ export const createDateTimePickerProps = ({
   timezone = dayjs.tz.guess(),
   allowPast = false,
   includeTime = true,
-  dependsOn = null,
-  form = null,
+  depend_timesOn,
+  form,
   additionalProps = {}
 }) => {
   return {
@@ -72,27 +92,22 @@ export const createDateTimePickerProps = ({
     format: includeTime ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD',
     style: { width: '100%' },
     disabledDate: (current) => {
-      if (!current) return false;
-
-      const currentInTz = current.tz(timezone);
-      
-      // Past date check
-      if (!allowPast) {
+      if (!allowPast && current) {
         const now = dayjs().tz(timezone);
-        if (currentInTz.startOf('day').isBefore(now.startOf('day'))) {
-          return true;
+        const currentInTz = current.tz(timezone);
+        
+        // Check against the dependent field if specified
+        if (depend_timesOn && form) {
+          const dependentValue = form.getFieldValue(depend_timesOn);
+          if (dependentValue) {
+            const dependentDate = dayjs(dependentValue).tz(timezone);
+            return currentInTz.startOf('day').isBefore(dependentDate.startOf('day')) || 
+                   currentInTz.startOf('day').isBefore(now.startOf('day'));
+          }
         }
+        
+        return currentInTz.startOf('day').isBefore(now.startOf('day'));
       }
-
-      // Dependent field check
-      if (dependsOn && form) {
-        const dependentValue = form.getFieldValue(dependsOn);
-        if (dependentValue) {
-          const dependentDate = dayjs(dependentValue).tz(timezone);
-          return currentInTz.isBefore(dependentDate, includeTime ? 'minute' : 'day');
-        }
-      }
-
       return false;
     },
     disabledTime: includeTime ? (current) => {

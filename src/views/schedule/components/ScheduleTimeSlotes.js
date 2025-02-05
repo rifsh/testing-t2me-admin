@@ -39,10 +39,11 @@ import {
   createDateTimePickerProps,
   createDateTimeValidation,
 } from "../../../utils/time_zone_util";
+import TimeSlots from "./TimeSlote";
 
 const { Title } = Typography;
 
-// Extend dayjs with required plugins
+// Extend_time dayjs with required plugins
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrBefore);
@@ -80,12 +81,12 @@ export function ScheduleTimeSlots({ form }) {
       }
 
       const hasCompleteSlot = slots.some(
-        (slot) => slot.start && slot.ticketType && slot.capacity && slot.price
+        (slot) => slot.start_time && slot.ticketType
       );
 
       if (hasCompleteSlot) {
         newSlotStatus[date] = "green";
-      } else if (slots.some((slot) => slot.start)) {
+      } else if (slots.some((slot) => slot.start_time)) {
         newSlotStatus[date] = "green";
       } else {
         newSlotStatus[date] = "red";
@@ -98,39 +99,39 @@ export function ScheduleTimeSlots({ form }) {
     if (!slots || slots.length === 0) return { valid: true };
 
     const sortedSlots = [...slots]
-      .filter((slot) => slot.start)
-      .sort((a, b) => a.start.valueOf() - b.start.valueOf());
+      .filter((slot) => slot.start_time)
+      .sort((a, b) => a.start_time.valueOf() - b.start_time.valueOf());
 
     for (let i = 0; i < sortedSlots.length - 1; i++) {
       const currentSlot = sortedSlots[i];
       const nextSlot = sortedSlots[i + 1];
 
       if (
-        currentSlot.end &&
-        nextSlot.start &&
-        currentSlot.end.isAfter(nextSlot.start)
+        currentSlot.end_time &&
+        nextSlot.start_time &&
+        currentSlot.end_time.isAfter(nextSlot.start_time)
       ) {
         return {
           valid: false,
-          message: `Time conflict between slots: ${currentSlot.start.format(
+          message: `Time conflict between slots: ${currentSlot.start_time.format(
             "HH:mm"
-          )} - ${currentSlot.end.format("HH:mm")} and ${nextSlot.start.format(
+          )} - ${currentSlot.end_time.format("HH:mm")} and ${nextSlot.start_time.format(
             "HH:mm"
-          )} - ${nextSlot.end?.format("HH:mm")}`,
+          )} - ${nextSlot.end_time?.format("HH:mm")}`,
         };
       }
     }
 
     return { valid: true };
   };
-  const updateDateRange = (startDate, endDate) => {
-    if (!validateDateRange(startDate, endDate)) return;
+  const updateDateRange = (startDate, end_timeDate) => {
+    if (!validateDateRange(startDate, end_timeDate)) return;
 
     const newDates = [];
     let currentDate = dayjs(startDate);
-    const end = dayjs(endDate);
+    const end_time = dayjs(end_timeDate);
 
-    while (currentDate.isSameOrBefore(end, "day")) {
+    while (currentDate.isSameOrBefore(end_time, "day")) {
       newDates.push(currentDate.format("YYYY-MM-DD"));
       currentDate = currentDate.add(1, "day");
     }
@@ -141,16 +142,16 @@ export function ScheduleTimeSlots({ form }) {
     // Initialize time slots for new dates
     const initialTimeSlots = {};
     newDates.forEach((date) => {
-      initialTimeSlots[date] = timeSlots[date] || [{ start: null, end: null }];
+      initialTimeSlots[date] = timeSlots[date] || [{ start_time: null, _time: null }];
     });
     setTimeSlots(initialTimeSlots);
   };
 
-  const validateDateRange = (startDate, endDate) => {
-    if (!startDate || !endDate) return false;
+  const validateDateRange = (startDate, end_timeDate) => {
+    if (!startDate || !end_timeDate) return false;
 
-    if (endDate.isSameOrBefore(startDate)) {
-      message.error("End date must be after start date");
+    if (end_timeDate.isSameOrBefore(startDate)) {
+      message.error("End date must be after start_time date");
       return false;
     }
 
@@ -159,7 +160,7 @@ export function ScheduleTimeSlots({ form }) {
       return false;
     }
 
-    const daysDiff = endDate.diff(startDate, "days");
+    const daysDiff = end_timeDate.diff(startDate, "days");
     if (daysDiff > 30) {
       message.error("Date range cannot exceed 30 days");
       return false;
@@ -171,7 +172,7 @@ export function ScheduleTimeSlots({ form }) {
   const addTimeSlot = (dateStr) => {
     setTimeSlots((prev) => ({
       ...prev,
-      [dateStr]: [...(prev[dateStr] || []), { start: null, end: null }],
+      [dateStr]: [...(prev[dateStr] || []), { start_time: null, _time: null }],
     }));
   };
 
@@ -186,19 +187,19 @@ export function ScheduleTimeSlots({ form }) {
     if (!slots || slots.length === 0) return { valid: true };
 
     const sortedSlots = [...slots]
-      .filter((slot) => slot.start)
-      .sort((a, b) => a.start?.valueOf() - b.start?.valueOf());
+      .filter((slot) => slot.start_time)
+      .sort((a, b) => a.start_time?.valueOf() - b.start_time?.valueOf());
 
     for (let i = 0; i < sortedSlots.length; i++) {
-      const { start, end } = sortedSlots[i];
+      const { start_time, end_time } = sortedSlots[i];
 
-      if (start && end && end.isSameOrBefore(start)) {
-        return { valid: false, message: "End time must be after start time" };
+      if (start_time && end_time && end_time.isSameOrBefore(start_time)) {
+        return { valid: false, message: "End time must be after start_time time" };
       }
 
       if (i < sortedSlots.length - 1) {
         const nextSlot = sortedSlots[i + 1];
-        if (end && nextSlot.start && end.isAfter(nextSlot.start)) {
+        if (end_time && nextSlot.start_time && end_time.isAfter(nextSlot.start_time)) {
           return { valid: false, message: "Time slots cannot overlap" };
         }
       }
@@ -212,16 +213,17 @@ export function ScheduleTimeSlots({ form }) {
       message.warning("Please set up time slots for the current date first");
       return;
     }
-
+  
     const sourceSlot = timeSlots[sourceDate][slotIndex];
-    if (!sourceSlot.start) {
+    console.log("Source Slot:", sourceSlot); // Debug log
+    
+    if (!sourceSlot.start_time) {
       message.warning("Please set a start time for the slot first");
       return;
     }
-
     const confirmDetails = [
-      `Apply time slot ${sourceSlot.start.format("HH:mm")} - ${
-        sourceSlot.end?.format("HH:mm") || "No end time"
+      `Apply time slot ${sourceSlot.start_time.format("HH:mm")} - ${
+        sourceSlot.end_time?.format("HH:mm") || "No end_time time"
       }`,
       `Ticket type: ${getTicketTypeName(sourceSlot.ticketType)}`,
       "This will overwrite any existing slots in the same position on other dates",
@@ -247,35 +249,38 @@ export function ScheduleTimeSlots({ form }) {
         const newTimeSlots = { ...timeSlots };
         const formValues = form.getFieldsValue();
         const newFormValues = { ...formValues };
-
+  
         dates.forEach((date) => {
           if (date !== sourceDate) {
             const existingSlots = newTimeSlots[date] || [];
             const updatedSlots = [...existingSlots];
-
-            const targetStart = sourceSlot.start
+  
+            const targetStart = sourceSlot.start_time
               ? dayjs(date)
-                  .hour(sourceSlot.start.hour())
-                  .minute(sourceSlot.start.minute())
+                  .hour(sourceSlot.start_time.hour())
+                  .minute(sourceSlot.start_time.minute())
               : null;
-
-            const targetEnd = sourceSlot.end
+  
+            const targetEnd = sourceSlot.end_time
               ? dayjs(date)
-                  .hour(sourceSlot.end.hour())
-                  .minute(sourceSlot.end.minute())
+                  .hour(sourceSlot.end_time.hour())
+                  .minute(sourceSlot.end_time.minute())
               : null;
-
+  
             // Ensure slot exists
             while (updatedSlots.length <= slotIndex) {
-              updatedSlots.push({ start: null, end: null });
+              updatedSlots.push({ start_time: null, end_time: null });
             }
-
+  
             updatedSlots[slotIndex] = {
               ...sourceSlot,
-              start: targetStart,
-              end: targetEnd,
+              start_time: targetStart,
+              end_time: targetEnd,
+              ticketType: sourceSlot.ticketType
             };
-
+  
+            console.log("Updated Slot:", updatedSlots[slotIndex]); // Debug log
+  
             // Update form values
             if (!newFormValues.timeSlots) {
               newFormValues.timeSlots = {};
@@ -287,9 +292,9 @@ export function ScheduleTimeSlots({ form }) {
               newFormValues.timeSlots[date].push({});
             }
             newFormValues.timeSlots[date][slotIndex] = {
-              start: targetStart,
-              end: targetEnd,
-              ticketType: sourceSlot.ticketType,
+              start_time: targetStart,
+              end_time: targetEnd,
+              ticketType: sourceSlot.ticketType
             };
 
             // Validate time conflicts
@@ -317,17 +322,17 @@ export function ScheduleTimeSlots({ form }) {
     }
 
     const sourceSlots = timeSlots[activeTab];
-    if (!sourceSlots.some((slot) => slot.start)) {
+    if (!sourceSlots.some((slot) => slot.start_time)) {
       message.warning("Please set at least one time slot first");
       return;
     }
 
     const confirmDetails = sourceSlots
-      .filter((slot) => slot.start)
+      .filter((slot) => slot.start_time)
       .map(
         (slot) =>
-          `Time: ${slot.start.format("HH:mm")} - ${
-            slot.end?.format("HH:mm") || "No end time"
+          `Time: ${slot.start_time.format("HH:mm")} - ${
+            slot.end_time?.format("HH:mm") || "No end_time time"
           }, ` + `Ticket: ${getTicketTypeName(slot.ticketType)}`
       );
 
@@ -359,20 +364,21 @@ export function ScheduleTimeSlots({ form }) {
         dates.forEach((date) => {
           if (date !== activeTab) {
             const updatedSlots = sourceSlots.map((slot) => {
-              const targetStart = slot.start
+              const targetStart = slot.start_time
                 ? dayjs(date)
-                    .hour(slot.start.hour())
-                    .minute(slot.start.minute())
+                    .hour(slot.start_time.hour())
+                    .minute(slot.start_time.minute())
                 : null;
-
-              const targetEnd = slot.end
-                ? dayjs(date).hour(slot.end.hour()).minute(slot.end.minute())
+            
+              const targetEnd = slot.end_time
+                ? dayjs(date).hour(slot.end_time.hour()).minute(slot.end_time.minute())
                 : null;
-
+            
               return {
                 ...slot,
-                start: targetStart,
-                end: targetEnd,
+                start_time: targetStart,
+                end_time: targetEnd,
+                ticketType: slot.ticketType, // Explicitly set the ticket type
               };
             });
 
@@ -381,8 +387,8 @@ export function ScheduleTimeSlots({ form }) {
               newFormValues.timeSlots = {};
             }
             newFormValues.timeSlots[date] = updatedSlots.map((slot) => ({
-              start: slot.start,
-              end: slot.end,
+              start_time: slot.start_time,
+              end_time: slot.end_time,
               ticketType: slot.ticketType,
             }));
 
@@ -443,17 +449,17 @@ export function ScheduleTimeSlots({ form }) {
       const formattedData = {
         event_times: {
           start_date: values.start_date.format(),
-          end_date: values.end_date.format(),
+          end_time_date: values.end_time_date.format(),
           ad_start_date_time: values.ad_start_date_time?.format(),
           booking_start_date_time: values.booking_start_date_time.format(),
         },
         time_slots: Object.entries(timeSlots).map(([date, slots]) => ({
           date,
           slots: slots
-            .filter((slot) => slot.start)
+            .filter((slot) => slot.start_time)
             .map((slot) => ({
-              start_time: slot.start.format("HH:mm"),
-              end_time: slot.end?.format("HH:mm"),
+              start_time: slot.start_time.format("HH:mm"),
+              end_time: slot.end_time?.format("HH:mm"),
               ticket_type: slot.ticketType,
             })),
         })),
@@ -487,7 +493,7 @@ export function ScheduleTimeSlots({ form }) {
     setScrollPosition(newPosition);
   };
 
-  const renderDateSegment = (dateStr) => ({
+  const rend_timeerDateSegment = (dateStr) => ({
     label: (
       <Badge dot color={slotStatus[dateStr]} style={{ margin: 4 }}>
         <span style={{ padding: "0 4px" }} data-date={dateStr}>
@@ -506,108 +512,21 @@ export function ScheduleTimeSlots({ form }) {
     );
   }, [eventDetails]);
 
-  const renderTimeSlots = (dateStr) => (
-    <div style={{ marginTop: 16 }}>
-      {timeSlots[dateStr]?.map((slot, index) => (
-        <Row
-          key={index}
-          gutter={[16, 16]}
-          align="middle"
-          style={{ marginBottom: 16 }}
-        >
-          {/* Start Time */}
-          <Col span={6}>
-            <Form.Item
-              name={["timeSlots", dateStr, index, "start"]}
-              label="Start Time"
-              rules={[
-                {
-                  required: true,
-                  message: "Please select booking start time",
-                },
-              ]}
-            >
-              <TimePicker
-                format="HH:mm"
-                value={slot.start}
-                onChange={(time) =>
-                  handleTimeChange(dateStr, index, "start", time)
-                }
-                style={{ width: "100%" }}
-                placeholder="Start Time"
-              />
-            </Form.Item>
-          </Col>
-
-          {/* End Time (Optional) */}
-          <Col span={6}>
-            <Form.Item
-              label="End Time"
-              name={["timeSlots", dateStr, index, "end"]}
-            >
-              <TimePicker
-                format="HH:mm"
-                value={slot.end}
-                onChange={(time) =>
-                  handleTimeChange(dateStr, index, "end", time)
-                }
-                style={{ width: "100%" }}
-                placeholder="End Time"
-              />
-            </Form.Item>
-          </Col>
-
-          {/* Ticket Type Selection */}
-          <Col span={6}>
-            <Form.Item
-              label="Ticket Type"
-              name={["timeSlots", dateStr, index, "ticketType"]}
-              rules={[
-                { required: true, message: "Please select a ticket type" },
-              ]}
-            >
-              <Select
-                options={ticketOptions}
-                value={slot.ticketType}
-                onChange={(value) =>
-                  handleTimeChange(dateStr, index, "ticketType", value)
-                }
-                style={{ width: "100%" }}
-                placeholder="Select Ticket Type"
-              />
-            </Form.Item>
-          </Col>
-
-          {/* Action Buttons */}
-          <Col span={4}>
-            <Space>
-              <Button
-                type="default"
-                danger
-                icon={<MinusCircleOutlined />}
-                onClick={() => removeTimeSlot(dateStr, index)}
-              />
-              <Button
-                type="default"
-                icon={<CopyOutlined />}
-                onClick={() => applySlotToAllDates(dateStr, index)}
-                title="Apply this slot to all dates"
-              />
-            </Space>
-          </Col>
-        </Row>
-      ))}
-
-      <Button
-        type="dashed"
-        onClick={() => addTimeSlot(dateStr)}
-        icon={<PlusOutlined />}
-        block
-        style={{ marginTop: 16 }}
-      >
-        Add Time Slot
-      </Button>
-    </div>
+  const rend_timeerTimeSlots = (dateStr) => (
+    // In ScheduleTimeSlots.js
+    <TimeSlots
+      dateStr={dateStr}
+      timeSlots={timeSlots}
+      form={form}
+      setTimeSlots={setTimeSlots}
+      eventStartTime={form.getFieldValue("start_date")}
+      bookingStartTime={form.getFieldValue("booking_start_date_time")}
+      ticketOptions={ticketOptions}
+      getEventTimezone={getEventTimezone}
+      onAddSlot={addTimeSlot}
+      onRemoveSlot={removeTimeSlot}
+      onApplyToAll={applySlotToAllDates}
+    />
   );
 
   const getEventTimezone = () => {
@@ -616,34 +535,44 @@ export function ScheduleTimeSlots({ form }) {
   const handleDateChange = (field) => (value) => {
     if (value) {
       form.setFieldsValue({
-        [field]: value.tz(getEventTimezone())
+        [field]: value.tz(getEventTimezone()),
       });
 
-      // Clear dependent fields when parent field changes
+      // Clear depend_timeent fields when parent field changes
       const fieldOrder = [
-        'ad_start_date_time',
-        'booking_start_date_time',
-        'start_date',
-        'end_date'
+        "ad_start_date_time",
+        "booking_start_date_time",
+        "start_date",
+        "end_time_date",
       ];
-      
+
       const currentIndex = fieldOrder.indexOf(field);
       if (currentIndex !== -1) {
         const fieldsToReset = fieldOrder.slice(currentIndex + 1);
         const resetValues = {};
-        fieldsToReset.forEach(fieldName => {
+        fieldsToReset.forEach((fieldName) => {
           resetValues[fieldName] = undefined;
         });
         form.setFieldsValue(resetValues);
       }
-      if(field==="end_date"||field==="start_date"){
-        updateDateRange(form.getFieldValue("start_date"),form.getFieldValue("end_date"))
+      if (field === "end_time_date" || field === "start_date") {
+        updateDateRange(
+          form.getFieldValue("start_date"),
+          form.getFieldValue("end_time_date")
+        );
       }
     }
   };
   return (
     <Form form={form} layout="vertical">
-      <Title level={4}>Schedule Time Slots</Title>
+      <Title level={4}>
+        Schedule Time Slots{" "}
+        <span style={{ fontSize: "15px", fontWeight: "lighter" }}>
+          {`(${
+            eventDetails?.venue?.place?.country.name ?? ""
+          } : ${getEventTimezone()})`}
+        </span>
+      </Title>
 
       <Card>
         <Title level={5}>Event Time</Title>
@@ -659,10 +588,10 @@ export function ScheduleTimeSlots({ form }) {
                   timezone: getEventTimezone(),
                   allowPast: false,
                   includeTime: true,
-                  form
+                  form,
                 })}
-                onChange={handleDateChange('ad_start_date_time')}
-                placeholder="Select ad start time"
+                onChange={handleDateChange("ad_start_date_time")}
+                placeholder="Select ad start_time time"
               />
             </Form.Item>
           </Col>
@@ -678,11 +607,11 @@ export function ScheduleTimeSlots({ form }) {
                   timezone: getEventTimezone(),
                   allowPast: false,
                   includeTime: true,
-                  dependsOn: 'ad_start_date_time',
-                  form
+                  depend_timesOn: "ad_start_date_time",
+                  form,
                 })}
-                onChange={handleDateChange('booking_start_date_time')}
-                placeholder="Select booking start time"
+                onChange={handleDateChange("booking_start_date_time")}
+                placeholder="Select booking start_time time"
               />
             </Form.Item>
           </Col>
@@ -698,18 +627,18 @@ export function ScheduleTimeSlots({ form }) {
                   timezone: getEventTimezone(),
                   allowPast: false,
                   includeTime: false,
-                  dependsOn: 'booking_start_date_time',
-                  form
+                  depend_timesOn: "booking_start_date_time",
+                  form,
                 })}
-                onChange={handleDateChange('start_date')}
-                placeholder="Select event start date"
+                onChange={handleDateChange("start_date")}
+                placeholder="Select event start_time date"
               />
             </Form.Item>
           </Col>
 
           <Col xs={24} sm={12}>
             <Form.Item
-              name="end_date"
+              name="end_time_date"
               label="Event End Time"
               rules={[{ required: true }]}
             >
@@ -718,11 +647,11 @@ export function ScheduleTimeSlots({ form }) {
                   timezone: getEventTimezone(),
                   allowPast: false,
                   includeTime: false,
-                  dependsOn: 'start_date',
-                  form
+                  depend_timesOn: "start_date",
+                  form,
                 })}
-                onChange={handleDateChange('end_date')}
-                placeholder="Select event end date"
+                onChange={handleDateChange("end_time_date")}
+                placeholder="Select event end_time date"
               />
             </Form.Item>
           </Col>
@@ -767,7 +696,7 @@ export function ScheduleTimeSlots({ form }) {
               <Segmented
                 value={activeTab}
                 onChange={setActiveTab}
-                options={dates.map(renderDateSegment)}
+                options={dates.map(rend_timeerDateSegment)}
                 style={{
                   padding: "4px",
                   margin: "8px",
@@ -791,7 +720,7 @@ export function ScheduleTimeSlots({ form }) {
           </div>
 
           <div style={{ marginTop: 16 }}>
-            {activeTab && renderTimeSlots(activeTab)}
+            {activeTab && rend_timeerTimeSlots(activeTab)}
           </div>
         </Card>
       )}

@@ -47,7 +47,7 @@ const DynamicDatePicker = ({ form, startDate, endDate }) => {
     const dateKey = date.toISOString();
     setTimeSlots(prev => ({
       ...prev,
-      [dateKey]: [...(prev[dateKey] || []), { start: null, end: null }]
+      [dateKey]: [...(prev[dateKey] || []), { start_time: null, end_time: null }]
     }));
   };
 
@@ -116,15 +116,15 @@ const DynamicDatePicker = ({ form, startDate, endDate }) => {
                     <TimePicker
                       className="w-32"
                       format="HH:mm"
-                      value={slot.start}
-                      onChange={(value) => updateTimeSlot(date, index, 'start', value)}
+                      value={slot.start_time}
+                      onChange={(value) => updateTimeSlot(date, index, 'start_time', value)}
                       placeholder="Start Time"
                     />
                     <TimePicker
                       className="w-32"
                       format="HH:mm"
-                      value={slot.end}
-                      onChange={(value) => updateTimeSlot(date, index, 'end', value)}
+                      value={slot.end_time}
+                      onChange={(value) => updateTimeSlot(date, index, 'end_time', value)}
                       placeholder="End Time"
                     />
                     <Button
