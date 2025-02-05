@@ -143,5 +143,6 @@
 	"sidenav.app.management": "App Management",
 	"sidenav.app.management.layout": "Layout",
 	"sidenav.app.management.layout.footer": "Footer",
+	"sidenav.app.management.layout.faq": "FAQ",
 	"sidenav.applications":"Applications"
 }

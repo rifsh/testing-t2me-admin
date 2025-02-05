@@ -99,6 +99,7 @@ const TicketFormFields = () => {
           form={form}
           label="Venue"
           rules={[{ required: true, message: RulesMessageConstants.VENUE }]}
+          onSelect={(value) => console.log("Selected Venue ID:", value)}
         />
         
         <Form.Item name="name" label="Ticket Type name" rules={[

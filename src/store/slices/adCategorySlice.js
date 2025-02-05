@@ -1,9 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import AdCategoryService from "services/AdCategoryService";
 import AdCategoryMockData from "mock/data/adCategoryData";
-import {
-  ADVERTISEMENT_ALL_CATEGORY_MOCK_API,
-} from "configs/MockConfig";
+import { ADVERTISEMENT_ALL_CATEGORY_MOCK_API } from "configs/MockConfig";
 
 const initialState = {
   loading: false,
@@ -20,6 +18,8 @@ const initialState = {
   pagination: {},
   editable_status: null,
   singleCategory: null,
+  responseImpactData: null,
+  editItemId:null,
 };
 
 export const addAdCategory = createAsyncThunk(
@@ -45,9 +45,21 @@ export const updateAdCategory = createAsyncThunk(
   async ({ data, action }, { rejectWithValue }) => {
     try {
       const response = await AdCategoryService.updateAdCategory(data, action);
-      return response.status;
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to update category");
+    }
+  }
+);
+
+export const updateAdCategoryStatus = createAsyncThunk(
+  "adCategoryStatus/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await AdCategoryService.updateAdStatus(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
     }
   }
 );
@@ -61,11 +73,11 @@ export const fetchAdCategories = createAsyncThunk(
         return response.data;
       } else {
         const response = await AdCategoryService.fetchAdCategory(pageData);
-        console.log("-----------Fetching categories",response.data[0])
+        console.log("-----------Fetching categories", response.data[0]);
         return response.data[0];
       }
     } catch (error) {
-      console.log(error,"-------------")
+      console.log(error, "-------------");
       return rejectWithValue("Failed to fetch categories");
     }
   }
@@ -83,6 +95,9 @@ const AdcategorySlice = createSlice({
     },
     setSelectedAdCategory(state, action) {
       state.selectedAdCategory = action.payload;
+    },
+    setEditItemId: (state, action) => {
+      state.editItemId = action.payload;
     },
     filterCategory: (state, action) => {
       const { searchTerm, type } = action.payload;
@@ -137,21 +152,44 @@ const AdcategorySlice = createSlice({
       })
       .addCase(updateAdCategory.fulfilled, (state, { payload }) => {
         state.loading = false;
-        if (payload.message) {
-          state.message = payload.message;
-          state.editable_status = payload.editable_status;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
         }
       })
       .addCase(updateAdCategory.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to edit event";
       })
+      .addCase(updateAdCategoryStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateAdCategoryStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
 
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(updateAdCategoryStatus.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      });
   },
 });
 
-export const { filterCategory, setAdCategoryDialogVisible,
-  setAdCategoryModalLoading, setSelectedAdCategory } =
-  AdcategorySlice.actions;
+export const {
+  filterCategory,
+  setAdCategoryDialogVisible,
+  setAdCategoryModalLoading,
+  setSelectedAdCategory,
+  setEditItemId,
+} = AdcategorySlice.actions;
 
 export default AdcategorySlice.reducer;

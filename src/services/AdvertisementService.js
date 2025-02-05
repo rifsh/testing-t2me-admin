@@ -99,6 +99,15 @@ AdvertisementService.updateAdBanner = function (data, action) {
   });
 };
 
+AdvertisementService.updateBannerStatus = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.ADVERTISEMENT_BANNER_STATUS_UPDATE_URL}?advertisement_id=${data.id}&action=${encodedAction}`,
+    method: "put",
+    data: data,
+  });
+};
+
 
 
 export default AdvertisementService;

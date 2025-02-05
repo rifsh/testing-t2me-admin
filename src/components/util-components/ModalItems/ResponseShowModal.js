@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Modal, Button, Typography, Table, Space } from "antd";
+import { Modal, Button, Typography, Table, Space, Row, Col } from "antd";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
@@ -14,16 +14,84 @@ const ResponseShowModal = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
   loading = false,
-  jsonData = null, 
+  jsonData = null,
 }) => {
-  
-
+  console.log(jsonData, "JSONNNNNNNNNNNNNNNNNNNNN");
+  console.log(warningMessage, "MESSAGEEEEEEEEEEE");
   const tableData = useMemo(() => {
     if (!jsonData) return [];
-    return Object.entries(jsonData).map(([key, value], index) => ({
+
+    let dataObject = jsonData?.data ?? jsonData; // Check if jsonData.data exists, otherwise use jsonData
+
+    if (dataObject?.data) {
+      dataObject = dataObject.data; // Handle nested "data" case
+    }
+
+    return Object.entries(dataObject).map(([key, value], index) => ({
       key: index,
       columnKey: key,
       value: Array.isArray(value) ? value.join(", ") : value ?? "N/A",
+    }));
+  }, [jsonData]);
+
+  const revisedOfferStartData = jsonData?.revised_offer_start_date
+    ? Object.entries(jsonData.revised_offer_start_date).map(
+        ([key, value], index) => ({
+          key: index,
+          columnKey: key,
+          value: value ?? "N/A",
+        })
+      )
+    : [];
+
+  const revisedOfferEndData = jsonData?.revised_offer_end_date
+    ? Object.entries(jsonData.revised_offer_end_date).map(
+        ([key, value], index) => ({
+          key: index,
+          columnKey: key,
+          value: value ?? "N/A",
+        })
+      )
+    : [];
+
+  const revisedCouponStartDate = jsonData?.revised_coupon_start_date
+    ? Object.entries(jsonData.revised_coupon_start_date).map(
+        ([key, value], index) => ({
+          key: index,
+          columnKey: key,
+          value: value ?? "N/A",
+        })
+      )
+    : [];
+
+  const revisedCouponEndData = jsonData?.revised_coupon_end_date
+    ? Object.entries(jsonData.revised_coupon_end_date).map(
+        ([key, value], index) => ({
+          key: index,
+          columnKey: key,
+          value: value ?? "N/A",
+        })
+      )
+    : [];
+
+  const scheduleOfferData = useMemo(() => {
+    if (!jsonData?.list_of_schedule_offer_removed) return [];
+    return jsonData.list_of_schedule_offer_removed.map((item, index) => ({
+      key: index,
+      schedule_id: item.schedule_id,
+      event_id: item.event_id,
+      schedule_start: item.schedule_start,
+      schedule_end: item.schedule_end,
+    }));
+  }, [jsonData]);
+  const scheduleCouponData = useMemo(() => {
+    if (!jsonData?.list_of_schedule_coupon_removed) return [];
+    return jsonData.list_of_schedule_coupon_removed.map((item, index) => ({
+      key: index,
+      schedule_id: item.schedule_id,
+      event_id: item.event_id,
+      schedule_start: item.schedule_start,
+      schedule_end: item.schedule_end,
     }));
   }, [jsonData]);
 
@@ -32,7 +100,7 @@ const ResponseShowModal = ({
       title: "Key",
       dataIndex: "columnKey",
       key: "columnKey",
-      width: 150, // or flex: '0 0 150px'
+      width: 150,
       render: (text) => <Text strong>{text}</Text>,
     },
     {
@@ -40,16 +108,39 @@ const ResponseShowModal = ({
       dataIndex: "value",
       key: "value",
       render: (text) => (
-        <Text style={{ whiteSpace: 'pre-wrap' }} ellipsis={{ tooltip: text }}>
+        <Text style={{ whiteSpace: "pre-wrap" }} ellipsis={{ tooltip: text }}>
           {text}
         </Text>
       ),
     },
   ];
+  const scheduleColumns = [
+    {
+      title: "Schedule ID",
+      dataIndex: "schedule_id",
+      key: "schedule_id",
+    },
+    {
+      title: "Event ID",
+      dataIndex: "event_id",
+      key: "event_id",
+    },
+    {
+      title: "Schedule Start",
+      dataIndex: "schedule_start",
+      key: "schedule_start",
+    },
+    {
+      title: "Schedule End",
+      dataIndex: "schedule_end",
+      key: "schedule_end",
+    },
+  ];
+
   return (
     <Modal
       open={visible}
-      width={600}
+      width={800}
       title={
         <Space align="center">
           <ExclamationCircleOutlined style={{ color: "#faad14" }} />
@@ -83,7 +174,7 @@ const ResponseShowModal = ({
             <Title level={5} style={{ marginBottom: 16 }}>
               Submission Details
             </Title>
-            <Table 
+            <Table
               columns={columns}
               dataSource={tableData}
               pagination={false}
@@ -92,7 +183,96 @@ const ResponseShowModal = ({
             />
           </div>
         )}
-        <Text strong style={{ color: "#fa541c", display: "block", marginTop: 16 }}>
+        {(revisedOfferStartData.length > 0 ||
+          revisedOfferEndData.length > 0) && (
+          <Row gutter={16}>
+            {revisedOfferStartData.length > 0 && (
+              <Col span={12}>
+                <Title level={5}>Revised Offer Start Date</Title>
+                <Table
+                  columns={columns}
+                  dataSource={revisedOfferStartData}
+                  pagination={false}
+                  size="small"
+                  bordered
+                />
+              </Col>
+            )}
+            {revisedOfferEndData.length > 0 && (
+              <Col span={12}>
+                <Title level={5}>Revised Offer End Date</Title>
+                <Table
+                  columns={columns}
+                  dataSource={revisedOfferEndData}
+                  pagination={false}
+                  size="small"
+                  bordered
+                />
+              </Col>
+            )}
+          </Row>
+        )}
+        {(revisedCouponStartDate.length > 0 ||
+          revisedCouponEndData.length > 0) && (
+          <Row gutter={16}>
+            {revisedCouponStartDate.length > 0 && (
+              <Col span={12}>
+                <Title level={5}>Revised Offer Start Date</Title>
+                <Table
+                  columns={columns}
+                  dataSource={revisedCouponStartDate}
+                  pagination={false}
+                  size="small"
+                  bordered
+                />
+              </Col>
+            )}
+            {revisedCouponEndData.length > 0 && (
+              <Col span={12}>
+                <Title level={5}>Revised Offer End Date</Title>
+                <Table
+                  columns={columns}
+                  dataSource={revisedCouponEndData}
+                  pagination={false}
+                  size="small"
+                  bordered
+                />
+              </Col>
+            )}
+          </Row>
+        )}
+        {scheduleOfferData.length > 0 && (
+          <>
+            <Title level={5} style={{ marginTop: 16 }}>
+              Schedule Offers Removed
+            </Title>
+            <Table
+              columns={scheduleColumns}
+              dataSource={scheduleOfferData}
+              pagination={false}
+              size="small"
+              bordered
+            />
+          </>
+        )}
+        {scheduleCouponData.length > 0 && (
+          <>
+            <Title level={5} style={{ marginTop: 16 }}>
+              Schedule Offers Removed
+            </Title>
+            <Table
+              columns={scheduleColumns}
+              dataSource={scheduleCouponData}
+              pagination={false}
+              size="small"
+              bordered
+            />
+          </>
+        )}
+        <Text
+          strong
+          style={{ color: "#fa541c", display: "block", marginTop: 16 }}
+        >
           {warningMessage}
         </Text>
       </Space>

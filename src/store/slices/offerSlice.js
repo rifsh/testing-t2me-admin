@@ -135,6 +135,7 @@ const offerSlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.message = payload.status.message;
+          state.responseMessage = payload.status.message;
           state.responseImpactData = payload.status.data;
           state.editable_status = payload.status.editable_status;
         }
@@ -153,6 +154,7 @@ const offerSlice = createSlice({
 
         if (payload.status) {
           state.message = payload.status.message;
+          state.responseMessage = payload.status.message;
           state.responseImpactData = payload.status.data;
           state.editable_status = payload.status.editable_status;
         }

@@ -276,6 +276,14 @@ const superAdminDashBoardNavTree = [
             breadcrumb: false,
             submenu: [],
           },
+          {
+            key: "app.management.layout.faq.list",
+            path: `${APP_PREFIX_PATH}/app/management/layout/faq/list`,
+            title: "sidenav.app.management.layout.faq",
+            icon: LayoutOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
         ],
       },
     ],
@@ -547,8 +555,17 @@ const techAdminDashBoardNavTree = [
             breadcrumb: false,
             submenu: [],
           },
+          {
+            key: "app.management.layout.footer.list",
+            path: `${APP_PREFIX_PATH}/app/management/layout/footer/list`,
+            title: "sidenav.app.management.layout.footer",
+            icon: LayoutOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
         ],
       },
+      
     ],
   },
 ];

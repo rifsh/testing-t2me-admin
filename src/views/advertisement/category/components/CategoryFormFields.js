@@ -1,7 +1,20 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message, message as antdMessage, Upload, Space, Select } from "antd";
 import {
-  addAdCategory, setAdCategoryModalLoading,
+  Input,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  message,
+  message as antdMessage,
+  Upload,
+  Space,
+  Select,
+} from "antd";
+import {
+  addAdCategory,
+  setAdCategoryModalLoading,
   setAdCategoryDialogVisible,
   setSelectedAdCategory,
   updateAdCategory,
@@ -15,8 +28,10 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import LoadingOverlay from "components/util-components/Loader/index";
-import { FileTypeImageOptions, FileTypeResolutions } from "constants/SupportFileConstants";
-
+import {
+  FileTypeImageOptions,
+  FileTypeResolutions,
+} from "constants/SupportFileConstants";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -30,7 +45,7 @@ const rules = {
   min_size: [{ required: true, message: "please enter min size" }],
   max_size: [{ required: true, message: "please enter max size" }],
   resolution: [{ required: false, message: "please enter resolution" }],
-  file_type: [{ required: true, message: "please enter file_type" }]
+  file_type: [{ required: true, message: "please enter file_type" }],
 };
 
 const CategoryFormFields = ({ mode, category }) => {
@@ -38,10 +53,18 @@ const CategoryFormFields = ({ mode, category }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { loading, error, responseData, responseMessage, dialogVisible, modalLoading, message: warningMessage, selectedAdCategory } = useSelector(
-    (state) => state.adCategory
-  );
-
+  const {
+    loading,
+    error,
+    responseData,
+    responseMessage,
+    dialogVisible,
+    modalLoading,
+    message: warningMessage,
+    selectedAdCategory,
+    responseImpactData,
+    editable_status,
+  } = useSelector((state) => state.adCategory);
 
   useEffect(() => {
     if (error) {
@@ -59,7 +82,7 @@ const CategoryFormFields = ({ mode, category }) => {
         max_size: category.max_size,
         resolution: category.resolution,
         // file_type: category.file_type
-        file_type: category.file_type ? category.file_type.split(', ') : []
+        file_type: category.file_type ? category.file_type.split(", ") : [],
       });
     }
   }, [mode, category, form]);
@@ -72,23 +95,18 @@ const CategoryFormFields = ({ mode, category }) => {
       if (mode === ADD) {
         const formData = {
           ...values,
-          file_type: values.file_type ? values.file_type.join(', ') : ''
-
-
+          file_type: values.file_type ? values.file_type.join(", ") : "",
         };
         console.log("Form Data to dispatch:", formData);
 
         dispatch(setSelectedSubmitItem(formData));
       } else if (mode === EDIT) {
-        const formData = {
-          ...values,
+        console.log("ITS AN EDITTTTTTTTTTTTT TAXXXXXXX");
 
-
-        };
         const data = {
           ...values,
           id: category.id,
-          file_type: values.file_type ? values.file_type.join(', ') : ''
+          file_type: values.file_type ? values.file_type.join(", ") : "",
         };
         console.log("Edit Data:", data);
 
@@ -114,9 +132,7 @@ const CategoryFormFields = ({ mode, category }) => {
     dispatch(setAdCategoryModalLoading(false));
     dispatch(setAdCategoryDialogVisible(false));
     if (updateAdCategory.fulfilled.match(resultAction)) {
-      antdMessage.success(`Category ${selectedAdCategory.name} updated successfully`);
-      form.resetFields();
-      navigate(`${APP_PREFIX_PATH}/advertisement/category/list`);
+      dispatch(setSelectedSubmitItem(selectedAdCategory));
     }
   };
 
@@ -142,54 +158,65 @@ const CategoryFormFields = ({ mode, category }) => {
                 placeholder="Enter category description"
               />
             </Form.Item>
-            <Form.Item name="category_code" label="Code" rules={rules.category_code}>
+            <Form.Item
+              name="category_code"
+              label="Code"
+              rules={rules.category_code}
+            >
               <Input placeholder="Code" />
             </Form.Item>
-            <Form.Item name="min_size" label="Min Size (MB)" rules={rules.min_size}>
+            <Form.Item
+              name="min_size"
+              label="Min Size (MB)"
+              rules={rules.min_size}
+            >
               <Input placeholder="Min Size  " />
             </Form.Item>
-            <Form.Item name="max_size" label="Max Size (MB)" rules={rules.max_size}>
+            <Form.Item
+              name="max_size"
+              label="Max Size (MB)"
+              rules={rules.max_size}
+            >
               <Input placeholder="Max Size  " />
             </Form.Item>
-            {/* <Form.Item name="resolution" label="Resolution (Height x Width)" rules={rules.resolution}>
-              <Input placeholder="Resolution (1080 x 1920)" />
-            </Form.Item> */}
-            {/* <Form.Item name="" label="File Type" rules={rules.resolution}>
-              <Input placeholder="File Type" />
-            </Form.Item> */}
             <Form.Item name="resolution" label="Resolution (Height X Width)">
-            <Select
-              loading={loading}
-              mode="single"
-              style={{ width: "100%" }}
-              placeholder="Please select resoluion"
-              notFoundContent= {FileTypeResolutions.length ? null : "No File Types Available"}
-             
-            >
-              {FileTypeResolutions.map((resolution) => (
-                <Select.Option key={resolution.key} value={resolution.resolution}>
-                  {resolution.resolution}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-            
+              <Select
+                loading={loading}
+                mode="single"
+                style={{ width: "100%" }}
+                placeholder="Please select resoluion"
+                notFoundContent={
+                  FileTypeResolutions.length ? null : "No File Types Available"
+                }
+              >
+                {FileTypeResolutions.map((resolution) => (
+                  <Select.Option
+                    key={resolution.key}
+                    value={resolution.resolution}
+                  >
+                    {resolution.resolution}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+
             <Form.Item name="file_type" label="File Type">
-            <Select
-              loading={loading}
-              mode="multiple"
-              style={{ width: "100%" }}
-              placeholder="Please select file type"
-              notFoundContent= {FileTypeImageOptions.length ? null : "No File Types Available"}
-             
-            >
-              {FileTypeImageOptions.map((fileType) => (
-                <Select.Option key={fileType.value} value={fileType.value}>
-                  {fileType.label}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+              <Select
+                loading={loading}
+                mode="multiple"
+                style={{ width: "100%" }}
+                placeholder="Please select file type"
+                notFoundContent={
+                  FileTypeImageOptions.length ? null : "No File Types Available"
+                }
+              >
+                {FileTypeImageOptions.map((fileType) => (
+                  <Select.Option key={fileType.value} value={fileType.value}>
+                    {fileType.label}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
             <div
               style={{
                 display: "flex",
@@ -207,23 +234,27 @@ const CategoryFormFields = ({ mode, category }) => {
           </Form>
         </Card>
       </Col>
-      <LoadingOverlay
-        loading={loading}
-      />
+      <LoadingOverlay loading={loading} />
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
         details={warningMessage}
+        responseData={responseImpactData}
         warningMessage="Do you want to continue?"
         onSubmit={handleModalSubmit}
         onCancel={handleModalCancel}
         confirmText="Proceed"
         cancelText="Back"
         loading={modalLoading}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules",
+        }}
+        editable_status={editable_status}
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={addAdCategory}
+        addFunction={mode === "EDIT" ? updateAdCategory : addAdCategory}
         navigationPath={`${APP_PREFIX_PATH}/advertisement/category/list`}
         responseMessage={responseMessage}
       />

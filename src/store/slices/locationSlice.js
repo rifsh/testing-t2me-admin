@@ -26,7 +26,7 @@ export const initialState = {
   coordinates: { lat: 23.4241, lng: 53.8478 },
   options: [],
   message: null,
-  responseImpactData:null,
+  responseImpactData: null,
   searchTerm: "",
   statusFilter: "All",
   selectedCountry: null,
@@ -34,6 +34,8 @@ export const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
+  validationStatus: false,
+  placeValidateData: null,
   pagination: { size: 10, page: 1 },
   editItemId: null,
 };
@@ -169,6 +171,20 @@ export const getSingleVenues = createAsyncThunk(
     }
   }
 );
+
+export const validatePlace = createAsyncThunk(
+  "locations/validatePlace",
+  async (placeId, { rejectWithValue }) => {
+    try {
+      const response = await LocationService.validatePlace(placeId);
+      console.log("VALIDATION RESULT", response);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
 export const getSinglePlace = createAsyncThunk(
   "locations/getSinglePlace",
   async (place_id, { rejectWithValue }) => {
@@ -193,14 +209,17 @@ export const getPlaces = createAsyncThunk(
         const response = LocationMockData.getAllPlaces;
         return response.data;
       } else {
-        console.log("Entered------------------")
+        console.log("Entered------------------");
 
         const response = await LocationService.getPlaces(pageData);
-        console.log("places fetched===============================>", response.data[0])
+        console.log(
+          "places fetched===============================>",
+          response.data[0]
+        );
         return response.data[0];
       }
     } catch (error) {
-      console.log("places Failes", error)
+      console.log("places Failes", error);
 
       return rejectWithValue(error.message || "Failed to fetch places");
     }
@@ -257,6 +276,9 @@ const locationSlice = createSlice({
     },
     setLocationModalLoading(state, action) {
       state.modalLoading = action.payload;
+    },
+    setPlaceValidationDialogVisible(state, action) {
+      state.dialogVisible = action.payload;
     },
     singleVenue(state, action) {
       console.warn(action);
@@ -415,6 +437,28 @@ const locationSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      .addCase(validatePlace.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validatePlace.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+        if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+        } else {
+          state.validationStatus = false;
+        }
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.placeValidateData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(validatePlace.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
       .addCase(editPlace.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -493,7 +537,7 @@ const locationSlice = createSlice({
         state.error = null;
         state.responseData = action.payload.data;
         state.responseMessage = action.payload.status.message;
-        state.createPlaceLoading=false;
+        state.createPlaceLoading = false;
       })
       .addCase(createPlace.rejected, (state, action) => {
         state.createPlaceLoading = false;
@@ -520,7 +564,6 @@ const locationSlice = createSlice({
         state.loading = false;
         state.error = payload;
       });
-
   },
 });
 
@@ -541,6 +584,7 @@ export const {
   setLoading,
   setSelectedPlace,
   setEditItemId,
+  setPlaceValidationDialogVisible
 } = locationSlice.actions;
 export const allLocations = (state) => state.location;
 
