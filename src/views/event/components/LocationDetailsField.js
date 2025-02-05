@@ -1,9 +1,11 @@
 import { Card, Col, Form } from "antd";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import VenueListForm from "components/util-components/FormItems/VenueList";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getVenues } from "store/slices/locationSlice";
 import { RulesMessageConstants } from "constants/RulesConstant";
+import { setPlaceValidationDialogVisible } from "store/slices/locationSlice";
+import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import { resetTicketSelection } from "store/slices/ticketSlice";
 
 const LocationDetailsField = ({ form }) => {
@@ -13,6 +15,12 @@ const LocationDetailsField = ({ form }) => {
     place: [{ required: true, message: RulesMessageConstants.PLACE }],
     venue: [{ required: true, message: RulesMessageConstants.VENUE }],
   };
+
+  const {
+    message: venueValidationMessage,
+    ValidateData,
+    placeValidationDialogVisible,
+  } = useSelector((state) => state.locations);
 
   const handlePlaceSelect = (id) => {
     dispatch(getVenues({ place_id: id }));
@@ -35,6 +43,9 @@ const LocationDetailsField = ({ form }) => {
     });
     dispatch(resetTicketSelection());
   };
+  const handleValidationModalCancel = () => {
+    dispatch(setPlaceValidationDialogVisible(false));
+  };
 
   return (
     <Col xs={24} sm={24} md={17}>
@@ -52,6 +63,12 @@ const LocationDetailsField = ({ form }) => {
           onSelect={handleVenueSelect}
         />
       </Card>
+      <ValidationModal
+        visible={placeValidationDialogVisible}
+        data={ValidateData?.errors}
+        statusMessage={venueValidationMessage}
+        onClose={handleValidationModalCancel}
+      />
     </Col>
   );
 };

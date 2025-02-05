@@ -202,5 +202,19 @@ LocationService.validatePlace = function (placeId) {
   });
 };
 
+LocationService.validateVenue = function (venueId) {
+  return fetch({
+    url: `${ApiConstant.VENUE_VALIDATE_URL}?venue_id=${venueId}`,
+    method: "get",
+  });
+};
+
+LocationService.validateCountry = function (countryId) {
+  return fetch({
+    url: `${ApiConstant.COUNTRY_VALIDATE_URL}?country_id=${countryId}`,
+    method: "get",
+  });
+};
+
 
 export default LocationService;

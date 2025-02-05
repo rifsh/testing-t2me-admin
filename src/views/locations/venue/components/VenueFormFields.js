@@ -68,9 +68,11 @@ const VenueFormFields = ({ mode, venue }) => {
     modalLoading,
     editable_status,
     responseImpactData,
-    placeValidateData,
+    ValidateData,
     validationStatus,
+    placeValidationDialogVisible,
     message: warningMessage,
+    message,
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
@@ -133,7 +135,7 @@ const VenueFormFields = ({ mode, venue }) => {
       // If placeId exists, it's an edit (Edit mode)
       const data = {
         ...values,
-        place_id: selectedPlace,
+        place_id: selectedPlace ?? venue.place?.id,
         latitude: coordinates.lat || 0,
         longitude: coordinates.lng || 0,
         capacity: values.capacity || 0,
@@ -144,12 +146,23 @@ const VenueFormFields = ({ mode, venue }) => {
       console.log("Edit Data:", data);
 
       const resultAction = await dispatch(
-        editVenue({ data, action: ActionType.WARNING })
+        validatePlace(selectedPlace ?? venue.place?.id)
       );
 
-      if (editVenue.fulfilled.match(resultAction)) {
-        dispatch(setSelectedVenue(data));
-        dispatch(setLocationDialogVisible(true));
+      if (validatePlace.fulfilled.match(resultAction)) {
+        const response = resultAction.payload;
+        if (response.message === "warning") {
+          dispatch(setPlaceValidationDialogVisible(true));
+        } else if (response.data && response.data[0]?.validation_status) {
+          const resultAction = await dispatch(
+            editVenue({ data, action: ActionType.WARNING })
+          );
+
+          if (editVenue.fulfilled.match(resultAction)) {
+            dispatch(setSelectedVenue(data));
+            dispatch(setLocationDialogVisible(true));
+          }
+        }
       }
     } else {
       try {
@@ -171,15 +184,17 @@ const VenueFormFields = ({ mode, venue }) => {
           address: values.address,
         };
 
-        // const resultAction = await dispatch(validatePlace(selectedPlace));
-        // if (validatePlace.fulfilled.match(resultAction)) {
-        //   if (validationStatus) {
-        //     dispatch(setSelectedSubmitItem(formData));
-        //   } else {
-        //     dispatch(setPlaceValidationDialogVisible(true));
-        //   }
-        // }
-        dispatch(setSelectedSubmitItem(formData));
+        const resultAction = await dispatch(validatePlace(selectedPlace));
+
+        if (validatePlace.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setPlaceValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            dispatch(setSelectedSubmitItem(formData));
+          }
+        }
+        // dispatch(setSelectedSubmitItem(formData));
       } catch (errorInfo) {
         console.error("Validation Failed:", errorInfo);
       }
@@ -378,12 +393,12 @@ const VenueFormFields = ({ mode, venue }) => {
         </Form>
       </Col>
 
-      {/* <ValidationModal
-        data={placeValidateData?.place}
-        statusMessage={warningMessage}
+      <ValidationModal
+        visible={placeValidationDialogVisible}
+        data={ValidateData?.errors}
+        statusMessage={message}
         onClose={handleValidationModalCancel}
-        visible={dialogVisible}
-      /> */}
+      />
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"

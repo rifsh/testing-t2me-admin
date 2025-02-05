@@ -12,7 +12,12 @@ import {
   Upload,
   Typography,
 } from "antd";
-import { fetchAdCategories } from "store/slices/adCategorySlice";
+import {
+  fetchAdCategories,
+  validateAdCategory,
+  setAdCategoryValidationDialogVisible,
+} from "store/slices/adCategorySlice";
+import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import {
   createAdBanner,
   updateAdBanner,
@@ -50,7 +55,9 @@ const rules = {
   category: [{ required: true, message: "Please choose country" }],
   event: [{ required: false, message: "Please choose event" }],
   place: [{ required: false, message: "Please choose place" }],
-  thumbnail_image: [{ required: true, message: "Please choose a banner image" }],
+  thumbnail_image: [
+    { required: true, message: "Please choose a banner image" },
+  ],
   description: [
     { required: true, message: "Please enter category description" },
   ],
@@ -64,7 +71,12 @@ const AdBannerFormFields = ({ mode, banner }) => {
 
   const { places } = useSelector((state) => state.locations);
   const { eventOnPlaces } = useSelector((state) => state.event);
-  const { filteredAdCategories } = useSelector((state) => state.adCategory);
+  const {
+    filteredAdCategories,
+    adCategoryValidationDialogVisible,
+    ValidateData,
+    message,
+  } = useSelector((state) => state.adCategory);
   const {
     loading,
     error,
@@ -139,7 +151,18 @@ const AdBannerFormFields = ({ mode, banner }) => {
       const values = await form.validateFields();
       console.log({ values });
       if (mode === ADD) {
-        dispatch(setSelectedSubmitItem(values));
+        const resultAction = await dispatch(
+          validateAdCategory(values.banner_category_id)
+        );
+
+        if (validateAdCategory.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setAdCategoryValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            dispatch(setSelectedSubmitItem(values));
+          }
+        }
       } else if (mode === EDIT) {
         const data = {
           ...values,
@@ -148,17 +171,31 @@ const AdBannerFormFields = ({ mode, banner }) => {
         console.log("Edit Data:", data);
 
         const resultAction = await dispatch(
-          updateAdBanner({ data, action: ActionType.WARNING })
+          validateAdCategory(values.banner_category_id)
         );
 
-        if (updateAdBanner.fulfilled.match(resultAction)) {
-          dispatch(setSelectedAdBanner(data));
-          dispatch(setAdBannerDialogVisible(true));
+        if (validateAdCategory.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setAdCategoryValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            const resultAction = await dispatch(
+              updateAdBanner({ data, action: ActionType.WARNING })
+            );
+
+            if (updateAdBanner.fulfilled.match(resultAction)) {
+              dispatch(setSelectedAdBanner(data));
+              dispatch(setAdBannerDialogVisible(true));
+            }
+          }
         }
       }
     } catch (errorInfo) {
       console.log("Validation Failed:", errorInfo);
     }
+  };
+  const handleValidationModalCancel = () => {
+    dispatch(setAdCategoryValidationDialogVisible(false));
   };
 
   const handleModalSubmit = async () => {
@@ -346,6 +383,12 @@ const AdBannerFormFields = ({ mode, banner }) => {
         </Card>
       </Col>
       <LoadingOverlay loading={createBannerLoading} />
+      <ValidationModal
+        visible={adCategoryValidationDialogVisible}
+        data={ValidateData?.errors}
+        statusMessage={message}
+        onClose={handleValidationModalCancel}
+      />
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"

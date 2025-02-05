@@ -16,15 +16,15 @@ TaxService.addTax = function (data, action) {
 TaxService.editTax = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
   return fetch({
     url: `${ApiConstant.TAX_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
@@ -51,4 +51,13 @@ TaxService.fetchAllTax = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+
+TaxService.validateTax = function (taxIds) {
+  const queryString = taxIds.map((id) => `Tax_id=${id.id}`).join("&");
+  return fetch({
+    url: `${ApiConstant.TAX_VALIDATE_URL}?${queryString}`,
+    method: "get",
+  });
+};
+
 export default TaxService;
