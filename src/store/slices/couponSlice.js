@@ -12,8 +12,10 @@ export const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
-  editItemId:null,
-  selectedCoupon:null,
+  couponDetails: null,
+  editItemId: null,
+  selectedCoupon: null,
+  responseImpactData: null,
   pagination: { size: 10, page: 1 },
 };
 export const fetchAllCoupons = createAsyncThunk(
@@ -29,6 +31,18 @@ export const fetchAllCoupons = createAsyncThunk(
       }
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching coupons");
+    }
+  }
+);
+
+export const fetchCouponDetails = createAsyncThunk(
+  "coupon/fetchCouponDetails",
+  async (couponId, { rejectWithValue }) => {
+    try {
+      const response = await CouponService.fetchCouponDetails(couponId);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
     }
   }
 );
@@ -49,8 +63,21 @@ export const editCoupon = createAsyncThunk(
   "coupon/edit",
   async ({ data, action }, { rejectWithValue }) => {
     try {
+      console.log(data, "DATA IN SERVICE");
       const response = await CouponService.editCoupon(data, action);
-      return response.status;
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+
+export const editCouponStatus = createAsyncThunk(
+  "coupon/editStatus",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await CouponService.editCouponStatus(data, action);
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
     }
@@ -96,22 +123,56 @@ const couponSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(editCoupon.pending, (state) => {
+
+      .addCase(fetchCouponDetails.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+      .addCase(fetchCouponDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        const couponData = { ...action.payload[0] };
+        state.couponDetails = couponData;
+      })
+      .addCase(fetchCouponDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(editCoupon.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(editCoupon.fulfilled, (state, { payload }) => {
         state.loading = false;
-        if (payload.message) {
-          state.message = payload.message;
-          state.editable_status = payload.editable_status;
-       
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
         }
       })
-      .addCase(editCoupon.rejected, (state, { payload }) => {
+      .addCase(editCoupon.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(editCouponStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editCouponStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(editCouponStatus.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to edit event";
       })
+
       .addCase(fetchAllCoupons.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -143,5 +204,11 @@ const couponSlice = createSlice({
   },
 });
 
-export const { filterCoupons ,setEditItemId,setCouponDialogVisible,setCouponModalLoading,setSelectedCoupon,} = couponSlice.actions;
+export const {
+  filterCoupons,
+  setEditItemId,
+  setCouponDialogVisible,
+  setCouponModalLoading,
+  setSelectedCoupon,
+} = couponSlice.actions;
 export default couponSlice.reducer;

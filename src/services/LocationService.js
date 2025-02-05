@@ -192,4 +192,15 @@ LocationService.getCoutryDetails = function () {
     method: "get",
   });
 };
+
+// VALIDATION API SERVICE
+
+LocationService.validatePlace = function (placeId) {
+  return fetch({
+    url: `${ApiConstant.PLACE_VALIDATE_URL}?place_id=${placeId}`,
+    method: "get",
+  });
+};
+
+
 export default LocationService;

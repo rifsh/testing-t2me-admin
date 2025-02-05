@@ -351,7 +351,6 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
                 ))}
               </Select>
             </Form.Item>
-
             <Form.Item name="coupon" label="Coupon">
               <Select
                 className="w-100"
@@ -375,7 +374,6 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
           </Form>
         </Card>
       </Col>
-      
       <Col xs={24} sm={24} md={7}>
         {selectedOffers.length > 0 && (
           <div style={{ marginBottom: 16 }}>
@@ -532,7 +530,7 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
 
           </div>
         )}
-       
+
 
       </Col>
       <Col xs={24} sm={24} md={17}>

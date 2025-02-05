@@ -13,12 +13,15 @@ import {
   Badge,
   Segmented,
   Cascader,
+  Select,
+  Modal,
 } from "antd";
 import {
   CopyOutlined,
   MinusCircleOutlined,
   PlusOutlined,
   LeftOutlined,
+  WarningOutlined,
   RightOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -29,6 +32,8 @@ import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isBetween from "dayjs/plugin/isBetween";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllTickets } from "store/slices/ticketSlice";
+import { fetchEventDetails } from "store/slices/eventSlice";
+import { labels } from "views/app-views/apps/mail/MailLabels";
 
 const { Title } = Typography;
 
@@ -39,8 +44,7 @@ dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isBetween);
 
-export function ScheduleTimeSlots() {
-  const [form] = Form.useForm();
+export function ScheduleTimeSlots({ form }) {
   const [timeSlots, setTimeSlots] = useState({});
   const [activeTab, setActiveTab] = useState(null);
   const [dates, setDates] = useState([]);
@@ -54,12 +58,14 @@ export function ScheduleTimeSlots() {
 
   const { filteredTickets } = useSelector((state) => state.tickets);
   const { selectedVenue } = useSelector((state) => state.locations);
-
+  const { eventDetails, submitLoading } = useSelector((state) => state.event);
   useEffect(() => {
-    dispatch(fetchAllTickets({ venue_id: selectedVenue }));
-  }, [dispatch, selectedVenue]);
+    const eventId = form?.getFieldValue("event_id");
+    if (eventId) {
+      dispatch(fetchEventDetails(eventId));
+    }
+  }, [dispatch, form]);
 
-  // Update slot status when time slots change
   useEffect(() => {
     const newSlotStatus = {};
     Object.entries(timeSlots).forEach(([date, slots]) => {
@@ -83,17 +89,35 @@ export function ScheduleTimeSlots() {
     setSlotStatus(newSlotStatus);
   }, [timeSlots]);
 
-  const ticketOptions = useMemo(() => {
-    return filteredTickets.map((ticketType) => ({
-      value: ticketType.id,
-      label: ticketType.name,
-      children: ticketType.ticket_types.map((ticket) => ({
-        value: ticket.ticket_set,
-        label: ticket.ticket_set,
-      })),
-    }));
-  }, [filteredTickets]);
+  const validateTimeConflicts = (slots) => {
+    if (!slots || slots.length === 0) return { valid: true };
 
+    const sortedSlots = [...slots]
+      .filter((slot) => slot.start)
+      .sort((a, b) => a.start.valueOf() - b.start.valueOf());
+
+    for (let i = 0; i < sortedSlots.length - 1; i++) {
+      const currentSlot = sortedSlots[i];
+      const nextSlot = sortedSlots[i + 1];
+
+      if (
+        currentSlot.end &&
+        nextSlot.start &&
+        currentSlot.end.isAfter(nextSlot.start)
+      ) {
+        return {
+          valid: false,
+          message: `Time conflict between slots: ${currentSlot.start.format(
+            "HH:mm"
+          )} - ${currentSlot.end.format("HH:mm")} and ${nextSlot.start.format(
+            "HH:mm"
+          )} - ${nextSlot.end?.format("HH:mm")}`,
+        };
+      }
+    }
+
+    return { valid: true };
+  };
   const updateDateRange = (startDate, endDate) => {
     if (!validateDateRange(startDate, endDate)) return;
 
@@ -153,14 +177,6 @@ export function ScheduleTimeSlots() {
     }));
   };
 
-  const handleTimeChange = (dateStr, index, type, time) => {
-    setTimeSlots((prev) => ({
-      ...prev,
-      [dateStr]: prev[dateStr].map((slot, i) =>
-        i === index ? { ...slot, [type]: time } : slot
-      ),
-    }));
-  };
 
   const validateTimeSlots = (slots) => {
     if (!slots || slots.length === 0) return { valid: true };
@@ -187,7 +203,6 @@ export function ScheduleTimeSlots() {
     return { valid: true };
   };
 
-  // Update the applySlotToAllDates function
   const applySlotToAllDates = (sourceDate, slotIndex) => {
     if (!sourceDate || !timeSlots[sourceDate]) {
       message.warning("Please set up time slots for the current date first");
@@ -200,58 +215,97 @@ export function ScheduleTimeSlots() {
       return;
     }
 
-    const newTimeSlots = { ...timeSlots };
-    let appliedDetails = {
-      time: sourceSlot.start ? sourceSlot.start.format("HH:mm") : "No time",
-      endTime: sourceSlot.end ? sourceSlot.end.format("HH:mm") : "No end time",
-      ticketType: sourceSlot.ticketType
-        ? ticketOptions.find((t) => t.value === sourceSlot.ticketType[0])?.label
-        : "No ticket type",
-    };
+    const confirmDetails = [
+      `Apply time slot ${sourceSlot.start.format("HH:mm")} - ${
+        sourceSlot.end?.format("HH:mm") || "No end time"
+      }`,
+      `Ticket type: ${getTicketTypeName(sourceSlot.ticketType)}`,
+      "This will overwrite any existing slots in the same position on other dates",
+    ];
 
-    dates.forEach((date) => {
-      if (date !== sourceDate) {
-        const existingSlots = newTimeSlots[date] || [];
-        const updatedSlots = [...existingSlots];
+    Modal.confirm({
+      title: "Confirm Apply to All Dates",
+      icon: <WarningOutlined />,
+      content: (
+        <div>
+          <p>This action will:</p>
+          <ul>
+            {confirmDetails.map((detail, index) => (
+              <li key={index}>{detail}</li>
+            ))}
+          </ul>
+          <p>Are you sure you want to continue?</p>
+        </div>
+      ),
+      okText: "Apply",
+      cancelText: "Cancel",
+      onOk: () => {
+        const newTimeSlots = { ...timeSlots };
+        const formValues = form.getFieldsValue();
+        const newFormValues = { ...formValues };
 
-        const targetStart = sourceSlot.start
-          ? dayjs(date)
-              .hour(sourceSlot.start.hour())
-              .minute(sourceSlot.start.minute())
-          : null;
+        dates.forEach((date) => {
+          if (date !== sourceDate) {
+            const existingSlots = newTimeSlots[date] || [];
+            const updatedSlots = [...existingSlots];
 
-        const targetEnd = sourceSlot.end
-          ? dayjs(date)
-              .hour(sourceSlot.end.hour())
-              .minute(sourceSlot.end.minute())
-          : null;
+            const targetStart = sourceSlot.start
+              ? dayjs(date)
+                  .hour(sourceSlot.start.hour())
+                  .minute(sourceSlot.start.minute())
+              : null;
 
-        while (updatedSlots.length <= slotIndex) {
-          updatedSlots.push({ start: null, end: null });
-        }
+            const targetEnd = sourceSlot.end
+              ? dayjs(date)
+                  .hour(sourceSlot.end.hour())
+                  .minute(sourceSlot.end.minute())
+              : null;
 
-        updatedSlots[slotIndex] = {
-          ...sourceSlot,
-          start: targetStart,
-          end: targetEnd,
-        };
+            // Ensure slot exists
+            while (updatedSlots.length <= slotIndex) {
+              updatedSlots.push({ start: null, end: null });
+            }
 
-        newTimeSlots[date] = updatedSlots;
-      }
+            updatedSlots[slotIndex] = {
+              ...sourceSlot,
+              start: targetStart,
+              end: targetEnd,
+            };
+
+            // Update form values
+            if (!newFormValues.timeSlots) {
+              newFormValues.timeSlots = {};
+            }
+            if (!newFormValues.timeSlots[date]) {
+              newFormValues.timeSlots[date] = [];
+            }
+            while (newFormValues.timeSlots[date].length <= slotIndex) {
+              newFormValues.timeSlots[date].push({});
+            }
+            newFormValues.timeSlots[date][slotIndex] = {
+              start: targetStart,
+              end: targetEnd,
+              ticketType: sourceSlot.ticketType,
+            };
+
+            // Validate time conflicts
+            const validation = validateTimeConflicts(updatedSlots);
+            if (!validation.valid) {
+              message.error(`Conflict on ${date}: ${validation.message}`);
+              return;
+            }
+
+            newTimeSlots[date] = updatedSlots;
+          }
+        });
+
+        setTimeSlots(newTimeSlots);
+        form.setFieldsValue(newFormValues);
+        message.success("Time slot applied to all dates successfully");
+      },
     });
-
-    setTimeSlots(newTimeSlots);
-    message.success(
-      <div>
-        Time slot applied to all dates:
-        <br />• Time: {appliedDetails.time} - {appliedDetails.endTime}
-        <br />• Ticket Type: {appliedDetails.ticketType}
-      </div>,
-      5 // Duration in seconds
-    );
   };
 
-  // Update the applyAllSlotsToAllDates function
   const applyAllSlotsToAllDates = () => {
     if (!activeTab || !timeSlots[activeTab]) {
       message.warning("Please set up time slots for the current date first");
@@ -259,58 +313,127 @@ export function ScheduleTimeSlots() {
     }
 
     const sourceSlots = timeSlots[activeTab];
-    const newTimeSlots = { ...timeSlots };
-    const appliedSlots = [];
+    if (!sourceSlots.some((slot) => slot.start)) {
+      message.warning("Please set at least one time slot first");
+      return;
+    }
 
-    dates.forEach((date) => {
-      if (date !== activeTab) {
-        newTimeSlots[date] = sourceSlots.map((slot) => {
-          const targetStart = slot.start
-            ? dayjs(date).hour(slot.start.hour()).minute(slot.start.minute())
-            : null;
+    const confirmDetails = sourceSlots
+      .filter((slot) => slot.start)
+      .map(
+        (slot) =>
+          `Time: ${slot.start.format("HH:mm")} - ${
+            slot.end?.format("HH:mm") || "No end time"
+          }, ` + `Ticket: ${getTicketTypeName(slot.ticketType)}`
+      );
 
-          const targetEnd = slot.end
-            ? dayjs(date).hour(slot.end.hour()).minute(slot.end.minute())
-            : null;
+    confirmDetails.push("This will overwrite all existing slots on other dates");
 
-          return {
-            ...slot,
-            start: targetStart,
-            end: targetEnd,
-          };
+    Modal.confirm({
+      title: "Confirm Apply to All Dates",
+      icon: <WarningOutlined />,
+      content: (
+        <div>
+          <p>This action will:</p>
+          <ul>
+            {confirmDetails.map((detail, index) => (
+              <li key={index}>{detail}</li>
+            ))}
+          </ul>
+          <p>Are you sure you want to continue?</p>
+        </div>
+      ),
+      okText: "Apply",
+      cancelText: "Cancel",
+      onOk: () => {
+        const newTimeSlots = { ...timeSlots };
+        const formValues = form.getFieldsValue();
+        const newFormValues = { ...formValues };
+
+        dates.forEach((date) => {
+          if (date !== activeTab) {
+            const updatedSlots = sourceSlots.map((slot) => {
+              const targetStart = slot.start
+                ? dayjs(date)
+                    .hour(slot.start.hour())
+                    .minute(slot.start.minute())
+                : null;
+
+              const targetEnd = slot.end
+                ? dayjs(date)
+                    .hour(slot.end.hour())
+                    .minute(slot.end.minute())
+                : null;
+
+              return {
+                ...slot,
+                start: targetStart,
+                end: targetEnd,
+              };
+            });
+
+            // Update form values
+            if (!newFormValues.timeSlots) {
+              newFormValues.timeSlots = {};
+            }
+            newFormValues.timeSlots[date] = updatedSlots.map((slot) => ({
+              start: slot.start,
+              end: slot.end,
+              ticketType: slot.ticketType,
+            }));
+
+            // Validate time conflicts
+            const validation = validateTimeConflicts(updatedSlots);
+            if (!validation.valid) {
+              message.error(`Conflict on ${date}: ${validation.message}`);
+              return;
+            }
+
+            newTimeSlots[date] = updatedSlots;
+          }
         });
-      }
-    });
 
-    // Collect details of applied slots
-    sourceSlots.forEach((slot, index) => {
-      if (slot.start) {
-        appliedSlots.push({
-          time: slot.start.format("HH:mm"),
-          endTime: slot.end ? slot.end.format("HH:mm") : "No end time",
-          ticketType: slot.ticketType
-            ? ticketOptions.find((t) => t.value === slot.ticketType[0])?.label
-            : "No ticket type",
-        });
-      }
+        setTimeSlots(newTimeSlots);
+        form.setFieldsValue(newFormValues);
+        message.success("All time slots applied to all dates successfully");
+      },
     });
-
-    setTimeSlots(newTimeSlots);
-    message.success(
-      <div>
-        Applied {appliedSlots.length} time slots to all dates:
-        {appliedSlots.map((slot, index) => (
-          <div key={index} style={{ marginTop: "4px" }}>
-            • Slot {index + 1}: {slot.time} - {slot.endTime}
-            <br />
-            &nbsp;&nbsp;Ticket Type: {slot.ticketType}
-          </div>
-        ))}
-      </div>,
-      6 // Increased duration for longer messages
-    );
   };
 
+  const handleTimeChange = (dateStr, index, type, value) => {
+    setTimeSlots((prev) => {
+      const newTimeSlots = {
+        ...prev,
+        [dateStr]: prev[dateStr].map((slot, i) =>
+          i === index ? { ...slot, [type]: value } : slot
+        ),
+      };
+      return newTimeSlots;
+    });
+
+    // Update form values
+    const currentFormValues = form.getFieldsValue();
+    if (!currentFormValues.timeSlots) {
+      currentFormValues.timeSlots = {};
+    }
+    if (!currentFormValues.timeSlots[dateStr]) {
+      currentFormValues.timeSlots[dateStr] = [];
+    }
+    while (currentFormValues.timeSlots[dateStr].length <= index) {
+      currentFormValues.timeSlots[dateStr].push({});
+    }
+    currentFormValues.timeSlots[dateStr][index] = {
+      ...currentFormValues.timeSlots[dateStr][index],
+      [type]: value,
+    };
+    form.setFieldsValue(currentFormValues);
+  };
+  const getTicketTypeName = (ticketTypeId) => {
+    return (
+      eventDetails?.event_ticket_structures?.find((t) => t.id === ticketTypeId)
+        ?.ticket_structure?.name || "Not selected"
+    );
+  };
   const handleSubmit = () => {
     form.validateFields().then((values) => {
       const formattedData = {
@@ -370,96 +493,105 @@ export function ScheduleTimeSlots() {
     ),
     value: dateStr,
   });
+  const ticketOptions = useMemo(() => {
+    return (
+      eventDetails?.event_ticket_structures?.map((ticketType) => ({
+        value: ticketType.id,
+        label: `${ticketType.ticket_structure.name} (${ticketType.ticket_set})`,
+      })) || []
+    );
+  }, [eventDetails]);
 
   const renderTimeSlots = (dateStr) => (
     <div style={{ marginTop: 16 }}>
       {timeSlots[dateStr]?.map((slot, index) => (
-        <Form form={form}>
-          <Row
-            key={index}
-            gutter={[16, 16]}
-            align="middle"
-            style={{ marginBottom: 16 }}
-          >
-            {/* Start Time */}
-            <Col span={6}>
-              <Form.Item
-                name={["slots", index, "start"]}
-                label="Start Time"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please select booking start time",
-                  },
-                ]}
-              >
-                <TimePicker
-                  format="HH:mm"
-                  value={slot.start}
-                  onChange={(time) =>
-                    handleTimeChange(dateStr, index, "start", time)
-                  }
-                  style={{ width: "100%" }}
-                  placeholder="Start Time"
-                />
-              </Form.Item>
-            </Col>
+        <Row
+          key={index}
+          gutter={[16, 16]}
+          align="middle"
+          style={{ marginBottom: 16 }}
+        >
+          {/* Start Time */}
+          <Col span={6}>
+            <Form.Item
+              name={["timeSlots", dateStr, index, "start"]}
+              label="Start Time"
+              rules={[
+                {
+                  required: true,
+                  message: "Please select booking start time",
+                },
+              ]}
+            >
+              <TimePicker
+                format="HH:mm"
+                value={slot.start}
+                onChange={(time) =>
+                  handleTimeChange(dateStr, index, "start", time)
+                }
+                style={{ width: "100%" }}
+                placeholder="Start Time"
+              />
+            </Form.Item>
+          </Col>
 
-            {/* End Time (Optional) */}
-            <Col span={6}>
-              <Form.Item label="End Time" name={["slots", index, "end"]}>
-                <TimePicker
-                  format="HH:mm"
-                  value={slot.end}
-                  onChange={(time) =>
-                    handleTimeChange(dateStr, index, "end", time)
-                  }
-                  style={{ width: "100%" }}
-                  placeholder="End Time"
-                />
-              </Form.Item>
-            </Col>
+          {/* End Time (Optional) */}
+          <Col span={6}>
+            <Form.Item
+              label="End Time"
+              name={["timeSlots", dateStr, index, "end"]}
+            >
+              <TimePicker
+                format="HH:mm"
+                value={slot.end}
+                onChange={(time) =>
+                  handleTimeChange(dateStr, index, "end", time)
+                }
+                style={{ width: "100%" }}
+                placeholder="End Time"
+              />
+            </Form.Item>
+          </Col>
 
-            {/* Ticket Type Selection */}
-            <Col span={6}>
-              <Form.Item
+          {/* Ticket Type Selection */}
+          <Col span={6}>
+            <Form.Item
               label="Ticket Type"
-                name={["slots", index, "ticketType"]}
-                rules={[
-                  { required: true, message: "Please select a ticket type" },
-                ]}
-              >
-                <Cascader
-                  options={ticketOptions}
-                  value={slot.ticketType}
-                  onChange={(value) =>
-                    handleTimeChange(dateStr, index, "ticketType", value)
-                  }
-                  style={{ width: "100%" }}
-                  placeholder="Select Ticket Type"
-                />
-              </Form.Item>
-            </Col>
+              name={["timeSlots", dateStr, index, "ticketType"]}
+              rules={[
+                { required: true, message: "Please select a ticket type" },
+              ]}
+            >
+              <Select
+                options={ticketOptions}
+                value={slot.ticketType}
+                onChange={(value) =>
+                  handleTimeChange(dateStr, index, "ticketType", value)
+                }
+                style={{ width: "100%" }}
+                placeholder="Select Ticket Type"
+              />
+            </Form.Item>
+          </Col>
 
-            {/* Action Buttons */}
-            <Col span={4} style={{marginTop:"45px"}}>
-              <Space>
-                <Button
-                  type="default"
-                  danger
-                  icon={<MinusCircleOutlined />}
-                  onClick={() => removeTimeSlot(dateStr, index)}
-                />
-                <Button
-                  type="default"
-                  icon={<CopyOutlined />}
-                  onClick={() => applySlotToAllDates(dateStr, index)}
-                  title="Apply this slot to all dates"
-                />
-              </Space>
-            </Col>
-          </Row>
-        </Form>
+          {/* Action Buttons */}
+          <Col span={4} style={{ marginTop: "45px" }}>
+            <Space>
+              <Button
+                type="default"
+                danger
+                icon={<MinusCircleOutlined />}
+                onClick={() => removeTimeSlot(dateStr, index)}
+              />
+              <Button
+                type="default"
+                icon={<CopyOutlined />}
+                onClick={() => applySlotToAllDates(dateStr, index)}
+                title="Apply this slot to all dates"
+              />
+            </Space>
+          </Col>
+        </Row>
       ))}
 
       <Button

@@ -50,6 +50,10 @@ export function ScheduleDetails() {
           placeholder="Select an event"
           onChange={handleSelectEvent}
           allowClear
+          showSearch
+            filterOption={(input, option) =>
+              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
         >
           {filteredEvents.map((event) => (
             <Option key={event.id} value={event.id}>

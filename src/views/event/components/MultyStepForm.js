@@ -60,7 +60,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     selectedEvent,
     modalLoading,
     editable_status,
-    message: warningMessage,
+     messages: warningMessage,
   } = useSelector((state) => state.event);
   const { selectedTicketStructure, ticketTypes } = useSelector(
     (state) => state.tickets
@@ -335,7 +335,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
       </div>
       <div style={{ marginLeft: "50px", marginRight: "50px" }}>
         <Form layout="vertical" form={form}>
-          {getEventFormItems(form, currentStep)}
+          {getEventFormItems(form, currentStep,mode)}
         </Form>
       </div>
 

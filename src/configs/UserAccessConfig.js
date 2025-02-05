@@ -48,7 +48,7 @@ export const getUserRole = () => {
   }
 };
 
-const getEventFormItems = (form, currentStep) => {
+const getEventFormItems = (form, currentStep,mode) => {
   const currentUser = getCurrentUser();
 
   if (!currentUser) {
@@ -71,7 +71,7 @@ const getEventFormItems = (form, currentStep) => {
       case 5:
         return <TicketField form={form} />;
       case 6:
-        return <OfferField form={form} />;
+        return <OfferField form={form} mode={mode}/>;
       default:
         return null;
     }

@@ -100,7 +100,12 @@ const CountryFormFields = ({mode}) => {
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
           <Form.Item name="country_id" label="Country name" rules={rules.country}>
-            <Select className="w-100" placeholder="Choose a Country" loading={loading}>
+            <Select className="w-100" placeholder="Choose a Country" loading={loading}
+            showSearch
+            filterOption={(input, option) =>
+              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            } 
+            >
               {countries && countries.length > 0 ? (
                 countries.map((country) => (
                   <Option key={country.id} value={country.id}>
