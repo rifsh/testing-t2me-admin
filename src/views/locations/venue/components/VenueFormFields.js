@@ -1,10 +1,27 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Select, Button, message, Upload, Typography } from "antd";
+import {
+  Input,
+  Row,
+  Col,
+  Card,
+  Form,
+  Select,
+  Button,
+  message,
+  Upload,
+  Typography,
+} from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import {
-  addVenue, setSelectedPlace, editVenue, setSelectedVenue, setLocationDialogVisible,
+  addVenue,
+  setSelectedPlace,
+  editVenue,
+  setSelectedVenue,
+  setLocationDialogVisible,
+  setPlaceValidationDialogVisible,
   setLocationModalLoading,
+  validatePlace,
 } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Flex from "components/shared-components/Flex";
@@ -17,18 +34,22 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
-import { SupportImageFormat, SupportFormatContent, ResolutionByServices } from "constants/SupportFileConstants";
-import Utils from "utils/index"
+import {
+  SupportImageFormat,
+  SupportFormatContent,
+  ResolutionByServices,
+} from "constants/SupportFileConstants";
+import Utils from "utils/index";
 import LoadingOverlay from "components/util-components/Loader/index";
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
+import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 
 const { Option } = Select;
 const { Text } = Typography;
 
 const VenueFormFields = ({ mode, venue }) => {
-
   console.log(venue, "VENUEEEEEEEEEE FOR EDIT -------------");
 
   const [form] = Form.useForm();
@@ -47,11 +68,12 @@ const VenueFormFields = ({ mode, venue }) => {
     modalLoading,
     editable_status,
     responseImpactData,
+    placeValidateData,
+    validationStatus,
     message: warningMessage,
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
-
     if (venue && mode === "EDIT") {
       form.setFieldsValue({
         address: venue.address,
@@ -63,25 +85,25 @@ const VenueFormFields = ({ mode, venue }) => {
         longitude: venue.longitude,
         banner_images: venue?.media
           ? venue?.media?.map((banner, index) => ({
-            uid: `-banner-${index}`,
-            name: banner?.media_url.split("/").pop(),
-            status: "done",
-            url: banner?.media_url,
-          }))
-          : [],
-
-        thumbnail_image: venue.thumbnail_image && venue.thumbnail_image !== "images"
-          ? [
-            {
-              uid: "-1",
-              name: venue.thumbnail_image.split("/").pop(),
+              uid: `-banner-${index}`,
+              name: banner?.media_url.split("/").pop(),
               status: "done",
-              url: venue.thumbnail_image,
-            },
-          ]
+              url: banner?.media_url,
+            }))
           : [],
-      });
 
+        thumbnail_image:
+          venue.thumbnail_image && venue.thumbnail_image !== "images"
+            ? [
+                {
+                  uid: "-1",
+                  name: venue.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: venue.thumbnail_image,
+                },
+              ]
+            : [],
+      });
     }
   }, [form, venue, mode]);
 
@@ -117,21 +139,18 @@ const VenueFormFields = ({ mode, venue }) => {
         capacity: values.capacity || 0,
         indoor: values.indoor !== undefined ? values.indoor : false,
         address: values.address,
-        id: venue.id
+        id: venue.id,
       };
       console.log("Edit Data:", data);
 
       const resultAction = await dispatch(
-        editVenue({ data, action: ActionType.WARNING, })
+        editVenue({ data, action: ActionType.WARNING })
       );
 
       if (editVenue.fulfilled.match(resultAction)) {
         dispatch(setSelectedVenue(data));
         dispatch(setLocationDialogVisible(true));
       }
-
-
-
     } else {
       try {
         console.log("Form valuexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs:", values);
@@ -152,15 +171,20 @@ const VenueFormFields = ({ mode, venue }) => {
           address: values.address,
         };
 
+        // const resultAction = await dispatch(validatePlace(selectedPlace));
+        // if (validatePlace.fulfilled.match(resultAction)) {
+        //   if (validationStatus) {
+        //     dispatch(setSelectedSubmitItem(formData));
+        //   } else {
+        //     dispatch(setPlaceValidationDialogVisible(true));
+        //   }
+        // }
         dispatch(setSelectedSubmitItem(formData));
-
       } catch (errorInfo) {
         console.error("Validation Failed:", errorInfo);
       }
     }
-
   };
-
 
   const handleModalSubmit = async () => {
     dispatch(setLocationModalLoading(true));
@@ -181,7 +205,9 @@ const VenueFormFields = ({ mode, venue }) => {
     dispatch(setLocationDialogVisible(false));
   };
 
-
+  const handleValidationModalCancel = () => {
+    dispatch(setPlaceValidationDialogVisible(false));
+  };
 
   return (
     <Row gutter={16}>
@@ -204,7 +230,6 @@ const VenueFormFields = ({ mode, venue }) => {
             >
               <Input placeholder="Enter the address" />
             </Form.Item>
-
 
             <PlaceWithCountryForm
               form={form}
@@ -272,25 +297,28 @@ const VenueFormFields = ({ mode, venue }) => {
               label="Thumbnail Image"
               valuePropName="fileList"
               getValueFromEvent={normFile}
-              style={{ marginBottom: "0px", padding:"0px"}}
-
+              style={{ marginBottom: "0px", padding: "0px" }}
             >
-              <Upload name="thumbnail_image" listType="picture" maxCount={1} 
-              beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
+              <Upload
+                name="thumbnail_image"
+                listType="picture"
+                maxCount={1}
+                beforeUpload={(file) =>
+                  Utils.handleBeforeUpload(file, ResolutionByServices.place)
+                }
                 // beforeUpload={handleBeforeUpload}
-                accept={`.${SupportImageFormat.join(',.')}`}
+                accept={`.${SupportImageFormat.join(",.")}`}
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
-
             </Form.Item>
             <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
-              {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
-              {" "}
+              {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
+              &{" resolution "}
+              {ResolutionByServices.place} pixels.{" "}
             </Text>
 
             <Form.Item
@@ -298,24 +326,29 @@ const VenueFormFields = ({ mode, venue }) => {
               label="Banner Images"
               valuePropName="fileList"
               getValueFromEvent={normFile}
-              style={{ marginBottom: "0px", padding:"0px"}}
+              style={{ marginBottom: "0px", padding: "0px" }}
             >
-              <Upload name="banner_images" listType="picture" 
-              beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
-              //beforeUpload={handleBeforeUpload}
-                accept={`.${SupportImageFormat.join(',.')}`}
+              <Upload
+                name="banner_images"
+                listType="picture"
+                beforeUpload={(file) =>
+                  Utils.handleBeforeUpload(file, ResolutionByServices.place)
+                }
+                //beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(",.")}`}
               >
-                <Button icon={<UploadOutlined />}>Click to upload banners</Button>
+                <Button icon={<UploadOutlined />}>
+                  Click to upload banners
+                </Button>
               </Upload>
-
             </Form.Item>
             <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
-              {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
-              {" "}
+              {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
+              &{" resolution "}
+              {ResolutionByServices.place} pixels.{" "}
             </Text>
 
             <div className="mb-3">
@@ -344,6 +377,13 @@ const VenueFormFields = ({ mode, venue }) => {
           {mode === "EDIT" && <EditWarningAlert />}
         </Form>
       </Col>
+
+      {/* <ValidationModal
+        data={placeValidateData?.place}
+        statusMessage={warningMessage}
+        onClose={handleValidationModalCancel}
+        visible={dialogVisible}
+      /> */}
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
@@ -357,13 +397,11 @@ const VenueFormFields = ({ mode, venue }) => {
         loading={modalLoading}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         }}
         editable_status={editable_status}
       />
-      <LoadingOverlay 
-        loading={loading} 
-      />
+      <LoadingOverlay loading={loading} />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? editVenue : addVenue}

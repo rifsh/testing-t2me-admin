@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import AdvertisementService from "services/AdvertisementService";
 
-
 const initialState = {
   loading: false,
   createBannerLoading: false,
@@ -29,6 +28,8 @@ const initialState = {
   singleAdSchedule: null,
   modalVisible: false,
   selectedMedia: null,
+  editItemId: null,
+  responseImpactData: null,
 };
 
 export const setDraggedFile = createAsyncThunk(
@@ -45,7 +46,6 @@ export const setSelectedDroppedFile = createAsyncThunk(
   }
 );
 
-
 export const setVideoPlayingStatus = createAsyncThunk(
   "advertisement/setVideoPlayingStatus",
   async (status) => {
@@ -53,15 +53,12 @@ export const setVideoPlayingStatus = createAsyncThunk(
   }
 );
 
-
 export const fetchAdBanners = createAsyncThunk(
   "advertisement/fetchAdBanners",
   async (pageData, { rejectWithValue }) => {
     try {
-
       const response = await AdvertisementService.fetchAdBanners(pageData);
       return response.data[0];
-
     } catch (error) {
       return rejectWithValue("Failed to fetch categories");
     }
@@ -71,10 +68,8 @@ export const fetchAdBanner = createAsyncThunk(
   "advertisement/fetchAdBanner",
   async (pageData, { rejectWithValue }) => {
     try {
-
       const response = await AdvertisementService.fetchAdBanner(pageData);
       return response.data[0];
-
     } catch (error) {
       return rejectWithValue("Failed to fetch categories");
     }
@@ -85,10 +80,8 @@ export const fetchAdSchedules = createAsyncThunk(
   "advertisement/fetchAdSchedules",
   async (pageData, { rejectWithValue }) => {
     try {
-
       const response = await AdvertisementService.fetchAdSchedules(pageData);
       return response.data[0];
-
     } catch (error) {
       return rejectWithValue("Failed to fetch categories");
     }
@@ -110,13 +103,13 @@ export const createAdSchedule = createAsyncThunk(
   "advertisement/createAdSchedule",
   async ({ data, action }, { rejectWithValue }) => {
     try {
-      console.log("inside-=-------------------")
-      console.log(data, "030303030303030")
+      console.log("inside-=-------------------");
+      console.log(data, "030303030303030");
       const response = await AdvertisementService.addAdSchedule(data, action);
-      console.log(response)
+      console.log(response);
       return response;
     } catch (error) {
-      console.log(error)
+      console.log(error);
 
       return rejectWithValue(error.response?.data || "Error creating AdBanner");
     }
@@ -126,18 +119,30 @@ export const updateAdBanner = createAsyncThunk(
   "advertisement/updateAdBanners",
   async ({ data, action }, { rejectWithValue }) => {
     try {
-      
-      console.log("DATA IN SLICE-----",data);
-      
+      console.log("DATA IN SLICE-----", data);
+
       const response = await AdvertisementService.updateAdBanner(data, action);
-      
+
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to update Banner");
     }
   }
 );
-
+export const updateAdBannerStatus = createAsyncThunk(
+  "advertisement/updateAdBannerStatus",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await AdvertisementService.updateBannerStatus(
+        data,
+        action
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 
 const AdvertisementSlice = createSlice({
   name: "advertisement",
@@ -170,6 +175,9 @@ const AdvertisementSlice = createSlice({
     setAdScheduleModalLoading(state, action) {
       state.modalLoading = action.payload;
     },
+    setEditItemId: (state, action) => {
+      state.editItemId = action.payload;
+    },
     setSelectedAdBanner(state, action) {
       state.selectedAdBanner = action.payload;
     },
@@ -188,11 +196,9 @@ const AdvertisementSlice = createSlice({
     filterSchedule: (state, action) => {
       const { searchTerm, type } = action.payload;
 
-
       state.filteredAdSchedules = state.adSchedules.filter((schedule) =>
         schedule.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
-
     },
 
     setSearchTerm: (state, action) => {
@@ -258,7 +264,7 @@ const AdvertisementSlice = createSlice({
         state.error = action.payload.data;
       })
       .addCase(createAdSchedule.pending, (state) => {
-        state.loading=true;
+        state.loading = true;
         state.createScheduleLoading = true;
         state.error = null;
       })
@@ -274,26 +280,44 @@ const AdvertisementSlice = createSlice({
         state.createScheduleLoading = false;
         state.error = action.payload.data;
       })
+      .addCase(updateAdBannerStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateAdBannerStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(updateAdBannerStatus.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
       .addCase(updateAdBanner.pending, (state) => {
         state.loading = true;
-        state.createBannerLoading=true;
+        state.createBannerLoading = true;
         state.error = null;
       })
       .addCase(updateAdBanner.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.createBannerLoading=false;
+        state.createBannerLoading = false;
         state.responseData = payload.data;
-        if (payload.message) {
+        if (payload.status) {
           state.message = payload.status.message;
-          state.editable_status = payload.editable_status;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
         }
       })
       .addCase(updateAdBanner.rejected, (state, { payload }) => {
         state.loading = false;
-        state.createBannerLoading=false;
+        state.createBannerLoading = false;
         state.error = payload || "Failed to edit event";
-      })
-
+      });
   },
 });
 
@@ -311,7 +335,7 @@ export const {
   setModalVisible,
   setSelectedMedia,
   setSelectedDroppedFileState,
-} =
-  AdvertisementSlice.actions;
+  setEditItemId,
+} = AdvertisementSlice.actions;
 
 export default AdvertisementSlice.reducer;

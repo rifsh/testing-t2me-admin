@@ -188,7 +188,7 @@ const TaxList = () => {
             onChange: (page, pageSize) => handlePagination(page, pageSize),
           }}
         />
-      </div>
+      </div> 
       <WarningModal
         mode={"itemmodal"}
         visible={dialogVisible}

@@ -7,20 +7,38 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { addCoupon } from "store/slices/couponSlice";
+import {
+  addCoupon,
+  editCoupon,
+  setSelectedCoupon,
+  setCouponDialogVisible,
+  setCouponModalLoading,
+} from "store/slices/couponSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
+import dayjs from "dayjs";
 import LoadingOverlay from "components/util-components/Loader/index";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { ActionType } from "utils/api/warning-submit-util";
 
 const ADD = "ADD";
 // const EDIT = 'EDIT'
 
 const CouponForm = ({ mode, coupon }) => {
-  const { loading, error, responseData, responseMessage } = useSelector(
-    (state) => state.coupons
-  );
+  const {
+    loading,
+    error,
+    responseData,
+    responseMessage,
+    dialogVisible,
+    editable_status,
+    selectedCoupon,
+    responseImpactData,
+    message: warningMessage,
+    modalLoading,
+  } = useSelector((state) => state.coupons);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -31,29 +49,84 @@ const CouponForm = ({ mode, coupon }) => {
     }
   }, [error]);
 
+  useEffect(() => {
+    if (coupon && mode === "EDIT") {
+      const formData = {
+        name: coupon.name,
+        coupon_code: coupon.coupon_code,
+        discount_percentage: coupon.discount_percentage,
+        start_date: dayjs(coupon.start_date),
+        end_date: dayjs(coupon.end_date),
+        max_uses: coupon.max_uses,
+        min_purchase_amount: coupon.min_purchase_amount,
+        thumbnail_image:
+          coupon.thumbnail_image && coupon.thumbnail_image !== "images"
+            ? [
+                {
+                  uid: "-1",
+                  name: coupon.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: coupon.thumbnail_image,
+                },
+              ]
+            : [],
+      };
+
+      form.setFieldsValue(formData);
+    }
+  }, [form, coupon]);
+
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      values.start_date =Utils.formatDate(values.start_date);
+
+      if (mode === "EDIT") {
+        values.start_date = Utils.formatDate(values.start_date);
         values.end_date = Utils.formatDate(values.end_date);
-      // dispatch(setSelectedSubmitItem(values));
-      const formData = {
-                            ...values,
-                          };
-                      
-      dispatch(setSelectedSubmitItem(formData));
-      //   const resultAction = await dispatch(addCoupon(values));
-      //   if (addCoupon.fulfilled.match(resultAction)) {
-      //     message.success(`Offer ${values.name} added successfully`);
-      //     form.resetFields();
-      //     navigate(`${APP_PREFIX_PATH}/coupon/list`);
-      //   } else {
-      //     message.error("Failed to add the coupon. Please try again.");
-      //   }
+
+        const editData = {
+          ...values,
+          id: coupon.id,
+        };
+        console.log("Edit Data:", editData);
+        const resultAction = await dispatch(
+          editCoupon({ data: editData, action: ActionType.WARNING })
+        );
+
+        if (editCoupon.fulfilled.match(resultAction)) {
+          dispatch(setSelectedCoupon(editData));
+          dispatch(setCouponDialogVisible(true));
+        }
+      } else {
+        values.start_date = Utils.formatDate(values.start_date);
+        values.end_date = Utils.formatDate(values.end_date);
+        // dispatch(setSelectedSubmitItem(values));
+        const formData = {
+          ...values,
+        };
+
+        dispatch(setSelectedSubmitItem(formData));
+      }
     } catch (info) {
       console.error("Validation Failed:", info);
       message.error("Please enter all required fields.");
     }
+  };
+
+  const handleModalSubmit = async () => {
+    dispatch(setCouponModalLoading(true));
+    const resultAction = await dispatch(
+      editCoupon({ data: selectedCoupon, action: ActionType.SUBMIT })
+    );
+    dispatch(setCouponModalLoading(false));
+    dispatch(setCouponDialogVisible(false));
+    if (editCoupon.fulfilled.match(resultAction)) {
+      dispatch(setSelectedSubmitItem(selectedCoupon));
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setCouponDialogVisible(false));
   };
 
   return (
@@ -81,7 +154,7 @@ const CouponForm = ({ mode, coupon }) => {
                 {mode === "ADD" ? "Add New Coupon" : `Edit Coupon`}{" "}
               </h2>
               <div className="mb-3">
-              <DiscardButton form={form} />
+                <DiscardButton form={form} />
                 <Button
                   type="primary"
                   onClick={() => onFinish()}
@@ -106,23 +179,37 @@ const CouponForm = ({ mode, coupon }) => {
               },
             ]}
           />
-
         </div>
         <Col xs={24} sm={24} md={17}>
-        <Alert
-          message="Warning"
-          description="expired coupons are non-editable."
-          type="warning"
-          showIcon
-        />
-      </Col>
+          <Alert
+            message="Warning"
+            description="expired coupons are non-editable."
+            type="warning"
+            showIcon
+          />
+        </Col>
       </Form>
-      <LoadingOverlay 
-        loading={loading}
+      <LoadingOverlay loading={loading} />
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={warningMessage}
+        responseData={responseImpactData}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={modalLoading}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules",
+        }}
+        editable_status={editable_status}
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={addCoupon}
+        addFunction={mode === "EDIT" ? editCoupon : addCoupon}
         navigationPath={`${APP_PREFIX_PATH}/coupon/list`}
         responseMessage={responseMessage}
       />
