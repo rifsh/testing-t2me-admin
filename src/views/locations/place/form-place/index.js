@@ -48,12 +48,11 @@ const CountryForm = ({ mode, placeId }) => {
     message: warningMessage,
   } = useSelector((state) => state.locations);
 
-
   useEffect(() => {
     console.log("FETCHING SINGLE PLACE");
 
     if (placeId) {
-      dispatch(getSinglePlace(placeId))
+      dispatch(getSinglePlace(placeId));
     }
   }, [dispatch, placeId]);
 
@@ -69,28 +68,29 @@ const CountryForm = ({ mode, placeId }) => {
           name: singlePlace.name,
           banner_images: singlePlace?.media
             ? singlePlace?.media?.map((banner, index) => ({
-              uid: `-banner-${index}`,
-              name: banner?.media_url.split("/").pop(),
-              status: "done",
-              url: banner?.media_url,
-            }))
-            : [],
-          thumbnail_image: singlePlace.thumbnail_image && singlePlace.thumbnail_image !== "images"
-            ? [
-              {
-                uid: "-1",
-                name: singlePlace.thumbnail_image.split("/").pop(),
+                uid: `-banner-${index}`,
+                name: banner?.media_url.split("/").pop(),
                 status: "done",
-                url: singlePlace.thumbnail_image,
-              },
-            ]
+                url: banner?.media_url,
+              }))
             : [],
+          thumbnail_image:
+            singlePlace.thumbnail_image &&
+            singlePlace.thumbnail_image !== "images"
+              ? [
+                  {
+                    uid: "-1",
+                    name: singlePlace.thumbnail_image.split("/").pop(),
+                    status: "done",
+                    url: singlePlace.thumbnail_image,
+                  },
+                ]
+              : [],
         });
       }
     } else {
       console.warn(`No place found with ID: ${placeId}`);
     }
-
   }, [singlePlace, form]);
 
   useEffect(() => {
@@ -106,14 +106,19 @@ const CountryForm = ({ mode, placeId }) => {
 
       const formData = new FormData();
 
-      Object.keys(values).forEach((key) => {
-        formData.append(key, values[key]);
-      });
+      // Object.keys(values).forEach((key) => {
+      //   formData.append(key, values[key]);
+      // });
+      const data = {
+        ...values,
+      };
+
+      console.log(data, "THIS IS THE DATA");
 
       if (!placeId) {
         dispatch(setSelectedSubmitItem(values));
         const resultAction = await dispatch(
-          createPlace({ formData, action: ActionType.SUBMIT })
+          createPlace({ values, action: ActionType.SUBMIT })
         );
 
         if (createPlace.fulfilled.match(resultAction)) {
@@ -131,7 +136,7 @@ const CountryForm = ({ mode, placeId }) => {
         console.log("Edit Data:", data);
 
         const resultAction = await dispatch(
-          editPlace({ data, action: ActionType.WARNING, })
+          editPlace({ data, action: ActionType.WARNING })
         );
 
         if (editPlace.fulfilled.match(resultAction)) {
@@ -143,7 +148,6 @@ const CountryForm = ({ mode, placeId }) => {
       console.error("Validation Failed:", errorInfo);
     }
   };
-
 
   const handleModalSubmit = async () => {
     dispatch(setLocationModalLoading(true));
@@ -164,10 +168,8 @@ const CountryForm = ({ mode, placeId }) => {
     dispatch(setLocationDialogVisible(false));
   };
 
-
   return (
     <>
-
       <Form
         layout="vertical"
         form={form}
@@ -191,7 +193,6 @@ const CountryForm = ({ mode, placeId }) => {
                 {!placeId ? "Add New Place" : `Edit Place`}{" "}
               </h2>
               <div className="mb-3">
-
                 <DiscardButton form={form} />
                 <Button
                   type="primary"
@@ -219,12 +220,9 @@ const CountryForm = ({ mode, placeId }) => {
           />
         </div>
       </Form>
-      <LoadingOverlay
-        loading={createPlaceLoading}
-      />
+      <LoadingOverlay loading={createPlaceLoading} />
 
       <WarningModal
-
         visible={dialogVisible}
         title="Confirm Action"
         details={warningMessage}
@@ -237,7 +235,7 @@ const CountryForm = ({ mode, placeId }) => {
         loading={modalLoading}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         }}
         editable_status={editable_status}
       />

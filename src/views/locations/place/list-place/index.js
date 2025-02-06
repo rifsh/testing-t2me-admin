@@ -1,20 +1,8 @@
 import React, { useEffect } from "react";
-import {
-  Card,
-  Table,
-  Menu,
-  Button,
-  Row,
-  Col,
-  Form,
-} from "antd";
+import { Card, Table, Menu, Button, Row, Col, Form } from "antd";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
-import {
-  EyeOutlined,
-  FormOutlined,
-  EditOutlined,
-} from "@ant-design/icons";
+import { EyeOutlined, FormOutlined, EditOutlined } from "@ant-design/icons";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
 import dayjs from "dayjs";
@@ -35,6 +23,8 @@ import {
 } from "store/slices/locationSlice";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
@@ -54,7 +44,7 @@ const PlaceList = () => {
     responseImpactData,
     editItemId,
   } = useSelector((state) => state.locations);
-
+  const { responseData } = useSelector((state) => state.modalSlice);
 
   useEffect(() => {
     dispatch(getPlaces(DEFAULT_PAGE_SIZE));
@@ -89,6 +79,8 @@ const PlaceList = () => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
+    dispatch(setDialogVisible(true));
+
   };
 
   const dropdownMenu = (row) => (
@@ -199,13 +191,21 @@ const PlaceList = () => {
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         }}
         editable_status={editable_status}
         responseData={responseImpactData}
       />
 
-
+      <StatusSubmitAndConfirmModal
+        editFunction={editPlaceStatus}
+        getAllFunction={getPlaces}
+        responseData={responseData}
+        responseMessage={message}
+        pageData={pagination}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
+      />
     </Card>
   );
 };

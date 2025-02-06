@@ -31,24 +31,24 @@ LocationService.getAllCountries = function () {
 
 LocationService.addPlace = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  console.log("DATA IN SERVICE PLACE", data);
 
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
-  if (data.banner_images && Array.isArray(data.banner_images)) {
-    data.banner_images.forEach((image) => {
-      formData.append("banner_images", image.originFileObj);
-    });
-  }
-
+  // if (data.banner_images && Array.isArray(data.banner_images)) {
+  //   data.banner_images.forEach((image) => {
+  //     formData.append("banner_images", image.originFileObj);
+  //   });
+  // }
 
   return fetch({
     url: `${ApiConstant.PLACE_URL}?country_id=${data.country_id}&action=${encodedAction}`,
     method: "POST",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
@@ -57,17 +57,16 @@ LocationService.editPlace = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
-
 
   return fetch({
     url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
@@ -90,13 +89,12 @@ LocationService.editVenueStatus = function (data, action) {
   });
 };
 
-
 LocationService.editVenue = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  
+
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
 
   return fetch({
@@ -104,7 +102,7 @@ LocationService.editVenue = function (data, action) {
     method: "put",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
@@ -123,7 +121,7 @@ LocationService.addVenue = function (data, action) {
   const formData = new FormData();
 
   // Ensure address is appended to the formData
-  formData.append("address", data.address);  // Add this line
+  formData.append("address", data.address); // Add this line
 
   formData.append("place_id", data.place_id);
   formData.append("name", data.name);
@@ -148,11 +146,10 @@ LocationService.addVenue = function (data, action) {
     method: "POST",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
-
 
 LocationService.placeWithCountry = function (place) {
   return fetch({
@@ -215,6 +212,5 @@ LocationService.validateCountry = function (countryId) {
     method: "get",
   });
 };
-
 
 export default LocationService;

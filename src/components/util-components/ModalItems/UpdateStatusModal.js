@@ -4,7 +4,10 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import {
   resetStatusModalState,
   setDialogVisible,
+  setStatusDialogVisible,
+  setResponseData,
   setModalLoading,
+  setResponseDialogVisible,
 } from "store/slices/modalSlice";
 import { ActionType } from "utils/api/warning-submit-util";
 import { message } from "antd";
@@ -22,50 +25,86 @@ const UpdateStatusModal = ({
   tableConfig = {
     title: "Submission Details",
     dataKey: "",
-  }
+  },
 }) => {
   const dispatch = useDispatch();
   const { statusDialogVisible, selectedItem, modalLoading } = useSelector(
     (state) => state.modalSlice
   );
 
+  // useEffect(() => {
+  //   if (selectedItem && statusDialogVisible) {
+  //     dispatch(
+  //       editFunction({ data: selectedItem, action: ActionType.WARNING })
+  //     ).then((result) => {
+  //       if (editFunction.fulfilled.match(result)) {
+  //         dispatch(setDialogVisible(true));
+  //       } else {
+  //         dispatch(resetStatusModalState());
+
+  //         dispatch(setDialogVisible(false));
+  //         message.error(TextConstants.ErrorLoadingItem);
+  //       }
+  //     });
+  //   } else {
+  //     dispatch(resetStatusModalState());
+  //     dispatch(setDialogVisible(false));
+  //   }
+  // }, [statusDialogVisible, dispatch, editFunction, selectedItem]);
+
   useEffect(() => {
-    if (selectedItem) {
+    if (selectedItem && statusDialogVisible) {
       dispatch(
-        editFunction({ data: selectedItem, action: ActionType.WARNING })
-      ).then((result) => {
-        if (editFunction.fulfilled.match(result)) {
-          dispatch(setDialogVisible(true));
-        } else {
-          dispatch(resetStatusModalState());
-
-          dispatch(setDialogVisible(false));
-          message.error(TextConstants.ErrorLoadingItem);
-        }
-      });
-
-    } else {
-      dispatch(resetStatusModalState());
-      dispatch(setDialogVisible(false));
+        editFunction({
+          data: selectedItem,
+          action: ActionType.WARNING,
+        })
+      );
     }
-  }, [statusDialogVisible, dispatch, editFunction, selectedItem]);
+  }, [selectedItem, statusDialogVisible]);
 
+  // const handleModalSubmit = async () => {
+  //   dispatch(setModalLoading(true));
+  //   const result = await dispatch(
+  //     editFunction({ data: selectedItem, action: ActionType.SUBMIT })
+  //   );
+  //   dispatch(setModalLoading(false));
+  //   dispatch(setDialogVisible(false));
+  //   if (editFunction.fulfilled.match(result)) {
+  //     dispatch(getAllFunction(pageData));
+  //     dispatch(resetStatusModalState());
+
+  //     message.success(onSubmitMessage);
+  //   } else {
+  //     dispatch(resetStatusModalState());
+  //     message.error(TextConstants.StatusUpdateError);
+  //   }
+  // };
   const handleModalSubmit = async () => {
     dispatch(setModalLoading(true));
-    const result = await dispatch(
-      editFunction({ data: selectedItem, action: ActionType.SUBMIT })
-    );
-    dispatch(setModalLoading(false));
-    dispatch(setDialogVisible(false));
-    if (editFunction.fulfilled.match(result)) {
-      dispatch(getAllFunction(pageData));
-      dispatch(resetStatusModalState());
 
-      message.success(onSubmitMessage);
-    } else {
-      dispatch(resetStatusModalState());
+    try {
+      const result = await dispatch(
+        editFunction({
+          data: selectedItem,
+          action: ActionType.SUBMIT,
+        })
+      );
+
+      if (editFunction.fulfilled.match(result)) {
+        // Close warning modal and open response modal
+        dispatch(setDialogVisible(false));
+        dispatch(setResponseData(result.payload));
+        dispatch(setResponseDialogVisible(true));
+      } else {
+        throw new Error();
+      }
+    } catch (error) {
       message.error(TextConstants.StatusUpdateError);
+      dispatch(resetStatusModalState());
     }
+
+    dispatch(setModalLoading(false));
   };
 
   const handleModalCancel = () => {
@@ -78,7 +117,7 @@ const UpdateStatusModal = ({
     <WarningModal
       visible={statusDialogVisible}
       title={TextConstants.Confirm_Action}
-      details= {responseMessage || ""}
+      details={responseMessage || ""}
       editable_status={editable_status}
       warningMessage={
         editable_status
