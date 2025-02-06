@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table, Input, Tabs, Button, Select, Menu } from "antd";
-import { FormOutlined, SearchOutlined, EditOutlined, EyeOutlined, } from "@ant-design/icons";
+import {
+  FormOutlined,
+  SearchOutlined,
+  EditOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Utils from "utils";
-import { setSelectedItem } from "store/slices/modalSlice";
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
@@ -28,6 +33,8 @@ import {
   editSubCategoryStatus,
 } from "store/slices/categorySlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -50,8 +57,10 @@ const CategoryList = () => {
     dialogVisible,
     modalLoading,
     activeTab,
-    responseImpactData
+    responseImpactData,
   } = useSelector((state) => state.category);
+
+  const { responseData } = useSelector((state) => state.modalSlice);
 
   useEffect(() => {
     dispatch(fetchCategories({ page: 1, size: 10 }));
@@ -68,7 +77,6 @@ const CategoryList = () => {
     console.log("Subcategory details fetched:", id);
     navigate(`${APP_PREFIX_PATH}/subcategory/details/${id}`);
   };
-
 
   const handlePagination = (page, size, type) => {
     if (type === "category") {
@@ -89,6 +97,7 @@ const CategoryList = () => {
     setModalType("category");
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
+    dispatch(setDialogVisible(true));
   };
 
   const handleUpdateSubStatus = (item) => {
@@ -96,6 +105,7 @@ const CategoryList = () => {
     setModalType("subcategory");
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
+    dispatch(setDialogVisible(true));
   };
 
   const handleTabChange = (key) => {
@@ -108,9 +118,9 @@ const CategoryList = () => {
   const handleModalSubmit = async () => {
     dispatch(setCatModalLoading(true));
     if (activeTab === "categories") {
-      navigate(`${APP_PREFIX_PATH}/category/edit/category/${editItemId}`)
+      navigate(`${APP_PREFIX_PATH}/category/edit/category/${editItemId}`);
     } else {
-      navigate(`${APP_PREFIX_PATH}/category/edit/subcategory/${editItemId}`)
+      navigate(`${APP_PREFIX_PATH}/category/edit/subcategory/${editItemId}`);
     }
 
     dispatch(setCatDialogVisible(false));
@@ -120,11 +130,6 @@ const CategoryList = () => {
   const handleModalCancel = () => {
     dispatch(setCatDialogVisible(false));
   };
-
-
-
-
-
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -153,7 +158,6 @@ const CategoryList = () => {
       </Menu.Item>
     </Menu>
   );
-
 
   const categoryColumns = [
     {
@@ -217,9 +221,9 @@ const CategoryList = () => {
         pageData: { page: 1, size: 10 },
         tableConfig: {
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         },
-        responseData: responseImpactData
+        responseData: responseImpactData,
       };
     }
     return {
@@ -230,9 +234,9 @@ const CategoryList = () => {
       pageData: { categoryId: null, data: { page: 1, size: 10 } },
       tableConfig: {
         title: "Active Schedules",
-        dataKey: "active_schedules"
+        dataKey: "active_schedules",
       },
-      responseData: responseImpactData
+      responseData: responseImpactData,
     };
   };
 
@@ -324,6 +328,22 @@ const CategoryList = () => {
         loading={modalLoading}
       />
       <UpdateStatusModal {...getModalProps()} />
+
+      <StatusSubmitAndConfirmModal
+        editFunction={
+          activeTab === "categories"
+            ? editCategoryStatus
+            : editSubCategoryStatus
+        }
+        getAllFunction={
+          activeTab === "categories" ? fetchCategories : fetchSubcategories
+        }
+        responseData={responseData}
+        responseMessage={responseMessage}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
+      />
     </Card>
   );
 };

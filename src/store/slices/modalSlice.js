@@ -8,6 +8,7 @@ export const initialState = {
   statusDialogVisible: false,
   responseDialogVisible: false,
   modalLoading: false,
+  responseData: null,
 };
 
 const modalSlice = createSlice({
@@ -30,6 +31,9 @@ const modalSlice = createSlice({
     setModalLoading: (state, action) => {
       state.modalLoading = action.payload;
     },
+    setResponseData: (state, action) => {
+      state.responseData = action.payload;
+    },
   },
 });
 
@@ -40,6 +44,7 @@ export const {
   setResponseDialogVisible,
   setSelectedItem,
   setSelectedSubmitItem,
+  setResponseData,
 } = modalSlice.actions;
 
 export default modalSlice.reducer;

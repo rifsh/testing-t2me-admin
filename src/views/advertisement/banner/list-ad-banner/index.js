@@ -15,8 +15,14 @@ import {
   setEditItemId,
   setAdBannerDialogVisible,
   setAdBannerModalLoading,
+  updateAdBannerStatus,
 } from "store/slices/advertisementSlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
+import Utils from "utils";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 
 const AdBannerlist = () => {
   const dispatch = useDispatch();
@@ -31,7 +37,11 @@ const AdBannerlist = () => {
     editItemId,
     dialogVisible,
     modalLoading,
+    message,
+    responseImpactData,
+    editable_status,
   } = useSelector((state) => state.advertisement);
+  const { responseData } = useSelector((state) => state.modalSlice);
 
   useEffect(() => {
     dispatch(fetchAdBanners({ page: 1, size: 10 }));
@@ -81,6 +91,13 @@ const AdBannerlist = () => {
       </Menu.Item>
     </Menu>
   );
+
+  const handleUpdateStatus = (item) => {
+    const newStatus = !item.status;
+    const data = { status: newStatus, id: item.id };
+    dispatch(setSelectedItem(data));
+    dispatch(setDialogVisible(true));
+  };
 
   const categoryColumns = [
     {
@@ -151,6 +168,7 @@ const AdBannerlist = () => {
       ),
       sorter: (a, b) => a.ads_url.localeCompare(b.ads_url),
     },
+    Utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "",
       dataIndex: "actions",
@@ -161,6 +179,20 @@ const AdBannerlist = () => {
       ),
     },
   ];
+  const getModalProps = () => {
+    return {
+      responseMessage: message,
+      editable_status: editable_status,
+      editFunction: updateAdBannerStatus,
+      getAllFunction: (pageData) => fetchAdBanners(pageData),
+      pageData: { page: 1, size: 10 },
+      tableConfig: {
+        title: "Active Schedules",
+        dataKey: "active_schedules",
+      },
+      responseData: responseImpactData,
+    };
+  };
 
   return (
     <Card>
@@ -202,6 +234,16 @@ const AdBannerlist = () => {
         confirmText="Proceed to Edit"
         cancelText="Cancel"
         loading={modalLoading}
+      />
+      <UpdateStatusModal {...getModalProps()} />
+      <StatusSubmitAndConfirmModal
+        editFunction={updateAdBannerStatus}
+        getAllFunction={fetchAdBanners}
+        responseData={responseData}
+        responseMessage={message}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
       />
       <Modal
         visible={modalVisible}
