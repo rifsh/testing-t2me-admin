@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table, Select, Input, Button, Menu, message } from "antd";
-import {
-  EyeOutlined,
-  FormOutlined,
-  EditOutlined,
-} from "@ant-design/icons";
+import { EyeOutlined, FormOutlined, EditOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,6 +12,7 @@ import {
   setEditItemId,
   editEventStatus,
 } from "store/slices/eventSlice";
+import { setDialogVisible as setStatusDialogVisible } from "store/slices/modalSlice";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Flex from "components/shared-components/Flex";
@@ -27,6 +24,8 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+
 const { Option } = Select;
 
 const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
@@ -35,11 +34,18 @@ const EventsList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
-  const { pagination, editable_status, filteredEvents, messages, loading, dialogVisible,
+  const {
+    pagination,
+    editable_status,
+    filteredEvents,
+    messages,
+    loading,
+    dialogVisible,
     modalLoading,
     editItemId,
-    responseImpactData, } =
-    useSelector((state) => state.event);
+    responseImpactData,
+  } = useSelector((state) => state.event);
+  const { responseData } = useSelector((state) => state.modalSlice);
 
   useEffect(() => {
     dispatch(fetchAllEvent(DEFAULT_PAGE_SIZE));
@@ -51,24 +57,22 @@ const EventsList = () => {
   };
 
   const handleEditEvent = async (id) => {
-
     if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
       const hasPendingUpdates = filteredEvents
-        .find(event => event.id === id)?.updates
-        .some(update =>
-          update.approval_status === 'pending' ||
-          update.approval_status === 'updates'
+        .find((event) => event.id === id)
+        ?.updates.some(
+          (update) =>
+            update.approval_status === "pending" ||
+            update.approval_status === "updates"
         );
 
       if (hasPendingUpdates) {
-        message.warning('This Event have already pending edit approval');
+        message.warning("This Event have already pending edit approval");
         return;
       }
     }
     dispatch(setEditItemId(id));
     dispatch(setDialogVisible(true));
-
-
   };
 
   const handleUpdateStatus = (item) => {
@@ -76,6 +80,7 @@ const EventsList = () => {
     const data = { status: newStatus, id: item.id };
 
     dispatch(setSelectedItem(data));
+    dispatch(setStatusDialogVisible(true));
   };
   const handlePagination = (page, size) => {
     dispatch(fetchAllEvent({ page: page, size: size }));
@@ -132,7 +137,8 @@ const EventsList = () => {
     {
       title: "Place",
       dataIndex: ["venue", "place", "name"],
-      sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["venue", "place", "name"]),
+      sorter: (a, b) =>
+        utils.antdTableObjectSorter(a, b, ["venue", "place", "name"]),
     },
     utils.statusColumnUtil(handleUpdateStatus),
     {
@@ -255,9 +261,18 @@ const EventsList = () => {
         responseData={responseImpactData}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         }}
         pageData={{ page: 1, size: 10 }}
+      />
+      <StatusSubmitAndConfirmModal
+        editFunction={editEventStatus}
+        getAllFunction={fetchAllEvent}
+        responseData={responseData}
+        responseMessage={messages}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
       />
     </Card>
   );

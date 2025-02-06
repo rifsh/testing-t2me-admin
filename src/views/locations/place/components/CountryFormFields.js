@@ -129,11 +129,11 @@ const CountryFormFields = ({mode}) => {
             rules={rules.thumbnail_image}
             style={{ marginBottom: "0px", padding:"0px"}}
           >
-             <Tooltip
+             {/* <Tooltip
               title={
                 thumbnailImage ? (
                   <img
-                    src={URL.createObjectURL(thumbnailImage)} // Preview selected image
+                    // src={URL.createObjectURL(thumbnailImage)} // Preview selected image
                     alt="Thumbnail Preview"
                     style={{ width: "150px", height: "150px" }}
                   />
@@ -141,7 +141,7 @@ const CountryFormFields = ({mode}) => {
                   "No image selected"
                 )
               }
-            >
+            > */}
             <Upload name="thumbnail_image" listType="picture" maxCount={1} 
             // beforeUpload={handleBeforeUpload}
             beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place, )}
@@ -149,7 +149,7 @@ const CountryFormFields = ({mode}) => {
             >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
-            </Tooltip>
+            {/* </Tooltip> */}
           </Form.Item>
           <Text
               type="warning"

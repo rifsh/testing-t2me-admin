@@ -15,7 +15,15 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
-import { editTax, fetchAllTax, filterTax, setTaxDialogVisible, setTaxModalLoading, setEditItemId, editTaxStatus } from "store/slices/taxSlice";
+import {
+  editTax,
+  fetchAllTax,
+  filterTax,
+  setTaxDialogVisible,
+  setTaxModalLoading,
+  setEditItemId,
+  editTaxStatus,
+} from "store/slices/taxSlice";
 import {
   fetchAllCountires,
   getCoutryDetails,
@@ -25,6 +33,8 @@ import Utils from "utils";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+
 import { TextConstants } from "constants/TextConstant";
 
 const { Option } = Select;
@@ -42,10 +52,10 @@ const TaxList = () => {
     modalLoading,
     editItemId,
     responseImpactData,
-  } =
-    useSelector((state) => state.tax) || {};
+  } = useSelector((state) => state.tax) || {};
   const [form] = Form.useForm();
   const locationState = useSelector((state) => state?.locations) || {};
+  const { responseData } = useSelector((state) => state.modalSlice);
   const {
     loading: locationLoading,
     filteredPlaces,
@@ -60,6 +70,7 @@ const TaxList = () => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
+    dispatch(setDialogVisible(true));
   };
   const handlePagination = (page, size) => {
     dispatch(fetchAllTax({ page: page, size: size }));
@@ -70,7 +81,7 @@ const TaxList = () => {
   };
   const handleModalSubmit = async () => {
     dispatch(setTaxModalLoading(true));
-    navigate(`${APP_PREFIX_PATH}/tax/edit/${editItemId}`)
+    navigate(`${APP_PREFIX_PATH}/tax/edit/${editItemId}`);
     console.log(editItemId, "9234239423490823498234098234908");
     dispatch(setTaxDialogVisible(false));
     dispatch(setTaxModalLoading(false));
@@ -81,9 +92,7 @@ const TaxList = () => {
   };
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item
-        onClick={() => handleEditTax(row.id)}
-      >
+      <Menu.Item onClick={() => handleEditTax(row.id)}>
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">Edit Tax</span>
@@ -174,7 +183,6 @@ const TaxList = () => {
         </Col>
       </Row>
 
-
       <div className="table-responsive">
         <Table
           columns={tableColumns}
@@ -188,7 +196,7 @@ const TaxList = () => {
             onChange: (page, pageSize) => handlePagination(page, pageSize),
           }}
         />
-      </div> 
+      </div>
       <WarningModal
         mode={"itemmodal"}
         visible={dialogVisible}
@@ -209,10 +217,19 @@ const TaxList = () => {
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         }}
         editable_status={editable_status}
         responseData={responseImpactData}
+      />
+      <StatusSubmitAndConfirmModal
+        editFunction={editTaxStatus}
+        getAllFunction={fetchAllTax}
+        responseData={responseData}
+        responseMessage={message}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
       />
     </Card>
   );
