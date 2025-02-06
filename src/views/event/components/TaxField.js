@@ -56,7 +56,7 @@ const TaxField = ({ form }) => {
               notFoundContent={
                 loading ? "Loading Taxes..." : "No Taxes Available"
               }
-              onChange={handleTaxChange} // Handle tax selection changes
+              onChange={handleTaxChange}  
             >
               {allTax.map((tax) => (
                 <Option key={tax.id} value={tax.id}>

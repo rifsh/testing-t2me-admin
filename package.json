@@ -6,6 +6,7 @@
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@hello-pangea/dnd": "^16.0.0",
+    "@meinefinsternis/react-horizontal-date-picker": "^1.0.1",
     "@reduxjs/toolkit": "^1.8.5",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",

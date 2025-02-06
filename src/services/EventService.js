@@ -6,11 +6,12 @@ import { handleAction } from "utils/api/warning-submit-util";
 const EventsService = {};
 
 EventsService.addEvent = function (data, action) {
+  console.log(data, 'event dataaaaaa=======================');
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
     fileKeys: ['thumbnail_image'],
     skipEmpty: true
-  }); 
+  });
 
   return fetch({
     url: `${ApiConstant.EVENT_URL}?action=${encodedAction}`,
