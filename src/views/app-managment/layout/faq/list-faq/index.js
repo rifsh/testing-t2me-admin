@@ -119,6 +119,7 @@ const FaqList = () => {
                                 columns={questionColumns}
                                 dataSource={record.questions}
                                 pagination={false}
+                                scroll={{ y: 'none' }}
                                 expandable={{
                                     expandedRowRender: (questionRecord) => (
                                         <p style={{ margin: 0 }}>{questionRecord.answer}</p>
