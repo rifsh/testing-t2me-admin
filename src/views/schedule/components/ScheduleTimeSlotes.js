@@ -29,6 +29,14 @@ import { fetchEventDetails } from "store/slices/eventSlice";
 
 import { createDateTimePickerProps } from "../../../utils/time_zone_util";
 import TimeSlots from "./TimeSlote";
+import {
+  addNewTimeSlot,
+  removeExistingTimeSlot,
+  setActiveTab,
+  setDates,
+  setSlotStatus,
+  setTimeSlots,
+} from "store/slices/scheduleSlice";
 
 const { Title } = Typography;
 
@@ -40,10 +48,10 @@ dayjs.extend(isSameOrAfter);
 dayjs.extend(isBetween);
 
 export function ScheduleTimeSlots({ form }) {
-  const [timeSlots, setTimeSlots] = useState({});
-  const [activeTab, setActiveTab] = useState(null);
-  const [dates, setDates] = useState([]);
-  const [slotStatus, setSlotStatus] = useState({});
+  // const [timeSlots, setTimeSlots] = useState({});
+  // const [activeTab, setActiveTab] = useState(null);
+  // const [dates, setDates] = useState([]);
+  // const [slotStatus, setSlotStatus] = useState({});
   const [scrollPosition, setScrollPosition] = useState(0);
   const segmentRef = useRef(null);
 
@@ -58,6 +66,9 @@ export function ScheduleTimeSlots({ form }) {
   }, [dispatch, form]);
 
   const { eventDetails } = useSelector((state) => state.event);
+  const { timeSlots, activeTab, dates, slotStatus } = useSelector(
+    (state) => state.schedules
+  );
   useEffect(() => {
     form.setFieldsValue({
       timeSlots: timeSlots,
@@ -83,7 +94,7 @@ export function ScheduleTimeSlots({ form }) {
         newSlotStatus[date] = "red";
       }
     });
-    setSlotStatus(newSlotStatus);
+    dispatch(setSlotStatus(newSlotStatus));
   }, [timeSlots]);
 
   const validateTimeConflicts = (slots) => {
@@ -129,8 +140,8 @@ export function ScheduleTimeSlots({ form }) {
       currentDate = currentDate.add(1, "day");
     }
 
-    setDates(newDates);
-    setActiveTab(newDates[0]);
+    dispatch(setDates(newDates));
+    dispatch(setActiveTab(newDates[0]));
 
     // Initialize time slots for new dates
     const initialTimeSlots = {};
@@ -139,7 +150,7 @@ export function ScheduleTimeSlots({ form }) {
         { start_time: null, _time: null },
       ];
     });
-    setTimeSlots(initialTimeSlots);
+    dispatch(setTimeSlots(initialTimeSlots));
   };
 
   const validateDateRange = (startDate, end_timeDate) => {
@@ -165,19 +176,19 @@ export function ScheduleTimeSlots({ form }) {
   };
 
   const addTimeSlot = (dateStr) => {
-    setTimeSlots((prev) => ({
-      ...prev,
-      [dateStr]: [...(prev[dateStr] || []), { start_time: null, _time: null }],
-    }));
+    dispatch(addTimeSlot({ dateStr }));
   };
 
   const removeTimeSlot = (dateStr, index) => {
-    setTimeSlots((prev) => ({
-      ...prev,
-      [dateStr]: prev[dateStr].filter((_, i) => i !== index),
-    }));
+    dispatch(removeTimeSlot({ dateStr, index }));
+  };
+  const handleAddTimeSlot = (dateStr) => {
+    dispatch(addNewTimeSlot({ dateStr }));
   };
 
+  const handleRemoveTimeSlot = (dateStr, index) => {
+    dispatch(removeExistingTimeSlot({ dateStr, index }));
+  };
   const applySlotToAllDates = (sourceDate, slotIndex) => {
     if (!sourceDate || !timeSlots[sourceDate]) {
       message.warning("Please set up time slots for the current date first");
@@ -278,7 +289,7 @@ export function ScheduleTimeSlots({ form }) {
           }
         });
 
-        setTimeSlots(newTimeSlots);
+        dispatch(setTimeSlots(newTimeSlots));
         form.setFieldsValue(newFormValues);
         message.success("Time slot applied to all dates successfully");
       },
@@ -375,7 +386,7 @@ export function ScheduleTimeSlots({ form }) {
           }
         });
 
-        setTimeSlots(newTimeSlots);
+        dispatch(setTimeSlots(newTimeSlots));
         form.setFieldsValue(newFormValues);
         message.success("All time slots applied to all dates successfully");
       },
@@ -390,9 +401,9 @@ export function ScheduleTimeSlots({ form }) {
   };
 
   const handleReset = () => {
-    setTimeSlots({});
-    setDates([]);
-    setActiveTab(null);
+    dispatch(setTimeSlots({}));
+    dispatch(setDates([]));
+    dispatch(setActiveTab(null));
   };
 
   const handleScroll = (direction) => {
@@ -435,13 +446,13 @@ export function ScheduleTimeSlots({ form }) {
       dateStr={dateStr}
       timeSlots={timeSlots}
       form={form}
-      setTimeSlots={setTimeSlots}
+      setTimeSlots={(newTimeSlots) => dispatch(setTimeSlots(newTimeSlots))}
       eventStartTime={form.getFieldValue("start_date")}
       bookingStartTime={form.getFieldValue("booking_start_date_time")}
       ticketOptions={ticketOptions}
       getEventTimezone={getEventTimezone}
-      onAddSlot={addTimeSlot}
-      onRemoveSlot={removeTimeSlot}
+      onAddSlot={handleAddTimeSlot}
+      onRemoveSlot={handleRemoveTimeSlot}
       onApplyToAll={applySlotToAllDates}
     />
   );
@@ -460,7 +471,7 @@ export function ScheduleTimeSlots({ form }) {
         "ad_start_date_time",
         "booking_start_date_time",
         "start_date",
-        "end_time_date",
+        "end_date",
       ];
 
       const currentIndex = fieldOrder.indexOf(field);
@@ -472,11 +483,11 @@ export function ScheduleTimeSlots({ form }) {
         });
         form.setFieldsValue(resetValues);
       }
-      if (field === "end_time_date" || field === "start_date") {
+      if (field === "end_date" || field === "start_date") {
         handleReset();
         updateDateRange(
           form.getFieldValue("start_date"),
-          form.getFieldValue("end_time_date")
+          form.getFieldValue("end_date")
         );
       }
     }
@@ -568,8 +579,8 @@ export function ScheduleTimeSlots({ form }) {
                   depend_timesOn: "start_date",
                   form,
                 })}
-                onChange={handleDateChange("end_time_date")}
-                placeholder="Select event end_time date"
+                onChange={handleDateChange("end_date")}
+                placeholder="Select event end date"
               />
             </Form.Item>
           </Col>
@@ -613,7 +624,7 @@ export function ScheduleTimeSlots({ form }) {
             >
               <Segmented
                 value={activeTab}
-                onChange={setActiveTab}
+                onChange={(value) => dispatch(setActiveTab(value))}
                 options={dates.map(rend_timeerDateSegment)}
                 style={{
                   padding: "4px",
