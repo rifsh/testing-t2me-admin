@@ -16,8 +16,8 @@ const ResponseShowModal = ({
   loading = false,
   jsonData = null,
 }) => {
-  console.log(jsonData, "JSONNNNNNNNNNNNNNNNNNNNN");
-  console.log(warningMessage, "MESSAGEEEEEEEEEEE");
+  
+
   const tableData = useMemo(() => {
     if (!jsonData) return [];
 

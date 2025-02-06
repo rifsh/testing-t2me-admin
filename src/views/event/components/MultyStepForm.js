@@ -84,6 +84,9 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     editable_status,
     messages: warningMessage,
   } = useSelector((state) => state.event);
+  const { selectedTicketStructure, ticketTypes } = useSelector(
+    (state) => state.tickets
+  );
   const dispatch = useDispatch();
   const [form] = Form.useForm();
   const { responseDataEvent, responseMessageEvent, message } = useSelector(
@@ -354,9 +357,19 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           offer_ids: selectedOffers?.map((offer) => offer.id) || [],
           coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
         };
+        const ticket_structure = {
+          ticket_structure: ticketTypes.reduce((acc, ticketType) => {
+            const structureItems = ticketType.ticket_types.map(ticket => ({
+              id: ticket.ticketStructureId,
+              ticket_set: ticket.ticket_set
+            }));
+            return [...acc, ...structureItems];
+          }, [])
+        };
 
         const finalData = {
           ...submitData,
+          ...ticket_structure,
           ...offers,
           max_tickets: parseInt(submitData.max_tickets || "0", 10),
         };
@@ -374,7 +387,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           if (response.message === "warning") {
             dispatch(setOfferCouponValidationDialogVisible(true));
           } else if (response.data && response.data[0]?.validation_status) {
-            dispatch(setSelectedSubmitItem(finalData));
+          dispatch(setSelectedSubmitItem(finalData));
           }
         }
       }
@@ -386,6 +399,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     }
   };
 
+  
   const handleModalSubmit = async () => {
     dispatch(setModalLoading(true));
     const resultAction = await dispatch(
@@ -494,6 +508,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         loading={modalLoading}
         tableConfig={{
           title: "Active Schedules",
+          dataKey: "active_schedules",
           dataKey: "active_schedules",
         }}
         editable_status={editable_status}

@@ -60,6 +60,8 @@ const getEventFormItems = (form, currentStep,mode) => {
     switch (currentStep) {
       case 1:
         return <EventDetailsField form={form} />;
+
+        // return <TicketField form={form} />;
       case 2:
         return <CategoryField form={form} />;
       case 3:

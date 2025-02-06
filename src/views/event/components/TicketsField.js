@@ -23,10 +23,10 @@ const TicketField = ({ form }) => {
   } = useSelector((state) => state.tickets);
 
   useEffect(() => {
-    if (!selectedVenue || !selectedVenue?.id) {
-      console.warn("No selected venue.");
-      return;
-    }
+    // if (!selectedVenue || !selectedVenue?.id) {
+    //   console.warn("No selected venue.");
+    //   return;
+    // }
 
     dispatch(getAvailableTicketsType());
     dispatch(fetchAllTickets({ venue_id: selectedVenue.id }));

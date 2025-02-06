@@ -18,7 +18,7 @@ export const initialState = {
   venueId: null,
   availableTicketTyps: [],
   selectedTicketType: null,
-  selectedTicketStructure: null,
+  selectedTicketStructure: [],
   availableTicketSets: [],
   selectedTicketSet: null,
   currentStepSaved: false,
@@ -152,49 +152,70 @@ export const ticketSlice = createSlice({
         ticket_set,
         tickets,
         id,
+        ticketStructureId
       } = action.payload;
-      console.log(state, ticket_set, tickets, "Saving Ticket Set");
-
-      if (venue_id && number_of_tickets && base_price) {
-        // First time adding venue data and ticket set
-        if (state.ticketTypes.length === 0) {
-          state.ticketTypes.push({
-            venue_id,
-            number_of_tickets,
-            name,
-            base_price,
-            place_id,
-            ticket_types: [],
-          });
-        }
+    
+      const existingTypeIndex = state.ticketTypes.findIndex(
+        (type) => type.venue_id === venue_id && type.name === name
+      );
+    
+      if (existingTypeIndex === -1) {
+        // Add new ticket type
+        state.ticketTypes.push({
+          venue_id,
+          number_of_tickets,
+          name,
+          base_price,
+          place_id,
+          ticket_types: [
+            {
+              ticket_set,
+              tickets,
+              id: Date.now(), // Use Date.now() for the unique ID
+              ticketStructureId // Keep the structure ID separately
+            },
+          ],
+        });
       } else {
-        // Subsequent times: Add new ticket set (ticket types only)
-        const existingTicketSetIndex =
-          state.ticketTypes[0]?.ticket_types.findIndex((set) => set.id === id);
-
-        if (existingTicketSetIndex !== -1) {
-          // If the ticket set already exists, update it
-          state.ticketTypes[0].ticket_types[existingTicketSetIndex] = {
+        // Add new ticket set to existing ticket type
+        const existingTicketSetIndex = state.ticketTypes[
+          existingTypeIndex
+        ].ticket_types.findIndex((set) => set.id === id);
+    
+        if (existingTicketSetIndex === -1) {
+          state.ticketTypes[existingTypeIndex].ticket_types.push({
             ticket_set,
             tickets,
-            id,
-          };
+            id: Date.now(), // Use Date.now() for the unique ID
+            ticketStructureId // Keep the structure ID separately
+          });
         } else {
-          // Otherwise, add the new ticket set
-          state.ticketTypes[0].ticket_types.push({ ticket_set, tickets, id });
+          state.ticketTypes[existingTypeIndex].ticket_types[
+            existingTicketSetIndex
+          ] = {
+            ticket_set,
+            tickets,
+            id: Date.now(), // Use Date.now() for the unique ID
+            ticketStructureId // Keep the structure ID separately
+          };
         }
       }
     },
 
     removeSpecificTicketSet(state, action) {
-      const ticketSetToRemove = action.payload; // Name of the ticket_set to remove
-
-      if (state.ticketTypes.length > 0 && state.ticketTypes[0]?.ticket_types) {
-        state.ticketTypes[0].ticket_types =
-          state.ticketTypes[0].ticket_types.filter(
-            (set) => set.id !== ticketSetToRemove
-          );
+      const { typeIndex, ticketSetId } = action.payload;
+      if (state.ticketTypes[typeIndex]?.ticket_types) {
+        state.ticketTypes[typeIndex].ticket_types = state.ticketTypes[
+          typeIndex
+        ].ticket_types.filter((set) => set.id !== ticketSetId);
       }
+    },
+
+    removeTicketType(state, action) {
+      const typeIndex = action.payload;
+      state.ticketTypes = state.ticketTypes.filter(
+        (_, index) => index !== typeIndex
+      );
     },
     // Reset all ticket sets
     currentStepSaveUpdate(state, action) {
@@ -217,7 +238,11 @@ export const ticketSlice = createSlice({
     },
     setSelectedTicketStructure(state, action) {
       const selectedStructure = action.payload;
-      state.selectedTicketStructure = selectedStructure;
+
+      if (!Array.isArray(state.selectedTicketStructure)) {
+        state.selectedTicketStructure = [];
+      }
+      state.selectedTicketStructure.push(action.payload);
 
       // Extract ticket types from the selected structure
       state.availableTicketSets = selectedStructure?.ticket_types || [];
@@ -334,6 +359,7 @@ export const {
   setSelectedTicketSet,
   resetTicketSelection,
   removeSpecificTicketSet,
+  removeTicketType,
   currentStepSaveUpdate,
   addOrUpdateTicketSet,
   resetTicketSets,
