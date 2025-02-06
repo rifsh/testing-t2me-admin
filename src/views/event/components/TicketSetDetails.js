@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Typography, Collapse, Col, Button, Space, Empty } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  removeSpecificTicketSet,
+  removeSpecificTicketSetforEvent,
   removeTicketType
 } from "store/slices/ticketSlice";
 import { DeleteOutlined, CloseCircleOutlined } from "@ant-design/icons";
@@ -16,7 +16,7 @@ export const TicketSetDetails = () => {
 
   const handleRemoveTicketSet = (typeIndex, ticketSetId, e) => {
     e.stopPropagation();
-    dispatch(removeSpecificTicketSet({ typeIndex, ticketSetId }));
+    dispatch(removeSpecificTicketSetforEvent({ typeIndex, ticketSetId }));
   };
 
   const handleRemoveTicketType = (typeIndex) => {
