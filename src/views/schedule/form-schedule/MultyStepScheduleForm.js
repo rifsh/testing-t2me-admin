@@ -33,6 +33,26 @@ const MultyStepScheduleForm = () => {
   const nextStep = async () => {
     try {
       await form.validateFields();
+      
+      const values = form.getFieldValue();
+      const timeSlots = values.timeSlots || {};
+  
+      if (currentStep === 2) {
+        for (const [date, slots] of Object.entries(timeSlots)) {
+          for (let index = 0; index < slots.length; index++) {
+            const slot = slots[index];
+            if (!slot.start_time) {
+              message.error(`Missing Start Time for Date: ${date}, Slot ${index + 1}`);
+              return;
+            }
+            if (!slot.end_time) {
+              message.error(`Missing End Time for Date: ${date}, Slot ${index + 1}`);
+              return;
+            }
+          }
+        }
+      }
+  
       if (currentStep < steps.length) {
         dispatch(setCurrentStep(currentStep + 1));
       }
@@ -40,6 +60,7 @@ const MultyStepScheduleForm = () => {
       message.error("Please ensure all required fields are filled.");
     }
   };
+  
   const { loading, error, selectedOffers, selectedCoupons } = useSelector(
     (state) => state.schedules
   );
@@ -53,8 +74,16 @@ const MultyStepScheduleForm = () => {
     try {
       const values = form.getFieldValue();
       const timeSlots = values.timeSlots || {};
-      const formattedTimeSlots = Object.entries(timeSlots).map(
-        ([date, slots]) => ({
+
+      const startDate = values.start_date
+        ? values.start_date.format("YYYY-MM-DD")
+        : null;
+      const endDate = values.end_date
+        ? values.end_date.format("YYYY-MM-DD")
+        : null;
+
+      const formattedTimeSlots = Object.entries(timeSlots)
+        .map(([date, slots]) => ({
           date,
           show_times: slots
             .filter((slot) => slot.start_time)
@@ -73,13 +102,15 @@ const MultyStepScheduleForm = () => {
                 ticket_set: ticketStructure?.ticket_set,
               };
             }),
-        })
-      );
+        }))
+        .filter(
+          ({ date, show_times }) =>
+            show_times.length > 0 && date >= startDate && date <= endDate
+        ); // Only keep dates within range & having show_times
+
       const submitData = {
-        start_date: values.start_date
-          ? values.start_date.format("YYYY-MM-DD")
-          : null,
-        end_date: values.end_date ? values.end_date.format("YYYY-MM-DD") : null,
+        start_date: startDate,
+        end_date: endDate,
         booking_start_date_time: values.booking_start_date_time
           ? values.booking_start_date_time.format("YYYY-MM-DDTHH:mm")
           : null,
@@ -114,6 +145,7 @@ const MultyStepScheduleForm = () => {
             ),
           })) ?? [],
       };
+
       dispatch(setSelectedSubmitItem(submitData));
     } catch (info) {
       console.error("Validation Failed:", info);
