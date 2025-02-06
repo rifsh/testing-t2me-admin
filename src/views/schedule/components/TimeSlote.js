@@ -14,7 +14,6 @@ import {
   PlusOutlined,
   CopyOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs";
 
 const TimeSlots = ({
   dateStr,
@@ -29,7 +28,6 @@ const TimeSlots = ({
   onRemoveSlot,
   onApplyToAll,
 }) => {
-  // Watch for changes in booking start time and event start time
   useEffect(() => {
     const slots = form.getFieldValue(["timeSlots", dateStr]) || [];
     if (slots.length > 0) {
@@ -235,84 +233,7 @@ const TimeSlots = ({
       bookingStartTime
     );
   };
-  const clearInvalidTime = (dateStr, index, type) => {
-    const formPath = ["timeSlots", dateStr, index];
-
-    if (type === "start_time") {
-      form.setFields([
-        {
-          name: [...formPath, "start_time"],
-          value: null,
-          errors: [],
-        },
-        {
-          name: [...formPath, "end_time"],
-          value: null,
-          errors: [],
-        },
-      ]);
-
-      setTimeSlots((prev) => ({
-        ...prev,
-        [dateStr]: prev[dateStr].map((slot, i) =>
-          i === index ? { ...slot, start_time: null, end_time: null } : slot
-        ),
-      }));
-    } else {
-      form.setFields([
-        {
-          name: [...formPath, type],
-          value: null,
-          errors: [],
-        },
-      ]);
-
-      setTimeSlots((prev) => ({
-        ...prev,
-        [dateStr]: prev[dateStr].map((slot, i) =>
-          i === index ? { ...slot, [type]: null } : slot
-        ),
-      }));
-    }
-  };
-  //   const handleTimeChange = (dateStr, index, type, value) => {
-  //     // Convert the selected time to the event timezone if it's a time value
-  //     const timeValue =
-  //       (type === "start_time" || type === "end_time") && value
-  //         ? value.tz(getEventTimezone())
-  //         : value;
-
-  //     // Get all current time slots
-  //     const currentSlots = form.getFieldValue(["timeSlots", dateStr]) || [];
-
-  //     // Create updated slots
-  //     const updatedSlots = currentSlots.map((slot, i) =>
-  //       i === index ? { ...slot, [type]: timeValue } : slot
-  //     );
-
-  //     // Validate before updating
-  //     const isValid = validateTimeSequence(
-  //       dateStr,
-  //       index,
-  //       type,
-  //       timeValue,
-  //       updatedSlots
-  //     );
-
-  //     if (isValid) {
-  //       // Update form
-  //       form.setFieldsValue({
-  //         timeSlots: {
-  //           ...form.getFieldValue("timeSlots"),
-  //           [dateStr]: updatedSlots,
-  //         },
-  //       });
-  //     } else {
-  //       // Clear the invalid value
-  //       clearInvalidTime(dateStr, index, type);
-  //     }
-  //   };
-
+ 
   const validateTimeSequence = (
     dateStr,
     index,

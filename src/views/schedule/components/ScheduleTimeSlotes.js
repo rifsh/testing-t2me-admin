@@ -3,7 +3,6 @@ import {
   Card,
   Form,
   DatePicker,
-  TimePicker,
   Button,
   Typography,
   Row,
@@ -12,14 +11,9 @@ import {
   message,
   Badge,
   Segmented,
-  Cascader,
-  Select,
   Modal,
 } from "antd";
 import {
-  CopyOutlined,
-  MinusCircleOutlined,
-  PlusOutlined,
   LeftOutlined,
   WarningOutlined,
   RightOutlined,
@@ -31,14 +25,9 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isBetween from "dayjs/plugin/isBetween";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllTickets } from "store/slices/ticketSlice";
 import { fetchEventDetails } from "store/slices/eventSlice";
-import { labels } from "views/app-views/apps/mail/MailLabels";
-import Utils from "utils";
-import {
-  createDateTimePickerProps,
-  createDateTimeValidation,
-} from "../../../utils/time_zone_util";
+
+import { createDateTimePickerProps } from "../../../utils/time_zone_util";
 import TimeSlots from "./TimeSlote";
 
 const { Title } = Typography;
@@ -68,9 +57,7 @@ export function ScheduleTimeSlots({ form }) {
     }
   }, [dispatch, form]);
 
-  const { filteredTickets } = useSelector((state) => state.tickets);
-  const { selectedVenue } = useSelector((state) => state.locations);
-  const { eventDetails, submitLoading } = useSelector((state) => state.event);
+  const { eventDetails } = useSelector((state) => state.event);
   useEffect(() => {
     form.setFieldsValue({
       timeSlots: timeSlots,
@@ -189,38 +176,6 @@ export function ScheduleTimeSlots({ form }) {
       ...prev,
       [dateStr]: prev[dateStr].filter((_, i) => i !== index),
     }));
-  };
-
-  const validateTimeSlots = (slots) => {
-    if (!slots || slots.length === 0) return { valid: true };
-
-    const sortedSlots = [...slots]
-      .filter((slot) => slot.start_time)
-      .sort((a, b) => a.start_time?.valueOf() - b.start_time?.valueOf());
-
-    for (let i = 0; i < sortedSlots.length; i++) {
-      const { start_time, end_time } = sortedSlots[i];
-
-      if (start_time && end_time && end_time.isSameOrBefore(start_time)) {
-        return {
-          valid: false,
-          message: "End time must be after start_time time",
-        };
-      }
-
-      if (i < sortedSlots.length - 1) {
-        const nextSlot = sortedSlots[i + 1];
-        if (
-          end_time &&
-          nextSlot.start_time &&
-          end_time.isAfter(nextSlot.start_time)
-        ) {
-          return { valid: false, message: "Time slots cannot overlap" };
-        }
-      }
-    }
-
-    return { valid: true };
   };
 
   const applySlotToAllDates = (sourceDate, slotIndex) => {
@@ -427,76 +382,14 @@ export function ScheduleTimeSlots({ form }) {
     });
   };
 
-  const handleTimeChange = (dateStr, index, type, value) => {
-    setTimeSlots((prev) => {
-      const newTimeSlots = {
-        ...prev,
-        [dateStr]: prev[dateStr].map((slot, i) =>
-          i === index ? { ...slot, [type]: value } : slot
-        ),
-      };
-      return newTimeSlots;
-    });
-
-    // Update form values
-    const currentFormValues = form.getFieldsValue();
-    if (!currentFormValues.timeSlots) {
-      currentFormValues.timeSlots = {};
-    }
-    if (!currentFormValues.timeSlots[dateStr]) {
-      currentFormValues.timeSlots[dateStr] = [];
-    }
-    while (currentFormValues.timeSlots[dateStr].length <= index) {
-      currentFormValues.timeSlots[dateStr].push({});
-    }
-    currentFormValues.timeSlots[dateStr][index] = {
-      ...currentFormValues.timeSlots[dateStr][index],
-      [type]: value,
-    };
-    form.setFieldsValue(currentFormValues);
-  };
   const getTicketTypeName = (ticketTypeId) => {
     return (
       eventDetails?.event_ticket_structures?.find((t) => t.id === ticketTypeId)
         ?.ticket_structure?.name || "Not selected"
     );
   };
-  const handleSubmit = () => {
-    form.validateFields().then((values) => {
-      const formattedData = {
-        event_times: {
-          start_date: values.start_date.format(),
-          end_date: values.end_date.format(),
-          ad_start_date_time: values.ad_start_date_time?.format(),
-          booking_start_date_time: values.booking_start_date_time.format(),
-        },
-        show_dates: Object.entries(timeSlots).map(([date, slots]) => ({
-          date,
-          slots: slots
-            .filter((slot) => slot.start_time)
-            .map((slot) => {
-              const ticketStructure =
-                eventDetails?.event_ticket_structures?.find(
-                  (ts) => ts.id === slot.ticketType
-                );
-
-              return {
-                start_time: slot.start_time.format("HH:mm"),
-                end_time: slot.end_time?.format("HH:mm"),
-                ticket_structure_id: ticketStructure?.ticket_structure?.id,
-                ticket_set: ticketStructure?.ticket_set,
-              };
-            }),
-        })),
-      };
-
-      console.log("Submission data:", formattedData);
-      message.success("Schedule saved successfully");
-    });
-  };
 
   const handleReset = () => {
-    form.resetFields();
     setTimeSlots({});
     setDates([]);
     setActiveTab(null);
@@ -538,7 +431,6 @@ export function ScheduleTimeSlots({ form }) {
   }, [eventDetails]);
 
   const rend_timeerTimeSlots = (dateStr) => (
-    // In ScheduleTimeSlots.js
     <TimeSlots
       dateStr={dateStr}
       timeSlots={timeSlots}
@@ -581,6 +473,7 @@ export function ScheduleTimeSlots({ form }) {
         form.setFieldsValue(resetValues);
       }
       if (field === "end_time_date" || field === "start_date") {
+        handleReset();
         updateDateRange(
           form.getFieldValue("start_date"),
           form.getFieldValue("end_time_date")
@@ -749,17 +642,6 @@ export function ScheduleTimeSlots({ form }) {
           </div>
         </Card>
       )}
-
-      <Row gutter={16} style={{ marginTop: 16 }}>
-        <Col>
-          <Button type="primary" onClick={handleSubmit}>
-            Save Schedule
-          </Button>
-        </Col>
-        <Col>
-          <Button onClick={handleReset}>Reset</Button>
-        </Col>
-      </Row>
     </Form>
   );
 }

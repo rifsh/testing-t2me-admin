@@ -9,14 +9,11 @@ import { ScheduleOffersAndCoupons } from "../components/ScheduleOffersAndCoupons
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { StepIndicator } from "../components/StepIndicator";
 import { ScheduleTimeSlots } from "../components/ScheduleTimeSlotes";
-import OfferDateModal from "../components/OfferDateModal";
 import Utils from "utils";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import dayjs from "dayjs";
 import LoadingOverlay from "components/util-components/Loader/index";
-const { Option } = Select;
-const { Text } = Typography;
 
 const MultyStepScheduleForm = () => {
   const steps = ["Schedule Details", "Time Slots", "Confirmation"];
@@ -24,10 +21,8 @@ const MultyStepScheduleForm = () => {
     (state) => state.event
   );
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const [form] = Form.useForm();
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const { selectedItemForModal, responseData, responseMessage } = useSelector(
+  const { responseData, responseMessage } = useSelector(
     (state) => state.schedules
   );
   useEffect(() => {
@@ -58,16 +53,6 @@ const MultyStepScheduleForm = () => {
     try {
       const values = form.getFieldValue();
       const timeSlots = values.timeSlots || {};
-      const timeZone =
-        eventDetails?.venue?.place?.country?.time_zone || dayjs.tz.guess();
-
-      // // Convert dates to the event's timezone and format them for API
-      // const startDateInTZ = dayjs(values.start_date).tz(timeZone, true);
-      // const endDateInTZ = dayjs(values.end_date).tz(timeZone, true);
-
-      // const startDate = startDateInTZ.format("YYYY-MM-DD");
-      // const endDate = endDateInTZ.format("YYYY-MM-DD");
-
       const formattedTimeSlots = Object.entries(timeSlots).map(
         ([date, slots]) => ({
           date,
@@ -130,14 +115,6 @@ const MultyStepScheduleForm = () => {
           })) ?? [],
       };
       dispatch(setSelectedSubmitItem(submitData));
-      // const resultAction = await dispatch(addSchedule(submitData));
-      // if (addSchedule.fulfilled.match(resultAction)) {
-      //   message.success(`Schedule ${values.name} added successfully`);
-      //   form.resetFields();
-      //   navigate(`${APP_PREFIX_PATH}/schedule/list`);
-      // } else {
-      //   message.error("Failed to add the Schedule. Please try again.");
-      // }
     } catch (info) {
       console.error("Validation Failed:", info);
       message.error("Please enter all required fields.");
