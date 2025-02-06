@@ -176,65 +176,6 @@ const TimeSlots = ({
 
     return { valid: true };
   };
-
-  // Helper function to apply validation on time change
-  // const handleTimeChange = (dateStr, index, type, value) => {
-  //   const timeValue = value
-  //     ? type === "ticketType"
-  //       ? value
-  //       : value.tz(getEventTimezone())
-  //     : null;
-
-  //   // Create copy of current slots
-  //   const currentSlots = [...(timeSlots[dateStr] || [])];
-
-  //   // For start_time, calculate end_time
-  //   let endTimeValue = null;
-  //   // if (type === "start_time" && timeValue) {
-  //   //   endTimeValue = timeValue.clone();
-  //   // }
-
-  //   // Update the specific slot
-  //   currentSlots[index] = {
-  //     ...currentSlots[index],
-  //     [type]: timeValue,
-  //     ...(type === "start_time" && { end_time: endTimeValue }),
-  //   };
-
-  //   // Update state and form
-  //   setTimeSlots((prev) => ({
-  //     ...prev,
-  //     [dateStr]: currentSlots,
-  //   }));
-
-  //   // Update form values
-  //   const formFields = [
-  //     {
-  //       name: ["timeSlots", dateStr, index, type],
-  //       value: timeValue,
-  //       errors: [],
-  //     },
-  //   ];
-
-  //   // Add end_time update for start_time
-  //   if (type === "start_time") {
-  //     formFields.push({
-  //       name: ["timeSlots", dateStr, index, "end_time"],
-  //       value: endTimeValue,
-  //       errors: [],
-  //     });
-  //   }
-
-  //   form.setFields(formFields);
-
-  //   validateTimeSlots(
-  //     dateStr,
-  //     currentSlots,
-  //     form,
-  //     eventStartTime,
-  //     bookingStartTime
-  //   );
-  // };
   const dispatch = useDispatch();
   const handleTimeChange = (dateStr, index, type, value) => {
     const timeValue = value
