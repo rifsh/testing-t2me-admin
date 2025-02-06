@@ -1,7 +1,12 @@
 import { Card, Col, Form, Select, Row, Typography, List } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllTax, setSelectedTaxDetails } from "store/slices/taxSlice";
-import { useEffect, } from "react";
+import {
+  fetchAllTax,
+  setSelectedTaxDetails,
+  setTaxValidationDialogVisible,
+} from "store/slices/taxSlice";
+import { useEffect } from "react";
+import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import { RulesMessageConstants } from "constants/RulesConstant";
 
 const { Text } = Typography;
@@ -15,7 +20,14 @@ const TaxField = ({ form }) => {
     venue: [{ required: true, message: RulesMessageConstants.VENUE }],
   };
 
-  const { allTax, loading, selectedTax } = useSelector((state) => state.tax);
+  const {
+    allTax,
+    loading,
+    selectedTax,
+    taxValidationDialogVisible,
+    message: taxValidationMessage,
+    ValidateData,
+  } = useSelector((state) => state.tax);
 
   useEffect(() => {
     dispatch(fetchAllTax({ place_id: form.getFieldValue("place_id") }));
@@ -25,7 +37,10 @@ const TaxField = ({ form }) => {
     const selectedTaxes = allTax.filter((tax) =>
       selectedTaxIds.includes(tax.id)
     );
-    dispatch(setSelectedTaxDetails(selectedTaxes)); 
+    dispatch(setSelectedTaxDetails(selectedTaxes));
+  };
+  const handleValidationModalCancel = () => {
+    dispatch(setTaxValidationDialogVisible(false));
   };
 
   return (
@@ -87,6 +102,12 @@ const TaxField = ({ form }) => {
           </Card>
         </Col>
       )}
+      <ValidationModal
+        visible={taxValidationDialogVisible}
+        data={ValidateData?.errors}
+        statusMessage={taxValidationMessage}
+        onClose={handleValidationModalCancel}
+      />
     </Row>
   );
 };

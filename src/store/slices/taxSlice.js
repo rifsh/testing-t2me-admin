@@ -59,6 +59,19 @@ export const editTaxStatus = createAsyncThunk(
   }
 );
 
+export const validateTax = createAsyncThunk(
+  "tax/validate",
+  async (taxIds, { rejectWithValue }) => {
+    try {
+      const response = await TaxService.validateTax(taxIds);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+
 const taxSlice = createSlice({
   name: "tax",
   initialState: {
@@ -71,9 +84,12 @@ const taxSlice = createSlice({
     message: null,
     responseData: null,
     responseMessage: null,
-    selectedTax: null,
+    selectedTax: [],
     singleTax: null,
     editable_status: null,
+    validationStatus: false,
+    taxValidationDialogVisible: false,
+    ValidateData: null,
     pagination: { size: 10, page: 1 },
     editItemId: null,
   },
@@ -110,10 +126,38 @@ const taxSlice = createSlice({
     setTaxModalLoading(state, action) {
       state.modalLoading = action.payload;
     },
+    setTaxValidationDialogVisible(state, action) {
+      state.taxValidationDialogVisible = action.payload;
+    },
   },
 
   extraReducers: (builder) => {
     builder
+      .addCase(validateTax.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validateTax.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        console.log("HELOOOOOOOOOO");
+
+        if (payload.message === "warning") {
+          state.validationStatus = false;
+          state.message = payload.status.message;
+          state.ValidateData = payload.status.data;
+          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status.editable_status;
+        } else if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+          if (payload.status) {
+            state.message = payload.status.message;
+          }
+        }
+      })
+      .addCase(validateTax.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to validate place";
+      })
       .addCase(fetchAvailableCategory.pending, (state) => {
         state.loading = true;
       })
@@ -187,5 +231,12 @@ const taxSlice = createSlice({
       });
   },
 });
-export const { filterTax, setSelectedTaxDetails, setTaxDialogVisible, setTaxModalLoading, setEditItemId } = taxSlice.actions;
+export const {
+  filterTax,
+  setSelectedTaxDetails,
+  setTaxDialogVisible,
+  setTaxModalLoading,
+  setEditItemId,
+  setTaxValidationDialogVisible,
+} = taxSlice.actions;
 export default taxSlice.reducer;

@@ -71,7 +71,11 @@ export function ScheduleTimeSlots({ form }) {
   const { filteredTickets } = useSelector((state) => state.tickets);
   const { selectedVenue } = useSelector((state) => state.locations);
   const { eventDetails, submitLoading } = useSelector((state) => state.event);
-
+  useEffect(() => {
+    form.setFieldsValue({
+      timeSlots: timeSlots,
+    });
+  }, [timeSlots, form]);
   useEffect(() => {
     const newSlotStatus = {};
     Object.entries(timeSlots).forEach(([date, slots]) => {
@@ -115,7 +119,9 @@ export function ScheduleTimeSlots({ form }) {
           valid: false,
           message: `Time conflict between slots: ${currentSlot.start_time.format(
             "HH:mm"
-          )} - ${currentSlot.end_time.format("HH:mm")} and ${nextSlot.start_time.format(
+          )} - ${currentSlot.end_time.format(
+            "HH:mm"
+          )} and ${nextSlot.start_time.format(
             "HH:mm"
           )} - ${nextSlot.end_time?.format("HH:mm")}`,
         };
@@ -142,7 +148,9 @@ export function ScheduleTimeSlots({ form }) {
     // Initialize time slots for new dates
     const initialTimeSlots = {};
     newDates.forEach((date) => {
-      initialTimeSlots[date] = timeSlots[date] || [{ start_time: null, _time: null }];
+      initialTimeSlots[date] = timeSlots[date] || [
+        { start_time: null, _time: null },
+      ];
     });
     setTimeSlots(initialTimeSlots);
   };
@@ -194,12 +202,19 @@ export function ScheduleTimeSlots({ form }) {
       const { start_time, end_time } = sortedSlots[i];
 
       if (start_time && end_time && end_time.isSameOrBefore(start_time)) {
-        return { valid: false, message: "End time must be after start_time time" };
+        return {
+          valid: false,
+          message: "End time must be after start_time time",
+        };
       }
 
       if (i < sortedSlots.length - 1) {
         const nextSlot = sortedSlots[i + 1];
-        if (end_time && nextSlot.start_time && end_time.isAfter(nextSlot.start_time)) {
+        if (
+          end_time &&
+          nextSlot.start_time &&
+          end_time.isAfter(nextSlot.start_time)
+        ) {
           return { valid: false, message: "Time slots cannot overlap" };
         }
       }
@@ -213,10 +228,10 @@ export function ScheduleTimeSlots({ form }) {
       message.warning("Please set up time slots for the current date first");
       return;
     }
-  
+
     const sourceSlot = timeSlots[sourceDate][slotIndex];
     console.log("Source Slot:", sourceSlot); // Debug log
-    
+
     if (!sourceSlot.start_time) {
       message.warning("Please set a start time for the slot first");
       return;
@@ -249,38 +264,38 @@ export function ScheduleTimeSlots({ form }) {
         const newTimeSlots = { ...timeSlots };
         const formValues = form.getFieldsValue();
         const newFormValues = { ...formValues };
-  
+
         dates.forEach((date) => {
           if (date !== sourceDate) {
             const existingSlots = newTimeSlots[date] || [];
             const updatedSlots = [...existingSlots];
-  
+
             const targetStart = sourceSlot.start_time
               ? dayjs(date)
                   .hour(sourceSlot.start_time.hour())
                   .minute(sourceSlot.start_time.minute())
               : null;
-  
+
             const targetEnd = sourceSlot.end_time
               ? dayjs(date)
                   .hour(sourceSlot.end_time.hour())
                   .minute(sourceSlot.end_time.minute())
               : null;
-  
+
             // Ensure slot exists
             while (updatedSlots.length <= slotIndex) {
               updatedSlots.push({ start_time: null, end_time: null });
             }
-  
+
             updatedSlots[slotIndex] = {
               ...sourceSlot,
               start_time: targetStart,
               end_time: targetEnd,
-              ticketType: sourceSlot.ticketType
+              ticketType: sourceSlot.ticketType,
             };
-  
+
             console.log("Updated Slot:", updatedSlots[slotIndex]); // Debug log
-  
+
             // Update form values
             if (!newFormValues.timeSlots) {
               newFormValues.timeSlots = {};
@@ -294,7 +309,7 @@ export function ScheduleTimeSlots({ form }) {
             newFormValues.timeSlots[date][slotIndex] = {
               start_time: targetStart,
               end_time: targetEnd,
-              ticketType: sourceSlot.ticketType
+              ticketType: sourceSlot.ticketType,
             };
 
             // Validate time conflicts
@@ -369,11 +384,13 @@ export function ScheduleTimeSlots({ form }) {
                     .hour(slot.start_time.hour())
                     .minute(slot.start_time.minute())
                 : null;
-            
+
               const targetEnd = slot.end_time
-                ? dayjs(date).hour(slot.end_time.hour()).minute(slot.end_time.minute())
+                ? dayjs(date)
+                    .hour(slot.end_time.hour())
+                    .minute(slot.end_time.minute())
                 : null;
-            
+
               return {
                 ...slot,
                 start_time: targetStart,
@@ -449,19 +466,27 @@ export function ScheduleTimeSlots({ form }) {
       const formattedData = {
         event_times: {
           start_date: values.start_date.format(),
-          end_time_date: values.end_time_date.format(),
+          end_date: values.end_date.format(),
           ad_start_date_time: values.ad_start_date_time?.format(),
           booking_start_date_time: values.booking_start_date_time.format(),
         },
-        time_slots: Object.entries(timeSlots).map(([date, slots]) => ({
+        show_dates: Object.entries(timeSlots).map(([date, slots]) => ({
           date,
           slots: slots
             .filter((slot) => slot.start_time)
-            .map((slot) => ({
-              start_time: slot.start_time.format("HH:mm"),
-              end_time: slot.end_time?.format("HH:mm"),
-              ticket_type: slot.ticketType,
-            })),
+            .map((slot) => {
+              const ticketStructure =
+                eventDetails?.event_ticket_structures?.find(
+                  (ts) => ts.id === slot.ticketType
+                );
+
+              return {
+                start_time: slot.start_time.format("HH:mm"),
+                end_time: slot.end_time?.format("HH:mm"),
+                ticket_structure_id: ticketStructure?.ticket_structure?.id,
+                ticket_set: ticketStructure?.ticket_set,
+              };
+            }),
         })),
       };
 
@@ -638,7 +663,7 @@ export function ScheduleTimeSlots({ form }) {
 
           <Col xs={24} sm={12}>
             <Form.Item
-              name="end_time_date"
+              name="end_date"
               label="Event End Time"
               rules={[{ required: true }]}
             >

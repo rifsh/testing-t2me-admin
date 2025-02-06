@@ -92,20 +92,21 @@ const TimeSlots = ({
         });
       }
 
-    // First show on first day validation
-if (isFirstDay && index === 0 && bookingStartTime) {
-    // Check if booking start date and event start date are the same day
-    if (
-      bookingStartTime.format('YYYY-MM-DD') === eventStartTime.format('YYYY-MM-DD')
-    ) {
-      if (start_time.isBefore(bookingStartTime)) {
-        errors.push({
-          field: ["timeSlots", dateStr, index, "start_time"],
-          message: "First show must start after booking start time",
-        });
+      // First show on first day validation
+      if (isFirstDay && index === 0 && bookingStartTime) {
+        // Check if booking start date and event start date are the same day
+        if (
+          bookingStartTime.format("YYYY-MM-DD") ===
+          eventStartTime.format("YYYY-MM-DD")
+        ) {
+          if (start_time.isBefore(bookingStartTime)) {
+            errors.push({
+              field: ["timeSlots", dateStr, index, "start_time"],
+              message: "First show must start after booking start time",
+            });
+          }
+        }
       }
-    }
-  }
 
       // Check for overlap with next slot
       if (index < validSlots.length - 1) {
@@ -130,7 +131,7 @@ if (isFirstDay && index === 0 && bookingStartTime) {
 
       // Validate show duration
       const minDurationMinutes = 0;
-      const maxDurationMinutes = 300; // 5 hours
+      const maxDurationMinutes = 1440; // 24 hours
       const durationMinutes = end_time.diff(start_time, "minutes");
 
       if (durationMinutes < minDurationMinutes) {
@@ -178,7 +179,11 @@ if (isFirstDay && index === 0 && bookingStartTime) {
 
   // Helper function to apply validation on time change
   const handleTimeChange = (dateStr, index, type, value) => {
-    const timeValue = value ? (type === "ticketType" ? value : value.tz(getEventTimezone())) : null;
+    const timeValue = value
+      ? type === "ticketType"
+        ? value
+        : value.tz(getEventTimezone())
+      : null;
 
     // Create copy of current slots
     const currentSlots = [...(timeSlots[dateStr] || [])];
@@ -208,7 +213,7 @@ if (isFirstDay && index === 0 && bookingStartTime) {
         name: ["timeSlots", dateStr, index, type],
         value: timeValue,
         errors: [],
-      }
+      },
     ];
 
     // Add end_time update for start_time
@@ -229,7 +234,7 @@ if (isFirstDay && index === 0 && bookingStartTime) {
       eventStartTime,
       bookingStartTime
     );
-};
+  };
   const clearInvalidTime = (dateStr, index, type) => {
     const formPath = ["timeSlots", dateStr, index];
 

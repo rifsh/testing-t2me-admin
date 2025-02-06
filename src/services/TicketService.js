@@ -6,7 +6,6 @@ import { handleAction } from "utils/api/warning-submit-util";
 const TicketsService = {};
 
 TicketsService.getAllTickets = function (pageData) {
-
   return fetch({
     url: ApiConstant.TICKET_URL,
     method: "get",
@@ -25,18 +24,24 @@ TicketsService.addTicket = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
-
 
   return fetch({
     url: `${ApiConstant.TICKET_URL}?venue_id=${data.venue_id}&action=${encodedAction}`,
     method: "post",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data'
-    }
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+TicketsService.validateTicket = function (ticketId) {
+  return fetch({
+    url: `${ApiConstant.TICKET_VALIDATE_URL}?ticket_id=${ticketId}`,
+    method: "get",
   });
 };
 

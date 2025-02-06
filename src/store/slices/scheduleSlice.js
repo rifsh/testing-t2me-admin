@@ -16,10 +16,6 @@ export const initialState = {
   editable_status: true,
   responseData: null,
   responseMessage: null,
-  timeSlots: {},
-  dates: [],
-  formValues: {},
-  activeTab: null,
   pagination: { size: 10, page: 1 },
 };
 
@@ -70,10 +66,6 @@ const scheduleSlice = createSlice({
   name: "schedules",
   initialState,
   reducers: {
-    setScheduleData: (state, action) => {
-      return { ...state, ...action.payload };
-    },
-    clearScheduleData: () => initialState,
     filterSchedules: (state, action) => {
       const { searchTerm, status } = action.payload;
 
@@ -217,7 +209,7 @@ export const {
   toggleSelectedOffer,
   toggleSelectedCoupon,
   updateSelectedCoupons,
-  setSelectedItemForModal,setScheduleData, clearScheduleData,
+  setSelectedItemForModal,
   setScheduleSelectTime,
   updateSelectedOffer,
 } = scheduleSlice.actions;

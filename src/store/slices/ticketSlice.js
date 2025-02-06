@@ -25,6 +25,9 @@ export const initialState = {
   isModalVisible: false,
   ticketTypes: [],
   message: null,
+  validationStatus: false,
+  ticketValidationDialogVisible: false,
+  ValidateData: null,
   editable_status: null,
   responseData: null,
   responseMessage: null,
@@ -45,6 +48,19 @@ export const fetchAllTickets = createAsyncThunk(
       }
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching tickets");
+    }
+  }
+);
+
+export const validateTicket = createAsyncThunk(
+  "ticket/validateTicket",
+  async (ticketId, { rejectWithValue }) => {
+    try {
+      const response = await TicketsService.validateTicket(ticketId);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
     }
   }
 );
@@ -117,6 +133,9 @@ export const ticketSlice = createSlice({
     },
     setIsModalVisible(state, action) {
       state.isModalVisible = action.payload;
+    },
+    setTicketValidationDialogVisible(state, action) {
+      state.ticketValidationDialogVisible = action.payload;
     },
     setSelectedTicketType(state, action) {
       console.log("Setting selected ticket type:", action.payload);
@@ -243,6 +262,31 @@ export const ticketSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(validateTicket.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validateTicket.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        console.log("HELOOOOOOOOOO");
+
+        if (payload.message === "warning") {
+          state.validationStatus = false;
+          state.message = payload.status.message;
+          state.ValidateData = payload.status.data;
+          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status.editable_status;
+        } else if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+          if (payload.status) {
+            state.message = payload.status.message;
+          }
+        }
+      })
+      .addCase(validateTicket.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to validate place";
+      })
       .addCase(editTicket.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -319,6 +363,7 @@ export const {
   currentStepSaveUpdate,
   addOrUpdateTicketSet,
   resetTicketSets,
+  setTicketValidationDialogVisible
 } = ticketSlice.actions;
 
 export const selectTickets = (state) => state.tickets;

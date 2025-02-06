@@ -16,5 +16,11 @@ export const faqData = [
         question: 'Where can I find documentation?',
         answer: 'Documentation is available in the "Help" section of the website.',
         category: 'Documentation'
+    },
+    {
+        key: '4',
+        question: 'Where can I find account?',
+        answer: 'Documentation is available in the "Help" section of the website.',
+        category: 'Account'
     }
 ];
