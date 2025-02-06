@@ -48,7 +48,7 @@ export const getUserRole = () => {
   }
 };
 
-const getEventFormItems = (form, currentStep,mode) => {
+const getEventFormItems = (form, currentStep, mode) => {
   const currentUser = getCurrentUser();
 
   if (!currentUser) {
@@ -61,7 +61,7 @@ const getEventFormItems = (form, currentStep,mode) => {
       case 1:
         return <EventDetailsField form={form} />;
 
-        // return <TicketField form={form} />;
+      // return <TicketField form={form} />;
       case 2:
         return <CategoryField form={form} />;
       case 3:
@@ -71,7 +71,27 @@ const getEventFormItems = (form, currentStep,mode) => {
       case 5:
         return <TicketField form={form} />;
       case 6:
-        return <OfferField form={form} mode={mode}/>;
+        return <OfferField form={form} mode={mode} />;
+      default:
+        return null;
+    }
+  }
+  if (currentUser.role_id === UserRoleConstants.techAdminRoleId) {
+    switch (currentStep) {
+      case 1:
+        return <EventDetailsField form={form} />;
+
+      // return <TicketField form={form} />;
+      case 2:
+        return <CategoryField form={form} />;
+      case 3:
+        return <LocationDetailsField form={form} />;
+      case 4:
+        return <TaxField form={form} />;
+      case 5:
+        return <TicketField form={form} />;
+      case 6:
+        return <OfferField form={form} mode={mode} />;
       default:
         return null;
     }
@@ -102,6 +122,8 @@ export const getEventFormSteps = () => {
   }
 
   if (currentUser.role_id === UserRoleConstants.superAdminRoleId) {
+    return ["Event Details", "Category", "Location", "Tax", "Ticket", "Offers"];
+  } else if (currentUser.role_id === UserRoleConstants.techAdminRoleId) {
     return ["Event Details", "Category", "Location", "Tax", "Ticket", "Offers"];
   } else if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
     return ["Event Details"];
