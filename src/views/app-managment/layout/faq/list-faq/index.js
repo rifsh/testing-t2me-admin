@@ -1,19 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FormOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Card, Col, Button, Table, Menu } from 'antd';
+import { Card, Col, Row, Button, Table, Menu, Select, Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { faqData } from 'mock/data/faqData';
-import SearchBarWithStatus from 'components/util-components/Search/SearchBarWithStatus';
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
 
-const { Row } = require('antd');
+const { Option } = Select;
 
 const FaqList = () => {
     const navigate = useNavigate();
+    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const groupedData = faqData.reduce((acc, item) => {
+    const categories = ['All', ...new Set(faqData.map(item => item.category))];
+
+    const filteredData = faqData.filter(item => {
+        const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+        const matchesSearch = item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              item.answer.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+    });
+
+    const groupedData = filteredData.reduce((acc, item) => {
         if (!acc[item.category]) {
             acc[item.category] = [];
         }
@@ -29,20 +39,20 @@ const FaqList = () => {
 
     const dropdownMenu = (row) => (
         <Menu>
-          <Menu.Item>
-            <Flex alignItems="center" >
-              <EditOutlined />
-              <span className="ml-2">Edit Faq</span>
-            </Flex>
-          </Menu.Item>
-          <Menu.Item>
-            <Flex alignItems="center" >
-              <DeleteOutlined />
-              <span className="ml-2">Delete Faq</span>
-            </Flex>
-          </Menu.Item>
+            <Menu.Item>
+                <Flex alignItems="center" onClick={() => navigate(`${APP_PREFIX_PATH}/app/management/layout/faq/add-faq`)}>
+                    <EditOutlined />
+                    <span className="ml-2">Edit Faq</span>
+                </Flex>
+            </Menu.Item>
+            <Menu.Item>
+                <Flex alignItems="center" >
+                    <DeleteOutlined />
+                    <span className="ml-2">Delete Faq</span>
+                </Flex>
+            </Menu.Item>
         </Menu>
-      );
+    );
 
     const categoryColumns = [
         {
@@ -54,25 +64,41 @@ const FaqList = () => {
 
     const questionColumns = [
         {
-            title: '',
+            title: 'Question',
             dataIndex: 'question',
             key: 'question',
         },
         {
-              title: "",
-              dataIndex: "actions",
-              render: (_, elm) => (
+            title: "",
+            dataIndex: "actions",
+            render: (_, elm) => (
                 <div className="text-right">
-                  <EllipsisDropdown menu={dropdownMenu(elm)} />
+                    <EllipsisDropdown menu={dropdownMenu(elm)} />
                 </div>
-              ),
-            },
+            ),
+        },
     ];
 
     return (
         <Card>
             <Row gutter={16} justify={'space-between'} style={{ marginBottom: 16 }}>
-                <SearchBarWithStatus />
+                <Col xs={24} sm={12}>
+                    <Input
+                        placeholder="Search FAQ by question or answer"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{ marginBottom: 16 }}
+                    />
+                    <Select
+                        defaultValue="All"
+                        style={{ width: 200 }}
+                        onChange={(value) => setSelectedCategory(value)}
+                    >
+                        {categories.map(category => (
+                            <Option key={category} value={category}>{category}</Option>
+                        ))}
+                    </Select>
+                </Col>
                 <Col xs={24} sm={8} style={{ textAlign: 'right' }}>
                     <Button
                         type="primary"
