@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_BASE_URL } from "configs/AppConfig";
-import { signOutSuccess } from "store/slices/authSlice";
+import { signOut, signOutSuccess } from "store/slices/authSlice";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { notification } from "antd";
 import store from "../store";
@@ -101,6 +101,7 @@ service.interceptors.response.use(
        
           await Utils.clearAllBrowserData();
           store.dispatch(signOutSuccess());
+          store.dispatch(signOut());
         }
         const errorMessage = data.status.message;
         notificationParam.message = data.status.status_code;
@@ -110,7 +111,8 @@ service.interceptors.response.use(
         if (unauthorizedCode.includes(status)) {
           notificationParam.message = "Session Expired";
           notificationParam.description =
-            "Your session has expired. Please log in again.";
+          "Your session has expired. Please log in again.";
+          store.dispatch(signOut());
           localStorage.removeItem(AUTH_TOKEN);
           store.dispatch(signOutSuccess());
         } else if (status === 404) {
