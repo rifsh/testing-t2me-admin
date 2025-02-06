@@ -17,6 +17,7 @@ import {
   LeftOutlined,
   WarningOutlined,
   RightOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -37,6 +38,7 @@ import {
   setSlotStatus,
   setTimeSlots,
 } from "store/slices/scheduleSlice";
+import TimezoneClock from "components/util-components/timezone/TimeZoneClock";
 
 const { Title } = Typography;
 
@@ -496,11 +498,8 @@ export function ScheduleTimeSlots({ form }) {
     <Form form={form} layout="vertical">
       <Title level={4}>
         Schedule Time Slots{" "}
-        <span style={{ fontSize: "15px", fontWeight: "lighter" }}>
-          {`(${
-            eventDetails?.venue?.place?.country.name ?? ""
-          } : ${getEventTimezone()})`}
-        </span>
+        <TimezoneClock timezone={getEventTimezone()} eventDetails={eventDetails} />
+
       </Title>
 
       <Card>
