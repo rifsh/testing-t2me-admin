@@ -18,6 +18,14 @@ const ResponseShowModal = ({
 }) => {
   console.log(jsonData, "JSONNNNNNNNNNNNNNNNNNNNN");
   console.log(warningMessage, "MESSAGEEEEEEEEEEE");
+
+  const formatValue = (value) => {
+    if (value === null || value === undefined) return "N/A";
+    if (Array.isArray(value)) return value.length ? value.join(", ") : "N/A";
+    if (typeof value === "object")
+      return Object.keys(value).length ? JSON.stringify(value) : "N/A";
+    return value.toString();
+  };
   const tableData = useMemo(() => {
     if (!jsonData) return [];
 
@@ -30,19 +38,23 @@ const ResponseShowModal = ({
     return Object.entries(dataObject).map(([key, value], index) => ({
       key: index,
       columnKey: key,
-      value: Array.isArray(value) ? value.join(", ") : value ?? "N/A",
+      value: formatValue(value),
     }));
   }, [jsonData]);
 
   const scheduleData = useMemo(() => {
     if (!jsonData?.list_of_updated_Schedules) return [];
-  
+
     const schedules = jsonData.list_of_updated_Schedules;
-    
+
     // Check if the first schedule contains offer or coupon fields
-    const isOffer = schedules.some(item => item.hasOwnProperty('revised_schedule_offer_start_date'));
-    const isCoupon = schedules.some(item => item.hasOwnProperty('revised_schedule_coupon_start_date'));
-  
+    const isOffer = schedules.some((item) =>
+      item.hasOwnProperty("revised_schedule_offer_start_date")
+    );
+    const isCoupon = schedules.some((item) =>
+      item.hasOwnProperty("revised_schedule_coupon_start_date")
+    );
+
     return schedules.map((item, index) => ({
       key: index,
       schedule_id: item.schedule_id,
@@ -53,14 +65,18 @@ const ResponseShowModal = ({
       schedule_end: item.schedule_end,
       ...(isOffer
         ? {
-            revised_schedule_offer_start_date: item.revised_schedule_offer_start_date,
-            revised_schedule_offer_end_date: item.revised_schedule_offer_end_date,
+            revised_schedule_offer_start_date:
+              item.revised_schedule_offer_start_date,
+            revised_schedule_offer_end_date:
+              item.revised_schedule_offer_end_date,
           }
         : {}),
       ...(isCoupon
         ? {
-            revised_schedule_coupon_start_date: item.revised_schedule_coupon_start_date,
-            revised_schedule_coupon_end_date: item.revised_schedule_coupon_end_date,
+            revised_schedule_coupon_start_date:
+              item.revised_schedule_coupon_start_date,
+            revised_schedule_coupon_end_date:
+              item.revised_schedule_coupon_end_date,
           }
         : {}),
     }));
@@ -87,31 +103,59 @@ const ResponseShowModal = ({
   ];
   const scheduleColumns = useMemo(() => {
     if (!scheduleData.length) return [];
-  
-    const isOffer = scheduleData.some(item => item.revised_schedule_offer_start_date);
-    const isCoupon = scheduleData.some(item => item.revised_schedule_coupon_start_date);
-  
+
+    const isOffer = scheduleData.some(
+      (item) => item.revised_schedule_offer_start_date
+    );
+    const isCoupon = scheduleData.some(
+      (item) => item.revised_schedule_coupon_start_date
+    );
+
     const baseColumns = [
       { title: "Schedule ID", dataIndex: "schedule_id", key: "schedule_id" },
       { title: "Event ID", dataIndex: "event_id", key: "event_id" },
-      { title: "Schedule Name", dataIndex: "schedule_name", key: "schedule_name" },
+      {
+        title: "Schedule Name",
+        dataIndex: "schedule_name",
+        key: "schedule_name",
+      },
       { title: "Event Name", dataIndex: "event_name", key: "event_name" },
-      { title: "Schedule Start", dataIndex: "schedule_start", key: "schedule_start" },
+      {
+        title: "Schedule Start",
+        dataIndex: "schedule_start",
+        key: "schedule_start",
+      },
       { title: "Schedule End", dataIndex: "schedule_end", key: "schedule_end" },
     ];
-  
+
     const dynamicColumns = isOffer
       ? [
-          { title: "Revised Schedule Offer Start Date", dataIndex: "revised_schedule_offer_start_date", key: "revised_schedule_offer_start_date" },
-          { title: "Revised Schedule Offer End Date", dataIndex: "revised_schedule_offer_end_date", key: "revised_schedule_offer_end_date" },
+          {
+            title: "Revised Schedule Offer Start Date",
+            dataIndex: "revised_schedule_offer_start_date",
+            key: "revised_schedule_offer_start_date",
+          },
+          {
+            title: "Revised Schedule Offer End Date",
+            dataIndex: "revised_schedule_offer_end_date",
+            key: "revised_schedule_offer_end_date",
+          },
         ]
       : isCoupon
       ? [
-          { title: "Revised Schedule Coupon Start Date", dataIndex: "revised_schedule_coupon_start_date", key: "revised_schedule_coupon_start_date" },
-          { title: "Revised Schedule Coupon End Date", dataIndex: "revised_schedule_coupon_end_date", key: "revised_schedule_coupon_end_date" },
+          {
+            title: "Revised Schedule Coupon Start Date",
+            dataIndex: "revised_schedule_coupon_start_date",
+            key: "revised_schedule_coupon_start_date",
+          },
+          {
+            title: "Revised Schedule Coupon End Date",
+            dataIndex: "revised_schedule_coupon_end_date",
+            key: "revised_schedule_coupon_end_date",
+          },
         ]
       : [];
-  
+
     return [...baseColumns, ...dynamicColumns];
   }, [scheduleData]);
 

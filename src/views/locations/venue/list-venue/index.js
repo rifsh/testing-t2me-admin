@@ -28,17 +28,19 @@ import {
   setLocationModalLoading,
 } from "store/slices/locationSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
-import { setSelectedItem } from "store/slices/modalSlice";
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 
 const { Option } = Select;
 
 const VenueList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { responseData } = useSelector((state) => state.modalSlice);
   const {
     filteredVenues,
     pagination,
@@ -50,14 +52,12 @@ const VenueList = () => {
     modalLoading,
     editItemId,
     responseImpactData,
-  } =
-    useSelector((state) => state.locations);
+  } = useSelector((state) => state.locations);
   const [form] = Form.useForm();
 
   useEffect(() => {
     dispatch(getVenues(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
-
 
   const handleViewDetails = async (id) => {
     await dispatch(getSingleVenues(id));
@@ -68,6 +68,7 @@ const VenueList = () => {
     const data = { status: newStatus, id: item.id };
 
     dispatch(setSelectedItem(data));
+    dispatch(setDialogVisible(true));
   };
   const handlePagination = (page, size) => {
     dispatch(getVenues({ page: page, size: size }));
@@ -240,10 +241,20 @@ const VenueList = () => {
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         }}
         editable_status={editable_status}
         responseData={responseImpactData}
+      />
+
+      <StatusSubmitAndConfirmModal
+        editFunction={editVenueStatus}
+        getAllFunction={getVenues}
+        responseData={responseData}
+        responseMessage={message}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
       />
     </Card>
   );

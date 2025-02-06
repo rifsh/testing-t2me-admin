@@ -37,6 +37,7 @@ import SearchBarWithStatus from "components/util-components/Search/SearchBarWith
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 
 const { Option } = Select;
 
@@ -52,8 +53,9 @@ const CouponList = () => {
     editItemId,
     dialogVisible,
     modalLoading,
-    responseImpactData
+    responseImpactData,
   } = useSelector((state) => state.coupons);
+  const { responseData } = useSelector((state) => state.modalSlice);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
@@ -268,9 +270,18 @@ const CouponList = () => {
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         }}
         responseData={responseImpactData}
+      />
+      <StatusSubmitAndConfirmModal
+        editFunction={editCouponStatus}
+        getAllFunction={fetchAllCoupons}
+        responseData={responseData}
+        responseMessage={message}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
       />
     </Card>
   );

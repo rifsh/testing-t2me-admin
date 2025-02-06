@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Utils from "utils";
-import { setSelectedItem } from "store/slices/modalSlice";
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import {
   fetchAdCategories,
@@ -25,6 +25,8 @@ import {
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -47,6 +49,7 @@ const CategoryList = () => {
     responseImpactData,
     message,
   } = useSelector((state) => state.adCategory);
+  const { responseData } = useSelector((state) => state.modalSlice);
 
   useEffect(() => {
     dispatch(fetchAdCategories({ page: 1, size: 10 }));
@@ -62,6 +65,7 @@ const CategoryList = () => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
+    dispatch(setDialogVisible(true));
   };
 
   const handleEditAdCategory = (id) => {
@@ -211,6 +215,15 @@ const CategoryList = () => {
         loading={modalLoading}
       />
       <UpdateStatusModal {...getModalProps()} />
+      <StatusSubmitAndConfirmModal
+        editFunction={updateAdCategoryStatus}
+        getAllFunction={fetchAdCategories}
+        responseData={responseData}
+        responseMessage={message}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
+      />
     </Card>
   );
 };

@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  Table,
-  Button,
-  Modal,
-  Descriptions,
-  Dropdown,
-} from "antd";
+import { Card, Table, Button, Modal, Descriptions, Dropdown } from "antd";
 import {
   EyeOutlined,
-
-
   FormOutlined,
   MoreOutlined,
   EditOutlined,
@@ -24,23 +15,33 @@ import {
   fetchAllOffers,
   setEditItemId,
   setOfferDialogVisible,
-  setOfferModalLoading
+  setOfferModalLoading,
 } from "store/slices/offerSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import {  setSelectedItem } from "store/slices/modalSlice";
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
-
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 
 const OfferList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredOffers, pagination, loading, editable_status, message,editItemId,dialogVisible,modalLoading ,responseImpactData} =
-    useSelector((state) => state.offers);
+  const {
+    filteredOffers,
+    pagination,
+    loading,
+    editable_status,
+    message,
+    editItemId,
+    dialogVisible,
+    modalLoading,
+    responseImpactData,
+  } = useSelector((state) => state.offers);
+  const { responseData } = useSelector((state) => state.modalSlice);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
@@ -63,22 +64,23 @@ const OfferList = () => {
     const data = { status: newStatus, id: item.id };
 
     dispatch(setSelectedItem(data));
+    dispatch(setDialogVisible(true));
   };
-    const handleEditTax = (id) => {
-      dispatch(setEditItemId(id));
-      dispatch(setOfferDialogVisible(true));
-    };
-    const handleModalSubmit = async () => {
-      dispatch(setOfferModalLoading(true));
-      navigate(`${APP_PREFIX_PATH}/offer/edit/${editItemId}`)
-      console.log(editItemId, "9234239423490823498234098234908");
-      dispatch(setOfferDialogVisible(false));
-      dispatch(setOfferModalLoading(false));
-    };
-  
-    const handleModalCancel = () => {
-      dispatch(setOfferDialogVisible(false));
-    };
+  const handleEditTax = (id) => {
+    dispatch(setEditItemId(id));
+    dispatch(setOfferDialogVisible(true));
+  };
+  const handleModalSubmit = async () => {
+    dispatch(setOfferModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/offer/edit/${editItemId}`);
+    console.log(editItemId, "9234239423490823498234098234908");
+    dispatch(setOfferDialogVisible(false));
+    dispatch(setOfferModalLoading(false));
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setOfferDialogVisible(false));
+  };
   const getDropdownMenu = (row) => [
     {
       key: "view",
@@ -98,7 +100,7 @@ const OfferList = () => {
           <span className="ml-2">Edit Offer</span>
         </Flex>
       ),
-      onClick:() => handleEditTax(row.id)
+      onClick: () => handleEditTax(row.id),
     },
   ];
 
@@ -209,16 +211,23 @@ const OfferList = () => {
             {/* <Descriptions.Item label="Offer Description">
             {selectedOffer.description || "No description available"}
             </Descriptions.Item> */}
-            {selectedOffer.thumbnail_image && selectedOffer.thumbnail_image !== "images" ? (
+            {selectedOffer.thumbnail_image &&
+            selectedOffer.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">
                 <img
                   src={selectedOffer.thumbnail_image}
                   alt="Offer Thumbnail"
-                  style={{ maxWidth: "100%", maxHeight: "200px", objectFit: "contain" }}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "200px",
+                    objectFit: "contain",
+                  }}
                 />
               </Descriptions.Item>
             ) : (
-              <Descriptions.Item label="Thumbnail Image">No image available</Descriptions.Item>
+              <Descriptions.Item label="Thumbnail Image">
+                No image available
+              </Descriptions.Item>
             )}
           </Descriptions>
         )}
@@ -242,10 +251,19 @@ const OfferList = () => {
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         }}
         editable_status={editable_status}
         responseData={responseImpactData}
+      />
+      <StatusSubmitAndConfirmModal
+        editFunction={editOfferStatus}
+        getAllFunction={fetchAllOffers}
+        responseData={responseData}
+        responseMessage={message}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
       />
     </Card>
   );
