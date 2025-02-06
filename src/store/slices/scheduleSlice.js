@@ -16,6 +16,11 @@ export const initialState = {
   editable_status: true,
   responseData: null,
   responseMessage: null,
+  timeSlots: {},
+  activeTab: null,
+  dates: [],
+  slotStatus: {},
+  scrollPosition: 0,
   pagination: { size: 10, page: 1 },
 };
 
@@ -66,6 +71,51 @@ const scheduleSlice = createSlice({
   name: "schedules",
   initialState,
   reducers: {
+    setTimeSlots: (state, action) => {
+      state.timeSlots = action.payload;
+    },
+    setActiveTab: (state, action) => {
+      state.activeTab = action.payload;
+    },
+    setDates: (state, action) => {
+      state.dates = action.payload;
+    },
+    setSlotStatus: (state, action) => {
+      state.slotStatus = action.payload;
+    },
+    addNewTimeSlot: (state, action) => {
+      const { dateStr } = action.payload;
+      if (!state.timeSlots[dateStr]) {
+        state.timeSlots[dateStr] = [];
+      }
+      state.timeSlots[dateStr].push({ start_time: null, end_time: null });
+    },
+    removeExistingTimeSlot: (state, action) => {
+      const { dateStr, index } = action.payload;
+      if (state.timeSlots[dateStr]) {
+        state.timeSlots[dateStr] = state.timeSlots[dateStr].filter((_, i) => i !== index);
+      }
+    },
+    addTimeSlot: (state, action) => {
+      const { dateStr } = action.payload;
+      if (!state.timeSlots[dateStr]) {
+        state.timeSlots[dateStr] = [];
+      }
+      state.timeSlots[dateStr].push({ start_time: null, end_time: null });
+    },
+    removeTimeSlot: (state, action) => {
+      const { dateStr, index } = action.payload;
+      if (state.timeSlots[dateStr]) {
+        state.timeSlots[dateStr] = state.timeSlots[dateStr].filter((_, i) => i !== index);
+      }
+    },
+    updateTimeSlot: (state, action) => {
+      const { dateStr, index, field, value } = action.payload;
+      if (state.timeSlots[dateStr] && state.timeSlots[dateStr][index]) {
+        state.timeSlots[dateStr][index][field] = value;
+      }
+    }
+  ,
     filterSchedules: (state, action) => {
       const { searchTerm, status } = action.payload;
 
@@ -203,13 +253,21 @@ const scheduleSlice = createSlice({
   },
 });
 
-export const {
+export const {  addNewTimeSlot, 
+  removeExistingTimeSlot ,
   filterSchedules,
   resetSchedule,
   toggleSelectedOffer,
   toggleSelectedCoupon,
   updateSelectedCoupons,
   setSelectedItemForModal,
+  setTimeSlots, 
+  setActiveTab, 
+  setDates, 
+  setSlotStatus,
+  addTimeSlot,
+  removeTimeSlot,
+  updateTimeSlot,
   setScheduleSelectTime,
   updateSelectedOffer,
 } = scheduleSlice.actions;

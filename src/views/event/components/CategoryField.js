@@ -2,10 +2,12 @@ import { Card, Col, Form, Select } from "antd";
 import {
   clearSubcategories,
   fetchCategories,
+  setCategoryValidationDialogVisible,
   fetchSubcategories,
 } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RulesMessageConstants } from "constants/RulesConstant";
+import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import { useEffect } from "react";
 
 const { Option } = Select;
@@ -17,9 +19,14 @@ const CategoryField = ({ form }) => {
   };
 
   const dispatch = useDispatch();
-  const { filteredCategories, subcategories, loading } = useSelector(
-    (state) => state.category
-  );
+  const {
+    filteredCategories,
+    subcategories,
+    loading,
+    message: subCatValidationMessage,
+    ValidateData,
+    categoryValidationDialogVisible,
+  } = useSelector((state) => state.category);
 
   useEffect(() => {
     dispatch(fetchCategories({}));
@@ -32,6 +39,9 @@ const CategoryField = ({ form }) => {
     } else {
       dispatch(clearSubcategories());
     }
+  };
+  const handleValidationModalCancel = () => {
+    dispatch(setCategoryValidationDialogVisible(false));
   };
 
   return (
@@ -86,6 +96,12 @@ const CategoryField = ({ form }) => {
           </Select>
         </Form.Item>
       </Card>
+      <ValidationModal
+        visible={categoryValidationDialogVisible}
+        data={ValidateData?.errors}
+        statusMessage={subCatValidationMessage}
+        onClose={handleValidationModalCancel}
+      />
     </Col>
   );
 };

@@ -18,13 +18,16 @@ export const initialState = {
   venueId: null,
   availableTicketTyps: [],
   selectedTicketType: null,
-  selectedTicketStructure: null,
+  selectedTicketStructure: [],
   availableTicketSets: [],
   selectedTicketSet: null,
   currentStepSaved: false,
   isModalVisible: false,
   ticketTypes: [],
   message: null,
+  validationStatus: false,
+  ticketValidationDialogVisible: false,
+  ValidateData: null,
   editable_status: null,
   responseData: null,
   responseMessage: null,
@@ -45,6 +48,19 @@ export const fetchAllTickets = createAsyncThunk(
       }
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching tickets");
+    }
+  }
+);
+
+export const validateTicket = createAsyncThunk(
+  "ticket/validateTicket",
+  async (ticketId, { rejectWithValue }) => {
+    try {
+      const response = await TicketsService.validateTicket(ticketId);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
     }
   }
 );
@@ -118,6 +134,9 @@ export const ticketSlice = createSlice({
     setIsModalVisible(state, action) {
       state.isModalVisible = action.payload;
     },
+    setTicketValidationDialogVisible(state, action) {
+      state.ticketValidationDialogVisible = action.payload;
+    },
     setSelectedTicketType(state, action) {
       console.log("Setting selected ticket type:", action.payload);
       state.selectedTicketType = action.payload;
@@ -133,49 +152,70 @@ export const ticketSlice = createSlice({
         ticket_set,
         tickets,
         id,
+        ticketStructureId
       } = action.payload;
-      console.log(state, ticket_set, tickets, "Saving Ticket Set");
-
-      if (venue_id && number_of_tickets && base_price) {
-        // First time adding venue data and ticket set
-        if (state.ticketTypes.length === 0) {
-          state.ticketTypes.push({
-            venue_id,
-            number_of_tickets,
-            name,
-            base_price,
-            place_id,
-            ticket_types: [],
-          });
-        }
+    
+      const existingTypeIndex = state.ticketTypes.findIndex(
+        (type) => type.venue_id === venue_id && type.name === name
+      );
+    
+      if (existingTypeIndex === -1) {
+        // Add new ticket type
+        state.ticketTypes.push({
+          venue_id,
+          number_of_tickets,
+          name,
+          base_price,
+          place_id,
+          ticket_types: [
+            {
+              ticket_set,
+              tickets,
+              id: Date.now(), // Use Date.now() for the unique ID
+              ticketStructureId // Keep the structure ID separately
+            },
+          ],
+        });
       } else {
-        // Subsequent times: Add new ticket set (ticket types only)
-        const existingTicketSetIndex =
-          state.ticketTypes[0]?.ticket_types.findIndex((set) => set.id === id);
-
-        if (existingTicketSetIndex !== -1) {
-          // If the ticket set already exists, update it
-          state.ticketTypes[0].ticket_types[existingTicketSetIndex] = {
+        // Add new ticket set to existing ticket type
+        const existingTicketSetIndex = state.ticketTypes[
+          existingTypeIndex
+        ].ticket_types.findIndex((set) => set.id === id);
+    
+        if (existingTicketSetIndex === -1) {
+          state.ticketTypes[existingTypeIndex].ticket_types.push({
             ticket_set,
             tickets,
-            id,
-          };
+            id: Date.now(), // Use Date.now() for the unique ID
+            ticketStructureId // Keep the structure ID separately
+          });
         } else {
-          // Otherwise, add the new ticket set
-          state.ticketTypes[0].ticket_types.push({ ticket_set, tickets, id });
+          state.ticketTypes[existingTypeIndex].ticket_types[
+            existingTicketSetIndex
+          ] = {
+            ticket_set,
+            tickets,
+            id: Date.now(), // Use Date.now() for the unique ID
+            ticketStructureId // Keep the structure ID separately
+          };
         }
       }
     },
 
     removeSpecificTicketSet(state, action) {
-      const ticketSetToRemove = action.payload; // Name of the ticket_set to remove
-
-      if (state.ticketTypes.length > 0 && state.ticketTypes[0]?.ticket_types) {
-        state.ticketTypes[0].ticket_types =
-          state.ticketTypes[0].ticket_types.filter(
-            (set) => set.id !== ticketSetToRemove
-          );
+      const { typeIndex, ticketSetId } = action.payload;
+      if (state.ticketTypes[typeIndex]?.ticket_types) {
+        state.ticketTypes[typeIndex].ticket_types = state.ticketTypes[
+          typeIndex
+        ].ticket_types.filter((set) => set.id !== ticketSetId);
       }
+    },
+
+    removeTicketType(state, action) {
+      const typeIndex = action.payload;
+      state.ticketTypes = state.ticketTypes.filter(
+        (_, index) => index !== typeIndex
+      );
     },
     // Reset all ticket sets
     currentStepSaveUpdate(state, action) {
@@ -198,7 +238,11 @@ export const ticketSlice = createSlice({
     },
     setSelectedTicketStructure(state, action) {
       const selectedStructure = action.payload;
-      state.selectedTicketStructure = selectedStructure;
+
+      if (!Array.isArray(state.selectedTicketStructure)) {
+        state.selectedTicketStructure = [];
+      }
+      state.selectedTicketStructure.push(action.payload);
 
       // Extract ticket types from the selected structure
       state.availableTicketSets = selectedStructure?.ticket_types || [];
@@ -218,6 +262,31 @@ export const ticketSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(validateTicket.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validateTicket.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        console.log("HELOOOOOOOOOO");
+
+        if (payload.message === "warning") {
+          state.validationStatus = false;
+          state.message = payload.status.message;
+          state.ValidateData = payload.status.data;
+          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status.editable_status;
+        } else if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+          if (payload.status) {
+            state.message = payload.status.message;
+          }
+        }
+      })
+      .addCase(validateTicket.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to validate place";
+      })
       .addCase(editTicket.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -290,9 +359,11 @@ export const {
   setSelectedTicketSet,
   resetTicketSelection,
   removeSpecificTicketSet,
+  removeTicketType,
   currentStepSaveUpdate,
   addOrUpdateTicketSet,
   resetTicketSets,
+  setTicketValidationDialogVisible
 } = ticketSlice.actions;
 
 export const selectTickets = (state) => state.tickets;

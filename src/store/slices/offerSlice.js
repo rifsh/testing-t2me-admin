@@ -15,8 +15,11 @@ export const initialState = {
   editable_status: null,
   editItemId: null,
   responseImpactData: null,
-  selectedOffer:null,
+  selectedOffer: null,
   offerDetails: null,
+  ValidateData: null,
+  offerCouponValidationDialogVisible: false,
+  validationStatus: false,
   pagination: { size: 10, page: 1 },
 };
 export const fetchAllOffers = createAsyncThunk(
@@ -32,6 +35,19 @@ export const fetchAllOffers = createAsyncThunk(
       }
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error fetching offers");
+    }
+  }
+);
+
+export const validateOfferCoupon = createAsyncThunk(
+  "offer/validate",
+  async ({ offers, coupons }, { rejectWithValue }) => {
+    try {
+      const response = await OfferService.validateOfferCoupon(offers, coupons);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
     }
   }
 );
@@ -64,7 +80,7 @@ export const editOffer = createAsyncThunk(
   "offer/edit",
   async ({ data, action }, { rejectWithValue }) => {
     try {
-      console.log(data,"DATA IN SERVICE");
+      console.log(data, "DATA IN SERVICE");
       const response = await OfferService.editOffer(data, action);
       return response;
     } catch (error) {
@@ -124,9 +140,37 @@ const offerSlice = createSlice({
     setSelectedOffer: (state, action) => {
       state.selectedOffer = action.payload;
     },
+    setOfferCouponValidationDialogVisible(state, action) {
+      state.offerCouponValidationDialogVisible = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(validateOfferCoupon.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validateOfferCoupon.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        console.log("HELOOOOOOOOOO");
+
+        if (payload.message === "warning") {
+          state.validationStatus = false;
+          state.message = payload.status.message;
+          state.ValidateData = payload.status.data;
+          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status.editable_status;
+        } else if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+          if (payload.status) {
+            state.message = payload.status.message;
+          }
+        }
+      })
+      .addCase(validateOfferCoupon.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to validate place";
+      })
       .addCase(editOffer.pending, (state) => {
         state.loading = true;
       })
@@ -214,5 +258,6 @@ export const {
   setOfferDialogVisible,
   setOfferModalLoading,
   setSelectedOffer,
+  setOfferCouponValidationDialogVisible,
 } = offerSlice.actions;
 export default offerSlice.reducer;

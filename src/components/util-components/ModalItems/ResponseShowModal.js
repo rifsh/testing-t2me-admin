@@ -16,15 +16,15 @@ const ResponseShowModal = ({
   loading = false,
   jsonData = null,
 }) => {
-  console.log(jsonData, "JSONNNNNNNNNNNNNNNNNNNNN");
-  console.log(warningMessage, "MESSAGEEEEEEEEEEE");
+  
+
   const tableData = useMemo(() => {
     if (!jsonData) return [];
 
-    let dataObject = jsonData?.data ?? jsonData; // Check if jsonData.data exists, otherwise use jsonData
+    let dataObject = jsonData?.data ?? jsonData;
 
     if (dataObject?.data) {
-      dataObject = dataObject.data; // Handle nested "data" case
+      dataObject = dataObject.data;
     }
 
     return Object.entries(dataObject).map(([key, value], index) => ({
@@ -34,64 +34,35 @@ const ResponseShowModal = ({
     }));
   }, [jsonData]);
 
-  const revisedOfferStartData = jsonData?.revised_offer_start_date
-    ? Object.entries(jsonData.revised_offer_start_date).map(
-        ([key, value], index) => ({
-          key: index,
-          columnKey: key,
-          value: value ?? "N/A",
-        })
-      )
-    : [];
-
-  const revisedOfferEndData = jsonData?.revised_offer_end_date
-    ? Object.entries(jsonData.revised_offer_end_date).map(
-        ([key, value], index) => ({
-          key: index,
-          columnKey: key,
-          value: value ?? "N/A",
-        })
-      )
-    : [];
-
-  const revisedCouponStartDate = jsonData?.revised_coupon_start_date
-    ? Object.entries(jsonData.revised_coupon_start_date).map(
-        ([key, value], index) => ({
-          key: index,
-          columnKey: key,
-          value: value ?? "N/A",
-        })
-      )
-    : [];
-
-  const revisedCouponEndData = jsonData?.revised_coupon_end_date
-    ? Object.entries(jsonData.revised_coupon_end_date).map(
-        ([key, value], index) => ({
-          key: index,
-          columnKey: key,
-          value: value ?? "N/A",
-        })
-      )
-    : [];
-
-  const scheduleOfferData = useMemo(() => {
-    if (!jsonData?.list_of_schedule_offer_removed) return [];
-    return jsonData.list_of_schedule_offer_removed.map((item, index) => ({
+  const scheduleData = useMemo(() => {
+    if (!jsonData?.list_of_updated_Schedules) return [];
+  
+    const schedules = jsonData.list_of_updated_Schedules;
+    
+    // Check if the first schedule contains offer or coupon fields
+    const isOffer = schedules.some(item => item.hasOwnProperty('revised_schedule_offer_start_date'));
+    const isCoupon = schedules.some(item => item.hasOwnProperty('revised_schedule_coupon_start_date'));
+  
+    return schedules.map((item, index) => ({
       key: index,
       schedule_id: item.schedule_id,
       event_id: item.event_id,
+      schedule_name: item.schedule_name,
+      event_name: item.event_name,
       schedule_start: item.schedule_start,
       schedule_end: item.schedule_end,
-    }));
-  }, [jsonData]);
-  const scheduleCouponData = useMemo(() => {
-    if (!jsonData?.list_of_schedule_coupon_removed) return [];
-    return jsonData.list_of_schedule_coupon_removed.map((item, index) => ({
-      key: index,
-      schedule_id: item.schedule_id,
-      event_id: item.event_id,
-      schedule_start: item.schedule_start,
-      schedule_end: item.schedule_end,
+      ...(isOffer
+        ? {
+            revised_schedule_offer_start_date: item.revised_schedule_offer_start_date,
+            revised_schedule_offer_end_date: item.revised_schedule_offer_end_date,
+          }
+        : {}),
+      ...(isCoupon
+        ? {
+            revised_schedule_coupon_start_date: item.revised_schedule_coupon_start_date,
+            revised_schedule_coupon_end_date: item.revised_schedule_coupon_end_date,
+          }
+        : {}),
     }));
   }, [jsonData]);
 
@@ -114,28 +85,35 @@ const ResponseShowModal = ({
       ),
     },
   ];
-  const scheduleColumns = [
-    {
-      title: "Schedule ID",
-      dataIndex: "schedule_id",
-      key: "schedule_id",
-    },
-    {
-      title: "Event ID",
-      dataIndex: "event_id",
-      key: "event_id",
-    },
-    {
-      title: "Schedule Start",
-      dataIndex: "schedule_start",
-      key: "schedule_start",
-    },
-    {
-      title: "Schedule End",
-      dataIndex: "schedule_end",
-      key: "schedule_end",
-    },
-  ];
+  const scheduleColumns = useMemo(() => {
+    if (!scheduleData.length) return [];
+  
+    const isOffer = scheduleData.some(item => item.revised_schedule_offer_start_date);
+    const isCoupon = scheduleData.some(item => item.revised_schedule_coupon_start_date);
+  
+    const baseColumns = [
+      { title: "Schedule ID", dataIndex: "schedule_id", key: "schedule_id" },
+      { title: "Event ID", dataIndex: "event_id", key: "event_id" },
+      { title: "Schedule Name", dataIndex: "schedule_name", key: "schedule_name" },
+      { title: "Event Name", dataIndex: "event_name", key: "event_name" },
+      { title: "Schedule Start", dataIndex: "schedule_start", key: "schedule_start" },
+      { title: "Schedule End", dataIndex: "schedule_end", key: "schedule_end" },
+    ];
+  
+    const dynamicColumns = isOffer
+      ? [
+          { title: "Revised Schedule Offer Start Date", dataIndex: "revised_schedule_offer_start_date", key: "revised_schedule_offer_start_date" },
+          { title: "Revised Schedule Offer End Date", dataIndex: "revised_schedule_offer_end_date", key: "revised_schedule_offer_end_date" },
+        ]
+      : isCoupon
+      ? [
+          { title: "Revised Schedule Coupon Start Date", dataIndex: "revised_schedule_coupon_start_date", key: "revised_schedule_coupon_start_date" },
+          { title: "Revised Schedule Coupon End Date", dataIndex: "revised_schedule_coupon_end_date", key: "revised_schedule_coupon_end_date" },
+        ]
+      : [];
+  
+    return [...baseColumns, ...dynamicColumns];
+  }, [scheduleData]);
 
   return (
     <Modal
@@ -183,86 +161,14 @@ const ResponseShowModal = ({
             />
           </div>
         )}
-        {(revisedOfferStartData.length > 0 ||
-          revisedOfferEndData.length > 0) && (
-          <Row gutter={16}>
-            {revisedOfferStartData.length > 0 && (
-              <Col span={12}>
-                <Title level={5}>Revised Offer Start Date</Title>
-                <Table
-                  columns={columns}
-                  dataSource={revisedOfferStartData}
-                  pagination={false}
-                  size="small"
-                  bordered
-                />
-              </Col>
-            )}
-            {revisedOfferEndData.length > 0 && (
-              <Col span={12}>
-                <Title level={5}>Revised Offer End Date</Title>
-                <Table
-                  columns={columns}
-                  dataSource={revisedOfferEndData}
-                  pagination={false}
-                  size="small"
-                  bordered
-                />
-              </Col>
-            )}
-          </Row>
-        )}
-        {(revisedCouponStartDate.length > 0 ||
-          revisedCouponEndData.length > 0) && (
-          <Row gutter={16}>
-            {revisedCouponStartDate.length > 0 && (
-              <Col span={12}>
-                <Title level={5}>Revised Offer Start Date</Title>
-                <Table
-                  columns={columns}
-                  dataSource={revisedCouponStartDate}
-                  pagination={false}
-                  size="small"
-                  bordered
-                />
-              </Col>
-            )}
-            {revisedCouponEndData.length > 0 && (
-              <Col span={12}>
-                <Title level={5}>Revised Offer End Date</Title>
-                <Table
-                  columns={columns}
-                  dataSource={revisedCouponEndData}
-                  pagination={false}
-                  size="small"
-                  bordered
-                />
-              </Col>
-            )}
-          </Row>
-        )}
-        {scheduleOfferData.length > 0 && (
+        {scheduleData.length > 0 && (
           <>
             <Title level={5} style={{ marginTop: 16 }}>
               Schedule Offers Removed
             </Title>
             <Table
               columns={scheduleColumns}
-              dataSource={scheduleOfferData}
-              pagination={false}
-              size="small"
-              bordered
-            />
-          </>
-        )}
-        {scheduleCouponData.length > 0 && (
-          <>
-            <Title level={5} style={{ marginTop: 16 }}>
-              Schedule Offers Removed
-            </Title>
-            <Table
-              columns={scheduleColumns}
-              dataSource={scheduleCouponData}
+              dataSource={scheduleData}
               pagination={false}
               size="small"
               bordered

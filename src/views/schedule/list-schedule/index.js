@@ -64,27 +64,28 @@ const ScheduleList = () => {
     Utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "Is Scheduled",
-      dataIndex: "is_scheduled",
+      dataIndex: "schedule_status",
       render: (_, record) => {
-        let statusText = record.is_scheduled;
-        let badgeStatus;
-
-        if (record.status) {
-          badgeStatus = "success";
-        } else {
-          badgeStatus = "error";
-        }
-
+        const statusMap = {
+          "Expired": { text: "Expired", badge: "error" },
+          "Upcoming": { text: "Upcoming", badge: "processing" },
+          "Running": { text: "Running", badge: "success" },
+          "Disabled": { text: "Disabled", badge: "error" },
+          "Booking Enabled": { text: "Booking Enabled", badge: "success" }
+        };
+    
+        const status = statusMap[record.schedule_status] || { text: record.schedule_status, badge: "default" };
+    
         return (
           <div>
-            <Badge status={badgeStatus}></Badge>
-            <span className="mx-2">{statusText}</span>
+            <Badge status={status.badge} />
+            <span className="mx-2">{status.text}</span>
           </div>
         );
       },
-      sorter: (a, b) => Utils.antdTableSorter(a, b, "is_scheduled"),
-      
-    },
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "schedule_status"),
+    }
+    
   ];
 
   return (

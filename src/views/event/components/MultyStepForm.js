@@ -19,18 +19,40 @@ import {
   toggleSelectedOffer,
   setSelectedEvent,
   setDialogVisible,
-  setModalLoading
+  setModalLoading,
 } from "store/slices/eventSlice";
-import { fetchAllTax, setSelectedTaxDetails } from "store/slices/taxSlice";
+import {
+  fetchAllTax,
+  setSelectedTaxDetails,
+  validateTax,
+  setTaxValidationDialogVisible,
+} from "store/slices/taxSlice";
+import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import {
   updateOrganizerEvent,
   setUpdateEventDialogVisible,
   setSelectedUpdateEvent,
   setUpdateEventLoading,
 } from "store/slices/EventOrganizerSlice";
-import { getVenues } from "store/slices/locationSlice";
-import { fetchAllTickets } from "store/slices/ticketSlice";
-import { fetchSubcategories } from "store/slices/categorySlice";
+import {
+  getVenues,
+  validateVenue,
+  setPlaceValidationDialogVisible,
+} from "store/slices/locationSlice";
+import {
+  fetchAllTickets,
+  validateTicket,
+  setTicketValidationDialogVisible,
+} from "store/slices/ticketSlice";
+import {
+  fetchSubcategories,
+  validateSubCategory,
+  setCategoryValidationDialogVisible,
+} from "store/slices/categorySlice";
+import {
+  validateOfferCoupon,
+  setOfferCouponValidationDialogVisible,
+} from "store/slices/offerSlice";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
@@ -60,18 +82,18 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     selectedEvent,
     modalLoading,
     editable_status,
-     messages: warningMessage,
+    messages: warningMessage,
   } = useSelector((state) => state.event);
+  const { selectedTicketStructure, ticketTypes } = useSelector(
+    (state) => state.tickets
+  );
   const dispatch = useDispatch();
   const [form] = Form.useForm();
   const { responseDataEvent, responseMessageEvent, message } = useSelector(
     (state) => state.organizerUpdates
   );
+  const { selectedTax } = useSelector((state) => state.tax);
 
-  console.log("------------------", eventId);
-  console.log("------------------", mode);
-  console.log("LENGTHHHHHHHHHH OFFER", selectedOffers.length);
-  console.log("LENGTHHHHHHHHHH COUPON", selectedCoupons.length);
   useEffect(() => {
     if (eventId) {
       dispatch(fetchEventDetails(eventId));
@@ -173,10 +195,100 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     dispatch(resetState());
   }, [dispatch]);
 
+  // VALIDATION STEP PROCESS
+
+  const validateCurrentStep = async (values) => {
+    switch (currentStep) {
+      case 2:
+        const subCategoryId = values.sub_category_id;
+        const resultActionCat = await dispatch(
+          validateSubCategory(subCategoryId)
+        );
+
+        if (validateSubCategory.fulfilled.match(resultActionCat)) {
+          const response = resultActionCat.payload;
+
+          if (response.message === "warning") {
+            dispatch(setCategoryValidationDialogVisible(true));
+            return false;
+          } else if (response.data && response.data[0]?.validation_status) {
+            return true;
+          }
+        } else {
+          return false;
+        }
+        break;
+
+      case 3:
+        const venueId = values.venue_id;
+        const resultActionVenue = await dispatch(validateVenue(venueId));
+
+        if (validateVenue.fulfilled.match(resultActionVenue)) {
+          const response = resultActionVenue.payload;
+
+          if (response.message === "warning") {
+            dispatch(setPlaceValidationDialogVisible(true));
+            return false;
+          } else if (response.data && response.data[0]?.validation_status) {
+            return true;
+          }
+        } else {
+          return false;
+        }
+        break;
+      case 4:
+        console.log(selectedTax, "TAXXXXXXXX");
+
+        if (selectedTax.length > 0) {
+          const resultActionTax = await dispatch(validateTax(selectedTax));
+
+          if (validateTax.fulfilled.match(resultActionTax)) {
+            const response = resultActionTax.payload;
+            if (response.message === "warning") {
+              dispatch(setTaxValidationDialogVisible(true));
+              return false;
+            } else if (response.data && response.data[0]?.validation_status) {
+              return true;
+            }
+          } else {
+            return false;
+          }
+        } else {
+          return true;
+        }
+
+        break;
+      case 5:
+        const ticketId = values.ticket_structure_id;
+        const resultActionTicket = await dispatch(validateTicket(ticketId));
+
+        if (validateTicket.fulfilled.match(resultActionTicket)) {
+          const response = resultActionTicket.payload;
+
+          if (response.message === "warning") {
+            dispatch(setTicketValidationDialogVisible(true));
+            return false;
+          } else if (response.data && response.data[0]?.validation_status) {
+            return true;
+          }
+        } else {
+          return false;
+        }
+        break;
+    }
+    return true;
+  };
+
   const nextStep = async () => {
     dispatch(setSubmitLoading(true));
     try {
       const values = await form.validateFields();
+
+      const isValid = await validateCurrentStep(values);
+      if (!isValid) {
+        return;
+      }
+
       const resultAction = await dispatch(checkEventValidation());
 
       if (checkEventValidation.fulfilled.match(resultAction)) {
@@ -206,9 +318,6 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     const values = await form.validateFields();
     try {
       if (mode === "EDIT") {
-        console.log("ITS AN EDITTTTTTTTTTTTT EVENT");
-
-      
         const offers = {
           offer_ids: selectedOffers?.map((offer) => offer.id) || [],
           coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
@@ -222,27 +331,65 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         console.log("Edit Data:", data);
 
         const resultAction = await dispatch(
-          editEvent({ data, action: ActionType.WARNING })
+          validateOfferCoupon({
+            offers: selectedOffers,
+            coupons: selectedCoupons,
+          })
         );
+        if (validateOfferCoupon.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setOfferCouponValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            const resultAction = await dispatch(
+              editEvent({ data, action: ActionType.WARNING })
+            );
 
-        if (editEvent.fulfilled.match(resultAction)) {
-          dispatch(setSelectedEvent(data));
-          dispatch(setDialogVisible(true));
+            if (editEvent.fulfilled.match(resultAction)) {
+              dispatch(setSelectedEvent(data));
+              dispatch(setDialogVisible(true));
+            }
+          }
         }
       } else {
-          dispatch(setSubmitLoading(true));
-          const offers = {
-            offer_ids: selectedOffers?.map((offer) => offer.id) || [],
-            coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
-          };
+        dispatch(setSubmitLoading(true));
+        const offers = {
+          offer_ids: selectedOffers?.map((offer) => offer.id) || [],
+          coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
+        };
+        const ticket_structure = {
+          ticket_structure: ticketTypes.reduce((acc, ticketType) => {
+            const structureItems = ticketType.ticket_types.map(ticket => ({
+              id: ticket.ticketStructureId,
+              ticket_set: ticket.ticket_set
+            }));
+            return [...acc, ...structureItems];
+          }, [])
+        };
 
-          const finalData = {
-            ...submitData,
-            ...offers,
-            max_tickets: parseInt(submitData.max_tickets || "0", 10),
-          };
+        const finalData = {
+          ...submitData,
+          ...ticket_structure,
+          ...offers,
+          max_tickets: parseInt(submitData.max_tickets || "0", 10),
+        };
 
+        console.log("HELOOOOOOOOOOOOOOOO");
+
+        const resultAction = await dispatch(
+          validateOfferCoupon({
+            offers: selectedOffers,
+            coupons: selectedCoupons,
+          })
+        );
+        if (validateOfferCoupon.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setOfferCouponValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
           dispatch(setSelectedSubmitItem(finalData));
+          }
+        }
       }
     } catch (error) {
       console.error("Submission Error:", error);
@@ -252,21 +399,22 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     }
   };
 
-    const handleModalSubmit = async () => {
-      dispatch(setModalLoading(true));
-      const resultAction = await dispatch(
-        editEvent({ data: selectedEvent, action: ActionType.SUBMIT })
-      );
-      dispatch(setModalLoading(false));
-      dispatch(setDialogVisible(false));
-      if (editEvent.fulfilled.match(resultAction)) {
-        dispatch(setSelectedSubmitItem(selectedEvent));
-      }
-    };
   
-    const handleModalCancel = () => {
-      dispatch(setDialogVisible(false));
-    };
+  const handleModalSubmit = async () => {
+    dispatch(setModalLoading(true));
+    const resultAction = await dispatch(
+      editEvent({ data: selectedEvent, action: ActionType.SUBMIT })
+    );
+    dispatch(setModalLoading(false));
+    dispatch(setDialogVisible(false));
+    if (editEvent.fulfilled.match(resultAction)) {
+      dispatch(setSelectedSubmitItem(selectedEvent));
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setDialogVisible(false));
+  };
 
   const prevStep = () => {
     if (currentStep > 1) {
@@ -323,7 +471,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
       </div>
       <div style={{ marginLeft: "50px", marginRight: "50px" }}>
         <Form layout="vertical" form={form}>
-          {getEventFormItems(form, currentStep,mode)}
+          {getEventFormItems(form, currentStep, mode)}
         </Form>
       </div>
 
@@ -346,6 +494,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         )}
       </div>
       <LoadingOverlay loading={loading} />
+
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
@@ -359,17 +508,16 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         loading={modalLoading}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
+          dataKey: "active_schedules",
         }}
         editable_status={editable_status}
       />
       <SubmitAndConfirmModal
-        responseData={ responseData}
+        responseData={responseData}
         addFunction={mode === "EDIT" ? editEvent : addEvent}
         navigationPath={`${APP_PREFIX_PATH}/event/list`}
-        responseMessage={
-          responseMessage
-        }
+        responseMessage={responseMessage}
       />
     </div>
   );

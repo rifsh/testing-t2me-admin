@@ -35,7 +35,8 @@ export const initialState = {
   responseMessage: null,
   editable_status: null,
   validationStatus: false,
-  placeValidateData: null,
+  ValidateData: null,
+  placeValidationDialogVisible: false,
   pagination: { size: 10, page: 1 },
   editItemId: null,
 };
@@ -172,19 +173,6 @@ export const getSingleVenues = createAsyncThunk(
   }
 );
 
-export const validatePlace = createAsyncThunk(
-  "locations/validatePlace",
-  async (placeId, { rejectWithValue }) => {
-    try {
-      const response = await LocationService.validatePlace(placeId);
-      console.log("VALIDATION RESULT", response);
-
-      return response;
-    } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch places");
-    }
-  }
-);
 export const getSinglePlace = createAsyncThunk(
   "locations/getSinglePlace",
   async (place_id, { rejectWithValue }) => {
@@ -236,6 +224,46 @@ export const getCoutryDetails = createAsyncThunk(
     }
   }
 );
+
+// Validation Slice Thunks
+
+export const validatePlace = createAsyncThunk(
+  "locations/validatePlace",
+  async (placeId, { rejectWithValue }) => {
+    try {
+      const response = await LocationService.validatePlace(placeId);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+
+export const validateVenue = createAsyncThunk(
+  "locations/validateVenue",
+  async (venueId, { rejectWithValue }) => {
+    try {
+      const response = await LocationService.validateVenue(venueId);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+export const validateCountry = createAsyncThunk(
+  "locations/validateCountry",
+  async (countryId, { rejectWithValue }) => {
+    try {
+      const response = await LocationService.validateCountry(countryId);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
 const locationSlice = createSlice({
   name: "locations",
   initialState,
@@ -278,7 +306,7 @@ const locationSlice = createSlice({
       state.modalLoading = action.payload;
     },
     setPlaceValidationDialogVisible(state, action) {
-      state.dialogVisible = action.payload;
+      state.placeValidationDialogVisible = action.payload;
     },
     singleVenue(state, action) {
       console.warn(action);
@@ -437,28 +465,6 @@ const locationSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(validatePlace.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(validatePlace.fulfilled, (state, { payload }) => {
-        state.loading = false;
-        state.responseData = payload.data;
-        if (payload.data) {
-          state.validationStatus = payload.data[0].validation_status;
-        } else {
-          state.validationStatus = false;
-        }
-        if (payload.status) {
-          state.message = payload.status.message;
-          state.placeValidateData = payload.status.data;
-          state.editable_status = payload.status.editable_status;
-        }
-      })
-      .addCase(validatePlace.rejected, (state, { payload }) => {
-        state.loading = false;
-        state.error = payload || "Failed to edit event";
-      })
       .addCase(editPlace.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -563,6 +569,84 @@ const locationSlice = createSlice({
       .addCase(addVenue.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
+      })
+
+      //VALIDATION EXTRA REDUCERS
+
+      .addCase(validatePlace.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validatePlace.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        console.log("HELOOOOOOOOOO");
+
+        if (payload.message === "warning") {
+          state.validationStatus = false;
+          state.message = payload.status.message;
+          state.ValidateData = payload.status.data;
+          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status.editable_status;
+        } else if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+          if (payload.status) {
+            state.message = payload.status.message;
+          }
+        }
+      })
+      .addCase(validatePlace.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to validate place";
+      })
+      .addCase(validateVenue.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validateVenue.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        console.log("HELOOOOOOOOOO");
+
+        if (payload.message === "warning") {
+          state.validationStatus = false;
+          state.message = payload.status.message;
+          state.ValidateData = payload.status.data;
+          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status.editable_status;
+        } else if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+          if (payload.status) {
+            state.message = payload.status.message;
+          }
+        }
+      })
+      .addCase(validateVenue.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to validate place";
+      })
+      .addCase(validateCountry.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validateCountry.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        console.log("HELOOOOOOOOOO");
+
+        if (payload.message === "warning") {
+          state.validationStatus = false;
+          state.message = payload.status.message;
+          state.ValidateData = payload.status.data;
+          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status.editable_status;
+        } else if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+          if (payload.status) {
+            state.message = payload.status.message;
+          }
+        }
+      })
+      .addCase(validateCountry.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to validate place";
       });
   },
 });
@@ -584,7 +668,7 @@ export const {
   setLoading,
   setSelectedPlace,
   setEditItemId,
-  setPlaceValidationDialogVisible
+  setPlaceValidationDialogVisible,
 } = locationSlice.actions;
 export const allLocations = (state) => state.location;
 
