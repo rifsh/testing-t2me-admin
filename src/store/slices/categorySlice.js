@@ -27,7 +27,37 @@ const initialState = {
   singleSubcategory: null,
   editItemId: null,
   selectedCat: null,
+  validationStatus: false,
+  ValidateData: null,
+  categoryValidationDialogVisible: false,
 };
+
+export const validateCategory = createAsyncThunk(
+  "category/validation",
+  async (categoryId, { rejectWithValue }) => {
+    try {
+      const response = await CategoryService.validateCategory(categoryId);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+
+export const validateSubCategory = createAsyncThunk(
+  "subCategory/validation",
+  async (subCategoryId, { rejectWithValue }) => {
+    try {
+      const response = await CategoryService.validateSubCategory(subCategoryId);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+
 export const addCategory = createAsyncThunk(
   "category/add",
   async ({ data, action }, { rejectWithValue }) => {
@@ -94,7 +124,9 @@ export const getSingleSubCateory = createAsyncThunk(
         const response = CategoryMockData.fetchAllCategory;
         return response.data;
       } else {
-        const response = await CategoryService.getSingleSubCateory(subcategory_id);
+        const response = await CategoryService.getSingleSubCateory(
+          subcategory_id
+        );
         return response.data[0];
       }
     } catch (error) {
@@ -214,6 +246,9 @@ const categorySlice = createSlice({
         state.selectedCategoryId = null;
       }
     },
+    setCategoryValidationDialogVisible(state, action) {
+      state.categoryValidationDialogVisible = action.payload;
+    },
     clearSubcategories: (state) => {
       state.subcategories = [];
       state.selectedCategoryId = null;
@@ -233,6 +268,56 @@ const categorySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(validateCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validateCategory.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        console.log("HELOOOOOOOOOO");
+
+        if (payload.message === "warning") {
+          state.validationStatus = false;
+          state.message = payload.status.message;
+          state.ValidateData = payload.status.data;
+          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status.editable_status;
+        } else if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+          if (payload.status) {
+            state.message = payload.status.message;
+          }
+        }
+      })
+      .addCase(validateCategory.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to validate place";
+      })
+      .addCase(validateSubCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validateSubCategory.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        console.log("HELOOOOOOOOOO");
+
+        if (payload.message === "warning") {
+          state.validationStatus = false;
+          state.message = payload.status.message;
+          state.ValidateData = payload.status.data;
+          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status.editable_status;
+        } else if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+          if (payload.status) {
+            state.message = payload.status.message;
+          }
+        }
+      })
+      .addCase(validateSubCategory.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to validate place";
+      })
       .addCase(getSingleCateory.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -405,7 +490,15 @@ const categorySlice = createSlice({
   },
 });
 
-export const { filterCategory, setActiveTab, clearSubcategories, setSelectedCatDetails, setCatDialogVisible, setCatModalLoading, setEditItemId } =
-  categorySlice.actions;
+export const {
+  filterCategory,
+  setActiveTab,
+  clearSubcategories,
+  setSelectedCatDetails,
+  setCatDialogVisible,
+  setCatModalLoading,
+  setEditItemId,
+  setCategoryValidationDialogVisible,
+} = categorySlice.actions;
 
 export default categorySlice.reducer;

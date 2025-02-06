@@ -5,42 +5,39 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const OfferService = {};
 
-
-
 OfferService.addOffer = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
-  }); 
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
+  });
   return fetch({
     url: `${ApiConstant.OFFER_URL}?action=${encodedAction}`,
     method: "post",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
 
 OfferService.editOffer = function (data, action) {
-  console.log(data,"DATA IN SERVICE");
-  
+  console.log(data, "DATA IN SERVICE");
+
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
   return fetch({
     url: `${ApiConstant.OFFER_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
-
 
 OfferService.editOfferStatus = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
@@ -65,4 +62,14 @@ OfferService.fetchOfferDetails = function (offerId) {
     method: "get",
   });
 };
+
+OfferService.validateOfferCoupon = function (offers, coupons) {
+  const offerIds = offers.map((offer) => `offer_id=${offer.id}`).join("&");
+  const couponIds = coupons.map((coupon) => `coupon_id=${coupon.id}`).join("&");
+  return fetch({
+    url: `${ApiConstant.OFFER_COUPON_VALIDATE_URL}?${offerIds}&${couponIds}`,
+    method: "get",
+  });
+};
+
 export default OfferService;

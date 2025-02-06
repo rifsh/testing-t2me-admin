@@ -1,10 +1,25 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message, Select, Upload, Typography } from "antd";
+import {
+  Input,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  message,
+  Select,
+  Upload,
+  Typography,
+} from "antd";
 import {
   addSubCategory,
   fetchCategories,
+  validateCategory,
+  setCategoryValidationDialogVisible,
   editSubCategory,
-  setCatDialogVisible, setCatModalLoading, setSelectedCatDetails
+  setCatDialogVisible,
+  setCatModalLoading,
+  setSelectedCatDetails,
 } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -13,11 +28,15 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { UploadOutlined } from "@ant-design/icons";
-import { SupportImageFormat, SupportFormatContent } from "constants/SupportFileConstants";
+import {
+  SupportImageFormat,
+  SupportFormatContent,
+} from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
+import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import { filterOption } from "components/util-components/FormItems/dropDownSearch";
 
 const ADD = "ADD";
@@ -27,17 +46,31 @@ const { Text } = Typography;
 const rules = {
   category: [{ required: true, message: "Please Select a category" }],
   name: [{ required: true, message: "Please enter sub category name" }],
-  description: [{ required: true, message: "Please enter sub category description" }],
+  description: [
+    { required: true, message: "Please enter sub category description" },
+  ],
 };
 
 const SubCategoryFormFields = ({ mode, category }) => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const { loading, error, categories, responseData, responseMessage, dialogVisible, responseImpactData,
+  const {
+    loading,
+    error,
+    categories,
+    responseData,
+    responseMessage,
+    dialogVisible,
+    responseImpactData,
     message: warningMessage,
     selectedCat,
     editable_status,
-    modalLoading, } = useSelector((state) => state.category);
+    ValidateData,
+    validationStatus,
+    categoryValidationDialogVisible,
+    message,
+    modalLoading,
+  } = useSelector((state) => state.category);
 
   useEffect(() => {
     dispatch(fetchCategories({}));
@@ -52,16 +85,17 @@ const SubCategoryFormFields = ({ mode, category }) => {
         category_id: category.category.id,
         name: category.name,
         description: category.description,
-        thumbnail_image: category.thumbnail_image && category.thumbnail_image !== "images"
-          ? [
-            {
-              uid: "-1",
-              name: category.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: category.thumbnail_image,
-            },
-          ]
-          : [],
+        thumbnail_image:
+          category.thumbnail_image && category.thumbnail_image !== "images"
+            ? [
+                {
+                  uid: "-1",
+                  name: category.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: category.thumbnail_image,
+                },
+              ]
+            : [],
       });
     }
   }, [mode, category, form]);
@@ -86,32 +120,56 @@ const SubCategoryFormFields = ({ mode, category }) => {
       if (mode === EDIT) {
         const data = {
           ...values,
-          id: category.id
+          id: category.id,
         };
         console.log("Edit Data:", data);
 
         const resultAction = await dispatch(
-          editSubCategory({ data, action: ActionType.WARNING, })
+          validateCategory(values.category_id)
         );
 
-        if (editSubCategory.fulfilled.match(resultAction)) {
-          dispatch(setSelectedCatDetails(data));
-          dispatch(setCatDialogVisible(true));
+        if (validateCategory.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setCategoryValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            const resultAction = await dispatch(
+              editSubCategory({ data, action: ActionType.WARNING })
+            );
+
+            if (editSubCategory.fulfilled.match(resultAction)) {
+              dispatch(setSelectedCatDetails(data));
+              dispatch(setCatDialogVisible(true));
+            }
+          }
         }
       } else {
+        console.log("HELOOOOOOOOOOO");
+
         const formData = {
           ...values,
         };
 
-        dispatch(setSelectedSubmitItem(formData));
-      }
+        const resultAction = await dispatch(
+          validateCategory(values.category_id)
+        );
 
+        if (validateCategory.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setCategoryValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            dispatch(setSelectedSubmitItem(formData));
+          }
+        }
+      }
     } catch (errorInfo) {
       console.log("Validation Failed:", errorInfo);
     }
-
   };
-
+  const handleValidationModalCancel = () => {
+    dispatch(setCategoryValidationDialogVisible(false));
+  };
   const handleModalSubmit = async () => {
     dispatch(setCatModalLoading(true));
     const resultAction = await dispatch(
@@ -128,7 +186,6 @@ const SubCategoryFormFields = ({ mode, category }) => {
     dispatch(setCatDialogVisible(false));
   };
 
-
   // const filterOption = (input, option) => {
   //   return option.children.toLowerCase().indexOf(input.toLowerCase()) >=0;
   // }
@@ -139,15 +196,16 @@ const SubCategoryFormFields = ({ mode, category }) => {
         <Card title="Basic Info">
           <Form form={form} layout="vertical">
             <Form.Item
-
               name="category_id"
               label="Category Name"
               rules={rules.category}
-              
             >
-              <Select className="w-100" placeholder="Choose a Category"
-              showSearch
-              filterOption={filterOption} >
+              <Select
+                className="w-100"
+                placeholder="Choose a Category"
+                showSearch
+                filterOption={filterOption}
+              >
                 {categories.map((elm) => (
                   <Option key={elm.name} value={elm.id}>
                     {elm.name}
@@ -158,7 +216,11 @@ const SubCategoryFormFields = ({ mode, category }) => {
             <Form.Item name="name" label="Sub Category" rules={rules.name}>
               <Input placeholder="Sub Category" />
             </Form.Item>
-            <Form.Item name="description" label="Description" rules={rules.description}>
+            <Form.Item
+              name="description"
+              label="Description"
+              rules={rules.description}
+            >
               <Input.TextArea
                 rows={4}
                 placeholder="Enter category description"
@@ -172,21 +234,21 @@ const SubCategoryFormFields = ({ mode, category }) => {
               rules={rules.thumbnail_image}
               style={{ marginBottom: "0px", padding: "0px" }}
             >
-              <Upload name="thumbnail_image" listType="picture" maxCount={1} beforeUpload={handleBeforeUpload}
-                accept={`.${SupportImageFormat.join(',.')}`}
+              <Upload
+                name="thumbnail_image"
+                listType="picture"
+                maxCount={1}
+                beforeUpload={handleBeforeUpload}
+                accept={`.${SupportImageFormat.join(",.")}`}
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
-
-
             </Form.Item>
             <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
-              {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")}.
-              {" "}
+              {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}.{" "}
             </Text>
             <div
               style={{
@@ -209,8 +271,12 @@ const SubCategoryFormFields = ({ mode, category }) => {
           </Form>
         </Card>
       </Col>
-      <LoadingOverlay
-        loading={loading}
+      <LoadingOverlay loading={loading} />
+      <ValidationModal
+        visible={categoryValidationDialogVisible}
+        data={ValidateData?.errors}
+        statusMessage={message}
+        onClose={handleValidationModalCancel}
       />
       <WarningModal
         visible={dialogVisible}
@@ -225,7 +291,7 @@ const SubCategoryFormFields = ({ mode, category }) => {
         loading={modalLoading}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         }}
         editable_status={editable_status}
       />

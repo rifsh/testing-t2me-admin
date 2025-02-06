@@ -138,4 +138,19 @@ CategoryService.editSubCatStatus = function (data, action) {
   });
 };
 
+CategoryService.validateCategory = function (categoryId) {
+  return fetch({
+    url: `${ApiConstant.CATEGORY_VALIDATE_URL}?category_id=${categoryId}`,
+    method: "get",
+  });
+};
+
+CategoryService.validateSubCategory = function (subCategoryId) {
+  return fetch({
+    url: `${ApiConstant.SUB_CATEGORY_VALIDATE_URL}?subcategory_id=${subCategoryId}`,
+    method: "get",
+  });
+};
+
+
 export default CategoryService;

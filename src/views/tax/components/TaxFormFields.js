@@ -8,7 +8,7 @@ import {
   Select,
   Button,
   message,
-  Checkbox
+  Checkbox,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +22,9 @@ import {
   getCoutryDetails,
   getPlaces,
   setSelectedPlace,
-  
+  validatePlace,
+  setPlaceValidationDialogVisible,
+  validateCountry,
 } from "store/slices/locationSlice";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 
@@ -32,15 +34,22 @@ import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWith
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { addTax, fetchAvailableCategory, editTax, setSelectedTaxDetails, setTaxDialogVisible, setTaxModalLoading } from "store/slices/taxSlice";
+import {
+  addTax,
+  fetchAvailableCategory,
+  editTax,
+  setSelectedTaxDetails,
+  setTaxDialogVisible,
+  setTaxModalLoading,
+} from "store/slices/taxSlice";
 import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
-import {filterOption } from "components/util-components/FormItems/dropDownSearch";
+import ValidationModal from "components/util-components/ModalItems/ValidationModal";
+import { filterOption } from "components/util-components/FormItems/dropDownSearch";
 
 const { Option } = Select;
 
 const TaxFormFields = ({ mode, tax }) => {
-
   console.log("TAX DATA FOR EDIT -----------", tax);
 
   const [form] = Form.useForm();
@@ -55,6 +64,10 @@ const TaxFormFields = ({ mode, tax }) => {
     loading: locationLoading,
     detailedCountryList,
     filteredPlaces,
+    message,
+    ValidateData,
+    validationStatus,
+    placeValidationDialogVisible,
   } = locationState;
 
   const {
@@ -82,17 +95,24 @@ const TaxFormFields = ({ mode, tax }) => {
   }, [error]);
 
   useEffect(() => {
-    console.log("taxxxxxxxxxxxx",tax);
-    
+    console.log("taxxxxxxxxxxxx", tax);
+
     if (tax && mode === "EDIT") {
-      form.setFieldsValue({
+      const formData = {
         country_id: tax.country?.id,
         available_category: tax.available_category,
         tax_name: tax.tax_name,
         code: tax.code,
         percentage: tax.percentage,
-      });
+      };
 
+      if (tax.place_id) {
+        setIsLocationBased(true);
+        dispatch(getPlaces({ country_id: tax.country?.id }));
+        formData.place_id = tax.place_id;
+      }
+
+      form.setFieldsValue(formData);
     }
   }, [form]);
 
@@ -111,38 +131,90 @@ const TaxFormFields = ({ mode, tax }) => {
 
     if (mode === "EDIT") {
       console.log("ITS AN EDITTTTTTTTTTTTT TAXXXXXXX");
+      if (!form.getFieldValue("place_id") && isLocationBased) {
+        message.error("Place ID is missing. Please select a place.");
+        return;
+      }
 
       const data = {
         ...values,
-        id: tax.id
+        id: tax.id,
       };
       console.log("Edit Data:", data);
 
-      const resultAction = await dispatch(
-        editTax({ data, action: ActionType.WARNING, })
-      );
+      if (isLocationBased) {
+        const resultAction = await dispatch(validatePlace(values.place_id));
+        if (validatePlace.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setPlaceValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            const resultAction = await dispatch(
+              editTax({ data, action: ActionType.WARNING })
+            );
 
-      if (editTax.fulfilled.match(resultAction)) {
-        dispatch(setSelectedTaxDetails(data));
-        dispatch(setTaxDialogVisible(true));
+            if (editTax.fulfilled.match(resultAction)) {
+              dispatch(setSelectedTaxDetails(data));
+              dispatch(setTaxDialogVisible(true));
+            }
+          }
+        }
+      } else {
+        const resultAction = await dispatch(validateCountry(values.country_id));
+        if (validateCountry.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setPlaceValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            const resultAction = await dispatch(
+              editTax({ data, action: ActionType.WARNING })
+            );
+
+            if (editTax.fulfilled.match(resultAction)) {
+              dispatch(setSelectedTaxDetails(data));
+              dispatch(setTaxDialogVisible(true));
+            }
+          }
+        }
       }
-
     } else {
       try {
-
         if (!form.getFieldValue("place_id") && isLocationBased) {
           message.error("Place ID is missing. Please select a place.");
           return;
         }
 
-        dispatch(setSelectedSubmitItem(values));
+        if (isLocationBased) {
+          const resultAction = await dispatch(validatePlace(values.place_id));
+          if (validatePlace.fulfilled.match(resultAction)) {
+            const response = resultAction.payload;
+            if (response.message === "warning") {
+              dispatch(setPlaceValidationDialogVisible(true));
+            } else if (response.data && response.data[0]?.validation_status) {
+              dispatch(setSelectedSubmitItem(values));
+            }
+          }
+        } else {
+          const resultAction = await dispatch(
+            validateCountry(values.country_id)
+          );
+          if (validateCountry.fulfilled.match(resultAction)) {
+            const response = resultAction.payload;
+            if (response.message === "warning") {
+              dispatch(setPlaceValidationDialogVisible(true));
+            } else if (response.data && response.data[0]?.validation_status) {
+              dispatch(setSelectedSubmitItem(values));
+            }
+          }
+        }
       } catch (errorInfo) {
         console.error("Validation Failed:", errorInfo);
       }
     }
-
   };
-
+  const handleValidationModalCancel = () => {
+    dispatch(setPlaceValidationDialogVisible(false));
+  };
 
   const handleModalSubmit = async () => {
     dispatch(setTaxModalLoading(true));
@@ -181,7 +253,7 @@ const TaxFormFields = ({ mode, tax }) => {
                 className="w-100"
                 placeholder="Choose a Country"
                 showSearch
-                filterOption={filterOption} 
+                filterOption={filterOption}
                 loading={locationLoading}
                 onChange={(id) => handleCountrySelect(id)}
               >
@@ -210,7 +282,7 @@ const TaxFormFields = ({ mode, tax }) => {
                   placeholder="Choose a Tax"
                   loading={locationLoading}
                   showSearch
-                  filterOption={filterOption} 
+                  filterOption={filterOption}
                 >
                   {filteredPlaces && filteredPlaces.length > 0 ? (
                     filteredPlaces.map((country) => (
@@ -238,11 +310,14 @@ const TaxFormFields = ({ mode, tax }) => {
                 placeholder="Choose a Category"
                 loading={loading}
                 showSearch
-                filterOption={filterOption} 
+                filterOption={filterOption}
               >
                 {availableTaxCategory && availableTaxCategory.length > 0 ? (
                   availableTaxCategory.map((country) => (
-                    <Option key={country.id} value={country.name}>
+                    <Option
+                      key={country.id}
+                      value={mode === "EDIT" ? country.name : country.id}
+                    >
                       {country.name}
                     </Option>
                   ))
@@ -274,7 +349,11 @@ const TaxFormFields = ({ mode, tax }) => {
                 { required: true, message: RulesMessageConstants.CAPACITY },
               ]}
             >
-              <Input type="number" placeholder="Enter percentage" onWheel={(e) => e.target.blur()} />
+              <Input
+                type="number"
+                placeholder="Enter percentage"
+                onWheel={(e) => e.target.blur()}
+              />
             </Form.Item>
 
             <Flex
@@ -292,8 +371,12 @@ const TaxFormFields = ({ mode, tax }) => {
         </Form>
       </Col>
 
-      <LoadingOverlay
-        loading={loading}
+      <LoadingOverlay loading={loading} />
+      <ValidationModal
+        visible={placeValidationDialogVisible}
+        data={ValidateData?.errors}
+        statusMessage={message}
+        onClose={handleValidationModalCancel}
       />
       <WarningModal
         visible={dialogVisible}
@@ -308,7 +391,7 @@ const TaxFormFields = ({ mode, tax }) => {
         loading={modalLoading}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "active_schedules",
         }}
         editable_status={editable_status}
       />

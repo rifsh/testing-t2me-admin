@@ -4,14 +4,23 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllTickets,
   getAvailableTicketsType,
+  setTicketValidationDialogVisible,
 } from "store/slices/ticketSlice";
 import { TicketTypeSelector } from "./TicketTypeSelector";
 import { TicketStructureSelector } from "./TicketStructureSelector";
 import { TicketSetDetails } from "./TicketSetDetails";
+import ValidationModal from "components/util-components/ModalItems/ValidationModal";
+
 
 const TicketField = ({ form }) => {
   const dispatch = useDispatch();
   const { selectedVenue } = useSelector((state) => state.locations);
+  const {
+    message,
+    validationStatus,
+    ticketValidationDialogVisible,
+    ValidateData,
+  } = useSelector((state) => state.tickets);
 
   useEffect(() => {
     if (!selectedVenue || !selectedVenue?.id) {
@@ -47,6 +56,9 @@ const TicketField = ({ form }) => {
     }
     return Promise.resolve();
   };
+  const handleValidationModalCancel = () => {
+    dispatch(setTicketValidationDialogVisible(false));
+  };
 
   return (
     <Row gutter={16}>
@@ -68,6 +80,13 @@ const TicketField = ({ form }) => {
           <TicketStructureSelector form={form} />
         </Card>
       </Col>
+
+      <ValidationModal
+        visible={ticketValidationDialogVisible}
+        data={ValidateData?.errors}
+        statusMessage={message}
+        onClose={handleValidationModalCancel}
+      />
       <TicketSetDetails />
     </Row>
   );

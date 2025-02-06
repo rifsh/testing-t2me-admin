@@ -17,9 +17,12 @@ const initialState = {
   subPagination: {},
   pagination: {},
   editable_status: null,
+  validationStatus: false,
+  ValidateData: null,
+  adCategoryValidationDialogVisible: false,
   singleCategory: null,
   responseImpactData: null,
-  editItemId:null,
+  editItemId: null,
 };
 
 export const addAdCategory = createAsyncThunk(
@@ -36,6 +39,18 @@ export const addAdCategory = createAsyncThunk(
       const errorMessage =
         err.response?.data?.message || "Failed to add category";
       return rejectWithValue(errorMessage);
+    }
+  }
+);
+export const validateAdCategory = createAsyncThunk(
+  "adCategory/validation",
+  async (adCategoryId, { rejectWithValue }) => {
+    try {
+      const response = await AdCategoryService.validateAdCategory(adCategoryId);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
     }
   }
 );
@@ -115,9 +130,38 @@ const AdcategorySlice = createSlice({
         cat.name.toLowerCase().includes(action.payload.toLowerCase())
       );
     },
+    setAdCategoryValidationDialogVisible(state, action) {
+      state.adCategoryValidationDialogVisible = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
+
+      .addCase(validateAdCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validateAdCategory.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        console.log("HELOOOOOOOOOO");
+
+        if (payload.message === "warning") {
+          state.validationStatus = false;
+          state.message = payload.status.message;
+          state.ValidateData = payload.status.data;
+          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status.editable_status;
+        } else if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+          if (payload.status) {
+            state.message = payload.status.message;
+          }
+        }
+      })
+      .addCase(validateAdCategory.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to validate place";
+      })
       .addCase(addAdCategory.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -190,6 +234,7 @@ export const {
   setAdCategoryModalLoading,
   setSelectedAdCategory,
   setEditItemId,
+  setAdCategoryValidationDialogVisible,
 } = AdcategorySlice.actions;
 
 export default AdcategorySlice.reducer;

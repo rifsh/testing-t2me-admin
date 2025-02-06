@@ -2,8 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Row, Col, Card, Form, Select, Typography, Button, Alert } from "antd";
 import { CloseCircleOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllOffers } from "store/slices/offerSlice";
+import {
+  fetchAllOffers,
+  setOfferCouponValidationDialogVisible,
+} from "store/slices/offerSlice";
 import { fetchAllCoupons } from "store/slices/couponSlice";
+import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import {
   toggleSelectedCoupon,
   toggleSelectedOffer,
@@ -16,9 +20,13 @@ const OfferField = ({ mode }) => {
   const dispatch = useDispatch();
 
   // State from Redux
-  const { filteredOffers: filteredOffer, loading: offerLoading } = useSelector(
-    (state) => state.offers
-  );
+  const {
+    filteredOffers: filteredOffer,
+    loading: offerLoading,
+    ValidateData,
+    offerCouponValidationDialogVisible,
+    message,
+  } = useSelector((state) => state.offers);
   const { selectedOffers, selectedCoupons } = useSelector(
     (state) => state.event
   );
@@ -56,6 +64,9 @@ const OfferField = ({ mode }) => {
 
   const handleDeleteCoupon = (coupon) => {
     dispatch(toggleSelectedCoupon(coupon));
+  };
+  const handleValidationModalCancel = () => {
+    dispatch(setOfferCouponValidationDialogVisible(false));
   };
 
   return (
@@ -252,6 +263,12 @@ const OfferField = ({ mode }) => {
           showIcon
         />
       </Col>
+      <ValidationModal
+        visible={offerCouponValidationDialogVisible}
+        data={ValidateData?.errors}
+        statusMessage={message}
+        onClose={handleValidationModalCancel}
+      />
     </Row>
   );
 };
