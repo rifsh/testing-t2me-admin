@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
-import { Badge, Button, Card, Input, Menu, Select, Table, Tag } from "antd";
+import { Badge, Button, Card, Menu,  Table } from "antd";
 import Flex from "components/shared-components/Flex";
-import { EditOutlined, EyeOutlined, FormOutlined, SearchOutlined } from "@ant-design/icons";
+import { EditOutlined, EyeOutlined, FormOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,7 +9,6 @@ import {
   editSchedule,
   fetchAllSchedules,
   fetchSingleSchedules,
-  filterSchedules,
 } from "store/slices/scheduleSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { setSelectedItem } from "store/slices/modalSlice";
@@ -18,7 +17,6 @@ import SearchBarWithStatus from "components/util-components/Search/SearchBarWith
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 
-const { Option } = Select;
 
 const ScheduleList = () => {
   const navigate = useNavigate();

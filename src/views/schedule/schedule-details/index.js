@@ -4,20 +4,18 @@ import {
   Descriptions,
   Typography,
   Space,
-  Table,
   Collapse,
   Timeline,
-  Spin,
   Empty,
   Row,
   Col,
 } from "antd";
-import { Calendar, Clock, MapPin } from "lucide-react";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSingleSchedules } from "store/slices/scheduleSlice";
 import { useParams } from "react-router-dom";
 import Loading from "components/shared-components/Loading";
+import { FaCalendarAlt, FaClock, FaMapPin } from "react-icons/fa";
 
 const { Panel } = Collapse;
 
@@ -46,12 +44,16 @@ const ScheduleDetails = () => {
   }
 
   if (!scheduleDetails) {
-    return <Empty description="No schedule data found" image={Empty.PRESENTED_IMAGE_SIMPLE} />;
+    return (
+      <Empty
+        description="No schedule data found"
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+      />
+    );
   }
 
   return (
     <Space direction="vertical" size="large" className="w-full">
-      {/* Schedule & Event Details */}
       <Card title="Schedule & Event Details">
         <Row gutter={16}>
           <Col xs={24} md={12}>
@@ -59,13 +61,32 @@ const ScheduleDetails = () => {
               <Descriptions.Item label="Schedule Name">
                 {scheduleDetails.name || "Untitled Schedule"}
               </Descriptions.Item>
-              <Descriptions.Item label={<Space><Calendar /> Event Date Range</Space>}>
-                {formatDate(scheduleDetails.start_date)} - {formatDate(scheduleDetails.end_date)}
+              <Descriptions.Item
+                label={
+                  <Space>
+                    <FaCalendarAlt /> Event Date Range
+                  </Space>
+                }
+              >
+                {formatDate(scheduleDetails.start_date)} -{" "}
+                {formatDate(scheduleDetails.end_date)}
               </Descriptions.Item>
-              <Descriptions.Item label={<Space><Clock /> Advertisement Start</Space>}>
+              <Descriptions.Item
+                label={
+                  <Space>
+                    <FaClock /> Advertisement Start
+                  </Space>
+                }
+              >
                 {formatDateTime(scheduleDetails.ad_start_date_time)}
               </Descriptions.Item>
-              <Descriptions.Item label={<Space><Clock /> Booking Start</Space>}>
+              <Descriptions.Item
+                label={
+                  <Space>
+                    <FaClock /> Booking Start
+                  </Space>
+                }
+              >
                 {formatDateTime(scheduleDetails.booking_start_date_time)}
               </Descriptions.Item>
             </Descriptions>
@@ -76,7 +97,13 @@ const ScheduleDetails = () => {
               <Descriptions.Item label="Event Name">
                 {scheduleDetails.event?.event_name || "N/A"}
               </Descriptions.Item>
-              <Descriptions.Item label={<Space><MapPin /> Venue</Space>}>
+              <Descriptions.Item
+                label={
+                  <Space>
+                    <FaMapPin /> Venue
+                  </Space>
+                }
+              >
                 <Typography.Text strong>
                   {scheduleDetails.event?.venue?.name || "N/A"}
                 </Typography.Text>
@@ -90,8 +117,6 @@ const ScheduleDetails = () => {
           </Col>
         </Row>
       </Card>
-
-      {/* Show Dates and Times with Timeline */}
       <Card title="Show Dates and Times" className="w-full">
         {scheduleDetails.show_dates?.length > 0 ? (
           <Collapse accordion>
@@ -101,7 +126,8 @@ const ScheduleDetails = () => {
                   {showDate.show_times.map((timeSlot) => (
                     <Timeline.Item key={timeSlot.id} color="blue">
                       <Typography.Text strong>
-                        {formatTime(timeSlot.start_time)} - {formatTime(timeSlot.end_time)}
+                        {formatTime(timeSlot.start_time)} -{" "}
+                        {formatTime(timeSlot.end_time)}
                       </Typography.Text>
                     </Timeline.Item>
                   ))}

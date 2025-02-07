@@ -1,7 +1,7 @@
 import {
   DashboardOutlined,
   LayoutOutlined,
-  MoreOutlined,
+
   OrderedListOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
