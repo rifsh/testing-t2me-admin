@@ -29,4 +29,11 @@ ScheduleService.getAllSchedule = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+ScheduleService.getSingleSchedule = function (pageData) {
+  return fetch({
+    url: ApiConstant.SINGLE_SCHEDULE_URL,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
 export default ScheduleService;

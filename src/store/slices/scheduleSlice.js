@@ -17,6 +17,7 @@ export const initialState = {
   responseData: null,
   responseMessage: null,
   timeSlots: {},
+  scheduleDetails: {},
   activeTab: null,
   dates: [],
   slotStatus: {},
@@ -33,6 +34,24 @@ export const fetchAllSchedules = createAsyncThunk(
         return response.data;
       } else {
         const response = await ScheduleService.getAllSchedule(pageData);
+        return response.data[0];
+      }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching schedules"
+      );
+    }
+  }
+);
+export const fetchSingleSchedules = createAsyncThunk(
+  "schedule/fetchSingle",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      if (GET_SCHEDULE_MOCK_API && ENABLE_MOCK_API) {
+        const response = ScheduleMockData.fetchAllSchedules;
+        return response.data;
+      } else {
+        const response = await ScheduleService.getSingleSchedule(pageData);
         return response.data[0];
       }
     } catch (error) {
@@ -247,6 +266,19 @@ const scheduleSlice = createSlice({
         state.pagination = action.payload;
       })
       .addCase(fetchAllSchedules.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchSingleSchedules.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchSingleSchedules.fulfilled, (state, action) => {
+        state.loading = false;
+        state.scheduleDetails = action.payload;
+  
+      })
+      .addCase(fetchSingleSchedules.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

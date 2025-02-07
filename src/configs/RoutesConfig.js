@@ -117,12 +117,16 @@ export const protectedRoutes = [
   {
     key: "category.details",
     path: `${APP_PREFIX_PATH}/category/details/:categoryId`,
-    component: React.lazy(() => import("views/category/category/category-detials")),
+    component: React.lazy(() =>
+      import("views/category/category/category-detials")
+    ),
   },
   {
     key: "subcategory.details",
     path: `${APP_PREFIX_PATH}/subcategory/details/:subcategoryId`,
-    component: React.lazy(() => import("views/category/category/subcategory-details")),
+    component: React.lazy(() =>
+      import("views/category/category/subcategory-details")
+    ),
   },
   {
     key: "category.add",
@@ -132,12 +136,16 @@ export const protectedRoutes = [
   {
     key: "category.edit",
     path: `${APP_PREFIX_PATH}/category/edit/category/:catId`,
-    component: React.lazy(() => import("views/category/category/edit-category/category/index")),
+    component: React.lazy(() =>
+      import("views/category/category/edit-category/category/index")
+    ),
   },
   {
     key: "subcategory.edit",
     path: `${APP_PREFIX_PATH}/category/edit/subcategory/:subcatId`,
-    component: React.lazy(() => import("views/category/category/edit-category/subcategory/index")),
+    component: React.lazy(() =>
+      import("views/category/category/edit-category/subcategory/index")
+    ),
   },
   {
     key: "offer.list",
@@ -180,6 +188,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/user/add-user")),
   },
   {
+    key: "user.edit",
+    path: `${APP_PREFIX_PATH}/user/edit/:userId`,
+    component: React.lazy(() => import("views/user/edit-user/index")),
+  },
+  {
     key: "seat.list",
     path: `${APP_PREFIX_PATH}/seat/list`,
     component: React.lazy(() => import("views/seat/list-seat")),
@@ -193,6 +206,11 @@ export const protectedRoutes = [
     key: "schedule.list",
     path: `${APP_PREFIX_PATH}/schedule/list`,
     component: React.lazy(() => import("views/schedule/list-schedule")),
+  },
+  {
+    key: "schedule.details",
+    path: `${APP_PREFIX_PATH}/schedule/:scheduleId`,
+    component: React.lazy(() => import("views/schedule/schedule-details")),
   },
   {
     key: "schedule.add",
@@ -230,44 +248,60 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/tax/edit-tax/index")),
   },
   {
-
     key: "app.management.layout.footer.list",
     path: `${APP_PREFIX_PATH}/app/management/layout/footer/list`,
-    component: React.lazy(() => import("views/app-managment/layout/footer/list-footer")),
+    component: React.lazy(() =>
+      import("views/app-managment/layout/footer/list-footer")
+    ),
   },
   {
     key: "app.management.layout.footer.add",
     path: `${APP_PREFIX_PATH}/app/management/layout/footer/add`,
-    component: React.lazy(() => import("views/app-managment/layout/footer/add-footer")),
-  }, {
+    component: React.lazy(() =>
+      import("views/app-managment/layout/footer/add-footer")
+    ),
+  },
+  {
     key: "advertisement.category.list",
     path: `${APP_PREFIX_PATH}/advertisement/category/list`,
-    component: React.lazy(() => import("views/advertisement/category/list-ad-category")),
+    component: React.lazy(() =>
+      import("views/advertisement/category/list-ad-category")
+    ),
   },
   {
     key: "advertisement.category.add",
     path: `${APP_PREFIX_PATH}/advertisement/category/add`,
-    component: React.lazy(() => import("views/advertisement/category/add-ad-category")),
+    component: React.lazy(() =>
+      import("views/advertisement/category/add-ad-category")
+    ),
   },
   {
     key: "advertisement.banner.list",
     path: `${APP_PREFIX_PATH}/advertisement/banner/list`,
-    component: React.lazy(() => import("views/advertisement/banner/list-ad-banner")),
+    component: React.lazy(() =>
+      import("views/advertisement/banner/list-ad-banner")
+    ),
   },
   {
     key: "advertisement.schedule.list",
     path: `${APP_PREFIX_PATH}/advertisement/schedule/list`,
-    component: React.lazy(() => import("views/advertisement/schedule/list-ad-schedule")),
+    component: React.lazy(() =>
+      import("views/advertisement/schedule/list-ad-schedule")
+    ),
   },
   {
     key: "advertisement.schedule.add",
     path: `${APP_PREFIX_PATH}/advertisement/schedule/add`,
-    component: React.lazy(() => import("views/advertisement/schedule/add-ad-schedule")),
+    component: React.lazy(() =>
+      import("views/advertisement/schedule/add-ad-schedule")
+    ),
   },
   {
     key: "advertisement.banner.add",
     path: `${APP_PREFIX_PATH}/advertisement/banner/add`,
-    component: React.lazy(() => import("views/advertisement/banner/add-ad-banner")),
+    component: React.lazy(() =>
+      import("views/advertisement/banner/add-ad-banner")
+    ),
   },
   {
     key: "mail.list",
@@ -277,56 +311,78 @@ export const protectedRoutes = [
   {
     key: "issue.list",
     path: `${APP_PREFIX_PATH}/issue/list`,
-    component: React.lazy(() => import("views/app-views/apps/issues/issue-list")),
+    component: React.lazy(() =>
+      import("views/app-views/apps/issues/issue-list")
+    ),
   },
   {
     key: "issue.add",
     path: `${APP_PREFIX_PATH}/issue/add`,
-    component: React.lazy(() => import("views/app-views/apps/issues/add-issue")),
+    component: React.lazy(() =>
+      import("views/app-views/apps/issues/add-issue")
+    ),
   },
   {
     key: "issue.details",
     path: `${APP_PREFIX_PATH}/issue/details/:issueId`,
-    component: React.lazy(() => import("views/app-views/apps/issues/issue-details")),
+    component: React.lazy(() =>
+      import("views/app-views/apps/issues/issue-details")
+    ),
   },
   {
     key: "alerts.list",
     path: `${APP_PREFIX_PATH}/alerts/list`,
-    component: React.lazy(() => import("views/app-views/apps/alerts/alerts-list")),
-  }, {
+    component: React.lazy(() =>
+      import("views/app-views/apps/alerts/alerts-list")
+    ),
+  },
+  {
     key: "organiser.update",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
-    component: React.lazy(() => import("views/track-team/event-organizer/update-list/index.js")),
-
+    component: React.lazy(() =>
+      import("views/track-team/event-organizer/update-list/index.js")
+    ),
   },
   {
     key: "advertisement.category.edit",
     path: `${APP_PREFIX_PATH}/advertisement/category/edit/:adCategoryId`,
-    component: React.lazy(() => import("views/advertisement/category/edit-ad-category")),
+    component: React.lazy(() =>
+      import("views/advertisement/category/edit-ad-category")
+    ),
   },
   {
     key: "advertisement.banner.edit",
     path: `${APP_PREFIX_PATH}/advertisement/banner/edit/:adBannerId`,
-    component: React.lazy(() => import("views/advertisement/banner/edit-ad-banner")),
+    component: React.lazy(() =>
+      import("views/advertisement/banner/edit-ad-banner")
+    ),
   },
   {
     key: "org.details",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/details/:eventUpId`,
-    component: React.lazy(() => import("views/track-team/event-organizer/update-list-details/index.js")),
+    component: React.lazy(() =>
+      import("views/track-team/event-organizer/update-list-details/index.js")
+    ),
   },
   {
     key: "org.event.edit",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/update-edit/:eventId`,
-    component: React.lazy(() => import("views/track-team/event-organizer/update-edit/index")),
+    component: React.lazy(() =>
+      import("views/track-team/event-organizer/update-edit/index")
+    ),
   },
   {
     key: "app.management.layout.faq.list",
     path: `${APP_PREFIX_PATH}/app/management/layout/faq/list`,
-    component: React.lazy(() => import("views/app-managment/layout/faq/list-faq/index")),
+    component: React.lazy(() =>
+      import("views/app-managment/layout/faq/list-faq/index")
+    ),
   },
   {
     key: "app.management.layout.faq.add-faq",
     path: `${APP_PREFIX_PATH}/app/management/layout/faq/add-faq`,
-    component: React.lazy(() => import("views/app-managment/layout/faq/add-faq")),
+    component: React.lazy(() =>
+      import("views/app-managment/layout/faq/add-faq")
+    ),
   },
 ];

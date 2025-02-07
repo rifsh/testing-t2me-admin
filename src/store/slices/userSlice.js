@@ -12,10 +12,13 @@ export const initialState = {
   message: null,
   roles: [],
   selectedRole: null,
+  selectedUser:null,
   responseData: null,
   editable_status: null,
   responseMessage: null,
+  editItemId: null,
   singleUser: null,
+  responseImpactData: null,
   pagination: { size: 10, page: 1 },
 };
 
@@ -37,7 +40,25 @@ export const fetchSingleUsers = createAsyncThunk(
       const response = await UserService.getSingleUsers(pageData);
       return response.data[0];
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Error fetching single users");
+      return rejectWithValue(
+        error.response?.data || "Error fetching single users"
+      );
+    }
+  }
+);
+
+export const getSingleUser = createAsyncThunk(
+  "users/getSingleUser",
+  async (userId, { rejectWithValue }) => {
+    try {
+      console.log(userId, "USERID IN SLICE");
+
+      const response = await UserService.getSingleUser(userId);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching single users"
+      );
     }
   }
 );
@@ -73,6 +94,30 @@ export const editUser = createAsyncThunk(
       return response.status;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit user");
+    }
+  }
+);
+
+export const updateUser = createAsyncThunk(
+  "users/update",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await UserService.updateUser(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+
+export const updateUserStatus = createAsyncThunk(
+  "users/updateStatus",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await UserService.updateUserStatus(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
     }
   }
 );
@@ -117,6 +162,18 @@ const userSlice = createSlice({
     resetRoleState: (state, action) => {
       state.roles = initialState.roles;
     },
+    setEditItemId: (state, action) => {
+      state.editItemId = action.payload;
+    },
+    setUserDialogVisible(state, action) {
+      state.dialogVisible = action.payload;
+    },
+    setUserModalLoading(state, action) {
+      state.modalLoading = action.payload;
+    },
+    setSelectedUser(state, action) {
+      state.selectedUser = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -141,6 +198,18 @@ const userSlice = createSlice({
         state.singleUser = action.payload;
       })
       .addCase(fetchSingleUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getSingleUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getSingleUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleUser = action.payload;
+      })
+      .addCase(getSingleUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -186,11 +255,55 @@ const userSlice = createSlice({
       .addCase(editUser.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to edit user";
+      })
+      .addCase(updateUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateUser.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateUserStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUserStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data;
+          state.editable_status = payload.status.editable_status;
+        }
+      })
+      .addCase(updateUserStatus.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit USER";
       });
   },
 });
 
-export const { filterUsers, setSelectedRole, setStatusFilter, setSearchTerm ,resetUserstate, resetRoleState} =
-  userSlice.actions;
+export const {
+  filterUsers,
+  setSelectedRole,
+  setStatusFilter,
+  setSearchTerm,
+  resetUserstate,
+  resetRoleState,
+  setEditItemId,
+  setUserDialogVisible,
+  setUserModalLoading,
+  setSelectedUser,
+} = userSlice.actions;
 
 export default userSlice.reducer;

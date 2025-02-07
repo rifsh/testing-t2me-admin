@@ -5,26 +5,27 @@ import {
   updateSelectedOffer,
 } from "store/slices/scheduleSlice";
 import { SupportImageFormat } from "constants/SupportFileConstants";
-import {ENABLE_RESOLUTIONS} from "configs/AppConfig";
+import { ENABLE_RESOLUTIONS } from "configs/AppConfig";
 class Utils {
-
   /**
- * Filters out properties with null or undefined values from an object
- * and returns a new object with only valid properties.
- *
- * @param {Object} obj - The object to filter.
- * @returns {Object} - A new object with only non-null/undefined values.
- */
+   * Filters out properties with null or undefined values from an object
+   * and returns a new object with only valid properties.
+   *
+   * @param {Object} obj - The object to filter.
+   * @returns {Object} - A new object with only non-null/undefined values.
+   */
   static filterParams = (obj) => {
     return Object.fromEntries(
-      Object.entries(obj)
-        .filter(([_, value]) => value !== null && value !== undefined)
+      Object.entries(obj).filter(
+        ([_, value]) => value !== null && value !== undefined
+      )
     );
   };
   static filterParams = (obj) => {
     return Object.fromEntries(
-      Object.entries(obj)
-        .filter(([_, value]) => value !== null && value !== undefined)
+      Object.entries(obj).filter(
+        ([_, value]) => value !== null && value !== undefined
+      )
     );
   };
   /**
@@ -234,15 +235,14 @@ class Utils {
   };
 
   static formatTime = (inputTime) => {
-
     console.log("-------INPUT TIME------", inputTime);
 
     const date = new Date(inputTime);
 
     // Extract hours, minutes, and seconds
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
 
     // Format the time as HH:mm:ss
     return `${hours}:${minutes}:${seconds}`;
@@ -423,7 +423,6 @@ class Utils {
     );
   };
 
-
   static clearAllBrowserData = async () => {
     // Clear localStorage
     localStorage.clear();
@@ -436,9 +435,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-        (document.cookie = cookie
-          .replace(/^ +/, "")
-          .replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/"))
+          (document.cookie = cookie
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date(0).toUTCString() + ";path=/"
+            ))
       );
 
     // Unregister Service Workers
@@ -459,37 +461,47 @@ class Utils {
       console.log("Caches cleared.");
     }
 
-    console.log("All browser data (localStorage, sessionStorage, cookies, cache, and Service Workers) has been cleared.");
+    console.log(
+      "All browser data (localStorage, sessionStorage, cookies, cache, and Service Workers) has been cleared."
+    );
   };
 
   // ----------------------------------------Form data converion----------------------------------------------->
   /**
-   * @param {Object} data - 
+   * @param {Object} data -
    * @param {Object} options
-   * @param {Array<string>} options.fileKeys 
-   * @param {boolean} options.skipEmpty 
+   * @param {Array<string>} options.fileKeys
+   * @param {boolean} options.skipEmpty
    * @returns {FormData} -
    */
   static createFormData(data, options = { fileKeys: [], skipEmpty: false }) {
     const formData = new FormData();
 
     const appendToFormData = (value, key) => {
-      if (options.skipEmpty && (value === null || value === undefined || value === '')) {
+      if (
+        options.skipEmpty &&
+        (value === null || value === undefined || value === "")
+      ) {
         return;
       }
       if (Array.isArray(value)) {
-        if (key === 'tax_ids' || key === 'coupon_ids' || key === 'offer_ids') {
-          value.forEach(id => formData.append(key, id));
+        if (
+          key === "tax_ids" ||
+          key === "coupon_ids" ||
+          key === "offer_ids" ||
+          key === "event_ids"
+        ) {
+          value.forEach((id) => formData.append(key, id));
           return;
         }
 
-        if (key === 'banner_images') {
+        if (key === "banner_images") {
           if (value.length === 0) {
-            formData.append(key, '');
+            formData.append(key, "");
           } else {
-            value.forEach(image => {
+            value.forEach((image) => {
               if (image.url) {
-                formData.append('banner_images', image.url);
+                formData.append("banner_images", image.url);
               }
               if (image.originFileObj) {
                 formData.append(key, image.originFileObj);
@@ -499,34 +511,34 @@ class Utils {
           return;
         }
 
-        if (key === 'key_words' && value.length > 0) {
-          value.forEach(word => formData.append("key_words", word));
+        if (key === "key_words" && value.length > 0) {
+          value.forEach((word) => formData.append("key_words", word));
           return;
-        } else if (key === 'key_words') {
-
-          return;
-        }
-        if (key === 'event_ids' && Array.isArray(value)) {
-          formData.append(key, value.join(','));
+        } else if (key === "key_words") {
           return;
         }
-        if (key === 'ticket_structure') {
+        // if (key === 'event_ids' && Array.isArray(value)) {
+        //   formData.append(key, value.join(','));
+        //   return;
+        // }
+        if (key === "ticket_structure") {
           formData.append("ticket_structure", JSON.stringify(value));
           return;
         }
-
       }
 
-      if (key === 'ticket_types' && Array.isArray(value)) {
-        value.forEach(ticket => {
-          if (ticket.name) formData.append('ticket_type_names', ticket.name);
-          if (ticket.price != null) formData.append('ticket_type_prices', ticket.price);
-          if (ticket.number_of_tickets != null) formData.append('ticket_type_numbers', ticket.number_of_tickets);
-          if (ticket.ticket_set) formData.append('ticket_set', ticket.ticket_set);
+      if (key === "ticket_types" && Array.isArray(value)) {
+        value.forEach((ticket) => {
+          if (ticket.name) formData.append("ticket_type_names", ticket.name);
+          if (ticket.price != null)
+            formData.append("ticket_type_prices", ticket.price);
+          if (ticket.number_of_tickets != null)
+            formData.append("ticket_type_numbers", ticket.number_of_tickets);
+          if (ticket.ticket_set)
+            formData.append("ticket_set", ticket.ticket_set);
         });
         return;
       }
-
 
       if (options.fileKeys.includes(key) && value?.[0]) {
         formData.append(key, value[0].originFileObj || value[0]);
@@ -547,7 +559,11 @@ class Utils {
       //   return;
       // }
 
-      if (typeof value === 'object' && value !== null && !(value instanceof File)) {
+      if (
+        typeof value === "object" &&
+        value !== null &&
+        !(value instanceof File)
+      ) {
         Object.entries(value).forEach(([objKey, objValue]) => {
           formData.append(`${key}[${objKey}]`, objValue);
         });
@@ -565,10 +581,10 @@ class Utils {
   }
 
   /**
-    * Validates the file format against supported image formats.
-    * @param {File} file - File to validate.
-    * @returns {boolean} - True if the file format is supported, otherwise false.
-    */
+   * Validates the file format against supported image formats.
+   * @param {File} file - File to validate.
+   * @returns {boolean} - True if the file format is supported, otherwise false.
+   */
   static validateFileFormat(file) {
     const fileExtension = file.name.split(".").pop().toUpperCase();
     return SupportImageFormat.includes(fileExtension);
@@ -581,23 +597,21 @@ class Utils {
    * @returns {Promise<boolean|string>} - False if valid, otherwise LIST_IGNORE.
    */
   static validateImageResolution(file, allowedResolutions) {
-   
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.src = URL.createObjectURL(file);
-        img.onload = () => {
-          const resolution = `${img.width}x${img.height}`;
-          if (resolution !== allowedResolutions) {
-            message.error(
-              `Invalid resolution: ${resolution}. Allowed resolutions: ${allowedResolutions}`
-            );
-            resolve(Upload.LIST_IGNORE);
-          } else {
-            resolve(false);
-          }
-        };
-      });
-    
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        const resolution = `${img.width}x${img.height}`;
+        if (resolution !== allowedResolutions) {
+          message.error(
+            `Invalid resolution: ${resolution}. Allowed resolutions: ${allowedResolutions}`
+          );
+          resolve(Upload.LIST_IGNORE);
+        } else {
+          resolve(false);
+        }
+      };
+    });
   }
 
   /**
@@ -606,7 +620,7 @@ class Utils {
    * @param {string} allowedResolutions - Allowed image resolutions.
    * @returns {boolean|string} - False if the file is valid, otherwise LIST_IGNORE.
    */
-  static async handleBeforeUpload(file, allowedResolutions,) {
+  static async handleBeforeUpload(file, allowedResolutions) {
     console.log("ENABLE_RESOLUTIONS:", ENABLE_RESOLUTIONS);
     if (!this.validateFileFormat(file)) {
       message.error(
@@ -615,8 +629,9 @@ class Utils {
       );
       return Upload.LIST_IGNORE; // Prevent upload
     }
-    if (ENABLE_RESOLUTIONS===true && allowedResolutions) {
-    return await this.validateImageResolution(file, allowedResolutions);}
+    if (ENABLE_RESOLUTIONS === true && allowedResolutions) {
+      return await this.validateImageResolution(file, allowedResolutions);
+    }
   }
 
   /**
@@ -630,11 +645,15 @@ class Utils {
     const fileSizeInBytes = file.size;
     const bytesToMB = (bytes) => (bytes / (1024 * 1024)).toFixed(2);
     if (minSize && fileSizeInBytes < minSize) {
-      message.error(`File is too small. Minimum size: ${bytesToMB(minSize)} mb.`);
+      message.error(
+        `File is too small. Minimum size: ${bytesToMB(minSize)} mb.`
+      );
       return Upload.LIST_IGNORE;
     }
     if (maxSize && fileSizeInBytes > maxSize) {
-      message.error(`File is too large. Maximum size: ${bytesToMB(maxSize)} mb.`);
+      message.error(
+        `File is too large. Maximum size: ${bytesToMB(maxSize)} mb.`
+      );
       return Upload.LIST_IGNORE;
     }
     return false; // Allow upload
@@ -648,7 +667,12 @@ class Utils {
    * @param {number} maxSize - Maximum file size in bytes.
    * @returns {boolean|string} - False if the file is valid, otherwise LIST_IGNORE.
    */
-  static async handleBannerBeforeUpload(file, allowedResolution, minSize, maxSize) {
+  static async handleBannerBeforeUpload(
+    file,
+    allowedResolution,
+    minSize,
+    maxSize
+  ) {
     // Validate file format
     if (!this.validateFileFormat(file)) {
       message.error(
@@ -671,8 +695,6 @@ class Utils {
 
     return false; // Allow upload if all validations pass
   }
-  
-
 }
 
 export default Utils;
