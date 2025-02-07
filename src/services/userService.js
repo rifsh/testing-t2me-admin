@@ -25,6 +25,16 @@ UserService.getSingleUsers = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+
+UserService.getSingleUser = function (userId) {
+  console.log(userId, "USERID IN SERVICE");
+
+  return fetch({
+    url: `${ApiConstant.SINGLE_USER_URL}?user_id=${userId}`,
+    method: "get",
+  });
+};
+
 UserService.editUser = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
@@ -33,18 +43,43 @@ UserService.editUser = function (data, action) {
     data: data,
   });
 };
+
+UserService.updateUser = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
+  });
+  return fetch({
+    url: `${ApiConstant.USER_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+UserService.updateUserStatus = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.USER_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+  });
+};
 UserService.createUser = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
   return fetch({
     url: `${ApiConstant.REGISTER_USER_URL}?action=${encodedAction}`,
     method: "post",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };

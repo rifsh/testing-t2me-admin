@@ -6,22 +6,78 @@ import UserFormFields from "../components/UserFormFields";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { createUser } from "store/slices/userSlice";
+import { createUser, updateUser } from "store/slices/userSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import LoadingOverlay from "components/util-components/Loader/index";
+import { ActionType } from "utils/api/warning-submit-util";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import {
+  fetchAllRoles,
+  setSelectedRole,
+  setSelectedUser,
+  setUserDialogVisible,
+  setUserModalLoading,
+} from "store/slices/userSlice";
+import { getCurrentUser } from "configs/UserAccessConfig";
+import { fetchAllEvent } from "store/slices/eventSlice";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 
 const ADD = "ADD";
 
-const UserForm = (props) => {
-  const { mode = ADD } = props;
-  const { loading, error, responseData, responseMessage } = useSelector(
-    (state) => state.users
-  );
+const UserForm = ({ mode, user }) => {
+  // const { mode = ADD } = props;
+  const {
+    loading,
+    error,
+    responseData,
+    responseMessage,
+    selectedUser,
+    dialogVisible,
+    responseImpactData,
+    message: warningMessage,
+    modalLoading,
+    editable_status,
+  } = useSelector((state) => state.users);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && mode === "EDIT") {
+      const formData = {
+        username: user.username,
+        position_id: user.role.position_id,
+        thumbnail_image:
+          user.thumbnail_image && user.thumbnail_image !== "images"
+            ? [
+                {
+                  uid: "-1",
+                  name: user.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: user.thumbnail_image,
+                },
+              ]
+            : [],
+      };
+      if (user.role.position_id === UserRoleConstants.eventOrganizerRoleId) {
+        dispatch(fetchAllEvent({}));
+      }
+
+      if (
+        user.role.position_id === UserRoleConstants.eventOrganizerRoleId ||
+        user.role.position_id === UserRoleConstants.eventSupportingTeamRoleId
+      ) {
+        formData.event_ids = user.events
+          ? user.events.map((event) => event.id)
+          : [];
+      }
+      dispatch(setSelectedRole(user.role.position_id));
+
+      form.setFieldsValue(formData);
+    }
+  }, [form, user, mode]);
 
   useEffect(() => {
     if (error) {
@@ -30,19 +86,50 @@ const UserForm = (props) => {
   }, [error]);
 
   const onFinish = async () => {
+    const values = await form.validateFields();
     try {
-      const values = await form.validateFields();
+      if (mode === "EDIT") {
+        console.log("ITS AN EDITTTTTTTTTTTTT TAXXXXXXX");
+        const data = {
+          ...values,
+          id: user.id,
+        };
+        console.log("Edit Data:", data);
+        const resultAction = await dispatch(
+          updateUser({ data, action: ActionType.WARNING })
+        );
 
-      // dispatch(setSelectedSubmitItem(values));
-      const formData = {
-                      ...values,    
-                    };
-                
-                dispatch(setSelectedSubmitItem(formData));
+        if (updateUser.fulfilled.match(resultAction)) {
+          dispatch(setSelectedUser(data));
+          dispatch(setUserDialogVisible(true));
+        }
+      } else {
+        // dispatch(setSelectedSubmitItem(values));
+        const formData = {
+          ...values,
+        };
+
+        dispatch(setSelectedSubmitItem(formData));
+      }
     } catch (info) {
       console.error("Validation Failed:", info);
       message.error("Please enter all required fields.");
     }
+  };
+  const handleModalSubmit = async () => {
+    dispatch(setUserModalLoading(true));
+    const resultAction = await dispatch(
+      updateUser({ data: selectedUser, action: ActionType.SUBMIT })
+    );
+    dispatch(setUserModalLoading(false));
+    dispatch(setUserDialogVisible(false));
+    if (updateUser.fulfilled.match(resultAction)) {
+      dispatch(setSelectedSubmitItem(selectedUser));
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setUserDialogVisible(false));
   };
 
   return (
@@ -65,7 +152,7 @@ const UserForm = (props) => {
                 {mode === "ADD" ? "Add New User" : `Edit User`}
               </h2>
               <div className="mb-3">
-              <DiscardButton form={form} />
+                <DiscardButton form={form} />
                 <Button
                   type="primary"
                   onClick={() => onFinish()}
@@ -86,18 +173,33 @@ const UserForm = (props) => {
               {
                 label: "General",
                 key: "1",
-                children: <UserFormFields />,
+                children: <UserFormFields mode={mode} user={user} />,
               },
             ]}
           />
         </div>
       </Form>
-      <LoadingOverlay 
-        loading={loading} 
+      <LoadingOverlay loading={loading} />
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={warningMessage}
+        responseData={responseImpactData}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={modalLoading}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules",
+        }}
+        editable_status={editable_status}
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={createUser}
+        addFunction={mode === "EDIT" ? updateUser : createUser}
         navigationPath={`${APP_PREFIX_PATH}/user/list`}
         responseMessage={responseMessage}
       />

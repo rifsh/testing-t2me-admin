@@ -11,6 +11,7 @@ import {
 } from "antd";
 import {
   EyeOutlined,
+  EditOutlined,
   PlusCircleOutlined,
   SearchOutlined,
   FormOutlined,
@@ -19,24 +20,37 @@ import {
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllUsers, filterUsers, editUser } from "store/slices/userSlice";
+import {
+  fetchAllUsers,
+  filterUsers,
+  editUser,
+  updateUserStatus,
+} from "store/slices/userSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { setSelectedItem } from "store/slices/modalSlice";
+import { setSelectedItem, setDialogVisible } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
+import { TextConstants } from "constants/TextConstant";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 
 const { Option } = Select;
 
 const UserList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredUsers, pagination,loading, editable_status, message } = useSelector(
-    (state) => state.users
-  );
+  const {
+    filteredUsers,
+    pagination,
+    loading,
+    editable_status,
+    message,
+    responseImpactData,
+    responseData,
+  } = useSelector((state) => state.users);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -59,13 +73,17 @@ const UserList = () => {
   };
 
   const handleUpdateStatus = (item) => {
-    if (getCurrentUser().role_id==UserRoleConstants.superAdminRoleId){
-
+    if (getCurrentUser().role_id == UserRoleConstants.superAdminRoleId) {
       const newStatus = !item.is_active;
       const data = { status: newStatus, id: item.id };
-      
+
       dispatch(setSelectedItem(data));
+      dispatch(setDialogVisible(true));
     }
+  };
+
+  const handleEditUser = async (userId) => {
+    navigate(`${APP_PREFIX_PATH}/user/edit/${userId}`);
   };
 
   const getDropdownMenu = (row) => [
@@ -79,15 +97,16 @@ const UserList = () => {
       ),
       onClick: () => showModal(row),
     },
-    // {
-    //   key: "remark",
-    //   label: (
-    //     <Flex alignItems="center">
-    //       <PlusCircleOutlined />
-    //       <span className="ml-2">Add to remark</span>
-    //     </Flex>
-    //   ),
-    // },
+    {
+      key: "edit",
+      label: (
+        <Flex alignItems="center">
+          <EditOutlined />
+          <span className="ml-2">Edit User</span>
+        </Flex>
+      ),
+      onClick: () => handleEditUser(row.id),
+    },
   ];
 
   const tableColumns = [
@@ -125,7 +144,7 @@ const UserList = () => {
         justifyContent="space-between"
         style={{ paddingBottom: "30px" }}
       >
-          <SearchBarWithStatus fetchFunction={fetchAllUsers} />
+        <SearchBarWithStatus fetchFunction={fetchAllUsers} />
         <Button
           type="primary"
           icon={<FormOutlined />}
@@ -172,24 +191,31 @@ const UserList = () => {
             <Descriptions.Item label="Event Name">
               {/* {selectedUser.events || "No additional information available"} */}
               {selectedUser.events && Array.isArray(selectedUser.events)
-    ? selectedUser.events.map((event, index) => (
-        <span key={event.id}>
-          {event.event_name}
-          {index < selectedUser.events.length - 1 && ", "}
-        </span>
-      ))
-    : "No additional information available"}
+                ? selectedUser.events.map((event, index) => (
+                    <span key={event.id}>
+                      {event.event_name}
+                      {index < selectedUser.events.length - 1 && ", "}
+                    </span>
+                  ))
+                : "No additional information available"}
             </Descriptions.Item>
-            {selectedUser.thumbnail_image && selectedUser.thumbnail_image !== "images" ? (
+            {selectedUser.thumbnail_image &&
+            selectedUser.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">
                 <img
                   src={selectedUser.thumbnail_image}
                   alt="Offer Thumbnail"
-                  style={{ maxWidth: "100%", maxHeight: "200px", objectFit: "contain" }}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "200px",
+                    objectFit: "contain",
+                  }}
                 />
               </Descriptions.Item>
             ) : (
-              <Descriptions.Item label="Thumbnail Image">No image available</Descriptions.Item>
+              <Descriptions.Item label="Thumbnail Image">
+                No image available
+              </Descriptions.Item>
             )}
           </Descriptions>
         )}
@@ -197,10 +223,24 @@ const UserList = () => {
 
       <UpdateStatusModal
         responseMessage={message}
-        editFunction={editUser}
-        editable_status={editable_status}
-  getAllFunction={(pageData) => fetchAllUsers(pageData)}
+        editFunction={updateUserStatus}
+        getAllFunction={(pageData) => fetchAllUsers(pageData)}
         pageData={{ page: 1, size: 10 }}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "active_schedules",
+        }}
+        editable_status={editable_status}
+        responseData={responseImpactData}
+      />
+      <StatusSubmitAndConfirmModal
+        editFunction={updateUserStatus}
+        getAllFunction={fetchAllUsers}
+        responseData={responseData}
+        responseMessage={message}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
       />
     </Card>
   );
