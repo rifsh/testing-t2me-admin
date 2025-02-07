@@ -3,8 +3,8 @@ import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { 
   setSelectedTicketSet, 
-  setSelectedTicketStructure,
-  addOrUpdateTicketSet 
+  setSelectedTicketStructureforEvent,
+  addOrUpdateTicketSetforEvent 
 } from "store/slices/ticketSlice";
 
 const { Option } = Select;
@@ -49,7 +49,7 @@ export const TicketStructureSelector = ({ form }) => {
         ticketStructureId: selectedStructure.id
       };
   
-      dispatch(addOrUpdateTicketSet(ticketSetData));
+      dispatch(addOrUpdateTicketSetforEvent(ticketSetData));
       dispatch(setSelectedTicketSet(setName));
   
       form.setFieldsValue({
@@ -67,7 +67,7 @@ export const TicketStructureSelector = ({ form }) => {
     );
 
     if (selectedStructure) {
-      dispatch(setSelectedTicketStructure(selectedStructure));
+      dispatch(setSelectedTicketStructureforEvent(selectedStructure));
     }
   };
 
