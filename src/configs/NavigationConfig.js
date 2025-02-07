@@ -154,6 +154,14 @@ const superAdminDashBoardNavTree = [
             breadcrumb: false,
             submenu: [],
           },
+          {
+            key: "sidenav.payment",
+            path: `${APP_PREFIX_PATH}/schedule/list`,
+            title: "sidenav.payment",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
         ],
       },
     ]
@@ -416,7 +424,6 @@ const techAdminDashBoardNavTree = [
             breadcrumb: false,
             submenu: [],
           },
-
           {
             key: "event.list",
             path: `${APP_PREFIX_PATH}/event/list`,
