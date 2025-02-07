@@ -195,6 +195,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/schedule/list-schedule")),
   },
   {
+    key: "schedule.details",
+    path: `${APP_PREFIX_PATH}/schedule/:scheduleId`,
+    component: React.lazy(() => import("views/schedule/schedule-details")),
+  },
+  {
     key: "schedule.add",
     path: `${APP_PREFIX_PATH}/schedule/add`,
     component: React.lazy(() => import("views/schedule/add-schedule")),

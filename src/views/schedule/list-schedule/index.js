@@ -1,13 +1,14 @@
 import React, { useEffect } from "react";
-import { Badge, Button, Card, Input, Select, Table, Tag } from "antd";
+import { Badge, Button, Card, Input, Menu, Select, Table, Tag } from "antd";
 import Flex from "components/shared-components/Flex";
-import { FormOutlined, SearchOutlined } from "@ant-design/icons";
+import { EditOutlined, EyeOutlined, FormOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import {
   editSchedule,
   fetchAllSchedules,
+  fetchSingleSchedules,
   filterSchedules,
 } from "store/slices/scheduleSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
@@ -15,15 +16,15 @@ import { setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 
 const { Option } = Select;
 
 const ScheduleList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredSchedules, message,pagination, editable_status, loading } = useSelector(
-    (state) => state.schedules
-  );
+  const { filteredSchedules, message, pagination, editable_status, loading } =
+    useSelector((state) => state.schedules);
   // const [form] = Form.useForm();
 
   useEffect(() => {
@@ -38,7 +39,26 @@ const ScheduleList = () => {
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
   };
-
+   const handleViewDetails = async (id) => {
+      await dispatch(fetchSingleSchedules({id:id}));
+      navigate(`${APP_PREFIX_PATH}/schedule/${id}`);
+    };
+  const dropdownMenu = (row) => (
+    <Menu>
+      <Menu.Item>
+        <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+          <EyeOutlined />
+          <span className="ml-2">View Details</span>
+        </Flex>
+      </Menu.Item>
+      <Menu.Item>
+        <Flex alignItems="center" /* onClick={() => handleEditEvent(row.id)} */>
+          <EditOutlined />
+          <span className="ml-2">Edit Event</span>
+        </Flex>
+      </Menu.Item>
+    </Menu>
+  );
   const tableColumns = [
     {
       title: "Schedule Name",
@@ -67,15 +87,22 @@ const ScheduleList = () => {
       dataIndex: "schedule_status",
       render: (_, record) => {
         const statusMap = {
-          "Expired": { text: "Expired", badge: "error" },
-          "Upcoming": { text: "Upcoming", badge: "processing" },
-          "Running": { text: "Running", badge: "success" },
-          "Disabled": { text: "Disabled", badge: "error" },
-          "Booking Enabled": { text: "Booking Enabled", badge: "success" }
+          "Event Expired": { text: "Event Expired", badge: "error" },
+          "Event Upcoming": { text: "Event Upcoming", badge: "processing" },
+          "Event Running": { text: "Event Running", badge: "success" },
+          "Event Disabled": { text: "Event Disabled", badge: "error" },
+          "Event Booking Enabled": {
+            text: "Event Booking Enabled",
+            badge: "success",
+          },
+          "Event Ad running": { text: "Event Ad running", badge: "warning" },
         };
-    
-        const status = statusMap[record.schedule_status] || { text: record.schedule_status, badge: "default" };
-    
+
+        const status = statusMap[record.schedule_status] || {
+          text: record.schedule_status,
+          badge: "default",
+        };
+
         return (
           <div>
             <Badge status={status.badge} />
@@ -84,8 +111,16 @@ const ScheduleList = () => {
         );
       },
       sorter: (a, b) => Utils.antdTableSorter(a, b, "schedule_status"),
-    }
-    
+    },
+    {
+      title: "",
+      dataIndex: "actions",
+      render: (_, elm) => (
+        <div className="text-right">
+          <EllipsisDropdown menu={dropdownMenu(elm)} />
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -119,8 +154,8 @@ const ScheduleList = () => {
         responseMessage={message}
         editable_status={editable_status}
         editFunction={editSchedule}
-         getAllFunction={(pageData) => fetchAllSchedules(pageData)}
-               pageData={{ page: 1, size: 10 }}
+        getAllFunction={(pageData) => fetchAllSchedules(pageData)}
+        pageData={{ page: 1, size: 10 }}
       />
     </Card>
   );
