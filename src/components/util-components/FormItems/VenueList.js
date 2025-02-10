@@ -3,7 +3,7 @@ import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 
-const VenueListForm = ({ form, label, rules, onSelect }) => {
+const VenueListForm = ({ form, label, rules, onSelect,mode }) => {
   const dispatch = useDispatch();
   const { filteredVenues, selectedVenue, loading } = useSelector(
     (state) => state.locations
@@ -23,7 +23,7 @@ const VenueListForm = ({ form, label, rules, onSelect }) => {
 
   return (
     <Form.Item name="venue_id" label={label} rules={rules}>
-      <Select
+      <Select mode={mode}
         notFoundContent={
           loading ? (
             <span>Loading venues...</span>

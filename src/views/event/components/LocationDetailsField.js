@@ -58,6 +58,7 @@ const LocationDetailsField = ({ form }) => {
         />
         <VenueListForm
           form={form}
+          // mode={"multiple"}
           label="Venue"
           rules={rules.venue}
           onSelect={handleVenueSelect}

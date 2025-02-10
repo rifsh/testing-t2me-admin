@@ -1,5 +1,6 @@
 export const ApiConstant = {
   API_BASE_URL: "https://uat-tickets2me.mitetechnology.com",
+  LOG_OUT:  "/api/v1/auth/secured/logout",
   CATEGORY_URL: "/api/v1/events/secured/category",
   CATEGORY_STATUS_URL: "/api/v1/events/secured/category_status",
   SUB_CATEGORY_STATUS_URL: "/api/v1/events/secured/subcategory_status",
