@@ -72,25 +72,24 @@ export function ScheduleTimeSlots({ form }) {
     (state) => state.schedules
   );
   useEffect(() => {
-    form.setFieldsValue({
-      timeSlots: timeSlots,
-    });
-  }, [timeSlots, form]);
-  useEffect(() => {
     const newSlotStatus = {};
     Object.entries(timeSlots).forEach(([date, slots]) => {
-      if (!slots || slots.length === 0) {
+      // First, ensure slots is an array
+      const slotsArray = Array.isArray(slots) ? slots : [];
+
+      if (!slotsArray || slotsArray.length === 0) {
         newSlotStatus[date] = "yellow";
         return;
       }
 
-      const hasCompleteSlot = slots.some(
-        (slot) => slot.start_time && slot.ticketType
+      // Now safely use array methods
+      const hasCompleteSlot = slotsArray.some(
+        (slot) => slot && slot.start_time && slot.ticketType
       );
 
       if (hasCompleteSlot) {
         newSlotStatus[date] = "green";
-      } else if (slots.some((slot) => slot.start_time)) {
+      } else if (slotsArray.some((slot) => slot && slot.start_time)) {
         newSlotStatus[date] = "green";
       } else {
         newSlotStatus[date] = "red";
@@ -100,10 +99,13 @@ export function ScheduleTimeSlots({ form }) {
   }, [timeSlots]);
 
   const validateTimeConflicts = (slots) => {
-    if (!slots || slots.length === 0) return { valid: true };
+    // Ensure slots is an array
+    const slotsArray = Array.isArray(slots) ? slots : [];
 
-    const sortedSlots = [...slots]
-      .filter((slot) => slot.start_time)
+    if (!slotsArray || slotsArray.length === 0) return { valid: true };
+
+    const sortedSlots = [...slotsArray]
+      .filter((slot) => slot && slot.start_time)
       .sort((a, b) => a.start_time.valueOf() - b.start_time.valueOf());
 
     for (let i = 0; i < sortedSlots.length - 1; i++) {
@@ -130,14 +132,15 @@ export function ScheduleTimeSlots({ form }) {
 
     return { valid: true };
   };
-  const updateDateRange = (startDate, end_timeDate) => {
-    if (!validateDateRange(startDate, end_timeDate)) return;
+
+  const updateDateRange = (startDate, endDate) => {
+    if (!validateDateRange(startDate, endDate)) return;
 
     const newDates = [];
     let currentDate = dayjs(startDate);
-    const end_time = dayjs(end_timeDate);
+    const end = dayjs(endDate);
 
-    while (currentDate.isSameOrBefore(end_time, "day")) {
+    while (currentDate.isSameOrBefore(end, "day")) {
       newDates.push(currentDate.format("YYYY-MM-DD"));
       currentDate = currentDate.add(1, "day");
     }
@@ -145,12 +148,13 @@ export function ScheduleTimeSlots({ form }) {
     dispatch(setDates(newDates));
     dispatch(setActiveTab(newDates[0]));
 
-    // Initialize time slots for new dates
+    // Initialize time slots for new dates with array
     const initialTimeSlots = {};
     newDates.forEach((date) => {
-      initialTimeSlots[date] = timeSlots[date] || [
-        { start_time: null, _time: null },
-      ];
+      // Ensure we always have an array, even if empty
+      initialTimeSlots[date] = Array.isArray(timeSlots[date])
+        ? timeSlots[date]
+        : [{ start_time: null, end_time: null }];
     });
     dispatch(setTimeSlots(initialTimeSlots));
   };
@@ -177,9 +181,9 @@ export function ScheduleTimeSlots({ form }) {
     return true;
   };
 
-  const addTimeSlot = (dateStr) => {
-    dispatch(addTimeSlot({ dateStr }));
-  };
+  // const addTimeSlot = (dateStr) => {
+  //   dispatch(addTimeSlot({ dateStr }));
+  // };
 
   const removeTimeSlot = (dateStr, index) => {
     dispatch(removeTimeSlot({ dateStr, index }));
@@ -498,8 +502,10 @@ export function ScheduleTimeSlots({ form }) {
     <Form form={form} layout="vertical">
       <Title level={4}>
         Schedule Time Slots{" "}
-        <TimezoneClock timezone={getEventTimezone()} eventDetails={eventDetails} />
-
+        <TimezoneClock
+          timezone={getEventTimezone()}
+          eventDetails={eventDetails}
+        />
       </Title>
 
       <Card>

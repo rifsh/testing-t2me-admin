@@ -91,6 +91,8 @@ const scheduleSlice = createSlice({
   initialState,
   reducers: {
     setTimeSlots: (state, action) => {
+      console.log('adsfjlsfjjadjfas', action.payload);
+      
       state.timeSlots = action.payload;
     },
     setActiveTab: (state, action) => {
@@ -219,7 +221,7 @@ const scheduleSlice = createSlice({
     },
     setScheduleSelectTime: (state, action) => {
       state.isSelectTime = action.payload;
-    },
+    },  
     resetSchedule: (state, action) => {
       return initialState;
     },

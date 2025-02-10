@@ -41,6 +41,10 @@ const ScheduleList = () => {
       await dispatch(fetchSingleSchedules({id:id}));
       navigate(`${APP_PREFIX_PATH}/schedule/${id}`);
     };
+   const handleEditSchedule = async (id) => {
+      await dispatch(fetchSingleSchedules({id:id}));
+      navigate(`${APP_PREFIX_PATH}/schedule/edit/${id}`);
+    };
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
@@ -50,9 +54,9 @@ const ScheduleList = () => {
         </Flex>
       </Menu.Item>
       <Menu.Item>
-        <Flex alignItems="center" /* onClick={() => handleEditEvent(row.id)} */>
+        <Flex alignItems="center" onClick={() => handleEditSchedule(row.id)}>
           <EditOutlined />
-          <span className="ml-2">Edit Event</span>
+          <span className="ml-2">Edit Event</span>    
         </Flex>
       </Menu.Item>
     </Menu>
