@@ -499,7 +499,7 @@ export function ScheduleTimeSlots({ form }) {
     }
   };
   return (
-    <Form form={form} layout="vertical">
+    <>
       <Title level={4}>
         Schedule Time Slots{" "}
         <TimezoneClock
@@ -658,6 +658,6 @@ export function ScheduleTimeSlots({ form }) {
           </div>
         </Card>
       )}
-    </Form>
+    </>
   );
 }

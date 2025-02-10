@@ -1,25 +1,19 @@
 import axios from "axios";
 import { API_BASE_URL } from "configs/AppConfig";
-import { signOut, signOutSuccess } from "store/slices/authSlice";
+import { signOutSuccess, signOut } from "store/slices/authSlice";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { notification } from "antd";
 import store from "../store";
 import Utils from "utils";
+import { delay } from "lodash";
 
 const unauthorizedCode = [401, 403];
+let isLoggingOut = false; // Flag to prevent logout loop
 
 const service = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000,
 });
-
-// Helper function to handle sign out
-const handleSignOut = async () => {
-  await Utils.clearAllBrowserData();
-  localStorage.removeItem(AUTH_TOKEN);
-  store.dispatch(signOut());
-  store.dispatch(signOutSuccess());
-};
 
 // Config
 service.interceptors.request.use(
@@ -53,7 +47,6 @@ service.interceptors.request.use(
     return config;
   },
   (error) => {
-    // Log request error details
     console.error(
       "%c[REQUEST ERROR]",
       "color: #f5365c; font-weight: bold;",
@@ -71,7 +64,6 @@ service.interceptors.request.use(
 // Response Interceptor
 service.interceptors.response.use(
   (response) => {
-    // Log the successful response details
     console.log(
       `%c[RESPONSE] URL: ${response.config.baseURL + response.config.url}`,
       "color: #2dce89; font-weight: bold;"
@@ -80,7 +72,6 @@ service.interceptors.response.use(
     return response.data;
   },
   async (error) => {
-    // Log the response error details
     console.error(
       "%c[RESPONSE ERROR]",
       "color: #f5365c; font-weight: bold;",
@@ -92,7 +83,9 @@ service.interceptors.response.use(
     if (error.response) {
       const { status, data, config } = error.response;
 
-      // Log the error details
+      // Check if the current request is a logout request
+      const isLogoutRequest = config.url.includes("/logout");
+
       console.log(
         `[ERROR] URL: ${config.baseURL + config.url}`,
         "Status Code:",
@@ -100,17 +93,35 @@ service.interceptors.response.use(
       );
       console.log("[ERROR] Response Data:", data);
 
-      if (unauthorizedCode.includes(status)) {
-        notificationParam.message = "Session Expired";
-        notificationParam.description =
-          "Your session has expired. Please log in again.";
-        await handleSignOut();
+      // Handle unauthorized errors only if we're not already logging out
+      // and this is not a logout request
+      if (
+        unauthorizedCode.includes(status) &&
+        !isLoggingOut &&
+        !isLogoutRequest
+      ) {
+        try {
+          isLoggingOut = true; // Set the flag before starting logout process
+          notificationParam.message = "Session Expired";
+          notificationParam.description =
+            "Your session has expired. Please log in again.";
+
+          await store.dispatch(signOut());
+
+          await Utils.clearAllBrowserData();
+          store.dispatch(signOutSuccess());
+
+          // Optional: Redirect to login page
+          // window.location.href = '/login';
+        } finally {
+          isLoggingOut = false; // Reset the flag after logout process
+        }
       } else if (data.status && data.status.status_code) {
         const errorMessage = data.status.message;
         notificationParam.message = data.status.status_code;
         notificationParam.description = errorMessage;
       } else {
-        // Custom Network errors handled if tickets2me server not giving any status code
+        // Handle other status codes
         switch (status) {
           case 404:
             notificationParam.message = "Resource Not Found";
@@ -144,13 +155,16 @@ service.interceptors.response.use(
         }
       }
     } else {
-      notificationParam.message = "Unexpected Error";
+      notificationParam.message = "Network Error";
       notificationParam.description =
-        "An unexpected error occurred. Please try again or contact support if the issue persists.";
+        "Unable to connect to the server. Please check your internet connection.";
     }
 
-    // Show the error notification
-    notification.error(notificationParam);
+    // Show error notification only if it's not a logout request
+    if (!error.config.url.includes("/logout")) {
+      notification.error(notificationParam);
+    }
+
     return Promise.reject(error);
   }
 );

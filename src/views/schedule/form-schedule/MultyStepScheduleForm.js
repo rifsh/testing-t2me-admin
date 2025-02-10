@@ -6,6 +6,9 @@ import {
   addSchedule,
   fetchSingleSchedules,
   resetSchedule,
+  setActiveTab,
+  setDates,
+  setSlotStatus,
   setTimeSlots,
 } from "store/slices/scheduleSlice";
 import { ScheduleDetails } from "../components/ScheduleDetails";
@@ -62,11 +65,6 @@ const MultyStepScheduleForm = ({ mode, id }) => {
   useEffect(() => {
     const setFormFields = () => {
       if (mode === "EDIT" && scheduleDetails) {
-        console.log(
-          "Setting form fields with scheduleDetails:",
-          scheduleDetails
-        );
-
         const formValues = {
           event_id: scheduleDetails?.event?.id,
           name: scheduleDetails?.name,
@@ -83,17 +81,35 @@ const MultyStepScheduleForm = ({ mode, id }) => {
             ? dayjs(scheduleDetails.ad_start_date_time)
             : null,
         };
-
-        console.log("Setting form values:", formValues);
+  
         form.setFieldsValue(formValues);
-
+  
         if (scheduleDetails.show_dates?.length > 0) {
-          console.log("Setting time slots:", scheduleDetails.show_dates);
-          dispatch(setTimeSlots(scheduleDetails.show_dates));
+          const newDates = scheduleDetails.show_dates.map(sd => sd.date);
+          
+          // Prepare time slots in the correct format
+          const formattedTimeSlots = scheduleDetails.show_dates.reduce((acc, showDate) => {
+            acc[showDate.date] = showDate.show_times.map(time => ({
+              start_time: dayjs(`${showDate.date} ${time.start_time}`),
+              end_time: dayjs(`${showDate.date} ${time.end_time}`),
+              ticketType: time.event_ticket_structures[0]?.id
+            }));
+            return acc;
+          }, {});
+  
+          dispatch(setDates(newDates));
+          dispatch(setActiveTab(newDates[0]));
+          dispatch(setSlotStatus("green"));
+          dispatch(setTimeSlots(formattedTimeSlots));
+  
+          // Update form's time slots
+          form.setFieldsValue({
+            timeSlots: formattedTimeSlots
+          });
         }
       }
     };
-
+  
     setFormFields();
   }, [form, mode, scheduleDetails, dispatch]);
 
