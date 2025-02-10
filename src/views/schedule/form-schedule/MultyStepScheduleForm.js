@@ -2,7 +2,12 @@ import React, { useEffect } from "react";
 import { Form, Button, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentStep, resetState } from "store/slices/eventSlice";
-import { addSchedule, resetSchedule } from "store/slices/scheduleSlice";
+import {
+  addSchedule,
+  fetchSingleSchedules,
+  resetSchedule,
+  setTimeSlots,
+} from "store/slices/scheduleSlice";
 import { ScheduleDetails } from "../components/ScheduleDetails";
 import { ScheduleOffersAndCoupons } from "../components/ScheduleOffersAndCoupons";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -14,20 +19,88 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import dayjs from "dayjs";
 import LoadingOverlay from "components/util-components/Loader/index";
 
-const MultyStepScheduleForm = () => {
+const MultyStepScheduleForm = ({ mode, id }) => {
   const steps = ["Schedule Details", "Time Slots", "Confirmation"];
+
   const { currentStep, eventDetails, submitLoading } = useSelector(
     (state) => state.event
   );
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const { responseData, responseMessage } = useSelector(
-    (state) => state.schedules
-  );
+  const {
+    scheduleDetails,
+    responseData,
+    responseMessage,
+    loading,
+    selectedOffers,
+    selectedCoupons,
+  } = useSelector((state) => state.schedules);
+
+  // Debug log when component mounts
   useEffect(() => {
-    dispatch(resetSchedule());
-    dispatch(resetState());
-  }, [dispatch]);
+    console.log("Component mounted with mode:", mode, "and id:", id);
+  }, [mode, id]);
+
+  // First useEffect for fetching data
+  useEffect(() => {
+    const fetchData = async () => {
+      if (mode === "EDIT" && id) {
+        console.log("Fetching schedule data for id:", id);
+        await dispatch(fetchSingleSchedules({ id }));
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      dispatch(resetSchedule());
+      dispatch(resetState());
+    };
+  }, [dispatch, mode, id]);
+
+  // Second useEffect for setting form fields
+  useEffect(() => {
+    const setFormFields = () => {
+      if (mode === "EDIT" && scheduleDetails) {
+        console.log(
+          "Setting form fields with scheduleDetails:",
+          scheduleDetails
+        );
+
+        const formValues = {
+          event_id: scheduleDetails?.event?.id,
+          name: scheduleDetails?.name,
+          start_date: scheduleDetails?.start_date
+            ? dayjs(scheduleDetails.start_date)
+            : null,
+          end_date: scheduleDetails?.end_date
+            ? dayjs(scheduleDetails.end_date)
+            : null,
+          booking_start_date_time: scheduleDetails?.booking_start_date_time
+            ? dayjs(scheduleDetails.booking_start_date_time)
+            : null,
+          ad_start_date_time: scheduleDetails?.ad_start_date_time
+            ? dayjs(scheduleDetails.ad_start_date_time)
+            : null,
+        };
+
+        console.log("Setting form values:", formValues);
+        form.setFieldsValue(formValues);
+
+        if (scheduleDetails.show_dates?.length > 0) {
+          console.log("Setting time slots:", scheduleDetails.show_dates);
+          dispatch(setTimeSlots(scheduleDetails.show_dates));
+        }
+      }
+    };
+
+    setFormFields();
+  }, [form, mode, scheduleDetails, dispatch]);
+
+  // Debug log for scheduleDetails changes
+  useEffect(() => {
+    console.log("scheduleDetails updated:", scheduleDetails);
+  }, [scheduleDetails]);
 
   const nextStep = async () => {
     try {
@@ -117,9 +190,7 @@ const MultyStepScheduleForm = () => {
       message.error("Please ensure all required fields are filled correctly.");
     }
   };
-  const { loading, selectedOffers, selectedCoupons } = useSelector(
-    (state) => state.schedules
-  );
+
   const prevStep = () => {
     if (currentStep > 1) {
       dispatch(setCurrentStep(currentStep - 1));
@@ -214,7 +285,7 @@ const MultyStepScheduleForm = () => {
       case 1:
         return <ScheduleDetails form={form} />;
       case 2:
-        return <ScheduleTimeSlots form={form} />;
+        return <ScheduleTimeSlots form={form} mode={mode} />;
       case 3:
         return <ScheduleOffersAndCoupons form={form} />;
       default:
@@ -224,10 +295,14 @@ const MultyStepScheduleForm = () => {
 
   return (
     <div>
-      <h2>Create Schedule</h2>
+      <h2>{mode === "EDIT" ? "Edit Schedule" : "Create Schedule"}</h2>
       <StepIndicator steps={steps} currentStep={currentStep} />
       <div style={{ padding: "20px" }}>
-        <Form form={form} layout="vertical">
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{}} // Add empty initial values
+        >
           {renderStepContent()}
         </Form>
       </div>

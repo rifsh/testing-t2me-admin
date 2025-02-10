@@ -1,4 +1,5 @@
 import fetch from "auth/FetchInterceptor";
+import { ApiConstant } from "constants/ApiConstant";
 
 const AuthService = {};
 AuthService.login = function (data) {
@@ -10,7 +11,7 @@ AuthService.login = function (data) {
 }
 AuthService.logout = function () {
 	return fetch({
-		url: `/api/v1/auth/public/logout`,
+		url:ApiConstant.LOG_OUT,
 		method: 'post',
 	})
 }
