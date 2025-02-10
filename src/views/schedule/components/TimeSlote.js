@@ -30,8 +30,6 @@ const TimeSlots = ({
   onRemoveSlot,
   onApplyToAll,
 }) => {
-  const dispatch = useDispatch();
-
   useEffect(() => {
     const slots = form.getFieldValue(["timeSlots", dateStr]) || [];
     if (slots.length > 0) {
@@ -39,142 +37,152 @@ const TimeSlots = ({
     }
   }, [bookingStartTime, eventStartTime, dateStr]);
 
-  const validateTimeSlot = (dateStr, index, currentSlot, slots) => {
-    const previousSlot = index > 0 ? slots[index - 1] : null;
-    const nextSlot = index < slots.length - 1 ? slots[index + 1] : null;
-    const isFirstDayFirstShow =
-      dateStr === eventStartTime?.format("YYYY-MM-DD") && index === 0;
+  const validateAllSlots = (dateStr, slots) => {
+    slots.forEach((slot, index) => {
+      if (slot.start_time) {
+        validateTimeSequence(
+          dateStr,
+          index,
+          "start_time",
+          slot.start_time,
+          slots,
+          true
+        );
+      }
+      if (slot.end_time) {
+        validateTimeSequence(
+          dateStr,
+          index,
+          "end_time",
+          slot.end_time,
+          slots,
+          true
+        );
+      }
+    });
+  };
+  const validateTimeSlots = (
+    dateStr,
+    slots,
+    form,
+    eventStartTime,
+    bookingStartTime
+  ) => {
+    if (!slots?.length) return { valid: true };
 
-    // Start time validations
-    if (currentSlot.start_time) {
-      if (isFirstDayFirstShow && bookingStartTime) {
-        const startDateTime = currentSlot.start_time.format("YYYY-MM-DD HH:mm");
-        const bookingDateTime = bookingStartTime.format("YYYY-MM-DD HH:mm");
-        if (currentSlot.start_time.isBefore(bookingStartTime)) {
-          return {
-            valid: false,
-            field: "start_time",
-            message: "First show must start after booking start time",
-          };
+    // Filter out empty slots and sort by start time
+    const validSlots = slots
+      .filter((slot) => slot.start_time && slot.end_time)
+      .sort((a, b) => a.start_time.valueOf() - b.start_time.valueOf());
+
+    if (!validSlots.length) return { valid: true };
+
+    const errors = [];
+    const isFirstDay = dateStr === eventStartTime?.format("YYYY-MM-DD");
+
+    // Validate each slot
+    validSlots.forEach((slot, index) => {
+      const { start_time, end_time } = slot;
+
+      // Check if end time is after start time
+      if (end_time.isSameOrBefore(start_time)) {
+        errors.push({
+          field: ["timeSlots", dateStr, index, "end_time"],
+          message: "End time must be after start time",
+        });
+      }
+
+      // First show on first day validation
+      if (isFirstDay && index === 0 && bookingStartTime) {
+        // Check if booking start date and event start date are the same day
+        if (
+          bookingStartTime.format("YYYY-MM-DD") ===
+          eventStartTime.format("YYYY-MM-DD")
+        ) {
+          if (start_time.isBefore(bookingStartTime)) {
+            errors.push({
+              field: ["timeSlots", dateStr, index, "start_time"],
+              message: "First show must start after booking start time",
+            });
+          }
         }
       }
 
-      if (
-        previousSlot?.end_time &&
-        currentSlot.start_time.isSameOrBefore(previousSlot.end_time)
-      ) {
-        return {
-          valid: false,
-          field: "start_time",
-          message: "Start time must be after previous slot end time",
-        };
+      // Check for overlap with next slot
+      if (index < validSlots.length - 1) {
+        const nextSlot = validSlots[index + 1];
+        if (end_time.isAfter(nextSlot.start_time)) {
+          errors.push({
+            field: ["timeSlots", dateStr, index, "end_time"],
+            message: "Time slots cannot overlap",
+          });
+        }
+
+        // Check for minimum gap between shows
+        const minGapMinutes = 0;
+        const gapMinutes = nextSlot.start_time.diff(end_time, "minutes");
+        if (gapMinutes < minGapMinutes) {
+          errors.push({
+            field: ["timeSlots", dateStr, index + 1, "start_time"],
+            message: `Minimum ${minGapMinutes} minutes gap required between shows`,
+          });
+        }
       }
+
+      // Validate show duration
+      const minDurationMinutes = 0;
+      const maxDurationMinutes = 1440; // 24 hours
+      const durationMinutes = end_time.diff(start_time, "minutes");
+
+      if (durationMinutes < minDurationMinutes) {
+        errors.push({
+          field: ["timeSlots", dateStr, index, "end_time"],
+          message: `Show must be at least ${minDurationMinutes} minutes long`,
+        });
+      }
+
+      if (durationMinutes > maxDurationMinutes) {
+        errors.push({
+          field: ["timeSlots", dateStr, index, "end_time"],
+          message: `Show cannot exceed ${maxDurationMinutes} minutes`,
+        });
+      }
+    });
+
+    // Update form errors
+    if (errors.length) {
+      errors.forEach(({ field, message }) => {
+        form.setFields([
+          {
+            name: field,
+            errors: [message],
+          },
+        ]);
+      });
+      return { valid: false, errors };
     }
 
-    // End time validations
-    if (currentSlot.end_time) {
-      if (currentSlot.end_time.isSameOrBefore(currentSlot.start_time)) {
-        return {
-          valid: false,
-          field: "end_time",
-          message: "End time must be after start time",
-        };
-      }
-
-      if (
-        nextSlot?.start_time &&
-        currentSlot.end_time.isAfter(nextSlot.start_time)
-      ) {
-        return {
-          valid: false,
-          field: "end_time",
-          message: "End time must be before next slot start time",
-        };
-      }
-    }
+    // Clear any existing errors
+    validSlots.forEach((_, index) => {
+      ["start_time", "end_time"].forEach((field) => {
+        form.setFields([
+          {
+            name: ["timeSlots", dateStr, index, field],
+            errors: [],
+          },
+        ]);
+      });
+    });
 
     return { valid: true };
   };
-
-  const clearFormFields = (dateStr, index, fields) => {
-    const clearValues = {};
-    fields.forEach((field) => {
-      clearValues[field] = null;
-    });
-
-    form.setFields([
-      {
-        name: ["timeSlots", dateStr, index],
-        value: clearValues,
-        errors: [],
-      },
-    ]);
-  };
-
-  const validateAllSlots = (dateStr, slots) => {
-    let hasError = false;
-    const updatedSlots = [...slots];
-
-    for (let i = 0; i < slots.length; i++) {
-      const validationResult = validateTimeSlot(dateStr, i, slots[i], slots);
-      if (!validationResult.valid) {
-        hasError = true;
-        message.warning(validationResult.message);
-
-        // Clear affected slots
-        for (let j = i; j < slots.length; j++) {
-          if (j === i) {
-            if (validationResult.field === "end_time") {
-              updatedSlots[j] = {
-                ...updatedSlots[j],
-                end_time: null,
-                ticketType: null,
-              };
-            } else {
-              updatedSlots[j] = {
-                start_time: null,
-                end_time: null,
-                ticketType: null,
-              };
-            }
-          } else {
-            updatedSlots[j] = {
-              start_time: null,
-              end_time: null,
-              ticketType: null,
-            };
-          }
-          clearFormFields(dateStr, j, ["start_time", "end_time", "ticketType"]);
-        }
-        break;
-      }
-    }
-
-    if (hasError) {
-      dispatch(
-        setTimeSlots({
-          ...timeSlots,
-          [dateStr]: updatedSlots,
-        })
-      );
-    }
-
-    return !hasError;
-  };
-
+  const dispatch = useDispatch();
   const handleTimeChange = (dateStr, index, type, value) => {
     const timeValue = value
       ? type === "ticketType"
         ? value
         : value.tz(getEventTimezone())
       : null;
-
-    const currentSlots = form.getFieldValue(["timeSlots", dateStr]) || [];
-    const updatedSlots = [...currentSlots];
-    updatedSlots[index] = {
-      ...updatedSlots[index],
-      [type]: timeValue,
-    };
 
     dispatch(
       updateTimeSlot({
@@ -185,7 +193,88 @@ const TimeSlots = ({
       })
     );
 
-    validateAllSlots(dateStr, updatedSlots);
+    validateTimeSlots(
+      dateStr,
+      timeSlots[dateStr],
+      form,
+      eventStartTime,
+      bookingStartTime
+    );
+  };
+
+  const validateTimeSequence = (
+    dateStr,
+    index,
+    type,
+    value,
+    slots,
+    isSystemCheck = false
+  ) => {
+    if (!value) return true;
+
+    const currentSlot = slots[index];
+    const previousSlot = index > 0 ? slots[index - 1] : null;
+    const nextSlot = index < slots.length - 1 ? slots[index + 1] : null;
+    const isFirstDayFirstShow =
+      dateStr === eventStartTime?.format("YYYY-MM-DD") && index === 0;
+
+    let errorMessage = null;
+
+    // Special validation for first day first show
+    if (isFirstDayFirstShow && type === "start_time") {
+      if (
+        bookingStartTime?.format("YYYY-MM-DD") ===
+        eventStartTime?.format("YYYY-MM-DD")
+      ) {
+        if (value.isBefore(bookingStartTime)) {
+          errorMessage = "First show must start after booking start time";
+        }
+      }
+    } else if (!isFirstDayFirstShow && type === "start_time") {
+      // For non-first shows, check against previous slot
+      if (previousSlot?.end_time && value.isBefore(previousSlot.end_time)) {
+        errorMessage = "Start time must be after previous slot end time";
+      }
+    }
+
+    // Common validations for all slots
+    if (
+      type === "start_time" &&
+      currentSlot.end_time &&
+      value.isAfter(currentSlot.end_time)
+    ) {
+      errorMessage = "Start time must be before end time";
+    } else if (type === "end_time") {
+      if (currentSlot.start_time && value.isBefore(currentSlot.start_time)) {
+        errorMessage = "End time must be after start time";
+      } else if (nextSlot?.start_time && value.isAfter(nextSlot.start_time)) {
+        errorMessage = "End time must be before next slot start time";
+      }
+    }
+
+    if (errorMessage) {
+      form.setFields([
+        {
+          name: ["timeSlots", dateStr, index, type],
+          errors: [errorMessage],
+        },
+      ]);
+
+      if (!isSystemCheck) {
+        message.error(errorMessage);
+      }
+      return false;
+    }
+
+    // Clear errors if validation passes
+    form.setFields([
+      {
+        name: ["timeSlots", dateStr, index, type],
+        errors: [],
+      },
+    ]);
+
+    return true;
   };
 
   const getDisabledTimes = (index, type) => {
@@ -200,6 +289,7 @@ const TimeSlots = ({
       disabledHours: () => {
         const hours = new Set();
 
+        // Only apply booking start time restriction for first show on first day
         if (
           isFirstDayFirstShow &&
           type === "start_time" &&
@@ -211,6 +301,7 @@ const TimeSlots = ({
           }
         }
 
+        // Previous slot restrictions (only for non-first shows)
         if (
           !isFirstDayFirstShow &&
           type === "start_time" &&
@@ -221,12 +312,14 @@ const TimeSlots = ({
           }
         }
 
+        // End time restrictions based on start time
         if (type === "end_time" && currentSlot?.start_time) {
           for (let i = 0; i < currentSlot.start_time.hour(); i++) {
             hours.add(i);
           }
         }
 
+        // Next slot restrictions for end time
         if (type === "end_time" && nextSlot?.start_time) {
           for (let i = nextSlot.start_time.hour(); i < 24; i++) {
             hours.add(i);
@@ -238,6 +331,7 @@ const TimeSlots = ({
       disabledMinutes: (hour) => {
         const minutes = new Set();
 
+        // First show booking start time minutes restriction
         if (
           isFirstDayFirstShow &&
           type === "start_time" &&
@@ -250,31 +344,34 @@ const TimeSlots = ({
           }
         }
 
+        // Previous slot minutes restriction (only for non-first shows)
         if (
           !isFirstDayFirstShow &&
           type === "start_time" &&
           previousSlot?.end_time &&
-          hour === previousSlot.end_time.hour()
+          previousSlot.end_time.hour() === hour
         ) {
           for (let i = 0; i <= previousSlot.end_time.minute(); i++) {
             minutes.add(i);
           }
         }
 
+        // End time minutes restriction based on start_time time
         if (
           type === "end_time" &&
           currentSlot?.start_time &&
-          hour === currentSlot.start_time.hour()
+          currentSlot.start_time.hour() === hour
         ) {
           for (let i = 0; i < currentSlot.start_time.minute(); i++) {
             minutes.add(i);
           }
         }
 
+        // Next slot minutes restriction for end_time time
         if (
           type === "end_time" &&
           nextSlot?.start_time &&
-          hour === nextSlot.start_time.hour()
+          nextSlot.start_time.hour() === hour
         ) {
           for (let i = nextSlot.start_time.minute(); i < 60; i++) {
             minutes.add(i);
@@ -347,12 +444,17 @@ const TimeSlots = ({
               <Select
                 options={ticketOptions}
                 value={slot.ticketType}
-                onChange={(value) =>
-                  handleTimeChange(dateStr, index, "ticketType", value)
-                }
+                onChange={(value) => {
+                  console.log("Ticket Type Changed:", {
+                    dateStr,
+                    index,
+                    value,
+                    currentSlot: slot,
+                  });
+                  handleTimeChange(dateStr, index, "ticketType", value);
+                }}
                 style={{ width: "100%" }}
                 placeholder="Select Ticket Type"
-                disabled={!timeSlots[dateStr]?.[index]?.end_time}
               />
             </Form.Item>
           </Col>
