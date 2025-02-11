@@ -279,7 +279,7 @@ const eventSlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.messages = payload.status.message;
-          state.responseImpactData = payload.status.data;
+          state.responseImpactData = payload.status.data.active_schedules;
           state.editable_status = payload.status.editable_status;
         }
       })
@@ -294,10 +294,9 @@ const eventSlice = createSlice({
       .addCase(editEventStatus.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.responseData = payload.data;
-
         if (payload.status) {
           state.messages = payload.status.message;
-          state.responseImpactData = payload.status.data;
+          state.responseImpactData = payload.status.data.active_schedules;
           state.editable_status = payload.status.editable_status;
         }
       })

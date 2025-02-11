@@ -11,7 +11,6 @@ import { TicketStructureSelector } from "./TicketStructureSelector";
 import { TicketSetDetails } from "./TicketSetDetails";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 
-
 const TicketField = ({ form }) => {
   const dispatch = useDispatch();
   const { selectedVenue } = useSelector((state) => state.locations);
@@ -29,7 +28,9 @@ const TicketField = ({ form }) => {
     // }
 
     dispatch(getAvailableTicketsType());
-    dispatch(fetchAllTickets({ venue_id: selectedVenue.id }));
+    if (selectedVenue?.id) {
+      dispatch(fetchAllTickets({ venue_id: selectedVenue.id }));
+    }
 
     if (selectedVenue?.capacity) {
       form.setFieldsValue({

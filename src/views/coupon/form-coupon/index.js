@@ -203,7 +203,7 @@ const CouponForm = ({ mode, coupon }) => {
         loading={modalLoading}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules",
+          dataKey: "items",
         }}
         editable_status={editable_status}
       />

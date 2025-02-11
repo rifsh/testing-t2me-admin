@@ -191,7 +191,7 @@ const PlaceList = () => {
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules",
+          dataKey: "items",
         }}
         editable_status={editable_status}
         responseData={responseImpactData}
