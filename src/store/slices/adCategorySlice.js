@@ -199,7 +199,7 @@ const AdcategorySlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data;
+          state.responseImpactData = payload.status.data.active_schedules;
           state.editable_status = payload.status.editable_status;
         }
       })
@@ -217,7 +217,7 @@ const AdcategorySlice = createSlice({
 
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data;
+          state.responseImpactData = payload.status.data.active_schedules;
           state.editable_status = payload.status.editable_status;
         }
       })

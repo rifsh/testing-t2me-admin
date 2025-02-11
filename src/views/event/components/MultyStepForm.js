@@ -43,6 +43,10 @@ import {
   fetchAllTickets,
   validateTicket,
   setTicketValidationDialogVisible,
+  setSelectedTicketType,
+  setSelectedTicketStructureforEvent,
+  addOrUpdateTicketSetforEvent,
+  getAvailableTicketsType,
 } from "store/slices/ticketSlice";
 import {
   fetchSubcategories,
@@ -84,9 +88,12 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     editable_status,
     messages: warningMessage,
   } = useSelector((state) => state.event);
-  const { selectedTicketStructure, ticketTypes } = useSelector(
-    (state) => state.tickets
-  );
+  const {
+    selectedTicketStructure,
+    ticketTypes,
+    filteredTickets,
+    availableTicketTyps,
+  } = useSelector((state) => state.tickets);
   const dispatch = useDispatch();
   const [form] = Form.useForm();
   const { responseDataEvent, responseMessageEvent, message } = useSelector(
@@ -144,10 +151,25 @@ const MultyStepEventForm = ({ eventId, mode }) => {
 
       form.setFieldsValue(formValues);
 
+      // Set tax details
       if (eventDetails.taxs && eventDetails.taxs.length > 0) {
         dispatch(setSelectedTaxDetails(eventDetails.taxs));
       }
+      if (eventDetails.category?.id) {
+        dispatch(fetchSubcategories({ category_id: eventDetails.category.id }));
+      }
 
+      if (eventDetails.venue?.place?.id) {
+        dispatch(getVenues({ place_id: eventDetails.venue.place.id }));
+      }
+
+      if (eventDetails.ticket_structure) {
+        dispatch(fetchAllTickets({ venue_id: eventDetails.venue.id }));
+      }
+
+      dispatch(getAvailableTicketsType());
+
+      // Set offers
       if (eventDetails.event_offers && eventDetails.event_offers.length > 0) {
         eventDetails.event_offers.forEach((eventOffer) => {
           dispatch(
@@ -163,6 +185,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         });
       }
 
+      // Set coupons
       if (eventDetails.event_coupons && eventDetails.event_coupons.length > 0) {
         eventDetails.event_coupons.forEach((eventCoupon) => {
           dispatch(
@@ -177,19 +200,65 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         });
       }
 
-      if (eventDetails.category?.id) {
-        dispatch(fetchSubcategories({ category_id: eventDetails.category.id }));
-      }
+      // // Set ticket data
+      // if (eventDetails.available_types ) {
+      //   console.log("KERYYYYYYYYYYYYYYYYY");
 
-      if (eventDetails.venue?.place?.id) {
-        dispatch(getVenues({ place_id: eventDetails.venue.place.id }));
-      }
+      //   // Set the booking type
+      //   const ticketType = availableTicketTyps.available_types.find(
+      //     (type) =>
+      //       type.name.toLowerCase() ===
+      //       eventDetails.available_types.toLowerCase()
+      //   );
+      //   console.log("THIS IS TICKET", ticketType);
+      //   if (ticketType) {
+      //     dispatch(setSelectedTicketType(ticketType.id));
+      //     form.setFieldsValue({
+      //       available_types: ticketType.id,
+      //     });
+      //   }
 
-      if (eventDetails.ticket_structure) {
-        dispatch(fetchAllTickets({ venue_id: eventDetails.venue.id }));
-      }
+      //   // Set ticket structures and populate ticket sets
+      //   if (eventDetails.event_ticket_structures?.length > 0) {
+      //     const ticketStructure = eventDetails.event_ticket_structures[0];
+
+      //     // Set the ticket structure in the form
+      //     form.setFieldsValue({
+      //       ticket_structure_id: ticketStructure.ticket_structure.id,
+      //     });
+
+      //     console.log("FILTERED TICKETS",filteredTickets);
+
+      //     const selectedStructure = filteredTickets.find(
+      //       (ticket) => ticket.id === ticketStructure.ticket_structure.id
+      //     );
+
+      //     if (selectedStructure) {
+      //       dispatch(setSelectedTicketStructureforEvent(selectedStructure));
+
+      //       eventDetails.event_ticket_structures.forEach((structure) => {
+      //         const ticketSetData = {
+      //           venue_id: eventDetails.venue?.id,
+      //           place_id: eventDetails.venue?.place?.id,
+      //           name: structure.ticket_structure.name,
+      //           ticket_set: structure.ticket_set,
+      //           id: structure.ticket_structure.id,
+      //           ticketStructureId: structure.ticket_structure.id,
+      //         };
+      //         dispatch(addOrUpdateTicketSetforEvent(ticketSetData));
+      //       });
+      //     }
+      //   }
+      // }
     }
-  }, [eventDetails, mode, form, dispatch]);
+  }, [
+    eventDetails,
+    mode,
+    form,
+    dispatch,
+    availableTicketTyps,
+    filteredTickets,
+  ]);
 
   useEffect(() => {
     dispatch(resetState());
@@ -359,12 +428,12 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         };
         const ticket_structure = {
           ticket_structure: ticketTypes.reduce((acc, ticketType) => {
-            const structureItems = ticketType.ticket_types.map(ticket => ({
+            const structureItems = ticketType.ticket_types.map((ticket) => ({
               id: ticket.ticketStructureId,
-              ticket_set: ticket.ticket_set
+              ticket_set: ticket.ticket_set,
             }));
             return [...acc, ...structureItems];
-          }, [])
+          }, []),
         };
 
         const finalData = {
@@ -387,7 +456,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           if (response.message === "warning") {
             dispatch(setOfferCouponValidationDialogVisible(true));
           } else if (response.data && response.data[0]?.validation_status) {
-          dispatch(setSelectedSubmitItem(finalData));
+            dispatch(setSelectedSubmitItem(finalData));
           }
         }
       }
@@ -399,7 +468,6 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     }
   };
 
-  
   const handleModalSubmit = async () => {
     dispatch(setModalLoading(true));
     const resultAction = await dispatch(
@@ -424,7 +492,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
 
   return (
     <div>
-      <h2>Create Event</h2>
+      <h2>{mode === "EDIT" ? "Edit Event" : "Create Event"}</h2>
       <div
         style={{
           display: "flex",

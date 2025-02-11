@@ -200,7 +200,7 @@ const TaxList = () => {
       <WarningModal
         mode={"itemmodal"}
         visible={dialogVisible}
-        title="Edit Place"
+        title="Edit Tax"
         details={TextConstants.DefaultEditContent1}
         warningMessage="Do you want to proceed to the edit page?"
         onSubmit={handleModalSubmit}
@@ -217,7 +217,7 @@ const TaxList = () => {
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules",
+          dataKey: "items",
         }}
         editable_status={editable_status}
         responseData={responseImpactData}

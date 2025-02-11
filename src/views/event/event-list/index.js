@@ -243,7 +243,7 @@ const EventsList = () => {
       <WarningModal
         mode={"itemmodal"}
         visible={dialogVisible}
-        title="Edit Place"
+        title="Edit Event"
         details={TextConstants.DefaultEditContent1}
         warningMessage="Do you want to proceed to the edit page?"
         onSubmit={handleModalSubmit}
@@ -261,7 +261,7 @@ const EventsList = () => {
         responseData={responseImpactData}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules",
+          dataKey: "items",
         }}
         pageData={{ page: 1, size: 10 }}
       />
