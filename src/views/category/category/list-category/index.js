@@ -318,7 +318,9 @@ const CategoryList = () => {
       <WarningModal
         mode={"itemmodal"}
         visible={dialogVisible}
-        title="Edit Place"
+        title={
+          activeTab === "categories" ? "Edit Category" : "Edit Subcategory"
+        }
         details={TextConstants.DefaultEditContent1}
         warningMessage="Do you want to proceed to the edit page?"
         onSubmit={handleModalSubmit}
