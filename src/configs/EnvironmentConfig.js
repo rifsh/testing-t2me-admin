@@ -9,9 +9,9 @@ const uat = {
 const demo = {
   API_ENDPOINT_URL: "https://demo-tickets2me.mitetechnology.in",
 };
-
+// temp
 const prod = {
-  API_ENDPOINT_URL: "https://tickets2me.mitetechnology.in",
+  API_ENDPOINT_URL: "https://uat-tickets2me.mitetechnology.in",
 };
 
 const test = {
