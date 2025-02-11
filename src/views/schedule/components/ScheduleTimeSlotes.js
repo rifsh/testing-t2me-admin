@@ -39,6 +39,14 @@ import {
   setTimeSlots,
 } from "store/slices/scheduleSlice";
 import TimezoneClock from "components/util-components/timezone/TimeZoneClock";
+import {
+  clearFieldValue,
+  ScheduleTimeSlotsUtil,
+  validateAdStartTime,
+  validateBookingStartTime,
+  validateEventEndTime,
+  validateEventStartTime,
+} from "../utils/ScheduleTime";
 
 const { Title } = Typography;
 
@@ -61,7 +69,8 @@ export function ScheduleTimeSlots({ form }) {
   const currentDateInTimeZone = useMemo(() => dayjs().tz(timeZone), [timeZone]);
   const dispatch = useDispatch();
   useEffect(() => {
-    const eventId = form?.getFieldValue("event_id");
+    // const eventId = form?.getFieldValue("event_id"); // note--
+    const eventId = 7;
     if (eventId) {
       dispatch(fetchEventDetails(eventId));
     }
@@ -498,6 +507,68 @@ export function ScheduleTimeSlots({ form }) {
       }
     }
   };
+  const handleSubmitScheduleDate = (field, date) => {
+    let validationResult = null;
+
+    if (field === "ad_start_date_time") {
+      validationResult = ScheduleTimeSlotsUtil.validateAdStartTime({
+        date,
+        form,
+        timezone: getEventTimezone(),
+      });
+    } else if (field === "booking_start_date_time") {
+      validationResult = ScheduleTimeSlotsUtil.validateBookingStartTime({
+        date,
+        form,
+        timezone: getEventTimezone(),
+      });
+    } else if (field === "start_date") {
+      validationResult = ScheduleTimeSlotsUtil.validateEventStartTime({
+        date,
+        form,
+        timezone: getEventTimezone(),
+      });
+    } else if (field === "end_date") {
+      validationResult = ScheduleTimeSlotsUtil.validateEventEndTime({
+        date,
+        form,
+        timezone: getEventTimezone(),
+      });
+    }
+
+    if (!validationResult.isValid) {
+      console.log("Validation Failed:", validationResult);
+      message.error(validationResult.message);
+      form.setFieldsValue({ [field]: null });
+      ScheduleTimeSlotsUtil.clearFieldValue(form, [field]);
+      return;
+    }
+
+    if (validationResult.isWarning) {
+      console.log("Warning detected!");
+
+      Modal.confirm({
+        title: "Warning",
+        content: validationResult.message,
+        okText: "Proceed",
+        cancelText: "Cancel",
+        onOk() {
+          console.log("User confirmed changes");
+          form.setFieldsValue({ [field]: date });
+          ScheduleTimeSlotsUtil.clearFieldValue(
+            form,
+            validationResult.clearFields || []
+          );
+        },
+        onCancel() {
+          console.log("User canceled changes");
+        },
+      });
+    } else {
+      form.setFieldsValue({ [field]: date });
+    }
+  };
+
   return (
     <>
       <Title level={4}>
@@ -515,17 +586,19 @@ export function ScheduleTimeSlots({ form }) {
             <Form.Item
               name="ad_start_date_time"
               label="Ad Start Time"
-              rules={[{ required: true }]}
+              rules={[{ required: true, message: "Ad start time is required" }]}
             >
               <DatePicker
-                {...createDateTimePickerProps({
-                  timezone: getEventTimezone(),
-                  allowPast: false,
-                  includeTime: true,
-                  form,
-                })}
-                onChange={handleDateChange("ad_start_date_time")}
-                placeholder="Select ad start_time time"
+                format="YYYY-MM-DD HH:mm"
+                showTime={{ format: "HH:mm" }}
+                style={{ width: "100%" }}
+                onSelect={(date) =>
+                  handleSubmitScheduleDate("ad_start_date_time", date)
+                }
+                onChange={(date) =>
+                  handleSubmitScheduleDate("ad_start_date_time", date)
+                }
+                placeholder="Select ad start time"
               />
             </Form.Item>
           </Col>
@@ -537,15 +610,16 @@ export function ScheduleTimeSlots({ form }) {
               rules={[{ required: true }]}
             >
               <DatePicker
-                {...createDateTimePickerProps({
-                  timezone: getEventTimezone(),
-                  allowPast: false,
-                  includeTime: true,
-                  depend_timesOn: "ad_start_date_time",
-                  form,
-                })}
-                onChange={handleDateChange("booking_start_date_time")}
-                placeholder="Select booking start_time time"
+                format="YYYY-MM-DD HH:mm"
+                style={{ width: "100%" }}
+                showTime={{ format: "HH:mm" }}
+                onSelect={(date) =>
+                  handleSubmitScheduleDate("booking_start_date_time", date)
+                }
+                onChange={(date) =>
+                  handleSubmitScheduleDate("booking_start_date_time", date)
+                }
+                placeholder="Select ad start time"
               />
             </Form.Item>
           </Col>
@@ -557,15 +631,16 @@ export function ScheduleTimeSlots({ form }) {
               rules={[{ required: true }]}
             >
               <DatePicker
-                {...createDateTimePickerProps({
-                  timezone: getEventTimezone(),
-                  allowPast: false,
-                  includeTime: false,
-                  depend_timesOn: "booking_start_date_time",
-                  form,
-                })}
-                onChange={handleDateChange("start_date")}
-                placeholder="Select event start_time date"
+                format="YYYY-MM-DD HH:mm"
+                showTime={{ format: "HH:mm" }}
+                style={{ width: "100%" }}
+                onSelect={(date) =>
+                  handleSubmitScheduleDate("start_date", date)
+                }
+                onChange={(date) =>
+                  handleSubmitScheduleDate("start_date", date)
+                }
+                placeholder="Select ad start time"
               />
             </Form.Item>
           </Col>
@@ -577,15 +652,12 @@ export function ScheduleTimeSlots({ form }) {
               rules={[{ required: true }]}
             >
               <DatePicker
-                {...createDateTimePickerProps({
-                  timezone: getEventTimezone(),
-                  allowPast: false,
-                  includeTime: false,
-                  depend_timesOn: "start_date",
-                  form,
-                })}
-                onChange={handleDateChange("end_date")}
-                placeholder="Select event end date"
+                format="YYYY-MM-DD HH:mm"
+                showTime={{ format: "HH:mm" }}
+                style={{ width: "100%" }}
+                onSelect={(date) => handleSubmitScheduleDate("end_date", date)}
+                onChange={(date) => handleSubmitScheduleDate("end_date", date)}
+                placeholder="Select ad start time"
               />
             </Form.Item>
           </Col>
