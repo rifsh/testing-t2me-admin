@@ -91,8 +91,6 @@ const scheduleSlice = createSlice({
   initialState,
   reducers: {
     setTimeSlots: (state, action) => {
-      console.log('adsfjlsfjjadjfas', action.payload);
-      
       state.timeSlots = action.payload;
     },
     setActiveTab: (state, action) => {
@@ -114,7 +112,9 @@ const scheduleSlice = createSlice({
     removeExistingTimeSlot: (state, action) => {
       const { dateStr, index } = action.payload;
       if (state.timeSlots[dateStr]) {
-        state.timeSlots[dateStr] = state.timeSlots[dateStr].filter((_, i) => i !== index);
+        state.timeSlots[dateStr] = state.timeSlots[dateStr].filter(
+          (_, i) => i !== index
+        );
       }
     },
     addTimeSlot: (state, action) => {
@@ -127,7 +127,9 @@ const scheduleSlice = createSlice({
     removeTimeSlot: (state, action) => {
       const { dateStr, index } = action.payload;
       if (state.timeSlots[dateStr]) {
-        state.timeSlots[dateStr] = state.timeSlots[dateStr].filter((_, i) => i !== index);
+        state.timeSlots[dateStr] = state.timeSlots[dateStr].filter(
+          (_, i) => i !== index
+        );
       }
     },
     updateTimeSlot: (state, action) => {
@@ -135,8 +137,7 @@ const scheduleSlice = createSlice({
       if (state.timeSlots[dateStr] && state.timeSlots[dateStr][index]) {
         state.timeSlots[dateStr][index][field] = value;
       }
-    }
-  ,
+    },
     filterSchedules: (state, action) => {
       const { searchTerm, status } = action.payload;
 
@@ -221,7 +222,7 @@ const scheduleSlice = createSlice({
     },
     setScheduleSelectTime: (state, action) => {
       state.isSelectTime = action.payload;
-    },  
+    },
     resetSchedule: (state, action) => {
       return initialState;
     },
@@ -278,7 +279,6 @@ const scheduleSlice = createSlice({
       .addCase(fetchSingleSchedules.fulfilled, (state, action) => {
         state.loading = false;
         state.scheduleDetails = action.payload;
-  
       })
       .addCase(fetchSingleSchedules.rejected, (state, action) => {
         state.loading = false;
@@ -287,17 +287,18 @@ const scheduleSlice = createSlice({
   },
 });
 
-export const {  addNewTimeSlot, 
-  removeExistingTimeSlot ,
+export const {
+  addNewTimeSlot,
+  removeExistingTimeSlot,
   filterSchedules,
   resetSchedule,
   toggleSelectedOffer,
   toggleSelectedCoupon,
   updateSelectedCoupons,
   setSelectedItemForModal,
-  setTimeSlots, 
-  setActiveTab, 
-  setDates, 
+  setTimeSlots,
+  setActiveTab,
+  setDates,
   setSlotStatus,
   addTimeSlot,
   removeTimeSlot,

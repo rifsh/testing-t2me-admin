@@ -21,14 +21,14 @@ export function ScheduleDetails() {
     dispatch(setScheduleSelectTime(false));
     dispatch(setSelectedEvent(id));
 
-    const selectedEvent = filteredEvents.find(event => event.id === id);
+    const selectedEvent = filteredEvents.find((event) => event.id === id);
 
     if (selectedEvent) {
-        dispatch(setSelectedVenue(selectedEvent.venue.id));
+      dispatch(setSelectedVenue(selectedEvent.venue.id));
     }
 
     dispatch(resetSchedule());
-};
+  };
 
   return (
     <Card title="Schedule Details">
@@ -51,9 +51,9 @@ export function ScheduleDetails() {
           onChange={handleSelectEvent}
           allowClear
           showSearch
-            filterOption={(input, option) =>
-              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            }
+          filterOption={(input, option) =>
+            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }
         >
           {filteredEvents.map((event) => (
             <Option key={event.id} value={event.id}>

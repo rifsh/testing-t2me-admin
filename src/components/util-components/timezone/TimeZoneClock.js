@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Typography } from "antd";
+import { Row, Col } from "antd";
 import { ClockCircleOutlined } from "@ant-design/icons";
-
-const { Title } = Typography;
 
 const TimezoneClock = ({ timezone, eventDetails }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -21,13 +19,15 @@ const TimezoneClock = ({ timezone, eventDetails }) => {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
-      hour12: true,
+      hour12: false,
     });
   };
 
   return (
     <Row align="middle" gutter={8}>
-      <span style={{ fontSize: "15px",paddingLeft:"5px", fontWeight: "lighter" }}>
+      <span
+        style={{ fontSize: "15px", paddingLeft: "5px", fontWeight: "lighter" }}
+      >
         {` (${eventDetails?.venue?.place?.country.name ?? ""} : ${timezone})`}
       </span>
 

@@ -8,6 +8,7 @@ import {
   Col,
   Space,
   message,
+  Modal,
 } from "antd";
 import {
   MinusCircleOutlined,
@@ -16,6 +17,7 @@ import {
 } from "@ant-design/icons";
 import { updateTimeSlot } from "store/slices/scheduleSlice";
 import { useDispatch } from "react-redux";
+import { ScheduleTimeUtil } from "../utils/ScheduleTime";
 
 const TimeSlots = ({
   dateStr,
@@ -30,12 +32,15 @@ const TimeSlots = ({
   onRemoveSlot,
   onApplyToAll,
 }) => {
-  useEffect(() => {
-    const slots = form.getFieldValue(["timeSlots", dateStr]) || [];
-    if (slots.length > 0) {
-      validateAllSlots(dateStr, slots);
-    }
-  }, [bookingStartTime, eventStartTime, dateStr]);
+  // useEffect(() => {
+  //   const slots = form.getFieldValue(["timeSlots", dateStr]) || [];
+  //   if (slots.length > 0) {
+  //     validateAllSlots(dateStr, slots);
+  //   }
+  // }, [bookingStartTime, eventStartTime, dateStr]);
+  // useEffect(() => {
+  //   form.getFieldValue(["timeSlots", dateStr]) || []
+  // }, [dateStr]);
 
   const validateAllSlots = (dateStr, slots) => {
     slots.forEach((slot, index) => {
@@ -176,32 +181,6 @@ const TimeSlots = ({
 
     return { valid: true };
   };
-  const dispatch = useDispatch();
-  const handleTimeChange = (dateStr, index, type, value) => {
-    const timeValue = value
-      ? type === "ticketType"
-        ? value
-        : value.tz(getEventTimezone())
-      : null;
-
-    dispatch(
-      updateTimeSlot({
-        dateStr,
-        index,
-        field: type,
-        value: timeValue,
-      })
-    );
-
-    validateTimeSlots(
-      dateStr,
-      timeSlots[dateStr],
-      form,
-      eventStartTime,
-      bookingStartTime
-    );
-  };
-
   const validateTimeSequence = (
     dateStr,
     index,
@@ -382,7 +361,149 @@ const TimeSlots = ({
       },
     };
   };
+  const dispatch = useDispatch();
 
+  const handleTimeChange = (
+    dateStr,
+    index,
+    type,
+    value,
+    eventType = "change"
+  ) => {
+    // 1. Handle Select Event
+    if (eventType === "select") {
+      return;
+    }
+
+    // 2. Process Time Value
+    const timeValue = value
+      ? type === "ticketType"
+        ? value
+        : value.tz(getEventTimezone())
+      : null;
+
+    // 3. Validate Time-related Changes
+    if (type === "start_time" || type === "end_time") {
+      const validationResult = ScheduleTimeUtil.validateTimeSlote(
+        timeSlots,
+        dateStr,
+        form,
+        value,
+        index,
+        type
+      );
+
+      // 4. Handle Invalid Time
+      if (!validationResult.isValid) {
+        message.error(validationResult.message);
+        // Clear form field
+        form.setFieldsValue({
+          timeSlots: {
+            [dateStr]: {
+              [index]: {
+                [type]: null,
+              },
+            },
+          },
+        });
+        // Clear state
+        dispatch(
+          updateTimeSlot({
+            dateStr,
+            index,
+            field: type,
+            value: null,
+          })
+        );
+        return;
+      }
+
+      // 5. Handle Warning Cases
+      if (validationResult.isValid && validationResult.isWarning) {
+        Modal.confirm({
+          title: "Warning",
+          content: validationResult.message,
+          onOk: () => {
+            // 5.1 Clear Subsequent Slots (Both Form and State)
+            const updatedTimeSlots = [...timeSlots[dateStr]];
+            for (let i = index + 1; i < updatedTimeSlots.length; i++) {
+              // Batch form updates
+              const formUpdates = {
+                timeSlots: {
+                  [dateStr]: {
+                    [i]: {
+                      start_time: null,
+                      end_time: null,
+                    },
+                  },
+                },
+              };
+              form.setFieldsValue(formUpdates);
+
+              // Batch state updates
+              dispatch(
+                updateTimeSlot({
+                  dateStr,
+                  index: i,
+                  field: "start_time",
+                  value: null,
+                })
+              );
+              dispatch(
+                updateTimeSlot({
+                  dateStr,
+                  index: i,
+                  field: "end_time",
+                  value: null,
+                })
+              );
+            }
+
+            // 5.2 Update Current Slot
+            dispatch(
+              updateTimeSlot({
+                dateStr,
+                index,
+                field: type,
+                value: timeValue,
+              })
+            );
+          },
+          onCancel: () => {
+            // 5.3 Clear Current Field (Both Form and State)
+            form.setFieldsValue({
+              timeSlots: {
+                [dateStr]: {
+                  [index]: {
+                    [type]: null,
+                  },
+                },
+              },
+            });
+            dispatch(
+              updateTimeSlot({
+                dateStr,
+                index,
+                field: type,
+                value: null,
+              })
+            );
+          },
+        });
+        return;
+      }
+    }
+
+    // 6. Default Case: Update Time Slot
+    dispatch(
+      updateTimeSlot({
+        dateStr,
+        index,
+        field: type,
+        value: timeValue,
+      })
+    );
+  };
   return (
     <div style={{ marginTop: 16 }}>
       {timeSlots[dateStr]?.map((slot, index) => (
@@ -402,12 +523,14 @@ const TimeSlots = ({
               <TimePicker
                 format="HH:mm"
                 value={timeSlots[dateStr]?.[index]?.start_time}
+                onSelect={(time) =>
+                  handleTimeChange(dateStr, index, "start_time", time, "select")
+                }
                 onChange={(time) =>
-                  handleTimeChange(dateStr, index, "start_time", time)
+                  handleTimeChange(dateStr, index, "start_time", time, "change")
                 }
                 style={{ width: "100%" }}
                 placeholder="Start Time"
-                {...getDisabledTimes(index, "start_time")}
               />
             </Form.Item>
           </Col>
@@ -422,13 +545,14 @@ const TimeSlots = ({
               <TimePicker
                 format="HH:mm"
                 value={timeSlots[dateStr]?.[index]?.end_time}
+                onSelect={(time) =>
+                  handleTimeChange(dateStr, index, "end_time", time)
+                }
                 onChange={(time) =>
                   handleTimeChange(dateStr, index, "end_time", time)
                 }
                 style={{ width: "100%" }}
                 placeholder="End Time"
-                {...getDisabledTimes(index, "end_time")}
-                disabled={!timeSlots[dateStr]?.[index]?.start_time}
               />
             </Form.Item>
           </Col>
