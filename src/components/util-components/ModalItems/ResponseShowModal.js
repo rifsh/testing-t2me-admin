@@ -15,10 +15,9 @@ const ResponseShowModal = ({
   cancelText = "Cancel",
   loading = false,
   jsonData = null,
+  pagination,
+  onPaginationChange = () => {},
 }) => {
-  
-
-
   const formatValue = (value) => {
     if (value === null || value === undefined) return "N/A";
     if (Array.isArray(value)) return value.length ? value.join(", ") : "N/A";
@@ -43,9 +42,9 @@ const ResponseShowModal = ({
   }, [jsonData]);
 
   const scheduleData = useMemo(() => {
-    if (!jsonData?.list_of_updated_Schedules) return [];
+    if (!jsonData?.list_of_updated_Schedules?.items) return [];
 
-    const schedules = jsonData.list_of_updated_Schedules;
+    const schedules = jsonData.list_of_updated_Schedules?.items;
 
     // Check if the first schedule contains offer or coupon fields
     const isOffer = schedules.some((item) =>
@@ -213,7 +212,12 @@ const ResponseShowModal = ({
             <Table
               columns={scheduleColumns}
               dataSource={scheduleData}
-              pagination={false}
+              pagination={{
+                current: pagination?.page,
+                pageSize: pagination?.size,
+                total: pagination?.total,
+                onChange: onPaginationChange,
+              }}
               size="small"
               bordered
             />
