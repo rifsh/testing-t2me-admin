@@ -18,6 +18,7 @@ export const initialState = {
   selectedOffer: null,
   offerDetails: null,
   warningPagination: { size: 10, page: 1 },
+  submitPagination: { size: 10, page: 1 },
   ValidateData: null,
   offerCouponValidationDialogVisible: false,
   validationStatus: false,
@@ -182,6 +183,9 @@ const offerSlice = createSlice({
       .addCase(editOffer.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.responseData = payload.data;
+        if (payload.data?.list_of_updated_Schedules) {
+          state.submitPagination = payload.data?.list_of_updated_Schedules;
+        }
         if (payload.status) {
           state.message = payload.status.message;
           state.responseMessage = payload.status.message;

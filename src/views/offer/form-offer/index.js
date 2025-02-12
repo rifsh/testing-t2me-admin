@@ -39,6 +39,7 @@ const OfferForm = ({ mode, offer }) => {
     selectedOffer,
     responseImpactData,
     warningPagination,
+    submitPagination,
     message: warningMessage,
     modalLoading,
   } = useSelector((state) => state.offers);
@@ -235,6 +236,7 @@ const OfferForm = ({ mode, offer }) => {
         addFunction={mode === "EDIT" ? editOffer : addOffer}
         navigationPath={`${APP_PREFIX_PATH}/offer/list`}
         responseMessage={responseMessage}
+        pagination={submitPagination}
       />
     </>
   );

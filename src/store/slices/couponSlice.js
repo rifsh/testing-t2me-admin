@@ -16,6 +16,7 @@ export const initialState = {
   editItemId: null,
   selectedCoupon: null,
   responseImpactData: null,
+  submitPagination: { size: 10, page: 1 },
   warningPagination: { size: 10, page: 1 },
   pagination: { size: 10, page: 1 },
 };
@@ -149,6 +150,9 @@ const couponSlice = createSlice({
       .addCase(editCoupon.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.responseData = payload.data;
+        if (payload.data?.list_of_updated_Schedules) {
+          state.submitPagination = payload.data?.list_of_updated_Schedules;
+        }
         if (payload.status) {
           state.message = payload.status.message;
           state.responseImpactData = payload.status.data?.active_schedules;
