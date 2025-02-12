@@ -1,7 +1,7 @@
 import {
   DashboardOutlined,
   LayoutOutlined,
-  MoreOutlined,
+
   OrderedListOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
@@ -562,14 +562,7 @@ const techAdminDashBoardNavTree = [
             breadcrumb: false,
             submenu: [],
           },
-          {
-            key: "app.management.layout.footer.list",
-            path: `${APP_PREFIX_PATH}/app/management/layout/footer/list`,
-            title: "sidenav.app.management.layout.footer",
-            icon: LayoutOutlined,
-            breadcrumb: false,
-            submenu: [],
-          },
+          
         ],
       },
       

@@ -1,9 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { Form, Select, Typography, Button, message } from "antd";
+import React, { useEffect } from "react";
+import { Form, Button, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { setCurrentStep, resetState } from "store/slices/eventSlice";
-import { addSchedule, resetSchedule } from "store/slices/scheduleSlice";
+import {
+  addSchedule,
+  fetchSingleSchedules,
+  resetSchedule,
+  setActiveTab,
+  setDates,
+  setSlotStatus,
+  setTimeSlots,
+} from "store/slices/scheduleSlice";
 import { ScheduleDetails } from "../components/ScheduleDetails";
 import { ScheduleOffersAndCoupons } from "../components/ScheduleOffersAndCoupons";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -15,55 +22,191 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import dayjs from "dayjs";
 import LoadingOverlay from "components/util-components/Loader/index";
 
-const MultyStepScheduleForm = () => {
+const MultyStepScheduleForm = ({ mode, id }) => {
   const steps = ["Schedule Details", "Time Slots", "Confirmation"];
+
   const { currentStep, eventDetails, submitLoading } = useSelector(
     (state) => state.event
   );
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const { responseData, responseMessage } = useSelector(
-    (state) => state.schedules
-  );
+  const {
+    scheduleDetails,
+    responseData,
+    responseMessage,
+    loading,
+    selectedOffers,
+    selectedCoupons,
+  } = useSelector((state) => state.schedules);
+
+  // Debug log when component mounts
   useEffect(() => {
-    dispatch(resetSchedule());
-    dispatch(resetState());
-  }, [dispatch]);
+    console.log("Component mounted with mode:", mode, "and id:", id);
+  }, [mode, id]);
+
+  // First useEffect for fetching data
+  useEffect(() => {
+    const fetchData = async () => {
+      if (mode === "EDIT" && id) {
+        console.log("Fetching schedule data for id:", id);
+        await dispatch(fetchSingleSchedules({ id }));
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      dispatch(resetSchedule());
+      dispatch(resetState());
+    };
+  }, [dispatch, mode, id]);
+
+  // Second useEffect for setting form fields
+  useEffect(() => {
+    const setFormFields = () => {
+      if (mode === "EDIT" && scheduleDetails) {
+        const formValues = {
+          event_id: scheduleDetails?.event?.id,
+          name: scheduleDetails?.name,
+          start_date: scheduleDetails?.start_date
+            ? dayjs(scheduleDetails.start_date)
+            : null,
+          end_date: scheduleDetails?.end_date
+            ? dayjs(scheduleDetails.end_date)
+            : null,
+          booking_start_date_time: scheduleDetails?.booking_start_date_time
+            ? dayjs(scheduleDetails.booking_start_date_time)
+            : null,
+          ad_start_date_time: scheduleDetails?.ad_start_date_time
+            ? dayjs(scheduleDetails.ad_start_date_time)
+            : null,
+        };
+  
+        form.setFieldsValue(formValues);
+  
+        if (scheduleDetails.show_dates?.length > 0) {
+          const newDates = scheduleDetails.show_dates.map(sd => sd.date);
+          
+          // Prepare time slots in the correct format
+          const formattedTimeSlots = scheduleDetails.show_dates.reduce((acc, showDate) => {
+            acc[showDate.date] = showDate.show_times.map(time => ({
+              start_time: dayjs(`${showDate.date} ${time.start_time}`),
+              end_time: dayjs(`${showDate.date} ${time.end_time}`),
+              ticketType: time.event_ticket_structures[0]?.id
+            }));
+            return acc;
+          }, {});
+  
+          dispatch(setDates(newDates));
+          dispatch(setActiveTab(newDates[0]));
+          dispatch(setSlotStatus("green"));
+          dispatch(setTimeSlots(formattedTimeSlots));
+  
+          // Update form's time slots
+          form.setFieldsValue({
+            timeSlots: formattedTimeSlots
+          });
+        }
+      }
+    };
+  
+    setFormFields();
+  }, [form, mode, scheduleDetails, dispatch]);
+
+  // Debug log for scheduleDetails changes
+  useEffect(() => {
+    console.log("scheduleDetails updated:", scheduleDetails);
+  }, [scheduleDetails]);
 
   const nextStep = async () => {
     try {
       await form.validateFields();
-      
       const values = form.getFieldValue();
-      const timeSlots = values.timeSlots || {};
-  
+
+      // Only perform date validation on step 2
       if (currentStep === 2) {
-        for (const [date, slots] of Object.entries(timeSlots)) {
-          for (let index = 0; index < slots.length; index++) {
-            const slot = slots[index];
-            if (!slot.start_time) {
-              message.error(`Missing Start Time for Date: ${date}, Slot ${index + 1}`);
-              return;
-            }
-            if (!slot.end_time) {
-              message.error(`Missing End Time for Date: ${date}, Slot ${index + 1}`);
+        const timeSlots = values.timeSlots || {};
+        const startDate = values.start_date
+          ? values.start_date.format("YYYY-MM-DD")
+          : null;
+        const endDate = values.end_date
+          ? values.end_date.format("YYYY-MM-DD")
+          : null;
+
+        // Validate that both start and end dates are selected
+        if (!startDate || !endDate) {
+          message.error("Please select both start and end dates");
+          return;
+        }
+
+        // Get all dates between start and end date
+        const allDates = [];
+        let currentDate = dayjs(startDate);
+        const endDateTime = dayjs(endDate);
+
+        while (currentDate.isSameOrBefore(endDateTime)) {
+          allDates.push(currentDate.format("YYYY-MM-DD"));
+          currentDate = currentDate.add(1, "day");
+        }
+
+        // Check if all dates have at least one time slot
+        const missingDates = allDates.filter((date) => {
+          const dateSlots = timeSlots[date];
+          return !dateSlots || dateSlots.length === 0;
+        });
+
+        if (missingDates.length > 0) {
+          message.error(
+            `Please add time slots for the following dates: ${missingDates.join(
+              ", "
+            )}`
+          );
+          return;
+        }
+
+        // Validate each date's time slots
+        for (const date of allDates) {
+          const dateSlots = timeSlots[date] || [];
+
+          // Check if each slot has both start and end time and ticket type
+          const invalidSlots = dateSlots.filter(
+            (slot) => !slot.start_time || !slot.end_time || !slot.ticketType
+          );
+
+          if (invalidSlots.length > 0) {
+            message.error(
+              `Please fill in all required fields (start time, end time, and ticket type) for date: ${date}`
+            );
+            return;
+          }
+
+          // Validate time sequence
+          for (let i = 0; i < dateSlots.length - 1; i++) {
+            const currentSlot = dayjs(dateSlots[i].end_time);
+            const nextSlot = dayjs(dateSlots[i + 1].start_time);
+
+            if (currentSlot.isAfter(nextSlot)) {
+              message.error(
+                `Invalid time sequence on ${date}: Slot ${
+                  i + 1
+                } ends after slot ${i + 2} begins`
+              );
               return;
             }
           }
         }
       }
-  
+
+      // Move to next step if validation passes
       if (currentStep < steps.length) {
         dispatch(setCurrentStep(currentStep + 1));
       }
     } catch (error) {
-      message.error("Please ensure all required fields are filled.");
+      console.error("Validation error:", error);
+      message.error("Please ensure all required fields are filled correctly.");
     }
   };
-  
-  const { loading, error, selectedOffers, selectedCoupons } = useSelector(
-    (state) => state.schedules
-  );
+
   const prevStep = () => {
     if (currentStep > 1) {
       dispatch(setCurrentStep(currentStep - 1));
@@ -156,9 +299,10 @@ const MultyStepScheduleForm = () => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <ScheduleDetails form={form} />;
+        // return <ScheduleDetails form={form} />; // note--
+        return <ScheduleTimeSlots form={form} mode={mode} />;
       case 2:
-        return <ScheduleTimeSlots form={form} />;
+        return <ScheduleTimeSlots form={form} mode={mode} />;
       case 3:
         return <ScheduleOffersAndCoupons form={form} />;
       default:
@@ -168,10 +312,14 @@ const MultyStepScheduleForm = () => {
 
   return (
     <div>
-      <h2>Create Schedule</h2>
+      <h2>{mode === "EDIT" ? "Edit Schedule" : "Create Schedule"}</h2>
       <StepIndicator steps={steps} currentStep={currentStep} />
       <div style={{ padding: "20px" }}>
-        <Form form={form} layout="vertical">
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{}} // Add empty initial values
+        >
           {renderStepContent()}
         </Form>
       </div>

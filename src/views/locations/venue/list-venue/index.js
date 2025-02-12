@@ -225,7 +225,7 @@ const VenueList = () => {
       <WarningModal
         mode={"itemmodal"}
         visible={dialogVisible}
-        title="Edit Place"
+        title="Edit Venue"
         details={TextConstants.DefaultEditContent1}
         warningMessage="Do you want to proceed to the edit page?"
         onSubmit={handleModalSubmit}
@@ -241,7 +241,7 @@ const VenueList = () => {
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules",
+          dataKey: "active_schedules[items]",
         }}
         editable_status={editable_status}
         responseData={responseImpactData}

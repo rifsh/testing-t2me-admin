@@ -246,7 +246,10 @@ const TaxFormFields = ({ mode, tax }) => {
           className="ant-advanced-search-form"
         >
           <Card>
-            <h2 className="mb-3">Add Tax</h2>
+            <h2 className="mb-3">
+              {" "}
+              {mode === "EDIT" ? "Edit Tax" : "Add Tax"}
+            </h2>
 
             <Form.Item name="country_id" label="Country Name">
               <Select
@@ -391,7 +394,7 @@ const TaxFormFields = ({ mode, tax }) => {
         loading={modalLoading}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules",
+          dataKey: "items",
         }}
         editable_status={editable_status}
       />

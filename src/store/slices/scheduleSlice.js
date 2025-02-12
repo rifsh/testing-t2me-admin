@@ -17,6 +17,7 @@ export const initialState = {
   responseData: null,
   responseMessage: null,
   timeSlots: {},
+  scheduleDetails: {},
   activeTab: null,
   dates: [],
   slotStatus: {},
@@ -33,6 +34,24 @@ export const fetchAllSchedules = createAsyncThunk(
         return response.data;
       } else {
         const response = await ScheduleService.getAllSchedule(pageData);
+        return response.data[0];
+      }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching schedules"
+      );
+    }
+  }
+);
+export const fetchSingleSchedules = createAsyncThunk(
+  "schedule/fetchSingle",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      if (GET_SCHEDULE_MOCK_API && ENABLE_MOCK_API) {
+        const response = ScheduleMockData.fetchAllSchedules;
+        return response.data;
+      } else {
+        const response = await ScheduleService.getSingleSchedule(pageData);
         return response.data[0];
       }
     } catch (error) {
@@ -93,7 +112,9 @@ const scheduleSlice = createSlice({
     removeExistingTimeSlot: (state, action) => {
       const { dateStr, index } = action.payload;
       if (state.timeSlots[dateStr]) {
-        state.timeSlots[dateStr] = state.timeSlots[dateStr].filter((_, i) => i !== index);
+        state.timeSlots[dateStr] = state.timeSlots[dateStr].filter(
+          (_, i) => i !== index
+        );
       }
     },
     addTimeSlot: (state, action) => {
@@ -106,7 +127,9 @@ const scheduleSlice = createSlice({
     removeTimeSlot: (state, action) => {
       const { dateStr, index } = action.payload;
       if (state.timeSlots[dateStr]) {
-        state.timeSlots[dateStr] = state.timeSlots[dateStr].filter((_, i) => i !== index);
+        state.timeSlots[dateStr] = state.timeSlots[dateStr].filter(
+          (_, i) => i !== index
+        );
       }
     },
     updateTimeSlot: (state, action) => {
@@ -114,8 +137,7 @@ const scheduleSlice = createSlice({
       if (state.timeSlots[dateStr] && state.timeSlots[dateStr][index]) {
         state.timeSlots[dateStr][index][field] = value;
       }
-    }
-  ,
+    },
     filterSchedules: (state, action) => {
       const { searchTerm, status } = action.payload;
 
@@ -249,21 +271,34 @@ const scheduleSlice = createSlice({
       .addCase(fetchAllSchedules.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(fetchSingleSchedules.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchSingleSchedules.fulfilled, (state, action) => {
+        state.loading = false;
+        state.scheduleDetails = action.payload;
+      })
+      .addCase(fetchSingleSchedules.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
-export const {  addNewTimeSlot, 
-  removeExistingTimeSlot ,
+export const {
+  addNewTimeSlot,
+  removeExistingTimeSlot,
   filterSchedules,
   resetSchedule,
   toggleSelectedOffer,
   toggleSelectedCoupon,
   updateSelectedCoupons,
   setSelectedItemForModal,
-  setTimeSlots, 
-  setActiveTab, 
-  setDates, 
+  setTimeSlots,
+  setActiveTab,
+  setDates,
   setSlotStatus,
   addTimeSlot,
   removeTimeSlot,

@@ -402,7 +402,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
         responseData={responseImpactData}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules",
+          dataKey: "items",
         }}
         editable_status={editable_status}
       />
