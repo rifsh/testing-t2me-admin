@@ -29,6 +29,7 @@ const initialState = {
   selectedEvent: null,
   warningMessage: null,
   responseData: null,
+  warningPagination: { size: 10, page: 1 },
   responseMessage: null,
   editable_status: null,
   eventsupport: null,
@@ -148,9 +149,9 @@ export const addEvent = createAsyncThunk(
 );
 export const editEvent = createAsyncThunk(
   "event/edit",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await EventService.updateEvent(data, action);
+      const response = await EventService.updateEvent(data, action, pageData);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -159,9 +160,13 @@ export const editEvent = createAsyncThunk(
 );
 export const editEventStatus = createAsyncThunk(
   "event/editStatus",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await EventService.editEventStatus(data, action);
+      const response = await EventService.editEventStatus(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -279,8 +284,9 @@ const eventSlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.messages = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editEvent.rejected, (state, action) => {
@@ -296,8 +302,9 @@ const eventSlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.messages = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editEventStatus.rejected, (state, { payload }) => {

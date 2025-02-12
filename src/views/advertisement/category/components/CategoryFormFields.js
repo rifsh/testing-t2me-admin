@@ -64,6 +64,7 @@ const CategoryFormFields = ({ mode, category }) => {
     selectedAdCategory,
     responseImpactData,
     editable_status,
+    warningPagination,
   } = useSelector((state) => state.adCategory);
 
   useEffect(() => {
@@ -138,6 +139,19 @@ const CategoryFormFields = ({ mode, category }) => {
 
   const handleModalCancel = () => {
     dispatch(setAdCategoryDialogVisible(false));
+  };
+  const handleWarningPagination = (page, size) => {
+    console.log("------------------------");
+
+    console.log("CHANIGN...........");
+
+    dispatch(
+      updateAdCategory({
+        data: selectedAdCategory,
+        action: ActionType.WARNING,
+        pageData: { page: page, size: size },
+      })
+    );
   };
 
   return (
@@ -251,6 +265,8 @@ const CategoryFormFields = ({ mode, category }) => {
           dataKey: "items",
         }}
         editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
       />
       <SubmitAndConfirmModal
         responseData={responseData}

@@ -83,6 +83,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     responseImpactData,
     dialogVisible,
     eventDetails,
+    warningPagination,
     selectedEvent,
     modalLoading,
     editable_status,
@@ -467,6 +468,19 @@ const MultyStepEventForm = ({ eventId, mode }) => {
       dispatch(setSubmitLoading(false));
     }
   };
+  const handleWarningPagination = (page, size) => {
+    console.log("------------------------");
+
+    console.log("CHANIGN...........");
+
+    dispatch(
+      editEvent({
+        data: selectedEvent,
+        action: ActionType.WARNING,
+        pageData: { page: page, size: size },
+      })
+    );
+  };
 
   const handleModalSubmit = async () => {
     dispatch(setModalLoading(true));
@@ -580,6 +594,8 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           dataKey: "active_schedules",
         }}
         editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
       />
       <SubmitAndConfirmModal
         responseData={responseData}

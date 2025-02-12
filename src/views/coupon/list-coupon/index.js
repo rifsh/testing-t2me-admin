@@ -52,6 +52,7 @@ const CouponList = () => {
     message,
     editItemId,
     dialogVisible,
+    warningPagination,
     modalLoading,
     responseImpactData,
   } = useSelector((state) => state.coupons);
@@ -273,6 +274,7 @@ const CouponList = () => {
           dataKey: "items",
         }}
         responseData={responseImpactData}
+        pagination={warningPagination}
       />
       <StatusSubmitAndConfirmModal
         editFunction={editCouponStatus}

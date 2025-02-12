@@ -53,7 +53,11 @@ LocationService.addPlace = function (data, action) {
   });
 };
 
-LocationService.editPlace = function (data, action) {
+LocationService.editPlace = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
   const formData = Utils.createFormData(data, {
@@ -65,31 +69,46 @@ LocationService.editPlace = function (data, action) {
     url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
+    params: Utils.filterParams(pageData),
     headers: {
       "Content-Type": "multipart/form-data",
     },
   });
 };
 
-LocationService.editPlaceStatus = function (data, action) {
+LocationService.editPlaceStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.EDIT_PLACE_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
+    params: Utils.filterParams(pageData),
     data: data,
   });
 };
 
-LocationService.editVenueStatus = function (data, action) {
+LocationService.editVenueStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.EDIT_VENUE_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
+    params: Utils.filterParams(pageData),
   });
 };
 
-LocationService.editVenue = function (data, action) {
+LocationService.editVenue = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
   const formData = Utils.createFormData(data, {
@@ -101,6 +120,7 @@ LocationService.editVenue = function (data, action) {
     url: `${ApiConstant.EDIT_VENUE_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
+    params: Utils.filterParams(pageData),
     headers: {
       "Content-Type": "multipart/form-data",
     },

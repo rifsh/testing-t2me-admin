@@ -37,9 +37,9 @@ export const addTax = createAsyncThunk(
 );
 export const editTax = createAsyncThunk(
   "tax/edit",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action ,pageData}, { rejectWithValue }) => {
     try {
-      const response = await TaxService.editTax(data, action);
+      const response = await TaxService.editTax(data, action,pageData);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -49,9 +49,9 @@ export const editTax = createAsyncThunk(
 
 export const editTaxStatus = createAsyncThunk(
   "tax/editStatus",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await TaxService.editTaxStatus(data, action);
+      const response = await TaxService.editTaxStatus(data, action, pageData);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -91,6 +91,7 @@ const taxSlice = createSlice({
     taxValidationDialogVisible: false,
     ValidateData: null,
     pagination: { size: 10, page: 1 },
+    warningPagination: { size: 10, page: 1 },
     editItemId: null,
   },
   reducers: {
@@ -190,8 +191,9 @@ const taxSlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editTax.rejected, (state, action) => {
@@ -208,8 +210,9 @@ const taxSlice = createSlice({
 
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editTaxStatus.rejected, (state, { payload }) => {

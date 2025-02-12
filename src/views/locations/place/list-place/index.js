@@ -41,6 +41,7 @@ const PlaceList = () => {
     pagination,
     dialogVisible,
     modalLoading,
+    warningPagination,
     responseImpactData,
     editItemId,
   } = useSelector((state) => state.locations);
@@ -80,7 +81,6 @@ const PlaceList = () => {
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
     dispatch(setDialogVisible(true));
-
   };
 
   const dropdownMenu = (row) => (
@@ -195,6 +195,7 @@ const PlaceList = () => {
         }}
         editable_status={editable_status}
         responseData={responseImpactData}
+        pagination={warningPagination}
       />
 
       <StatusSubmitAndConfirmModal
