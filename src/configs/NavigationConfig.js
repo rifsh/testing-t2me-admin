@@ -156,7 +156,7 @@ const superAdminDashBoardNavTree = [
           },
           {
             key: "sidenav.payment",
-            path: `${APP_PREFIX_PATH}/schedule/list`,
+            path: `${APP_PREFIX_PATH}/payment/list`,
             title: "sidenav.payment",
             icon: OrderedListOutlined,
             breadcrumb: false,
