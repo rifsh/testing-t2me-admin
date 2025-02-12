@@ -17,7 +17,6 @@ import {
   LeftOutlined,
   WarningOutlined,
   RightOutlined,
-  ClockCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -28,8 +27,6 @@ import isBetween from "dayjs/plugin/isBetween";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchEventDetails } from "store/slices/eventSlice";
 
-import { createDateTimePickerProps } from "../../../utils/time_zone_util";
-import TimeSlots from "./TimeSlote";
 import {
   addNewTimeSlot,
   removeExistingTimeSlot,
@@ -39,14 +36,9 @@ import {
   setTimeSlots,
 } from "store/slices/scheduleSlice";
 import TimezoneClock from "components/util-components/timezone/TimeZoneClock";
-import {
-  clearFieldValue,
-  ScheduleTimeUtil,
-  validateAdStartTime,
-  validateBookingStartTime,
-  validateEventEndTime,
-  validateEventStartTime,
-} from "../utils/ScheduleTime";
+
+import TimeSlots from "./TimeSlote";
+import { ScheduleTimeValidator } from "../utils/ScheduleTimeValidator";
 
 const { Title } = Typography;
 
@@ -58,18 +50,12 @@ dayjs.extend(isSameOrAfter);
 dayjs.extend(isBetween);
 
 export function ScheduleTimeSlots({ form }) {
-  // const [timeSlots, setTimeSlots] = useState({});
-  // const [activeTab, setActiveTab] = useState(null);
-  // const [dates, setDates] = useState([]);
-  // const [slotStatus, setSlotStatus] = useState({});
   const [scrollPosition, setScrollPosition] = useState(0);
   const segmentRef = useRef(null);
-
   const timeZone = dayjs.tz.guess();
   const currentDateInTimeZone = useMemo(() => dayjs().tz(timeZone), [timeZone]);
   const dispatch = useDispatch();
   useEffect(() => {
-    // const eventId = form?.getFieldValue("event_id"); // note--
     const eventId = 7;
     if (eventId) {
       dispatch(fetchEventDetails(eventId));
@@ -107,103 +93,6 @@ export function ScheduleTimeSlots({ form }) {
     dispatch(setSlotStatus(newSlotStatus));
   }, [timeSlots]);
 
-  const validateTimeConflicts = (slots) => {
-    // Ensure slots is an array
-    const slotsArray = Array.isArray(slots) ? slots : [];
-
-    if (!slotsArray || slotsArray.length === 0) return { valid: true };
-
-    const sortedSlots = [...slotsArray]
-      .filter((slot) => slot && slot.start_time)
-      .sort((a, b) => a.start_time.valueOf() - b.start_time.valueOf());
-
-    for (let i = 0; i < sortedSlots.length - 1; i++) {
-      const currentSlot = sortedSlots[i];
-      const nextSlot = sortedSlots[i + 1];
-
-      if (
-        currentSlot.end_time &&
-        nextSlot.start_time &&
-        currentSlot.end_time.isAfter(nextSlot.start_time)
-      ) {
-        return {
-          valid: false,
-          message: `Time conflict between slots: ${currentSlot.start_time.format(
-            "HH:mm"
-          )} - ${currentSlot.end_time.format(
-            "HH:mm"
-          )} and ${nextSlot.start_time.format(
-            "HH:mm"
-          )} - ${nextSlot.end_time?.format("HH:mm")}`,
-        };
-      }
-    }
-
-    return { valid: true };
-  };
-
-  const updateDateRange = (startDate, endDate) => {
-    // if (!validateDateRange(startDate, endDate)) return;
-
-    const newDates = [];
-    let currentDate = dayjs(startDate);
-    const end = dayjs(endDate);
-
-    while (currentDate.isSameOrBefore(end, "day")) {
-      newDates.push(currentDate.format("YYYY-MM-DD"));
-      currentDate = currentDate.add(1, "day");
-    }
-
-    dispatch(setDates(newDates));
-    dispatch(setActiveTab(newDates[0]));
-
-    // Initialize time slots for new dates with array
-    const initialTimeSlots = {};
-    newDates.forEach((date) => {
-      // Ensure we always have an array, even if empty
-      initialTimeSlots[date] = Array.isArray(timeSlots[date])
-        ? timeSlots[date]
-        : [{ start_time: null, end_time: null }];
-    });
-    dispatch(setTimeSlots(initialTimeSlots));
-  };
-
-  const validateDateRange = (startDate, end_timeDate) => {
-    if (!startDate || !end_timeDate) return false;
-
-    if (end_timeDate.isSameOrBefore(startDate)) {
-      message.error("End date must be after start_time date");
-      return false;
-    }
-
-    if (startDate.isBefore(currentDateInTimeZone, "day")) {
-      message.error("Start date cannot be in the past");
-      return false;
-    }
-
-    const daysDiff = end_timeDate.diff(startDate, "days");
-    if (daysDiff > 30) {
-      message.error("Date range cannot exceed 30 days");
-      return false;
-    }
-
-    return true;
-  };
-
-  // const addTimeSlot = (dateStr) => {
-  //   dispatch(addTimeSlot({ dateStr }));
-  // };
-
-  const removeTimeSlot = (dateStr, index) => {
-    dispatch(removeTimeSlot({ dateStr, index }));
-  };
-  const handleAddTimeSlot = (dateStr) => {
-    dispatch(addNewTimeSlot({ dateStr }));
-  };
-
-  const handleRemoveTimeSlot = (dateStr, index) => {
-    dispatch(removeExistingTimeSlot({ dateStr, index }));
-  };
   const applySlotToAllDates = (sourceDate, slotIndex) => {
     if (!sourceDate || !timeSlots[sourceDate]) {
       message.warning("Please set up time slots for the current date first");
@@ -408,6 +297,78 @@ export function ScheduleTimeSlots({ form }) {
     });
   };
 
+  const validateTimeConflicts = (slots) => {
+    // Ensure slots is an array
+    const slotsArray = Array.isArray(slots) ? slots : [];
+
+    if (!slotsArray || slotsArray.length === 0) return { valid: true };
+
+    const sortedSlots = [...slotsArray]
+      .filter((slot) => slot && slot.start_time)
+      .sort((a, b) => a.start_time.valueOf() - b.start_time.valueOf());
+
+    for (let i = 0; i < sortedSlots.length - 1; i++) {
+      const currentSlot = sortedSlots[i];
+      const nextSlot = sortedSlots[i + 1];
+
+      if (
+        currentSlot.end_time &&
+        nextSlot.start_time &&
+        currentSlot.end_time.isAfter(nextSlot.start_time)
+      ) {
+        return {
+          valid: false,
+          message: `Time conflict between slots: ${currentSlot.start_time.format(
+            "HH:mm"
+          )} - ${currentSlot.end_time.format(
+            "HH:mm"
+          )} and ${nextSlot.start_time.format(
+            "HH:mm"
+          )} - ${nextSlot.end_time?.format("HH:mm")}`,
+        };
+      }
+    }
+
+    return { valid: true };
+  };
+
+  const updateDateRange = (startDate, endDate) => {
+    // if (!validateDateRange(startDate, endDate)) return;
+
+    const newDates = [];
+    let currentDate = dayjs(startDate);
+    const end = dayjs(endDate);
+
+    while (currentDate.isSameOrBefore(end, "day")) {
+      newDates.push(currentDate.format("YYYY-MM-DD"));
+      currentDate = currentDate.add(1, "day");
+    }
+
+    dispatch(setDates(newDates));
+    dispatch(setActiveTab(newDates[0]));
+
+    // Initialize time slots for new dates with array
+    const initialTimeSlots = {};
+    newDates.forEach((date) => {
+      // Ensure we always have an array, even if empty
+      initialTimeSlots[date] = Array.isArray(timeSlots[date])
+        ? timeSlots[date]
+        : [{ start_time: null, end_time: null }];
+    });
+    dispatch(setTimeSlots(initialTimeSlots));
+  };
+
+  const removeTimeSlot = (dateStr, index) => {
+    dispatch(removeTimeSlot({ dateStr, index }));
+  };
+  const handleAddTimeSlot = (dateStr) => {
+    dispatch(addNewTimeSlot({ dateStr }));
+  };
+
+  const handleRemoveTimeSlot = (dateStr, index) => {
+    dispatch(removeExistingTimeSlot({ dateStr, index }));
+  };
+
   const getTicketTypeName = (ticketTypeId) => {
     return (
       eventDetails?.event_ticket_structures?.find((t) => t.id === ticketTypeId)
@@ -457,8 +418,6 @@ export function ScheduleTimeSlots({ form }) {
   }, [eventDetails]);
 
   const renderTimeDateTimeSlots = (dateStr) => {
-    
-    
     return (
       <TimeSlots
         dateStr={dateStr}
@@ -471,85 +430,51 @@ export function ScheduleTimeSlots({ form }) {
         getEventTimezone={getEventTimezone}
         onAddSlot={handleAddTimeSlot}
         onRemoveSlot={handleRemoveTimeSlot}
-        onApplyToAll={applySlotToAllDates} />
+        onApplyToAll={applySlotToAllDates}
+      />
     );
   };
 
   const getEventTimezone = () => {
     return eventDetails?.venue?.place?.country?.time_zone || "America/New_York";
   };
-  // const handleDateChange = (field) => (value) => {
-  //   if (value) {
-  //     form.setFieldsValue({
-  //       [field]: value.tz(getEventTimezone()),
-  //     });
-
-  //     // Clear depend_timeent fields when parent field changes
-  //     const fieldOrder = [
-  //       "ad_start_date_time",
-  //       "booking_start_date_time",
-  //       "start_date",
-  //       "end_date",
-  //     ];
-
-  //     const currentIndex = fieldOrder.indexOf(field);
-  //     if (currentIndex !== -1) {
-  //       const fieldsToReset = fieldOrder.slice(currentIndex + 1);
-  //       const resetValues = {};
-  //       fieldsToReset.forEach((fieldName) => {
-  //         resetValues[fieldName] = undefined;
-  //       });
-  //       form.setFieldsValue(resetValues);
-  //     }
-  //     if (field === "end_date" || field === "start_date") {
-  //       handleReset();
-  //       updateDateRange(
-  //         form.getFieldValue("start_date"),
-  //         form.getFieldValue("end_date")
-  //       );
-  //     }
-  //   }
-  // };
-  const handleSubmitScheduleDate = (field, date) => {
-    let validationResult = null;
-
-    if (field === "ad_start_date_time") {
-      validationResult = ScheduleTimeUtil.validateAdStartTime({
-        date,
-        form,
-        timezone: getEventTimezone(),
-      });
-    } else if (field === "booking_start_date_time") {
-      validationResult = ScheduleTimeUtil.validateBookingStartTime({
-        date,
-        form,
-        timezone: getEventTimezone(),
-      });
-    } else if (field === "start_date") {
-      validationResult = ScheduleTimeUtil.validateEventStartTime({
-        date,
-        form,
-        timezone: getEventTimezone(),
-      });
-    } else if (field === "end_date") {
-      validationResult = ScheduleTimeUtil.validateEventEndTime({
-        date,
-        form,
-        timezone: getEventTimezone(),
-      });
-    }
-
-    if (!validationResult.isValid) {
-      console.log("Validation Failed:", validationResult);
-      message.error(validationResult.message);
-      form.setFieldsValue({ [field]: null });
-      ScheduleTimeUtil.clearFieldValue(form, [field]);
+  const handleScheduleDateChange = (field, date, eventType = "change") => {
+    if (eventType === "select") {
       return;
     }
 
+    console.log(`Date ${eventType} for ${field}:`, date);
+    let validationResult = null;
+
+    // Validation check based on field type
+    const validationMap = {
+      ad_start_date_time: ScheduleTimeValidator.validateAdStartTime,
+      booking_start_date_time: ScheduleTimeValidator.validateBookingStartTime,
+      start_date: ScheduleTimeValidator.validateEventStartTime,
+      end_date: ScheduleTimeValidator.validateEventEndTime,
+    };
+
+    const validator = validationMap[field];
+    if (validator) {
+      validationResult = validator({
+        date,
+        form,
+        timezone: getEventTimezone(),
+      });
+    }
+
+    // Handle validation failure
+    if (!validationResult?.isValid) {
+      console.log("Validation Failed:", validationResult);
+      message.error(validationResult.message);
+      form.setFieldsValue({ [field]: null });
+      ScheduleTimeValidator.clearFieldValue(form, [field]);
+      return;
+    }
+
+    // Handle warning cases
     if (validationResult.isWarning) {
       console.log("Warning detected!");
-
       Modal.confirm({
         title: "Warning",
         content: validationResult.message,
@@ -558,7 +483,7 @@ export function ScheduleTimeSlots({ form }) {
         onOk() {
           console.log("User confirmed changes");
           form.setFieldsValue({ [field]: date });
-          ScheduleTimeUtil.clearFieldValue(
+          ScheduleTimeValidator.clearFieldValue(
             form,
             validationResult.clearFields || []
           );
@@ -610,10 +535,10 @@ export function ScheduleTimeSlots({ form }) {
                 showTime={{ format: "HH:mm" }}
                 style={{ width: "100%" }}
                 onSelect={(date) =>
-                  handleSubmitScheduleDate("ad_start_date_time", date)
+                  handleScheduleDateChange("ad_start_date_time", date, "select")
                 }
                 onChange={(date) =>
-                  handleSubmitScheduleDate("ad_start_date_time", date)
+                  handleScheduleDateChange("ad_start_date_time", date, "change")
                 }
                 placeholder="Select ad start time"
               />
@@ -628,15 +553,23 @@ export function ScheduleTimeSlots({ form }) {
             >
               <DatePicker
                 format="YYYY-MM-DD HH:mm"
-                style={{ width: "100%" }}
                 showTime={{ format: "HH:mm" }}
+                style={{ width: "100%" }}
                 onSelect={(date) =>
-                  handleSubmitScheduleDate("booking_start_date_time", date)
+                  handleScheduleDateChange(
+                    "booking_start_date_time",
+                    date,
+                    "select"
+                  )
                 }
                 onChange={(date) =>
-                  handleSubmitScheduleDate("booking_start_date_time", date)
+                  handleScheduleDateChange(
+                    "booking_start_date_time",
+                    date,
+                    "change"
+                  )
                 }
-                placeholder="Select ad start time"
+                placeholder="Select booking start time"
               />
             </Form.Item>
           </Col>
@@ -644,20 +577,19 @@ export function ScheduleTimeSlots({ form }) {
           <Col xs={24} sm={12}>
             <Form.Item
               name="start_date"
-              label="Event Start Time"
+              label="Event Start Date"
               rules={[{ required: true }]}
             >
               <DatePicker
-                format="YYYY-MM-DD HH:mm"
-                showTime={{ format: "HH:mm" }}
+                format="YYYY-MM-DD"
                 style={{ width: "100%" }}
                 onSelect={(date) =>
-                  handleSubmitScheduleDate("start_date", date)
+                  handleScheduleDateChange("start_date", date, "select")
                 }
                 onChange={(date) =>
-                  handleSubmitScheduleDate("start_date", date)
+                  handleScheduleDateChange("start_date", date, "change")
                 }
-                placeholder="Select ad start time"
+                placeholder="Select event start date"
               />
             </Form.Item>
           </Col>
@@ -665,16 +597,19 @@ export function ScheduleTimeSlots({ form }) {
           <Col xs={24} sm={12}>
             <Form.Item
               name="end_date"
-              label="Event End Time"
+              label="Event End Date"
               rules={[{ required: true }]}
             >
               <DatePicker
-                format="YYYY-MM-DD HH:mm"
-                showTime={{ format: "HH:mm" }}
+                format="YYYY-MM-DD"
                 style={{ width: "100%" }}
-                onSelect={(date) => handleSubmitScheduleDate("end_date", date)}
-                onChange={(date) => handleSubmitScheduleDate("end_date", date)}
-                placeholder="Select ad start time"
+                onSelect={(date) =>
+                  handleScheduleDateChange("end_date", date, "select")
+                }
+                onChange={(date) =>
+                  handleScheduleDateChange("end_date", date, "change")
+                }
+                placeholder="Select event end date"
               />
             </Form.Item>
           </Col>
