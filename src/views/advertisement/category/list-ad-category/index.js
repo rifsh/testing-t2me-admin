@@ -47,6 +47,7 @@ const CategoryList = () => {
     modalLoading,
     dialogVisible,
     responseImpactData,
+    warningPagination,
     message,
   } = useSelector((state) => state.adCategory);
   const { responseData } = useSelector((state) => state.modalSlice);
@@ -169,6 +170,7 @@ const CategoryList = () => {
           dataKey: "active_schedules",
         },
         responseData: responseImpactData,
+        pagination: warningPagination,
       };
     }
   };

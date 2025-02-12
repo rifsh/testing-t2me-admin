@@ -21,7 +21,11 @@ OfferService.addOffer = function (data, action) {
   });
 };
 
-OfferService.editOffer = function (data, action) {
+OfferService.editOffer = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   console.log(data, "DATA IN SERVICE");
 
   const encodedAction = encodeURIComponent(handleAction(action));
@@ -33,17 +37,23 @@ OfferService.editOffer = function (data, action) {
     url: `${ApiConstant.OFFER_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
+    params: Utils.filterParams(pageData),
     headers: {
       "Content-Type": "multipart/form-data",
     },
   });
 };
 
-OfferService.editOfferStatus = function (data, action) {
+OfferService.editOfferStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.OFFER_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
+    params: Utils.filterParams(pageData),
     data: data,
   });
 };

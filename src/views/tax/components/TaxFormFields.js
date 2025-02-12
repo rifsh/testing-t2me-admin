@@ -77,7 +77,9 @@ const TaxFormFields = ({ mode, tax }) => {
     responseMessage,
     selectedTax,
     dialogVisible,
+    warningPagination,
     responseImpactData,
+
     message: warningMessage,
     modalLoading,
     editable_status,
@@ -150,7 +152,11 @@ const TaxFormFields = ({ mode, tax }) => {
             dispatch(setPlaceValidationDialogVisible(true));
           } else if (response.data && response.data[0]?.validation_status) {
             const resultAction = await dispatch(
-              editTax({ data, action: ActionType.WARNING })
+              editTax({
+                data,
+                action: ActionType.WARNING,
+                pageData: { page: 1, size: 10 },
+              })
             );
 
             if (editTax.fulfilled.match(resultAction)) {
@@ -167,7 +173,11 @@ const TaxFormFields = ({ mode, tax }) => {
             dispatch(setPlaceValidationDialogVisible(true));
           } else if (response.data && response.data[0]?.validation_status) {
             const resultAction = await dispatch(
-              editTax({ data, action: ActionType.WARNING })
+              editTax({
+                data,
+                action: ActionType.WARNING,
+                pageData: { page: 1, size: 10 },
+              })
             );
 
             if (editTax.fulfilled.match(resultAction)) {
@@ -211,6 +221,19 @@ const TaxFormFields = ({ mode, tax }) => {
         console.error("Validation Failed:", errorInfo);
       }
     }
+  };
+  const handleWarningPagination = (page, size) => {
+    console.log("------------------------");
+
+    console.log("CHANIGN...........");
+
+    dispatch(
+      editTax({
+        data: selectedTax,
+        action: ActionType.WARNING,
+        pageData: { page: page, size: size },
+      })
+    );
   };
   const handleValidationModalCancel = () => {
     dispatch(setPlaceValidationDialogVisible(false));
@@ -397,6 +420,8 @@ const TaxFormFields = ({ mode, tax }) => {
           dataKey: "items",
         }}
         editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
       />
 
       <SubmitAndConfirmModal

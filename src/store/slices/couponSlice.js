@@ -16,6 +16,7 @@ export const initialState = {
   editItemId: null,
   selectedCoupon: null,
   responseImpactData: null,
+  warningPagination: { size: 10, page: 1 },
   pagination: { size: 10, page: 1 },
 };
 export const fetchAllCoupons = createAsyncThunk(
@@ -61,10 +62,10 @@ export const addCoupon = createAsyncThunk(
 
 export const editCoupon = createAsyncThunk(
   "coupon/edit",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
       console.log(data, "DATA IN SERVICE");
-      const response = await CouponService.editCoupon(data, action);
+      const response = await CouponService.editCoupon(data, action, pageData);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -74,9 +75,13 @@ export const editCoupon = createAsyncThunk(
 
 export const editCouponStatus = createAsyncThunk(
   "coupon/editStatus",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await CouponService.editCouponStatus(data, action);
+      const response = await CouponService.editCouponStatus(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -146,8 +151,9 @@ const couponSlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editCoupon.rejected, (state, action) => {
@@ -164,8 +170,9 @@ const couponSlice = createSlice({
 
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editCouponStatus.rejected, (state, { payload }) => {

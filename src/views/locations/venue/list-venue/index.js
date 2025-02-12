@@ -50,6 +50,7 @@ const VenueList = () => {
     message,
     dialogVisible,
     modalLoading,
+    warningPagination,
     editItemId,
     responseImpactData,
   } = useSelector((state) => state.locations);
@@ -241,10 +242,11 @@ const VenueList = () => {
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules[items]",
+          dataKey: "items",
         }}
         editable_status={editable_status}
         responseData={responseImpactData}
+        pagination={warningPagination}
       />
 
       <StatusSubmitAndConfirmModal

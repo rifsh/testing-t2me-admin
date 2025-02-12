@@ -26,6 +26,7 @@ const initialState = {
   editable_status: null,
   singleAdBanner: null,
   singleAdSchedule: null,
+  warningPagination: { size: 10, page: 1 },
   modalVisible: false,
   selectedMedia: null,
   editItemId: null,
@@ -117,11 +118,15 @@ export const createAdSchedule = createAsyncThunk(
 );
 export const updateAdBanner = createAsyncThunk(
   "advertisement/updateAdBanners",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
       console.log("DATA IN SLICE-----", data);
 
-      const response = await AdvertisementService.updateAdBanner(data, action);
+      const response = await AdvertisementService.updateAdBanner(
+        data,
+        action,
+        pageData
+      );
 
       return response;
     } catch (error) {
@@ -131,11 +136,12 @@ export const updateAdBanner = createAsyncThunk(
 );
 export const updateAdBannerStatus = createAsyncThunk(
   "advertisement/updateAdBannerStatus",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
       const response = await AdvertisementService.updateBannerStatus(
         data,
-        action
+        action,
+        pageData
       );
       return response;
     } catch (error) {
@@ -290,8 +296,9 @@ const AdvertisementSlice = createSlice({
 
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(updateAdBannerStatus.rejected, (state, { payload }) => {
@@ -309,8 +316,9 @@ const AdvertisementSlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(updateAdBanner.rejected, (state, { payload }) => {

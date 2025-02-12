@@ -32,6 +32,7 @@ export const initialState = {
   selectedCountry: null,
   createPlaceLoading: false,
   responseData: null,
+  warningPagination: { size: 10, page: 1 },
   responseMessage: null,
   editable_status: null,
   validationStatus: false,
@@ -73,9 +74,9 @@ export const createPlace = createAsyncThunk(
 );
 export const editPlace = createAsyncThunk(
   "place/edit",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await LocationService.editPlace(data, action);
+      const response = await LocationService.editPlace(data, action, pageData);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -84,9 +85,13 @@ export const editPlace = createAsyncThunk(
 );
 export const editPlaceStatus = createAsyncThunk(
   "place/editStatus",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await LocationService.editPlaceStatus(data, action);
+      const response = await LocationService.editPlaceStatus(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -95,9 +100,13 @@ export const editPlaceStatus = createAsyncThunk(
 );
 export const editVenueStatus = createAsyncThunk(
   "venue/editStatus",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await LocationService.editVenueStatus(data, action);
+      const response = await LocationService.editVenueStatus(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -106,9 +115,9 @@ export const editVenueStatus = createAsyncThunk(
 );
 export const editVenue = createAsyncThunk(
   "venue/edit",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await LocationService.editVenue(data, action);
+      const response = await LocationService.editVenue(data, action, pageData);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -475,8 +484,9 @@ const locationSlice = createSlice({
 
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editPlace.rejected, (state, { payload }) => {
@@ -493,8 +503,9 @@ const locationSlice = createSlice({
 
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editPlaceStatus.rejected, (state, { payload }) => {
@@ -510,8 +521,9 @@ const locationSlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editVenue.rejected, (state, { payload }) => {
@@ -527,8 +539,9 @@ const locationSlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editVenueStatus.rejected, (state, { payload }) => {
