@@ -40,15 +40,15 @@ class TimeSlotValidator {
         timeValues;
 
       // 4. Check if time is already used across all dates
-      const timeUsageValidation = this.validateTimeUsageAcrossDates(
-        timeSlots,
-        selectedTime,
-        dateStr,
-        currentIndex
-      );
-      if (!timeUsageValidation.isValid) {
-        return timeUsageValidation;
-      }
+      // const timeUsageValidation = this.validateTimeUsageAcrossDates(
+      //   timeSlots,
+      //   selectedTime,
+      //   dateStr,
+      //   currentIndex
+      // );
+      // if (!timeUsageValidation.isValid) {
+      //   return timeUsageValidation;
+      // }
 
       // 5. Start/End Time Relationship Validation
       const relationshipValidation = this.validateTimeRelationship(

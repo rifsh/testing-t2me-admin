@@ -299,8 +299,8 @@ const MultyStepScheduleForm = ({ mode, id }) => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        // return <ScheduleDetails form={form} />; // note--
-        return <ScheduleTimeSlots form={form} mode={mode} />;
+        return <ScheduleDetails form={form} />; 
+        // return <ScheduleTimeSlots form={form} mode={mode} />;
       case 2:
         return <ScheduleTimeSlots form={form} mode={mode} />;
       case 3:
