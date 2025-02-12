@@ -38,6 +38,8 @@ const OfferForm = ({ mode, offer }) => {
     editable_status,
     selectedOffer,
     responseImpactData,
+    warningPagination,
+    submitPagination,
     message: warningMessage,
     modalLoading,
   } = useSelector((state) => state.offers);
@@ -101,7 +103,7 @@ const OfferForm = ({ mode, offer }) => {
         };
         console.log("Edit Data:", editData);
         const resultAction = await dispatch(
-          editOffer({ data:editData, action: ActionType.WARNING })
+          editOffer({ data: editData, action: ActionType.WARNING })
         );
 
         if (editOffer.fulfilled.match(resultAction)) {
@@ -126,6 +128,19 @@ const OfferForm = ({ mode, offer }) => {
       console.error("Validation Failed:", info);
       message.error("Please enter all required fields.");
     }
+  };
+  const handleWarningPagination = (page, size) => {
+    console.log("------------------------");
+
+    console.log("CHANIGN...........");
+
+    dispatch(
+      editOffer({
+        data: selectedOffer,
+        action: ActionType.WARNING,
+        pageData: { page: page, size: size },
+      })
+    );
   };
 
   const handleModalSubmit = async () => {
@@ -213,12 +228,15 @@ const OfferForm = ({ mode, offer }) => {
           dataKey: "items",
         }}
         editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
       />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? editOffer : addOffer}
         navigationPath={`${APP_PREFIX_PATH}/offer/list`}
         responseMessage={responseMessage}
+        pagination={submitPagination}
       />
     </>
   );

@@ -38,6 +38,7 @@ const OfferList = () => {
     message,
     editItemId,
     dialogVisible,
+    warningPagination,
     modalLoading,
     responseImpactData,
   } = useSelector((state) => state.offers);
@@ -255,6 +256,7 @@ const OfferList = () => {
         }}
         editable_status={editable_status}
         responseData={responseImpactData}
+        pagination={warningPagination}
       />
       <StatusSubmitAndConfirmModal
         editFunction={editOfferStatus}

@@ -6,11 +6,11 @@ import { handleAction } from "utils/api/warning-submit-util";
 const EventsService = {};
 
 EventsService.addEvent = function (data, action) {
-  console.log(data, 'event dataaaaaa=======================');
+  console.log(data, "event dataaaaaa=======================");
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
 
   return fetch({
@@ -64,29 +64,38 @@ EventsService.fetchEventSupportAvailable = function (userId) {
     method: "get",
   });
 };
-EventsService.updateEvent = function (data, action) {
+EventsService.updateEvent = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
   return fetch({
     url: `${ApiConstant.EDIT_EVENT_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
+    params: Utils.filterParams(pageData),
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
-EventsService.editEventStatus = function (data, action) {
+EventsService.editEventStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.EDIT_EVENT_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
+    params: Utils.filterParams(pageData),
   });
 };
-
 
 export default EventsService;

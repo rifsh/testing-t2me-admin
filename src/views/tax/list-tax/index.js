@@ -47,6 +47,7 @@ const TaxList = () => {
     loading,
     editable_status,
     pagination,
+    warningPagination,
     message,
     dialogVisible,
     modalLoading,
@@ -75,6 +76,7 @@ const TaxList = () => {
   const handlePagination = (page, size) => {
     dispatch(fetchAllTax({ page: page, size: size }));
   };
+
   const handleEditTax = (id) => {
     dispatch(setEditItemId(id));
     dispatch(setTaxDialogVisible(true));
@@ -221,6 +223,8 @@ const TaxList = () => {
         }}
         editable_status={editable_status}
         responseData={responseImpactData}
+        pagination={warningPagination}
+        
       />
       <StatusSubmitAndConfirmModal
         editFunction={editTaxStatus}

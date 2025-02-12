@@ -33,8 +33,8 @@ AdvertisementService.addAdSchedule = function (data, action) {
   console.log("----------------", data);
 
   const formData = Utils.createFormData(data, {
-    fileKeys: ['media_path'],
-    skipEmpty: true
+    fileKeys: ["media_path"],
+    skipEmpty: true,
   });
 
   console.log("----------------", formData);
@@ -43,7 +43,7 @@ AdvertisementService.addAdSchedule = function (data, action) {
     method: "POST",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
@@ -52,8 +52,8 @@ AdvertisementService.addAdBanner = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
   const formData = Utils.createFormData(data, {
-    fileKeys: ['media_path'],
-    skipEmpty: true
+    fileKeys: ["media_path"],
+    skipEmpty: true,
   });
   if (data.media_path && Array.isArray(data.media_path)) {
     data.media_path.forEach((image) => {
@@ -63,25 +63,28 @@ AdvertisementService.addAdBanner = function (data, action) {
 
   console.log("----------------", formData);
 
-
   return fetch({
     url: `${ApiConstant.ADVERTISEMENT_BANNER_URL}?action=${encodedAction}`,
     method: "POST",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
 
-AdvertisementService.updateAdBanner = function (data, action) {
+AdvertisementService.updateAdBanner = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  console.log("DATA in SERVICE--------",data);
-  
+  console.log("DATA in SERVICE--------", data);
+
   const formData = Utils.createFormData(data, {
-    fileKeys: ['media_path'],
-    skipEmpty: true
+    fileKeys: ["media_path"],
+    skipEmpty: true,
   });
   if (data.media_path && Array.isArray(data.media_path)) {
     data.media_path.forEach((image) => {
@@ -93,21 +96,25 @@ AdvertisementService.updateAdBanner = function (data, action) {
     url: `${ApiConstant.ADVERTISEMENT_BANNER_UPDATE_URL}?advertisement_id=${data.id}&action=${encodedAction}`,
     method: "put",
     data: formData,
+    params: Utils.filterParams(pageData),
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
 
-AdvertisementService.updateBannerStatus = function (data, action) {
+AdvertisementService.updateBannerStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.ADVERTISEMENT_BANNER_STATUS_UPDATE_URL}?advertisement_id=${data.id}&action=${encodedAction}`,
     method: "put",
     data: data,
+    params: Utils.filterParams(pageData),
   });
 };
-
-
 
 export default AdvertisementService;

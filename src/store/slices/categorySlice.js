@@ -25,6 +25,7 @@ const initialState = {
   editable_status: null,
   singleCategory: null,
   singleSubcategory: null,
+  warningPagination: { page: 1, size: 10 },
   editItemId: null,
   selectedCat: null,
   validationStatus: false,
@@ -171,9 +172,13 @@ export const addSubCategory = createAsyncThunk(
 );
 export const editCategory = createAsyncThunk(
   "category/editCategory",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await CategoryService.editCategory(data, action);
+      const response = await CategoryService.editCategory(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -182,9 +187,13 @@ export const editCategory = createAsyncThunk(
 );
 export const editCategoryStatus = createAsyncThunk(
   "category/editCategoryStatus",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await CategoryService.editCatStatus(data, action);
+      const response = await CategoryService.editCatStatus(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -193,9 +202,13 @@ export const editCategoryStatus = createAsyncThunk(
 );
 export const editSubCategory = createAsyncThunk(
   "category/editSubCategory",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await CategoryService.editSubCategory(data, action);
+      const response = await CategoryService.editSubCategory(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to update category");
@@ -204,9 +217,13 @@ export const editSubCategory = createAsyncThunk(
 );
 export const editSubCategoryStatus = createAsyncThunk(
   "category/editSubCategoryStatus",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await CategoryService.editSubCatStatus(data, action);
+      const response = await CategoryService.editSubCatStatus(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -426,8 +443,9 @@ const categorySlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editCategory.rejected, (state, action) => {
@@ -444,8 +462,9 @@ const categorySlice = createSlice({
 
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editCategoryStatus.rejected, (state, { payload }) => {
@@ -462,8 +481,9 @@ const categorySlice = createSlice({
 
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editSubCategoryStatus.rejected, (state, { payload }) => {
@@ -479,8 +499,9 @@ const categorySlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editSubCategory.rejected, (state, { payload }) => {

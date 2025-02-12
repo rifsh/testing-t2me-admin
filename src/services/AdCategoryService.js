@@ -13,7 +13,11 @@ AdCategoryService.fetchAdCategory = function (pageData) {
   });
 };
 
-AdCategoryService.updateAdCategory = function (data, action) {
+AdCategoryService.updateAdCategory = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
@@ -23,18 +27,24 @@ AdCategoryService.updateAdCategory = function (data, action) {
     url: `${ApiConstant.ADVERTISEMENT_CATEGORY_UPDATE_URL}?ad_category_id=${data.id}&action=${encodedAction}`,
     method: "put",
     data: formData,
+    params: Utils.filterParams(pageData),
     headers: {
       "Content-Type": "multipart/form-data",
     },
   });
 };
 
-AdCategoryService.updateAdStatus = function (data, action) {
+AdCategoryService.updateAdStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.ADVERTISEMENT_CATEGORY_STATUS_UPDATE_URL}?ad_category_id=${data.id}&action=${encodedAction}`,
     method: "put",
     data: data,
+    params: Utils.filterParams(pageData),
   });
 };
 

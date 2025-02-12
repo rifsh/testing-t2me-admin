@@ -17,6 +17,8 @@ export const initialState = {
   responseImpactData: null,
   selectedOffer: null,
   offerDetails: null,
+  warningPagination: { size: 10, page: 1 },
+  submitPagination: { size: 10, page: 1 },
   ValidateData: null,
   offerCouponValidationDialogVisible: false,
   validationStatus: false,
@@ -78,10 +80,10 @@ export const addOffer = createAsyncThunk(
 
 export const editOffer = createAsyncThunk(
   "offer/edit",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
       console.log(data, "DATA IN SERVICE");
-      const response = await OfferService.editOffer(data, action);
+      const response = await OfferService.editOffer(data, action, pageData);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -91,9 +93,13 @@ export const editOffer = createAsyncThunk(
 
 export const editOfferStatus = createAsyncThunk(
   "offer/editStatus",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await OfferService.editOfferStatus(data, action);
+      const response = await OfferService.editOfferStatus(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -157,9 +163,9 @@ const offerSlice = createSlice({
         if (payload.message === "warning") {
           state.validationStatus = false;
           state.message = payload.status.message;
-          state.ValidateData = payload.status.data;
-          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
-          state.editable_status = payload.status.editable_status;
+          state.ValidateData = payload.status?.data;
+          console.log(payload.status?.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status?.editable_status;
         } else if (payload.data) {
           state.validationStatus = payload.data[0].validation_status;
           if (payload.status) {
@@ -177,11 +183,15 @@ const offerSlice = createSlice({
       .addCase(editOffer.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.responseData = payload.data;
+        if (payload.data?.list_of_updated_Schedules) {
+          state.submitPagination = payload.data?.list_of_updated_Schedules;
+        }
         if (payload.status) {
           state.message = payload.status.message;
           state.responseMessage = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editOffer.rejected, (state, action) => {
@@ -199,8 +209,9 @@ const offerSlice = createSlice({
         if (payload.status) {
           state.message = payload.status.message;
           state.responseMessage = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(editOfferStatus.rejected, (state, { payload }) => {

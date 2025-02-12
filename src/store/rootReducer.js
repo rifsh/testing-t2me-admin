@@ -20,6 +20,7 @@ import tax from "./slices/taxSlice";
 import layout from "./slices/layoutSlice"; 
 
 import issue from "./slices/IssueSlice";
+import payment from "./slices/paymentSlice"; 
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -42,6 +43,7 @@ const rootReducer = (asyncReducers = {}) => {
       adCategory,
       advertisement,
       organizerUpdates,
+      payment,
       ...asyncReducers, 
     });
 

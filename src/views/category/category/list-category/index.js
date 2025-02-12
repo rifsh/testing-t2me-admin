@@ -56,6 +56,7 @@ const CategoryList = () => {
     editItemId,
     dialogVisible,
     modalLoading,
+    warningPagination,
     activeTab,
     responseImpactData,
   } = useSelector((state) => state.category);
@@ -221,9 +222,10 @@ const CategoryList = () => {
         pageData: { page: 1, size: 10 },
         tableConfig: {
           title: "Active Schedules",
-          dataKey: "active_schedules",
+          dataKey: "items",
         },
         responseData: responseImpactData,
+        pagination: warningPagination,
       };
     }
     return {
@@ -234,9 +236,10 @@ const CategoryList = () => {
       pageData: { categoryId: null, data: { page: 1, size: 10 } },
       tableConfig: {
         title: "Active Schedules",
-        dataKey: "active_schedules",
+        dataKey: "items",
       },
       responseData: responseImpactData,
+      pagination: warningPagination,
     };
   };
 

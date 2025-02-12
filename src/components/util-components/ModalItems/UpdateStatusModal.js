@@ -26,6 +26,7 @@ const UpdateStatusModal = ({
     title: "Submission Details",
     dataKey: "",
   },
+  pagination,
 }) => {
   const dispatch = useDispatch();
   const { statusDialogVisible, selectedItem, modalLoading } = useSelector(
@@ -58,10 +59,26 @@ const UpdateStatusModal = ({
         editFunction({
           data: selectedItem,
           action: ActionType.WARNING,
+          pageData: { page: 1, size: 10 },
         })
       );
     }
   }, [selectedItem, statusDialogVisible]);
+
+  const handleWarningPagination = (page, size) => {
+    console.log("------------------------");
+    if (selectedItem && statusDialogVisible) {
+      console.log("CHANIGN...........");
+
+      dispatch(
+        editFunction({
+          data: selectedItem,
+          action: ActionType.WARNING,
+          pageData: { page: page, size: size },
+        })
+      );
+    }
+  };
 
   // const handleModalSubmit = async () => {
   //   dispatch(setModalLoading(true));
@@ -88,6 +105,7 @@ const UpdateStatusModal = ({
         editFunction({
           data: selectedItem,
           action: ActionType.SUBMIT,
+          pageData: { page: 1, size: 10 },
         })
       );
 
@@ -109,7 +127,6 @@ const UpdateStatusModal = ({
 
   const handleModalCancel = () => {
     dispatch(resetStatusModalState());
-
     message.warning(onCloseMessage);
   };
 
@@ -131,6 +148,8 @@ const UpdateStatusModal = ({
       loading={modalLoading}
       tableConfig={tableConfig}
       responseData={responseData}
+      pagination={pagination}
+      onPaginationChange={handleWarningPagination}
     />
   );
 };

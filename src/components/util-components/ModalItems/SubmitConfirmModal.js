@@ -18,13 +18,13 @@ export const SubmitAndConfirmModal = ({
   onSubmitMessage = TextConstants.ItemAddedSuccessfully,
   onCloseMessage = TextConstants.ItemAddCanceled,
   responseMessage,
+  pagination,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { responseDialogVisible, selectedSubmitItem, modalLoading } = useSelector(
-    (state) => state.modalSlice
-  );
+  const { responseDialogVisible, selectedSubmitItem, modalLoading } =
+    useSelector((state) => state.modalSlice);
 
   useEffect(() => {
     if (selectedSubmitItem) {
@@ -40,6 +40,19 @@ export const SubmitAndConfirmModal = ({
       });
     }
   }, [selectedSubmitItem, dispatch, addFunction]);
+
+  const handleSubmitPagination = (page, size) => {
+    console.log("------------------------");
+    if (selectedSubmitItem) {
+      dispatch(
+        addFunction({
+          data: selectedSubmitItem,
+          action: ActionType.SUBMIT,
+          pageData: { page: page, size: size },
+        })
+      );
+    }
+  };
 
   const handleModalSubmit = async () => {
     try {
@@ -87,6 +100,8 @@ export const SubmitAndConfirmModal = ({
       confirmText={TextConstants.ConfirmItem}
       cancelText={TextConstants.Cancel}
       loading={modalLoading}
+      pagination={pagination}
+      onPaginationChange={handleSubmitPagination}
     />
   );
 };

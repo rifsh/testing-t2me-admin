@@ -42,6 +42,7 @@ const EventsList = () => {
     loading,
     dialogVisible,
     modalLoading,
+    warningPagination,
     editItemId,
     responseImpactData,
   } = useSelector((state) => state.event);
@@ -264,6 +265,7 @@ const EventsList = () => {
           dataKey: "items",
         }}
         pageData={{ page: 1, size: 10 }}
+        pagination={warningPagination}
       />
       <StatusSubmitAndConfirmModal
         editFunction={editEventStatus}

@@ -22,6 +22,7 @@ const initialState = {
   adCategoryValidationDialogVisible: false,
   singleCategory: null,
   responseImpactData: null,
+  warningPagination: { size: 10, page: 1 },
   editItemId: null,
 };
 
@@ -57,9 +58,13 @@ export const validateAdCategory = createAsyncThunk(
 
 export const updateAdCategory = createAsyncThunk(
   "adCategory/edit",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await AdCategoryService.updateAdCategory(data, action);
+      const response = await AdCategoryService.updateAdCategory(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to update category");
@@ -69,9 +74,13 @@ export const updateAdCategory = createAsyncThunk(
 
 export const updateAdCategoryStatus = createAsyncThunk(
   "adCategoryStatus/edit",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await AdCategoryService.updateAdStatus(data, action);
+      const response = await AdCategoryService.updateAdStatus(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -148,9 +157,9 @@ const AdcategorySlice = createSlice({
         if (payload.message === "warning") {
           state.validationStatus = false;
           state.message = payload.status.message;
-          state.ValidateData = payload.status.data;
-          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
-          state.editable_status = payload.status.editable_status;
+          state.ValidateData = payload.status?.data;
+          console.log(payload.status?.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status?.editable_status;
         } else if (payload.data) {
           state.validationStatus = payload.data[0].validation_status;
           if (payload.status) {
@@ -199,8 +208,9 @@ const AdcategorySlice = createSlice({
         state.responseData = payload.data;
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(updateAdCategory.rejected, (state, { payload }) => {
@@ -217,8 +227,9 @@ const AdcategorySlice = createSlice({
 
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseImpactData = payload.status.data.active_schedules;
-          state.editable_status = payload.status.editable_status;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(updateAdCategoryStatus.rejected, (state, { payload }) => {

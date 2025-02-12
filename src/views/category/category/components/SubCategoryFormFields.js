@@ -66,6 +66,7 @@ const SubCategoryFormFields = ({ mode, category }) => {
     selectedCat,
     editable_status,
     ValidateData,
+    warningPagination,
     validationStatus,
     categoryValidationDialogVisible,
     message,
@@ -185,6 +186,19 @@ const SubCategoryFormFields = ({ mode, category }) => {
   const handleModalCancel = () => {
     dispatch(setCatDialogVisible(false));
   };
+  const handleWarningPagination = (page, size) => {
+    console.log("------------------------");
+
+    console.log("CHANIGN...........");
+
+    dispatch(
+      editSubCategory({
+        data: selectedCat,
+        action: ActionType.WARNING,
+        pageData: { page: page, size: size },
+      })
+    );
+  };
 
   // const filterOption = (input, option) => {
   //   return option.children.toLowerCase().indexOf(input.toLowerCase()) >=0;
@@ -294,6 +308,8 @@ const SubCategoryFormFields = ({ mode, category }) => {
           dataKey: "items",
         }}
         editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
       />
 
       <SubmitAndConfirmModal
