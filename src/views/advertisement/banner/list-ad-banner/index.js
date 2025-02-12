@@ -38,6 +38,7 @@ const AdBannerlist = () => {
     dialogVisible,
     modalLoading,
     message,
+    warningPagination,
     responseImpactData,
     editable_status,
   } = useSelector((state) => state.advertisement);
@@ -191,6 +192,7 @@ const AdBannerlist = () => {
         dataKey: "active_schedules",
       },
       responseData: responseImpactData,
+      pagination: warningPagination,
     };
   };
 

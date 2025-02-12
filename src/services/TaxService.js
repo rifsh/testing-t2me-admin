@@ -13,7 +13,7 @@ TaxService.addTax = function (data, action) {
     data: data,
   });
 };
-TaxService.editTax = function (data, action) {
+TaxService.editTax = function (data, action, pageData = { page: 1, size: 10 }) {
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
@@ -23,18 +23,24 @@ TaxService.editTax = function (data, action) {
     url: `${ApiConstant.TAX_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
+    params: Utils.filterParams(pageData),
     headers: {
       "Content-Type": "multipart/form-data",
     },
   });
 };
 
-TaxService.editTaxStatus = function (data, action) {
+TaxService.editTaxStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.TAX_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
+    params: Utils.filterParams(pageData),
   });
 };
 

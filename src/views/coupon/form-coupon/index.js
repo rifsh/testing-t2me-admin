@@ -35,6 +35,7 @@ const CouponForm = ({ mode, coupon }) => {
     dialogVisible,
     editable_status,
     selectedCoupon,
+    warningPagination,
     responseImpactData,
     message: warningMessage,
     modalLoading,
@@ -128,6 +129,19 @@ const CouponForm = ({ mode, coupon }) => {
   const handleModalCancel = () => {
     dispatch(setCouponDialogVisible(false));
   };
+  const handleWarningPagination = (page, size) => {
+    console.log("------------------------");
+
+    console.log("CHANIGN...........");
+
+    dispatch(
+      editCoupon({
+        data: selectedCoupon,
+        action: ActionType.WARNING,
+        pageData: { page: page, size: size },
+      })
+    );
+  };
 
   return (
     <>
@@ -206,6 +220,8 @@ const CouponForm = ({ mode, coupon }) => {
           dataKey: "items",
         }}
         editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
       />
       <SubmitAndConfirmModal
         responseData={responseData}

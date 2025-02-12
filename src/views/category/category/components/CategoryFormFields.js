@@ -1,6 +1,23 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, message, Upload, Typography } from "antd";
-import { addCategory, updateCategory, editCategory, setCatDialogVisible, setCatModalLoading,setSelectedCatDetails } from "store/slices/categorySlice";
+import {
+  Input,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  message,
+  Upload,
+  Typography,
+} from "antd";
+import {
+  addCategory,
+  updateCategory,
+  editCategory,
+  setCatDialogVisible,
+  setCatModalLoading,
+  setSelectedCatDetails,
+} from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -8,9 +25,13 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
-import { SupportImageFormat, SupportFormatContent, ResolutionByServices } from "constants/SupportFileConstants";
+import {
+  SupportImageFormat,
+  SupportFormatContent,
+  ResolutionByServices,
+} from "constants/SupportFileConstants";
 import Utils from "utils/index";
-import LoadingOverlay from "components/util-components/Loader/index"
+import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
 
@@ -30,13 +51,19 @@ const CategoryFormFields = ({ mode, category }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { loading, error, responseData, responseMessage, dialogVisible, responseImpactData,
+  const {
+    loading,
+    error,
+    responseData,
+    responseMessage,
+    dialogVisible,
+    responseImpactData,
     message: warningMessage,
     selectedCat,
     editable_status,
-    modalLoading, } = useSelector(
-      (state) => state.category
-    );
+    warningPagination,
+    modalLoading,
+  } = useSelector((state) => state.category);
 
   // Handle error message
   useEffect(() => {
@@ -54,16 +81,17 @@ const CategoryFormFields = ({ mode, category }) => {
       form.setFieldsValue({
         name: category.name,
         description: category.description,
-        thumbnail_image: category.thumbnail_image && category.thumbnail_image !== "images"
-          ? [
-            {
-              uid: "-1",
-              name: category.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: category.thumbnail_image,
-            },
-          ]
-          : [],
+        thumbnail_image:
+          category.thumbnail_image && category.thumbnail_image !== "images"
+            ? [
+                {
+                  uid: "-1",
+                  name: category.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: category.thumbnail_image,
+                },
+              ]
+            : [],
       });
     }
   }, [mode, category, form]);
@@ -93,17 +121,14 @@ const CategoryFormFields = ({ mode, category }) => {
         //   navigate(`${APP_PREFIX_PATH}/category/list`);
         // }
       } else if (mode === EDIT) {
-
-
-
         const data = {
           ...values,
-          id: category.id
+          id: category.id,
         };
         console.log("Edit Data:", data);
 
         const resultAction = await dispatch(
-          editCategory({ data, action: ActionType.WARNING, })
+          editCategory({ data, action: ActionType.WARNING })
         );
 
         if (editCategory.fulfilled.match(resultAction)) {
@@ -130,7 +155,19 @@ const CategoryFormFields = ({ mode, category }) => {
   const handleModalCancel = () => {
     dispatch(setCatDialogVisible(false));
   };
+  const handleWarningPagination = (page, size) => {
+    console.log("------------------------");
 
+    console.log("CHANIGN...........");
+
+    dispatch(
+      editCategory({
+        data: selectedCat,
+        action: ActionType.WARNING,
+        pageData: { page: page, size: size },
+      })
+    );
+  };
 
   return (
     <Row gutter={16}>
@@ -163,20 +200,21 @@ const CategoryFormFields = ({ mode, category }) => {
                 listType="picture"
                 maxCount={1}
                 // beforeUpload={handleBeforeUpload}
-                beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
-                accept={`.${SupportImageFormat.join(',.')}`}
+                beforeUpload={(file) =>
+                  Utils.handleBeforeUpload(file, ResolutionByServices.place)
+                }
+                accept={`.${SupportImageFormat.join(",.")}`}
               >
                 <Button icon={<UploadOutlined />}>Click to upload</Button>
               </Upload>
-
             </Form.Item>
             <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
-              {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
-              {" "}
+              {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
+              &{" resolution "}
+              {ResolutionByServices.place} pixels.{" "}
             </Text>
             <div
               style={{
@@ -195,9 +233,7 @@ const CategoryFormFields = ({ mode, category }) => {
           </Form>
         </Card>
       </Col>
-      <LoadingOverlay
-        loading={loading}
-      />
+      <LoadingOverlay loading={loading} />
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
@@ -211,9 +247,11 @@ const CategoryFormFields = ({ mode, category }) => {
         loading={modalLoading}
         tableConfig={{
           title: "Active Schedules",
-          dataKey: "active_schedules"
+          dataKey: "items",
         }}
         editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
       />
       <SubmitAndConfirmModal
         responseData={responseData}
