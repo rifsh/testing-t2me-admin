@@ -8,6 +8,7 @@ import {
   resetSchedule,
   setActiveTab,
   setDates,
+  setScheduleSubmitData,
   setSlotStatus,
   setTimeSlots,
 } from "store/slices/scheduleSlice";
@@ -22,12 +23,20 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import dayjs from "dayjs";
 import LoadingOverlay from "components/util-components/Loader/index";
 
+import ConfirmationPage from "../components/Confrimation";
+
 const MultyStepScheduleForm = ({ mode, id }) => {
-  const steps = ["Schedule Details", "Time Slots", "Confirmation"];
+  const steps = [
+    "Schedule Details",
+    "Time Slots",
+    "Coupon & Offer",
+    "Confirmation",
+  ];
 
   const { currentStep, eventDetails, submitLoading } = useSelector(
     (state) => state.event
   );
+  const { selectedSubmitItem } = useSelector((state) => state.modalSlice);
   const dispatch = useDispatch();
   const [form] = Form.useForm();
   const {
@@ -36,6 +45,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
     responseMessage,
     loading,
     selectedOffers,
+    submitedData,
     selectedCoupons,
   } = useSelector((state) => state.schedules);
 
@@ -81,35 +91,38 @@ const MultyStepScheduleForm = ({ mode, id }) => {
             ? dayjs(scheduleDetails.ad_start_date_time)
             : null,
         };
-  
+
         form.setFieldsValue(formValues);
-  
+
         if (scheduleDetails.show_dates?.length > 0) {
-          const newDates = scheduleDetails.show_dates.map(sd => sd.date);
-          
+          const newDates = scheduleDetails.show_dates.map((sd) => sd.date);
+
           // Prepare time slots in the correct format
-          const formattedTimeSlots = scheduleDetails.show_dates.reduce((acc, showDate) => {
-            acc[showDate.date] = showDate.show_times.map(time => ({
-              start_time: dayjs(`${showDate.date} ${time.start_time}`),
-              end_time: dayjs(`${showDate.date} ${time.end_time}`),
-              ticketType: time.event_ticket_structures[0]?.id
-            }));
-            return acc;
-          }, {});
-  
+          const formattedTimeSlots = scheduleDetails.show_dates.reduce(
+            (acc, showDate) => {
+              acc[showDate.date] = showDate.show_times.map((time) => ({
+                start_time: dayjs(`${showDate.date} ${time.start_time}`),
+                end_time: dayjs(`${showDate.date} ${time.end_time}`),
+                ticketType: time.event_ticket_structures[0]?.id,
+              }));
+              return acc;
+            },
+            {}
+          );
+
           dispatch(setDates(newDates));
           dispatch(setActiveTab(newDates[0]));
           dispatch(setSlotStatus("green"));
           dispatch(setTimeSlots(formattedTimeSlots));
-  
+
           // Update form's time slots
           form.setFieldsValue({
-            timeSlots: formattedTimeSlots
+            timeSlots: formattedTimeSlots,
           });
         }
       }
     };
-  
+
     setFormFields();
   }, [form, mode, scheduleDetails, dispatch]);
 
@@ -122,7 +135,10 @@ const MultyStepScheduleForm = ({ mode, id }) => {
     try {
       await form.validateFields();
       const values = form.getFieldValue();
+      console.log("Current form values:", values); // Debug log
 
+      // Store the values in form
+      form.setFieldsValue(values);
       // Only perform date validation on step 2
       if (currentStep === 2) {
         const timeSlots = values.timeSlots || {};
@@ -289,22 +305,30 @@ const MultyStepScheduleForm = ({ mode, id }) => {
           })) ?? [],
       };
 
-      dispatch(setSelectedSubmitItem(submitData));
+      dispatch(setScheduleSubmitData(submitData));
+      if (currentStep < steps.length) {
+        dispatch(setCurrentStep(currentStep + 1));
+      }
     } catch (info) {
       console.error("Validation Failed:", info);
       message.error("Please enter all required fields.");
     }
   };
-
+  const confirm = () => {
+    dispatch(setSelectedSubmitItem(submitedData));
+  };
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <ScheduleDetails form={form} />; 
-        // return <ScheduleTimeSlots form={form} mode={mode} />;
+        // return <ConfirmationPage  />;
+        return <ScheduleDetails form={form} />;
+      // return <ScheduleTimeSlots form={form} mode={mode} />;
       case 2:
         return <ScheduleTimeSlots form={form} mode={mode} />;
       case 3:
         return <ScheduleOffersAndCoupons form={form} />;
+      case 4:
+        return <ConfirmationPage />;
       default:
         return null;
     }
@@ -324,18 +348,19 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         </Form>
       </div>
       <div style={{ textAlign: "right", marginTop: "20px" }}>
-        {currentStep > 1 && (
-          <Button type="default" onClick={prevStep} style={{ marginRight: 8 }}>
-            Previous
-          </Button>
-        )}
-        {currentStep < steps.length ? (
-          <Button type="primary" loading={submitLoading} onClick={nextStep}>
+        {currentStep > 1 && <Button onClick={prevStep}>Previous</Button>}
+
+        {currentStep < 3 ? (
+          <Button type="primary" onClick={nextStep}>
             Next
           </Button>
-        ) : (
+        ) : currentStep === 3 ? (
           <Button type="primary" onClick={onFinish}>
             Submit
+          </Button>
+        ) : (
+          <Button type="primary" onClick={confirm}>
+            Confirm
           </Button>
         )}
       </div>
