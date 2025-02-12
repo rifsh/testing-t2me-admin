@@ -18,7 +18,7 @@ import {
 import { updateTimeSlot } from "store/slices/scheduleSlice";
 import { useDispatch } from "react-redux";
 import TimeSlotValidator from "../utils/TimeSloteValidator";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 const TimeSlots = ({
   dateStr,
   timeSlots,
@@ -34,74 +34,12 @@ const TimeSlots = ({
 }) => {
   const dispatch = useDispatch();
 
-  const isFullDayCovered = () => {
-    const currentDateSlots = timeSlots[dateStr] || [];
-    if (currentDateSlots.length === 0) return false;
-
-    // Sort slots by start time
-    const sortedSlots = [...currentDateSlots]
-      .filter((slot) => slot.start_time && slot.end_time)
-      .sort((a, b) => {
-        const aTime = dayjs(a.start_time);
-        const bTime = dayjs(b.start_time);
-        return aTime.isBefore(bTime) ? -1 : 1;
-      });
-
-    if (sortedSlots.length === 0) return false;
-
-    // Check if first slot starts at beginning of day and last slot ends at end of day
-    const firstSlot = sortedSlots[0];
-    const lastSlot = sortedSlots[sortedSlots.length - 1];
-
-    const startOfDay = dayjs().startOf("day");
-    const endOfDay = dayjs().endOf("day");
-
-    const firstSlotStart = dayjs(firstSlot.start_time);
-    const lastSlotEnd = dayjs(lastSlot.end_time);
-
-    // Check if slots cover entire day (00:01 to 23:59)
-    const startsAtBeginning =
-      firstSlotStart.hour() === 0 && firstSlotStart.minute() <= 1;
-    const endsAtEnd = lastSlotEnd.hour() === 23 && lastSlotEnd.minute() >= 59;
-
-    // Check for gaps between slots
-    for (let i = 0; i < sortedSlots.length - 1; i++) {
-      const currentSlotEnd = dayjs(sortedSlots[i].end_time);
-      const nextSlotStart = dayjs(sortedSlots[i + 1].start_time);
-
-      if (nextSlotStart.diff(currentSlotEnd, "minute") > 0) {
-        return false; // Found a gap
-      }
-    }
-
-    return startsAtBeginning && endsAtEnd;
-  };
-
-  const areAllSlotsComplete = () => {
-    const currentDateSlots = timeSlots[dateStr] || [];
-
-    // If no slots, allow adding new slot
-    if (currentDateSlots.length === 0) {
-      return true;
-    }
-
-    // Check if all existing slots have required fields filled
-    return currentDateSlots.every(
-      (slot) => slot.start_time && slot.end_time && slot.ticketType
-    );
-  };
-
-  const hasFormErrors = () => {
-    const fields = form.getFieldsError();
-    const timeSlotFields = fields.filter(
-      (field) => field.name[0] === "timeSlots" && field.name[1] === dateStr
-    );
-
-    return timeSlotFields.some((field) => field.errors.length > 0);
-  };
-
   const shouldShowAddButton = () => {
-    return areAllSlotsComplete() && !hasFormErrors() && !isFullDayCovered();
+    return (
+      TimeSlotValidator.areAllSlotsComplete(timeSlots, dateStr) &&
+      !TimeSlotValidator.hasFormErrors(form, dateStr) &&
+      !TimeSlotValidator.isFullDayCovered(timeSlots, dateStr)
+    );
   };
 
   const handleTimeChange = async (
@@ -333,7 +271,7 @@ const TimeSlots = ({
         </Row>
       ))}
 
-      {shouldShowAddButton() && (
+{shouldShowAddButton() && (
         <Button
           type="dashed"
           onClick={() => onAddSlot(dateStr)}
@@ -354,7 +292,7 @@ const TimeSlots = ({
             fontSize: "14px",
           }}
         >
-          {isFullDayCovered()
+          {TimeSlotValidator.isFullDayCovered(timeSlots, dateStr)
             ? "All time slots for the day are filled"
             : "Please complete all required fields in existing time slots before adding a new one"}
         </div>

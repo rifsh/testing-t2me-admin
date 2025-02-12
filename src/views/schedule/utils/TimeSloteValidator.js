@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 class TimeSlotValidator {
   static validateTimeSlot = (
     timeSlots,
@@ -469,27 +471,27 @@ class TimeSlotValidator {
 
     // Only check subsequent slots if modifying start time
     // if (fieldType === "start_time") {
-      const laterSlots = timeSlots[dateStr]
-        .slice(currentIndex + 1)
-        .map((slot, idx) => ({ ...slot, index: currentIndex + idx + 1 }))
-        .filter((slot) => slot.start_time);
+    const laterSlots = timeSlots[dateStr]
+      .slice(currentIndex + 1)
+      .map((slot, idx) => ({ ...slot, index: currentIndex + idx + 1 }))
+      .filter((slot) => slot.start_time);
 
-      const affectedSlots = laterSlots.filter((slot) => {
-        const slotStartMinutes = this.timeToMinutes(
-          slot.start_time.format("HH:mm")
-        );
-        // If new start time is after or equal to any later slot's start time
-        return selectedMinutes >= slotStartMinutes;
-      });
+    const affectedSlots = laterSlots.filter((slot) => {
+      const slotStartMinutes = this.timeToMinutes(
+        slot.start_time.format("HH:mm")
+      );
+      // If new start time is after or equal to any later slot's start time
+      return selectedMinutes >= slotStartMinutes;
+    });
 
-      if (affectedSlots.length > 0) {
-        return {
-          isValid: true,
-          isWarning: true,
-          message: "This change will affect later time slots. Continue?",
-          affectedSlots,
-        };
-      }
+    if (affectedSlots.length > 0) {
+      return {
+        isValid: true,
+        isWarning: true,
+        message: "This change will affect later time slots. Continue?",
+        affectedSlots,
+      };
+    }
     // }
 
     return { isValid: true };
@@ -498,6 +500,69 @@ class TimeSlotValidator {
   static timeToMinutes(timeStr) {
     const [hours, minutes] = timeStr.split(":").map(Number);
     return hours * 60 + minutes;
+  }
+
+  static isFullDayCovered(timeSlots, dateStr) {
+    const currentDateSlots = timeSlots[dateStr] || [];
+    if (currentDateSlots.length === 0) return false;
+
+    // Sort slots by start time
+    const sortedSlots = [...currentDateSlots]
+      .filter((slot) => slot.start_time && slot.end_time)
+      .sort((a, b) => {
+        const aTime = dayjs(a.start_time);
+        const bTime = dayjs(b.start_time);
+        return aTime.isBefore(bTime) ? -1 : 1;
+      });
+
+    if (sortedSlots.length === 0) return false;
+
+    // Check if first slot starts at beginning of day and last slot ends at end of day
+    const firstSlot = sortedSlots[0];
+    const lastSlot = sortedSlots[sortedSlots.length - 1];
+
+    const firstSlotStart = dayjs(firstSlot.start_time);
+    const lastSlotEnd = dayjs(lastSlot.end_time);
+
+    // Check if slots cover entire day (00:01 to 23:59)
+    const startsAtBeginning =
+      firstSlotStart.hour() === 0 && firstSlotStart.minute() <= 1;
+    const endsAtEnd = lastSlotEnd.hour() === 23 && lastSlotEnd.minute() >= 59;
+
+    // Check for gaps between slots
+    for (let i = 0; i < sortedSlots.length - 1; i++) {
+      const currentSlotEnd = dayjs(sortedSlots[i].end_time);
+      const nextSlotStart = dayjs(sortedSlots[i + 1].start_time);
+
+      if (nextSlotStart.diff(currentSlotEnd, "minute") > 0) {
+        return false; // Found a gap
+      }
+    }
+
+    return startsAtBeginning && endsAtEnd;
+  }
+
+  static areAllSlotsComplete(timeSlots, dateStr) {
+    const currentDateSlots = timeSlots[dateStr] || [];
+
+    // If no slots, allow adding new slot
+    if (currentDateSlots.length === 0) {
+      return true;
+    }
+
+    // Check if all existing slots have required fields filled
+    return currentDateSlots.every(
+      (slot) => slot.start_time && slot.end_time && slot.ticketType
+    );
+  }
+
+  static hasFormErrors(form, dateStr) {
+    const fields = form.getFieldsError();
+    const timeSlotFields = fields.filter(
+      (field) => field.name[0] === "timeSlots" && field.name[1] === dateStr
+    );
+
+    return timeSlotFields.some((field) => field.errors.length > 0);
   }
 }
 
