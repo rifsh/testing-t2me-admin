@@ -38,6 +38,7 @@ const CouponForm = ({ mode, coupon }) => {
     warningPagination,
     responseImpactData,
     message: warningMessage,
+    submitPagination,
     modalLoading,
   } = useSelector((state) => state.coupons);
   const [form] = Form.useForm();
@@ -228,6 +229,7 @@ const CouponForm = ({ mode, coupon }) => {
         addFunction={mode === "EDIT" ? editCoupon : addCoupon}
         navigationPath={`${APP_PREFIX_PATH}/coupon/list`}
         responseMessage={responseMessage}
+        pagination={submitPagination}
       />
     </>
   );
