@@ -81,12 +81,12 @@ export function ScheduleTimeSlots({ form }) {
 
       // Now safely use array methods
       const hasCompleteSlot = slotsArray.some(
-        (slot) => slot && slot.start_time && slot.ticketType
+        (slot) => slot && slot.start_time && slot.ticketType && slot.end_time
       );
 
       if (hasCompleteSlot) {
         newSlotStatus[date] = "green";
-      } else if (slotsArray.some((slot) => slot && slot.start_time)) {
+      } else if (slotsArray.some((slot) => slot && slot.start_time && slot.ticketType && slot.end_time)) {
         newSlotStatus[date] = "green";
       } else {
         newSlotStatus[date] = "red";
