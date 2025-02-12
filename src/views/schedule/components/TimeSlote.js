@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Form,
   TimePicker,
@@ -19,6 +19,7 @@ import { updateTimeSlot } from "store/slices/scheduleSlice";
 import { useDispatch } from "react-redux";
 import TimeSlotValidator from "../utils/TimeSloteValidator";
 import dayjs from "dayjs";
+
 const TimeSlots = ({
   dateStr,
   timeSlots,
@@ -35,8 +36,21 @@ const TimeSlots = ({
   const dispatch = useDispatch();
 
   const shouldShowAddButton = () => {
+    // Get the current slots for the date
+    const currentDateSlots = timeSlots[dateStr] || [];
+
+    // If there are no slots, we should show the add button
+    if (currentDateSlots.length === 0) {
+      return true;
+    }
+
+    // Check if the last slot has all required fields
+    const lastSlot = currentDateSlots[currentDateSlots.length - 1];
+    const isLastSlotComplete =
+      lastSlot.start_time && lastSlot.end_time && lastSlot.ticketType;
+
     return (
-      TimeSlotValidator.areAllSlotsComplete(timeSlots, dateStr) &&
+      isLastSlotComplete &&
       !TimeSlotValidator.hasFormErrors(form, dateStr) &&
       !TimeSlotValidator.isFullDayCovered(timeSlots, dateStr)
     );
@@ -68,7 +82,6 @@ const TimeSlots = ({
         message.error(validationResult.message);
         clearFormTimeSlot(dateStr, index, type);
 
-        // If start time is invalid, also clear the end time
         if (type === "start_time") {
           clearFormTimeSlot(dateStr, index, "end_time");
         }
@@ -89,7 +102,6 @@ const TimeSlots = ({
           },
           onCancel: () => {
             clearFormTimeSlot(dateStr, index, type);
-            // Also clear end time if start time is cancelled
             if (type === "start_time") {
               clearFormTimeSlot(dateStr, index, "end_time");
             }
@@ -103,7 +115,6 @@ const TimeSlots = ({
   };
 
   const clearFormTimeSlot = (dateStr, index, type) => {
-    // Update form state
     form.setFields([
       {
         name: ["timeSlots", dateStr, index, type],
@@ -111,7 +122,6 @@ const TimeSlots = ({
       },
     ]);
 
-    // Update Redux state
     dispatch(
       updateTimeSlot({
         dateStr,
@@ -123,7 +133,6 @@ const TimeSlots = ({
   };
 
   const clearAffectedSlots = (dateStr, affectedSlots) => {
-    // Batch form updates
     const fieldUpdates = affectedSlots.map((slot) => ({
       name: ["timeSlots", dateStr, slot.index],
       value: { ...slot, start_time: null, end_time: null },
@@ -131,7 +140,6 @@ const TimeSlots = ({
 
     form.setFields(fieldUpdates);
 
-    // Batch Redux updates
     affectedSlots.forEach((slot) => {
       dispatch(
         updateTimeSlot({
@@ -154,7 +162,6 @@ const TimeSlots = ({
   };
 
   const updateCurrentTimeSlot = (dateStr, index, type, value) => {
-    // Update form state first
     form.setFields([
       {
         name: ["timeSlots", dateStr, index, type],
@@ -162,7 +169,6 @@ const TimeSlots = ({
       },
     ]);
 
-    // Then update Redux state
     dispatch(
       updateTimeSlot({
         dateStr,
@@ -191,7 +197,7 @@ const TimeSlots = ({
             >
               <TimePicker
                 format="HH:mm"
-                value={timeSlots[dateStr]?.[index]?.start_time}
+                value={slot.start_time}
                 onSelect={(time) =>
                   handleTimeChange(dateStr, index, "start_time", time, "select")
                 }
@@ -213,12 +219,12 @@ const TimeSlots = ({
             >
               <TimePicker
                 format="HH:mm"
-                value={timeSlots[dateStr]?.[index]?.end_time}
+                value={slot.end_time}
                 onSelect={(time) =>
-                  handleTimeChange(dateStr, index, "end_time", time)
+                  handleTimeChange(dateStr, index, "end_time", time, "select")
                 }
                 onChange={(time) =>
-                  handleTimeChange(dateStr, index, "end_time", time)
+                  handleTimeChange(dateStr, index, "end_time", time, "change")
                 }
                 style={{ width: "100%" }}
                 placeholder="End Time"
@@ -238,12 +244,6 @@ const TimeSlots = ({
                 options={ticketOptions}
                 value={slot.ticketType}
                 onChange={(value) => {
-                  console.log("Ticket Type Changed:", {
-                    dateStr,
-                    index,
-                    value,
-                    currentSlot: slot,
-                  });
                   handleTimeChange(dateStr, index, "ticketType", value);
                 }}
                 style={{ width: "100%" }}
@@ -271,7 +271,7 @@ const TimeSlots = ({
         </Row>
       ))}
 
-{shouldShowAddButton() && (
+      {shouldShowAddButton() && (
         <Button
           type="dashed"
           onClick={() => onAddSlot(dateStr)}
