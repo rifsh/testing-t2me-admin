@@ -3,7 +3,6 @@ import { Card, Button, Table, Menu, Collapse, Dropdown, Modal, Descriptions, Tag
 import { FormOutlined, EditOutlined, EyeOutlined, MoreOutlined } from '@ant-design/icons';
 import Flex from "components/shared-components/Flex";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
-import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { fetchAllPayment } from "store/slices/paymentSlice";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { useNavigate } from 'react-router-dom';
