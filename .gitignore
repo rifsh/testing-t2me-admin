@@ -54,4 +54,6 @@ Thumbs.db
 
 # Node package lock file
 package-lock.json/
+package-lock.json
+
 
