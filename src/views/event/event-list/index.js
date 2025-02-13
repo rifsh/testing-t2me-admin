@@ -266,6 +266,7 @@ const EventsList = () => {
         }}
         pageData={{ page: 1, size: 10 }}
         pagination={warningPagination}
+        loading={loading}
       />
       <StatusSubmitAndConfirmModal
         editFunction={editEventStatus}

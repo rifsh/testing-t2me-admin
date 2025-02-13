@@ -13,6 +13,7 @@ export const initialState = {
   responseMessage: null,
   editable_status: null,
   couponDetails: null,
+  isDateRequired: false,
   editItemId: null,
   selectedCoupon: null,
   responseImpactData: null,
@@ -126,6 +127,9 @@ const couponSlice = createSlice({
     setSelectedCoupon: (state, action) => {
       state.selectedCoupon = action.payload;
     },
+    setIsDateRequired: (state, action) => {
+      state.isDateRequired = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -220,6 +224,7 @@ export const {
   setEditItemId,
   setCouponDialogVisible,
   setCouponModalLoading,
+  setIsDateRequired,
   setSelectedCoupon,
 } = couponSlice.actions;
 export default couponSlice.reducer;

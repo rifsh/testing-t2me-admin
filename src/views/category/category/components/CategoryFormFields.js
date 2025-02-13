@@ -244,7 +244,7 @@ const CategoryFormFields = ({ mode, category }) => {
         onCancel={handleModalCancel}
         confirmText="Proceed"
         cancelText="Back"
-        loading={modalLoading}
+        loading={loading}
         tableConfig={{
           title: "Active Schedules",
           dataKey: "items",

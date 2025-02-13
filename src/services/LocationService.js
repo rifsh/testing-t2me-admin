@@ -56,7 +56,7 @@ LocationService.addPlace = function (data, action) {
 LocationService.editPlace = function (
   data,
   action,
-  pageData = { page: 1, size: 10 }
+  pageData = { page: 1, size: 1 }
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
