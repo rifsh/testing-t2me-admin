@@ -71,11 +71,6 @@ const PaymentList = () => {
       sorter: (a, b) => Utils.antdTableSorter(a, b, ["jsonData", "place_name"])
     },
     {
-      title: "Event",
-      dataIndex: ["jsonData", "event"],
-      render: (event) => <span>{event || "N/A"}</span>
-    },
-    {
       title: "Add on Services",
       render: (row) => (
         <Collapse defaultActiveKey={[]} accordion>
