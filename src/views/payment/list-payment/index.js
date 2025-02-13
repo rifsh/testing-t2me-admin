@@ -47,7 +47,8 @@ const PaymentList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       ),
-      onClick: () => navigate(`${APP_PREFIX_PATH}/payment/details/${row.id}`), 
+      onClick: () => 
+        navigate(`${APP_PREFIX_PATH}/payment/details/${row.id}`), 
         //showModal(row),
     },
     {
@@ -137,6 +138,7 @@ const PaymentList = () => {
         <Button
           type="primary"
           icon={<FormOutlined />}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/payment/payment`)}
         >
           Add Payment
         </Button>
@@ -165,51 +167,97 @@ const PaymentList = () => {
         {selectedPayment && (
           <Descriptions column={1} bordered>
             <Descriptions.Item label="Place Name">
-              {selectedPayment.jsonData?.place_name || 'N/A'}
+              {selectedPayment.jsonData?.place_name || "N/A"}
             </Descriptions.Item>
             <Descriptions.Item label="Event Name">
-              {selectedPayment.jsonData?.event || 'N/A'}
+              {selectedPayment.jsonData?.event || "N/A"}
             </Descriptions.Item>
             <Descriptions.Item label="Add on Services">
               {selectedPayment.jsonData?.service_adons?.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {selectedPayment.jsonData.service_adons.map((service, index) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <img
-                        src={service.logo}
-                        alt={service.name}
-                        style={{ width: 50, height: 50, objectFit: 'contain' }}
-                      />
-                      <div>
-                        <div><strong>{service.name}</strong></div>
-                        {service.type && <Tag color="blue">{service.type}</Tag>}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                  }}
+                >
+                  {selectedPayment.jsonData.service_adons.map(
+                    (service, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                        }}
+                      >
+                        <img
+                          src={service.logo}
+                          alt={service.name}
+                          style={{
+                            width: 50,
+                            height: 50,
+                            objectFit: "contain",
+                          }}
+                        />
+                        <div>
+                          <div>
+                            <strong>{service.name}</strong>
+                          </div>
+                          {service.type && (
+                            <Tag color="blue">{service.type}</Tag>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               ) : (
-                'No add-on services available'
+                "No add-on services available"
               )}
             </Descriptions.Item>
             <Descriptions.Item label="Payments">
               {selectedPayment.jsonData?.payment_logos?.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {selectedPayment.jsonData.payment_logos.map((payment, index) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <img
-                        src={payment.logo}
-                        alt={payment.name}
-                        style={{ width: 50, height: 50, objectFit: 'contain' }}
-                      />
-                      <div>
-                        <div><strong>{payment.name}</strong></div>
-                        {payment.type && <Tag color="green">{payment.type}</Tag>}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                  }}
+                >
+                  {selectedPayment.jsonData.payment_logos.map(
+                    (payment, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                        }}
+                      >
+                        <img
+                          src={payment.logo}
+                          alt={payment.name}
+                          style={{
+                            width: 50,
+                            height: 50,
+                            objectFit: "contain",
+                          }}
+                        />
+                        <div>
+                          <div>
+                            <strong>{payment.name}</strong>
+                          </div>
+                          {payment.type && (
+                            <Tag color="green">{payment.type}</Tag>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               ) : (
-                'No payment methods available'
+                "No payment methods available"
               )}
             </Descriptions.Item>
             <Descriptions.Item label="Url Terms & Conditions">
