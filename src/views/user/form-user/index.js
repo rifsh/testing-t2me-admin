@@ -20,6 +20,11 @@ import {
   setUserDialogVisible,
   setUserModalLoading,
 } from "store/slices/userSlice";
+import ValidationModal from "components/util-components/ModalItems/ValidationModal";
+import {
+  setEventValidationDialogVisible,
+  validateMultipleEvent,
+} from "store/slices/eventSlice";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { UserRoleConstants } from "constants/UserRoleConstant";
@@ -40,6 +45,9 @@ const UserForm = ({ mode, user }) => {
     modalLoading,
     editable_status,
   } = useSelector((state) => state.users);
+  const { eventValidationDialogVisible, ValidateData, messages } = useSelector(
+    (state) => state.event
+  );
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -95,13 +103,25 @@ const UserForm = ({ mode, user }) => {
           id: user.id,
         };
         console.log("Edit Data:", data);
+
         const resultAction = await dispatch(
-          updateUser({ data, action: ActionType.WARNING })
+          validateMultipleEvent(values.event_ids)
         );
 
-        if (updateUser.fulfilled.match(resultAction)) {
-          dispatch(setSelectedUser(data));
-          dispatch(setUserDialogVisible(true));
+        if (validateMultipleEvent.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setEventValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            const resultAction = await dispatch(
+              updateUser({ data, action: ActionType.WARNING })
+            );
+
+            if (updateUser.fulfilled.match(resultAction)) {
+              dispatch(setSelectedUser(data));
+              dispatch(setUserDialogVisible(true));
+            }
+          }
         }
       } else {
         // dispatch(setSelectedSubmitItem(values));
@@ -109,7 +129,20 @@ const UserForm = ({ mode, user }) => {
           ...values,
         };
 
-        dispatch(setSelectedSubmitItem(formData));
+        console.log(values.event_ids, "EVENT IDS");
+
+        const resultAction = await dispatch(
+          validateMultipleEvent(values.event_ids)
+        );
+
+        if (validateMultipleEvent.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setEventValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            dispatch(setSelectedSubmitItem(formData));
+          }
+        }
       }
     } catch (info) {
       console.error("Validation Failed:", info);
@@ -130,6 +163,9 @@ const UserForm = ({ mode, user }) => {
 
   const handleModalCancel = () => {
     dispatch(setUserDialogVisible(false));
+  };
+  const handleValidationModalCancel = () => {
+    dispatch(setEventValidationDialogVisible(false));
   };
 
   return (
@@ -180,6 +216,12 @@ const UserForm = ({ mode, user }) => {
         </div>
       </Form>
       <LoadingOverlay loading={loading} />
+      <ValidationModal
+        visible={eventValidationDialogVisible}
+        data={ValidateData?.errors}
+        statusMessage={messages}
+        onClose={handleValidationModalCancel}
+      />
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"

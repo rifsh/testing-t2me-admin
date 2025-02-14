@@ -90,11 +90,16 @@ export const ApiConstant = {
   SUB_CATEGORY_VALIDATE_URL: "/api/v1/validation/secured/validate_subcategory",
   VENUE_VALIDATE_URL: "/api/v1/validation/secured/validate_venue",
   TAX_VALIDATE_URL: "/api/v1/validation/secured/validate_tax",
+  MULT_EVENT_VALIDATE_URL: "/api/v1/validation/secured/validate_multiple_event",
   TICKET_VALIDATE_URL: "/api/v1/validation/secured/validate_ticket",
   OFFER_COUPON_VALIDATE_URL: "/api/v1/validation/secured/validate_offer_coupon",
   ADCATEGORY_VALIDATE_URL: "/api/v1/validation/secured/validate_ad_category",
 
   // FOOTER URLS
 
-  FAQ_URL: "https://ticket2me.app/uat/faq/v1.0.0.json",
+  FAQ_URL: "https://cdn-assets.ticket2me.app/faq/v1.0.0.json",
+  BUCKET_URL:
+    "https://de64063e3b101c4412b924b8c25193ae.r2.cloudflarestorage.com",
+  BUCKET_NAME: "ticket2me-json",
+  BUCKET_FAQ_KEY: "faq/v1.0.0.json",
 };

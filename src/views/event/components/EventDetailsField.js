@@ -1,7 +1,20 @@
-import { Card, Col, Form, Input, Button, Upload, Typography, message } from "antd";
+import {
+  Card,
+  Col,
+  Form,
+  Input,
+  Button,
+  Upload,
+  Typography,
+  message,
+} from "antd";
 import React from "react";
 import { UploadOutlined } from "@ant-design/icons";
-import { SupportImageFormat, SupportFormatContent, ResolutionByServices } from "constants/SupportFileConstants";
+import {
+  SupportImageFormat,
+  SupportFormatContent,
+  ResolutionByServices,
+} from "constants/SupportFileConstants";
 import Utils from "utils/index";
 
 const { Text } = Typography;
@@ -45,53 +58,64 @@ const EventDetailsField = () => {
             valuePropName="fileList"
             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
-            style={{ marginBottom: "0px", padding:"0px"}}
+            style={{ marginBottom: "0px", padding: "0px" }}
           >
-            <Upload name="thumbnail_image" listType="picture" maxCount={1}
-            // beforeUpload={handleBeforeUpload}
-            beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
-              accept={`.${SupportImageFormat.join(',.')}`}
+            <Upload
+              name="thumbnail_image"
+              listType="picture"
+              maxCount={1}
+              // beforeUpload={handleBeforeUpload}
+              beforeUpload={(file) =>
+                Utils.handleBeforeUpload(file, ResolutionByServices.place)
+              }
+              accept={`.${SupportImageFormat.join(",.")}`}
             >
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
-            
           </Form.Item>
           <Text
-              type="warning"
-              style={{ padding: "00px 00px", fontSize: "11px" }}
-            >
-              {SupportFormatContent.join(",")}:{" "}
-              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
-              {" "}
-            </Text>
+            type="warning"
+            style={{ padding: "00px 00px", fontSize: "11px" }}
+          >
+            {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
+            {" resolution "}
+            {ResolutionByServices.place} pixels.{" "}
+          </Text>
           <Form.Item
             name="banner_images"
             label="Banner Images"
             valuePropName="fileList"
             getValueFromEvent={normFile}
             rules={rules.banner_images}
-            style={{ marginBottom: "0px", padding:"0px"}}
+            style={{ marginBottom: "0px", padding: "0px" }}
           >
-            <Upload name="banner_images" listType="picture" 
-            // beforeUpload={handleBeforeUpload}
-            beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
-              accept={`.${SupportImageFormat.join(',.')}`}
+            <Upload
+              name="banner_images"
+              listType="picture"
+              // beforeUpload={handleBeforeUpload}
+              beforeUpload={(file) =>
+                Utils.handleBeforeUpload(file, ResolutionByServices.place)
+              }
+              accept={`.${SupportImageFormat.join(",.")}`}
             >
               <Button icon={<UploadOutlined />}>Click to upload banners</Button>
             </Upload>
-            
           </Form.Item>
           <Text
-              type="warning"
-              style={{ padding: "00px 00px", fontSize: "11px" }}
-            >
-              {SupportFormatContent.join(",")}:{" "}
-              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
-              {" "}
-            </Text>
-            
-            <Form.Item name="" label="Banner Images Url" rules=""
-            style={{ marginTop: "10px", padding:"0px"}}>
+            type="warning"
+            style={{ padding: "00px 00px", fontSize: "11px" }}
+          >
+            {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
+            {" resolution "}
+            {ResolutionByServices.place} pixels.{" "}
+          </Text>
+
+          <Form.Item
+            name=""
+            label="Banner Images Url"
+            rules=""
+            style={{ marginTop: "10px", padding: "0px" }}
+          >
             <Input placeholder="Banner Images Url" />
           </Form.Item>
         </Card>
