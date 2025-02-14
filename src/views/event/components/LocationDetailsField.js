@@ -25,13 +25,14 @@ const LocationDetailsField = ({ form }) => {
 
   const handlePlaceSelect = (id) => {
     dispatch(getVenues({ place_id: id }));
-    form.setFieldsValue({
-      available_types: null,
-      seat_structure_id: null,
-      ticket_structure_id: null,
-      ticket_set: null,
-      venue_id: null,
-    });
+    form.resetFields([
+      "available_types",
+      "seat_structure_id",
+      "ticket_structure_id",
+      "ticket_set",
+      "venue_id",
+    ]);
+
     dispatch(resetTicketSelection());
     dispatch(setSelectedVenueList("clear"));
   };
@@ -40,7 +41,7 @@ const LocationDetailsField = ({ form }) => {
     const venue = filteredVenues.find((venue) => venue.id === value);
 
     if (venue) {
-      dispatch(setSelectedVenueList([venue])); 
+      dispatch(setSelectedVenueList([venue]));
     }
 
     form.setFieldsValue({

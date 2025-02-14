@@ -10,17 +10,23 @@ import {
   message,
   Modal,
   Checkbox,
+  Cascader,
+  DatePicker,
+  Alert,
+  Typography,
 } from "antd";
 import {
   MinusCircleOutlined,
   PlusOutlined,
   CopyOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import { updateTimeSlot } from "store/slices/scheduleSlice";
 import { useDispatch } from "react-redux";
 import TimeSlotValidator from "../utils/TimeSloteValidator";
 import dayjs from "dayjs";
 
+const { Text } = Typography;
 const TimeSlots = ({
   dateStr,
   timeSlots,
@@ -35,24 +41,130 @@ const TimeSlots = ({
   onApplyToAll,
 }) => {
   const dispatch = useDispatch();
+  const getDateCoverage = () => {
+    const allDates = Object.keys(timeSlots).sort();
+    const coverage = {
+      isFullyCovered: false,
+      partialCoverage: null,
+      availableFrom: null,
+    };
 
-  const shouldShowAddButton = () => {
-    const currentDateSlots = timeSlots[dateStr] || [];
-    if (currentDateSlots.length === 0) {
-      return true;
+    for (const date of allDates) {
+      if (date > dateStr) break;
+
+      const slots = timeSlots[date] || [];
+      for (const slot of slots) {
+        if (slot.is_midnight_passed && slot.show_end_date) {
+          const showEndDate = dayjs(slot.show_end_date);
+          const showEndDateStr = showEndDate.format("YYYY-MM-DD");
+
+          if (showEndDateStr === dateStr) {
+            coverage.partialCoverage = true;
+            coverage.availableFrom = showEndDate;
+          } else if (showEndDateStr > dateStr) {
+            coverage.isFullyCovered = true;
+          }
+        }
+      }
     }
 
-    const lastSlot = currentDateSlots[currentDateSlots.length - 1];
-    const isLastSlotComplete =
-      lastSlot.start_time && lastSlot.end_time && lastSlot.ticketType;
-
-    return (
-      isLastSlotComplete &&
-      !TimeSlotValidator.hasFormErrors(form, dateStr) &&
-      !TimeSlotValidator.isFullDayCovered(timeSlots, dateStr)
-    );
+    return coverage;
   };
 
+  const shouldShowAddButton = () => {
+    const coverage = getDateCoverage();
+    if (coverage.isFullyCovered) return false;
+
+    const currentDateSlots = timeSlots[dateStr] || [];
+    if (currentDateSlots.length === 0) return true;
+
+    const lastSlot = currentDateSlots[currentDateSlots.length - 1];
+    // return lastSlot.start_time && lastSlot.end_time && lastSlot.ticketType;
+    return true;
+  };
+
+  const coverage = getDateCoverage();
+
+  const validateTimeAgainstCoverage = (time, type) => {
+    const coverage = getDateCoverage();
+    if (coverage.partialCoverage && coverage.availableFrom) {
+      const proposedTime = dayjs(time);
+      if (
+        type === "start_time" &&
+        proposedTime.isBefore(coverage.availableFrom)
+      ) {
+        message.error(
+          `Start time must be after ${coverage.availableFrom.format(
+            "HH:mm"
+          )} for this date`
+        );
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleShowEndTime = (
+    dateStr,
+    index,
+    type,
+    value,
+    eventType = "change"
+  ) => {
+    if (eventType === "select") {
+      clearFormTimeSlot(dateStr, index, type);
+      return;
+    }
+
+    const validation = TimeSlotValidator.validateShowEndTime(
+      timeSlots,
+      dateStr,
+      index,
+      value
+    );
+
+    if (!validation.isValid) {
+      message.error(validation.message);
+      clearFormTimeSlot(dateStr, index, type);
+      return;
+    }
+
+    // Update slots for valid dates
+    validation.datesToUpdate.forEach((date) => {
+      const slots = timeSlots[date];
+      if (!slots) return;
+
+      slots.forEach((slot, slotIndex) => {
+        if (!slot.is_midnight_passed) return;
+
+        const formUpdate = {
+          name: ["timeSlots", date, slotIndex, "show_end_date"],
+          value: value,
+        };
+
+        form.setFields([formUpdate]);
+
+        dispatch(
+          updateTimeSlot({
+            dateStr: date,
+            index: slotIndex,
+            field: "show_end_date",
+            value: value,
+          })
+        );
+      });
+    });
+
+    if (validation.skippedDates.length > 0) {
+      message.warning(
+        `The following dates are already covered by other midnight passed slots: ${validation.skippedDates.join(
+          ", "
+        )}`
+      );
+    }
+
+    return validation;
+  };
   const handleTimeChange = async (
     dateStr,
     index,
@@ -66,6 +178,20 @@ const TimeSlots = ({
     }
 
     if (type === "start_time" || type === "end_time") {
+      // Validate against coverage
+      const coverageValidation = TimeSlotValidator.validateTimeAgainstCoverage(
+        timeSlots,
+        dateStr,
+        value,
+        type
+      );
+      if (!coverageValidation.isValid) {
+        message.error(coverageValidation.message);
+        clearFormTimeSlot(dateStr, index, type);
+        return;
+      }
+
+      // Validate time slot
       const validationResult = TimeSlotValidator.validateTimeSlot(
         timeSlots,
         dateStr,
@@ -300,140 +426,243 @@ const TimeSlots = ({
       })
     );
   };
+  const displayRender = (label) => label.join(" / ");
 
   return (
-    <div style={{ marginTop: 16 }}>
-      {timeSlots[dateStr]?.map((slot, index) => (
-        <Row
-          key={index}
-          gutter={[16, 16]}
-          align="middle"
-          style={{ marginBottom: 16 }}
-        >
-          <Col span={4}>
-            <Form.Item
-              name={["timeSlots", dateStr, index, "start_time"]}
-              label="Start Time"
-              rules={[{ required: true, message: "Please select start time" }]}
-              validateTrigger={["onChange", "onBlur"]}
-            >
-              <TimePicker
-                format="HH:mm"
-                value={slot.start_time}
-                onSelect={(time) =>
-                  handleTimeChange(dateStr, index, "start_time", time, "select")
-                }
-                onChange={(time) =>
-                  handleTimeChange(dateStr, index, "start_time", time, "change")
-                }
-                style={{ width: "100%" }}
-                placeholder="Start Time"
-              />
-            </Form.Item>
-          </Col>
-
-          <Col span={4}>
-            <Form.Item
-              name={["timeSlots", dateStr, index, "is_midnight_passed"]}
-              label="Midnight Passed"
-              valuePropName="checked"
-            >
-              <Checkbox
-                value={false}
-                disabled={!slot.start_time}
-                onChange={(e) =>
-                  handleMidnightPassedChange(dateStr, index, e.target.checked)
-                }
-              />
-            </Form.Item>
-          </Col>
-
-          <Col span={4}>
-            <Form.Item
-              name={["timeSlots", dateStr, index, "end_time"]}
-              label="End Time"
-              rules={[{ required: true, message: "Please select end time" }]}
-              validateTrigger={["onChange", "onBlur"]}
-            >
-              <TimePicker
-                format="HH:mm"
-                value={slot.end_time}
-                onSelect={(time) =>
-                  handleTimeChange(dateStr, index, "end_time", time, "select")
-                }
-                onChange={(time) =>
-                  handleTimeChange(dateStr, index, "end_time", time, "change")
-                }
-                style={{ width: "100%" }}
-                placeholder="End Time"
-              />
-            </Form.Item>
-          </Col>
-
-          <Col span={4}>
-            <Form.Item
-              label="Ticket Type"
-              name={["timeSlots", dateStr, index, "ticketType"]}
-              rules={[
-                { required: true, message: "Please select a ticket type" },
-              ]}
-            >
-              <Select
-                options={ticketOptions}
-                value={slot.ticketType}
-                onChange={(value) => {
-                  handleTimeChange(dateStr, index, "ticketType", value);
-                }}
-                style={{ width: "100%" }}
-                placeholder="Select Ticket Type"
-              />
-            </Form.Item>
-          </Col>
-
-          <Col span={4}>
+    <div className="space-y-4">
+      {coverage.partialCoverage && !coverage.isFullyCovered && (
+        <Alert
+          message={
             <Space>
-              <Button
-                type="default"
-                danger
-                icon={<MinusCircleOutlined />}
-                onClick={() => onRemoveSlot(dateStr, index)}
-              />
-              <Button
-                type="default"
-                icon={<CopyOutlined />}
-                onClick={() => onApplyToAll(dateStr, index)}
-                title="Apply this slot to all dates"
-              />
+              <ClockCircleOutlined />
+              <Text>
+                Time slots can be added after{" "}
+                <Text strong>{coverage.availableFrom.format("HH:mm")}</Text> for
+                this date
+              </Text>
             </Space>
-          </Col>
-        </Row>
-      ))}
-
-      {shouldShowAddButton() && (
-        <Button
-          type="dashed"
-          onClick={() => onAddSlot(dateStr)}
-          icon={<PlusOutlined />}
-          block
-          style={{ marginTop: 16 }}
-        >
-          Add Time Slot
-        </Button>
+          }
+          type="info"
+          className="mb-4"
+        />
       )}
 
-      {!shouldShowAddButton() && timeSlots[dateStr]?.length > 0 && (
-        <div
-          style={{
-            marginTop: 16,
-            textAlign: "center",
-            color: "#ff4d4f",
-            fontSize: "14px",
-          }}
-        >
-          {TimeSlotValidator.isFullDayCovered(timeSlots, dateStr)
-            ? "All time slots for the day are filled"
-            : "Please complete all required fields in existing time slots before adding a new one"}
-        </div>
+      {!coverage.isFullyCovered && (
+        <>
+          {timeSlots[dateStr]?.map((slot, index) => (
+            <Row
+              key={index}
+              gutter={[16, 16]}
+              align="middle"
+              style={{ marginBottom: 16 }}
+            >
+              <Col span={5}>
+                <Form.Item
+                  name={["timeSlots", dateStr, index, "start_time"]}
+                  label="Start Time"
+                  rules={[
+                    { required: true, message: "Please select start time" },
+                  ]}
+                  validateTrigger={["onChange", "onBlur"]}
+                >
+                  <TimePicker
+                    format="HH:mm"
+                    value={slot.start_time}
+                    onSelect={(time) =>
+                      handleTimeChange(
+                        dateStr,
+                        index,
+                        "start_time",
+                        time,
+                        "select"
+                      )
+                    }
+                    onChange={(time) =>
+                      handleTimeChange(
+                        dateStr,
+                        index,
+                        "start_time",
+                        time,
+                        "change"
+                      )
+                    }
+                    style={{ width: "100%" }}
+                    placeholder="Start Time"
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col span={4}>
+                <Form.Item
+                  name={["timeSlots", dateStr, index, "is_midnight_passed"]}
+                  label=" "
+                  valuePropName="checked"
+                >
+                  <Checkbox
+                    value={false}
+                    disabled={!slot.start_time}
+                    onChange={(e) =>
+                      handleMidnightPassedChange(
+                        dateStr,
+                        index,
+                        e.target.checked
+                      )
+                    }
+                  />
+                  <span> Midnight Passed</span>
+                </Form.Item>
+              </Col>
+              {!form.getFieldValue([
+                "timeSlots",
+                dateStr,
+                index,
+                "is_midnight_passed",
+              ]) && (
+                <Col span={5}>
+                  <Form.Item
+                    name={["timeSlots", dateStr, index, "end_time"]}
+                    label="End Time"
+                    rules={[
+                      { required: true, message: "Please select end time" },
+                    ]}
+                    validateTrigger={["onChange", "onBlur"]}
+                  >
+                    <TimePicker
+                      format="HH:mm"
+                      value={slot.end_time}
+                      onSelect={(time) =>
+                        handleTimeChange(
+                          dateStr,
+                          index,
+                          "end_time",
+                          time,
+                          "select"
+                        )
+                      }
+                      onChange={(time) =>
+                        handleTimeChange(
+                          dateStr,
+                          index,
+                          "end_time",
+                          time,
+                          "change"
+                        )
+                      }
+                      style={{ width: "100%" }}
+                      placeholder="End Time"
+                    />
+                  </Form.Item>
+                </Col>
+              )}
+              {form.getFieldValue([
+                "timeSlots",
+                dateStr,
+                index,
+                "is_midnight_passed",
+              ]) && (
+                <Col span={5}>
+                  <Form.Item
+                    name={["timeSlots", dateStr, index, "show_end_date"]}
+                    label="Show End Time"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select show end time",
+                      },
+                    ]}
+                    validateTrigger={["onChange", "onBlur"]}
+                  >
+                    <DatePicker
+                      format="YYYY-MM-DD HH:mm"
+                      showTime={{ format: "HH:mm" }}
+                      value={slot.show_end_date}
+                      onSelect={(time) =>
+                        handleShowEndTime(
+                          dateStr,
+                          index,
+                          "show_end_date",
+                          time,
+                          "select"
+                        )
+                      }
+                      onChange={(time) =>
+                        handleShowEndTime(
+                          dateStr,
+                          index,
+                          "show_end_date",
+                          time,
+                          "change"
+                        )
+                      }
+                      style={{ width: "100%" }}
+                      placeholder="End Time"
+                    />
+                  </Form.Item>
+                </Col>
+              )}
+              <Col span={5}>
+                <Form.Item
+                  label="Ticket Type"
+                  name={["timeSlots", dateStr, index, "ticketType"]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please select a ticket type",
+                    },
+                  ]}
+                >
+                  <Cascader
+                    options={ticketOptions}
+                    expandTrigger="hover"
+                    displayRender={displayRender}
+                    onChange={(value) => {
+                      handleTimeChange(dateStr, index, "ticketType", value);
+                    }}
+                    placeholder="Select Ticket Type"
+                    style={{ width: "100%" }}
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col span={4}>
+                <Space>
+                  <Button
+                    type="default"
+                    danger
+                    icon={<MinusCircleOutlined />}
+                    onClick={() => onRemoveSlot(dateStr, index)}
+                  />
+                  <Button
+                    type="default"
+                    icon={<CopyOutlined />}
+                    onClick={() => onApplyToAll(dateStr, index)}
+                    title="Apply this slot to all dates"
+                  />
+                </Space>
+              </Col>
+            </Row>
+          ))}
+
+          {shouldShowAddButton() && (
+            <Button
+              type="dashed"
+              onClick={() => onAddSlot(dateStr)}
+              icon={<PlusOutlined />}
+              block
+              className="mt-4"
+            >
+              Add Time Slot
+            </Button>
+          )}
+        </>
+      )}
+
+      {coverage.isFullyCovered && (
+        <Alert
+          message="This date is fully covered by previous time slots"
+          type="success"
+          showIcon
+        />
       )}
     </div>
   );

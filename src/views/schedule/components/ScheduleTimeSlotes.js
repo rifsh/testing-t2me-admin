@@ -362,7 +362,14 @@ export function ScheduleTimeSlots({ form }) {
       // Ensure we always have an array, even if empty
       initialTimeSlots[date] = Array.isArray(timeSlots[date])
         ? timeSlots[date]
-        : [{ start_time: null, end_time: null }];
+        : [
+            {
+              start_time: null,
+              end_time: null,
+              is_midnight_passed: false,
+              show_end_date: null,
+            },
+          ];
     });
     dispatch(setTimeSlots(initialTimeSlots));
   };
@@ -442,9 +449,17 @@ export function ScheduleTimeSlots({ form }) {
   });
   const ticketOptions = useMemo(() => {
     return (
-      eventDetails?.venue_ticket_structures?.map((ticketType) => ({
-        value: ticketType.id,
-        label: `${ticketType.ticket_structure.name} (${ticketType.ticket_set})`,
+      eventDetails?.venue_ticket_structures?.map((venueData) => ({
+        value: venueData.venue.id,
+        label: venueData.venue.name,
+        children: venueData.ticket_structures.map((ticketType) => ({
+          value: ticketType.ticket_structure,
+          label: `Structure ${ticketType.ticket_structure}`,
+          children: ticketType.ticket_sets.map((ticketSet) => ({
+            value: ticketSet,
+            label: ticketSet,
+          })),
+        })),
       })) || []
     );
   }, [eventDetails]);
@@ -468,8 +483,12 @@ export function ScheduleTimeSlots({ form }) {
   };
 
   const getEventTimezone = () => {
-    return eventDetails?.venue?.place?.country?.time_zone || "America/New_York";
+    return (
+      eventDetails?.venue_events?.[0]?.venue?.place?.country?.time_zone ||
+      "America/New_York"
+    );
   };
+
   const handleScheduleDateChange = (field, date, eventType = "change") => {
     if (eventType === "select") {
       return;
@@ -566,6 +585,7 @@ export function ScheduleTimeSlots({ form }) {
                 format="YYYY-MM-DD HH:mm"
                 showTime={{ format: "HH:mm" }}
                 style={{ width: "100%" }}
+                showNow={false}
                 onSelect={(date) =>
                   handleScheduleDateChange("ad_start_date_time", date, "select")
                 }
@@ -586,6 +606,7 @@ export function ScheduleTimeSlots({ form }) {
               <DatePicker
                 format="YYYY-MM-DD HH:mm"
                 showTime={{ format: "HH:mm" }}
+                showNow={false}
                 style={{ width: "100%" }}
                 onSelect={(date) =>
                   handleScheduleDateChange(
