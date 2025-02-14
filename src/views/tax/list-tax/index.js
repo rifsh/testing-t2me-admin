@@ -224,7 +224,7 @@ const TaxList = () => {
         editable_status={editable_status}
         responseData={responseImpactData}
         pagination={warningPagination}
-        
+        loading={loading}
       />
       <StatusSubmitAndConfirmModal
         editFunction={editTaxStatus}

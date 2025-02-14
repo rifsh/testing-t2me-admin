@@ -9,18 +9,19 @@ import users from "./slices/userSlice";
 import locations from "./slices/locationSlice";
 import event from "./slices/eventSlice";
 import offers from "./slices/offerSlice";
-import staticsReducer from './slices/staticsSlice';
+import staticsReducer from "./slices/staticsSlice";
 import coupons from "./slices/couponSlice";
 import tickets from "./slices/ticketSlice";
 import schedules from "./slices/scheduleSlice";
 import modalSlice from "./slices/modalSlice";
 import organizerUpdates from "./slices/EventOrganizerSlice";
-import tax from "./slices/taxSlice"; 
+import tax from "./slices/taxSlice";
+import faqs from "./slices/faqSlice";
 
-import layout from "./slices/layoutSlice"; 
+import layout from "./slices/layoutSlice";
 
 import issue from "./slices/IssueSlice";
-import payment from "./slices/paymentSlice"; 
+import payment from "./slices/paymentSlice";
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -36,15 +37,16 @@ const rootReducer = (asyncReducers = {}) => {
       coupons,
       tickets,
       schedules,
-      modalSlice,     
-      layout,   
-      tax,  
-      issue,    
+      modalSlice,
+      layout,
+      tax,
+      issue,
       adCategory,
       advertisement,
       organizerUpdates,
       payment,
-      ...asyncReducers, 
+      faqs,
+      ...asyncReducers,
     });
 
     return combinedReducer(state, action);

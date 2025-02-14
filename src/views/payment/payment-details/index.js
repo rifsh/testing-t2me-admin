@@ -3,33 +3,57 @@ import { Card, Row, Col, Typography, Image, Alert } from "antd";
 import Loading from "components/shared-components/Loading";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
-import { getSinglePayment } from "store/slices/paymentSlice";
+import { getSinglePayment, clearSinglePayment } from "store/slices/paymentSlice";
 
 const { Title, Text } = Typography;
 
 const PaymentDetails = () => {
-  const dispatch = useDispatch();
-  const { paymentId } = useParams();
+    const dispatch = useDispatch();
+    const { paymentId } = useParams();
+    const { singlePayment, loading, error } = useSelector((state) => state.payment);
 
-  useEffect(() => {
-    if (paymentId) {
-      dispatch(getSinglePayment(paymentId));
-    }
-  }, [dispatch, paymentId]);
+    useEffect(() => {
+        console.log('Requesting Payment ID:', paymentId);
+        
+        if (paymentId) {
+            dispatch(getSinglePayment(paymentId));
+        }
+        return () => {
+            dispatch(clearSinglePayment());
+        };
+    }, [dispatch, paymentId]);
 
-  const { singlePayment, loading, error } = useSelector(
-    (state) => state.payment
-  );
+    useEffect(() => {
+        console.log('Current Payment State:', { singlePayment, loading, error });
+    }, [singlePayment, loading, error]);
 
-  if (loading) return <Loading />;
-  if (error) return <Alert message={`Error: ${error}`} type="error" />;
-  if (!singlePayment) return <div>No Payment Details Found</div>;
+    if (loading) return <Loading />;
+    
+    if (error) return (
+        <Alert
+            message="Error"
+            description={error}
+            type="error"
+            showIcon
+            style={{ margin: 20 }}
+        />
+    );
+    
+    if (!singlePayment) return (
+        <Alert
+            message="No Payment Details Found"
+            description="The requested payment could not be found. Please check the payment ID and try again."
+            type="info"
+            showIcon
+            style={{ margin: 20 }}
+        />
+    );
 
-  const { jsonData } = singlePayment;
+    const { jsonData } = singlePayment;
 
-  return (
-    <Row gutter={[16, 16]} style={{ padding: "20px" }}>
-      <Col span={24}>
+    return (
+        <Row gutter={[16, 16]} style={{ padding: "20px" }}>
+            <Col span={24}>
         <Card bordered={false}>
           <Title level={2} style={{ margin: "10px 0" }}>
             {jsonData?.place_name || "N/A"}
@@ -89,7 +113,7 @@ const PaymentDetails = () => {
                         src={payment.logo}
                         alt={payment.name}
                         height={100}
-                        style={{ objectFit: "contain" }}
+                        style={{ objectFit: "contain", height:50 }}
                       />
                       <Title level={4} style={{ marginTop: 16 }}>
                         {payment.name}
@@ -110,7 +134,7 @@ const PaymentDetails = () => {
         </Card>
       </Col>
     </Row>
-  );
+    );
 };
 
 export default PaymentDetails;

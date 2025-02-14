@@ -6,12 +6,15 @@ import {
   Card,
   Form,
   DatePicker,
+  Checkbox,
   Upload,
   Button,
   Typography,
 } from "antd";
 import moment from "moment";
+import { useDispatch, useSelector } from "react-redux";
 import { UploadOutlined } from "@ant-design/icons";
+import { setIsDateRequired } from "store/slices/couponSlice";
 import {
   SupportImageFormat,
   SupportFormatContent,
@@ -74,8 +77,21 @@ const rules = {
 };
 
 function CouponFormFields(props) {
+  const dispatch = useDispatch();
   const [form] = Form.useForm();
   const startDate = Form.useWatch("start_date", form);
+  const { isDateRequired } = useSelector((state) => state.coupons);
+
+  const handleRequiredChanges = (e) => {
+    dispatch(setIsDateRequired(e.target.checked));
+    // Reset dates when toggling date requirement
+    if (!e.target.checked) {
+      form.setFieldsValue({
+        start_date: null,
+        end_date: null,
+      });
+    }
+  };
 
   const disablePastDates = (current) => {
     const startDate = form.getFieldValue("start_date");
@@ -148,49 +164,64 @@ function CouponFormFields(props) {
           </Form.Item>
 
           <Form.Item
-            name="start_date"
-            label="Start Date"
-            rules={rules.startDate}
+            name="date_required"
+            label="Is Date Required?"
+            valuePropName="checked"
           >
-            <DatePicker
-              className="w-100"
-              placeholder="Select start date"
-              format="YYYY-MM-DD"
-              disabledDate={disablePastDates}
-              onChange={handleStartDateChange}
-              showToday={false}
-            />
+            <Checkbox checked={isDateRequired} onChange={handleRequiredChanges}>
+              Date Required
+            </Checkbox>
           </Form.Item>
 
-          <Form.Item
-            name="end_date"
-            label="End Date"
-            rules={[
-              ...rules.endDate,
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  const startDate = getFieldValue("start_date");
-                  if (!startDate || !value) {
-                    return Promise.resolve();
-                  }
-                  if (value.isBefore(startDate, "day")) {
-                    return Promise.reject(
-                      new Error("End date must be after start date")
-                    );
-                  }
-                  return Promise.resolve();
-                },
-              }),
-            ]}
-          >
-            <DatePicker
-              className="w-100"
-              placeholder="Select end date"
-              format="YYYY-MM-DD"
-              disabledDate={disableEndDate}
-              showToday={false}
-            />
-          </Form.Item>
+          {isDateRequired && (
+            <>
+              <Form.Item
+                name="start_date"
+                label="Start Date"
+                rules={rules.startDate}
+              >
+                <DatePicker
+                  className="w-100"
+                  placeholder="Select start date"
+                  format="YYYY-MM-DD"
+                  disabledDate={disablePastDates}
+                  onChange={handleStartDateChange}
+                  showToday={false}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="end_date"
+                label="End Date"
+                rules={[
+                  ...rules.endDate,
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      const startDate = getFieldValue("start_date");
+                      if (!startDate || !value) {
+                        return Promise.resolve();
+                      }
+                      if (value.isBefore(startDate, "day")) {
+                        return Promise.reject(
+                          new Error("End date must be after start date")
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+              >
+                <DatePicker
+                  className="w-100"
+                  placeholder="Select end date"
+                  format="YYYY-MM-DD"
+                  disabledDate={disableEndDate}
+                  showToday={false}
+                />
+              </Form.Item>
+            </>
+          )}
+
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
