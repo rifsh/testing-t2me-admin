@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Modal, Button, Typography, Table, Space } from "antd";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
+import LoadingOverlay from "components/util-components/Loader/index";
 
 const { Title, Text } = Typography;
 
@@ -125,10 +126,9 @@ const WarningModal = ({
     );
   }
 
-  console.log(pagination?.total,"TOTALLLLLLLLLLLL");
-  console.log(pagination?.size,"SIZEEEEEEEEEE");
-  console.log(pagination?.page,"PAGEEEEEEEEEEE");
-  
+  console.log(pagination?.total, "TOTALLLLLLLLLLLL");
+  console.log(pagination?.size, "SIZEEEEEEEEEE");
+  console.log(pagination?.page, "PAGEEEEEEEEEEE");
 
   return (
     <Modal
@@ -181,6 +181,7 @@ const WarningModal = ({
           {warningMessage}
         </Text>
       </Space>
+      <LoadingOverlay loading={loading} />
     </Modal>
   );
 };

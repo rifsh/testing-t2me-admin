@@ -248,6 +248,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/ticket/add-ticket")),
   },
   {
+    key: "ticket.edit",
+    path: `${APP_PREFIX_PATH}/ticket/edit/:ticketId`,
+    component: React.lazy(() => import("views/ticket/edit-ticket/index")),
+  },
+  {
     key: "ticket.type",
     path: `${APP_PREFIX_PATH}/ticket/type/add`,
     component: React.lazy(() => import("views/ticket/components/MultyForm.js")),

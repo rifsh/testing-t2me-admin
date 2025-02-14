@@ -489,7 +489,8 @@ class Utils {
           key === "tax_ids" ||
           key === "coupon_ids" ||
           key === "offer_ids" ||
-          key === "event_ids"
+          key === "event_ids"||
+          key === "venue_ids"
         ) {
           value.forEach((id) => formData.append(key, id));
           return;

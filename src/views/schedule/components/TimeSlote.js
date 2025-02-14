@@ -9,6 +9,7 @@ import {
   Space,
   message,
   Modal,
+  Checkbox,
 } from "antd";
 import {
   MinusCircleOutlined,
@@ -36,15 +37,11 @@ const TimeSlots = ({
   const dispatch = useDispatch();
 
   const shouldShowAddButton = () => {
-    // Get the current slots for the date
     const currentDateSlots = timeSlots[dateStr] || [];
-
-    // If there are no slots, we should show the add button
     if (currentDateSlots.length === 0) {
       return true;
     }
 
-    // Check if the last slot has all required fields
     const lastSlot = currentDateSlots[currentDateSlots.length - 1];
     const isLastSlotComplete =
       lastSlot.start_time && lastSlot.end_time && lastSlot.ticketType;
@@ -63,7 +60,7 @@ const TimeSlots = ({
     value,
     eventType = "change"
   ) => {
-    if (eventType === "select" || !value) {
+    if (eventType === "select") {
       clearFormTimeSlot(dateStr, index, type);
       return;
     }
@@ -84,6 +81,7 @@ const TimeSlots = ({
 
         if (type === "start_time") {
           clearFormTimeSlot(dateStr, index, "end_time");
+          clearFormTimeSlot(dateStr, index, "is_midnight_passed");
         }
         return;
       }
@@ -99,11 +97,17 @@ const TimeSlots = ({
             if (validationResult.affectedSlots) {
               clearAffectedSlots(dateStr, validationResult.affectedSlots);
             }
+            if (validationResult.clearFields) {
+              validationResult.clearFields.forEach((field) => {
+                clearFormTimeSlot(dateStr, index, field);
+              });
+            }
           },
           onCancel: () => {
             clearFormTimeSlot(dateStr, index, type);
             if (type === "start_time") {
               clearFormTimeSlot(dateStr, index, "end_time");
+              clearFormTimeSlot(dateStr, index, "is_midnight_passed");
             }
           },
         });
@@ -112,6 +116,110 @@ const TimeSlots = ({
     }
 
     updateCurrentTimeSlot(dateStr, index, type, value);
+  };
+
+  const handleMidnightPassedChange = (dateStr, index, checked) => {
+    const currentSlot = timeSlots[dateStr]?.[index];
+
+    // Check if start time is set
+    if (!currentSlot?.start_time) {
+      message.error("Please set start time before enabling midnight passed");
+      clearFormTimeSlot(dateStr, index, "is_midnight_passed");
+      return;
+    }
+
+    // If enabling midnight passed
+    if (checked) {
+      // Check if this is the last day of the event
+      const eventDates = Object.keys(timeSlots).sort();
+      const isLastDay = dateStr === eventDates[eventDates.length - 1];
+
+      if (isLastDay) {
+        Modal.error({
+          title: "Cannot Enable Midnight Passed",
+          content:
+            "You cannot enable midnight passed on the last day of the event as there are no subsequent days available.",
+          okText: "OK",
+          cancelText: "Cancel",
+          onOk: () => {
+            clearFormTimeSlot(dateStr, index, "is_midnight_passed");
+          },
+          onCancel: () => {
+            clearFormTimeSlot(dateStr, index, "is_midnight_passed");
+          },
+        });
+        return;
+      }
+
+      // Show warning about next day implications
+      Modal.confirm({
+        title: "Enable Midnight Passed",
+        content:
+          "Enabling this option means the end time will be on the next day. You can only select end times before the start time. Do you want to continue?",
+        okText: "Continue",
+        cancelText: "Cancel",
+        onOk: () => {
+          updateCurrentTimeSlot(dateStr, index, "is_midnight_passed", checked);
+          // Clear end time if it exists and is after start time
+          if (currentSlot.end_time) {
+            const startTimeMinutes = TimeSlotValidator.timeToMinutes(
+              currentSlot.start_time.format("HH:mm")
+            );
+            const endTimeMinutes = TimeSlotValidator.timeToMinutes(
+              currentSlot.end_time.format("HH:mm")
+            );
+
+            if (endTimeMinutes > startTimeMinutes) {
+              clearFormTimeSlot(dateStr, index, "end_time");
+            }
+          }
+        },
+        onCancel: () => {
+          clearFormTimeSlot(dateStr, index, "is_midnight_passed");
+        },
+      });
+      return;
+    }
+
+    // If disabling midnight passed
+    if (!checked && currentSlot?.end_time) {
+      const startTimeMinutes = TimeSlotValidator.timeToMinutes(
+        currentSlot.start_time.format("HH:mm")
+      );
+      const endTimeMinutes = TimeSlotValidator.timeToMinutes(
+        currentSlot.end_time.format("HH:mm")
+      );
+
+      if (endTimeMinutes < startTimeMinutes) {
+        Modal.confirm({
+          title: "Warning",
+          content:
+            "Disabling midnight passed will clear the end time as it's currently set to next day",
+          okText: "Continue",
+          cancelText: "Cancel",
+          onOk: () => {
+            updateCurrentTimeSlot(
+              dateStr,
+              index,
+              "is_midnight_passed",
+              checked
+            );
+            clearFormTimeSlot(dateStr, index, "end_time");
+          },
+          onCancel: () => {
+            form.setFields([
+              {
+                name: ["timeSlots", dateStr, index, "is_midnight_passed"],
+                value: true,
+              },
+            ]);
+          },
+        });
+        return;
+      }
+    }
+
+    updateCurrentTimeSlot(dateStr, index, "is_midnight_passed", checked);
   };
 
   const clearFormTimeSlot = (dateStr, index, type) => {
@@ -135,7 +243,12 @@ const TimeSlots = ({
   const clearAffectedSlots = (dateStr, affectedSlots) => {
     const fieldUpdates = affectedSlots.map((slot) => ({
       name: ["timeSlots", dateStr, slot.index],
-      value: { ...slot, start_time: null, end_time: null },
+      value: {
+        ...slot,
+        start_time: null,
+        end_time: null,
+        is_midnight_passed: false,
+      },
     }));
 
     form.setFields(fieldUpdates);
@@ -156,6 +269,15 @@ const TimeSlots = ({
           index: slot.index,
           field: "end_time",
           value: null,
+        })
+      );
+
+      dispatch(
+        updateTimeSlot({
+          dateStr,
+          index: slot.index,
+          field: "is_midnight_passed",
+          value: false,
         })
       );
     });
@@ -188,7 +310,7 @@ const TimeSlots = ({
           align="middle"
           style={{ marginBottom: 16 }}
         >
-          <Col span={6}>
+          <Col span={4}>
             <Form.Item
               name={["timeSlots", dateStr, index, "start_time"]}
               label="Start Time"
@@ -210,7 +332,23 @@ const TimeSlots = ({
             </Form.Item>
           </Col>
 
-          <Col span={6}>
+          <Col span={4}>
+            <Form.Item
+              name={["timeSlots", dateStr, index, "is_midnight_passed"]}
+              label="Midnight Passed"
+              valuePropName="checked"
+            >
+              <Checkbox
+                value={false}
+                disabled={!slot.start_time}
+                onChange={(e) =>
+                  handleMidnightPassedChange(dateStr, index, e.target.checked)
+                }
+              />
+            </Form.Item>
+          </Col>
+
+          <Col span={4}>
             <Form.Item
               name={["timeSlots", dateStr, index, "end_time"]}
               label="End Time"
@@ -232,7 +370,7 @@ const TimeSlots = ({
             </Form.Item>
           </Col>
 
-          <Col span={6}>
+          <Col span={4}>
             <Form.Item
               label="Ticket Type"
               name={["timeSlots", dateStr, index, "ticketType"]}

@@ -54,7 +54,10 @@ class TimeSlotValidator {
       const relationshipValidation = this.validateTimeRelationship(
         fieldType,
         selectedTime,
-        timeSlots[dateStr]?.[currentIndex] || {}
+        timeSlots[dateStr]?.[currentIndex] || {},
+        timeSlots,
+        dateStr,
+        currentIndex
       );
       if (!relationshipValidation.isValid) {
         return relationshipValidation;
@@ -197,8 +200,24 @@ class TimeSlotValidator {
     }
   }
 
-  static validateTimeRelationship(fieldType, selectedTime, existingSlot) {
-    if (fieldType === "end_time" && existingSlot.start_time) {
+  static validateTimeRelationship(
+    fieldType,
+    selectedTime,
+    existingSlot,
+    timeSlots,
+    dateStr,
+    currentIndex
+  ) {
+    const slots = timeSlots[dateStr] || [];
+    const currentSlot = slots[currentIndex] || {};
+    const isMidnightPassed = currentSlot.is_midnight_passed;
+    console.log(isMidnightPassed, "isMidnightPassed");
+
+    if (
+      fieldType === "end_time" &&
+      existingSlot.start_time &&
+      !isMidnightPassed
+    ) {
       const startTime = existingSlot.start_time.format("HH:mm");
       if (selectedTime <= startTime) {
         return {
@@ -287,6 +306,7 @@ class TimeSlotValidator {
     const slots = timeSlots[dateStr] || [];
     const selectedMinutes = this.timeToMinutes(selectedTime);
     const currentSlot = slots[currentIndex] || {};
+    const isMidnightPassed = currentSlot.is_midnight_passed;
 
     // Get all valid slots except current one
     const otherSlots = slots
@@ -371,7 +391,7 @@ class TimeSlotValidator {
       );
 
       // End time must be after start time
-      if (selectedMinutes <= currentStartMinutes) {
+      if (selectedMinutes <= currentStartMinutes && !isMidnightPassed) {
         return {
           isValid: false,
           message: "End time must be after start time",
@@ -504,6 +524,9 @@ class TimeSlotValidator {
 
   static isFullDayCovered(timeSlots, dateStr) {
     const currentDateSlots = timeSlots[dateStr] || [];
+    const slots = timeSlots[dateStr] || [];
+    const isMidnightPassed =
+      slots.some((slot) => slot.is_midnight_passed === true) || false;
     if (currentDateSlots.length === 0) return false;
 
     // Sort slots by start time
@@ -539,7 +562,7 @@ class TimeSlotValidator {
       }
     }
 
-    return startsAtBeginning && endsAtEnd;
+    return isMidnightPassed || (startsAtBeginning && endsAtEnd);
   }
 
   static areAllSlotsComplete(timeSlots, dateStr) {

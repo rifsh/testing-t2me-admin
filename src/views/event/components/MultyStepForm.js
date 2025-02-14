@@ -1,4 +1,4 @@
-import { Button, Form, message, message as antdMessage } from "antd";
+import { Button, Form } from "antd";
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
@@ -22,18 +22,10 @@ import {
   setModalLoading,
 } from "store/slices/eventSlice";
 import {
-  fetchAllTax,
   setSelectedTaxDetails,
   validateTax,
   setTaxValidationDialogVisible,
 } from "store/slices/taxSlice";
-import ValidationModal from "components/util-components/ModalItems/ValidationModal";
-import {
-  updateOrganizerEvent,
-  setUpdateEventDialogVisible,
-  setSelectedUpdateEvent,
-  setUpdateEventLoading,
-} from "store/slices/EventOrganizerSlice";
 import {
   getVenues,
   validateVenue,
@@ -43,9 +35,6 @@ import {
   fetchAllTickets,
   validateTicket,
   setTicketValidationDialogVisible,
-  setSelectedTicketType,
-  setSelectedTicketStructureforEvent,
-  addOrUpdateTicketSetforEvent,
   getAvailableTicketsType,
 } from "store/slices/ticketSlice";
 import {
@@ -57,7 +46,6 @@ import {
   validateOfferCoupon,
   setOfferCouponValidationDialogVisible,
 } from "store/slices/offerSlice";
-import { UserRoleConstants } from "constants/UserRoleConstant";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
@@ -69,8 +57,6 @@ import { getEventFormSteps } from "configs/UserAccessConfig";
 import getEventFormItems from "configs/UserAccessConfig";
 
 const MultyStepEventForm = ({ eventId, mode }) => {
-  const navigate = useNavigate();
-  const currentUser = getCurrentUser();
   const {
     currentStep,
     selectedCoupons,
@@ -90,17 +76,19 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     messages: warningMessage,
   } = useSelector((state) => state.event);
   const {
-    selectedTicketStructure,
     ticketTypes,
     filteredTickets,
     availableTicketTyps,
   } = useSelector((state) => state.tickets);
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const { responseDataEvent, responseMessageEvent, message } = useSelector(
+  const { message } = useSelector(
     (state) => state.organizerUpdates
   );
   const { selectedTax } = useSelector((state) => state.tax);
+ const { selectedVenue, selectedVenueList } = useSelector(
+    (state) => state.locations
+  );
 
   useEffect(() => {
     if (eventId) {
@@ -122,7 +110,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         category_id: eventDetails.category?.id,
         sub_category_id: eventDetails.sub_category?.id,
         place: eventDetails.venue?.place?.name,
-        venue_id: eventDetails.venue?.id,
+        venue_id: eventDetails.venue?.map((venue) => venue.venue.id) || [],
         tax_ids: eventDetails.taxs?.map((tax) => tax.id) || [],
         available_types: eventDetails.available_types,
         max_capacity: eventDetails.max_tickets || 0,
@@ -354,10 +342,10 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     try {
       const values = await form.validateFields();
 
-      const isValid = await validateCurrentStep(values);
-      if (!isValid) {
-        return;
-      }
+      // const isValid = await validateCurrentStep(values);
+      // if (!isValid) {
+      //   return;
+      // } // note-----------
 
       const resultAction = await dispatch(checkEventValidation());
 
@@ -385,13 +373,13 @@ const MultyStepEventForm = ({ eventId, mode }) => {
   };
 
   const onFinish = async () => {
-    const values = await form.validateFields();
     try {
       if (mode === "EDIT") {
         const offers = {
           offer_ids: selectedOffers?.map((offer) => offer.id) || [],
           coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
         };
+     
         const data = {
           ...submitData,
           ...offers,
@@ -427,6 +415,9 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           offer_ids: selectedOffers?.map((offer) => offer.id) || [],
           coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
         };
+        const venue_id = {
+          venue_ids: selectedVenueList?.map((venue) => venue.id) || [],
+        };
         const ticket_structure = {
           ticket_structure: ticketTypes.reduce((acc, ticketType) => {
             const structureItems = ticketType.ticket_types.map((ticket) => ({
@@ -439,6 +430,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
 
         const finalData = {
           ...submitData,
+          ...venue_id,
           ...ticket_structure,
           ...offers,
           max_tickets: parseInt(submitData.max_tickets || "0", 10),

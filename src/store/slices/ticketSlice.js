@@ -31,6 +31,9 @@ export const initialState = {
   ValidateData: null,
   editable_status: null,
   responseData: null,
+  editItemId: null,
+  mode: "ADD",
+  editItemData: null,
   responseMessage: null,
   pagination: { size: 10, page: 1 },
   editable_status: null,
@@ -138,9 +141,24 @@ export const ticketSlice = createSlice({
     setTicketValidationDialogVisible(state, action) {
       state.ticketValidationDialogVisible = action.payload;
     },
+    setTicketDialogVisible(state, action) {
+      state.dialogVisible = action.payload;
+    },
+    setTicketModalLoading(state, action) {
+      state.modalLoading = action.payload;
+    },
     setSelectedTicketType(state, action) {
       console.log("Setting selected ticket type:", action.payload);
       state.selectedTicketType = action.payload;
+    },
+    setEditItemId: (state, action) => {
+      state.editItemId = action.payload;
+    },
+    setMode: (state, action) => {
+      state.mode = action.payload;
+    },
+    setEditItemData: (state, action) => {
+      state.editItemData = action.payload;
     },
 
     addOrUpdateTicketSet(state, action) {
@@ -278,6 +296,9 @@ export const ticketSlice = createSlice({
     resetTicketSets(state) {
       state.ticketTypes = [];
     },
+    resetAvailableTicketSets(state) {
+      state.availableTicketSets = [];
+    },
     resetTicketTypes(state) {
       if (state.ticketTypes.length > 0) {
         state.ticketTypes[0].ticket_types = []; // Reset ticket_types to an empty array
@@ -414,6 +435,7 @@ export const {
   setStatusFilter,
   setPlaceId,
   setVenueId,
+  resetAvailableTicketSets,
   filterTickets,
   setSelectedVenue,
   resetTicketTypes,
@@ -428,7 +450,12 @@ export const {
   removeSpecificTicketSetforEvent,
   removeTicketType,
   currentStepSaveUpdate,
+  setEditItemId,
   addOrUpdateTicketSet,
+  setTicketDialogVisible,
+  setTicketModalLoading,
+  setMode,
+  setEditItemData,
   resetTicketSets,
   setTicketValidationDialogVisible,
 } = ticketSlice.actions;

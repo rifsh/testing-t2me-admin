@@ -1,10 +1,27 @@
 import React from "react";
-import { Input, Row, Col, Card, Form, DatePicker, Checkbox, Button, Space, Upload, Typography, message } from "antd";
+import {
+  Input,
+  Row,
+  Col,
+  Card,
+  Form,
+  DatePicker,
+  Checkbox,
+  Button,
+  Space,
+  Upload,
+  Typography,
+  message,
+} from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsDateRequired } from "store/slices/offerSlice";
 import moment from "moment";
 import { UploadOutlined } from "@ant-design/icons";
-import { SupportImageFormat, SupportFormatContent, ResolutionByServices } from "constants/SupportFileConstants";
+import {
+  SupportImageFormat,
+  SupportFormatContent,
+  ResolutionByServices,
+} from "constants/SupportFileConstants";
 import Utils from "utils/index";
 
 const { Text } = Typography;
@@ -45,7 +62,7 @@ function OfferFormFields() {
   const dispatch = useDispatch();
   const { isDateRequired } = useSelector((state) => state.offers);
   const [form] = Form.useForm();
-  const startDate = Form.useWatch('start_date', form);
+  const startDate = Form.useWatch("start_date", form);
 
   const handleRequiredChanges = (e) => {
     dispatch(setIsDateRequired(e.target.checked));
@@ -53,28 +70,32 @@ function OfferFormFields() {
     if (!e.target.checked) {
       form.setFieldsValue({
         start_date: null,
-        end_date: null
+        end_date: null,
       });
     }
   };
 
   // Disallow selecting dates before today
   const disablePastDates = (current) => {
-    const startDate = form.getFieldValue('start_date'); 
-    return current && current < moment().startOf('day') && !moment(current).isSame(startDate, 'day');
+    const startDate = form.getFieldValue("start_date");
+    return (
+      current &&
+      current < moment().startOf("day") &&
+      !moment(current).isSame(startDate, "day")
+    );
   };
   // Validate end date based on start date
   const disableEndDate = (current) => {
     if (!startDate) {
       return false;
     }
-    return current && current < moment(startDate).startOf('day');
+    return current && current < moment(startDate).startOf("day");
   };
 
   const handleStartDateChange = (date) => {
     // Reset end date when start date changes
     form.setFieldsValue({
-      end_date: null
+      end_date: null,
     });
   };
   const normFile = (e) => {
@@ -104,7 +125,11 @@ function OfferFormFields() {
             label="Maximum Users"
             rules={rules.maxUsers}
           >
-            <Input type="number" placeholder="Enter maximum uses" onWheel={(e) => e.target.blur()} />
+            <Input
+              type="number"
+              placeholder="Enter maximum uses"
+              onWheel={(e) => e.target.blur()}
+            />
           </Form.Item>
           <Form.Item
             name="date_required"
@@ -139,12 +164,14 @@ function OfferFormFields() {
                   ...rules.endDate,
                   ({ getFieldValue }) => ({
                     validator(_, value) {
-                      const startDate = getFieldValue('start_date');
+                      const startDate = getFieldValue("start_date");
                       if (!startDate || !value) {
                         return Promise.resolve();
                       }
-                      if (value.isBefore(startDate, 'day')) {
-                        return Promise.reject(new Error('End date must be after start date'));
+                      if (value.isBefore(startDate, "day")) {
+                        return Promise.reject(
+                          new Error("End date must be after start date")
+                        );
                       }
                       return Promise.resolve();
                     },
@@ -168,37 +195,42 @@ function OfferFormFields() {
             valuePropName="fileList"
             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
-            style={{ marginBottom: "0px", padding:"0px"}}
+            style={{ marginBottom: "0px", padding: "0px" }}
           >
-
-            <Upload name="thumbnail_image" listType="picture" maxCount={1} 
-            //beforeUpload={handleBeforeUpload}
-            beforeUpload={(file) => Utils.handleBeforeUpload(file, ResolutionByServices.place)}
-              accept={`.${SupportImageFormat.join(',.')}`}
+            <Upload
+              name="thumbnail_image"
+              listType="picture"
+              maxCount={1}
+              //beforeUpload={handleBeforeUpload}
+              beforeUpload={(file) =>
+                Utils.handleBeforeUpload(file, ResolutionByServices.place)
+              }
+              accept={`.${SupportImageFormat.join(",.")}`}
             >
-
               <Button icon={<UploadOutlined />}>Click to upload</Button>
             </Upload>
-            
-
           </Form.Item>
           <div>
-          <Text
+            <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
-              {SupportFormatContent.join(",")}: {" "}
-              {SupportImageFormat.join(", ")} &{" resolution "}{ResolutionByServices.place} pixels.
-              {" "}
+              {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
+              &{" resolution "}
+              {ResolutionByServices.place} pixels.{" "}
             </Text>
-            </div>
+          </div>
 
           <Form.List name="key_words">
             {(fields, { add, remove }) => (
               <>
                 <label>Key Words</label>
                 {fields.map(({ key, name, fieldKey, ...restField }) => (
-                  <Space key={key} style={{ display: "flex", marginBottom: 8 }} align="baseline">
+                  <Space
+                    key={key}
+                    style={{ display: "flex", marginBottom: 8 }}
+                    align="baseline"
+                  >
                     <Form.Item
                       {...restField}
                       name={name}
@@ -212,11 +244,7 @@ function OfferFormFields() {
                     >
                       <Input placeholder="Enter keyword" />
                     </Form.Item>
-                    <Button
-                      type="link"
-                      danger
-                      onClick={() => remove(name)}
-                    >
+                    <Button type="link" danger onClick={() => remove(name)}>
                       Remove
                     </Button>
                   </Space>

@@ -193,6 +193,7 @@ const AdBannerlist = () => {
       },
       responseData: responseImpactData,
       pagination: warningPagination,
+      loading: loading,
     };
   };
 
