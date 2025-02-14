@@ -27,7 +27,7 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import LoadingOverlay from "components/util-components/Loader/index";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 
-const TicketFormFields = () => {
+const TicketFormFields = ({ mode, ticket }) => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();

@@ -13,6 +13,7 @@ import {
   setSelectedCoupon,
   setCouponDialogVisible,
   setCouponModalLoading,
+  setIsDateRequired,
 } from "store/slices/couponSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
@@ -37,6 +38,7 @@ const CouponForm = ({ mode, coupon }) => {
     selectedCoupon,
     warningPagination,
     responseImpactData,
+    isDateRequired,
     message: warningMessage,
     submitPagination,
     modalLoading,
@@ -46,6 +48,7 @@ const CouponForm = ({ mode, coupon }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    dispatch(setIsDateRequired(false));
     if (error) {
       message.error(error);
     }
@@ -57,8 +60,7 @@ const CouponForm = ({ mode, coupon }) => {
         name: coupon.name,
         coupon_code: coupon.coupon_code,
         discount_percentage: coupon.discount_percentage,
-        start_date: dayjs(coupon.start_date),
-        end_date: dayjs(coupon.end_date),
+        date_required: coupon.date_required,
         max_uses: coupon.max_uses,
         min_purchase_amount: coupon.min_purchase_amount,
         thumbnail_image:
@@ -74,7 +76,14 @@ const CouponForm = ({ mode, coupon }) => {
             : [],
       };
 
+      if (coupon.date_required && coupon.start_date && coupon.end_date) {
+        formData.start_date = dayjs(coupon.start_date);
+        formData.end_date = dayjs(coupon.end_date);
+      }
+
       form.setFieldsValue(formData);
+
+      dispatch(setIsDateRequired(coupon?.date_required));
     }
   }, [form, coupon]);
 
@@ -83,8 +92,11 @@ const CouponForm = ({ mode, coupon }) => {
       const values = await form.validateFields();
 
       if (mode === "EDIT") {
-        values.start_date = Utils.formatDate(values.start_date);
-        values.end_date = Utils.formatDate(values.end_date);
+        if (isDateRequired) {
+          values.start_date = Utils.formatDate(values.start_date);
+          values.end_date = Utils.formatDate(values.end_date);
+        }
+        values.date_required = values.date_required ?? isDateRequired;
 
         const editData = {
           ...values,
@@ -100,8 +112,11 @@ const CouponForm = ({ mode, coupon }) => {
           dispatch(setCouponDialogVisible(true));
         }
       } else {
-        values.start_date = Utils.formatDate(values.start_date);
-        values.end_date = Utils.formatDate(values.end_date);
+        if (isDateRequired) {
+          values.start_date = Utils.formatDate(values.start_date);
+          values.end_date = Utils.formatDate(values.end_date);
+        }
+        values.date_required = values.date_required ?? isDateRequired;
         // dispatch(setSelectedSubmitItem(values));
         const formData = {
           ...values,
@@ -214,8 +229,8 @@ const CouponForm = ({ mode, coupon }) => {
         onSubmit={handleModalSubmit}
         onCancel={handleModalCancel}
         confirmText="Proceed"
-        cancelText="Back"
-        loading={modalLoading}
+        cancelText="Back"  
+        loading={loading}
         tableConfig={{
           title: "Active Schedules",
           dataKey: "items",

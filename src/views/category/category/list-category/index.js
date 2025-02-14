@@ -226,6 +226,7 @@ const CategoryList = () => {
         },
         responseData: responseImpactData,
         pagination: warningPagination,
+        loading: loading,
       };
     }
     return {
@@ -240,6 +241,7 @@ const CategoryList = () => {
       },
       responseData: responseImpactData,
       pagination: warningPagination,
+      loading: loading,
     };
   };
 

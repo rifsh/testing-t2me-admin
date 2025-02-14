@@ -275,6 +275,7 @@ const CouponList = () => {
         }}
         responseData={responseImpactData}
         pagination={warningPagination}
+        loading={loading}
       />
       <StatusSubmitAndConfirmModal
         editFunction={editCouponStatus}

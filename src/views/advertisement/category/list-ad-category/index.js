@@ -171,6 +171,7 @@ const CategoryList = () => {
         },
         responseData: responseImpactData,
         pagination: warningPagination,
+        loading: loading,
       };
     }
   };
