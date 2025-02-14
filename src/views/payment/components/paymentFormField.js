@@ -1,30 +1,33 @@
 import React from "react";
-import { Form, Card, Button, Input, Upload, Space, message } from "antd";
-import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
+import {
+  Form,
+  Card,
+  Button,
+  Input,
+  Upload,
+  Space,
+  Checkbox,
+} from "antd";
+import {
+  PlusOutlined,
+  MinusCircleOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { getVenues } from "store/slices/locationSlice";
 import { RulesMessageConstants } from "constants/RulesConstant";
+import {
+  SupportImageFormat,
+  ResolutionByServices,
+} from "constants/SupportFileConstants";
 import { useDispatch } from "react-redux";
+import Utils from "utils/index";
 
 const PaymentFormFields = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-
-  const uploadProps = {
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith("image/");
-      if (!isImage) {
-        message.error("You can only upload image files!");
-      }
-      const isLt2M = file.size / 1024 / 1024 < 2;
-      if (!isLt2M) {
-        message.error("Image must be smaller than 2MB!");
-      }
-      return isImage && isLt2M;
-    },
-  };
 
   return (
     <Form form={form} layout="vertical">
@@ -38,10 +41,11 @@ const PaymentFormFields = () => {
           }}
           rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
         />
-
-        {/* <Card title="Add-on Services" className="mt-4"> */}
+        <Form.Item name="Event" label="Event (Optional)">
+          <Input placeholder="Select Your Event" type="text" />
+        </Form.Item>
         <Form.Item
-          name="Add-On Services"
+          name="addOnServices"
           label="Add-On Services"
           rules={[{ required: true }]}
         >
@@ -66,7 +70,6 @@ const PaymentFormFields = () => {
                     >
                       <Input placeholder="Service name" />
                     </Form.Item>
-
                     <Form.Item
                       {...restField}
                       name={[name, "image"]}
@@ -75,18 +78,26 @@ const PaymentFormFields = () => {
                         Array.isArray(e) ? e : e?.fileList
                       }
                     >
-                      <Upload {...uploadProps} listType="picture-card">
-                        <div>
-                          <PlusOutlined />
-                          <div style={{ marginTop: 8 }}>Upload</div>
-                        </div>
+                      <Upload
+                        name="thumbnail_image"
+                        listType="picture"
+                        maxCount={1}
+                        beforeUpload={(file) =>
+                          Utils.handleBeforeUpload(
+                            file,
+                            ResolutionByServices.place
+                          )
+                        }
+                        accept={`.${SupportImageFormat.join(",.")}`}
+                      >
+                        <Button icon={<UploadOutlined />}>
+                          Click to upload
+                        </Button>
                       </Upload>
                     </Form.Item>
-
                     <MinusCircleOutlined onClick={() => remove(name)} />
                   </Space>
                 ))}
-
                 <Form.Item>
                   <Button
                     type="dashed"
@@ -101,11 +112,129 @@ const PaymentFormFields = () => {
             )}
           </Form.List>
         </Form.Item>
-        {/* </Card> */}
 
-        <Form.Item name="url" label="Terms and Conditions" form={form}>
-          <Input placeholder="Enter your url" type="text" />
+        <Form.Item
+          name="addPaymentMethods"
+          label="Add Payment Methods"
+          rules={[{ required: true }]}
+        >
+          <Form.List name="cardPayments">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => (
+                  <Space
+                    key={key}
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Form.Item
+                      {...restField}
+                      name={[name, "bankName"]}
+                      rules={[{ required: true, message: "Enter bank name" }]}
+                    >
+                      <Input placeholder="Bank Name" />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, "cardType"]}
+                      rules={[{ required: true, message: "Select card type" }]}
+                    >
+                      <Checkbox.Group>
+                        <Checkbox value="debit">Debit Card</Checkbox>
+                        <Checkbox value="credit">Credit Card</Checkbox>
+                      </Checkbox.Group>
+                    </Form.Item>
+                    <MinusCircleOutlined onClick={() => remove(name)} />
+                  </Space>
+                ))}
+                <Form.Item>
+                  <Button
+                    type="dashed"
+                    onClick={() => add()}
+                    block
+                    icon={<PlusOutlined />}
+                  >
+                    Add Bank & Card Type
+                  </Button>
+                </Form.Item>
+              </>
+            )}
+          </Form.List>
         </Form.Item>
+
+        <Form.Item name="qrPayments" label="QR Payments">
+          <Form.List name="qrPayments">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => (
+                  <Space
+                    key={key}
+                    style={{ display: "flex", marginBottom: 8 }}
+                    align="baseline"
+                  >
+                    <Form.Item
+                      {...restField}
+                      name={[name, "paymentProvider"]}
+                      rules={[
+                        { required: true, message: "Enter provider name" },
+                      ]}
+                    >
+                      <Input placeholder="Payment Provider" />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, "qrCode"]}
+                      valuePropName="fileList"
+                      getValueFromEvent={(e) =>
+                        Array.isArray(e) ? e : e?.fileList
+                      }
+                    >
+                      <Upload
+                        name="qr_code"
+                        listType="picture"
+                        maxCount={1}
+                        beforeUpload={(file) =>
+                          Utils.handleBeforeUpload(
+                            file,
+                            ResolutionByServices.place
+                          )
+                        }
+                        accept={`.${SupportImageFormat.join(",.")}`}
+                      >
+                        <Button icon={<UploadOutlined />}>
+                          Upload QR Code
+                        </Button>
+                      </Upload>
+                    </Form.Item>
+                    <MinusCircleOutlined onClick={() => remove(name)} />
+                  </Space>
+                ))}
+                <Form.Item>
+                  <Button
+                    type="dashed"
+                    onClick={() => add()}
+                    block
+                    icon={<PlusOutlined />}
+                  >
+                    Add QR Payment
+                  </Button>
+                </Form.Item>
+              </>
+            )}
+          </Form.List>
+        </Form.Item>
+
+        <Form.Item name="url" label="Terms and Conditions">
+          <Input placeholder="Enter your URL" type="text" />
+        </Form.Item>
+        <Form.Item name="url" label="Additional Urls">
+          <Input placeholder="Enter your URL" type="text" />
+        </Form.Item>
+
         <div className="container" style={{ padding: "0px" }}>
           <Flex
             className="py-2"
