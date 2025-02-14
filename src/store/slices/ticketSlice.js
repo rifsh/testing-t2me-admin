@@ -278,6 +278,9 @@ export const ticketSlice = createSlice({
     resetTicketSets(state) {
       state.ticketTypes = [];
     },
+    resetAvailableTicketSets(state) {
+      state.availableTicketSets = [];
+    },
     resetTicketTypes(state) {
       if (state.ticketTypes.length > 0) {
         state.ticketTypes[0].ticket_types = []; // Reset ticket_types to an empty array
@@ -414,6 +417,7 @@ export const {
   setStatusFilter,
   setPlaceId,
   setVenueId,
+  resetAvailableTicketSets,
   filterTickets,
   setSelectedVenue,
   resetTicketTypes,

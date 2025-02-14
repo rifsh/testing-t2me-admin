@@ -22,6 +22,7 @@ export const initialState = {
   detailedCountryList: [],
   places: [],
   selectedVenue: null,
+  selectedVenueList: [],
   selectedPlace: null,
   coordinates: { lat: 23.4241, lng: 53.8478 },
   options: [],
@@ -295,6 +296,40 @@ const locationSlice = createSlice({
     setSelectedVenue(state, action) {
       state.selectedVenue = action.payload;
     },
+    setSelectedVenueList(state, action) {
+      if (action.payload === "clear") {
+
+        state.selectedVenueList = [];
+      } else {
+        console.log(state.selectedVenueList, "selectedVenueList");
+
+        // Ensure payload is an array before proceeding
+        if (!Array.isArray(action.payload)) {
+          console.error("Invalid payload: expected an array", action.payload);
+          return;
+        }
+
+        const venueToToggle = action.payload[0]; // Assuming one venue at a time
+
+        if (!venueToToggle) return; // Safety check
+
+        // Check if the venue already exists
+        const index = state.selectedVenueList.findIndex(
+          (venue) => venue.id === venueToToggle.id
+        );
+
+        if (index !== -1) {
+          // If exists, remove it (toggle off)
+          state.selectedVenueList = state.selectedVenueList.filter(
+            (venue) => venue.id !== venueToToggle.id
+          );
+        } else {
+          // If not, add it (toggle on)
+          state.selectedVenueList = [...state.selectedVenueList, venueToToggle];
+        }
+      }
+    },
+
     setSelectedPlace(state, action) {
       state.selectedPlace = action.payload;
     },
@@ -674,6 +709,7 @@ export const {
   setLocationModalLoading,
   filterVenues,
   singleVenue,
+  setSelectedVenueList,
   onSearch,
   setCoordinates,
   filterPlaces,

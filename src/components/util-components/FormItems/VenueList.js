@@ -3,15 +3,15 @@ import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 
-const VenueListForm = ({ form, label, rules, onSelect,mode }) => {
+const VenueListForm = ({ form, label, rules, onSelect, mode }) => {
   const dispatch = useDispatch();
   const { filteredVenues, selectedVenue, loading } = useSelector(
     (state) => state.locations
   );
 
   useEffect(() => {
-    if (form.getFieldValue("venue_id")) {
-      dispatch(getVenues(form.getFieldValue("venue_id")));
+    if (form.getFieldValue("place_id")) {
+      dispatch(getVenues({place_id:form.getFieldValue("place_id")}));
     }
   }, [dispatch, form]);
 
@@ -23,7 +23,9 @@ const VenueListForm = ({ form, label, rules, onSelect,mode }) => {
 
   return (
     <Form.Item name="venue_id" label={label} rules={rules}>
-      <Select mode={mode}
+      <Select
+        mode={mode}
+        defaultValue={null}
         notFoundContent={
           loading ? (
             <span>Loading venues...</span>
