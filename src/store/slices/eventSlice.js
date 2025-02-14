@@ -25,6 +25,9 @@ const initialState = {
   currentStep: 1,
   submitLoading: false,
   dialogVisible: false,
+  validationStatus: false,
+  ValidateData: null,
+  eventValidationDialogVisible: false,
   modalLoading: false,
   selectedEvent: null,
   warningMessage: null,
@@ -174,6 +177,19 @@ export const editEventStatus = createAsyncThunk(
   }
 );
 
+export const validateMultipleEvent = createAsyncThunk(
+  "event/validateMultiple",
+  async (eventIds, { rejectWithValue }) => {
+    try {
+      const response = await EventService.validateMultiEvent(eventIds);
+
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+
 const eventSlice = createSlice({
   name: "event",
   initialState,
@@ -254,9 +270,37 @@ const eventSlice = createSlice({
     setSelectedEvent(state, action) {
       state.selectedEvent = action.payload;
     },
+    setEventValidationDialogVisible(state, action) {
+      state.eventValidationDialogVisible = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(validateMultipleEvent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(validateMultipleEvent.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        console.log("HELOOOOOOOOOO");
+
+        if (payload.message === "warning") {
+          state.validationStatus = false;
+          state.messages = payload.status.message;
+          state.ValidateData = payload.status.data;
+          console.log(payload.status.data, "DATAAAAAAA IN PAYLOAD");
+          state.editable_status = payload.status.editable_status;
+        } else if (payload.data) {
+          state.validationStatus = payload.data[0].validation_status;
+          if (payload.status) {
+            state.messages = payload.status.message;
+          }
+        }
+      })
+      .addCase(validateMultipleEvent.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to validate place";
+      })
       .addCase(addEvent.pending, (state) => {
         console.log("AddEvent - Pending State");
         state.loading = true;
@@ -431,6 +475,7 @@ export const {
   resetSelected,
   setCurrentStep,
   setSubmitLoading,
+  setEventValidationDialogVisible,
   setEditItemId,
 } = eventSlice.actions;
 
