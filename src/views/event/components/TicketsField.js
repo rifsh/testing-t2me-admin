@@ -1,19 +1,23 @@
 import React, { useEffect } from "react";
-import { Card, Col, Form, Input, Row } from "antd";
+import { Card, Col, Form, Input, Row, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllTickets,
   getAvailableTicketsType,
+  resetAvailableTicketSets,
   setTicketValidationDialogVisible,
 } from "store/slices/ticketSlice";
 import { TicketTypeSelector } from "./TicketTypeSelector";
 import { TicketStructureSelector } from "./TicketStructureSelector";
 import { TicketSetDetails } from "./TicketSetDetails";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
-
+import { setSelectedVenue } from "store/slices/locationSlice";
+const { Option } = Select;
 const TicketField = ({ form }) => {
   const dispatch = useDispatch();
-  const { selectedVenue } = useSelector((state) => state.locations);
+  const { selectedVenue, selectedVenueList } = useSelector(
+    (state) => state.locations
+  );
   const {
     message,
     validationStatus,
@@ -28,17 +32,7 @@ const TicketField = ({ form }) => {
     // }
 
     dispatch(getAvailableTicketsType());
-    if (selectedVenue?.id) {
-      dispatch(fetchAllTickets({ venue_id: selectedVenue.id }));
-    }
-
-    if (selectedVenue?.capacity) {
-      form.setFieldsValue({
-        max_capacity: selectedVenue.capacity,
-      });
-    }
   }, [selectedVenue, form, dispatch]);
-
   const validateMaxTickets = (_, value) => {
     // if (!value) {
     //   return Promise.reject(
@@ -57,6 +51,24 @@ const TicketField = ({ form }) => {
     }
     return Promise.resolve();
   };
+  const handleVenueClick = async (value) => {
+    const venue = selectedVenueList.find((venue) => venue.id === value);
+    // await dispatch(setSelectedVenue(venue));
+    if (value) {
+      form.setFieldsValue({
+        ticket_structure_id: null,
+        ticket_set: null,
+      });
+      dispatch(resetAvailableTicketSets());
+      dispatch(fetchAllTickets({ venue_id: value }));
+    }
+
+    if (venue?.capacity) {
+      form.setFieldsValue({
+        max_capacity: venue.capacity,
+      });
+    }
+  };
   const handleValidationModalCancel = () => {
     dispatch(setTicketValidationDialogVisible(false));
   };
@@ -65,6 +77,26 @@ const TicketField = ({ form }) => {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Ticket Details">
+          {/* Venue Selection */}
+          <Form.Item
+            name="venues"
+            label="Selected Venues"
+            rules={[{ required: true, message: "Please select a Venue." }]}
+          >
+            <Select
+              className="w-100"
+              placeholder="Choose a Venue"
+              value={selectedVenueList} // Fixed the value binding
+              onChange={handleVenueClick} // Updated state when venue changes
+            >
+              {Array.isArray(selectedVenueList) &&
+                selectedVenueList.map((venue) => (
+                  <Option key={venue.id} value={venue.id}>
+                    {venue.name}
+                  </Option>
+                ))}
+            </Select>
+          </Form.Item>
           <Form.Item name="max_capacity" label="Max Capacity">
             <Input readOnly />
           </Form.Item>
