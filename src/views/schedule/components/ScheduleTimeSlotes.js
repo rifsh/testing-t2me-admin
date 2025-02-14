@@ -86,7 +86,11 @@ export function ScheduleTimeSlots({ form }) {
 
       if (hasCompleteSlot) {
         newSlotStatus[date] = "green";
-      } else if (slotsArray.some((slot) => slot && slot.start_time && slot.ticketType && slot.end_time)) {
+      } else if (
+        slotsArray.some(
+          (slot) => slot && slot.start_time && slot.ticketType && slot.end_time
+        )
+      ) {
         newSlotStatus[date] = "green";
       } else {
         newSlotStatus[date] = "red";
@@ -438,7 +442,7 @@ export function ScheduleTimeSlots({ form }) {
   });
   const ticketOptions = useMemo(() => {
     return (
-      eventDetails?.event_ticket_structures?.map((ticketType) => ({
+      eventDetails?.venue_ticket_structures?.map((ticketType) => ({
         value: ticketType.id,
         label: `${ticketType.ticket_structure.name} (${ticketType.ticket_set})`,
       })) || []
