@@ -412,7 +412,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
         onCancel={handleModalCancel}
         confirmText="Proceed"
         cancelText="Back"
-        loading={modalLoading}
+        loading={loading}
         responseData={responseImpactData}
         tableConfig={{
           title: "Active Schedules",

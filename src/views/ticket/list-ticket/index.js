@@ -5,12 +5,20 @@ import {
   Input,
   Button,
   Collapse,
+  Menu,
   Modal,
   Row,
   Col,
   Divider,
 } from "antd";
-import { PlusCircleOutlined, SearchOutlined } from "@ant-design/icons";
+import Flex from "components/shared-components/Flex";
+import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
+import {
+  PlusCircleOutlined,
+  SearchOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import {
@@ -18,6 +26,9 @@ import {
   fetchAllTickets,
   filterTickets,
   resetTicketSets,
+  setEditItemId,
+  setTicketDialogVisible,
+  setTicketModalLoading,
 } from "store/slices/ticketSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedItem } from "store/slices/modalSlice";
@@ -25,13 +36,20 @@ import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { TextConstants } from "constants/TextConstant";
 const { Panel } = Collapse;
 
 const TicketList = () => {
   const dispatch = useDispatch();
-  const { filteredTickets, pagination,editable_status, message } = useSelector(
-    (state) => state.tickets
-  );
+  const {
+    filteredTickets,
+    pagination,
+    editable_status,
+    message,
+    editItemId,
+    dialogVisible,
+    modalLoading,
+  } = useSelector((state) => state.tickets);
 
   useEffect(() => {
     dispatch(resetTicketSets());
@@ -53,6 +71,32 @@ const TicketList = () => {
   const handleCancel = () => {
     setIsModalVisible(false);
   };
+  const handleEditTicket = (id) => {
+    dispatch(setEditItemId(id));
+    dispatch(setTicketDialogVisible(true));
+  };
+  const handleModalSubmit = async () => {
+    dispatch(setTicketModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/ticket/edit/${editItemId}`);
+
+    console.log(editItemId, "9234239423490823498234098234908");
+    dispatch(setTicketDialogVisible(false));
+    dispatch(setTicketModalLoading(false));
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setTicketDialogVisible(false));
+  };
+  const dropdownMenu = (row) => (
+    <Menu>
+      <Menu.Item onClick={() => handleEditTicket(row.id)}>
+        <Flex alignItems="center">
+          <EyeOutlined />
+          <span className="ml-2">Edit Ticket</span>
+        </Flex>
+      </Menu.Item>
+    </Menu>
+  );
 
   const navigate = useNavigate();
   const handleUpdateStatus = (item) => {
@@ -111,10 +155,10 @@ const TicketList = () => {
             dataIndex: "base_price",
             render: (price, record) => {
               const currencyCode = record?.venue?.place?.country?.currency_code;
-              return `${currencyCode ? currencyCode : ''} ${price}`;
+              return `${currencyCode ? currencyCode : ""} ${price}`;
             },
           },
-          
+
           {
             title: "Ticket Sub Types",
             dataIndex: "ticket_types",
@@ -182,14 +226,35 @@ const TicketList = () => {
             ),
           },
           Utils.statusColumnUtil(handleUpdateStatus),
+          {
+            title: "Actions",
+            dataIndex: "actions",
+            render: (_, elm) => (
+              <div className="text-right">
+                <EllipsisDropdown menu={dropdownMenu(elm)} />
+              </div>
+            ),
+          },
         ]}
+      />
+      <WarningModal
+        mode={"itemmodal"}
+        visible={dialogVisible}
+        title="Edit Ticket"
+        details={TextConstants.DefaultEditContent1}
+        warningMessage="Do you want to proceed to the edit page?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed to Edit"
+        cancelText="Cancel"
+        loading={modalLoading}
       />
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editTicket}
-       getAllFunction={(pageData) => fetchAllTickets(pageData)}
-             pageData={{ page: 1, size: 10 }}
-             editable_status={editable_status}
+        getAllFunction={(pageData) => fetchAllTickets(pageData)}
+        pageData={{ page: 1, size: 10 }}
+        editable_status={editable_status}
       />
       <Modal
         title="Venue Details"

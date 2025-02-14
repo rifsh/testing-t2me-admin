@@ -2,7 +2,7 @@ import { Card, Col, Form } from "antd";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import VenueListForm from "components/util-components/FormItems/VenueList";
 import { useDispatch, useSelector } from "react-redux";
-import { getVenues } from "store/slices/locationSlice";
+import { getVenues, setSelectedVenueList } from "store/slices/locationSlice";
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { setPlaceValidationDialogVisible } from "store/slices/locationSlice";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
@@ -19,6 +19,7 @@ const LocationDetailsField = ({ form }) => {
   const {
     message: venueValidationMessage,
     ValidateData,
+    filteredVenues,
     placeValidationDialogVisible,
   } = useSelector((state) => state.locations);
 
@@ -32,17 +33,26 @@ const LocationDetailsField = ({ form }) => {
       venue_id: null,
     });
     dispatch(resetTicketSelection());
+    dispatch(setSelectedVenueList("clear"));
   };
 
-  const handleVenueSelect = () => {
+  const handleVenueSelect = (value) => {
+    const venue = filteredVenues.find((venue) => venue.id === value);
+
+    if (venue) {
+      dispatch(setSelectedVenueList([venue])); 
+    }
+
     form.setFieldsValue({
       available_types: null,
       seat_structure_id: null,
       ticket_structure_id: null,
       ticket_set: null,
     });
+
     dispatch(resetTicketSelection());
   };
+
   const handleValidationModalCancel = () => {
     dispatch(setPlaceValidationDialogVisible(false));
   };
@@ -58,10 +68,10 @@ const LocationDetailsField = ({ form }) => {
         />
         <VenueListForm
           form={form}
-          // mode={"multiple"}
+          mode={"multiple"}
           label="Venue"
           rules={rules.venue}
-          onSelect={handleVenueSelect}
+          onSelect={(value) => handleVenueSelect(value)}
         />
       </Card>
       <ValidationModal

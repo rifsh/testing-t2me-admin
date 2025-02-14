@@ -22,6 +22,7 @@ const UpdateStatusModal = ({
   onCloseMessage = TextConstants.StatusUpdateCanceled,
   responseMessage,
   pageData,
+  loading,
   tableConfig = {
     title: "Submission Details",
     dataKey: "",
@@ -145,7 +146,7 @@ const UpdateStatusModal = ({
       onCancel={handleModalCancel}
       confirmText={TextConstants.ProceedButton}
       cancelText={TextConstants.BackButton}
-      loading={modalLoading}
+      loading={loading}
       tableConfig={tableConfig}
       responseData={responseData}
       pagination={pagination}
