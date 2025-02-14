@@ -13,17 +13,43 @@ const ValidationModal = ({
   console.log(data, "DATA IN MODAL");
 
   const formattedErrors = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+    if (!data) return [];
 
-    return data.map((error, index) => ({
-      key: index,
-      message: error.message,
-      tableData: Object.entries(error.item || {}).map(([key, value], idx) => ({
-        key: `${index}-${idx}`, // Unique key for each row
-        columnKey: key,
-        value: value !== null && value !== undefined ? String(value) : "N/A",
-      })),
-    }));
+    if (Array.isArray(data)) {
+      return data.map((error, index) => ({
+        key: index,
+        message: error.message,
+        tableData: Object.entries(error.item || {}).map(
+          ([key, value], idx) => ({
+            key: `${index}-${idx}`,
+            columnKey: key,
+            value:
+              value !== null && value !== undefined ? String(value) : "N/A",
+          })
+        ),
+      }));
+    }
+
+    const errors = [];
+    Object.entries(data).forEach(([eventName, eventErrors]) => {
+      eventErrors.forEach((error, index) => {
+        errors.push({
+          key: `${eventName}-${index}`,
+          eventName,
+          message: error.message,
+          tableData: Object.entries(error.item || {}).map(
+            ([key, value], idx) => ({
+              key: `${eventName}-${index}-${idx}`,
+              columnKey: key,
+              value:
+                value !== null && value !== undefined ? String(value) : "N/A",
+            })
+          ),
+        });
+      });
+    });
+
+    return errors;
   }, [data]);
 
   const columns = [
@@ -59,7 +85,7 @@ const ValidationModal = ({
         </Text>
 
         {formattedErrors.length > 0 ? (
-          formattedErrors.map(({ key, message, tableData }) => (
+          formattedErrors.map(({ key, eventName, message, tableData }) => (
             <div key={key}>
               <Space>
                 <ExclamationCircleOutlined style={{ color: "orange" }} />
@@ -67,6 +93,11 @@ const ValidationModal = ({
                   {message}
                 </Text>
               </Space>
+              {eventName && ( // Display event name if it exists
+                <Text strong style={{ display: "block", marginTop: 8 }}>
+                  Event: {eventName}
+                </Text>
+              )}
               <Table
                 columns={columns}
                 dataSource={tableData}

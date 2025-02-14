@@ -125,30 +125,30 @@ const FaqList = () => {
           </Button>
         </Col>
       </Row>
-      <div className="table-responsive">
-        <Table
-          loading={loading}
-          columns={sectionColumns}
-          dataSource={dataSource}
-          expandable={{
-            expandedRowRender: (record) => (
+      <Table
+        loading={loading}
+        columns={sectionColumns}
+        dataSource={dataSource}
+        // pagination={false}
+        expandable={{
+          expandedRowRender: (record) => (
+            <div style={{ margin: '0 -16px' }}>
               <Table
                 columns={questionColumns}
                 dataSource={record.faq}
                 pagination={false}
-                scroll={{ y: "none" }}
                 expandable={{
                   expandedRowRender: (questionRecord) => (
-                    <p style={{ margin: 0 }}>{questionRecord.answer}</p>
+                    <p style={{ margin: '16px 0' }}>{questionRecord.answer}</p>
                   ),
                   rowExpandable: (questionRecord) => questionRecord.answer,
                 }}
               />
-            ),
-            rowExpandable: (record) => record.faq && record.faq.length > 0,
-          }}
-        />
-      </div>
+            </div>
+          ),
+          rowExpandable: (record) => record.faq && record.faq.length > 0,
+        }}
+      />
     </Card>
   );
 };
