@@ -68,6 +68,7 @@ const VenueFormFields = ({ mode, venue }) => {
     modalLoading,
     editable_status,
     responseImpactData,
+    warningPagination,
     ValidateData,
     validationStatus,
     placeValidationDialogVisible,
@@ -199,6 +200,19 @@ const VenueFormFields = ({ mode, venue }) => {
         console.error("Validation Failed:", errorInfo);
       }
     }
+  };
+  const handleWarningPagination = (page, size) => {
+    console.log("------------------------");
+
+    console.log("CHANIGN...........");
+
+    dispatch(
+      editVenue({
+        data: selectedVenue,
+        action: ActionType.WARNING,
+        pageData: { page: page, size: size },
+      })
+    );
   };
 
   const handleModalSubmit = async () => {
@@ -415,6 +429,8 @@ const VenueFormFields = ({ mode, venue }) => {
           dataKey: "items",
         }}
         editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
       />
       <LoadingOverlay loading={loading} />
       <SubmitAndConfirmModal

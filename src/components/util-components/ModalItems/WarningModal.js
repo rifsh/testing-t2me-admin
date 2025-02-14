@@ -17,13 +17,19 @@ const WarningModal = ({
   cancelText = "Cancel",
   loading = false,
   responseData = null,
+  pagination,
+  onPaginationChange = () => {},
   tableConfig = {
     title: "Submission Details",
     dataKey: "",
-  }
+  },
 }) => {
   const { columns, data, noSchedulesImpacted } = useMemo(() => {
-    if (!responseData || !tableConfig.dataKey || !responseData[tableConfig.dataKey]) {
+    if (
+      !responseData ||
+      !tableConfig.dataKey ||
+      !responseData[tableConfig.dataKey]
+    ) {
       return { columns: [], data: [], noSchedulesImpacted: true };
     }
 
@@ -35,58 +41,65 @@ const WarningModal = ({
 
     const columnConfig = {
       name: {
-        title: 'Schedule Name',
-        dataIndex: 'name',
-        key: 'name',
+        title: "Schedule Name",
+        dataIndex: "name",
+        key: "name",
       },
       status: {
-        title: 'Status',
-        dataIndex: 'status',
-        key: 'status',
+        title: "Status",
+        dataIndex: "status",
+        key: "status",
       },
       is_scheduled: {
-        title: 'Is Scheduled',
-        dataIndex: 'is_scheduled',
-        key: 'is_scheduled',
+        title: "Is Scheduled",
+        dataIndex: "is_scheduled",
+        key: "is_scheduled",
       },
       event: {
-        title: 'Event Name',
-        dataIndex: 'event',
-        key: 'event',
+        title: "Event Name",
+        dataIndex: "event",
+        key: "event",
         render: (event) => (
-          <Text style={{ whiteSpace: "pre-wrap" }} ellipsis={{ tooltip: event?.event_name }}>
+          <Text
+            style={{ whiteSpace: "pre-wrap" }}
+            ellipsis={{ tooltip: event?.event_name }}
+          >
             {event?.event_name ?? "N/A"}
           </Text>
         ),
       },
       start_date: {
-        title: 'Start Date',
-        dataIndex: 'start_date',
-        key: 'start_date',
+        title: "Start Date",
+        dataIndex: "start_date",
+        key: "start_date",
       },
       end_date: {
-        title: 'End Date',
-        dataIndex: 'end_date',
-        key: 'end_date',
-      }
+        title: "End Date",
+        dataIndex: "end_date",
+        key: "end_date",
+      },
     };
 
     const columns = Object.keys(items[0])
-      .filter(key => key !== 'id' && columnConfig[key]) // Exclude 'id' column
-      .map(key => ({
+      .filter((key) => key !== "id" && columnConfig[key]) // Exclude 'id' column
+      .map((key) => ({
         ...columnConfig[key],
-        render: key === 'event' 
-          ? columnConfig[key].render 
-          : (text) => (
-              <Text style={{ whiteSpace: "pre-wrap" }} ellipsis={{ tooltip: text?.toString() }}>
-                {text?.toString() ?? "N/A"}
-              </Text>
-            ),
+        render:
+          key === "event"
+            ? columnConfig[key].render
+            : (text) => (
+                <Text
+                  style={{ whiteSpace: "pre-wrap" }}
+                  ellipsis={{ tooltip: text?.toString() }}
+                >
+                  {text?.toString() ?? "N/A"}
+                </Text>
+              ),
       }));
 
     const data = items.map((item, index) => ({
       key: index,
-      ...item
+      ...item,
     }));
 
     return { columns, data, noSchedulesImpacted: false };
@@ -95,7 +108,7 @@ const WarningModal = ({
   const footerButtons = [
     <Button key="cancel" onClick={onCancel}>
       {cancelText}
-    </Button>
+    </Button>,
   ];
 
   if (editable_status) {
@@ -111,6 +124,11 @@ const WarningModal = ({
       </Button>
     );
   }
+
+  console.log(pagination?.total,"TOTALLLLLLLLLLLL");
+  console.log(pagination?.size,"SIZEEEEEEEEEE");
+  console.log(pagination?.page,"PAGEEEEEEEEEEE");
+  
 
   return (
     <Modal
@@ -144,14 +162,22 @@ const WarningModal = ({
             <Table
               columns={columns}
               dataSource={data}
-              pagination={false}
+              pagination={{
+                current: pagination?.page,
+                pageSize: pagination?.size,
+                total: pagination?.total,
+                onChange: onPaginationChange,
+              }}
               size="small"
               bordered
-              scroll={{ x: 'max-content' }}
+              scroll={{ x: "max-content" }}
             />
           </div>
         )}
-        <Text strong style={{ color: "#fa541c", display: "block", marginTop: 16 }}>
+        <Text
+          strong
+          style={{ color: "#fa541c", display: "block", marginTop: 16 }}
+        >
           {warningMessage}
         </Text>
       </Space>

@@ -87,6 +87,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
     message: warningMessage,
     selectedAdBanner,
     createBannerLoading,
+    warningPagination,
     responseImpactData,
     editable_status,
   } = useSelector((state) => state.advertisement);
@@ -193,6 +194,19 @@ const AdBannerFormFields = ({ mode, banner }) => {
     } catch (errorInfo) {
       console.log("Validation Failed:", errorInfo);
     }
+  };
+  const handleWarningPagination = (page, size) => {
+    console.log("------------------------");
+
+    console.log("CHANIGN...........");
+
+    dispatch(
+      updateAdBanner({
+        data: selectedAdBanner,
+        action: ActionType.WARNING,
+        pageData: { page: page, size: size },
+      })
+    );
   };
   const handleValidationModalCancel = () => {
     dispatch(setAdCategoryValidationDialogVisible(false));
@@ -405,6 +419,8 @@ const AdBannerFormFields = ({ mode, banner }) => {
           dataKey: "items",
         }}
         editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
       />
       <SubmitAndConfirmModal
         responseData={responseData}

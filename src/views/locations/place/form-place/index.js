@@ -40,6 +40,7 @@ const CountryForm = ({ mode, placeId }) => {
     responseMessage,
     createPlaceLoading,
     modalLoading,
+    warningPagination,
     selectedPlace,
     filteredPlaces,
     responseImpactData,
@@ -148,6 +149,19 @@ const CountryForm = ({ mode, placeId }) => {
       console.error("Validation Failed:", errorInfo);
     }
   };
+  const handleWarningPagination = (page, size) => {
+    console.log("------------------------");
+
+    console.log("CHANIGN...........");
+
+    dispatch(
+      editPlace({
+        data: selectedPlace,
+        action: ActionType.WARNING,
+        pageData: { page: page, size: size },
+      })
+    );
+  };
 
   const handleModalSubmit = async () => {
     dispatch(setLocationModalLoading(true));
@@ -238,6 +252,8 @@ const CountryForm = ({ mode, placeId }) => {
           dataKey: "items",
         }}
         editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
       />
       <SubmitAndConfirmModal
         responseData={responseData}

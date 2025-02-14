@@ -5,46 +5,54 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const CouponService = {};
 
-
-CouponService.addCoupon = function (data,action) {
+CouponService.addCoupon = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
   return fetch({
     url: `${ApiConstant.COUPON_URL}?action=${encodedAction}`,
     method: "post",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
-CouponService.editCoupon = function (data, action) {
-  console.log(data,"DATA IN SERVICE");
-  
+CouponService.editCoupon = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  console.log(data, "DATA IN SERVICE");
+
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
   return fetch({
     url: `${ApiConstant.COUPON_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
+    params: Utils.filterParams(pageData),
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
 
-
-CouponService.editCouponStatus = function (data, action) {
+CouponService.editCouponStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.COUPON_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
+    params: Utils.filterParams(pageData),
     data: data,
   });
 };

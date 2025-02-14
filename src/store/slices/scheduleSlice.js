@@ -8,6 +8,7 @@ export const initialState = {
   schedules: [],
   filteredSchedules: [],
   selectedCoupons: [],
+  submitedData: null,
   selectedOffers: [],
   selectedItemForModal: null,
   isSelectTime: false,
@@ -102,6 +103,9 @@ const scheduleSlice = createSlice({
     setSlotStatus: (state, action) => {
       state.slotStatus = action.payload;
     },
+    setScheduleSubmitData: (state, action) => {
+      state.submitedData = action.payload;
+    },
     addNewTimeSlot: (state, action) => {
       const { dateStr } = action.payload;
       if (!state.timeSlots[dateStr]) {
@@ -134,8 +138,26 @@ const scheduleSlice = createSlice({
     },
     updateTimeSlot: (state, action) => {
       const { dateStr, index, field, value } = action.payload;
-      if (state.timeSlots[dateStr] && state.timeSlots[dateStr][index]) {
-        state.timeSlots[dateStr][index][field] = value;
+      if (!state.timeSlots[dateStr]) {
+        state.timeSlots[dateStr] = [];
+      }
+      if (!state.timeSlots[dateStr][index]) {
+        state.timeSlots[dateStr][index] = {};
+      }
+      state.timeSlots[dateStr][index][field] = value;
+    },
+    clearTimeSlots: (state, action) => {
+      const { dateStr, indices } = action.payload;
+      if (state.timeSlots[dateStr]) {
+        indices.forEach(index => {
+          if (state.timeSlots[dateStr][index]) {
+            state.timeSlots[dateStr][index] = {
+              ...state.timeSlots[dateStr][index],
+              start_time: null,
+              end_time: null,
+            };
+          }
+        });
       }
     },
     filterSchedules: (state, action) => {
@@ -302,7 +324,7 @@ export const {
   setSlotStatus,
   addTimeSlot,
   removeTimeSlot,
-  updateTimeSlot,
+  updateTimeSlot,setScheduleSubmitData,
   setScheduleSelectTime,
   updateSelectedOffer,
 } = scheduleSlice.actions;

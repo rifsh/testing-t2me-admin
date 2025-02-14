@@ -9,8 +9,8 @@ CategoryService.addCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
 
   return fetch({
@@ -18,7 +18,7 @@ CategoryService.addCategory = function (data, action) {
     method: "POST",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
@@ -33,8 +33,6 @@ CategoryService.updateCategory = function (data, action) {
 };
 
 CategoryService.fetchCategory = function (pageData) {
-
-
   return fetch({
     url: ApiConstant.CATEGORY_URL,
     method: "get",
@@ -54,7 +52,6 @@ CategoryService.getSingleSubCateory = function (subcategory_id) {
   });
 };
 CategoryService.fetchSubCategory = function (pageData) {
-
   return fetch({
     url: ApiConstant.SUB_CATEGORY_URL,
     method: "get",
@@ -73,68 +70,86 @@ CategoryService.fetchSubCategory = function (pageData) {
 CategoryService.addSubCategory = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
-
-
 
   return fetch({
     url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${data.category_id}&action=${encodedAction}`,
     method: "POST",
     data: formData,
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
 
-CategoryService.editCategory = function (data, action) {
+CategoryService.editCategory = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
   return fetch({
     url: `${ApiConstant.CATEGORY_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
+    params: Utils.filterParams(pageData),
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
 
-CategoryService.editSubCategory = function (data, action) {
+CategoryService.editSubCategory = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
-    fileKeys: ['thumbnail_image'],
-    skipEmpty: true
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
   });
   return fetch({
     url: `${ApiConstant.SUB_CATEGORY_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
+    params: Utils.filterParams(pageData),
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
 
-CategoryService.editCatStatus = function (data, action) {
+CategoryService.editCatStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.CATEGORY_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
+    params: Utils.filterParams(pageData),
   });
 };
-CategoryService.editSubCatStatus = function (data, action) {
+CategoryService.editSubCatStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.SUB_CATEGORY_STATUS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
+    params: Utils.filterParams(pageData),
   });
 };
 
@@ -151,6 +166,5 @@ CategoryService.validateSubCategory = function (subCategoryId) {
     method: "get",
   });
 };
-
 
 export default CategoryService;
