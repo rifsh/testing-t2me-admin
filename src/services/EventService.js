@@ -98,4 +98,12 @@ EventsService.editEventStatus = function (
   });
 };
 
+EventsService.validateMultiEvent = function (eventIds) {
+  const queryString = eventIds.map((id) => `event_ids=${id}`).join("&");
+  return fetch({
+    url: `${ApiConstant.MULT_EVENT_VALIDATE_URL}?${queryString}`,
+    method: "get",
+  });
+};
+
 export default EventsService;
