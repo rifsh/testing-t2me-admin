@@ -25,7 +25,7 @@ import {
 import { useDispatch } from "react-redux";
 import Utils from "utils/index";
 
-const PaymentFormFields = () => {
+const PaymentFormFields = ({mode, id}) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
@@ -44,6 +44,15 @@ const PaymentFormFields = () => {
         <Form.Item name="Event" label="Event (Optional)">
           <Input placeholder="Select Your Event" type="text" />
         </Form.Item>
+
+        <Form.Item name="url" label="Terms and Conditions">
+          <Input placeholder="Enter your URL" type="text" />
+        </Form.Item>
+        <Form.Item name="url" label="Additional Urls">
+          <Input placeholder="Enter your URL" type="text" />
+        </Form.Item>
+      </Card>
+      <Card>
         <Form.Item
           name="addOnServices"
           label="Add-On Services"
@@ -112,60 +121,8 @@ const PaymentFormFields = () => {
             )}
           </Form.List>
         </Form.Item>
-
-        <Form.Item
-          name="addPaymentMethods"
-          label="Add Payment Methods"
-          rules={[{ required: true }]}
-        >
-          <Form.List name="cardPayments">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Space
-                    key={key}
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Form.Item
-                      {...restField}
-                      name={[name, "bankName"]}
-                      rules={[{ required: true, message: "Enter bank name" }]}
-                    >
-                      <Input placeholder="Bank Name" />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "cardType"]}
-                      rules={[{ required: true, message: "Select card type" }]}
-                    >
-                      <Checkbox.Group>
-                        <Checkbox value="debit">Debit Card</Checkbox>
-                        <Checkbox value="credit">Credit Card</Checkbox>
-                      </Checkbox.Group>
-                    </Form.Item>
-                    <MinusCircleOutlined onClick={() => remove(name)} />
-                  </Space>
-                ))}
-                <Form.Item>
-                  <Button
-                    type="dashed"
-                    onClick={() => add()}
-                    block
-                    icon={<PlusOutlined />}
-                  >
-                    Add Bank & Card Type
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
-        </Form.Item>
-
+      </Card>
+      <Card>
         <Form.Item name="qrPayments" label="QR Payments">
           <Form.List name="qrPayments">
             {(fields, { add, remove }) => (
@@ -227,14 +184,62 @@ const PaymentFormFields = () => {
             )}
           </Form.List>
         </Form.Item>
-
-        <Form.Item name="url" label="Terms and Conditions">
-          <Input placeholder="Enter your URL" type="text" />
+      </Card>
+      <Card>
+        <Form.Item
+          name="addPaymentMethods"
+          label="Add Payment Methods"
+          rules={[{ required: true }]}
+        >
+          <Form.List name="cardPayments">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => (
+                  <Space
+                    key={key}
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Form.Item
+                      {...restField}
+                      name={[name, "bankName"]}
+                      rules={[{ required: true, message: "Enter bank name" }]}
+                    >
+                      <Input placeholder="Bank Name" />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, "cardType"]}
+                      rules={[{ required: true, message: "Select card type" }]}
+                    >
+                      <Checkbox.Group>
+                        <Checkbox value="debit">Debit Card</Checkbox>
+                        <Checkbox value="credit">Credit Card</Checkbox>
+                      </Checkbox.Group>
+                    </Form.Item>
+                    <MinusCircleOutlined onClick={() => remove(name)} />
+                  </Space>
+                ))}
+                <Form.Item>
+                  <Button
+                    type="dashed"
+                    onClick={() => add()}
+                    block
+                    icon={<PlusOutlined />}
+                  >
+                    Add Bank & Card Type
+                  </Button>
+                </Form.Item>
+              </>
+            )}
+          </Form.List>
         </Form.Item>
-        <Form.Item name="url" label="Additional Urls">
-          <Input placeholder="Enter your URL" type="text" />
-        </Form.Item>
-
+      </Card>
+      <Card>
         <div className="container" style={{ padding: "0px" }}>
           <Flex
             className="py-2"
