@@ -56,10 +56,10 @@ const PaymentList = () => {
       label: (
         <Flex alignItems="center">
           <EditOutlined />
-          <span className="ml-2">Edit Offer</span>
+          <span className="ml-2">Edit Payment</span>
         </Flex>
       ),
-      //onClick: () => handleEditTax(row.id),
+      onClick: () => navigate(`${APP_PREFIX_PATH}/payment/edit/`),
     },
   ];
 
@@ -68,13 +68,20 @@ const PaymentList = () => {
       title: "Place",
       dataIndex: ["jsonData", "place_name"],
       render: (name) => <span>{name || "N/A"}</span>,
-      sorter: (a, b) => Utils.antdTableSorter(a, b, ["jsonData", "place_name"])
+      sorter: (a, b) => Utils.antdTableSorter(a, b, ["jsonData", "place_name"]),
+    },
+    {
+      title: "Event",
+      dataIndex: ["jsonData", "event"],
+      render: (name) => <span>{name || "N/A"}</span>,
+      sorter: (a, b) => Utils.antdTableSorter(a, b, ["jsonData", "event"]),
     },
     {
       title: "Add on Services",
       render: (row) => (
         <Collapse defaultActiveKey={[]} accordion>
-          {row.jsonData?.service_adons && row.jsonData.service_adons.length > 0 ? (
+          {row.jsonData?.service_adons &&
+          row.jsonData.service_adons.length > 0 ? (
             row.jsonData.service_adons.map((logo, index) => (
               <Panel
                 header={logo.name}
@@ -99,7 +106,8 @@ const PaymentList = () => {
       title: "Payments",
       render: (row) => (
         <Collapse defaultActiveKey={[]} accordion>
-          {row.jsonData?.payment_logos && row.jsonData.payment_logos.length > 0 ? (
+          {row.jsonData?.payment_logos &&
+          row.jsonData.payment_logos.length > 0 ? (
             row.jsonData.payment_logos.map((logo, index) => (
               <Panel
                 header={logo.name}
