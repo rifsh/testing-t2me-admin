@@ -21,6 +21,7 @@ const initialState = {
   selectedAdScheduleId: null,
   error: null,
   message: null,
+  singleSchedule: null,
   subPagination: {},
   pagination: {},
   editable_status: null,
@@ -37,6 +38,17 @@ export const setDraggedFile = createAsyncThunk(
   "advertisement/setDraggedFile",
   async (file) => {
     return file;
+  }
+);
+export const getSingleSchedule = createAsyncThunk(
+  "advertisement/getSingleSchedule",
+  async (scheduleId, { rejectWithValue }) => {
+    try {
+      const response = await AdvertisementService.getSingleSchedule(scheduleId);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
   }
 );
 
@@ -134,6 +146,17 @@ export const updateAdBanner = createAsyncThunk(
     }
   }
 );
+export const editAdSchedule = createAsyncThunk(
+  "advertisement/editAdSchedule",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await AdvertisementService.editSchedule(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 export const updateAdBannerStatus = createAsyncThunk(
   "advertisement/updateAdBannerStatus",
   async ({ data, action, pageData }, { rejectWithValue }) => {
@@ -216,6 +239,35 @@ const AdvertisementSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(editAdSchedule.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(editAdSchedule.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          // state.responseImpactData = payload.status.data?.active_schedules;
+          // state.editable_status = payload.status?.editable_status;
+          // state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(editAdSchedule.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getSingleSchedule.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getSingleSchedule.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleSchedule = action.payload;
+      })
+      .addCase(getSingleSchedule.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(setDraggedFile.fulfilled, (state, action) => {
         state.draggedFile = action.payload;
       })

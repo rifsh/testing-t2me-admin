@@ -8,6 +8,7 @@ import {
   Modal,
   Descriptions,
   Dropdown,
+  Menu,
 } from "antd";
 import {
   EyeOutlined,
@@ -48,18 +49,13 @@ const CouponList = () => {
     selectedMedia,
   } = useSelector((state) => state.advertisement);
 
-
-
   useEffect(() => {
     dispatch(fetchAdSchedules({ page: 1, size: 10 }));
     console.log(filteredAdSchedules.length, "-------------------------ssss");
-
   }, [dispatch]);
 
   const handlePagination = (page, size, type) => {
-
     dispatch(fetchAdSchedules({ page: page, size: size }));
-
   };
   const handleMediaClick = (mediaPath) => {
     dispatch(setSelectedMedia(mediaPath));
@@ -73,32 +69,28 @@ const CouponList = () => {
     dispatch(setSelectedMedia(null));
   };
 
-
-
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
     dispatch(setDialogVisible(true));
   };
+  const handleEditSchedule = (id) => {
+    navigate(`${APP_PREFIX_PATH}/advertisement/schedule/edit/${id}`);
+  };
 
   const getDropdownMenu = (row) => [
-    // {
-    //   key: "view",
-    //   label: (
-    //     <Flex alignItems="center">
-    //       <EyeOutlined />
-    //       <span className="ml-2">View Details</span>
-    //     </Flex>
-    //   ),
-    // },
     {
       key: "remark",
       label: (
-        <Flex alignItems="center">
-          <EditOutlined />
-          <span className="ml-2">Edit Schedule</span>
-        </Flex>
+        <Menu>
+          <Menu.Item onClick={() => handleEditSchedule(row.id)}>
+            <Flex alignItems="center">
+              <EyeOutlined />
+              <span className="ml-2">Edit AdSchedule</span>
+            </Flex>
+          </Menu.Item>
+        </Menu>
       ),
     },
   ];
@@ -130,54 +122,60 @@ const CouponList = () => {
     {
       title: "Name",
       dataIndex: "name",
-      sorter: (a, b) => Utils.antdTableSorter(a, b, "name")
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
     },
     {
       title: "Start Date",
       dataIndex: "start_date",
       sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
-      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A")
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
     },
     {
       title: "End Date",
       dataIndex: "end_date",
       sorter: (a, b) => new Date(a.end_date) - new Date(b.end_date),
-      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A")
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
     },
     {
       title: "Start Time",
       dataIndex: "start_time",
-      render: (time) => time || "N/A"
+      render: (time) => time || "N/A",
     },
     {
       title: "End Time",
       dataIndex: "end_time",
-      render: (time) => time || "N/A"
+      render: (time) => time || "N/A",
     },
     {
       title: "Duration",
       dataIndex: "duration",
       sorter: (a, b) => a.duration - b.duration,
-      render: (duration) => `${duration} seconds`
+      render: (duration) => `${duration} seconds`,
     },
     {
       title: "Category",
       dataIndex: ["advertisement_banner", "banner_category", "name"],
-      sorter: (a, b) => a.advertisement_banner.banner_category.name - b.advertisement_banner.banner_category.name
+      sorter: (a, b) =>
+        a.advertisement_banner.banner_category.name -
+        b.advertisement_banner.banner_category.name,
     },
     {
       title: "Place",
       dataIndex: ["advertisement_banner", "place", "name"],
       render: (name) => name || "N/A",
       sorter: (a, b) =>
-        a.advertisement_banner.place.name.localeCompare(b.advertisement_banner.place.name)
+        a.advertisement_banner.place.name.localeCompare(
+          b.advertisement_banner.place.name
+        ),
     },
     {
       title: "Event",
       dataIndex: ["advertisement_banner", "event", "event_name"],
       render: (name) => name || "N/A",
       sorter: (a, b) =>
-        a.advertisement_banner.event?.event_name.localeCompare(b.advertisement_banner.event?.event_name)
+        a.advertisement_banner.event?.event_name.localeCompare(
+          b.advertisement_banner.event?.event_name
+        ),
     },
 
     // -------------STATUS COLUMN COMPLETE AFTER ADDING STATUS FIELD IN API-----------------
@@ -191,18 +189,23 @@ const CouponList = () => {
         <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
           <Button type="text" icon={<MoreOutlined />} />
         </Dropdown>
-      )
-    }
+      ),
+    },
   ];
 
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={fetchAdSchedules} isStatus= {false}/>
+        <SearchBarWithStatus
+          fetchFunction={fetchAdSchedules}
+          isStatus={false}
+        />
         <Button
           type="primary"
           icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/advertisement/schedule/add`)}
+          onClick={() =>
+            navigate(`${APP_PREFIX_PATH}/advertisement/schedule/add`)
+          }
         >
           Add Schedule
         </Button>
@@ -240,14 +243,23 @@ const CouponList = () => {
       >
         {selectedMedia &&
           (/\.(mp4|webm|ogg)$/i.test(selectedMedia) ? (
-            <video src={selectedMedia} controls autoPlay style={{ width: "100%", height: "auto", borderRadius: "8px" }} />
+            <video
+              src={selectedMedia}
+              controls
+              autoPlay
+              style={{ width: "100%", height: "auto", borderRadius: "8px" }}
+            />
           ) : (
-            <img src={selectedMedia} alt="Media Preview" style={{
-              width: "50%",
-              height: "auto",
-              borderRadius: "8px",
-              objectFit: "cover",
-            }} />
+            <img
+              src={selectedMedia}
+              alt="Media Preview"
+              style={{
+                width: "50%",
+                height: "auto",
+                borderRadius: "8px",
+                objectFit: "cover",
+              }}
+            />
           ))}
       </Modal>
     </Card>
