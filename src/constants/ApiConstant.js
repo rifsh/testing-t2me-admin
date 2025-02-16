@@ -62,6 +62,9 @@ export const ApiConstant = {
   ADVERTISEMENT_CATEGORY_URL: "/api/v1/banners/secured/bannercategory",
   ADVERTISEMENT_BANNER_URL: "/api/v1/banners/secured/advertisementbanner",
   ADVERTISEMENT_SCHEDULE_URL: "/api/v1/banners/secured/advertisementschedule",
+  ADVERTISEMENT_SCHEDULE_UPDATE_URL: "/api/v1/banners/secured/adscheduleupdate",
+  ADVERTISEMENT_SINGLE_SCHEDULE_URL:
+    "/api/v1/banners/secured/single_ad_schedule",
   ADVERTISEMENT_BANNER_UPDATE_URL:
     "/api/v1/banners/secured/advertisementbannerupdate",
   ADVERTISEMENT_BANNER_STATUS_UPDATE_URL:

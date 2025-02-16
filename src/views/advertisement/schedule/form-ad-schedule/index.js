@@ -3,28 +3,49 @@ import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import { Tabs, Form, Button, message } from "antd";
 import Flex from "components/shared-components/Flex";
 import AdScheduleFormFields from "../components/AdScheduleFormFields";
+import {
+  setDraggedFile,
+  setDraggedFileState,
+  setSelectedDroppedFile,
+} from "store/slices/advertisementSlice";
+import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { createAdSchedule } from "store/slices/advertisementSlice";
+import {
+  createAdSchedule,
+  editAdSchedule,
+} from "store/slices/advertisementSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import { ActionType } from "utils/api/warning-submit-util";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
 import LoadingOverlay from "components/util-components/Loader/index";
 
 const ADD = "ADD";
-const EDIT = 'EDIT'
+const EDIT = "EDIT";
 
-const AdScheduleForm = ({ mode }) => {
+const AdScheduleForm = ({ mode, scheduleDetails, id }) => {
+  const {
+    loading,
+    error,
+    responseData,
+    message,
+    responseMessage,
+    createScheduleLoading,
+    filteredAdBanner,
+    draggedFile,
+    selectedDroppedFile,
+    isVideoPlaying,
+  } = useSelector((state) => state.advertisement);
 
-  const { loading, error, responseData, responseMessage,createScheduleLoading } = useSelector(
-    (state) => state.advertisement
-  );
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  console.log(scheduleDetails, "THIS IS SCHEDULE DETAILS");
 
   useEffect(() => {
     if (error) {
@@ -32,29 +53,79 @@ const AdScheduleForm = ({ mode }) => {
     }
   }, [error]);
 
-  const onFinish = async () => {
-    try {
-      console.log("HEREEEEEEEEEEEEEEEEEEEEE");
-      
-      const values = await form.validateFields();
-      let formattedStartDate = Utils.formatDate(values.start_date);
-      let formattedEndDate = Utils.formatDate(values.end_date);
-      let formattedStartTime = Utils.formatTime(values.start_date)
-      let formattedEndTime = Utils.formatTime(values.end_date)
-      
-      values.start_date = formattedStartDate
-      values.start_time = formattedStartTime
-      values.end_date = formattedEndDate
-      values.end_time = formattedEndTime
-      
+  useEffect(() => {
+    console.log("SETTING DATA");
 
-      if (mode === ADD) {
-      console.log("ENTEREDDDDDDDDDDDDDDDD");
+    if (scheduleDetails && mode === "EDIT") {
+      const startTime = dayjs(scheduleDetails.start_time, "HH:mm");
+      const endTime = dayjs(scheduleDetails.end_time, "HH:mm");
 
-        dispatch(setSelectedSubmitItem(values));
+      const formData = {
+        name: scheduleDetails.name,
+        advertisement_banner_id: scheduleDetails?.advertisement_banner.id,
+        start_date: dayjs(scheduleDetails.start_date),
+        end_date: dayjs(scheduleDetails.end_date),
+        start_time: startTime,
+        end_time: endTime,
+        duration: scheduleDetails.duration,
+      };
 
+      if (scheduleDetails.advertisement_banner) {
+        console.log("BANNER ADDED TO FILE");
+        dispatch(setSelectedDroppedFile(scheduleDetails.advertisement_banner));
       }
 
+      form.setFieldsValue(formData);
+    }
+  }, [form, id]);
+  const onFinish = async () => {
+    try {
+      const values = await form.validateFields();
+
+      if (mode === "EDIT") {
+        let formattedStartDate = Utils.formatDate(values.start_date);
+        let formattedEndDate = Utils.formatDate(values.end_date);
+        let formattedStartTime = Utils.formatTime(values.start_time);
+        let formattedEndTime = Utils.formatTime(values.end_time);
+
+        values.start_date = formattedStartDate;
+        values.start_time = formattedStartTime;
+        values.end_date = formattedEndDate;
+        values.end_time = formattedEndTime;
+
+        const editData = {
+          ...values,
+          id: id,
+        };
+        console.log("Edit Data:", editData);
+        const resultAction = await dispatch(
+          editAdSchedule({ data: editData, action: ActionType.SUBMIT })
+        );
+
+        if (editAdSchedule.fulfilled.match(resultAction)) {
+          dispatch(setSelectedSubmitItem(editData));
+        }
+      } else {
+        console.log("HEREEEEEEEEEEEEEEEEEEEEE");
+
+        let formattedStartDate = Utils.formatDate(values.start_date);
+        let formattedEndDate = Utils.formatDate(values.end_date);
+        let formattedStartTime = Utils.formatTime(values.start_time);
+        let formattedEndTime = Utils.formatTime(values.end_time);
+
+        values.start_date = formattedStartDate;
+        values.start_time = formattedStartTime;
+        values.end_date = formattedEndDate;
+        values.end_time = formattedEndTime;
+
+        console.log(values, "THIS IS THE VALUES");
+
+        if (mode === ADD) {
+          console.log("ENTEREDDDDDDDDDDDDDDDD");
+
+          dispatch(setSelectedSubmitItem(values));
+        }
+      }
     } catch (info) {
       console.error("Validation Failed:", info);
       message.error("Please enter all required fields.");
@@ -113,14 +184,12 @@ const AdScheduleForm = ({ mode }) => {
           />
         </div>
       </Form>
-      <LoadingOverlay 
-        loading={createScheduleLoading} 
-      />
+      <LoadingOverlay loading={createScheduleLoading} />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={createAdSchedule}
+        addFunction={mode === "EDIT" ? editAdSchedule : createAdSchedule}
         navigationPath={`${APP_PREFIX_PATH}/advertisement/schedule/list`}
-        responseMessage={responseMessage}
+        responseMessage={mode==="EDIT"?message: responseMessage}
       />
     </>
   );

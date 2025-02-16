@@ -5,6 +5,29 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const AdvertisementService = {};
 
+AdvertisementService.getSingleSchedule = function (scheduleId) {
+  return fetch({
+    url: `${ApiConstant.ADVERTISEMENT_SINGLE_SCHEDULE_URL}?ad_schedule_id=${scheduleId}`,
+    method: "get",
+  });
+};
+
+AdvertisementService.editSchedule = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
+  });
+  return fetch({
+    url: `${ApiConstant.ADVERTISEMENT_SCHEDULE_UPDATE_URL}?ad_schedule_id=${data.id}&action=${encodedAction}`,
+    method: "put",
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
 AdvertisementService.fetchAdBanners = function (pageData) {
   return fetch({
     url: ApiConstant.ADVERTISEMENT_BANNER_URL,
