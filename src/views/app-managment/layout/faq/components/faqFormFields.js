@@ -1,13 +1,13 @@
-// FaqFormFields.js
 import React, { useState, useEffect } from "react";
 import { Input, Row, Form, Card, Col, Button, message, Select } from "antd";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import { fetchAllFaqs, addFaq } from "store/slices/faqSlice";
+import { fetchAllFaqs, addFaq, setModalVisible } from "store/slices/faqSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { filterOption } from "components/util-components/FormItems/dropDownSearch";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import CreateSectionModal from "../components/faqSectionModal";
 
 const FaqFormFields = ({ mode }) => {
   const navigate = useNavigate();
@@ -89,34 +89,44 @@ const FaqFormFields = ({ mode }) => {
           className="ant-advanced-search-form"
         >
           <Card title="Add FAQ's">
-            {/* <Form.Item
-              name="category"
-              label="Category"
-              rules={[{ required: true, message: "Please input category!" }]}
-            >
-              <Input placeholder="Enter FAQ Category" />
-            </Form.Item> */}
-
-            <Form.Item name="category" label="Section">
-              <Select
-                className="w-100"
-                placeholder="Choose a Section"
-                showSearch
-                filterOption={filterOption}
-                loading={loading}
-                // onChange={(id) => handleCountrySelect(id)}
-              >
-                {faqSections && faqSections.length > 0 ? (
-                  faqSections.map((secion) => (
-                    <Option key={secion} value={secion}>
-                      {secion}
-                    </Option>
-                  ))
-                ) : (
-                  <Option disabled>No sections available</Option>
-                )}
-              </Select>
-            </Form.Item>
+            <Row gutter={16} align="middle">
+              <Col flex="auto">
+                <Form.Item
+                  name="category"
+                  label="Section"
+                  rules={[
+                    { required: true, message: "Please select a section!" },
+                  ]}
+                >
+                  <Select
+                    className="w-100"
+                    placeholder="Choose a Section"
+                    showSearch
+                    filterOption={filterOption}
+                    loading={loading}
+                  >
+                    {faqSections && faqSections.length > 0 ? (
+                      faqSections.map((secion) => (
+                        <Option key={secion} value={secion}>
+                          {secion}
+                        </Option>
+                      ))
+                    ) : (
+                      <Option disabled>No sections available</Option>
+                    )}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col>
+                <Button
+                  type="primary"
+                  style={{ marginTop: 10 }}
+                  onClick={() => dispatch(setModalVisible(true))}
+                >
+                  Create Section
+                </Button>
+              </Col>
+            </Row>
 
             {questions.map((question, index) => (
               <div key={index} className="mb-4">
@@ -151,7 +161,8 @@ const FaqFormFields = ({ mode }) => {
 
                 {questions.length > 1 && (
                   <Button
-                    type="danger"
+                    type="primary"
+                    danger
                     onClick={() => handleRemoveQuestion(index)}
                   >
                     Remove
@@ -174,7 +185,7 @@ const FaqFormFields = ({ mode }) => {
             mobileFlex={false}
             justifyContent="space-between"
           >
-            <DiscardButton />
+            <DiscardButton form={form} />
             <Button
               type="primary"
               onClick={handleAdd}
@@ -185,6 +196,7 @@ const FaqFormFields = ({ mode }) => {
             </Button>
           </Flex>
         </Form>
+        <CreateSectionModal />
       </Col>
     </Row>
   );

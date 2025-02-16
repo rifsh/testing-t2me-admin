@@ -1,7 +1,6 @@
 import {
   DashboardOutlined,
   LayoutOutlined,
-
   OrderedListOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
@@ -70,7 +69,6 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         isGroupTitle: false,
 
-
         submenu: [
           {
             key: "place.list",
@@ -120,7 +118,7 @@ const superAdminDashBoardNavTree = [
             breadcrumb: false,
             submenu: [],
           },
-         
+
           // {
           //   key: 'seat.list',
           //   path: `${APP_PREFIX_PATH}/seat/list`,
@@ -164,7 +162,7 @@ const superAdminDashBoardNavTree = [
           },
         ],
       },
-    ]
+    ],
   },
   {
     key: "Issue",
@@ -215,7 +213,6 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
-
     ],
   },
 
@@ -252,7 +249,8 @@ const superAdminDashBoardNavTree = [
         submenu: [],
       },
     ],
-  },  {
+  },
+  {
     key: "user.list",
     path: `${APP_PREFIX_PATH}/user/list`,
     title: "sidenav.user",
@@ -288,6 +286,14 @@ const superAdminDashBoardNavTree = [
             key: "app.management.layout.faq.list",
             path: `${APP_PREFIX_PATH}/app/management/layout/faq/list`,
             title: "sidenav.app.management.layout.faq",
+            icon: LayoutOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "app.management.layout.info.list",
+            path: `${APP_PREFIX_PATH}/app/management/layout/app-info/list`,
+            title: "sidenav.app.management.layout.info",
             icon: LayoutOutlined,
             breadcrumb: false,
             submenu: [],
@@ -357,7 +363,6 @@ const techAdminDashBoardNavTree = [
         breadcrumb: false,
         isGroupTitle: false,
 
-
         submenu: [
           {
             key: "place.list",
@@ -407,7 +412,7 @@ const techAdminDashBoardNavTree = [
             breadcrumb: false,
             submenu: [],
           },
-         
+
           // {
           //   key: 'seat.list',
           //   path: `${APP_PREFIX_PATH}/seat/list`,
@@ -442,7 +447,7 @@ const techAdminDashBoardNavTree = [
           },
         ],
       },
-    ]
+    ],
   },
   {
     key: "Issue",
@@ -493,7 +498,6 @@ const techAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
-
     ],
   },
 
@@ -530,7 +534,8 @@ const techAdminDashBoardNavTree = [
         submenu: [],
       },
     ],
-  },  {
+  },
+  {
     key: "user.list",
     path: `${APP_PREFIX_PATH}/user/list`,
     title: "sidenav.user",
@@ -562,10 +567,8 @@ const techAdminDashBoardNavTree = [
             breadcrumb: false,
             submenu: [],
           },
-          
         ],
       },
-      
     ],
   },
 ];
@@ -621,7 +624,6 @@ const eventOrganaizerDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
-
     ],
   },
   {
@@ -716,20 +718,18 @@ const navigationConfig = () => {
   const decodedToken = jwtDecode(token);
 
   if (decodedToken?.role_id === UserRoleConstants.superAdminRoleId) {
-
     return superAdminDashBoardNavTree;
   } else if (decodedToken?.role_id === UserRoleConstants.techAdminRoleId) {
-    
     return techAdminDashBoardNavTree;
   } else if (decodedToken?.role_id === UserRoleConstants.eventOrganizerRoleId) {
-
     return eventOrganaizerDashBoardNavTree;
-  } 
-   else if (decodedToken?.role_id === UserRoleConstants.techSupportingTeamRoleId) {
-    
+  } else if (
+    decodedToken?.role_id === UserRoleConstants.techSupportingTeamRoleId
+  ) {
     return techSupportingTeamDashBoardNavTree;
-  }
-  else if (decodedToken?.role_id === UserRoleConstants.eventSupportingTeamRoleId) {
+  } else if (
+    decodedToken?.role_id === UserRoleConstants.eventSupportingTeamRoleId
+  ) {
     return EventSupportingTeamDashBoardNavTree;
   }
 

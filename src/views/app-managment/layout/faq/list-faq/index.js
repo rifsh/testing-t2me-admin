@@ -19,6 +19,7 @@ const FaqList = () => {
   const { faqs, faqSections, loading } = useSelector((state) => state.faqs);
 
   useEffect(() => {
+    console.log("Dispatching fetchAllFaqs");
     dispatch(fetchAllFaqs());
   }, [dispatch]);
 
@@ -129,17 +130,36 @@ const FaqList = () => {
         loading={loading}
         columns={sectionColumns}
         dataSource={dataSource}
-        // pagination={false}
+        className="faq-table"
         expandable={{
           expandedRowRender: (record) => (
-            <div style={{ margin: '0 -16px' }}>
+            <div
+              style={{
+                margin: "0 24px",
+                padding: "12px 24px",
+                backgroundColor: "#fafafa",
+                borderRadius: "4px",
+              }}
+            >
               <Table
                 columns={questionColumns}
                 dataSource={record.faq}
                 pagination={false}
+                showHeader={false}
+                className="nested-faq-table"
                 expandable={{
                   expandedRowRender: (questionRecord) => (
-                    <p style={{ margin: '16px 0' }}>{questionRecord.answer}</p>
+                    <div
+                      style={{
+                        padding: "16px 24px",
+                        backgroundColor: "#fff",
+                        borderRadius: "4px",
+                        marginLeft: "24px",
+                        borderLeft: "3px solid #1890ff",
+                      }}
+                    >
+                      {questionRecord.answer}
+                    </div>
                   ),
                   rowExpandable: (questionRecord) => questionRecord.answer,
                 }}

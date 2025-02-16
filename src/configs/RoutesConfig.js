@@ -415,4 +415,18 @@ export const protectedRoutes = [
       import("views/app-managment/layout/faq/add-faq")
     ),
   },
+  {
+    key: "app.management.layout.info.list",
+    path: `${APP_PREFIX_PATH}/app/management/layout/app-info/list`,
+    component: React.lazy(() =>
+      import("views/app-managment/layout/app-info/list-info")
+    ),
+  },
+  {
+    key: "app.management.layout.info.add",
+    path: `${APP_PREFIX_PATH}/app/management/layout/app-info/add-info`,
+    component: React.lazy(() =>
+      import("views/app-managment/layout/app-info/add-info/index")
+    ),
+  },
 ];
