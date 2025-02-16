@@ -211,32 +211,75 @@ class TimeSlotValidator {
     const slots = timeSlots[dateStr] || [];
     const currentSlot = slots[currentIndex] || {};
     const isMidnightPassed = currentSlot.is_midnight_passed;
-    console.log(isMidnightPassed, "isMidnightPassed");
 
-    if (
-      fieldType === "end_time" &&
-      existingSlot.start_time &&
-      !isMidnightPassed
-    ) {
-      const startTime = existingSlot.start_time.format("HH:mm");
-      if (selectedTime <= startTime) {
-        return {
-          isValid: false,
-          message: "End time must be after the start time.",
-        };
+    // Convert selected time to minutes for comparison
+    const selectedMinutes = this.timeToMinutes(selectedTime);
+
+    // Check previous slots when adding start_time
+    if (fieldType === "start_time") {
+      // Get all previous slots that have start times
+      const previousSlots = slots
+        .slice(0, currentIndex)
+        .filter((slot) => slot.start_time);
+
+      if (previousSlots.length > 0) {
+        // Get the last previous slot
+        const lastPreviousSlot = previousSlots[previousSlots.length - 1];
+        const lastEndTime = lastPreviousSlot.end_time?.format("HH:mm");
+
+        if (lastEndTime) {
+          const lastEndMinutes = this.timeToMinutes(lastEndTime);
+
+          // New start time must be after the end time of the last previous slot
+          if (selectedMinutes < lastEndMinutes) {
+            return {
+              isValid: false,
+              message: `Start time must be after the end time (${lastEndTime}) of the previous slot`,
+            };
+          }
+        }
       }
     }
 
-    // if (fieldType === "start_time" && existingSlot.end_time) {
-    //   const endTime = existingSlot.end_time.format("HH:mm");
-    //   if (selectedTime >= endTime) {
-    //     return {
-    //       isValid: true,
-    //       isWarning: true,
-    //       message: "Start time must be before the start time.",
-    //     };
-    //   }
-    // }
+    // Check next slots when adding end_time
+    if (fieldType === "end_time") {
+      // First check if we have a start time
+      if (!existingSlot.start_time) {
+        return {
+          isValid: false,
+          message: "Please set start time first",
+        };
+      }
+
+      // Then check if end time is after start time (except for midnight passed)
+      const startTime = existingSlot.start_time.format("HH:mm");
+      if (selectedTime <= startTime && !isMidnightPassed) {
+        return {
+          isValid: false,
+          message: "End time must be after the start time",
+        };
+      }
+
+      // Get all next slots that have start times
+      const nextSlots = slots
+        .slice(currentIndex + 1)
+        .filter((slot) => slot.start_time);
+
+      if (nextSlots.length > 0) {
+        // Get the first next slot
+        const firstNextSlot = nextSlots[0];
+        const nextStartTime = firstNextSlot.start_time.format("HH:mm");
+        const nextStartMinutes = this.timeToMinutes(nextStartTime);
+
+        // New end time must be before the start time of the next slot
+        if (selectedMinutes > nextStartMinutes) {
+          return {
+            isValid: false,
+            message: `End time must be before the start time (${nextStartTime}) of the next slot`,
+          };
+        }
+      }
+    }
 
     return { isValid: true };
   }

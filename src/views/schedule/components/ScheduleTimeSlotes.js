@@ -211,7 +211,44 @@ export function ScheduleTimeSlots({ form }) {
       return;
     }
 
-    // Filter out only valid slots that have start time and exclude midnight passed slots
+    // Check if any date has midnight passed slots
+    const datesWithMidnightPassed = dates.filter((date) => {
+      const slots = timeSlots[date] || [];
+      return slots.some((slot) => slot?.is_midnight_passed);
+    });
+
+    // If any date has midnight passed slots, show warning and return
+    if (datesWithMidnightPassed.length > 0) {
+      Modal.warning({
+        title: "Cannot Apply Slots",
+        content: (
+          <div>
+            <p>
+              Unable to apply slots to all dates because the following dates
+              have midnight passed slots:
+            </p>
+            <p style={{ color: "#ff4d4f" }}>
+              {datesWithMidnightPassed.join(", ")}
+            </p>
+            <p>
+              Please clear or modify the midnight passed slots before
+              proceeding.
+            </p>
+          </div>
+        ),
+      });
+      return;
+    }
+
+    // Check if any date has incomplete slots
+    const datesWithIncompleteSlots = dates.filter((date) => {
+      const slots = timeSlots[date] || [];
+      return slots.some((slot) => {
+        return slot && (!slot.start_time || !slot.end_time || !slot.ticketType);
+      });
+    });
+
+    // Filter out only valid slots that have start time
     const validSourceSlots = sourceSlots.filter(
       (slot) => slot?.start_time && !slot.is_midnight_passed
     );
@@ -232,19 +269,29 @@ export function ScheduleTimeSlots({ form }) {
       }: ${startTime} - ${endTime}, Ticket: ${ticketName}`;
     });
 
+    // Calculate dates that can be updated
+    const updatableDates = dates.filter((date) => date !== activeTab);
+
     Modal.confirm({
       title: "Confirm Apply to All Dates",
       icon: <WarningOutlined />,
       content: (
         <div>
-          <p>This will apply the following slots to all dates:</p>
+          <p>This will apply the following slots to all eligible dates:</p>
           <ul>
             {confirmDetails.map((detail, index) => (
               <li key={index}>{detail}</li>
             ))}
           </ul>
-          <p>Note: Slots with midnight passed will not be applied.</p>
-          <p>This will overwrite all existing slots on other dates.</p>
+          {datesWithIncompleteSlots.length > 0 && (
+            <div style={{ marginTop: "10px", color: "#ff4d4f" }}>
+              <p>
+                The following dates have incomplete slots that will be
+                overwritten: {datesWithIncompleteSlots.join(", ")}
+              </p>
+            </div>
+          )}
+          <p>Slots will be applied to {updatableDates.length} dates.</p>
           <p>Are you sure you want to continue?</p>
         </div>
       ),
@@ -259,10 +306,7 @@ export function ScheduleTimeSlots({ form }) {
             timeSlots: { ...formValues.timeSlots },
           };
 
-          for (const date of dates) {
-            if (date === activeTab) continue;
-
-            // Create new array for the date's slots
+          for (const date of updatableDates) {
             const newDateSlots = validSourceSlots.map((sourceSlot) => ({
               start_time: dayjs(date)
                 .hour(sourceSlot.start_time.hour())
@@ -288,7 +332,7 @@ export function ScheduleTimeSlots({ form }) {
 
           dispatch(setTimeSlots(newTimeSlots));
           form.setFieldsValue(newFormValues);
-          message.success("All time slots applied to all dates successfully");
+          message.success("Time slots applied to all dates successfully");
         } catch (error) {
           message.error(error.message);
         }
