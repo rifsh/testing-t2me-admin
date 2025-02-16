@@ -18,12 +18,14 @@ export function ScheduleDetails() {
     dispatch(fetchAllEvent({}));
   }, [dispatch]);
   const handleSelectEvent = (id) => {
+    if (!id) return; 
+
     dispatch(setScheduleSelectTime(false));
     dispatch(setSelectedEvent(id));
 
     const selectedEvent = filteredEvents.find((event) => event.id === id);
 
-    if (selectedEvent) {
+    if (selectedEvent && selectedEvent.venue) {
       dispatch(setSelectedVenue(selectedEvent.venue.id));
     }
 

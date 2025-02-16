@@ -70,34 +70,275 @@ export function ScheduleTimeSlots({ form }) {
   );
   useEffect(() => {
     const newSlotStatus = {};
+
+    // First, find the latest show_end_date across all slots
+    let latestShowEndDate = null;
     Object.entries(timeSlots).forEach(([date, slots]) => {
-      // First, ensure slots is an array
+      const slotsArray = Array.isArray(slots) ? slots : [];
+      slotsArray.forEach((slot) => {
+        if (
+          slot.show_end_date &&
+          (!latestShowEndDate ||
+            dayjs(slot.show_end_date).isAfter(dayjs(latestShowEndDate)))
+        ) {
+          latestShowEndDate = slot.show_end_date;
+        }
+      });
+    });
+
+    Object.entries(timeSlots).forEach(([date, slots]) => {
       const slotsArray = Array.isArray(slots) ? slots : [];
 
-      if (!slotsArray || slotsArray.length === 0) {
-        newSlotStatus[date] = "yellow";
+      // Check for empty slots array
+      if (slotsArray.length === 0) {
+        const isDateCovered = Object.entries(timeSlots).some(
+          ([prevDate, prevSlots]) => {
+            return prevSlots.some(
+              (slot) =>
+                slot.show_end_date &&
+                dayjs(date).isSameOrBefore(dayjs(slot.show_end_date), "day")
+            );
+          }
+        );
+        newSlotStatus[date] = isDateCovered ? "green" : "blue";
         return;
       }
 
-      // Now safely use array methods
-      const hasCompleteSlot = slotsArray.some(
-        (slot) => slot && slot.start_time && slot.ticketType && slot.end_time
+      // Check for null or empty required fields in any slot
+      const hasNullFields = slotsArray.some((slot) => {
+        if (!slot) return true;
+
+        // Check all required fields for null, undefined, or empty string
+        const requiredFields = ["start_time", "ticketType"];
+        const hasEmptyRequired = requiredFields.some((field) => {
+          const value = slot[field];
+          return value === null || value === undefined || value === "";
+        });
+
+        // Check end-related fields based on midnight passed status
+        if (slot.is_midnight_passed) {
+          return hasEmptyRequired || !slot.show_end_date;
+        } else {
+          return hasEmptyRequired || !slot.end_time;
+        }
+      });
+
+      if (hasNullFields) {
+        newSlotStatus[date] = "red";
+        return;
+      }
+
+      // Check if slots are complete
+      const allSlotsComplete = slotsArray.every((slot) => {
+        if (!slot || !slot.start_time || !slot.ticketType) return false;
+        if (slot.is_midnight_passed) {
+          return !!slot.show_end_date;
+        }
+        return !!slot.end_time;
+      });
+
+      // Check for show_end_date coverage
+      const isDateCoveredByShowEndDate =
+        latestShowEndDate &&
+        dayjs(date).isSameOrBefore(dayjs(latestShowEndDate), "day");
+
+      // Check if this date has a midnight passed slot with show_end_date
+      const hasOwnMidnightPassedCoverage = slotsArray.some(
+        (slot) =>
+          slot.is_midnight_passed &&
+          slot.show_end_date &&
+          dayjs(date).isSameOrBefore(dayjs(slot.show_end_date), "day")
       );
 
-      if (hasCompleteSlot) {
-        newSlotStatus[date] = "green";
-      } else if (
-        slotsArray.some(
-          (slot) => slot && slot.start_time && slot.ticketType && slot.end_time
-        )
+      // Check if covered by previous dates' show_end_date
+      const isPreviouslyCovered = Object.entries(timeSlots).some(
+        ([prevDate, prevSlots]) => {
+          if (dayjs(prevDate).isSame(date) || dayjs(prevDate).isAfter(date))
+            return false;
+
+          return prevSlots.some(
+            (slot) =>
+              slot.show_end_date &&
+              dayjs(date).isSameOrBefore(dayjs(slot.show_end_date), "day")
+          );
+        }
+      );
+
+      if (
+        isDateCoveredByShowEndDate ||
+        hasOwnMidnightPassedCoverage ||
+        isPreviouslyCovered
       ) {
+        newSlotStatus[date] = "green";
+      } else if (allSlotsComplete) {
         newSlotStatus[date] = "green";
       } else {
         newSlotStatus[date] = "red";
       }
     });
+
+    // Handle dates up to and including the latest show_end_date
+    if (latestShowEndDate) {
+      const lastDate = Object.keys(timeSlots).sort((a, b) =>
+        dayjs(b).diff(dayjs(a))
+      )[0];
+
+      if (lastDate) {
+        let currentDate = dayjs(lastDate);
+        const endDate = dayjs(latestShowEndDate);
+
+        while (currentDate.isSameOrBefore(endDate, "day")) {
+          const dateStr = currentDate.format("YYYY-MM-DD");
+          if (!newSlotStatus[dateStr]) {
+            newSlotStatus[dateStr] = "green";
+          }
+          currentDate = currentDate.add(1, "day");
+        }
+      }
+    }
+
     dispatch(setSlotStatus(newSlotStatus));
   }, [timeSlots]);
+  const applyAllSlotsToAllDates = () => {
+    if (!activeTab || !timeSlots[activeTab]) {
+      message.warning("Please set up time slots for the current date first");
+      return;
+    }
+
+    const sourceSlots = timeSlots[activeTab];
+    if (!sourceSlots.some((slot) => slot?.start_time)) {
+      message.warning("Please set at least one time slot first");
+      return;
+    }
+
+    // Check if any date has midnight passed slots
+    const datesWithMidnightPassed = dates.filter((date) => {
+      const slots = timeSlots[date] || [];
+      return slots.some((slot) => slot?.is_midnight_passed);
+    });
+
+    // If any date has midnight passed slots, show warning and return
+    if (datesWithMidnightPassed.length > 0) {
+      Modal.warning({
+        title: "Cannot Apply Slots",
+        content: (
+          <div>
+            <p>
+              Unable to apply slots to all dates because the following dates
+              have midnight passed slots:
+            </p>
+            <p style={{ color: "#ff4d4f" }}>
+              {datesWithMidnightPassed.join(", ")}
+            </p>
+            <p>
+              Please clear or modify the midnight passed slots before
+              proceeding.
+            </p>
+          </div>
+        ),
+      });
+      return;
+    }
+
+    // Check if any date has incomplete slots
+    const datesWithIncompleteSlots = dates.filter((date) => {
+      const slots = timeSlots[date] || [];
+      return slots.some((slot) => {
+        return slot && (!slot.start_time || !slot.end_time || !slot.ticketType);
+      });
+    });
+
+    // Filter out only valid slots that have start time
+    const validSourceSlots = sourceSlots.filter(
+      (slot) => slot?.start_time && !slot.is_midnight_passed
+    );
+
+    if (validSourceSlots.length === 0) {
+      message.warning(
+        "No valid slots to apply. Slots with midnight passed cannot be applied to all dates."
+      );
+      return;
+    }
+
+    const confirmDetails = validSourceSlots.map((slot, index) => {
+      const startTime = slot.start_time?.format("HH:mm") || "No start time";
+      const endTime = slot.end_time?.format("HH:mm") || "No end time";
+      const ticketName = getTicketTypeName(slot.ticketType);
+      return `Slot ${
+        index + 1
+      }: ${startTime} - ${endTime}, Ticket: ${ticketName}`;
+    });
+
+    // Calculate dates that can be updated
+    const updatableDates = dates.filter((date) => date !== activeTab);
+
+    Modal.confirm({
+      title: "Confirm Apply to All Dates",
+      icon: <WarningOutlined />,
+      content: (
+        <div>
+          <p>This will apply the following slots to all eligible dates:</p>
+          <ul>
+            {confirmDetails.map((detail, index) => (
+              <li key={index}>{detail}</li>
+            ))}
+          </ul>
+          {datesWithIncompleteSlots.length > 0 && (
+            <div style={{ marginTop: "10px", color: "#ff4d4f" }}>
+              <p>
+                The following dates have incomplete slots that will be
+                overwritten: {datesWithIncompleteSlots.join(", ")}
+              </p>
+            </div>
+          )}
+          <p>Slots will be applied to {updatableDates.length} dates.</p>
+          <p>Are you sure you want to continue?</p>
+        </div>
+      ),
+      okText: "Apply",
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          const newTimeSlots = { ...timeSlots };
+          const formValues = form.getFieldsValue();
+          const newFormValues = {
+            ...formValues,
+            timeSlots: { ...formValues.timeSlots },
+          };
+
+          for (const date of updatableDates) {
+            const newDateSlots = validSourceSlots.map((sourceSlot) => ({
+              start_time: dayjs(date)
+                .hour(sourceSlot.start_time.hour())
+                .minute(sourceSlot.start_time.minute()),
+              end_time: sourceSlot.end_time
+                ? dayjs(date)
+                    .hour(sourceSlot.end_time.hour())
+                    .minute(sourceSlot.end_time.minute())
+                : null,
+              ticketType: sourceSlot.ticketType,
+              is_midnight_passed: false,
+              show_end_date: null,
+            }));
+
+            const validation = validateTimeConflicts(newDateSlots);
+            if (!validation.valid) {
+              throw new Error(`Conflict on ${date}: ${validation.message}`);
+            }
+
+            newTimeSlots[date] = newDateSlots;
+            newFormValues.timeSlots[date] = newDateSlots;
+          }
+
+          dispatch(setTimeSlots(newTimeSlots));
+          form.setFieldsValue(newFormValues);
+          message.success("Time slots applied to all dates successfully");
+        } catch (error) {
+          message.error(error.message);
+        }
+      },
+    });
+  };
 
   const applySlotToAllDates = (sourceDate, slotIndex) => {
     // Initial validation
@@ -112,7 +353,7 @@ export function ScheduleTimeSlots({ form }) {
       return;
     }
 
-    if (!sourceSlot?.end_time) {
+    if (!sourceSlot?.end_time && !sourceSlot?.show_end_date) {
       message.warning("Please set an end time for the slot first");
       return;
     }
@@ -122,8 +363,17 @@ export function ScheduleTimeSlots({ form }) {
       return;
     }
 
+    if (sourceSlot.is_midnight_passed) {
+      message.warning(
+        "Slots with midnight passed cannot be applied to other dates"
+      );
+      return;
+    }
+
     const startTimeStr = sourceSlot.start_time.format("HH:mm");
-    const endTimeStr = sourceSlot.end_time.format("HH:mm");
+    const endTimeStr = sourceSlot.end_time
+      ? sourceSlot.end_time.format("HH:mm")
+      : "Next day";
     const ticketName = getTicketTypeName(sourceSlot.ticketType);
 
     Modal.confirm({
@@ -170,15 +420,18 @@ export function ScheduleTimeSlots({ form }) {
             // Create new slot arrays with the correct length
             const newDateSlots = [...Array(slotIndex + 1)].map((_, idx) => {
               if (idx === slotIndex) {
-                const sourceSlot = timeSlots[sourceDate][slotIndex];
                 return {
                   start_time: dayjs(date)
                     .hour(sourceSlot.start_time.hour())
                     .minute(sourceSlot.start_time.minute()),
-                  end_time: dayjs(date)
-                    .hour(sourceSlot.end_time.hour())
-                    .minute(sourceSlot.end_time.minute()),
+                  end_time: sourceSlot.end_time
+                    ? dayjs(date)
+                        .hour(sourceSlot.end_time.hour())
+                        .minute(sourceSlot.end_time.minute())
+                    : null,
                   ticketType: sourceSlot.ticketType,
+                  is_midnight_passed: false,
+                  show_end_date: null,
                 };
               }
               return (
@@ -186,6 +439,8 @@ export function ScheduleTimeSlots({ form }) {
                   start_time: null,
                   end_time: null,
                   ticketType: null,
+                  is_midnight_passed: false,
+                  show_end_date: null,
                 }
               );
             });
@@ -254,92 +509,6 @@ export function ScheduleTimeSlots({ form }) {
 
     return { valid: true };
   };
-  const applyAllSlotsToAllDates = () => {
-    if (!activeTab || !timeSlots[activeTab]) {
-      message.warning("Please set up time slots for the current date first");
-      return;
-    }
-
-    const sourceSlots = timeSlots[activeTab];
-    if (!sourceSlots.some((slot) => slot?.start_time)) {
-      message.warning("Please set at least one time slot first");
-      return;
-    }
-
-    // Filter out only valid slots that have start time
-    const validSourceSlots = sourceSlots.filter((slot) => slot?.start_time);
-
-    const confirmDetails = validSourceSlots.map((slot, index) => {
-      const startTime = slot.start_time?.format("HH:mm") || "No start time";
-      const endTime = slot.end_time?.format("HH:mm") || "No end time";
-      const ticketName = getTicketTypeName(slot.ticketType);
-      return `Slot ${
-        index + 1
-      }: ${startTime} - ${endTime}, Ticket: ${ticketName}`;
-    });
-
-    Modal.confirm({
-      title: "Confirm Apply to All Dates",
-      icon: <WarningOutlined />,
-      content: (
-        <div>
-          <p>This will apply the following slots to all dates:</p>
-          <ul>
-            {confirmDetails.map((detail, index) => (
-              <li key={index}>{detail}</li>
-            ))}
-          </ul>
-          <p>This will overwrite all existing slots on other dates.</p>
-          <p>Are you sure you want to continue?</p>
-        </div>
-      ),
-      okText: "Apply",
-      cancelText: "Cancel",
-      onOk: async () => {
-        try {
-          const newTimeSlots = { ...timeSlots };
-          const formValues = form.getFieldsValue();
-          const newFormValues = {
-            ...formValues,
-            timeSlots: { ...formValues.timeSlots },
-          };
-
-          for (const date of dates) {
-            if (date === activeTab) continue;
-
-            // Create new array for the date's slots
-            const newDateSlots = timeSlots[activeTab]
-              .filter((slot) => slot?.start_time)
-              .map((sourceSlot) => ({
-                start_time: dayjs(date)
-                  .hour(sourceSlot.start_time.hour())
-                  .minute(sourceSlot.start_time.minute()),
-                end_time: sourceSlot.end_time
-                  ? dayjs(date)
-                      .hour(sourceSlot.end_time.hour())
-                      .minute(sourceSlot.end_time.minute())
-                  : null,
-                ticketType: sourceSlot.ticketType,
-              }));
-
-            const validation = validateTimeConflicts(newDateSlots);
-            if (!validation.valid) {
-              throw new Error(`Conflict on ${date}: ${validation.message}`);
-            }
-
-            newTimeSlots[date] = newDateSlots;
-            newFormValues.timeSlots[date] = newDateSlots;
-          }
-
-          dispatch(setTimeSlots(newTimeSlots));
-          form.setFieldsValue(newFormValues);
-          message.success("All time slots applied to all dates successfully");
-        } catch (error) {
-          message.error(error.message);
-        }
-      },
-    });
-  };
 
   const updateDateRange = (startDate, endDate) => {
     // if (!validateDateRange(startDate, endDate)) return;
@@ -363,12 +532,12 @@ export function ScheduleTimeSlots({ form }) {
       initialTimeSlots[date] = Array.isArray(timeSlots[date])
         ? timeSlots[date]
         : [
-            {
+            /* {
               start_time: null,
               end_time: null,
               is_midnight_passed: false,
               show_end_date: null,
-            },
+            }, */
           ];
     });
     dispatch(setTimeSlots(initialTimeSlots));
@@ -448,20 +617,20 @@ export function ScheduleTimeSlots({ form }) {
     value: dateStr,
   });
   const ticketOptions = useMemo(() => {
-    return (
-      eventDetails?.venue_ticket_structures?.map((venueData) => ({
-        value: venueData.venue.id,
-        label: venueData.venue.name,
-        children: venueData.ticket_structures.map((ticketType) => ({
-          value: ticketType.ticket_structure,
-          label: `Structure ${ticketType.ticket_structure}`,
-          children: ticketType.ticket_sets.map((ticketSet) => ({
-            value: ticketSet,
-            label: ticketSet,
-          })),
+    if (!eventDetails?.venue_ticket_structures) return [];
+
+    return eventDetails.venue_ticket_structures.map((venueData) => ({
+      value: venueData.venue.id,
+      label: venueData.venue.name,
+      children: venueData.ticket_structures.map((ticketType) => ({
+        value: ticketType.ticket_structure,
+        label: `Structure ${ticketType.ticket_structure}`,
+        children: ticketType.ticket_sets.map((ticketSet) => ({
+          value: ticketSet,
+          label: ticketSet,
         })),
-      })) || []
-    );
+      })),
+    }));
   }, [eventDetails]);
 
   const renderTimeDateTimeSlots = (dateStr) => {

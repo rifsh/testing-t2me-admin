@@ -69,9 +69,23 @@ const TaxFormFields = ({ mode, tax }) => {
       const formData = {
         enabled: maintenanceData.enabled,
         footer_message: maintenanceData.footer_message,
+        isComingSoonMessage: maintenanceData.isComingSoonMessage,
+        isComingSoonFlag: maintenanceData.isComingSoonFlag,
         reason_for_maintenance: maintenanceData.reason_for_maintenance,
         playstore_url: maintenanceData.playstore_url,
         appstore_url: maintenanceData.appstore_url,
+        isComingSoonImage:
+          maintenanceData.isComingSoonImage &&
+          maintenanceData.isComingSoonImage !== "images"
+            ? [
+                {
+                  uid: "-1",
+                  name: maintenanceData.isComingSoonImage.split("/").pop(),
+                  status: "done",
+                  url: maintenanceData.isComingSoonImage,
+                },
+              ]
+            : [],
         maintenance_image:
           maintenanceData.maintenance_image &&
           maintenanceData.maintenance_image !== "images"
@@ -129,6 +143,18 @@ const TaxFormFields = ({ mode, tax }) => {
               <Input placeholder="Enter the footer message" />
             </Form.Item>
             <Form.Item
+              name="isComingSoonMessage"
+              label="Coming Soon Message"
+              rules={[
+                {
+                  required: true,
+                  message: "Please enter the coming soon message",
+                },
+              ]}
+            >
+              <Input placeholder="Enter the coming soon message" />
+            </Form.Item>
+            <Form.Item
               name="reason_for_maintenance"
               label="Maintenance Reason"
               rules={[
@@ -167,6 +193,17 @@ const TaxFormFields = ({ mode, tax }) => {
               />
             </Form.Item>
             <Form.Item
+              name="isComingSoonFlag"
+              label="Coming Soon Status"
+              valuePropName="checked"
+            >
+              <Switch
+                checkedChildren={<CheckOutlined />}
+                unCheckedChildren={<CloseOutlined />}
+                defaultChecked
+              />
+            </Form.Item>
+            <Form.Item
               name="maintenance_image"
               label="Maintenance Image"
               valuePropName="fileList"
@@ -175,6 +212,33 @@ const TaxFormFields = ({ mode, tax }) => {
             >
               <Upload
                 name="maintenance_image"
+                listType="picture"
+                maxCount={1}
+                beforeUpload={(file) =>
+                  Utils.handleBeforeUpload(file, ResolutionByServices.place)
+                }
+                accept={`.${SupportImageFormat.join(",.")}`}
+              >
+                <Button icon={<UploadOutlined />}>Click to upload</Button>
+              </Upload>
+            </Form.Item>
+            <Text
+              type="warning"
+              style={{ padding: "00px 00px", fontSize: "11px" }}
+            >
+              {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
+              &{" resolution "}
+              {ResolutionByServices.place} pixels.{" "}
+            </Text>
+            <Form.Item
+              name="isComingSoonImage"
+              label="Coming Soon Image"
+              valuePropName="fileList"
+              getValueFromEvent={normFile}
+              style={{ marginBottom: "0px", padding: "0px" }}
+            >
+              <Upload
+                name="isComingSoonImage"
                 listType="picture"
                 maxCount={1}
                 beforeUpload={(file) =>
