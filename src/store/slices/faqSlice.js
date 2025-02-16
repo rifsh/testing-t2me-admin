@@ -15,14 +15,45 @@ const initialState = {
   pagination: {},
   editable_status: null,
   singleCategory: null,
+  addingSectionLoading: false,
+  isModalVisible: false,
 };
+
+export const createSection = createAsyncThunk(
+  "faqs/createSection",
+  async (sectionName, { getState, rejectWithValue }) => {
+    try {
+      const { faqJson } = getState().faqs;
+      if (!faqJson) return rejectWithValue("FAQ data not initialized");
+
+      const updatedJson = {
+        ...faqJson,
+        sections: [...faqJson.sections, sectionName.toLowerCase().trim()],
+        data: [
+          ...faqJson.data,
+          {
+            id: sectionName.toLowerCase().trim(),
+            section: sectionName,
+            faq: [],
+          },
+        ],
+      };
+
+      const response = await FaqService.createFaq(updatedJson);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to create section");
+    }
+  }
+);
 
 export const fetchAllFaqs = createAsyncThunk(
   "faqs/fetchAllFaqs",
   async (_, { rejectWithValue }) => {
     try {
+      console.log("FETCHING FAQS");
       const response = await FaqService.getFaqs();
-      return response;
+      return response.data[0];
     } catch (error) {
       return rejectWithValue("Failed to fetch FAQs");
     }
@@ -38,9 +69,10 @@ export const addFaq = createAsyncThunk(
 
       const updatedJson = updateFaqJson(faqJson, category, questions);
 
-      await FaqService.uploadFaqToR2(updatedJson);
+      const response = await FaqService.createFaq(updatedJson);
+      return response.data;
 
-      return updatedJson;
+      // return updatedJson;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to add FAQ");
     }
@@ -52,6 +84,8 @@ const updateFaqJson = (faqJson, category, newQuestions) => {
     sections: [...faqJson.sections],
     data: JSON.parse(JSON.stringify(faqJson.data)),
   };
+
+  console.log(category, "CATEGORY");
 
   const normalizedCategory = category.toLowerCase().trim();
 
@@ -103,20 +137,39 @@ const updateFaqJson = (faqJson, category, newQuestions) => {
 const FaqSlice = createSlice({
   name: "faqs",
   initialState,
-  reducers: {},
+  reducers: {
+    setModalVisible: (state, action) => {
+      state.isModalVisible = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
+      .addCase(createSection.pending, (state) => {
+        state.addingSectionLoading = true;
+        state.error = null;
+      })
+      .addCase(createSection.fulfilled, (state, { payload }) => {
+        state.addingSectionLoading = false;
+        state.isModalVisible = false;
+      })
+      .addCase(createSection.rejected, (state, { payload }) => {
+        state.addingSectionLoading = false;
+        state.error = payload;
+      })
       .addCase(fetchAllFaqs.pending, (state) => {
+        console.log("fetchAllFaqs pending");
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchAllFaqs.fulfilled, (state, { payload }) => {
+        console.log("fetchAllFaqs fulfilled", payload);
         state.loading = false;
         state.faqs = payload.data;
         state.faqJson = payload;
         state.faqSections = payload.sections;
       })
       .addCase(fetchAllFaqs.rejected, (state, { payload }) => {
+        console.log("fetchAllFaqs rejected", payload);
         state.loading = false;
         state.error = payload;
       })
@@ -126,9 +179,6 @@ const FaqSlice = createSlice({
       })
       .addCase(addFaq.fulfilled, (state, { payload }) => {
         state.submitting = false;
-        state.faqs = payload.data;
-        state.faqJson = payload;
-        state.faqSections = payload.sections;
       })
       .addCase(addFaq.rejected, (state, { payload }) => {
         state.submitting = false;
@@ -136,5 +186,7 @@ const FaqSlice = createSlice({
       });
   },
 });
+
+export const { setModalVisible } = FaqSlice.actions;
 
 export default FaqSlice.reducer;

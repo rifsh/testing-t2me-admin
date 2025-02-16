@@ -17,6 +17,7 @@ import modalSlice from "./slices/modalSlice";
 import organizerUpdates from "./slices/EventOrganizerSlice";
 import tax from "./slices/taxSlice";
 import faqs from "./slices/faqSlice";
+import appinfo from "./slices/AppInfoSlice";
 
 import layout from "./slices/layoutSlice";
 
@@ -46,6 +47,7 @@ const rootReducer = (asyncReducers = {}) => {
       organizerUpdates,
       payment,
       faqs,
+      appinfo,
       ...asyncReducers,
     });
 
