@@ -129,19 +129,26 @@ const UserForm = ({ mode, user }) => {
           ...values,
         };
 
-        console.log(values.event_ids, "EVENT IDS");
+        if (
+          values.position_id === UserRoleConstants.eventOrganizerRoleId ||
+          values.position_id === UserRoleConstants.eventSupportingTeamRoleId
+        ) {
+          console.log(values.event_ids, "EVENT IDS");
 
-        const resultAction = await dispatch(
-          validateMultipleEvent(values.event_ids)
-        );
+          const resultAction = await dispatch(
+            validateMultipleEvent(values.event_ids)
+          );
 
-        if (validateMultipleEvent.fulfilled.match(resultAction)) {
-          const response = resultAction.payload;
-          if (response.message === "warning") {
-            dispatch(setEventValidationDialogVisible(true));
-          } else if (response.data && response.data[0]?.validation_status) {
-            dispatch(setSelectedSubmitItem(formData));
+          if (validateMultipleEvent.fulfilled.match(resultAction)) {
+            const response = resultAction.payload;
+            if (response.message === "warning") {
+              dispatch(setEventValidationDialogVisible(true));
+            } else if (response.data && response.data[0]?.validation_status) {
+              dispatch(setSelectedSubmitItem(formData));
+            }
           }
+        } else {
+          dispatch(setSelectedSubmitItem(formData));
         }
       }
     } catch (info) {

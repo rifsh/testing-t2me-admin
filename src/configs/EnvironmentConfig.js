@@ -1,5 +1,5 @@
 const dev = {
-  //API_ENDPOINT_URL: "http://192.168.29.8:8000",
+  // API_ENDPOINT_URL: "http://192.168.29.221:8000",
    API_ENDPOINT_URL: "https://uat-tickets2me.mitetechnology.in",
 };
 

@@ -327,8 +327,12 @@ class Utils {
    * @param {string} dataIndex - The key for the column in the data source (default: 'status').
    * @returns {Object} - An object containing render and sorter logic for the "Status" column.
    */
-  static statusColumnUtil = (handleUpdateStatus, dataIndex = "status") => ({
-    title: "Status",
+  static statusColumnUtil = (
+    handleUpdateStatus,
+    dataIndex = "status",
+    title = "Status"
+  ) => ({
+    title: title,
     dataIndex: dataIndex,
     render: (_, record) => (
       <Tag
@@ -489,7 +493,7 @@ class Utils {
           key === "tax_ids" ||
           key === "coupon_ids" ||
           key === "offer_ids" ||
-          key === "event_ids"||
+          key === "event_ids" ||
           key === "venue_ids"
         ) {
           value.forEach((id) => formData.append(key, id));
@@ -503,6 +507,21 @@ class Utils {
             value.forEach((image) => {
               if (image.url) {
                 formData.append("banner_images", image.url);
+              }
+              if (image.originFileObj) {
+                formData.append(key, image.originFileObj);
+              }
+            });
+          }
+          return;
+        }
+        if (key === "maintenance_image") {
+          if (value.length === 0) {
+            formData.append(key, "");
+          } else {
+            value.forEach((image) => {
+              if (image.url) {
+                formData.append("maintenance_image", image.url);
               }
               if (image.originFileObj) {
                 formData.append(key, image.originFileObj);
