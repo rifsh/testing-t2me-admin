@@ -1065,6 +1065,12 @@ class TimeSlotValidator {
     const lastEventDate = allDates[allDates.length - 1];
     const selectedEndDate = value.format("YYYY-MM-DD");
 
+    if (selectedEndDate === dateStr) {
+      return {
+        isValid: false,
+        message: "Show end date cannot be same the current slot date",
+      };
+    }
     if (selectedEndDate < dateStr) {
       return {
         isValid: false,

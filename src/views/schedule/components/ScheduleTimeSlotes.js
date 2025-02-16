@@ -71,51 +71,86 @@ export function ScheduleTimeSlots({ form }) {
   useEffect(() => {
     const newSlotStatus = {};
 
+    // First, find the latest show_end_date across all slots
+    let latestShowEndDate = null;
     Object.entries(timeSlots).forEach(([date, slots]) => {
-      // Ensure slots is an array
+      const slotsArray = Array.isArray(slots) ? slots : [];
+      slotsArray.forEach((slot) => {
+        if (
+          slot.show_end_date &&
+          (!latestShowEndDate ||
+            dayjs(slot.show_end_date).isAfter(dayjs(latestShowEndDate)))
+        ) {
+          latestShowEndDate = slot.show_end_date;
+        }
+      });
+    });
+
+    Object.entries(timeSlots).forEach(([date, slots]) => {
       const slotsArray = Array.isArray(slots) ? slots : [];
 
+      // Check for empty slots array
       if (slotsArray.length === 0) {
-        // Check if this date is covered by a previous date's midnight passed slot
         const isDateCovered = Object.entries(timeSlots).some(
           ([prevDate, prevSlots]) => {
-            if (dayjs(prevDate).isAfter(date)) return false;
-
             return prevSlots.some(
               (slot) =>
-                slot.is_midnight_passed &&
                 slot.show_end_date &&
-                dayjs(slot.show_end_date).isAfter(dayjs(date), "day")
+                dayjs(date).isSameOrBefore(dayjs(slot.show_end_date), "day")
             );
           }
         );
-
         newSlotStatus[date] = isDateCovered ? "green" : "blue";
         return;
       }
 
-      // Check if every slot is fully filled with proper end time handling
+      // Check for null or empty required fields in any slot
+      const hasNullFields = slotsArray.some((slot) => {
+        if (!slot) return true;
+
+        // Check all required fields for null, undefined, or empty string
+        const requiredFields = ["start_time", "ticketType"];
+        const hasEmptyRequired = requiredFields.some((field) => {
+          const value = slot[field];
+          return value === null || value === undefined || value === "";
+        });
+
+        // Check end-related fields based on midnight passed status
+        if (slot.is_midnight_passed) {
+          return hasEmptyRequired || !slot.show_end_date;
+        } else {
+          return hasEmptyRequired || !slot.end_time;
+        }
+      });
+
+      if (hasNullFields) {
+        newSlotStatus[date] = "red";
+        return;
+      }
+
+      // Check if slots are complete
       const allSlotsComplete = slotsArray.every((slot) => {
         if (!slot || !slot.start_time || !slot.ticketType) return false;
-
-        // For midnight passed slots, require show_end_date
         if (slot.is_midnight_passed) {
           return !!slot.show_end_date;
         }
-
-        // For regular slots, require end_time
         return !!slot.end_time;
       });
 
-      // Check if this date is covered by a midnight passed slot
-      const hasMidnightPassedCoverage = slotsArray.some(
+      // Check for show_end_date coverage
+      const isDateCoveredByShowEndDate =
+        latestShowEndDate &&
+        dayjs(date).isSameOrBefore(dayjs(latestShowEndDate), "day");
+
+      // Check if this date has a midnight passed slot with show_end_date
+      const hasOwnMidnightPassedCoverage = slotsArray.some(
         (slot) =>
           slot.is_midnight_passed &&
           slot.show_end_date &&
-          dayjs(slot.show_end_date).isAfter(dayjs(date), "day")
+          dayjs(date).isSameOrBefore(dayjs(slot.show_end_date), "day")
       );
 
-      // Check if previous dates cover this date
+      // Check if covered by previous dates' show_end_date
       const isPreviouslyCovered = Object.entries(timeSlots).some(
         ([prevDate, prevSlots]) => {
           if (dayjs(prevDate).isSame(date) || dayjs(prevDate).isAfter(date))
@@ -123,14 +158,17 @@ export function ScheduleTimeSlots({ form }) {
 
           return prevSlots.some(
             (slot) =>
-              slot.is_midnight_passed &&
               slot.show_end_date &&
-              dayjs(slot.show_end_date).isAfter(dayjs(date), "day")
+              dayjs(date).isSameOrBefore(dayjs(slot.show_end_date), "day")
           );
         }
       );
 
-      if (hasMidnightPassedCoverage || isPreviouslyCovered) {
+      if (
+        isDateCoveredByShowEndDate ||
+        hasOwnMidnightPassedCoverage ||
+        isPreviouslyCovered
+      ) {
         newSlotStatus[date] = "green";
       } else if (allSlotsComplete) {
         newSlotStatus[date] = "green";
@@ -138,6 +176,26 @@ export function ScheduleTimeSlots({ form }) {
         newSlotStatus[date] = "red";
       }
     });
+
+    // Handle dates up to and including the latest show_end_date
+    if (latestShowEndDate) {
+      const lastDate = Object.keys(timeSlots).sort((a, b) =>
+        dayjs(b).diff(dayjs(a))
+      )[0];
+
+      if (lastDate) {
+        let currentDate = dayjs(lastDate);
+        const endDate = dayjs(latestShowEndDate);
+
+        while (currentDate.isSameOrBefore(endDate, "day")) {
+          const dateStr = currentDate.format("YYYY-MM-DD");
+          if (!newSlotStatus[dateStr]) {
+            newSlotStatus[dateStr] = "green";
+          }
+          currentDate = currentDate.add(1, "day");
+        }
+      }
+    }
 
     dispatch(setSlotStatus(newSlotStatus));
   }, [timeSlots]);

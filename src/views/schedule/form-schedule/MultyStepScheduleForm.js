@@ -144,15 +144,11 @@ const MultyStepScheduleForm = ({ mode, id }) => {
     try {
       const values = form.getFieldValue();
 
-      // Format dates properly
       const startDate = dayjs(values.start_date).format("YYYY-MM-DD");
       const endDate = dayjs(values.end_date).format("YYYY-MM-DD");
 
-      // Transform timeSlots into show_dates format
-      // Transform timeSlots into show_dates format
       const show_dates = Object.entries(values.timeSlots || {}).map(
         ([date, slots]) => {
-          // Find the latest show_end_date from slots if any exist
           const latestEndDate = slots.reduce((latest, slot) => {
             if (
               slot.show_end_date &&
@@ -206,10 +202,10 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         start_date: startDate,
         end_date: endDate,
         booking_start_date_time: dayjs(values.booking_start_date_time).format(
-          "YYYY-MM-DDTHH:mm:ss.SSSZ"
+          "YYYY-MM-DDTHH:mm"
         ),
         ad_start_date_time: dayjs(values.ad_start_date_time).format(
-          "YYYY-MM-DDTHH:mm:ss.SSSZ"
+          "YYYY-MM-DDTHH:mm"
         ),
         name: values.name,
         event_id: values.event_id,

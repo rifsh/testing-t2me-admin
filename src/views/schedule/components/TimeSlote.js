@@ -131,6 +131,7 @@ const TimeSlots = ({
       clearSlotFields(dateStr, index, [type]);
       return;
     }
+    console.log(value, "showendtimevaue");
 
     const validation = TimeSlotValidator.validateShowEndTime(
       timeSlots,
@@ -227,9 +228,8 @@ const TimeSlots = ({
 
     form.setFields(formUpdates);
     updates.forEach((update) => dispatch(updateTimeSlot(update)));
-    console.log(timeSlots,'timeslotes');
-    console.log(form.getFieldValue(),'timeslotes');
-    
+    console.log(timeSlots, "timeslotes");
+    console.log(form.getFieldValue(), "timeslotes");
   };
 
   const handleTimeChange = async (
