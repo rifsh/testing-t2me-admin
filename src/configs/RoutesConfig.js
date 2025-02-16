@@ -238,6 +238,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/payment/add-payment")),
   },
   {
+    key: "payment.edit",
+    path: `${APP_PREFIX_PATH}/payment/edit/`,
+    component: React.lazy(() => import("views/payment/edit-payment")),
+  },
+  {
     key: "ticket.list",
     path: `${APP_PREFIX_PATH}/ticket/list`,
     component: React.lazy(() => import("views/ticket/list-ticket")),
@@ -408,6 +413,20 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/app/management/layout/faq/add-faq`,
     component: React.lazy(() =>
       import("views/app-managment/layout/faq/add-faq")
+    ),
+  },
+  {
+    key: "app.management.layout.info.list",
+    path: `${APP_PREFIX_PATH}/app/management/layout/app-info/list`,
+    component: React.lazy(() =>
+      import("views/app-managment/layout/app-info/list-info")
+    ),
+  },
+  {
+    key: "app.management.layout.info.add",
+    path: `${APP_PREFIX_PATH}/app/management/layout/app-info/add-info`,
+    component: React.lazy(() =>
+      import("views/app-managment/layout/app-info/add-info/index")
     ),
   },
 ];

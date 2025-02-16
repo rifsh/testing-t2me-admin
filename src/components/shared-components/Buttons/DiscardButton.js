@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Modal } from "antd";
 import { useNavigate } from "react-router-dom";
 
-const DiscardButton = (form) => {
+const DiscardButton = ({ form }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -12,8 +12,9 @@ const DiscardButton = (form) => {
       content: "Your unsaved changes will be lost.",
       onOk: () => {
         // Reset the form and navigate back if the user confirms
-        form.form.resetFields();
+        form.resetFields();
         navigate(-1);
+        console.log("DISCARDED");
       },
       onCancel: () => {
         // Do nothing if the user cancels
