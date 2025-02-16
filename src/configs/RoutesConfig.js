@@ -238,6 +238,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/payment/add-payment")),
   },
   {
+    key: "payment.edit",
+    path: `${APP_PREFIX_PATH}/payment/edit/`,
+    component: React.lazy(() => import("views/payment/edit-payment")),
+  },
+  {
     key: "ticket.list",
     path: `${APP_PREFIX_PATH}/ticket/list`,
     component: React.lazy(() => import("views/ticket/list-ticket")),

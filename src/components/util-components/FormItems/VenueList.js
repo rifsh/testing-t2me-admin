@@ -25,7 +25,7 @@ const VenueListForm = ({ form, label, rules, onSelect, mode }) => {
     <Form.Item name="venue_id" label={label} rules={rules}>
       <Select
         mode={mode}
-        defaultValue={null}
+        // defaultValue={null}
         notFoundContent={
           loading ? (
             <span>Loading venues...</span>

@@ -28,7 +28,9 @@ const TimezoneClock = ({ timezone, eventDetails }) => {
       <span
         style={{ fontSize: "15px", paddingLeft: "5px", fontWeight: "lighter" }}
       >
-        {` (${eventDetails?.venue?.place?.country.name ?? ""} : ${timezone})`}
+        {` (${
+          eventDetails?.venue_events?.[0]?.venue?.place?.country?.name || ""
+        } : ${timezone})`}
       </span>
 
       <Col>
