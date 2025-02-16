@@ -308,6 +308,30 @@ class TimeSlotValidator {
     const currentSlot = slots[currentIndex] || {};
     const isMidnightPassed = currentSlot.is_midnight_passed;
 
+    // Check if there's any slot with show_end_date for the current date
+    const slotWithShowEnd = Object.keys(timeSlots).reduce((found, date) => {
+      const dateSlots = timeSlots[date] || [];
+      const matchingSlot = dateSlots.find(
+        (slot) =>
+          slot.show_end_date &&
+          dayjs(slot.show_end_date).format("YYYY-MM-DD") === dateStr
+      );
+      return found || matchingSlot;
+    }, null);
+
+    // If there's a slot with show_end_date, validate against it
+    if (slotWithShowEnd) {
+      const showEndTime = dayjs(slotWithShowEnd.show_end_date).format("HH:mm");
+      const showEndMinutes = this.timeToMinutes(showEndTime);
+
+      if (selectedMinutes <= showEndMinutes) {
+        return {
+          isValid: false,
+          message: `Cannot select time before show end time (${showEndTime}) for this date`,
+        };
+      }
+    }
+
     // Get all valid slots except current one
     const otherSlots = slots
       .map((slot, idx) => ({ ...slot, index: idx }))
@@ -407,7 +431,7 @@ class TimeSlotValidator {
           slot.end_time.format("HH:mm")
         );
 
-        // Check if selected end time falls within any existing slot
+        // Various overlap checks...
         if (
           selectedMinutes >= slotStartMinutes &&
           selectedMinutes <= slotEndMinutes
@@ -420,7 +444,7 @@ class TimeSlotValidator {
           };
         }
 
-        // Check if the new slot would completely contain another slot
+        // Check other overlap conditions...
         if (
           currentStartMinutes <= slotStartMinutes &&
           selectedMinutes >= slotEndMinutes
@@ -433,7 +457,6 @@ class TimeSlotValidator {
           };
         }
 
-        // Check if the new slot would be contained within another slot
         if (
           currentStartMinutes >= slotStartMinutes &&
           selectedMinutes <= slotEndMinutes
@@ -446,7 +469,6 @@ class TimeSlotValidator {
           };
         }
 
-        // Check if the new slot would overlap with the start of another slot
         if (
           currentStartMinutes < slotStartMinutes &&
           selectedMinutes > slotStartMinutes
@@ -459,7 +481,6 @@ class TimeSlotValidator {
           };
         }
 
-        // Check if the new slot would overlap with the end of another slot
         if (
           currentStartMinutes < slotEndMinutes &&
           selectedMinutes > slotEndMinutes
@@ -523,54 +544,57 @@ class TimeSlotValidator {
   }
 
   // First, let's update the coverage check function to handle show end times
-static isFullDayCovered(timeSlots, dateStr, checkShowEndTime = false) {
-  const currentDateSlots = timeSlots[dateStr] || [];
-  const slots = timeSlots[dateStr] || [];
-  const isMidnightPassed = slots.some((slot) => slot.is_midnight_passed === true) || false;
-  
-  if (currentDateSlots.length === 0) return false;
+  static isFullDayCovered(timeSlots, dateStr, checkShowEndTime = false) {
+    const currentDateSlots = timeSlots[dateStr] || [];
+    const slots = timeSlots[dateStr] || [];
+    const isMidnightPassed =
+      slots.some((slot) => slot.is_midnight_passed === true) || false;
 
-  // Sort slots by start time
-  const sortedSlots = [...currentDateSlots]
-    .filter((slot) => slot.start_time && slot.end_time)
-    .sort((a, b) => {
-      const aTime = dayjs(a.start_time);
-      const bTime = dayjs(b.start_time);
-      return aTime.isBefore(bTime) ? -1 : 1;
-    });
+    if (currentDateSlots.length === 0) return false;
 
-  if (sortedSlots.length === 0) return false;
+    // Sort slots by start time
+    const sortedSlots = [...currentDateSlots]
+      .filter((slot) => slot.start_time && slot.end_time)
+      .sort((a, b) => {
+        const aTime = dayjs(a.start_time);
+        const bTime = dayjs(b.start_time);
+        return aTime.isBefore(bTime) ? -1 : 1;
+      });
 
-  // Check if first slot starts at beginning of day and last slot ends at end of day
-  const firstSlot = sortedSlots[0];
-  const lastSlot = sortedSlots[sortedSlots.length - 1];
+    if (sortedSlots.length === 0) return false;
 
-  const firstSlotStart = dayjs(firstSlot.start_time);
-  const lastSlotEnd = dayjs(lastSlot.end_time);
+    // Check if first slot starts at beginning of day and last slot ends at end of day
+    const firstSlot = sortedSlots[0];
+    const lastSlot = sortedSlots[sortedSlots.length - 1];
 
-  // Check if slots cover entire day (00:01 to 23:59)
-  const startsAtBeginning = firstSlotStart.hour() === 0 && firstSlotStart.minute() <= 1;
-  const endsAtEnd = lastSlotEnd.hour() === 23 && lastSlotEnd.minute() >= 59;
+    const firstSlotStart = dayjs(firstSlot.start_time);
+    const lastSlotEnd = dayjs(lastSlot.end_time);
 
-  // Check for gaps between slots
-  for (let i = 0; i < sortedSlots.length - 1; i++) {
-    const currentSlotEnd = dayjs(sortedSlots[i].end_time);
-    const nextSlotStart = dayjs(sortedSlots[i + 1].start_time);
+    // Check if slots cover entire day (00:01 to 23:59)
+    const startsAtBeginning =
+      firstSlotStart.hour() === 0 && firstSlotStart.minute() <= 1;
+    const endsAtEnd = lastSlotEnd.hour() === 23 && lastSlotEnd.minute() >= 59;
 
-    if (nextSlotStart.diff(currentSlotEnd, "minute") > 0) {
-      return false; // Found a gap
+    // Check for gaps between slots
+    for (let i = 0; i < sortedSlots.length - 1; i++) {
+      const currentSlotEnd = dayjs(sortedSlots[i].end_time);
+      const nextSlotStart = dayjs(sortedSlots[i + 1].start_time);
+
+      if (nextSlotStart.diff(currentSlotEnd, "minute") > 0) {
+        return false; // Found a gap
+      }
     }
+
+    // Additional check for show_end_time coverage if requested
+    if (checkShowEndTime) {
+      const hasAllShowEndTimes = sortedSlots.every(
+        (slot) => slot.show_end_date
+      );
+      if (!hasAllShowEndTimes) return false;
+    }
+
+    return isMidnightPassed || (startsAtBeginning && endsAtEnd);
   }
-
-  // Additional check for show_end_time coverage if requested
-  if (checkShowEndTime) {
-    const hasAllShowEndTimes = sortedSlots.every(slot => slot.show_end_date);
-    if (!hasAllShowEndTimes) return false;
-  }
-
-  return isMidnightPassed || (startsAtBeginning && endsAtEnd);
-}
-
 
   static areAllSlotsComplete(timeSlots, dateStr) {
     const currentDateSlots = timeSlots[dateStr] || [];
@@ -595,146 +619,543 @@ static isFullDayCovered(timeSlots, dateStr, checkShowEndTime = false) {
     return timeSlotFields.some((field) => field.errors.length > 0);
   }
 
-    static getDateCoverage(timeSlots, dateStr) {
-      const allDates = Object.keys(timeSlots).sort();
-      const coverage = {
-        isFullyCovered: false,
-        partialCoverage: null,
-        availableFrom: null,
-      };
-  
-      // Check previous dates for midnight passed slots
-      for (const date of allDates) {
-        if (date > dateStr) break;
-  
-        const slots = timeSlots[date] || [];
-        for (const slot of slots) {
-          if (slot.is_midnight_passed && slot.show_end_date) {
-            const showEndDate = dayjs(slot.show_end_date);
-            const showEndDateStr = showEndDate.format("YYYY-MM-DD");
-  
-            if (showEndDateStr === dateStr) {
-              coverage.partialCoverage = true;
-              coverage.availableFrom = showEndDate;
-            } else if (showEndDateStr > dateStr) {
-              coverage.isFullyCovered = true;
-            }
+  static getDateCoverage(timeSlots, dateStr) {
+    const allDates = Object.keys(timeSlots).sort();
+    const coverage = {
+      isFullyCovered: false,
+      partialCoverage: null,
+      availableFrom: null,
+    };
+
+    // Check previous dates for midnight passed slots
+    for (const date of allDates) {
+      if (date > dateStr) break;
+
+      const slots = timeSlots[date] || [];
+      for (const slot of slots) {
+        if (slot.is_midnight_passed && slot.show_end_date) {
+          const showEndDate = dayjs(slot.show_end_date);
+          const showEndDateStr = showEndDate.format("YYYY-MM-DD");
+
+          if (showEndDateStr === dateStr) {
+            coverage.partialCoverage = true;
+            coverage.availableFrom = showEndDate;
+          } else if (showEndDateStr > dateStr) {
+            coverage.isFullyCovered = true;
           }
         }
       }
-  
-      return coverage;
     }
-  
-    static shouldShowTimeSlots(timeSlots, dateStr) {
-      const coverage = this.getDateCoverage(timeSlots, dateStr);
-      return !coverage.isFullyCovered;
+
+    return coverage;
+  }
+
+  static shouldShowTimeSlots(timeSlots, dateStr) {
+    const coverage = this.getDateCoverage(timeSlots, dateStr);
+    return !coverage.isFullyCovered;
+  }
+
+  static shouldShowAddButton(timeSlots, dateStr, form) {
+    const coverage = this.getDateCoverage(timeSlots, dateStr);
+    if (coverage.isFullyCovered) return false;
+
+    const currentDateSlots = timeSlots[dateStr] || [];
+    if (currentDateSlots.length === 0) {
+      return true;
     }
-  
-    static shouldShowAddButton(timeSlots, dateStr, form) {
-      const coverage = this.getDateCoverage(timeSlots, dateStr);
-      if (coverage.isFullyCovered) return false;
-  
-      const currentDateSlots = timeSlots[dateStr] || [];
-      if (currentDateSlots.length === 0) {
-        return true;
-      }
-  
-      const lastSlot = currentDateSlots[currentDateSlots.length - 1];
-      const isLastSlotComplete =
-        lastSlot.start_time && lastSlot.end_time && lastSlot.ticketType;
-  
-      return (
-        isLastSlotComplete &&
-        !this.hasFormErrors(form, dateStr) &&
-        !this.isFullDayCovered(timeSlots, dateStr)
-      );
-    }
-  
-    static validateTimeAgainstCoverage(timeSlots, dateStr, time, type) {
-      const coverage = this.getDateCoverage(timeSlots, dateStr);
-      if (coverage.partialCoverage && coverage.availableFrom) {
-        const proposedTime = dayjs(time);
-        if (type === "start_time" && proposedTime.isBefore(coverage.availableFrom)) {
+
+    const lastSlot = currentDateSlots[currentDateSlots.length - 1];
+    const isLastSlotComplete =
+      lastSlot.start_time && lastSlot.end_time && lastSlot.ticketType;
+
+    return (
+      isLastSlotComplete &&
+      !this.hasFormErrors(form, dateStr) &&
+      !this.isFullDayCovered(timeSlots, dateStr)
+    );
+  }
+
+  // static validateShowEndTime(timeSlots, dateStr, index, value) {
+  //   if (!value) {
+  //     return { isValid: false, message: "Show end time is required" };
+  //   }
+
+  //   const selectedEndTime = value.format("YYYY-MM-DD HH:mm");
+  //   const selectedEndDate = value.format("YYYY-MM-DD");
+  //   const allDates = Object.keys(timeSlots).sort();
+  //   const firstEventDate = allDates[0];
+  //   const lastEventDate = allDates[allDates.length - 1];
+  //   const currentDate = dayjs(dateStr);
+  //   const currentSlot = timeSlots[dateStr]?.[index];
+
+  //   // Basic validations
+  //   if (!value.isAfter(currentDate, "day")) {
+  //     return {
+  //       isValid: false,
+  //       message: "Show end date must be after the current date"
+  //     };
+  //   }
+
+  //   if (!currentSlot?.start_time || !currentSlot?.is_midnight_passed) {
+  //     return {
+  //       isValid: false,
+  //       message: "Please set start time and enable midnight passed first"
+  //     };
+  //   }
+
+  //   if (selectedEndDate < dateStr) {
+  //     return {
+  //       isValid: false,
+  //       message: "Show end date cannot be before the current slot date",
+  //     };
+  //   }
+
+  //   if (selectedEndDate < firstEventDate) {
+  //     return {
+  //       isValid: false,
+  //       message: "Show end date cannot be before the first event date",
+  //     };
+  //   }
+
+  //   if (selectedEndDate > lastEventDate) {
+  //     return {
+  //       isValid: false,
+  //       message: "Show end date cannot be after the last event date",
+  //     };
+  //   }
+
+  //   // Get coverage analysis
+  //   const {
+  //     coverageMap,
+  //     datesToUpdate,
+  //     skippedDates,
+  //     hasConflicts,
+  //     conflictMessage,
+  //     coverageStatus
+  //   } = this.validateDateCoverage(timeSlots, dateStr, index, value);
+
+  //   if (hasConflicts) {
+  //     return {
+  //       isValid: false,
+  //       message: conflictMessage
+  //     };
+  //   }
+
+  //   // Validate end time against start times on end date
+  //   const endDateSlots = timeSlots[selectedEndDate] || [];
+  //   if (endDateSlots.length > 0) {
+  //     const endTimeOnDay = dayjs(selectedEndTime);
+  //     const firstStartTime = endDateSlots[0].start_time;
+
+  //     if (firstStartTime && endTimeOnDay.isBefore(firstStartTime)) {
+  //       return {
+  //         isValid: false,
+  //         message: `Show end time must be after the start time (${firstStartTime.format("HH:mm")}) on ${selectedEndDate}`,
+  //       };
+  //     }
+  //   }
+
+  //   return {
+  //     isValid: true,
+  //     datesToUpdate,
+  //     skippedDates,
+  //     selectedEndDate,
+  //     coverageMap,
+  //     coverageStatus
+  //   };
+  // }
+
+  // static validateDateCoverage(timeSlots, dateStr, index, value) {
+  //   const coverageMap = new Map();
+  //   const coverageStatus = new Map();
+  //   let hasConflicts = false;
+  //   let conflictMessage = "";
+
+  //   // First pass: Map out existing coverage excluding the slot being edited
+  //   Object.entries(timeSlots).forEach(([date, slots]) => {
+  //     slots.forEach((slot, slotIdx) => {
+  //       // Skip the current slot being edited and any empty slots
+  //       if ((date === dateStr && slotIdx === index) || !slot) {
+  //         return;
+  //       }
+
+  //       if (slot.is_midnight_passed && slot.show_end_date) {
+  //         const slotStartDate = dayjs(date);
+  //         const slotEndDate = dayjs(slot.show_end_date);
+
+  //         let currentDate = slotStartDate;
+  //         while (currentDate.isSameOrBefore(slotEndDate, "day")) {
+  //           const dateKey = currentDate.format("YYYY-MM-DD");
+  //           if (!coverageMap.has(dateKey)) {
+  //             coverageMap.set(dateKey, new Set());
+  //             coverageStatus.set(dateKey, {
+  //               coveredByOthers: false,
+  //               slots: [],
+  //             });
+  //           }
+
+  //           // Add slot reference to coverage
+  //           coverageMap.get(dateKey).add(`${date}-${slotIdx}`);
+  //           coverageStatus.get(dateKey).slots.push({
+  //             date,
+  //             index: slotIdx,
+  //             startTime: slot.start_time,
+  //             endDate: slotEndDate,
+  //           });
+
+  //           currentDate = currentDate.add(1, "day");
+  //         }
+  //       }
+  //     });
+  //   });
+
+  //   // Second pass: Check the proposed coverage against existing coverage
+  //   const targetEndDate = dayjs(value);
+  //   let currentDate = dayjs(dateStr);
+  //   const datesToUpdate = new Set();
+
+  //   while (currentDate.isSameOrBefore(targetEndDate, "day")) {
+  //     const dateKey = currentDate.format("YYYY-MM-DD");
+  //     const existingCoverage = coverageStatus.get(dateKey);
+
+  //     if (existingCoverage) {
+  //       // Check if any existing slot already covers this date
+  //       const conflictingSlots = existingCoverage.slots.filter(
+  //         (slot) => slot.date !== dateStr || slot.index !== index
+  //       );
+
+  //       if (conflictingSlots.length > 0) {
+  //         // Check if the conflicting slots fully cover the date
+  //         const hasFullCoverage = conflictingSlots.some((slot) => {
+  //           const slotEndDate = dayjs(slot.endDate);
+  //           return slotEndDate.isAfter(targetEndDate);
+  //         });
+
+  //         if (hasFullCoverage) {
+  //           hasConflicts = true;
+  //           conflictMessage = `Cannot modify end date - Date ${dateKey} is covered by another slot`;
+  //           break;
+  //         }
+  //       }
+  //     }
+
+  //     datesToUpdate.add(dateKey);
+  //     currentDate = currentDate.add(1, "day");
+  //   }
+
+  //   return {
+  //     hasConflicts,
+  //     conflictMessage,
+  //     datesToUpdate: Array.from(datesToUpdate),
+  //     coverageMap,
+  //     coverageStatus,
+  //   };
+  // }
+  static normalizeTimeSlots(timeSlots) {
+    if (!timeSlots) return {};
+
+    const normalized = {};
+
+    Object.entries(timeSlots).forEach(([date, slots]) => {
+      // Ensure slots is an array and handle null/undefined slots
+      const validSlots = Array.isArray(slots) ? slots : [];
+
+      normalized[date] = validSlots.map((slot) => {
+        if (!slot) return {};
+
+        // If slot has nested show_end_date structure, flatten it
+        if (slot.show_end_date && typeof slot.show_end_date === "object") {
           return {
-            isValid: false,
-            message: `Start time must be after ${coverage.availableFrom.format("HH:mm")} for this date`
+            ...slot,
+            is_midnight_passed: slot.show_end_date.is_midnight_passed,
+            show_end_date: slot.show_end_date.show_end_date,
+            end_time: slot.show_end_date.end_time,
           };
         }
-      }
-      return { isValid: true };
-    }
-  
-    static validateShowEndTime(timeSlots, dateStr, index, value) {
-      if (!value) {
-        return { isValid: false, message: "Show end time is required" };
-      }
-  
-      const selectedEndTime = value.format("YYYY-MM-DD HH:mm");
-      const selectedEndDate = value.format("YYYY-MM-DD");
-      const allDates = Object.keys(timeSlots).sort();
-  
-      // Validate end date is not before current date
-      if (selectedEndDate < dateStr) {
-        return {
-          isValid: false,
-          message: "Show end date cannot be before the current slot date"
-        };
-      }
-  
-      // Get current slot details
-      const currentSlot = timeSlots[dateStr]?.[index];
-      if (!currentSlot?.is_midnight_passed) {
-        return {
-          isValid: false,
-          message: "Midnight passed must be enabled to set show end time"
-        };
-      }
-  
-      const currentStartTime = dayjs(currentSlot.start_time);
-  
-      // Find existing coverage
-      const existingCoverage = new Set();
-      allDates.forEach(date => {
-        const slots = timeSlots[date] || [];
-        slots.forEach(slot => {
-          if (slot.is_midnight_passed && slot.show_end_date) {
-            const slotStartDate = dayjs(slot.start_time).format("YYYY-MM-DD");
-            const slotEndDate = dayjs(slot.show_end_date).format("YYYY-MM-DD");
-            
-            let currentDate = dayjs(slotStartDate);
-            const endDate = dayjs(slotEndDate);
-  
-            while (currentDate.isSameOrBefore(endDate)) {
-              existingCoverage.add(currentDate.format("YYYY-MM-DD"));
-              currentDate = currentDate.add(1, "day");
-            }
-          }
-        });
+        return slot;
       });
-  
-      // Get dates that would be affected
-      const datesToUpdate = allDates.filter(
-        date =>
-          date >= dateStr &&
-          date <= selectedEndDate &&
-          !existingCoverage.has(date)
-      );
-  
-      const skippedDates = allDates.filter(
-        date =>
-          date >= dateStr &&
-          date <= selectedEndDate &&
-          existingCoverage.has(date)
-      );
-  
+
+      // Always preserve the array for the date
+      if (!normalized[date]) {
+        normalized[date] = [];
+      }
+    });
+
+    return normalized;
+  }
+
+  static analyzeTimeSlotCoverage(timeSlots) {
+    const coverage = {};
+    const normalizedSlots = this.normalizeTimeSlots(timeSlots);
+
+    Object.entries(normalizedSlots).forEach(([date, slots]) => {
+      coverage[date] = {
+        isFullyCovered: false,
+        isPartiallyCovered: false,
+        totalSlots: slots.length,
+        midnightSlots: 0,
+        coveringDates: new Set(),
+      };
+
+      // Count midnight slots and track covering dates
+      slots.forEach((slot) => {
+        if (slot.is_midnight_passed && slot.show_end_date) {
+          coverage[date].midnightSlots++;
+
+          // Track the range of dates this slot covers
+          const startDate = dayjs(date);
+          const endDate = dayjs(slot.show_end_date);
+          let currentDate = startDate;
+
+          while (currentDate.isSameOrBefore(endDate, "day")) {
+            coverage[date].coveringDates.add(currentDate.format("YYYY-MM-DD"));
+            currentDate = currentDate.add(1, "day");
+          }
+        }
+      });
+
+      // Update coverage status
+      coverage[date].isFullyCovered =
+        coverage[date].midnightSlots === coverage[date].totalSlots;
+      coverage[date].isPartiallyCovered =
+        coverage[date].midnightSlots > 0 && !coverage[date].isFullyCovered;
+    });
+
+    return coverage;
+  }
+
+  static cleanupTimeSlots(timeSlots) {
+    const coverage = this.analyzeTimeSlotCoverage(timeSlots);
+    const cleaned = {};
+
+    Object.entries(timeSlots).forEach(([date, slots]) => {
+      cleaned[date] = slots.map((slot) => {
+        if (!slot) return {};
+        return slot;
+      });
+    });
+
+    return this.normalizeTimeSlots(cleaned);
+  }
+
+  static validateDateCoverage(timeSlots, dateStr, index, value) {
+    const coverageMap = new Map();
+    const coverageStatus = new Map();
+    let hasConflicts = false;
+    let conflictingSlots = [];
+
+    // First pass: Map out existing coverage excluding the slot being edited
+    Object.entries(timeSlots).forEach(([date, slots]) => {
+      slots.forEach((slot, slotIdx) => {
+        // Skip the current slot being edited and any empty slots
+        if ((date === dateStr && slotIdx === index) || !slot) {
+          return;
+        }
+
+        if (slot.is_midnight_passed && slot.show_end_date) {
+          const slotStartDate = dayjs(date);
+          const slotEndDate = dayjs(slot.show_end_date);
+
+          let currentDate = slotStartDate;
+          while (currentDate.isSameOrBefore(slotEndDate, "day")) {
+            const dateKey = currentDate.format("YYYY-MM-DD");
+            if (!coverageMap.has(dateKey)) {
+              coverageMap.set(dateKey, new Set());
+              coverageStatus.set(dateKey, {
+                coveredByOthers: false,
+                slots: [],
+              });
+            }
+
+            coverageMap.get(dateKey).add(`${date}-${slotIdx}`);
+            coverageStatus.get(dateKey).slots.push({
+              date,
+              index: slotIdx,
+              startTime: slot.start_time,
+              endDate: slotEndDate,
+              originalStartDate: date,
+              originalEndDate: slot.show_end_date,
+            });
+
+            currentDate = currentDate.add(1, "day");
+          }
+        }
+      });
+    });
+
+    // Second pass: Check the proposed coverage for overlaps
+    const startDate = dayjs(dateStr);
+    const targetEndDate = dayjs(value);
+    const datesToUpdate = new Set();
+
+    // Check for any overlapping slots
+    for (const [dateKey, coverage] of coverageStatus.entries()) {
+      const currentDate = dayjs(dateKey);
+
+      // Only check dates that would be affected by the new range
+      if (currentDate.isBetween(startDate, targetEndDate, "day", "[]")) {
+        const overlappingSlots = coverage.slots.filter((slot) => {
+          const slotStart = dayjs(slot.originalStartDate);
+          const slotEnd = dayjs(slot.originalEndDate);
+
+          // Check if the ranges overlap
+          return !(
+            startDate.isAfter(slotEnd) || targetEndDate.isBefore(slotStart)
+          );
+        });
+
+        if (overlappingSlots.length > 0) {
+          hasConflicts = true;
+          conflictingSlots = [
+            ...new Set([...conflictingSlots, ...overlappingSlots]),
+          ];
+        }
+      }
+    }
+
+    // Collect all dates that would be affected by this change
+    let currentDate = startDate;
+    while (currentDate.isSameOrBefore(targetEndDate, "day")) {
+      datesToUpdate.add(currentDate.format("YYYY-MM-DD"));
+      currentDate = currentDate.add(1, "day");
+    }
+
+    return {
+      hasConflicts,
+      conflictingSlots,
+      conflictMessage: hasConflicts
+        ? `Overlapping time slots found between ${startDate.format(
+            "YYYY-MM-DD"
+          )} and ${targetEndDate.format("YYYY-MM-DD")}`
+        : "",
+      datesToUpdate: Array.from(datesToUpdate),
+      coverageMap,
+      coverageStatus,
+    };
+  }
+
+  static validateShowEndTime(timeSlots, dateStr, index, value, formValues) {
+    if (!timeSlots || !dateStr || index === undefined || !value) {
       return {
-        isValid: true,
-        datesToUpdate,
-        skippedDates,
-        selectedEndDate
+        isValid: false,
+        message: "Invalid input parameters",
       };
     }
+
+    const normalizedSlots = this.normalizeTimeSlots(timeSlots);
+    const currentSlot = normalizedSlots[dateStr]?.[index] || {};
+    const formSlot = formValues?.timeSlots?.[dateStr]?.[index] || {};
+
+    // Basic validation checks
+    const hasStartTime = Boolean(currentSlot.start_time || formSlot.start_time);
+    const isMidnightPassed = Boolean(
+      currentSlot.is_midnight_passed || formSlot.is_midnight_passed
+    );
+
+    if (!hasStartTime || !isMidnightPassed) {
+      return {
+        isValid: false,
+        message: "Please set start time and enable midnight passed first",
+      };
+    }
+
+    // Date range validation
+    const allDates = Object.keys(timeSlots).sort();
+    const firstEventDate = allDates[0];
+    const lastEventDate = allDates[allDates.length - 1];
+    const selectedEndDate = value.format("YYYY-MM-DD");
+
+    if (selectedEndDate < dateStr) {
+      return {
+        isValid: false,
+        message: "Show end date cannot be before the current slot date",
+      };
+    }
+
+    if (selectedEndDate < firstEventDate || selectedEndDate > lastEventDate) {
+      return {
+        isValid: false,
+        message: `Show end date must be between ${firstEventDate} and ${lastEventDate}`,
+      };
+    }
+
+    // Check coverage and conflicts
+    const coverageResult = this.validateDateCoverage(
+      normalizedSlots,
+      dateStr,
+      index,
+      value
+    );
+
+    if (coverageResult.hasConflicts) {
+      return {
+        isValid: true,
+        warning: true,
+        message: coverageResult.conflictMessage,
+        conflictingSlots: coverageResult.conflictingSlots,
+        affectedDates: coverageResult.datesToUpdate,
+      };
+    }
+
+    return {
+      isValid: true,
+      coverage: coverageResult.coverageStatus,
+      affectedDates: coverageResult.datesToUpdate,
+    };
+  }
+
+  // Add this helper method to handle show end date changes
+  static handleShowEndDateChange(timeSlots, dateStr, index, value) {
+    const normalizedSlots = this.normalizeTimeSlots(timeSlots);
+    const validation = this.validateShowEndTime(
+      normalizedSlots,
+      dateStr,
+      index,
+      value,
+      {
+        timeSlots: normalizedSlots,
+      }
+    );
+
+    if (!validation.isValid) {
+      return {
+        isValid: false,
+        message: validation.message,
+        updates: [],
+      };
+    }
+
+    // Prepare updates for all affected dates
+    const updates = [];
+
+    // Update the current slot
+    updates.push({
+      dateStr,
+      index,
+      field: "show_end_date",
+      value,
+    });
+
+    return {
+      isValid: true,
+      updates,
+      affectedDates: validation.affectedDates,
+    };
+  }
+
+  static getAffectedDates(startDate, endDate, timeSlots) {
+    const start = dayjs(startDate);
+    const end = dayjs(endDate);
+    const dates = [];
+
+    let current = start;
+    while (current.isSameOrBefore(end, "day")) {
+      dates.push(current.format("YYYY-MM-DD"));
+      current = current.add(1, "day");
+    }
+
+    return dates;
+  }
 }
 
 export default TimeSlotValidator;

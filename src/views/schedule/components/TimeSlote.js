@@ -41,28 +41,55 @@ const TimeSlots = ({
   onApplyToAll,
 }) => {
   const dispatch = useDispatch();
-  const getDateCoverage = () => {
+  const getDateCoverage = (timeSlots = {}, dateStr) => {
+    if (!dateStr) {
+      return {
+        isFullyCovered: false,
+        partialCoverage: null,
+        availableFrom: null,
+        isLastDateMidnightPassed: false,
+      };
+    }
+
     const allDates = Object.keys(timeSlots).sort();
     const coverage = {
       isFullyCovered: false,
       partialCoverage: null,
       availableFrom: null,
+      isLastDateMidnightPassed: false,
     };
 
+    // Check current date slots
+    const currentDateSlots = timeSlots[dateStr] || [];
+    if (currentDateSlots.length > 0) {
+      const lastSlot = currentDateSlots[currentDateSlots.length - 1];
+      if (lastSlot?.is_midnight_passed) {
+        coverage.isLastDateMidnightPassed = true;
+        if (lastSlot.show_end_date) {
+          const showEndDate = dayjs(lastSlot.show_end_date);
+          if (showEndDate.isAfter(dayjs(dateStr), "day")) {
+            coverage.isFullyCovered = true;
+          }
+        }
+      }
+    }
+
+    // Check previous dates coverage
     for (const date of allDates) {
-      if (date > dateStr) break;
+      if (dayjs(date).isAfter(dayjs(dateStr))) break;
 
       const slots = timeSlots[date] || [];
       for (const slot of slots) {
-        if (slot.is_midnight_passed && slot.show_end_date) {
+        if (slot?.is_midnight_passed && slot?.show_end_date) {
           const showEndDate = dayjs(slot.show_end_date);
-          const showEndDateStr = showEndDate.format("YYYY-MM-DD");
+          const currentDate = dayjs(dateStr);
 
-          if (showEndDateStr === dateStr) {
+          if (showEndDate.isSame(currentDate, "day")) {
             coverage.partialCoverage = true;
             coverage.availableFrom = showEndDate;
-          } else if (showEndDateStr > dateStr) {
+          } else if (showEndDate.isAfter(currentDate, "day")) {
             coverage.isFullyCovered = true;
+            return coverage;
           }
         }
       }
@@ -71,38 +98,27 @@ const TimeSlots = ({
     return coverage;
   };
 
+  const shouldShowTimeSlots = () => {
+    const currentDateSlots = timeSlots[dateStr] || [];
+    const hasMidnightPassedSlots = currentDateSlots.some(
+      (slot) => slot.is_midnight_passed
+    );
+
+    return !coverage.isFullyCovered || hasMidnightPassedSlots;
+  };
+
   const shouldShowAddButton = () => {
-    const coverage = getDateCoverage();
-    if (coverage.isFullyCovered) return false;
+    const coverage = getDateCoverage(timeSlots, dateStr);
+    if (coverage.isFullyCovered || coverage.isLastDateMidnightPassed)
+      return false;
 
     const currentDateSlots = timeSlots[dateStr] || [];
     if (currentDateSlots.length === 0) return true;
 
-    const lastSlot = currentDateSlots[currentDateSlots.length - 1];
-    // return lastSlot.start_time && lastSlot.end_time && lastSlot.ticketType;
     return true;
   };
 
-  const coverage = getDateCoverage();
-
-  const validateTimeAgainstCoverage = (time, type) => {
-    const coverage = getDateCoverage();
-    if (coverage.partialCoverage && coverage.availableFrom) {
-      const proposedTime = dayjs(time);
-      if (
-        type === "start_time" &&
-        proposedTime.isBefore(coverage.availableFrom)
-      ) {
-        message.error(
-          `Start time must be after ${coverage.availableFrom.format(
-            "HH:mm"
-          )} for this date`
-        );
-        return false;
-      }
-    }
-    return true;
-  };
+  const coverage = getDateCoverage(timeSlots, dateStr);
 
   const handleShowEndTime = (
     dateStr,
@@ -111,8 +127,8 @@ const TimeSlots = ({
     value,
     eventType = "change"
   ) => {
-    if (eventType === "select") {
-      clearFormTimeSlot(dateStr, index, type);
+    if (eventType === "select" || !value) {
+      clearSlotFields(dateStr, index, [type]);
       return;
     }
 
@@ -120,51 +136,102 @@ const TimeSlots = ({
       timeSlots,
       dateStr,
       index,
-      value
+      value,
+      form.getFieldsValue()
     );
 
     if (!validation.isValid) {
       message.error(validation.message);
-      clearFormTimeSlot(dateStr, index, type);
+      clearSlotFields(dateStr, index, [type]);
       return;
     }
 
-    // Update slots for valid dates
-    validation.datesToUpdate.forEach((date) => {
-      const slots = timeSlots[date];
-      if (!slots) return;
+    if (validation.warning) {
+      Modal.confirm({
+        title: "Warning: Overlapping Time Slots Detected",
+        content: (
+          <div>
+            <p>{validation.message}</p>
+            <p>The following slots will be affected:</p>
+            <ul>
+              {validation.conflictingSlots.map((slot, idx) => (
+                <li key={idx}>
+                  Date: {slot.originalStartDate} to {slot.originalEndDate}
+                </li>
+              ))}
+            </ul>
+            <p>
+              These overlapping slots will be cleared. Do you want to continue?
+            </p>
+          </div>
+        ),
+        okText: "Continue and Clear Overlaps",
+        cancelText: "Cancel",
+        onOk: () => {
+          // Clear conflicting slots
+          validation.conflictingSlots.forEach((slot) => {
+            clearSlotFields(slot.date, slot.index, [
+              "start_time",
+              "end_time",
+              "is_midnight_passed",
+              "show_end_date",
+              "ticketType",
+            ]);
+          });
 
-      slots.forEach((slot, slotIndex) => {
-        if (!slot.is_midnight_passed) return;
-
-        const formUpdate = {
-          name: ["timeSlots", date, slotIndex, "show_end_date"],
-          value: value,
-        };
-
-        form.setFields([formUpdate]);
-
-        dispatch(
-          updateTimeSlot({
-            dateStr: date,
-            index: slotIndex,
-            field: "show_end_date",
-            value: value,
-          })
-        );
+          // Update current slot
+          batchUpdate([
+            {
+              dateStr,
+              index,
+              field: type,
+              value,
+            },
+          ]);
+        },
+        onCancel: () => {
+          clearSlotFields(dateStr, index, [type]);
+        },
       });
-    });
-
-    if (validation.skippedDates.length > 0) {
-      message.warning(
-        `The following dates are already covered by other midnight passed slots: ${validation.skippedDates.join(
-          ", "
-        )}`
-      );
+      return;
     }
 
-    return validation;
+    // If no conflicts, update normally
+    batchUpdate([
+      {
+        dateStr,
+        index,
+        field: type,
+        value,
+      },
+    ]);
   };
+
+  // Helper function to clear slot fields (remains the same)
+  const clearSlotFields = (dateStr, index, fields) => {
+    const updates = fields.map((field) => ({
+      dateStr,
+      index,
+      field,
+      value: field === "is_midnight_passed" ? false : null,
+    }));
+    batchUpdate(updates);
+  };
+
+  // Helper function to batch update time slots (remains the same)
+  const batchUpdate = (updates) => {
+    const formUpdates = updates.map(({ dateStr, index, field, value }) => ({
+      name: ["timeSlots", dateStr, index, field],
+      value: field === "is_midnight_passed" ? !!value : value,
+    }));
+
+    form.setFields(formUpdates);
+    updates.forEach((update) => dispatch(updateTimeSlot(update)));
+    console.log(timeSlots,'timeslotes');
+    console.log(form.getFieldValue(),'timeslotes');
+    
+  };
+
   const handleTimeChange = async (
     dateStr,
     index,
@@ -173,25 +240,11 @@ const TimeSlots = ({
     eventType = "change"
   ) => {
     if (eventType === "select") {
-      clearFormTimeSlot(dateStr, index, type);
+      clearSlotFields(dateStr, index, [type]);
       return;
     }
 
     if (type === "start_time" || type === "end_time") {
-      // Validate against coverage
-      const coverageValidation = TimeSlotValidator.validateTimeAgainstCoverage(
-        timeSlots,
-        dateStr,
-        value,
-        type
-      );
-      if (!coverageValidation.isValid) {
-        message.error(coverageValidation.message);
-        clearFormTimeSlot(dateStr, index, type);
-        return;
-      }
-
-      // Validate time slot
       const validationResult = TimeSlotValidator.validateTimeSlot(
         timeSlots,
         dateStr,
@@ -203,12 +256,11 @@ const TimeSlots = ({
 
       if (!validationResult.isValid) {
         message.error(validationResult.message);
-        clearFormTimeSlot(dateStr, index, type);
-
+        const fieldsToClear = [type];
         if (type === "start_time") {
-          clearFormTimeSlot(dateStr, index, "end_time");
-          clearFormTimeSlot(dateStr, index, "is_midnight_passed");
+          fieldsToClear.push("end_time", "is_midnight_passed", "show_end_date");
         }
+        clearSlotFields(dateStr, index, fieldsToClear);
         return;
       }
 
@@ -219,44 +271,52 @@ const TimeSlots = ({
           okText: "Continue",
           cancelText: "Cancel",
           onOk: () => {
-            updateCurrentTimeSlot(dateStr, index, type, value);
+            batchUpdate([{ dateStr, index, field: type, value }]);
             if (validationResult.affectedSlots) {
-              clearAffectedSlots(dateStr, validationResult.affectedSlots);
-            }
-            if (validationResult.clearFields) {
-              validationResult.clearFields.forEach((field) => {
-                clearFormTimeSlot(dateStr, index, field);
+              validationResult.affectedSlots.forEach((slot) => {
+                clearSlotFields(dateStr, slot.index, [
+                  "start_time",
+                  "end_time",
+                  "is_midnight_passed",
+                  "show_end_date",
+                  "ticketType",
+                ]);
               });
             }
           },
           onCancel: () => {
-            clearFormTimeSlot(dateStr, index, type);
+            const fieldsToClear = [type];
             if (type === "start_time") {
-              clearFormTimeSlot(dateStr, index, "end_time");
-              clearFormTimeSlot(dateStr, index, "is_midnight_passed");
+              fieldsToClear.push(
+                "end_time",
+                "is_midnight_passed",
+                "show_end_date"
+              );
             }
+            clearSlotFields(dateStr, index, fieldsToClear);
           },
         });
         return;
       }
+      batchUpdate([{ dateStr, index, field: type, value }]);
     }
+    if (type === "ticketType") {
+      console.log(value, "dsfjakljflsjfka");
 
-    updateCurrentTimeSlot(dateStr, index, type, value);
+      batchUpdate([{ dateStr, index, field: type, value }]);
+    }
   };
 
   const handleMidnightPassedChange = (dateStr, index, checked) => {
     const currentSlot = timeSlots[dateStr]?.[index];
 
-    // Check if start time is set
     if (!currentSlot?.start_time) {
       message.error("Please set start time before enabling midnight passed");
-      clearFormTimeSlot(dateStr, index, "is_midnight_passed");
+      clearSlotFields(dateStr, index, ["is_midnight_passed"]);
       return;
     }
 
-    // If enabling midnight passed
     if (checked) {
-      // Check if this is the last day of the event
       const eventDates = Object.keys(timeSlots).sort();
       const isLastDay = dateStr === eventDates[eventDates.length - 1];
 
@@ -264,190 +324,104 @@ const TimeSlots = ({
         Modal.error({
           title: "Cannot Enable Midnight Passed",
           content:
-            "You cannot enable midnight passed on the last day of the event as there are no subsequent days available.",
-          okText: "OK",
-          cancelText: "Cancel",
-          onOk: () => {
-            clearFormTimeSlot(dateStr, index, "is_midnight_passed");
-          },
-          onCancel: () => {
-            clearFormTimeSlot(dateStr, index, "is_midnight_passed");
-          },
+            "Cannot enable midnight passed on the last day of the event.",
+          onOk: () => clearSlotFields(dateStr, index, ["is_midnight_passed"]),
         });
         return;
       }
 
-      // Show warning about next day implications
       Modal.confirm({
         title: "Enable Midnight Passed",
         content:
           "Enabling this option means the end time will be on the next day. You can only select end times before the start time. Do you want to continue?",
-        okText: "Continue",
-        cancelText: "Cancel",
         onOk: () => {
-          updateCurrentTimeSlot(dateStr, index, "is_midnight_passed", checked);
-          // Clear end time if it exists and is after start time
-          if (currentSlot.end_time) {
-            const startTimeMinutes = TimeSlotValidator.timeToMinutes(
-              currentSlot.start_time.format("HH:mm")
-            );
-            const endTimeMinutes = TimeSlotValidator.timeToMinutes(
-              currentSlot.end_time.format("HH:mm")
-            );
-
-            if (endTimeMinutes > startTimeMinutes) {
-              clearFormTimeSlot(dateStr, index, "end_time");
-            }
-          }
+          const updates = [
+            { dateStr, index, field: "end_time", value: null },
+            { dateStr, index, field: "is_midnight_passed", value: checked },
+            { dateStr, index, field: "show_end_date", value: null },
+          ];
+          batchUpdate(updates);
         },
-        onCancel: () => {
-          clearFormTimeSlot(dateStr, index, "is_midnight_passed");
-        },
+        onCancel: () => clearSlotFields(dateStr, index, ["is_midnight_passed"]),
       });
       return;
     }
 
-    // If disabling midnight passed
-    if (!checked && currentSlot?.end_time) {
-      const startTimeMinutes = TimeSlotValidator.timeToMinutes(
-        currentSlot.start_time.format("HH:mm")
-      );
-      const endTimeMinutes = TimeSlotValidator.timeToMinutes(
-        currentSlot.end_time.format("HH:mm")
-      );
-
-      if (endTimeMinutes < startTimeMinutes) {
-        Modal.confirm({
-          title: "Warning",
-          content:
-            "Disabling midnight passed will clear the end time as it's currently set to next day",
-          okText: "Continue",
-          cancelText: "Cancel",
-          onOk: () => {
-            updateCurrentTimeSlot(
-              dateStr,
-              index,
-              "is_midnight_passed",
-              checked
-            );
-            clearFormTimeSlot(dateStr, index, "end_time");
-          },
-          onCancel: () => {
-            form.setFields([
-              {
-                name: ["timeSlots", dateStr, index, "is_midnight_passed"],
-                value: true,
-              },
-            ]);
-          },
-        });
-        return;
-      }
-    }
-
-    updateCurrentTimeSlot(dateStr, index, "is_midnight_passed", checked);
-  };
-
-  const clearFormTimeSlot = (dateStr, index, type) => {
-    form.setFields([
-      {
-        name: ["timeSlots", dateStr, index, type],
-        value: null,
+    // Handle unchecking midnight passed
+    Modal.confirm({
+      title: "Warning",
+      content: "Disabling midnight passed will clear related fields. Continue?",
+      onOk: () => {
+        clearSlotFields(dateStr, index, [
+          "is_midnight_passed",
+          "show_end_date",
+          "end_time",
+        ]);
       },
-    ]);
-
-    dispatch(
-      updateTimeSlot({
-        dateStr,
-        index,
-        field: type,
-        value: null,
-      })
-    );
-  };
-
-  const clearAffectedSlots = (dateStr, affectedSlots) => {
-    const fieldUpdates = affectedSlots.map((slot) => ({
-      name: ["timeSlots", dateStr, slot.index],
-      value: {
-        ...slot,
-        start_time: null,
-        end_time: null,
-        is_midnight_passed: false,
+      onCancel: () => {
+        batchUpdate([
+          { dateStr, index, field: "is_midnight_passed", value: true },
+        ]);
       },
-    }));
-
-    form.setFields(fieldUpdates);
-
-    affectedSlots.forEach((slot) => {
-      dispatch(
-        updateTimeSlot({
-          dateStr,
-          index: slot.index,
-          field: "start_time",
-          value: null,
-        })
-      );
-
-      dispatch(
-        updateTimeSlot({
-          dateStr,
-          index: slot.index,
-          field: "end_time",
-          value: null,
-        })
-      );
-
-      dispatch(
-        updateTimeSlot({
-          dateStr,
-          index: slot.index,
-          field: "is_midnight_passed",
-          value: false,
-        })
-      );
     });
   };
 
-  const updateCurrentTimeSlot = (dateStr, index, type, value) => {
-    form.setFields([
-      {
-        name: ["timeSlots", dateStr, index, type],
-        value: value,
-      },
-    ]);
+  // const batchUpdate = (updates) => {
+  //   const formUpdates = updates.map(({ dateStr, index, field, value }) => ({
+  //     name: ["timeSlots", dateStr, index, field],
+  //     value: field === "is_midnight_passed" ? !!value : value,
+  //   }));
 
-    dispatch(
-      updateTimeSlot({
-        dateStr,
-        index,
-        field: type,
-        value,
-      })
-    );
-  };
+  //   form.setFields(formUpdates);
+  //   updates.forEach((update) => dispatch(updateTimeSlot(update)));
+  //   console.log(timeSlots, "timeslotes");
+  //   console.log(form.getFieldValue(), "timeslotes");
+  // };
+
+  // // Helper function to clear slot fields
+  // const clearSlotFields = (dateStr, index, fields) => {
+  //   const updates = fields.map((field) => ({
+  //     dateStr,
+  //     index,
+  //     field,
+  //     value: field === "is_midnight_passed" ? false : null,
+  //   }));
+  //   batchUpdate(updates);
+  // };
+
   const displayRender = (label) => label.join(" / ");
 
   return (
     <div className="space-y-4">
-      {coverage.partialCoverage && !coverage.isFullyCovered && (
+      {coverage.isFullyCovered && !coverage.isLastDateMidnightPassed && (
         <Alert
-          message={
-            <Space>
-              <ClockCircleOutlined />
-              <Text>
-                Time slots can be added after{" "}
-                <Text strong>{coverage.availableFrom.format("HH:mm")}</Text> for
-                this date
-              </Text>
-            </Space>
-          }
-          type="info"
-          className="mb-4"
+          message="This date is fully covered by previous time slots"
+          type="success"
+          showIcon
         />
       )}
 
-      {!coverage.isFullyCovered && (
+      {coverage.partialCoverage &&
+        !coverage.isFullyCovered &&
+        coverage.availableFrom && (
+          <Alert
+            message={
+              <Space>
+                <ClockCircleOutlined />
+                <Text>
+                  Time slots can be added after{" "}
+                  <Text strong>{coverage.availableFrom.format("HH:mm")}</Text>{" "}
+                  for this date
+                </Text>
+              </Space>
+            }
+            type="info"
+            className="mb-4"
+          />
+        )}
+
+      {/* Show time slots if either not fully covered OR has midnight passed slots */}
+      {shouldShowTimeSlots() && (
         <>
           {timeSlots[dateStr]?.map((slot, index) => (
             <Row
@@ -497,9 +471,10 @@ const TimeSlots = ({
                   name={["timeSlots", dateStr, index, "is_midnight_passed"]}
                   label=" "
                   valuePropName="checked"
+                  initialValue={slot.is_midnight_passed || false}
                 >
                   <Checkbox
-                    value={false}
+                    checked={slot.is_midnight_passed || false}
                     disabled={!slot.start_time}
                     onChange={(e) =>
                       handleMidnightPassedChange(
@@ -508,8 +483,9 @@ const TimeSlots = ({
                         e.target.checked
                       )
                     }
-                  />
-                  <span> Midnight Passed</span>
+                  >
+                    <span>Midnight Passed</span>
+                  </Checkbox>
                 </Form.Item>
               </Col>
               {!form.getFieldValue([
@@ -613,13 +589,15 @@ const TimeSlots = ({
                 >
                   <Cascader
                     options={ticketOptions}
-                    expandTrigger="hover"
+                    expandTrigger="click"
                     displayRender={displayRender}
                     onChange={(value) => {
                       handleTimeChange(dateStr, index, "ticketType", value);
                     }}
                     placeholder="Select Ticket Type"
                     style={{ width: "100%" }}
+                    changeOnSelect={false}
+                    notFoundContent="No ticket types available"
                   />
                 </Form.Item>
               </Col>
@@ -632,7 +610,14 @@ const TimeSlots = ({
                     icon={<MinusCircleOutlined />}
                     onClick={() => onRemoveSlot(dateStr, index)}
                   />
+
                   <Button
+                    disabled={form.getFieldValue([
+                      "timeSlots",
+                      dateStr,
+                      index,
+                      "is_midnight_passed",
+                    ])}
                     type="default"
                     icon={<CopyOutlined />}
                     onClick={() => onApplyToAll(dateStr, index)}
@@ -657,10 +642,10 @@ const TimeSlots = ({
         </>
       )}
 
-      {coverage.isFullyCovered && (
+      {coverage.isLastDateMidnightPassed && (
         <Alert
-          message="This date is fully covered by previous time slots"
-          type="success"
+          message="You can't add more time slots as the last slot extends past midnight"
+          type="info"
           showIcon
         />
       )}

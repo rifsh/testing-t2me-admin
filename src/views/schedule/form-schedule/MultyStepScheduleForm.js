@@ -135,13 +135,43 @@ const MultyStepScheduleForm = ({ mode, id }) => {
     try {
       await form.validateFields();
       const values = form.getFieldValue();
-      console.log("Current form values:", values); // Debug log
+      console.log("Current form values:", values);
 
-      // Store the values in form
-      form.setFieldsValue(values);
-      // Only perform date validation on step 2
+      // Create a copy of the form values to modify
+      const updatedValues = { ...values };
+      const timeSlots = updatedValues.timeSlots || {};
+
+      // Process slots with is_midnight_passed
+      Object.keys(timeSlots).forEach((date) => {
+        const dateSlots = timeSlots[date] || [];
+
+        dateSlots.forEach((slot, index) => {
+          if (
+            slot.is_midnight_passed &&
+            slot.show_end_date &&
+            slot.start_time
+          ) {
+            // Get the date from start_time
+            const startDate = dayjs(slot.start_time).format("YYYY-MM-DD");
+            // Get the time from show_end_date
+            const endTime = dayjs(slot.show_end_date).format("HH:mm:ss.SSS");
+            // Combine them
+            const combinedEndTime = `${startDate}T${endTime}Z`;
+
+            // Update the slot
+            timeSlots[date][index] = {
+              ...slot,
+              end_time: combinedEndTime,
+              ticketType: slot.ticketType ? slot.ticketType[2] : null, // Take the third element if it exists
+            };
+          }
+        });
+      });
+
+      // Update the form with modified values
+      form.setFieldsValue(updatedValues);
+
       if (currentStep === 2) {
-        const timeSlots = values.timeSlots || {};
         const startDate = values.start_date
           ? values.start_date.format("YYYY-MM-DD")
           : null;
@@ -149,13 +179,11 @@ const MultyStepScheduleForm = ({ mode, id }) => {
           ? values.end_date.format("YYYY-MM-DD")
           : null;
 
-        // Validate that both start and end dates are selected
         if (!startDate || !endDate) {
           message.error("Please select both start and end dates");
           return;
         }
 
-        // Get all dates between start and end date
         const allDates = [];
         let currentDate = dayjs(startDate);
         const endDateTime = dayjs(endDate);
@@ -165,43 +193,57 @@ const MultyStepScheduleForm = ({ mode, id }) => {
           currentDate = currentDate.add(1, "day");
         }
 
-        // Check if all dates have at least one time slot
-        const missingDates = allDates.filter((date) => {
-          const dateSlots = timeSlots[date];
-          return !dateSlots || dateSlots.length === 0;
-        });
-
-        if (missingDates.length > 0) {
-          message.error(
-            `Please add time slots for the following dates: ${missingDates.join(
-              ", "
-            )}`
-          );
-          return;
-        }
-
-        // Validate each date's time slots
         for (const date of allDates) {
           const dateSlots = timeSlots[date] || [];
 
-          // Check if each slot has both start and end time and ticket type
-          const invalidSlots = dateSlots.filter(
-            (slot) => !slot.start_time || !slot.end_time || !slot.ticketType
-          );
-
-          if (invalidSlots.length > 0) {
-            message.error(
-              `Please fill in all required fields (start time, end time, and ticket type) for date: ${date}`
-            );
-            return;
+          if (dateSlots.length === 0) {
+            continue;
           }
 
-          // Validate time sequence
-          for (let i = 0; i < dateSlots.length - 1; i++) {
-            const currentSlot = dayjs(dateSlots[i].end_time);
-            const nextSlot = dayjs(dateSlots[i + 1].start_time);
+          for (const slot of dateSlots) {
+            if (
+              Object.keys(slot).length === 1 &&
+              "is_midnight_passed" in slot
+            ) {
+              continue;
+            }
 
-            if (currentSlot.isAfter(nextSlot)) {
+            if (!slot.end_time && !slot.show_end_date) {
+              message.error(
+                `Each slot must have either an end time or show end date for date: ${date}`
+              );
+              return;
+            }
+
+            // if (slot.end_time && slot.show_end_date) {
+            //   message.error(
+            //     `Slot cannot have both end time and show end date for date: ${date}`
+            //   );
+            //   return;
+            // }
+
+            if (!slot.start_time || !slot.ticketType) {
+              message.error(
+                `Please fill in all required fields (start time and ticket type) for date: ${date}`
+              );
+              return;
+            }
+          }
+
+          for (let i = 0; i < dateSlots.length - 1; i++) {
+            const currentSlot = dateSlots[i];
+            const nextSlot = dateSlots[i + 1];
+
+            if (!currentSlot.start_time || !nextSlot.start_time) {
+              continue;
+            }
+
+            const currentEndTime = currentSlot.end_time
+              ? dayjs(currentSlot.end_time)
+              : dayjs(currentSlot.show_end_date);
+            const nextStartTime = dayjs(nextSlot.start_time);
+
+            if (currentEndTime.isAfter(nextStartTime)) {
               message.error(
                 `Invalid time sequence on ${date}: Slot ${
                   i + 1
@@ -213,7 +255,6 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         }
       }
 
-      // Move to next step if validation passes
       if (currentStep < steps.length) {
         dispatch(setCurrentStep(currentStep + 1));
       }
@@ -222,7 +263,6 @@ const MultyStepScheduleForm = ({ mode, id }) => {
       message.error("Please ensure all required fields are filled correctly.");
     }
   };
-
   const prevStep = () => {
     if (currentStep > 1) {
       dispatch(setCurrentStep(currentStep - 1));
