@@ -69,6 +69,10 @@ service.interceptors.response.use(
       "color: #2dce89; font-weight: bold;"
     );
     console.log("[RESPONSE] Data:", response.data);
+    const newToken = response.headers["new-token"];
+    if (newToken) {
+      localStorage.setItem("auth_token", newToken);
+    }
     return response.data;
   },
   async (error) => {
