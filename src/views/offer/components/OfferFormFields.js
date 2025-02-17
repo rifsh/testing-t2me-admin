@@ -75,21 +75,19 @@ function OfferFormFields() {
     }
   };
 
-  // Disallow selecting dates before today
+  // Fixed disablePastDates function to properly prevent selecting past dates
   const disablePastDates = (current) => {
-    const startDate = form.getFieldValue("start_date");
-    return (
-      current &&
-      current < moment().startOf("day") &&
-      !moment(current).isSame(startDate, "day")
-    );
+    // Disable all dates before today
+    return current && current < moment().startOf("day");
   };
+
   // Validate end date based on start date
   const disableEndDate = (current) => {
-    if (!startDate) {
-      return false;
+    const startDateValue = form.getFieldValue("start_date");
+    if (!startDateValue) {
+      return disablePastDates(current); // Also apply past date restriction to end date
     }
-    return current && current < moment(startDate).startOf("day");
+    return current && current < moment(startDateValue).startOf("day");
   };
 
   const handleStartDateChange = (date) => {
@@ -98,13 +96,13 @@ function OfferFormFields() {
       end_date: null,
     });
   };
+
   const normFile = (e) => {
     if (Array.isArray(e)) {
       return e;
     }
     return e?.fileList;
   };
-  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   return (
     <Row gutter={16}>
@@ -201,7 +199,6 @@ function OfferFormFields() {
               name="thumbnail_image"
               listType="picture"
               maxCount={1}
-              //beforeUpload={handleBeforeUpload}
               beforeUpload={(file) =>
                 Utils.handleBeforeUpload(file, ResolutionByServices.place)
               }

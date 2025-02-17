@@ -281,7 +281,11 @@ const VenueFormFields = ({ mode, venue }) => {
                 { required: true, message: RulesMessageConstants.CAPACITY },
               ]}
             >
-              <Input type="number" placeholder="Enter capacity" />
+              <Input
+                type="number"
+                placeholder="Enter capacity"
+                onWheel={(e) => e.target.blur()}
+              />
             </Form.Item>
             <Form.Item
               name="indoor"

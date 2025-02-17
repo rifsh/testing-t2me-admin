@@ -241,11 +241,7 @@ const PaymentFormFields = ({mode, id}) => {
       </Card>
       <Card>
         <div className="container" style={{ padding: "0px" }}>
-          <Flex
-            className="py-2"
-            mobileFlex={false}
-            justifyContent="space-between"
-          >
+          <Flex className="py-2" mobileFlex={false} justifyContent="flex-end">
             <DiscardButton form={form} />
             <div className="mb-3">
               <Button type="primary" htmlType="submit">
