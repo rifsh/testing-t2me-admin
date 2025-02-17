@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Input, Row, Form, Card, Col, Button, message, Select } from "antd";
 import Flex from "components/shared-components/Flex";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import { fetchAllFaqs, addFaq, setModalVisible } from "store/slices/faqSlice";
+import {
+  fetchAllFaqs,
+  addFaq,
+  editFaq,
+  setModalVisible,
+} from "store/slices/faqSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { filterOption } from "components/util-components/FormItems/dropDownSearch";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -11,6 +16,7 @@ import CreateSectionModal from "../components/faqSectionModal";
 
 const FaqFormFields = ({ mode }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { Option } = Select;
   const dispatch = useDispatch();
   const [form] = Form.useForm();
@@ -24,12 +30,23 @@ const FaqFormFields = ({ mode }) => {
     dispatch(fetchAllFaqs());
   }, [dispatch]);
 
-  // Show error message if there's an error
+  // Pre-populate form if in edit mode
   useEffect(() => {
-    if (error) {
-      message.error(error);
+    console.log(location.state, "THIS IS STATE LOCATION");
+    console.log(mode, "THIS IS MODE");
+
+    if (mode === "EDIT") {
+      const { sectionId, questionId, question, answer } = location.state;
+      console.log(sectionId, "THIS IS SECTIONID");
+      console.log(question, "THIS IS QUESTION");
+      console.log(answer, "THIS IS ANSWER");
+
+      form.setFieldsValue({
+        category: sectionId,
+      });
+      setQuestions([{ question, reply: answer }]);
     }
-  }, [error]);
+  }, [mode, location.state, form]);
 
   const handleAddQuestion = () => {
     setQuestions([...questions, { question: "", reply: "" }]);
@@ -46,32 +63,40 @@ const FaqFormFields = ({ mode }) => {
     setQuestions(newQuestions);
   };
 
-  const handleAdd = async () => {
+  const handleSubmit = async () => {
     try {
-      // Validate all form fields
       const values = await form.validateFields();
 
-      // Validate questions
       if (questions.some((q) => !q.question || !q.reply)) {
         message.error("Please fill in all questions and replies");
         return;
       }
 
-      // Dispatch addFaq action
-      const result = await dispatch(
-        addFaq({
-          category: values.category,
-          questions,
-        })
-      ).unwrap();
+      if (mode === "ADD") {
+        await dispatch(
+          addFaq({
+            category: values.category,
+            questions,
+          })
+        ).unwrap();
+        message.success("FAQ added successfully");
+      } else if (mode === "EDIT") {
+        const { sectionId, questionId } = location.state;
+        await dispatch(
+          editFaq({
+            sectionId,
+            questionId,
+            updatedQuestion: questions[0].question,
+            updatedAnswer: questions[0].reply,
+          })
+        ).unwrap();
+        message.success("FAQ updated successfully");
+      }
 
-      // Reset form on success
       form.resetFields();
       setQuestions([{ question: "", reply: "" }]);
       navigate(`${APP_PREFIX_PATH}/app/management/layout/faq/list`);
       dispatch(fetchAllFaqs());
-
-      message.success("FAQ added successfully");
     } catch (error) {
       if (error.errorFields) {
         message.error("Please fill in all required fields");
@@ -88,7 +113,7 @@ const FaqFormFields = ({ mode }) => {
           name="faq_form"
           className="ant-advanced-search-form"
         >
-          <Card title="Add FAQ's">
+          <Card title={mode === "ADD" ? "Add FAQ's" : "Edit FAQ"}>
             <Row gutter={16} align="middle">
               <Col flex="auto">
                 <Form.Item
@@ -106,9 +131,9 @@ const FaqFormFields = ({ mode }) => {
                     loading={loading}
                   >
                     {faqSections && faqSections.length > 0 ? (
-                      faqSections.map((secion) => (
-                        <Option key={secion} value={secion}>
-                          {secion}
+                      faqSections.map((section) => (
+                        <Option key={section} value={section}>
+                          {section}
                         </Option>
                       ))
                     ) : (
@@ -188,11 +213,11 @@ const FaqFormFields = ({ mode }) => {
             <DiscardButton form={form} />
             <Button
               type="primary"
-              onClick={handleAdd}
+              onClick={handleSubmit}
               loading={submitting}
               disabled={submitting}
             >
-              {submitting ? "Adding..." : mode === "ADD" ? "Add" : "Save"}
+              {submitting ? "Submitting..." : mode === "ADD" ? "Add" : "Save"}
             </Button>
           </Flex>
         </Form>

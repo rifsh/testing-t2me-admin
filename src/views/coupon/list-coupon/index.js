@@ -139,13 +139,14 @@ const CouponList = () => {
     {
       title: "Start Date",
       dataIndex: "start_date",
+      defaultSortOrder: "descend",
       sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
       render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
     },
     {
       title: "End Date",
       dataIndex: "end_date",
-      sorter: (a, b) => new Date(a.end_date) - new Date(b.end_date),
+      sorter: (a, b) => new Date(b.end_date) - new Date(a.end_date),
       render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
     },
     {

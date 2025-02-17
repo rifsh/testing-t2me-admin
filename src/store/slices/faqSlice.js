@@ -19,6 +19,47 @@ const initialState = {
   isModalVisible: false,
 };
 
+export const editFaq = createAsyncThunk(
+  "faqs/editFaq",
+  async (
+    { sectionId, questionId, updatedQuestion, updatedAnswer },
+    { getState, rejectWithValue }
+  ) => {
+    try {
+      const { faqJson } = getState().faqs;
+      if (!faqJson) return rejectWithValue("FAQ data not initialized");
+
+      // Find the section and update the question
+      const updatedJson = {
+        ...faqJson,
+        data: faqJson.data.map((section) => {
+          if (section.id === sectionId) {
+            return {
+              ...section,
+              faq: section.faq.map((faq) => {
+                if (faq.question === questionId) {
+                  return {
+                    ...faq,
+                    question: updatedQuestion,
+                    answer: updatedAnswer,
+                  };
+                }
+                return faq;
+              }),
+            };
+          }
+          return section;
+        }),
+      };
+
+      const response = await FaqService.createFaq(updatedJson);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit FAQ");
+    }
+  }
+);
+
 export const createSection = createAsyncThunk(
   "faqs/createSection",
   async (sectionName, { getState, rejectWithValue }) => {
@@ -43,6 +84,35 @@ export const createSection = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to create section");
+    }
+  }
+);
+
+export const deleteFaq = createAsyncThunk(
+  "faqs/deleteFaq",
+  async ({ sectionId, questionId }, { getState, rejectWithValue }) => {
+    try {
+      const { faqJson } = getState().faqs;
+      if (!faqJson) return rejectWithValue("FAQ data not initialized");
+
+      // Find the section and remove the question
+      const updatedJson = {
+        ...faqJson,
+        data: faqJson.data.map((section) => {
+          if (section.id === sectionId) {
+            return {
+              ...section,
+              faq: section.faq.filter((faq) => faq.question !== questionId),
+            };
+          }
+          return section;
+        }),
+      };
+
+      const response = await FaqService.createFaq(updatedJson);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to delete FAQ");
     }
   }
 );
@@ -144,6 +214,36 @@ const FaqSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(editFaq.pending, (state) => {
+        state.submitting = true;
+        state.error = null;
+      })
+      .addCase(editFaq.fulfilled, (state, { payload }) => {
+        state.submitting = false;
+        state.faqJson = payload;
+        state.faqs = payload.data;
+      })
+      .addCase(editFaq.rejected, (state, { payload }) => {
+        state.submitting = false;
+        state.error = payload;
+      })
+      .addCase(deleteFaq.pending, (state) => {
+        state.loading = true;
+        state.submitting = true;
+        state.error = null;
+      })
+      .addCase(deleteFaq.fulfilled, (state, { payload }) => {
+        state.loading = false;
+
+        state.submitting = false;
+        state.faqJson = payload;
+        state.faqs = payload.data;
+      })
+      .addCase(deleteFaq.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.submitting = false;
+        state.error = payload;
+      })
       .addCase(createSection.pending, (state) => {
         state.addingSectionLoading = true;
         state.error = null;

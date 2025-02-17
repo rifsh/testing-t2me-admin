@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { FormOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Card, Col, Row, Button, Table, Menu, Select, Input } from "antd";
+import {
+  Card,
+  Col,
+  Row,
+  Button,
+  Table,
+  Menu,
+  Select,
+  Input,
+  message,
+  Spin,
+} from "antd";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
-import { fetchAllFaqs } from "store/slices/faqSlice";
+import { fetchAllFaqs, deleteFaq } from "store/slices/faqSlice";
 
 const { Option } = Select;
 
@@ -16,16 +27,17 @@ const FaqList = () => {
   const [selectedSection, setSelectedSection] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { faqs, faqSections, loading } = useSelector((state) => state.faqs);
+  const { faqs, faqSections, loading, submitting } = useSelector(
+    (state) => state.faqs
+  );
 
   useEffect(() => {
-    console.log("Dispatching fetchAllFaqs");
     dispatch(fetchAllFaqs());
   }, [dispatch]);
 
   const sections = ["All", ...(faqSections || [])];
 
-  const filteredData = faqs.filter((item) => {
+  const filteredData = faqs?.filter((item) => {
     const matchesSection =
       selectedSection === "All" || item.id === selectedSection;
     const matchesSearch = item.faq.some(
@@ -42,7 +54,14 @@ const FaqList = () => {
         <Flex
           alignItems="center"
           onClick={() =>
-            navigate(`${APP_PREFIX_PATH}/app/management/layout/faq/add-faq`)
+            navigate(`${APP_PREFIX_PATH}/app/management/layout/faq/edit-faq`, {
+              state: {
+                sectionId: row.sectionId,
+                questionId: row.question,
+                question: row.question,
+                answer: row.answer,
+              },
+            })
           }
         >
           <EditOutlined />
@@ -50,8 +69,23 @@ const FaqList = () => {
         </Flex>
       </Menu.Item>
       <Menu.Item>
-        <Flex alignItems="center">
-          <DeleteOutlined />
+        <Flex
+          alignItems="center"
+          onClick={() => {
+            dispatch(
+              deleteFaq({ sectionId: row.sectionId, questionId: row.question })
+            )
+              .unwrap()
+              .then(() => {
+                message.success("FAQ deleted successfully!");
+                dispatch(fetchAllFaqs());
+              })
+              .catch(() => {
+                message.error("Failed to delete FAQ.");
+              });
+          }}
+        >
+          {submitting ? <Spin size="small" /> : <DeleteOutlined />}
           <span className="ml-2">Delete FAQ</span>
         </Flex>
       </Menu.Item>
@@ -77,13 +111,15 @@ const FaqList = () => {
       dataIndex: "actions",
       render: (_, elm) => (
         <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
+          <EllipsisDropdown
+            menu={dropdownMenu({ ...elm, sectionId: elm.key.split("-")[0] })}
+          />
         </div>
       ),
     },
   ];
 
-  const dataSource = filteredData.map((section) => ({
+  const dataSource = filteredData?.map((section) => ({
     key: section.id,
     section: section.section,
     faq: section.faq.map((item, index) => ({
