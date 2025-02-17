@@ -23,7 +23,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import dayjs from "dayjs";
 import LoadingOverlay from "components/util-components/Loader/index";
 
-import ConfirmationPage from "../components/Confrimation";
+import ConfirmationPage from "../components/ConfirmationPage";
 
 const MultyStepScheduleForm = ({ mode, id }) => {
   const steps = [
