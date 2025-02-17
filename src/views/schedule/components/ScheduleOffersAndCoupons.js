@@ -7,7 +7,8 @@ import {
   Row,
   Col,
   Button,
-  message, Alert
+  message,
+  Alert,
 } from "antd";
 import { CloseCircleOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -473,6 +474,10 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
             <Text>Selected Coupons</Text>
             {selectedCoupons.map((coupon) => (
               <Card
+                onClick={() => {
+                  setIsOffer(true);
+                  return showItemDetails(coupon);
+                }}
                 key={coupon.coupons.id}
                 size="small"
                 style={{
@@ -521,17 +526,11 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
                       form.getFieldValue("end_date")
                     )
                   )}
-
-
                 </div>
-
               </Card>
             ))}
-
           </div>
         )}
-
-
       </Col>
       <Col xs={24} sm={24} md={17}>
         <Alert
