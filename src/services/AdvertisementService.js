@@ -28,6 +28,20 @@ AdvertisementService.editSchedule = function (data, action) {
   });
 };
 
+AdvertisementService.editScheduleStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.ADVERTISEMENT_SCHEDULE_STATUS_URL}?ad_schedule_id=${data.id}&action=${encodedAction}`,
+    method: "put",
+    data: data,
+    params: Utils.filterParams(pageData),
+  });
+};
+
 AdvertisementService.fetchAdBanners = function (pageData) {
   return fetch({
     url: ApiConstant.ADVERTISEMENT_BANNER_URL,

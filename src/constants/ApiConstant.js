@@ -74,6 +74,8 @@ export const ApiConstant = {
   ADVERTISEMENT_CATEGORY_STATUS_UPDATE_URL:
     "/api/v1/banners/secured/banner_category/status_update",
   ADVERTISEMENT_CATEGORY_BANNER_URL: "/api/v1/banners/secured/category_banners",
+  ADVERTISEMENT_SCHEDULE_STATUS_URL:
+    "/api/v1/banners/secured/schedule_banner_status",
 
   // EVENT ORGANIZER ENDPOINTS
 

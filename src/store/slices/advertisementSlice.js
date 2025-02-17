@@ -51,6 +51,21 @@ export const getSingleSchedule = createAsyncThunk(
     }
   }
 );
+export const editScheduleStatus = createAsyncThunk(
+  "advertisement/editScheduleStatus",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      const response = await AdvertisementService.editScheduleStatus(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 
 export const setSelectedDroppedFile = createAsyncThunk(
   "advertisement/setSelectedDroppedFile",
@@ -239,6 +254,25 @@ const AdvertisementSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(editScheduleStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editScheduleStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(editScheduleStatus.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
       .addCase(editAdSchedule.pending, (state) => {
         state.loading = true;
       })
