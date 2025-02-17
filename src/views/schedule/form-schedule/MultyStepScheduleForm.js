@@ -139,6 +139,17 @@ const MultyStepScheduleForm = ({ mode, id }) => {
   const formatTimeForSubmission = (dateTime) => {
     return dayjs(dateTime).format("HH:mm");
   };
+  const cleanScheduleData = (data) => {
+    // Create a deep copy of the data to avoid mutating the original
+    const cleanedData = { ...data };
+
+    // Filter out show_dates with empty show_times
+    cleanedData.show_dates = data.show_dates.filter(
+      (date) => Array.isArray(date.show_times) && date.show_times.length > 0
+    );
+
+    return cleanedData;
+  };
 
   const onFinish = async () => {
     try {
@@ -147,9 +158,31 @@ const MultyStepScheduleForm = ({ mode, id }) => {
       const startDate = dayjs(values.start_date).format("YYYY-MM-DD");
       const endDate = dayjs(values.end_date).format("YYYY-MM-DD");
 
-      const show_dates = Object.entries(values.timeSlots || {}).map(
-        ([date, slots]) => {
-          const latestEndDate = slots.reduce((latest, slot) => {
+      // Filter show_dates to only include dates within the main date range
+      const show_dates = Object.entries(values.timeSlots || {})
+        .filter(([date]) => {
+          const currentDate = dayjs(date);
+          return (
+            currentDate.isSameOrAfter(startDate) &&
+            currentDate.isSameOrBefore(endDate)
+          );
+        })
+        .map(([date, slots]) => {
+          // Filter out slots that end after the main end date
+          const validSlots = slots.filter((slot) => {
+            const slotEndDate = slot.is_midnight_passed
+              ? dayjs(slot.show_end_date)
+              : dayjs(date);
+
+            return slotEndDate.isSameOrBefore(endDate);
+          });
+
+          // Only process dates that have valid slots
+          if (validSlots.length === 0) {
+            return null;
+          }
+
+          const latestEndDate = validSlots.reduce((latest, slot) => {
             if (
               slot.show_end_date &&
               (!latest || dayjs(slot.show_end_date).isAfter(dayjs(latest)))
@@ -162,7 +195,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
           return {
             start_date: date,
             end_date: latestEndDate || null,
-            show_times: slots.map((slot) => {
+            show_times: validSlots.map((slot) => {
               let startTime = dayjs(slot.start_time).format("HH:mm");
               let endTime;
 
@@ -181,7 +214,6 @@ const MultyStepScheduleForm = ({ mode, id }) => {
               eventDetails?.venue_ticket_structures?.forEach((venue) => {
                 venue.ticket_structures.forEach((ts) => {
                   if (ts.ticket_structure === ticketStructureId) {
-                    // Use the first ticket set if available
                     ticketSet = ts.ticket_sets[0] || "";
                   }
                 });
@@ -196,8 +228,9 @@ const MultyStepScheduleForm = ({ mode, id }) => {
               };
             }),
           };
-        }
-      );
+        })
+        .filter(Boolean); // Remove any null entries
+
       const submitData = {
         start_date: startDate,
         end_date: endDate,
@@ -222,10 +255,10 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         })),
       };
 
-      // Debug log
-      console.log("Submitting data:", JSON.stringify(submitData, null, 2));
+      // Clean the data before submitting
+      const cleanedSubmitData = cleanScheduleData(submitData);
 
-      dispatch(setScheduleSubmitData(submitData));
+      dispatch(setScheduleSubmitData(cleanedSubmitData));
       if (currentStep < steps.length) {
         dispatch(setCurrentStep(currentStep + 1));
       }
@@ -259,18 +292,16 @@ const MultyStepScheduleForm = ({ mode, id }) => {
 
         // Validate each date's time slots
         for (const date in timeSlots) {
+          // Skip validation for dates outside the selected range
           if (dayjs(date).isBefore(startDate) || dayjs(date).isAfter(endDate)) {
-            message.error(`Date ${date} is outside the selected date range`);
-            return;
+            continue;
           }
 
           const slots = timeSlots[date];
           if (!Array.isArray(slots) || slots.length === 0) continue;
 
           // Validate each slot
-          for (let i = 0; i < slots.length; i++) {
-            const slot = slots[i];
-
+          for (const slot of slots) {
             if (!slot.start_time) {
               message.error(`Start time is required for all slots on ${date}`);
               return;
