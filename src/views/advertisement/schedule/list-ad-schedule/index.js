@@ -8,6 +8,7 @@ import {
   Modal,
   Descriptions,
   Dropdown,
+  Badge,
   Menu,
 } from "antd";
 import {
@@ -21,10 +22,12 @@ import {
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { TextConstants } from "constants/TextConstant";
 import {
   fetchAdSchedules,
   setSelectedMedia,
   setModalVisible,
+  editScheduleStatus,
 } from "store/slices/advertisementSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
@@ -32,6 +35,8 @@ import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+
 
 const { Option } = Select;
 
@@ -47,7 +52,10 @@ const CouponList = () => {
     message: responseMessage,
     modalVisible,
     selectedMedia,
+    warningPagination,
+    responseImpactData,
   } = useSelector((state) => state.advertisement);
+  const { responseData } = useSelector((state) => state.modalSlice);
 
   useEffect(() => {
     dispatch(fetchAdSchedules({ page: 1, size: 10 }));
@@ -177,10 +185,32 @@ const CouponList = () => {
           b.advertisement_banner.event?.event_name
         ),
     },
+    {
+      title: "Schedule Status",
+      dataIndex: "schedule_status",
+      render: (_, record) => {
+        const statusMap = {
+          Expired: { text: "Expired", badge: "error" },
+          Upcoming: { text: "Upcoming", badge: "processing" },
+          Running: { text: "Running", badge: "success" },
+          Disabled: { text: "Disabled", badge: "error" },
+        };
 
-    // -------------STATUS COLUMN COMPLETE AFTER ADDING STATUS FIELD IN API-----------------
-    // Utils.statusColumnUtil(handleUpdateStatus),
-    // -------------STATUS COLUMN COMPLETE AFTER ADDING STATUS FIELD IN API-----------------
+        const status = statusMap[record.schedule_status] || {
+          text: record.schedule_status,
+          badge: "default",
+        };
+
+        return (
+          <div>
+            <Badge status={status.badge} />
+            <span className="mx-2">{status.text}</span>
+          </div>
+        );
+      },
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "schedule_status"),
+    },
+    Utils.statusColumnUtil(handleUpdateStatus),
 
     {
       title: "",
@@ -210,6 +240,30 @@ const CouponList = () => {
           Add Schedule
         </Button>
       </Flex>
+
+      <UpdateStatusModal
+        responseMessage={responseMessage}
+        editFunction={editScheduleStatus}
+        getAllFunction={(pageData) => fetchAdSchedules(pageData)}
+        pageData={{ page: 1, size: 10 }}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "items",
+        }}
+        editable_status={editable_status}
+        responseData={responseImpactData}
+        pagination={warningPagination}
+        loading={loading}
+      />
+      <StatusSubmitAndConfirmModal
+        editFunction={editScheduleStatus}
+        getAllFunction={fetchAdSchedules}
+        responseData={responseData}
+        responseMessage={responseMessage}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
+      />
 
       <Table
         columns={tableColumns}
