@@ -423,6 +423,13 @@ export const protectedRoutes = [
     ),
   },
   {
+    key: "app.management.layout.faq.edit-faq",
+    path: `${APP_PREFIX_PATH}/app/management/layout/faq/edit-faq`,
+    component: React.lazy(() =>
+      import("views/app-managment/layout/faq/edit-faq")
+    ),
+  },
+  {
     key: "app.management.layout.info.list",
     path: `${APP_PREFIX_PATH}/app/management/layout/app-info/list`,
     component: React.lazy(() =>
