@@ -30,6 +30,7 @@ import { fetchEventDetails } from "store/slices/eventSlice";
 import {
   addNewTimeSlot,
   removeExistingTimeSlot,
+  reSetOffersAndCoupons,
   setActiveTab,
   setDates,
   setSlotStatus,
@@ -522,6 +523,7 @@ export function ScheduleTimeSlots({ form }) {
       currentDate = currentDate.add(1, "day");
     }
 
+    dispatch(reSetOffersAndCoupons());
     dispatch(setDates(newDates));
     dispatch(setActiveTab(newDates[0]));
 

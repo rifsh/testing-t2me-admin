@@ -94,6 +94,10 @@ const scheduleSlice = createSlice({
     setTimeSlots: (state, action) => {
       state.timeSlots = action.payload;
     },
+    reSetOffersAndCoupons: (state, action) => {
+      state.selectedCoupons = [];
+      state.selectedOffers = [];
+    },
     setActiveTab: (state, action) => {
       state.activeTab = action.payload;
     },
@@ -149,7 +153,7 @@ const scheduleSlice = createSlice({
     clearTimeSlots: (state, action) => {
       const { dateStr, indices } = action.payload;
       if (state.timeSlots[dateStr]) {
-        indices.forEach(index => {
+        indices.forEach((index) => {
           if (state.timeSlots[dateStr][index]) {
             state.timeSlots[dateStr][index] = {
               ...state.timeSlots[dateStr][index],
@@ -188,11 +192,23 @@ const scheduleSlice = createSlice({
       );
 
       if (existingOfferIndex !== -1) {
+        // Store original dates before removing
+        const existingOffer = state.selectedOffers[existingOfferIndex];
         state.selectedOffers.splice(existingOfferIndex, 1);
       } else {
-        state.selectedOffers.push(action.payload);
+        // Add new offer with original dates
+        const newOffer = {
+          ...action.payload,
+          offer: {
+            ...action.payload.offer,
+            original_start_date: action.payload.offer.start_date,
+            original_end_date: action.payload.offer.end_date,
+          },
+        };
+        state.selectedOffers.push(newOffer);
       }
     },
+
     updateSelectedOffer: (state, action) => {
       const existingOfferIndex = state.selectedOffers.findIndex(
         (offer) => offer.offer.id === action.payload.id
@@ -205,38 +221,50 @@ const scheduleSlice = createSlice({
             ...state.selectedOffers[existingOfferIndex].offer,
             start_date: action.payload.start_date,
             end_date: action.payload.end_date,
-            date_required: true,
             wasAdjusted: true,
           },
         };
       }
     },
-    updateSelectedCoupons: (state, action) => {
-      const existingCouponsIndex = state.selectedCoupons.findIndex(
-        (coupons) => coupons.coupons.id === action.payload.id
-      );
 
-      if (existingCouponsIndex !== -1) {
-        state.selectedCoupons[existingCouponsIndex] = {
-          ...state.selectedCoupons[existingCouponsIndex],
-          coupons: {
-            ...state.selectedCoupons[existingCouponsIndex].coupons,
-            start_date: action.payload.start_date,
-            end_date: action.payload.end_date,
-            wasAdjusted: true,
-          },
-        };
-      }
-    },
     toggleSelectedCoupon: (state, action) => {
       const existingCouponIndex = state.selectedCoupons.findIndex(
         (coupon) => coupon.id === action.payload.id
       );
 
       if (existingCouponIndex !== -1) {
+        // Store original dates before removing
+        const existingCoupon = state.selectedCoupons[existingCouponIndex];
         state.selectedCoupons.splice(existingCouponIndex, 1);
       } else {
-        state.selectedCoupons.push(action.payload);
+        // Add new coupon with original dates
+        const newCoupon = {
+          ...action.payload,
+          coupons: {
+            ...action.payload.coupons,
+            original_start_date: action.payload.coupons.start_date,
+            original_end_date: action.payload.coupons.end_date,
+          },
+        };
+        state.selectedCoupons.push(newCoupon);
+      }
+    },
+
+    updateSelectedCoupons: (state, action) => {
+      const existingCouponIndex = state.selectedCoupons.findIndex(
+        (coupon) => coupon.id === action.payload.id
+      );
+
+      if (existingCouponIndex !== -1) {
+        state.selectedCoupons[existingCouponIndex] = {
+          ...state.selectedCoupons[existingCouponIndex],
+          coupons: {
+            ...state.selectedCoupons[existingCouponIndex].coupons,
+            start_date: action.payload.start_date,
+            end_date: action.payload.end_date,
+            wasAdjusted: true,
+          },
+        };
       }
     },
     setSelectedItemForModal: (state, action) => {
@@ -317,6 +345,7 @@ export const {
   toggleSelectedOffer,
   toggleSelectedCoupon,
   updateSelectedCoupons,
+  reSetOffersAndCoupons,
   setSelectedItemForModal,
   setTimeSlots,
   setActiveTab,
@@ -324,7 +353,8 @@ export const {
   setSlotStatus,
   addTimeSlot,
   removeTimeSlot,
-  updateTimeSlot,setScheduleSubmitData,
+  updateTimeSlot,
+  setScheduleSubmitData,
   setScheduleSelectTime,
   updateSelectedOffer,
 } = scheduleSlice.actions;
