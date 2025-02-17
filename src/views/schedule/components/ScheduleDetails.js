@@ -10,7 +10,7 @@ import { setSelectedVenue } from "store/slices/locationSlice";
 
 const { Option } = Select;
 
-export function ScheduleDetails() {
+export function ScheduleDetails({ form }) {
   const dispatch = useDispatch();
   const { filteredEvents = [], loading } = useSelector((state) => state.event);
 
@@ -18,7 +18,7 @@ export function ScheduleDetails() {
     dispatch(fetchAllEvent({}));
   }, [dispatch]);
   const handleSelectEvent = (id) => {
-    if (!id) return; 
+    if (!id) return;
 
     dispatch(setScheduleSelectTime(false));
     dispatch(setSelectedEvent(id));
@@ -28,7 +28,13 @@ export function ScheduleDetails() {
     if (selectedEvent && selectedEvent.venue) {
       dispatch(setSelectedVenue(selectedEvent.venue.id));
     }
-
+    const currentValues = form.getFieldsValue();
+    const valuesToKeep = {
+      event_id: id,
+      name: currentValues.name,
+    };
+    form.resetFields();
+    form.setFieldsValue(valuesToKeep);
     dispatch(resetSchedule());
   };
 
