@@ -5,19 +5,30 @@ import {
   Typography,
   Space,
   Collapse,
-  Timeline,
   Empty,
   Row,
   Col,
+  Tag,
+  Tooltip,
+  Divider,
+  Badge,
 } from "antd";
 import dayjs from "dayjs";
+import {
+  FaCalendarAlt,
+  FaClock,
+  FaTicketAlt,
+  FaTag,
+  FaGift,
+  FaBuilding,
+} from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSingleSchedules } from "store/slices/scheduleSlice";
 import { useParams } from "react-router-dom";
 import Loading from "components/shared-components/Loading";
-import { FaCalendarAlt, FaClock, FaMapPin } from "react-icons/fa";
 
 const { Panel } = Collapse;
+const { Text } = Typography;
 
 const ScheduleDetails = () => {
   const { scheduleId } = useParams();
@@ -30,9 +41,6 @@ const ScheduleDetails = () => {
     }
   }, [dispatch, scheduleId]);
 
-  const formatDateTime = (dateTimeStr) =>
-    dateTimeStr ? dayjs(dateTimeStr).format("MMMM D, YYYY h:mm A") : "-";
-
   const formatDate = (dateStr) =>
     dateStr ? dayjs(dateStr).format("MMMM D, YYYY") : "-";
 
@@ -43,95 +51,119 @@ const ScheduleDetails = () => {
     return <Loading />;
   }
 
-  if (!scheduleDetails) {
-    return (
-      <Empty
-        description="No schedule data found"
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-      />
-    );
+  const processedScheduleDetails =
+    scheduleDetails?.data?.[0] || scheduleDetails;
+
+  if (!processedScheduleDetails) {
+    return <Empty description="No schedule data found" />;
   }
 
   return (
-    <Space direction="vertical" size="large" className="w-full">
-      <Card title="Schedule & Event Details">
-        <Row gutter={16}>
-          <Col xs={24} md={12}>
-            <Descriptions title="Schedule Details" bordered column={1}>
+    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <Card
+        title={
+          <Space>
+            <FaCalendarAlt />
+            <span>Schedule & Event Details</span>
+          </Space>
+        }
+        style={{ width: "100%" }}
+      >
+        <Row gutter={[24, 24]}>
+          <Col span={12}>
+            <Descriptions bordered column={1} layout="vertical">
               <Descriptions.Item label="Schedule Name">
-                {scheduleDetails.name || "Untitled Schedule"}
+                {processedScheduleDetails.name || "Untitled Schedule"}
               </Descriptions.Item>
-              <Descriptions.Item
-                label={
-                  <Space>
-                    <FaCalendarAlt /> Event Date Range
-                  </Space>
-                }
-              >
-                {formatDate(scheduleDetails.start_date)} -{" "}
-                {formatDate(scheduleDetails.end_date)}
+              <Descriptions.Item label="Event Date Range">
+                <Text>
+                  {formatDate(processedScheduleDetails.start_date)} -{" "}
+                  {formatDate(processedScheduleDetails.end_date)}
+                </Text>
               </Descriptions.Item>
-              <Descriptions.Item
-                label={
-                  <Space>
-                    <FaClock /> Advertisement Start
-                  </Space>
-                }
-              >
-                {formatDateTime(scheduleDetails.ad_start_date_time)}
-              </Descriptions.Item>
-              <Descriptions.Item
-                label={
-                  <Space>
-                    <FaClock /> Booking Start
-                  </Space>
-                }
-              >
-                {formatDateTime(scheduleDetails.booking_start_date_time)}
+              <Descriptions.Item label="Schedule ID">
+                {processedScheduleDetails.id || "N/A"}
               </Descriptions.Item>
             </Descriptions>
           </Col>
 
-          <Col xs={24} md={12}>
-            <Descriptions title="Event Details" bordered column={1}>
+          <Col span={12}>
+            <Descriptions bordered column={1} layout="vertical">
               <Descriptions.Item label="Event Name">
-                {scheduleDetails.event?.event_name || "N/A"}
+                {processedScheduleDetails.event?.event_name || "N/A"}
               </Descriptions.Item>
-              <Descriptions.Item
-                label={
-                  <Space>
-                    <FaMapPin /> Venue
-                  </Space>
-                }
-              >
-                <Typography.Text strong>
-                  {scheduleDetails.event?.venue?.name || "N/A"}
-                </Typography.Text>
-                <br />
-                <Typography.Text>
-                  {scheduleDetails.event?.venue?.place?.name || "N/A"},
-                  {scheduleDetails.event?.venue?.place?.country?.name || "N/A"}
-                </Typography.Text>
+              <Descriptions.Item label="Event ID">
+                {processedScheduleDetails.event?.id || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Venues">
+                {processedScheduleDetails.event?.venues?.length > 0 ? (
+                  <Collapse>
+                    <Panel
+                      header={`${processedScheduleDetails.event.venues.length} Venue(s) Available`}
+                      key="venues"
+                    >
+                      <Row gutter={[16, 16]}>
+                        {processedScheduleDetails.event.venues.map((venue) => (
+                          <Col span={12} key={venue.id}>
+                            {/* <Card size="small"> */}
+                              <Text strong>{venue.name}, </Text>
+                              <Text type="secondary">
+                                {venue.place?.name || "N/A"},{" "}
+                                {venue.place?.country?.name || "N/A"}
+                              </Text>
+                            {/* </Card> */}
+                          </Col>
+                        ))}
+                      </Row>
+                    </Panel>
+                  </Collapse>
+                ) : (
+                  <Text>No venues available</Text>
+                )}
               </Descriptions.Item>
             </Descriptions>
           </Col>
         </Row>
       </Card>
-      <Card title="Show Dates and Times" className="w-full">
-        {scheduleDetails.show_dates?.length > 0 ? (
+
+      <Card
+        title={
+          <Space>
+            <FaClock />
+            <span>Show Dates and Times</span>
+          </Space>
+        }
+        style={{ width: "100%" }}
+      >
+        {processedScheduleDetails.show_dates?.length > 0 ? (
           <Collapse accordion>
-            {scheduleDetails.show_dates.map((showDate) => (
-              <Panel key={showDate.id} header={formatDate(showDate.date)}>
-                <Timeline mode="left">
-                  {showDate.show_times.map((timeSlot) => (
-                    <Timeline.Item key={timeSlot.id} color="blue">
-                      <Typography.Text strong>
-                        {formatTime(timeSlot.start_time)} -{" "}
-                        {formatTime(timeSlot.end_time)}
-                      </Typography.Text>
-                    </Timeline.Item>
+            {processedScheduleDetails.show_dates.map((showDate, index) => (
+              <Panel
+                key={showDate.id || index}
+                header={
+                  <Space>
+                    <Badge color="blue" />
+                    <Text strong>{formatDate(showDate.start_date)}</Text>
+                  </Space>
+                }
+              >
+                <Row gutter={[16, 16]}>
+                  {showDate.show_times.map((timeSlot, timeIndex) => (
+                    <Col span={8} key={timeSlot.id || timeIndex}>
+                      <Card size="small">
+                        <Text strong>
+                          {formatTime(timeSlot.start_time)} -{" "}
+                          {formatTime(timeSlot.end_time)}
+                        </Text>
+                        {timeSlot.is_midnight && (
+                          <Tooltip title="Runs past midnight">
+                            <Tag color="blue">Overnight</Tag>
+                          </Tooltip>
+                        )}
+                      </Card>
+                    </Col>
                   ))}
-                </Timeline>
+                </Row>
               </Panel>
             ))}
           </Collapse>
@@ -139,6 +171,61 @@ const ScheduleDetails = () => {
           <Empty description="No show dates available" />
         )}
       </Card>
+
+      {processedScheduleDetails.offer_ids?.length > 0 && (
+        <Card
+          title={
+            <Space>
+              <FaTag />
+              <span>Selected Offers</span>
+            </Space>
+          }
+          style={{ width: "100%" }}
+        >
+          <Row gutter={[16, 16]}>
+            {processedScheduleDetails.offer_ids.map((offer, index) => (
+              <Col span={8} key={offer.id || index}>
+                <Card size="small">
+                  <Text strong>Offer ID: {offer.id}</Text>
+                  <Text>
+                    Valid: {formatDate(offer.valid_from)} -{" "}
+                    {formatDate(offer.valid_to)}
+                  </Text>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </Card>
+      )}
+
+      {processedScheduleDetails.coupon_ids?.length > 0 && (
+        <Card
+          title={
+            <Space>
+              <FaGift />
+              <span>Selected Coupons</span>
+            </Space>
+          }
+          style={{ width: "100%" }}
+        >
+          <Row gutter={[16, 16]}>
+            {processedScheduleDetails.coupon_ids.map((coupon, index) => (
+              <Col span={8} key={coupon.id || index}>
+                <Card size="small">
+                  <Text strong>Coupon ID: {coupon.id}</Text>
+                  <Text>
+                    Valid: {formatDate(coupon.valid_from)} -{" "}
+                    {formatDate(coupon.valid_to)}
+                  </Text>
+                  {coupon.valid_from === "1970-01-01" && (
+                    <Tag color="orange">Legacy Coupon</Tag>
+                  )}
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </Card>
+      )}
     </Space>
   );
 };
