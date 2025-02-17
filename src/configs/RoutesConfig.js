@@ -327,6 +327,13 @@ export const protectedRoutes = [
     ),
   },
   {
+    key: "advertisement.schedule.edit",
+    path: `${APP_PREFIX_PATH}/advertisement/schedule/edit/:scheduleId`,
+    component: React.lazy(() =>
+      import("views/advertisement/schedule/edit-ad-schedule/index")
+    ),
+  },
+  {
     key: "advertisement.banner.add",
     path: `${APP_PREFIX_PATH}/advertisement/banner/add`,
     component: React.lazy(() =>

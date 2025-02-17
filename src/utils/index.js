@@ -530,6 +530,21 @@ class Utils {
           }
           return;
         }
+        if (key === "isComingSoonImage") {
+          if (value.length === 0) {
+            formData.append(key, "");
+          } else {
+            value.forEach((image) => {
+              if (image.url) {
+                formData.append("isComingSoonImage", image.url);
+              }
+              if (image.originFileObj) {
+                formData.append(key, image.originFileObj);
+              }
+            });
+          }
+          return;
+        }
 
         if (key === "key_words" && value.length > 0) {
           value.forEach((word) => formData.append("key_words", word));

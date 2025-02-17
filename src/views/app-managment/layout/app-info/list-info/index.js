@@ -65,6 +65,20 @@ const AppInfoList = () => {
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
+      title: "Coming Soon Image",
+      dataIndex: ["details", "under_maintenance", "isComingSoonImage"],
+      render: (mediaPath) => {
+        return (
+          <img
+            src={mediaPath}
+            alt="Image Thumbnail"
+            style={{ width: 80, height: 50 }}
+          />
+        );
+      },
+      sorter: (a, b) => a.name.localeCompare(b.name),
+    },
+    {
       title: "Maintainance Status",
       dataIndex: ["details", "under_maintenance", "enabled"],
       render: (_, record) => (
@@ -83,6 +97,43 @@ const AppInfoList = () => {
           ? -1
           : 1,
       sortDirections: ["ascend", "descend"],
+    },
+    {
+      title: "Coming Soon Status",
+      dataIndex: ["details", "under_maintenance", "isComingSoonFlag"],
+      render: (_, record) => (
+        <Tag
+          color={
+            record.details.under_maintenance.isComingSoonFlag ? "green" : "red"
+          }
+          style={{ cursor: "pointer" }}
+        >
+          {record.details.under_maintenance.isComingSoonFlag
+            ? "Active"
+            : "Inactive"}
+        </Tag>
+      ),
+      sorter: (a, b) =>
+        a.record.details.under_maintenance.isComingSoonFlag ===
+        b.record.details.under_maintenance.isComingSoonFlag
+          ? 0
+          : a.record.details.under_maintenance.isComingSoonFlag
+          ? -1
+          : 1,
+      sortDirections: ["ascend", "descend"],
+    },
+    {
+      title: "Coming Soon Message",
+      dataIndex: ["details", "under_maintenance", "isComingSoonMessage"],
+      render: (_, record) => (
+        <span>{record.details.under_maintenance.isComingSoonMessage}</span>
+      ),
+      sorter: (a, b) =>
+        (
+          a.record.details.under_maintenance.isComingSoonMessage || ""
+        ).localeCompare(
+          b.record.details.under_maintenance.isComingSoonMessage || ""
+        ),
     },
     {
       title: "Footer Message",
@@ -112,7 +163,16 @@ const AppInfoList = () => {
       title: "PlayStore url",
       dataIndex: ["details", "under_maintenance", "playstore_url"],
       render: (_, record) => (
-        <span>{record.details.under_maintenance.playstore_url}</span>
+        <a
+          href={record.details.under_maintenance.playstore_url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {Utils.truncateText(
+            record.details.under_maintenance.playstore_url,
+            25
+          )}
+        </a>
       ),
       sorter: (a, b) =>
         (a.record.details.under_maintenance.playstore_url || "").localeCompare(
@@ -123,7 +183,16 @@ const AppInfoList = () => {
       title: "AppStore url",
       dataIndex: ["details", "under_maintenance", "appstore_url"],
       render: (_, record) => (
-        <span>{record.details.under_maintenance.appstore_url}</span>
+        <a
+          href={record.details.under_maintenance.appstore_url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {Utils.truncateText(
+            record.details.under_maintenance.appstore_url,
+            25
+          )}
+        </a>
       ),
       sorter: (a, b) =>
         (a.details.under_maintenance.appstore_url || "").localeCompare(
