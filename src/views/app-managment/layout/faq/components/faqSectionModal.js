@@ -6,13 +6,26 @@ import { createSection, setModalVisible } from "store/slices/faqSlice";
 const CreateSectionModal = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const { isModalVisible, addingSectionLoading } = useSelector(
+  const { isModalVisible, addingSectionLoading, faqSections } = useSelector(
     (state) => state.faqs
   );
 
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
+      console.log(faqSections, "THIS IS SECTIONS");
+
+      const isDuplicate = faqSections.some(
+        (section) => section.toLowerCase() === values.sectionName.toLowerCase()
+      );
+
+      if (isDuplicate) {
+        message.error(
+          "Section name already exists. Please try a different name."
+        );
+        return;
+      }
+
       await dispatch(createSection(values.sectionName)).unwrap();
       form.resetFields();
       message.success("Section created successfully");

@@ -10,19 +10,26 @@ import {
   message,
   DatePicker,
   TimePicker,
+  Switch,
   Upload,
 } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import {
+  CheckOutlined,
+  CloseOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { addVenue, setSelectedPlace } from "store/slices/locationSlice";
+import { createFooter, fetchFooterData } from "store/slices/footerSlice";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import WorkingPeriodForm from "./WorkingPeriodForm";
 import PaymentLogoForm from "./PaymentLogoForm";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 
 const FooterFormFields = ({ mode }) => {
   const [form] = Form.useForm();
@@ -65,15 +72,54 @@ const FooterFormFields = ({ mode }) => {
     return e?.fileList;
   };
 
+  useEffect(() => {
+    form.setFieldsValue({
+      whatsapp_enabled: true,
+    });
+  }, [form]);
+
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      if (!selectedPlace) {
-        message.error("Place ID is missing. Please select a place.");
-        return;
+      console.log(JSON.stringify(values, null, 2), "THIS IS VALUES DATA");
+
+      const days_available = `${values.start_day} to ${values.end_day}`;
+      const operating_hours = `${values.start_time.format(
+        "HH:mm"
+      )} - ${values.end_time.format("HH:mm")}`;
+      const availability = `${values.start_day.toUpperCase()} TO ${values.end_day.toUpperCase()}`;
+
+      const data = {
+        footer_text: values.footer_name,
+        app_logo: values.app_logo,
+        platform_description: values.description,
+        customer_support_keys: values.place,
+        whatsapp_contact: values.whatsapp_number,
+        hotline_number: values.phone_number,
+        payment_keys: values.place,
+        contact_us_keys: values.place,
+        contact_heading: values.contact_heading,
+        contact_subheading: values.contact_subheading,
+        whatsapp_button_text: values.whatsapp_button_text,
+        whatsapp_enabled: values.whatsapp_enabled,
+        support_hours_keys: values.place,
+        days_available: days_available,
+        operating_hours: operating_hours,
+        availability: availability,
+      };
+
+      console.log(values.payment_logos.length, "PAYMENT LOGO LENGTHI");
+
+      if (values.payment_logos && values.payment_logos.length > 0) {
+        data.payment_logos = values.payment_logos;
       }
 
-      dispatch(setSelectedSubmitItem({ ...values, place_id: selectedPlace }));
+      console.log(data, "THIS IS THE DATA");
+
+      const resultAction = await dispatch(createFooter(data)).unwrap();
+      navigate(`${APP_PREFIX_PATH}/app/management/layout/footer/list`);
+      dispatch(fetchFooterData());
+      message.success("INFO updated successfully");
     } catch (errorInfo) {
       console.error("Validation Failed:", errorInfo);
     }
@@ -89,7 +135,6 @@ const FooterFormFields = ({ mode }) => {
           className="ant-advanced-search-form"
         >
           <Card title="Footer Details">
-
             <PlaceWithCountryForm
               form={form}
               label={"Place (Optional)"}
@@ -130,26 +175,67 @@ const FooterFormFields = ({ mode }) => {
             >
               <Input type="number" placeholder="Enter phone number" />
             </Form.Item>
-          </Card> <WorkingPeriodForm />
-          <PaymentLogoForm/>
-          <Flex
-              className="py-2"
-              mobileFlex={false}
-              justifyContent="space-between"
+
+            <Form.Item
+              name="contact_heading"
+              label="Contact Heading"
+              rules={[
+                { required: true, message: "Please enter the Contact Heading" },
+              ]}
             >
-              <DiscardButton form={form} />
-              <Button type="primary" onClick={onFinish} loading={loading}>
-                {mode === "ADD" ? "Add" : "Save"}
-              </Button>
-            </Flex>
+              <Input placeholder="Enter contact heading" />
+            </Form.Item>
+
+            <Form.Item
+              name="contact_subheading"
+              label="Contact Sub Heading"
+              rules={[
+                {
+                  required: true,
+                  message: "Please enter the contact sub heading",
+                },
+              ]}
+            >
+              <Input placeholder="Enter contact sub heading" />
+            </Form.Item>
+            <Form.Item
+              name="whatsapp_button_text"
+              label="Whatsapp Button Text"
+              rules={[
+                {
+                  required: true,
+                  message: "Please enter the whatsapp button text",
+                },
+              ]}
+            >
+              <Input placeholder="Enter whatsapp button text" />
+            </Form.Item>
+            <Form.Item
+              name="whatsapp_enabled"
+              label="Whatsapp Enabled"
+              valuePropName="checked"
+            >
+              <Switch
+                checkedChildren={<CheckOutlined />}
+                unCheckedChildren={<CloseOutlined />}
+                defaultChecked
+              />
+            </Form.Item>
+          </Card>{" "}
+          <WorkingPeriodForm />
+          <PaymentLogoForm />
+          <Flex
+            className="py-2"
+            mobileFlex={false}
+            justifyContent="space-between"
+          >
+            <DiscardButton form={form} />
+            <Button type="primary" onClick={onFinish} loading={loading}>
+              {mode === "ADD" ? "Add" : "Save"}
+            </Button>
+          </Flex>
         </Form>
       </Col>
-      <SubmitAndConfirmModal
-        responseData={responseData}
-        addFunction={addVenue}
-        navigationPath="/venue/list"
-        responseMessage={responseMessage}
-      />
     </Row>
   );
 };
