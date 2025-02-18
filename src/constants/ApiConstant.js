@@ -56,6 +56,7 @@ export const ApiConstant = {
   ISSUE_CLOSE_URL: "/api/v1/issue/secured/issues/close",
   ISSUE_REASSIGN_URL: "/api/v1/issue/secured/issues/assign",
   ISSUE_REASSIGN_COMMENT_URL: "/api/v1/issue/secured/issues/comment",
+  ADMIN_COMMENT_URL: "/api/v1/issue/secured/issues/comment/admin",
 
   // ADVERTISEMENT ENDPOINTS
 
