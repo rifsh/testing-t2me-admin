@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkticket2me=self.webpackChunkticket2me||[]).push([[7818],{37818:(e,s,t)=>{t.r(s),t.d(s,{default:()=>k});var c=t(65043),r=t(97508),u=t(1857),n=t(50061),l=t(73216),o=t(70579);const k=()=>{const e=(0,r.wA)(),s=(0,l.g)(),{singleUser:t}=(0,r.d4)((e=>e.users));return console.log(s.userId,"USERID"),(0,c.useEffect)((()=>{s&&(console.log("fetching single User--------"),e((0,n.yk)(s.userId)))}),[e,s]),(0,o.jsx)(u.A,{mode:"EDIT",user:t})}}}]);
+//# sourceMappingURL=7818.01594368.chunk.js.map

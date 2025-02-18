@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkticket2me=self.webpackChunkticket2me||[]).push([[9534],{59534:(e,s,t)=>{t.r(s),t.d(s,{default:()=>r});var d=t(65043),c=t(52525),l=t(73216),n=t(97508),i=t(16482),u=t(50613),a=t(70579);const r=()=>{const e=(0,n.wA)(),{scheduleId:s}=(0,l.g)(),{singleSchedule:t,loading:r}=(0,n.d4)((e=>e.advertisement));return(0,d.useEffect)((()=>{s&&e((0,i.EY)(s))}),[e,s]),(0,a.jsxs)(a.Fragment,{children:[(0,a.jsx)(u.A,{loading:r}),(0,a.jsx)(c.A,{mode:"EDIT",scheduleDetails:t,id:s})]})}}}]);
+//# sourceMappingURL=9534.cd9757b8.chunk.js.map
