@@ -18,16 +18,19 @@ const EditAdSchedule = () => {
     }
   }, [dispatch, scheduleId]);
 
-  if (loading) {
-    return <LoadingOverlay loading={loading} />;
-  }
+  // if (loading) {
+  //   return <LoadingOverlay loading={loading} />;
+  // }
 
   return (
-    <AdScheduleForm
-      mode="EDIT"
-      scheduleDetails={singleSchedule}
-      id={scheduleId}
-    />
+    <>
+      <LoadingOverlay loading={loading} />
+      <AdScheduleForm
+        mode="EDIT"
+        scheduleDetails={singleSchedule}
+        id={scheduleId}
+      />
+    </>
   );
 };
 

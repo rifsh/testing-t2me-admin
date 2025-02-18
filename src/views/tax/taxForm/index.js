@@ -34,9 +34,9 @@ const TaxForm = ({ mode, taxId }) => {
     console.log("filteredTax is empty or undefined.");
   }
 
-  if (loading) {
-    return <LoadingOverlay loading={loading} />;
-  }
+  // if (loading) {
+  //   return <LoadingOverlay loading={loading} />;
+  // }
 
   return (
     <>
