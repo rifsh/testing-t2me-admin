@@ -411,24 +411,21 @@ const IssueDetails = () => {
             </Space>
 
             <Space direction="vertical" style={{ padding: '10px 0', width: '100%' }}>
-  <Space align="start" style={{ display: 'flex', alignItems: 'center' }}>
-    <UserOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
-    <Text type="secondary" style={{ fontSize: '14px', marginLeft: '8px' }}>
-      Raised by
-      {IssueDetails?.user?.role?.name && (
-        <Text type="warning" style={{ marginLeft: '8px', fontSize: '14px' }}>
-          {IssueDetails.user.role.name}
-        </Text>
-      )}
-      <span style={{ fontSize: '14px', marginLeft: '8px', color: '#1890ff' }}>
-        {IssueDetails?.user?.email || IssueDetails.email}
-      </span>
-    </Text>
-  </Space>
-</Space>
-
-
-
+              <Space align="start" style={{ display: 'flex', alignItems: 'center' }}>
+                <UserOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                <Text type="secondary" style={{ fontSize: '14px', marginLeft: '8px' }}>
+                  Raised by
+                  {IssueDetails?.user?.role?.name && (
+                    <Text type="warning" style={{ marginLeft: '8px', fontSize: '14px' }}>
+                      {IssueDetails.user.role.name}
+                    </Text>
+                  )}
+                  <span style={{ fontSize: '14px', marginLeft: '8px', color: '#1890ff' }}>
+                    {IssueDetails?.user?.email || IssueDetails.email}
+                  </span>
+                </Text>
+              </Space>
+            </Space>
             <Space>
               <UserOutlined />
               <Text>
