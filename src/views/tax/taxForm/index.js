@@ -22,7 +22,7 @@ const TaxForm = ({ mode, taxId }) => {
     if (mode === "EDIT") {
       dispatch(fetchAllTax(DEFAULT_PAGE_SIZE));
     }
-  }, [dispatch]);
+  }, []);
 
   let taxData;
   if (filteredTax && filteredTax.length > 0) {

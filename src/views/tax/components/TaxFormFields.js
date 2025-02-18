@@ -89,7 +89,8 @@ const TaxFormFields = ({ mode, tax }) => {
   useEffect(() => {
     dispatch(getCoutryDetails());
     dispatch(fetchAvailableCategory());
-  }, [dispatch]);
+  }, []);
+
   useEffect(() => {
     if (error) {
       message.error(error);
