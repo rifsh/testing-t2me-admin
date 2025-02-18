@@ -58,10 +58,14 @@ const EventsList = () => {
   };
 
   const handleEditEvent = async (id) => {
+    console.log("TRYING TO EDIT ");
+    console.log(UserRoleConstants.eventOrganizerRoleId, "ORGANIZER ID");
+    console.log(currentUser.role_id, "CURRENT USER  ID");
+
     if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
       const hasPendingUpdates = filteredEvents
         .find((event) => event.id === id)
-        ?.updates.some(
+        ?.updates?.some(
           (update) =>
             update.approval_status === "pending" ||
             update.approval_status === "updates"
