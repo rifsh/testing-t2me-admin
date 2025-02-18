@@ -17,7 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
-import { fetchAllFaqs, deleteFaq } from "store/slices/faqSlice";
+import { fetchAllFaqs, deleteFaq, deleteSection } from "store/slices/faqSlice";
 
 const { Option } = Select;
 
@@ -92,11 +92,49 @@ const FaqList = () => {
     </Menu>
   );
 
+  const dropdownMenuSection = (row) => (
+    <Menu>
+      <Menu.Item>
+        <Flex
+          alignItems="center"
+          onClick={() => {
+            dispatch(deleteSection(row.sectionId))
+              .unwrap()
+              .then(() => {
+                message.success("Section deleted successfully!");
+                dispatch(fetchAllFaqs());
+              })
+              .catch(() => {
+                message.error("Failed to delete section.");
+              });
+          }}
+        >
+          {submitting ? <Spin size="small" /> : <DeleteOutlined />}
+          <span className="ml-2">Delete Section</span>
+        </Flex>
+      </Menu.Item>
+    </Menu>
+  );
+
   const sectionColumns = [
     {
       title: "Section",
       dataIndex: "section",
       key: "section",
+    },
+    {
+      title: "",
+      dataIndex: "actions",
+      render: (_, elm) => (
+        <div className="text-right">
+          <EllipsisDropdown
+            menu={dropdownMenuSection({
+              ...elm,
+              sectionId: elm.key, // Ensure sectionId is correctly passed
+            })}
+          />
+        </div>
+      ),
     },
   ];
 

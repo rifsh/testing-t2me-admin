@@ -500,6 +500,25 @@ class Utils {
           return;
         }
 
+        if (key === "payment_logos" && Array.isArray(value)) {
+          value.forEach((method) => {
+            if (method.name) {
+              formData.append("method_name", method.name);
+            }
+            if (method.logo) {
+              method.logo.forEach((image) => {
+                if (image.url) {
+                  formData.append("method_logo", image.url);
+                }
+                if (image.originFileObj) {
+                  formData.append("method_logo", image.originFileObj);
+                }
+              });
+            }
+          });
+          return;
+        }
+
         if (key === "banner_images") {
           if (value.length === 0) {
             formData.append(key, "");
