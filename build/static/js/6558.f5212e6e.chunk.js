@@ -1,2 +1,0 @@
-"use strict";(self.webpackChunkticket2me=self.webpackChunkticket2me||[]).push([[6558],{36558:(e,t,c)=>{c.r(t),c.d(t,{default:()=>r});var s=c(65043),o=c(73216),u=c(97508),a=c(38993),l=c(48018),n=c(70579);const r=()=>{const e=(0,u.wA)(),{subcatId:t}=(0,o.g)(),{singleSubcategory:c}=(0,u.d4)((e=>e.category));return(0,s.useEffect)((()=>{console.log("FETCHING SINGLE PLACE"),console.log("SINGLE CATEGORY ID :-",t),t&&e((0,l.UX)(t))}),[e,t]),(0,n.jsx)(a.A,{mode:"EDIT",category:c})}}}]);
-//# sourceMappingURL=6558.f5212e6e.chunk.js.map
