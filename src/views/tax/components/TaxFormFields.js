@@ -86,10 +86,12 @@ const TaxFormFields = ({ mode, tax }) => {
     availableTaxCategory = [],
   } = taxState;
 
+
   useEffect(() => {
     dispatch(getCoutryDetails());
     dispatch(fetchAvailableCategory());
-  }, [dispatch]);
+  }, []);
+
   useEffect(() => {
     if (error) {
       message.error(error);
@@ -120,7 +122,6 @@ const TaxFormFields = ({ mode, tax }) => {
 
   const handleCountrySelect = (id) => {
     form.setFieldValue("place_id", null);
-    // dispatch(getPlaces(form.getFieldValue("country_id")));
     dispatch(getPlaces({ country_id: id }));
   };
 
@@ -222,11 +223,8 @@ const TaxFormFields = ({ mode, tax }) => {
       }
     }
   };
+
   const handleWarningPagination = (page, size) => {
-    console.log("------------------------");
-
-    console.log("CHANIGN...........");
-
     dispatch(
       editTax({
         data: selectedTax,
@@ -235,6 +233,7 @@ const TaxFormFields = ({ mode, tax }) => {
       })
     );
   };
+
   const handleValidationModalCancel = () => {
     dispatch(setPlaceValidationDialogVisible(false));
   };
@@ -254,10 +253,6 @@ const TaxFormFields = ({ mode, tax }) => {
   const handleModalCancel = () => {
     dispatch(setTaxDialogVisible(false));
   };
-
-  // const filterOption = (input, option) => {
-  //   return option.children.toLowerCase().indexOf(input.toLowerCase()) >=0;
-  // }
 
   return (
     <Row gutter={16}>
@@ -321,14 +316,6 @@ const TaxFormFields = ({ mode, tax }) => {
                   )}
                 </Select>
               </Form.Item>
-              // <PlaceWithCountryForm
-              //   form={form}
-              //   label="Place"
-              //   onSelect={handlePlaceSelect}
-              //   rules={[
-              //     { required: true, message: RulesMessageConstants.PLACE },
-              //   ]}
-              // />
             )}
             <Form.Item name="available_category" label="Tax Category">
               <Select

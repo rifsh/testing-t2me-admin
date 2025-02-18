@@ -103,6 +103,32 @@ const PaymentList = () => {
       ),
     },
     {
+      title: "Card Types",
+      render: (row) => (
+        <Collapse defaultActiveKey={[]} accordion>
+          {row.jsonData?.payment_logos &&
+          row.jsonData.payment_logos.length > 0 ? (
+            row.jsonData.payment_logos.map((logo, index) => (
+              <Panel
+                header={logo.name}
+                key={index}
+                extra={<span>{logo.type}</span>}
+              >
+                <img
+                  key={logo.name}
+                  src={logo.logo}
+                  alt={logo.name}
+                  style={{ width: 50, marginRight: 8 }}
+                />
+              </Panel>
+            ))
+          ) : (
+            <Panel collapsible="disabled" header="" />
+          )}
+        </Collapse>
+      ),
+    },
+    {
       title: "Payments",
       render: (row) => (
         <Collapse defaultActiveKey={[]} accordion>
