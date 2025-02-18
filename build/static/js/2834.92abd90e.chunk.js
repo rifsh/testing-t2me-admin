@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkticket2me=self.webpackChunkticket2me||[]).push([[2834],{22834:(e,c,t)=>{t.r(c),t.d(c,{default:()=>a});var o=t(65043),s=t(73216),u=t(75584),n=t(97508),p=t(46371),k=t(70579);const a=()=>{const e=(0,n.wA)(),{couponId:c}=(0,s.g)(),{couponDetails:t}=(0,n.d4)((e=>e.coupons));return(0,o.useEffect)((()=>{c&&e((0,p.Xx)(c))}),[e,c]),(0,k.jsx)(u.A,{mode:"EDIT",coupon:t})}}}]);
+//# sourceMappingURL=2834.92abd90e.chunk.js.map
