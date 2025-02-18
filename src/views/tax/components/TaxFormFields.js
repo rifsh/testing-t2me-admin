@@ -116,7 +116,7 @@ const TaxFormFields = ({ mode, tax }) => {
 
       form.setFieldsValue(formData);
     }
-  }, [form]);
+  }, [form, tax, mode]);
 
   const handleCountrySelect = (id) => {
     form.setFieldValue("place_id", null);

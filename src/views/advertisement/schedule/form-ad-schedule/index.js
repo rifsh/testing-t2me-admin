@@ -45,8 +45,6 @@ const AdScheduleForm = ({ mode, scheduleDetails, id }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  console.log(scheduleDetails, "THIS IS SCHEDULE DETAILS");
-
   useEffect(() => {
     if (error) {
       message.error(error);
@@ -55,6 +53,7 @@ const AdScheduleForm = ({ mode, scheduleDetails, id }) => {
 
   useEffect(() => {
     console.log("SETTING DATA");
+    console.log(scheduleDetails, "THIS IS SCHEDULE DATA");
 
     if (scheduleDetails && mode === "EDIT") {
       const startTime = dayjs(scheduleDetails.start_time, "HH:mm");
@@ -77,7 +76,7 @@ const AdScheduleForm = ({ mode, scheduleDetails, id }) => {
 
       form.setFieldsValue(formData);
     }
-  }, [form, id]);
+  }, [form, scheduleDetails, mode, dispatch]);
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
@@ -189,7 +188,7 @@ const AdScheduleForm = ({ mode, scheduleDetails, id }) => {
         responseData={responseData}
         addFunction={mode === "EDIT" ? editAdSchedule : createAdSchedule}
         navigationPath={`${APP_PREFIX_PATH}/advertisement/schedule/list`}
-        responseMessage={mode==="EDIT"?message: responseMessage}
+        responseMessage={mode === "EDIT" ? message : responseMessage}
       />
     </>
   );
