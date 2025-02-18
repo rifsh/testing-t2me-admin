@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row,Collapse, Col, Typography, Space, List, Avatar, Button, Spin, Alert, Select, message, Image } from 'antd';
+import { Card, Row,Collapse, Col, Typography, Space, List, Avatar, Button, Spin, Alert, Select, Input, message, Image } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchAllUsers, resetRoleState, resetUserstate } from 'store/slices/userSlice';
@@ -10,7 +10,8 @@ import {
   IssueReasignUpdate,
   IssueCloseUpdate,
   fetchCommentDetails,
-  FetchAssignmentDetails
+  FetchAssignmentDetails,
+  AdminCommenting
 } from 'store/slices/IssueSlice';
 import {
   ClockCircleOutlined,
@@ -30,6 +31,7 @@ import { TextConstants } from 'constants/TextConstant';
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { Panel } = Collapse;
+const { TextArea } = Input;
 
 const IssueDetails = () => {
   const { issueId } = useParams();
@@ -42,6 +44,7 @@ const IssueDetails = () => {
   const [uploadingFiles, setUploadingFiles] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [selectedRoleId, setSelectedRoleId] = useState(null);
+  const [adminCommentText, setAdminCommentText] = useState("");
   
   const { IssueDetails, loading, error, CommentDetails, AssignmentDetails } = useSelector((state) => state.issue);
   const { roles, list } = useSelector((state) => state.users);
@@ -65,6 +68,20 @@ const IssueDetails = () => {
     }
   }, [isCommentModalVisible, inputForFetchingRole]);
 
+  const handleAdminCommentSubmit = async ()=>{
+
+   try {
+    const resultAction = await  dispatch(AdminCommenting({"data":{"comment":adminCommentText}, "params":{"issue_id":issueId}}))
+    console.warn(resultAction)
+    if (AdminCommenting.fulfilled.match(resultAction)) {
+      message.success(`commented`);
+      setAdminCommentText("")
+      dispatch(fetchCommentDetails({ size: 5, page: 1, issue_id: issueId }))
+    }
+  } catch (error) {
+    message.error("Failed to add comment");
+  }
+  }
   const handleChange = async (newStatus) => {
     try {
       const resultAction = await dispatch(
@@ -265,64 +282,79 @@ const IssueDetails = () => {
     const isMoreCommentsAvailable = CommentDetails.size < CommentDetails.total;
 
     return (
-      <div>
-        <List
-          itemLayout="horizontal"
-          dataSource={CommentDetails.items}
-          renderItem={(item) => (
-            <List.Item>
-              <List.Item.Meta
-                avatar={<Avatar icon={<UserOutlined />} />}
-                title={
-                  <Space>
-                    <Text strong>{item.users.username}</Text>
-                  </Space>
-                }
-                description={
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <div>
-                      <p>{item.comment}</p>
-                      <Text type="secondary">
-                        {moment(item.created_at).fromNow()}
-                      </Text>
-                    </div>
-                    {item.issue_comment_file?.length > 0 && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginLeft: "10px" }}>
-                        {item.issue_comment_file.map((files, index) => (
-                          <Image
-                            key={index}
-                            src={files.file}
-                            alt={`Comment attachment ${index + 1}`}
-                            style={{ width: "50px", height: "50px", objectFit: "cover" }}
-                            preview={true}
-                          />
-                        ))}
-                      </div>
-                    )}
+<div>
+      <List
+        itemLayout="horizontal"
+        dataSource={CommentDetails.items}
+        renderItem={(item) => (
+          <List.Item>
+            <List.Item.Meta
+              avatar={<Avatar icon={<UserOutlined />} />}
+              title={
+                <Space>
+                  <Text strong>{item.users.username}</Text>
+                </Space>
+              }
+              description={
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <p>{item.comment}</p>
+                    <Text type="secondary">{moment(item.created_at).fromNow()}</Text>
                   </div>
-                }
-              />
-            </List.Item>
-          )}
-        />
-        {isMoreCommentsAvailable && (
-          <Button
-            style={{ marginTop: '16px' }}
-            onClick={() => {
-              dispatch(fetchCommentDetails({
+                  {item.issue_comment_file?.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginLeft: "10px" }}>
+                      {item.issue_comment_file.map((files, index) => (
+                        <Image
+                          key={index}
+                          src={files.file}
+                          alt={`Comment attachment ${index + 1}`}
+                          style={{ width: "50px", height: "50px", objectFit: "cover" }}
+                          preview={true}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              }
+            />
+          </List.Item>
+        )}
+      />
+
+      {isMoreCommentsAvailable && (
+        <Button
+          style={{ marginTop: "16px" }}
+          onClick={() => {
+            dispatch(
+              fetchCommentDetails({
                 size: CommentDetails.size + 5,
                 page: 1,
-                issue_id: issueId
-              }));
-            }}
-          >
-            More Comments
-          </Button>
-        )}
-      </div>
-    );
-  };
+                issue_id: issueId,
+              })
+            );
+          }}
+        >
+          More Comments
+        </Button>
+      )}
 
+      {/* Comment Input Section */}
+     {IssueDetails.superadmin_access && <div style={{ marginTop: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+        <TextArea
+          rows={3}
+          value={adminCommentText}
+          onChange={(e) => setAdminCommentText(e.target.value)}
+          placeholder="Write a comment..."
+        />
+        <Button type="primary" 
+        onClick={handleAdminCommentSubmit} disabled={!adminCommentText.trim()}
+        >
+          Comment
+        </Button>
+      </div>}
+    </div>
+  );
+};
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -354,7 +386,7 @@ const IssueDetails = () => {
               <Title level={3} style={{ margin: 0 }}>{IssueDetails.subject}</Title>
             </Col>
             <Col>
-              {IssueDetails.status_changable && !IssueDetails.ticket_status && (
+              {(IssueDetails.status_changable && !IssueDetails.ticket_status)  && (
                 <Select
                   value={IssueDetails?.issue_status}
                   onChange={handleChange}
@@ -467,18 +499,18 @@ const IssueDetails = () => {
       <Row justify="center" style={{ marginTop: 24 }} gutter={[16, 16]}>
         {!IssueDetails.ticket_status && (
           <>
-            {(IssueDetails.assignable || IssueDetails.role_assignable_for_admin) && (
+            {(IssueDetails.assignable || IssueDetails.role_assignable_for_admin)&& (
               <Col>
                 <Button
                   size="large"
                   type="primary"
-                  onClick={!inputForFetchingRole ? handlefetchRoleDetails : handleCancelReassignAdmin}
+                  onClick={!inputForFetchingRole  ? handlefetchRoleDetails : handleCancelReassignAdmin}
                 >
-                  {!inputForFetchingRole ? "Reassign" : "Cancel"}
+                  {!inputForFetchingRole  ? "Reassign" : "Cancel"}
                 </Button>
               </Col>
             )}
-            {IssueDetails.ticket_closable && (
+            {IssueDetails.ticket_closable&& (
               <Col>
                 <Button
                   size="large"

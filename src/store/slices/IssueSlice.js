@@ -76,6 +76,22 @@ export const fetchCommentDetails = createAsyncThunk(
     }
   }
 );
+export const AdminCommenting = createAsyncThunk(
+  "event/AdminCommenting",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      if (EVENT_DETAILS_MOCK_API && ENABLE_MOCK_API) {
+        const response = EventMockData.AdminCommenting;
+        return response.data;
+      } else {
+        const response = await IssuesService.AdminCommenting(pageData);
+        return response.data;
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
 
 
 export const fetchAllissues = createAsyncThunk(
@@ -378,6 +394,21 @@ const eventSlice = createSlice({
         state.CommentDetails = commentData;
       })
       .addCase(fetchCommentDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(AdminCommenting.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(AdminCommenting.fulfilled, (state, action) => {
+        state.loading = false;
+        console.warn(action)
+        if (action.requestStatus) {
+          state.message = action.requestStatus;
+        }
+      })
+      .addCase(AdminCommenting.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
