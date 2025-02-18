@@ -70,7 +70,7 @@ function AdScheduleFormFields({ form }) {
     dispatch(setDraggedFileState(null));
     dispatch(setSelectedDroppedFile(null));
     dispatch(fetchAdBanners({ page: 1, size: 10 }));
-  }, [dispatch]);
+  }, []);
 
   const onDragStart = (e, file) => {
     e.stopPropagation();
