@@ -410,18 +410,22 @@ const IssueDetails = () => {
               </Text>
             </Space>
 
-            <Space direction="vertical">
-              <Space>
-                <UserOutlined />
-                <Text type="secondary">
-                  Raised by {IssueDetails?.user?.email || IssueDetails.email}
+            <Space direction="vertical" style={{ padding: '10px 0', width: '100%' }}>
+              <Space align="start" style={{ display: 'flex', alignItems: 'center' }}>
+                <UserOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                <Text type="secondary" style={{ fontSize: '14px', marginLeft: '8px' }}>
+                  Raised by
+                  {IssueDetails?.user?.role?.name && (
+                    <Text type="warning" style={{ marginLeft: '8px', fontSize: '14px' }}>
+                      {IssueDetails.user.role.name}
+                    </Text>
+                  )}
+                  <span style={{ fontSize: '14px', marginLeft: '8px', color: '#1890ff' }}>
+                    {IssueDetails?.user?.email || IssueDetails.email}
+                  </span>
                 </Text>
               </Space>
-              {IssueDetails?.user?.username && IssueDetails?.user?.role?.name && (
-                <Text type="secondary">Role: {IssueDetails.user.role.name}</Text>
-              )}
             </Space>
-
             <Space>
               <UserOutlined />
               <Text>
@@ -555,7 +559,7 @@ const IssueDetails = () => {
                   onChange={handleUserSelect}
                 >
                   {list?.map((user) => (
-                    currentUser.id !== user.id && (
+                   (currentUser.id !== user.id && IssueDetails?.ticket_assigned?.id !== user.id) && (
                       <Option key={user.id} value={user.id}>
                         {user.email}
                       </Option>

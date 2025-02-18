@@ -19,6 +19,35 @@ const initialState = {
   isModalVisible: false,
 };
 
+export const deleteSection = createAsyncThunk(
+  "faqs/deleteSection",
+  async (sectionId, { getState, rejectWithValue }) => {
+    try {
+      const { faqJson } = getState().faqs;
+      if (!faqJson) return rejectWithValue("FAQ data not initialized");
+
+      const updatedSections = faqJson.sections.filter(
+        (section) => section !== sectionId
+      );
+
+      const updatedData = faqJson.data.filter(
+        (section) => section.id !== sectionId
+      );
+
+      const updatedJson = {
+        ...faqJson,
+        sections: updatedSections,
+        data: updatedData,
+      };
+
+      const response = await FaqService.createFaq(updatedJson);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to delete section");
+    }
+  }
+);
+
 export const editFaq = createAsyncThunk(
   "faqs/editFaq",
   async (
@@ -188,7 +217,6 @@ const updateFaqJson = (faqJson, category, newQuestions) => {
       ...updatedJson.data.slice(existingSectionIndex + 1),
     ];
   } else {
-    // Add new section
     updatedJson.data = [
       ...updatedJson.data,
       {
@@ -281,6 +309,20 @@ const FaqSlice = createSlice({
         state.submitting = false;
       })
       .addCase(addFaq.rejected, (state, { payload }) => {
+        state.submitting = false;
+        state.error = payload;
+      })
+      .addCase(deleteSection.pending, (state) => {
+        state.submitting = true;
+        state.error = null;
+      })
+      .addCase(deleteSection.fulfilled, (state, { payload }) => {
+        state.submitting = false;
+        state.faqJson = payload;
+        state.faqs = payload.data;
+        state.faqSections = payload.sections;
+      })
+      .addCase(deleteSection.rejected, (state, { payload }) => {
         state.submitting = false;
         state.error = payload;
       });
