@@ -63,6 +63,14 @@ IssuesService.fetchCommentDetails = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+IssuesService.AdminCommenting = function (pageData) {
+  return fetch({
+    url: ApiConstant.ADMIN_COMMENT_URL,
+    method: "post",
+    data:pageData.data,
+    params:Utils.filterParams(pageData.params),
+  });
+};
 IssuesService.IssueStatusUpdate = function (IssueId, data ) {
 //   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
