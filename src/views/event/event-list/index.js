@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Select, Input, Button, Menu, message } from "antd";
+import { Card, Table, Select, Input, Button, Menu, message, Collapse, } from "antd";
 import { EyeOutlined, FormOutlined, EditOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +25,7 @@ import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+const { Panel } = Collapse;
 
 const { Option } = Select;
 
@@ -136,14 +137,30 @@ const EventsList = () => {
     },
     {
       title: "Venue",
-      dataIndex: ["venue", "name"],
-      sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["venue", "name"]),
-    },
-    {
-      title: "Place",
-      dataIndex: ["venue", "place", "name"],
-      sorter: (a, b) =>
-        utils.antdTableObjectSorter(a, b, ["venue", "place", "name"]),
+      dataIndex: "venues",
+      render: (_, record) => (
+        <Collapse defaultActiveKey={[]} accordion>
+          {record?.venues && record.venues.length > 0 ? (
+            record.venues.map((venue, index) => (
+              // extra={<span>{venue.place.name}</span>}
+              <Panel header={venue.name} key={index} >
+                <ul style={{ paddingLeft: 20 }}>
+                  <li style={{ padding: "10px 0" }}>
+                    <div>
+                      <span style={{ fontWeight: "bold" }}>Place: </span>
+                      <span style={{ color: "lightblue", fontWeight: "bold" }}>
+                        {venue.place.name}
+                      </span>
+                    </div>
+                  </li>
+                </ul>
+              </Panel>
+            ))
+          ) : (
+            <Panel collapsible="disabled" header={"No venue available"}></Panel>
+          )}
+        </Collapse>
+      ),
     },
     utils.statusColumnUtil(handleUpdateStatus),
     {
