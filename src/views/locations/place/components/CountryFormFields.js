@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button, Typography, Tooltip } from "antd";
+import { Input, Row, Col, Card, Form, Select, Spin, Upload, Button, Typography, Tooltip, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { fetchAllCountires } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -57,7 +57,7 @@ const CountryFormFields = ({mode}) => {
 
   const handleBeforeUpload = Utils.handleBeforeUpload;
   const [thumbnailImage, setThumbnailImage] = useState(null); // State for thumbnail image
-  const [bannerImages, setBannerImages] = useState([]); 
+  const [bannerImages, setBannerImages] = useState([]);
   const handleThumbnailChange = (info) => {
     if (info.file.status === "done") {
       setThumbnailImage(info.file.originFileObj);
@@ -84,15 +84,7 @@ const CountryFormFields = ({mode}) => {
   }
 
   if (error) {
-    return (
-      <Row>
-        <Col span={24}>
-          <div style={{ color: "red", textAlign: "center" }}>
-            {error || "Failed to load countries"}
-          </div>
-        </Col>
-      </Row>
-    );
+    message.error(error || "Failed to load countries");
   }
 
   return (
