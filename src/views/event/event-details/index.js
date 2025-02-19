@@ -74,7 +74,13 @@ const EventDetails = () => {
         >
           <Row gutter={[16, 16]}>
             <Col span={12}>
-              <Text strong>Venue:</Text> {eventDetails.venue?.name??"N/A"}
+              <Text strong>Venue:</Text>{" "}
+              {eventDetails.venue_events?.map((venueEvent, index) => (
+                <span key={index}>
+                  {venueEvent.venue.name}
+                  {index < eventDetails.venue_events.length - 1 ? ", " : ""}
+                </span>
+              )) || "N/A"}
             </Col>
             <Col span={12}>
               <Text strong>Available Seats:</Text> {eventDetails.max_tickets}
@@ -85,6 +91,41 @@ const EventDetails = () => {
             <Col span={12}>
               <Text strong>Sub Category:</Text> {eventDetails.sub_category?.name??"N/A"}
             </Col>
+          </Row>
+        </Card>
+      </Col>
+
+
+      <Col span={24}>
+        <Card title={<span style={{ color: "#1890ff" }}>Event Users</span>} bordered={false}>
+          <Row gutter={[24, 24]} justify="center">
+            {eventDetails.users?.length > 0 ? (
+              eventDetails.users.map((user, index) => (
+                <Col xs={24} sm={12} md={8} lg={6} key={index}>
+                  <Card hoverable style={{ textAlign: "center", borderRadius: 10, boxShadow: "0 4px 8px rgba(0,0,0,0.1)", padding: 15 }}>
+                    <div>
+                      {user.thumbnail_image ? (
+                        <Image
+                          alt="User Thumbnail"
+                          src={user.thumbnail_image}
+                          height={100}
+                          width={100}
+                          style={{ objectFit: "cover", borderRadius: "50%", marginBottom: 10 }}
+                        />
+                      ) : (
+                        <div style={{ height: 100, width: 100, display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#f0f0f0", color: "#888", borderRadius: "50%", margin: "0 auto 10px" }}>No Image</div>
+                      )}
+                      <Title level={5} style={{ marginBottom: 5 }}>{user.username}</Title>
+                      <Text type="secondary">{user.role?.name || "N/A"}</Text>
+                    </div>
+                  </Card>
+                </Col>
+              ))
+            ) : (
+              <Col span={24} style={{ textAlign: "center" }}>
+                <Text>No Users Associated</Text>
+              </Col>
+            )}
           </Row>
         </Card>
       </Col>
