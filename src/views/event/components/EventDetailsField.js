@@ -23,12 +23,17 @@ const EventDetailsField = () => {
   const rules = {
     name: [{ required: true, message: "Please enter event name" }],
     description: [
-      {
-        required: true,
-        message: "Please enter event description",
-      },
+      { required: true, message: "Please enter event description" },
     ],
+    thumbnail_image: [
+      { required: true, message: "Please upload a thumbnail image" },
+    ],
+    banner_images: [
+      { required: true, message: "Please upload at least one banner image" },
+    ],
+    banner_url: [{ required: true, message: "Please enter banner image URL" }],
   };
+
   const normFile = (e) => {
     if (Array.isArray(e)) {
       return e;
@@ -57,8 +62,8 @@ const EventDetailsField = () => {
             label="Thumbnail Image"
             valuePropName="fileList"
             getValueFromEvent={normFile}
-            rules={rules.thumbnail_image}
             style={{ marginBottom: "0px", padding: "0px" }}
+            rules={rules.thumbnail_image}
           >
             <Upload
               name="thumbnail_image"
@@ -113,7 +118,7 @@ const EventDetailsField = () => {
           <Form.Item
             name=""
             label="Banner Images Url"
-            rules=""
+            rules={rules.banner_url}
             style={{ marginTop: "10px", padding: "0px" }}
           >
             <Input placeholder="Banner Images Url" />
