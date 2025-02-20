@@ -62,6 +62,7 @@ const EventDetailsField = () => {
             label="Thumbnail Image"
             valuePropName="fileList"
             getValueFromEvent={normFile}
+            style={{ marginBottom: "0px", padding: "0px" }}
             rules={rules.thumbnail_image}
           >
             <Upload
@@ -117,7 +118,7 @@ const EventDetailsField = () => {
           <Form.Item
             name=""
             label="Banner Images Url"
-             rules={rules.banner_url}
+            rules={rules.banner_url}
             style={{ marginTop: "10px", padding: "0px" }}
           >
             <Input placeholder="Banner Images Url" />
