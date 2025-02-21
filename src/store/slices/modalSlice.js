@@ -20,7 +20,6 @@ const modalSlice = createSlice({
       state.selectedItem = action.payload;
     },
     setSelectedSubmitItem: (state, action) => {
-      console.log(action.payload, "ticketData");
       state.selectedSubmitItem = action.payload;
     },
     setDialogVisible: (state, action) => {
