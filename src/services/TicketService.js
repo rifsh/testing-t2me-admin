@@ -22,6 +22,7 @@ TicketsService.editTicket = function (data, action) {
 };
 TicketsService.addTicket = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  console.log(data, "ticketData servci");
 
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],

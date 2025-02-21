@@ -515,7 +515,7 @@ export function ScheduleTimeSlots({ form }) {
     // if (!validateDateRange(startDate, endDate)) return;
 
     const newDates = [];
-    let currentDate = dayjs(startDate);
+    let currentDate = dayjs(startDate); 
     const end = dayjs(endDate);
 
     while (currentDate.isSameOrBefore(end, "day")) {
@@ -527,7 +527,7 @@ export function ScheduleTimeSlots({ form }) {
     dispatch(setDates(newDates));
     dispatch(setActiveTab(newDates[0]));
 
-    // Initialize time slots for new dates with array
+    // Initialize time slots for new dates with array   
     const initialTimeSlots = {};
     newDates.forEach((date) => {
       // Ensure we always have an array, even if empty
