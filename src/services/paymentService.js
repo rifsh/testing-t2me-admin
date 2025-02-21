@@ -12,4 +12,13 @@ PaymentService.getAllPayment = function (pageData) {
     })
 }
 
+PaymentService.addPayment = function (paymentData) {
+    return fetch({
+      url: `${ApiConstant.PAYMENT_ADD_URL}secured/payment`,
+      method: "post",
+      data: paymentData,
+    });  
+}
+
+
 export default PaymentService;

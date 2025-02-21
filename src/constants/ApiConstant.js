@@ -115,4 +115,7 @@ export const ApiConstant = {
   INFO_GET_URL: "/api/v1/app_management/public/get_info",
   FOOTER_GET_URL: "/api/v1/app_management/public/get_footer",
   FOOTER_UPLOAD_URL: "/api/v1/app_management/secured/upload_footer",
+
+  //Payment
+  PAYMENT_ADD_URL: "/api/v1/payment/",
 };
