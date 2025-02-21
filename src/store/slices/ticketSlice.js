@@ -37,6 +37,7 @@ export const initialState = {
   responseMessage: null,
   pagination: { size: 10, page: 1 },
   editable_status: null,
+  numberOfTicket: 0,
 };
 
 export const fetchAllTickets = createAsyncThunk(
@@ -174,7 +175,8 @@ export const ticketSlice = createSlice({
       } = action.payload;
       console.log(state, ticket_set, tickets, "Saving Ticket Set");
 
-      if (venue_id && number_of_tickets ) {
+      if (venue_id && number_of_tickets) {
+        state.numberOfTicket += number_of_tickets;
         // First time adding venue data and ticket set
         if (state.ticketTypes.length === 0) {
           state.ticketTypes.push({
