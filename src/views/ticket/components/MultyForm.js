@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Button, Form, Steps, Row, Col, message, Input, Tooltip, Modal } from "antd";
+import {
+  Button,
+  Form,
+  Steps,
+  Row,
+  Col,
+  message,
+  Input,
+  Tooltip,
+  Modal,
+} from "antd";
 import TicketStructureFields from "./TicketStructureFields";
 import { useNavigate } from "react-router-dom";
 import {
@@ -38,6 +48,7 @@ const MultyStepTicketForm = () => {
   ]);
   const [showNormalTicketModal, setShowNormalTicketModal] = useState(false);
   const [remainingTickets, setRemainingTickets] = useState(0);
+  
   const nextStep = async () => {
     try {
       const values = await form.validateFields();
@@ -91,45 +102,78 @@ const MultyStepTicketForm = () => {
     );
   };
 
+  const calculateRemainingTickets = () => {
+    const totalAllowedTickets = tickets[0]?.number_of_tickets || 0;
+    let usedTickets = 0;
+
+    if (tickets[0]?.ticket_types) {
+      tickets[0].ticket_types.forEach((type) => {
+        type.tickets?.forEach((ticket) => {
+          usedTickets += parseInt(ticket.number_of_tickets) || 0;
+        });
+      });
+    }
+
+    return totalAllowedTickets - usedTickets;
+  };
+
   const addTicketStructure = () => {
     if (currentStepSaved) {
       // Calculate the new step based on the current length of ticketStructures
       const newStep = ticketStructures.length;
       const newStructureId = Date.now();
+      const availableTickets = calculateRemainingTickets();
+
+      if (availableTickets <= 0) {
+        message.error("No more tickets available to allocate. Check your ticket distribution.");
+        return;
+      }
+
+      // Create a default normal ticket type for this new structure
+      const normalTicketData = {
+        name: "Normal Ticket",
+        price: 0, // Default price
+        number_of_tickets: availableTickets,
+        ticket_set: "Normal Ticket Type"
+      };
 
       // Add the new structure
       setTicketStructures([
         ...ticketStructures,
-        { id: newStructureId, values: null },
+        { id: newStructureId, values: { ticket_types: [normalTicketData] } },
       ]);
+
+      // Add this normal ticket to the Redux store
+      dispatch(
+        addOrUpdateTicketSet({
+          id: newStep,
+          ticket_set: "Normal Ticket Type",
+          tickets: [
+            {
+              id: `${newStep}-ticket-1`,
+              ...normalTicketData,
+            },
+          ],
+        })
+      );
 
       // Update the current step to the new step
       setCurrentStep(newStep);
 
-      // Update currentStepSaved
-      dispatch(currentStepSaveUpdate(false));
+      // Update ticketCategory
+      setTicketCategory(prevCategory => [
+        ...prevCategory, 
+        { step: newStep, value: "Normal Ticket Type" }
+      ]);
+
+      // Mark the new step as saved
+      dispatch(currentStepSaveUpdate(true));
+
+      message.success("Normal ticket type added successfully");
+    } else {
+      message.warning("Save the current step before adding a new ticket structure");
     }
-
-    // Update ticketCategory with the calculated newStep
-    setTicketCategory((prevCategory) => {
-      const newStep = ticketStructures.length; // Calculate currentStep
-      const existingStep = prevCategory.find(
-        (category) => category.step === newStep
-      );
-
-      console.log(newStep, "currentStep check", existingStep);
-
-      if (!existingStep) {
-        // Add a new step if it doesn't exist
-        return [...prevCategory, { step: newStep, value: "" }];
-      }
-
-      // Return the unchanged category if the step exists
-      return prevCategory;
-    });
   };
-
-  console.log(ticketCategory, "tikcetgdgd");
 
   const removeTicketStructure = () => {
     if (ticketStructures.length > 1) {
@@ -141,7 +185,7 @@ const MultyStepTicketForm = () => {
         (ticket) => ticket.step === currentStep
       );
 
-      if (ticketToRemove?.step) {
+      if (ticketToRemove?.step !== undefined) {
         dispatch(removeSpecificTicketSet(ticketToRemove.step));
         setTicketCategory((prevCategory) =>
           prevCategory.filter((category) => category.step !== currentStep)
@@ -157,20 +201,7 @@ const MultyStepTicketForm = () => {
       message.warning("At least one Ticket Structure must remain.");
     }
   };
-  const calculateRemainingTickets = () => {
-    const totalAllowedTickets = tickets[0]?.number_of_tickets || 0;
-    let usedTickets = 0;
 
-    if (tickets[0]?.ticket_types) {
-      tickets[0].ticket_types.forEach((type) => {
-        type.tickets?.forEach((ticket) => {
-          usedTickets += parseInt(ticket.number_of_tickets) || 0;
-        });
-      });
-    }
-
-    return totalAllowedTickets - usedTickets;
-  };
   const onSubmit = async () => {
     try {
       const remaining = calculateRemainingTickets();
@@ -216,22 +247,12 @@ const MultyStepTicketForm = () => {
       console.log("Updated Ticket Data with Flattened Tickets:", ticketData);
       // Dispatch the updated ticket data
       dispatch(setSelectedSubmitItem(ticketData));
-
-      // const resultAction = await dispatch(addTicket({ ticketData, venue_id }));
-
-      // if (addTicket.fulfilled.match(resultAction)) {
-      //   message.success(`Ticket added successfully!`);
-      //   form.resetFields();
-      //   dispatch(resetTicketSets())
-      //   navigate(`${APP_PREFIX_PATH}/ticket/list`);
-      // } else {
-      //   message.error(resultAction.payload || "Failed to add the ticket. Please try again.");
-      // }
     } catch (error) {
       console.error("Submission failed:", error);
       message.error("An error occurred. Please check your data and try again.");
     }
   };
+  
   const handleNormalTicketCreation = async () => {
     try {
       const values = await normalTicketForm.validateFields();
@@ -272,6 +293,7 @@ const MultyStepTicketForm = () => {
       message.error("Please fill in all required fields");
     }
   };
+  
   const extractTicketData = (responseData) => {
     if (!responseData || !Array.isArray(responseData.ticket_types)) {
       return {};
@@ -295,7 +317,7 @@ const MultyStepTicketForm = () => {
   };
 
   const mappedTicketData = extractTicketData(responseData);
-  console.log(mappedTicketData);
+  
   const calculateTotalTickets = (currentValues, currentStep) => {
     let totalTickets = 0;
 
@@ -391,6 +413,16 @@ const MultyStepTicketForm = () => {
       message.error("An error occurred while saving the ticket data");
     }
   };
+  
+  useEffect(() => {
+    // This initializes ticket form when component mounts
+    if (tickets && tickets.length > 0 && 
+        tickets[0]?.ticket_types && tickets[0].ticket_types.length === 0) {
+      // If there are tickets but no ticket types, set up the initial structure
+      setTicketCategory([{ step: 0, value: "" }]);
+    }
+  }, [tickets]);
+
   return (
     <div>
       <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
@@ -402,12 +434,17 @@ const MultyStepTicketForm = () => {
         onOk={handleNormalTicketCreation}
         onCancel={() => setShowNormalTicketModal(false)}
       >
-        <p>There are {remainingTickets} tickets remaining. Would you like to create a normal ticket structure?</p>
+        <p>
+          There are {remainingTickets} tickets remaining. Would you like to
+          create a normal ticket structure?
+        </p>
         <Form form={normalTicketForm} layout="vertical">
           <Form.Item
             name="price"
             label="Ticket Price"
-            rules={[{ required: true, message: "Please enter the ticket price" }]}
+            rules={[
+              { required: true, message: "Please enter the ticket price" },
+            ]}
           >
             <Input type="number" placeholder="Enter ticket price" />
           </Form.Item>
@@ -475,7 +512,7 @@ const MultyStepTicketForm = () => {
               <Button
                 type="dashed"
                 disabled={!currentStepSaved}
-                onClick={currentStepSaved && addTicketStructure}
+                onClick={addTicketStructure}
               >
                 Add Ticket Structure
               </Button>
