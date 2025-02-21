@@ -174,7 +174,7 @@ export const ticketSlice = createSlice({
       } = action.payload;
       console.log(state, ticket_set, tickets, "Saving Ticket Set");
 
-      if (venue_id && number_of_tickets && base_price) {
+      if (venue_id && number_of_tickets ) {
         // First time adding venue data and ticket set
         if (state.ticketTypes.length === 0) {
           state.ticketTypes.push({

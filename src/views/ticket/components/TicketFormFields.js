@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, Card, Select, Button, message } from "antd";
+import { Form, Input, Card, Select, Button, message, Checkbox } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -102,7 +102,7 @@ const TicketFormFields = ({ mode, ticket }) => {
       if (ticket.place_id) form.setFieldsValue({ place_id: ticket.place_id });
     }
   }, []);
-
+  const isTicketTypeEnabled = Form.useWatch("is_ticket_type_enabled", form);
   return (
     <Form form={form} layout="vertical">
       <Card title="Ticket Form">
@@ -158,13 +158,30 @@ const TicketFormFields = ({ mode, ticket }) => {
             onWheel={(e) => e.target.blur()}
           />
         </Form.Item>
-        <Form.Item name="base_price" label="Price">
-          <Input
-            placeholder="Enter Ticket Price"
-            type="number"
-            onWheel={(e) => e.target.blur()}
-          />
+        <Form.Item name="is_ticket_type_enabled" valuePropName="checked">
+          <Checkbox>Enable Ticket Types</Checkbox>
         </Form.Item>
+
+        {!isTicketTypeEnabled && (
+          <Form.Item
+            name="base_price"
+            label="Price"
+            rules={[
+              {
+                required: !isTicketTypeEnabled,
+                message: "Please enter the ticket price",
+              },
+            ]}
+          >
+            <Input
+              placeholder="Enter Ticket Price"
+              type="number"
+              onWheel={(e) => e.target.blur()}
+              disabled={isTicketTypeEnabled}
+            />
+          </Form.Item>
+        )}
+
         <div className="container" style={{ padding: "0px" }}>
           <Flex
             className="py-2"
@@ -173,17 +190,21 @@ const TicketFormFields = ({ mode, ticket }) => {
           >
             <DiscardButton form={form} />
             <div className="mb-3">
-              <Button
-                icon={<PlusOutlined />}
-                type="default"
-                onClick={addTicketType}
-                style={{ marginRight: "10px" }}
-              >
-                Add Sub Ticket Type
-              </Button>
-              <Button onClick={onSubmit} type="primary" htmlType="submit">
-                Submit
-              </Button>
+              {isTicketTypeEnabled && (
+                <Button
+                  icon={<PlusOutlined />}
+                  type="default"
+                  onClick={addTicketType}
+                  style={{ marginRight: "10px" }}
+                >
+                  Add Sub Ticket Type
+                </Button>
+              )}
+              {!isTicketTypeEnabled && (
+                <Button onClick={onSubmit} type="primary" htmlType="submit">
+                  Submit
+                </Button>
+              )}
             </div>
           </Flex>
         </div>
