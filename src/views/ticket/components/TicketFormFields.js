@@ -182,32 +182,32 @@ const TicketFormFields = ({ mode, ticket }) => {
           </Form.Item>
         )}
 
-        <div className="container" style={{ padding: "0px" }}>
-          <Flex
-            className="py-2"
-            mobileFlex={false}
-            justifyContent="space-between"
-          >
-            <DiscardButton form={form} />
-            <div className="mb-3">
-              {isTicketTypeEnabled && (
-                <Button
-                  icon={<PlusOutlined />}
-                  type="default"
-                  onClick={addTicketType}
-                  style={{ marginRight: "10px" }}
-                >
-                  Add Sub Ticket Type
-                </Button>
-              )}
-              {!isTicketTypeEnabled && (
-                <Button onClick={onSubmit} type="primary" htmlType="submit">
-                  Submit
-                </Button>
-              )}
-            </div>
-          </Flex>
-        </div>
+        {/* <div className="container" style={{ padding: "0px", alignContent:"end" }}> */}
+        <Flex
+          className="py-2"
+          mobileFlex={false}
+          justifyContent="space-between"
+        >
+          <DiscardButton form={form} />
+
+          {isTicketTypeEnabled && (
+            <Button
+              icon={<PlusOutlined />}
+              type="default"
+              onClick={addTicketType}
+              style={{ marginRight: "10px" }}
+            >
+              Add Sub Ticket Type
+            </Button>
+          )}
+          {!isTicketTypeEnabled && (
+            <Button onClick={onSubmit} type="primary" htmlType="submit">
+              Submit
+            </Button>
+          )}
+        </Flex>
+
+        {/* </div> */}
       </Card>
       <LoadingOverlay loading={loading} />
       <ValidationModal

@@ -31,7 +31,7 @@ const EventDetailsField = () => {
     banner_images: [
       { required: true, message: "Please upload at least one banner image" },
     ],
-    banner_url: [{ required: true, message: "Please enter banner image URL" }],
+    banner_url: [{ required: false, message: "Please enter banner image URL" }],
   };
 
   const normFile = (e) => {
