@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, Card, Select, Button, message, Checkbox } from "antd";
+import {
+  Form,
+  Input,
+  Card,
+  Select,
+  Button,
+  message,
+  Checkbox,
+  Radio,
+  Divider,
+} from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -48,6 +58,13 @@ const TicketFormFields = ({ mode, ticket }) => {
   const { loading, responseData, responseMessage } = useSelector(
     (state) => state.tickets
   );
+  const numberOfTickets = Form.useWatch("number_of_tickets", form);
+
+  useEffect(() => {
+    if (numberOfTickets) {
+      form.setFieldsValue({ type_number_of_tickets: numberOfTickets });
+    }
+  }, [numberOfTickets, form]);
   const addTicketType = async () => {
     try {
       const formValues = await form.validateFields();
@@ -67,8 +84,17 @@ const TicketFormFields = ({ mode, ticket }) => {
         number_of_tickets: values.number_of_tickets,
         base_price: values.base_price,
         name: values.name,
-        ticket_types: [],
+        ticket_types: [
+          {
+            id: "0-ticket-1",
+            name: values.type_name,
+            price: values.type_price,
+            number_of_tickets: values.type_number_of_tickets,
+            ticket_set: "Normal",
+          },
+        ],
       };
+      console.log(ticketData, "ticketData, from page");
 
       const resultAction = await dispatch(validateVenue(values.venue_id));
 
@@ -84,6 +110,7 @@ const TicketFormFields = ({ mode, ticket }) => {
       console.log("Form validation failed:", error);
     }
   };
+
   const handleValidationModalCancel = () => {
     dispatch(setPlaceValidationDialogVisible(false));
   };
@@ -102,7 +129,9 @@ const TicketFormFields = ({ mode, ticket }) => {
       if (ticket.place_id) form.setFieldsValue({ place_id: ticket.place_id });
     }
   }, []);
-  const isTicketTypeEnabled = Form.useWatch("is_ticket_type_enabled", form);
+
+  const ticketType = Form.useWatch("ticket_type", form);
+
   return (
     <Form form={form} layout="vertical">
       <Card title="Ticket Form">
@@ -131,6 +160,7 @@ const TicketFormFields = ({ mode, ticket }) => {
         >
           <Input placeholder="Enter Ticket Type Name" type="text" />
         </Form.Item>
+
         <Form.Item
           name="number_of_tickets"
           label="No of Tickets"
@@ -158,57 +188,85 @@ const TicketFormFields = ({ mode, ticket }) => {
             onWheel={(e) => e.target.blur()}
           />
         </Form.Item>
-        <Form.Item name="is_ticket_type_enabled" valuePropName="checked">
-          <Checkbox>Enable Ticket Types</Checkbox>
-        </Form.Item>
 
-        {!isTicketTypeEnabled && (
+        <Form.Item
+          name="ticket_type"
+          label="Ticket Structure Type"
+          initialValue="normal"
+        >
+          <Radio.Group>
+            <Radio value="normal">Normal Ticket Types</Radio>
+            <Radio value="dynamic">Dynamic Ticket Types</Radio>
+          </Radio.Group>
+        </Form.Item>
+      </Card>
+
+      {ticketType === "normal" && (
+        <Card
+          title={`Ticket Type Details`}
+          style={{ marginBottom: "24px", position: "relative" }}
+        >
           <Form.Item
-            name="base_price"
-            label="Price"
+            name="type_name"
+            label="Ticket Type Name"
+            initialValue="Normal"
+            rules={[{ required: true, message: "Please enter a name" }]}
+          >
+            <Input placeholder="Enter Ticket Name" />
+          </Form.Item>
+
+          <Form.Item
+            name={"type_price"}
+            label="Ticket Price"
             rules={[
+              { required: true, message: "Please enter a price" },
               {
-                required: !isTicketTypeEnabled,
-                message: "Please enter the ticket price",
+                pattern: /^\d+(\.\d{1,2})?$/,
+                message: "Please enter a valid price",
               },
             ]}
           >
+            <Input placeholder="Enter Ticket Price" type="number" min={0} />
+          </Form.Item>
+
+          <Form.Item
+            name={"type_number_of_tickets"}
+            label="Ticket Quantity"
+            dependencies={["number_of_tickets"]}
+            rules={[
+              { required: true, message: "Please enter ticket quantity" },
+              { pattern: /^\d+$/, message: "Please enter a valid number" },
+            ]}
+          >
             <Input
-              placeholder="Enter Ticket Price"
+              value={form.getFieldValue("number_of_tickets")}
+              readOnly
+              placeholder="Number of Tickets"
               type="number"
-              onWheel={(e) => e.target.blur()}
-              disabled={isTicketTypeEnabled}
+              min={1}
             />
           </Form.Item>
+        </Card>
+      )}
+      <Flex className="py-2" mobileFlex={false} justifyContent="space-between">
+        <DiscardButton form={form} />
+
+        {ticketType === "dynamic" ? (
+          <Button
+            icon={<PlusOutlined />}
+            type="primary"
+            onClick={addTicketType}
+            style={{ marginRight: "10px" }}
+          >
+            Add Sub Ticket Type
+          </Button>
+        ) : (
+          <Button onClick={onSubmit} type="primary" htmlType="submit">
+            Submit
+          </Button>
         )}
+      </Flex>
 
-        {/* <div className="container" style={{ padding: "0px", alignContent:"end" }}> */}
-        <Flex
-          className="py-2"
-          mobileFlex={false}
-          justifyContent="space-between"
-        >
-          <DiscardButton form={form} />
-
-          {isTicketTypeEnabled && (
-            <Button
-              icon={<PlusOutlined />}
-              type="default"
-              onClick={addTicketType}
-              style={{ marginRight: "10px" }}
-            >
-              Add Sub Ticket Type
-            </Button>
-          )}
-          {!isTicketTypeEnabled && (
-            <Button onClick={onSubmit} type="primary" htmlType="submit">
-              Submit
-            </Button>
-          )}
-        </Flex>
-
-        {/* </div> */}
-      </Card>
       <LoadingOverlay loading={loading} />
       <ValidationModal
         visible={placeValidationDialogVisible}
