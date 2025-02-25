@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Form,
   Card,
@@ -8,6 +8,7 @@ import {
   Space,
   Checkbox,
   message,
+  Select
 } from "antd";
 import {
   PlusOutlined,
@@ -20,50 +21,94 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { getVenues } from "store/slices/locationSlice";
 import { addPayment } from "store/slices/paymentSlice";
 import { RulesMessageConstants } from "constants/RulesConstant";
+import { fetchAllEvent, setSelectedEvent } from "store/slices/eventSlice";
 import {
   SupportImageFormat,
   ResolutionByServices,
 } from "constants/SupportFileConstants";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Utils from "utils/index";
+const { Option } = Select;
 
 const PaymentFormFields = ({ mode, id }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const { filteredEvents = [], loading } = useSelector((state) => state.event);
 
-  const handleSubmit = async (values) => {
+  useEffect(() => {
+      dispatch(fetchAllEvent({}));
+    }, [dispatch]);
+    const handleSelectEvent = (id) => {
+      if (!id) return;
+    }
+  const handleSubmit = async () => {
+    const values = form.getFieldsValue();
     console.log("Form values:", values);
-
+  
     try {
-      const transformedData = {
-        place_id: values.place_id,
-        event_id: values.Event ? parseInt(values.Event) : undefined,
-        terms_and_conditions: values.url,
-        additional_urls: values.additional_urls,
+      const formData = new FormData();
+  
+      formData.append("place_id", form.getFieldValue('venue_id'));
+  
+      if (form.getFieldValue('event_id')) {
+        formData.append("event_id", form.getFieldValue('event_id'));
+      }
+  
+      if (values.url) {
+        formData.append("terms_and_conditions", values.url);
+      }
+  
+      if (values.additional_urls) {
+        formData.append("additional_urls", values.additional_urls);
+      }
 
-        payment_qr_details:
-          values.qrPayments?.map((qr) => ({
-            provider_name: qr.paymentProvider,
-            qr_code: qr.qrCode?.[0]?.originFileObj,
-          })) || [],
-
-        payment_methods:
-          values.cardPayments?.map((payment) => ({
-            bank_name: payment.bankName,
-            card_types: payment.cardType,
-          })) || [],
-
-        add_on_services:
-          values.services?.map((service) => ({
-            name: service.name,
-            image: service.image?.[0]?.originFileObj,
-          })) || [],
+    const qrPayments = form.getFieldValue('qrPayments') || [];
+    const qrDetails = qrPayments.map((qr) => {
+      return {
+        payment_provider: qr.paymentProvider,
+        qr_code: qr.qrCode && qr.qrCode[0]?.uid ? qr.qrCode[0].uid : null, // Extract uid
+        image: qr.qrCode && qr.qrCode[0]?.uid ? qr.qrCode[0].uid : null,//qr.image && qr.image[0]?.uid ? qr.image[0].uid : null, // Extract uid
       };
+    });
+    formData.append("payment_qr_details", JSON.stringify(qrDetails));
 
-      console.log("Transformed data:", transformedData);
+    const cardPayments = form.getFieldValue('cardPayments') || [];
+    const cardDetails = cardPayments.map((payment) => {
+      return {
+        bank_name: payment.bankName,
+        bank_code: payment.bankCode || '',
+        image: payment.image && payment.image[0]?.uid ? payment.image[0].uid : null, // Extract uid
+        is_debit: payment.cardType?.includes('debit') || false,
+        is_credit: payment.cardType?.includes('credit') || false,
+        is_master: payment.cardType?.includes('master') || false,
+        is_visa: payment.cardType?.includes('visa') || false,
+      };
+    });
 
-      const result = await dispatch(addPayment(transformedData)).unwrap();
+    // Append Card Payments as a JSON string
+    formData.append("payment_methods", JSON.stringify(cardDetails));
 
+    // Handle Add-On Services
+    const services = values.services || [];
+    const serviceDetails = services.map((service) => {
+      return {
+        service_name: service.name,
+        description: service.description || '',
+        thumbnail_image: service.image && service.image[0]?.uid ? service.image[0].uid : null, // Extract uid
+        is_percentage: service.isPercentage || false,
+        percentage_or_amount: service.percentageOrAmount || 0,
+      };
+    });
+
+    // Append Add-On Services as a JSON string
+    formData.append("add_on_services", JSON.stringify(serviceDetails));
+      console.log("FormData content:");
+      for (let [key, value] of formData.entries()) {
+        console.log("v",key, value);
+      }
+  
+      const result = await dispatch(addPayment(formData));
+  
       if (result) {
         message.success("Payment details added successfully");
         form.resetFields();
@@ -73,6 +118,7 @@ const PaymentFormFields = ({ mode, id }) => {
       message.error("Failed to add payment details");
     }
   };
+
   const handleFinishFailed = (errorInfo) => {
     console.log("Form submission failed:", errorInfo);
   };
@@ -81,7 +127,7 @@ const PaymentFormFields = ({ mode, id }) => {
     <Form
       form={form}
       layout="vertical"
-      onFinish={handleSubmit}
+      //onFinish={handleSubmit}
       onFinishFailed={handleFinishFailed}
     >
       <Card title="Payment Form">
@@ -90,24 +136,35 @@ const PaymentFormFields = ({ mode, id }) => {
           label="Place"
           onSelect={(id) => {
             dispatch(getVenues({ place_id: id }));
-            form.setFieldsValue({ venue_id: null });
+            form.setFieldsValue({ venue_id: id });
           }}
           rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
         />
-        <Form.Item name="Event" label="Event (Optional)">
-          <Input placeholder="Select Your Event" type="text" />
-        </Form.Item>
-
         <Form.Item
-          name="url"
-          label="Terms and Conditions"
-          rules={[
-            {
-              required: true,
-              message: "Please enter terms and conditions URL",
-            },
-          ]}
+        name="event_id"
+        label="Event"
+        rules={[{ required: false, message: "Please select an event" }]}
+      >
+        <Select
+          loading={loading}
+          className="w-100"
+          placeholder="Select an event"
+          onChange={handleSelectEvent}
+          allowClear
+          showSearch
+          filterOption={(input, option) =>
+            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }
         >
+          {filteredEvents.map((event) => (
+            <Option key={event.id} value={event.id}>
+              {event.event_name}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
+
+        <Form.Item name="url" label="Terms and Conditions">
           <Input placeholder="Enter your URL" type="text" />
         </Form.Item>
 
@@ -117,18 +174,7 @@ const PaymentFormFields = ({ mode, id }) => {
       </Card>
 
       <Card>
-        <Form.Item
-          name="services"
-          label="Add-On Services"
-          rules={[
-            {
-              validator: (_, value) =>
-                value && value.length > 0
-                  ? Promise.resolve()
-                  : Promise.reject("Please add at least one service"),
-            },
-          ]}
-        >
+        <Form.Item name="services" label="Add-On Services">
           <Form.List name="services">
             {(fields, { add, remove }) => (
               <>
@@ -141,12 +187,6 @@ const PaymentFormFields = ({ mode, id }) => {
                     <Form.Item
                       {...restField}
                       name={[name, "name"]}
-                      rules={[
-                        {
-                          required: true,
-                          message: "Please enter service name",
-                        },
-                      ]}
                     >
                       <Input placeholder="Service name" />
                     </Form.Item>
@@ -157,12 +197,6 @@ const PaymentFormFields = ({ mode, id }) => {
                       getValueFromEvent={(e) =>
                         Array.isArray(e) ? e : e?.fileList
                       }
-                      rules={[
-                        {
-                          required: true,
-                          message: "Please upload service image",
-                        },
-                      ]}
                     >
                       <Upload
                         name="thumbnail_image"
@@ -214,9 +248,6 @@ const PaymentFormFields = ({ mode, id }) => {
                     <Form.Item
                       {...restField}
                       name={[name, "paymentProvider"]}
-                      rules={[
-                        { required: true, message: "Enter provider name" },
-                      ]}
                     >
                       <Input placeholder="Payment Provider" />
                     </Form.Item>
@@ -227,9 +258,6 @@ const PaymentFormFields = ({ mode, id }) => {
                       getValueFromEvent={(e) =>
                         Array.isArray(e) ? e : e?.fileList
                       }
-                      rules={[
-                        { required: true, message: "Please upload QR code" },
-                      ]}
                     >
                       <Upload
                         name="qr_code"
@@ -268,18 +296,7 @@ const PaymentFormFields = ({ mode, id }) => {
       </Card>
 
       <Card>
-        <Form.Item
-          name="cardPayments"
-          label="Add Payment Methods"
-          rules={[
-            {
-              validator: (_, value) =>
-                value && value.length > 0
-                  ? Promise.resolve()
-                  : Promise.reject("Please add at least one payment method"),
-            },
-          ]}
-        >
+        <Form.Item name="cardPayments" label="Add Payment Methods">
           <Form.List name="cardPayments">
             {(fields, { add, remove }) => (
               <>
@@ -296,14 +313,12 @@ const PaymentFormFields = ({ mode, id }) => {
                     <Form.Item
                       {...restField}
                       name={[name, "bankName"]}
-                      rules={[{ required: true, message: "Enter bank name" }]}
                     >
                       <Input placeholder="Bank Name" />
                     </Form.Item>
                     <Form.Item
                       {...restField}
                       name={[name, "cardType"]}
-                      rules={[{ required: true, message: "Select card type" }]}
                     >
                       <Checkbox.Group>
                         <Checkbox value="debit">Debit Card</Checkbox>
@@ -334,7 +349,7 @@ const PaymentFormFields = ({ mode, id }) => {
           <Flex className="py-2" mobileFlex={false} justifyContent="flex-end">
             <DiscardButton form={form} />
             <div className="mb-3">
-              <Button type="primary" htmlType="submit">
+              <Button onClick={() => handleSubmit()} type="primary" htmlType="submit">
                 Submit
               </Button>
             </div>
