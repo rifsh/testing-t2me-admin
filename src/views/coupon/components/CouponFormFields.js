@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Input,
   Row,
@@ -10,10 +10,17 @@ import {
   Upload,
   Button,
   Typography,
+  Radio,
+  Alert,
+  InputNumber,
 } from "antd";
 import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
-import { UploadOutlined } from "@ant-design/icons";
+import {
+  UploadOutlined,
+  PlusOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import { setIsDateRequired } from "store/slices/couponSlice";
 import {
   SupportImageFormat,
@@ -23,68 +30,72 @@ import {
 import Utils from "utils/index";
 
 const { Text } = Typography;
-
-const rules = {
-  country: [
-    {
-      required: true,
-      message: "Please Choose a country",
-    },
-  ],
-  name: [
-    {
-      required: true,
-      message: "Please enter country name",
-    },
-  ],
-  description: [
-    {
-      required: true,
-      message: "Please enter country description",
-    },
-  ],
-  price: [
-    {
-      required: true,
-      message: "Please enter country price",
-    },
-  ],
-  comparePrice: [],
-  taxRate: [
-    {
-      required: true,
-      message: "Please enter tax rate",
-    },
-  ],
-  cost: [
-    {
-      required: true,
-      message: "Please enter item cost",
-    },
-  ],
-  startDate: [
-    {
-      required: true,
-      message: "Please select the start date",
-    },
-  ],
-  endDate: [
-    {
-      required: true,
-      message: "Please select the end date",
-    },
-  ],
-};
+const { Group: RadioGroup } = Radio;
 
 function CouponFormFields(props) {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
   const startDate = Form.useWatch("start_date", form);
   const { isDateRequired } = useSelector((state) => state.coupons);
+  const [couponType, setCouponType] = useState("single");
+  const [couponCodeType, setCouponCodeType] = useState("single_use");
 
-  const handleRequiredChanges = (e) => {
+  // Each row can have up to MAX_FIELDS_PER_ROW fields
+  const MAX_FIELDS_PER_ROW = 3;
+
+  // Store the coupon code fields as a flat array
+  const [couponFields, setCouponFields] = useState([{ id: 1 }]);
+
+  // Add a new coupon field
+  const addCouponField = () => {
+    const newId =
+      couponFields.length > 0
+        ? Math.max(...couponFields.map((field) => field.id)) + 1
+        : 1;
+
+    setCouponFields([...couponFields, { id: newId }]);
+  };
+
+  // Delete a coupon field
+  const deleteCouponField = (idToDelete) => {
+    // Only allow deletion if there's more than one field
+    if (couponFields.length > 1) {
+      const updatedFields = couponFields.filter(
+        (field) => field.id !== idToDelete
+      );
+      setCouponFields(updatedFields);
+
+      // Clear the form value for the deleted field
+      const currentValues = form.getFieldValue("coupon_codes") || {};
+      const newValues = { ...currentValues };
+      delete newValues[idToDelete];
+      form.setFieldsValue({ coupon_codes: newValues });
+    }
+  };
+
+  // Calculate rows based on coupon fields
+  const getRows = () => {
+    const rows = [];
+    let currentRow = [];
+
+    couponFields.forEach((field) => {
+      currentRow.push(field);
+
+      if (currentRow.length === MAX_FIELDS_PER_ROW) {
+        rows.push([...currentRow]);
+        currentRow = [];
+      }
+    });
+
+    if (currentRow.length > 0) {
+      rows.push(currentRow);
+    }
+
+    return rows;
+  };
+
+  const handleDateRequiredChange = (e) => {
     dispatch(setIsDateRequired(e.target.checked));
-    // Reset dates when toggling date requirement
     if (!e.target.checked) {
       form.setFieldsValue({
         start_date: null,
@@ -93,13 +104,16 @@ function CouponFormFields(props) {
     }
   };
 
+  const handleCouponTypeChange = (e) => {
+    setCouponType(e.target.value);
+  };
+
+  const handleCouponCodeTypeChange = (e) => {
+    setCouponCodeType(e.target.value);
+  };
+
   const disablePastDates = (current) => {
-    const startDate = form.getFieldValue("start_date");
-    return (
-      current &&
-      current < moment().startOf("day") &&
-      !moment(current).isSame(startDate, "day")
-    );
+    return current && current < moment().startOf("day");
   };
 
   const disableEndDate = (current) => {
@@ -112,64 +126,246 @@ function CouponFormFields(props) {
   const handleStartDateChange = () => {
     form.setFieldValue("end_date", null);
   };
+
   const normFile = (e) => {
     if (Array.isArray(e)) {
       return e;
     }
     return e?.fileList;
   };
-  const handleBeforeUpload = Utils.handleBeforeUpload;
+
+  // Get rows for rendering
+  const rows = getRows();
 
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Coupon Details">
-          <Form.Item name="name" label="Coupon Name" rules={rules.name}>
+          <Form.Item
+            name="name"
+            label="Coupon Name"
+            rules={[{ required: true, message: "Please enter coupon name" }]}
+          >
             <Input placeholder="Enter Coupon Name" />
-          </Form.Item>
-          <Form.Item
-            name="coupon_code"
-            label="Coupon Code"
-            rules={[
-              {
-                required: true,
-                message: "Please enter coupon code",
-              },
-            ]}
-          >
-            <Input placeholder="Enter Coupon Code" />
-          </Form.Item>
-          <Form.Item
-            name="discount_percentage"
-            label="Discount Percentage"
-            rules={[
-              {
-                required: true,
-                message: "Please enter discount percentage",
-              },
-              {
-                type: "number",
-                transform: (value) => Number(value),
-                min: 0,
-                max: 100,
-                message: "Discount must be between 0 and 100",
-              },
-            ]}
-          >
-            <Input
-              placeholder="Enter discount percentage"
-              type="number"
-              onWheel={(e) => e.target.blur()}
-            />
           </Form.Item>
 
           <Form.Item
+            name="coupon_type"
+            label="Coupon Type"
+            rules={[{ required: true, message: "Please select coupon type" }]}
+            initialValue="single"
+          >
+            <RadioGroup onChange={handleCouponTypeChange} value={couponType}>
+              <Radio value="single">Single Use (One-time use per user)</Radio>
+              <Radio value="multiple">
+                Multiple Use (Can be used multiple times by same user)
+              </Radio>
+            </RadioGroup>
+          </Form.Item>
+
+          <Form.Item
+            name="coupon_code_type"
+            label="How Can This Coupon Be Used"
+            rules={[
+              {
+                required: true,
+                message: "Please select how this coupon can be used",
+              },
+            ]}
+            initialValue="single_use"
+          >
+            <RadioGroup
+              onChange={handleCouponCodeTypeChange}
+              value={couponCodeType}
+            >
+              <Radio value="single_use">
+                One-Time Only (Can be used just once by anyone)
+              </Radio>
+              <Radio value="multi_use">
+                Limited Uses (Can be used by multiple people, up to a limit)
+              </Radio>
+            </RadioGroup>
+          </Form.Item>
+
+          {couponCodeType === "multi_use" && (
+            <Form.Item
+              name="max_uses"
+              label="Maximum Number of Uses"
+              rules={[
+                {
+                  required: true,
+                  message:
+                    "Please enter how many times this coupon can be used",
+                },
+                {
+                  type: "number",
+                  transform: (value) => Number(value),
+                  min: 1,
+                  message: "Total uses must be at least 1",
+                },
+              ]}
+            >
+              <Input
+                type="number"
+                placeholder="How many times can this coupon be used?"
+                onWheel={(e) => e.target.blur()}
+              />
+            </Form.Item>
+          )}
+
+          <Form.Item label="Coupon Codes">
+            <div>
+              {rows.map((row, rowIndex) => (
+                <Row
+                  gutter={8}
+                  key={`row-${rowIndex}`}
+                  style={{ marginBottom: "8px" }}
+                >
+                  {row.map((field) => (
+                    <Col
+                      key={`field-${field.id}`}
+                      xs={24}
+                      sm={8}
+                      style={{ marginBottom: "8px" }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <Form.Item
+                          name={[`coupon_codes`, `${field.id}`]}
+                          rules={[
+                            {
+                              required: true,
+                              message: `Please enter coupon code`,
+                            },
+                          ]}
+                          style={{ marginBottom: 0, flex: 1 }}
+                        >
+                          <Input placeholder="Coupon code" />
+                        </Form.Item>
+
+                        {/* Only show delete button when there's more than one coupon field */}
+                        {couponFields.length > 1 && (
+                          <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={() => deleteCouponField(field.id)}
+                            style={{ marginLeft: "8px" }}
+                          />
+                        )}
+                      </div>
+                    </Col>
+                  ))}
+
+                  {row.length < MAX_FIELDS_PER_ROW &&
+                    rowIndex === rows.length - 1 && (
+                      <Col xs={24} sm={8}>
+                        <Button
+                          type="dashed"
+                          icon={<PlusOutlined />}
+                          onClick={addCouponField}
+                        >
+                          Add Coupon Code
+                        </Button>
+                      </Col>
+                    )}
+                </Row>
+              ))}
+
+              {rows.length > 0 &&
+                rows[rows.length - 1].length === MAX_FIELDS_PER_ROW && (
+                  <Row>
+                    <Col>
+                      <Button
+                        type="dashed"
+                        icon={<PlusOutlined />}
+                        onClick={addCouponField}
+                        style={{ marginTop: "4px" }}
+                      >
+                        Add Coupon Code
+                      </Button>
+                    </Col>
+                  </Row>
+                )}
+            </div>
+          </Form.Item>
+
+          <Form.Item name="discount_type" label="Discount Type">
+            <Radio.Group>
+              <Radio value="percentage">Percentage</Radio>
+              <Radio value="amount">Amount</Radio>
+            </Radio.Group>
+          </Form.Item>
+
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) =>
+              prevValues.discount_type !== currentValues.discount_type
+            }
+          >
+            {({ getFieldValue }) =>
+              getFieldValue("discount_type") === "percentage" ? (
+                <Form.Item
+                  name="discount_percentage"
+                  label="Discount Percentage"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter discount percentage",
+                    },
+                    {
+                      type: "number",
+                      min: 0,
+                      max: 100,
+                      message: "Discount must be between 0 and 100",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    placeholder="Enter discount percentage"
+                    min={0} style={{ width: "100%" }}
+                    max={100}
+                    formatter={(value) => `${value}%`}
+                    parser={(value) => value.replace("%", "")}
+                  />
+                </Form.Item>
+              ) : (
+                <Form.Item
+                  style={{ width: "100%" }}
+                  name="discount_amount"
+                  label="Discount Amount"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter discount amount",
+                    },
+                    {
+                      type: "number",
+                      min: 0,
+                      message:
+                        "Discount amount must be greater than or equal to 0",
+                    },
+                  ]}
+                >
+                  <InputNumber style={{ width: "100%" }}
+                    placeholder="Enter discount amount"
+                    min={0}
+                    formatter={(value) => `$${value}`}
+                    parser={(value) => value.replace("$", "")}
+                  />
+                </Form.Item>
+              )
+            }
+          </Form.Item>
+          <Form.Item
             name="date_required"
-            label="Is Date Required?"
+            label="Date Settings"
             valuePropName="checked"
           >
-            <Checkbox checked={isDateRequired} onChange={handleRequiredChanges}>
-              Date Required
+            <Checkbox
+              checked={isDateRequired}
+              onChange={handleDateRequiredChange}
+            >
+              Set Validity Period
             </Checkbox>
           </Form.Item>
 
@@ -178,7 +374,9 @@ function CouponFormFields(props) {
               <Form.Item
                 name="start_date"
                 label="Start Date"
-                rules={rules.startDate}
+                rules={[
+                  { required: true, message: "Please select the start date" },
+                ]}
               >
                 <DatePicker
                   className="w-100"
@@ -194,7 +392,7 @@ function CouponFormFields(props) {
                 name="end_date"
                 label="End Date"
                 rules={[
-                  ...rules.endDate,
+                  { required: true, message: "Please select the end date" },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       const startDate = getFieldValue("start_date");
@@ -221,62 +419,9 @@ function CouponFormFields(props) {
               </Form.Item>
             </>
           )}
-
-          <Form.Item
-            name="thumbnail_image"
-            label="Thumbnail Image"
-            valuePropName="fileList"
-            getValueFromEvent={normFile}
-            rules={rules.thumbnail_image}
-            style={{ marginBottom: "0px", padding: "0px" }}
-          >
-            <Upload
-              name="thumbnail_image"
-              listType="picture"
-              maxCount={1}
-              // beforeUpload={handleBeforeUpload}
-              beforeUpload={(file) =>
-                Utils.handleBeforeUpload(file, ResolutionByServices.place)
-              }
-              accept={`.${SupportImageFormat.join(",.")}`}
-            >
-              <Button icon={<UploadOutlined />}>Click to upload</Button>
-            </Upload>
-          </Form.Item>
-          <Text
-            type="warning"
-            style={{ padding: "00px 00px", fontSize: "11px" }}
-          >
-            {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
-            {" resolution "}
-            {ResolutionByServices.place} pixels.{" "}
-          </Text>
-          <Form.Item
-            name="max_uses"
-            label="Max Users"
-            rules={[
-              {
-                required: true,
-                message: "Please enter maximum users",
-              },
-              {
-                type: "number",
-                transform: (value) => Number(value),
-                min: 1,
-                message: "Maximum users must be at least 1",
-              },
-            ]}
-          >
-            <Input
-              type="number"
-              placeholder="Enter maximum users"
-              onWheel={(e) => e.target.blur()}
-            />
-          </Form.Item>
-
           <Form.Item
             name="min_purchase_amount"
-            label="Min Purchase Amount"
+            label="Minimum Purchase Amount"
             rules={[
               {
                 required: true,
@@ -292,10 +437,76 @@ function CouponFormFields(props) {
           >
             <Input
               type="number"
-              placeholder="Enter min purchase amount"
+              placeholder="Enter minimum purchase amount"
               onWheel={(e) => e.target.blur()}
             />
           </Form.Item>
+          <Form.Item
+            name="thumbnail_image"
+            label="Thumbnail Image"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+            style={{ marginBottom: "0px", padding: "0px" }}
+          >
+            <Upload
+              name="thumbnail_image"
+              listType="picture"
+              maxCount={1}
+              beforeUpload={(file) =>
+                Utils.handleBeforeUpload(file, ResolutionByServices.place)
+              }
+              accept={`.${SupportImageFormat.join(",.")}`}
+            >
+              <Button icon={<UploadOutlined />}>Click to upload</Button>
+            </Upload>
+          </Form.Item>
+          <Text type="warning" style={{ padding: "0px 0px", fontSize: "11px" }}>
+            {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
+            {" resolution "}
+            {ResolutionByServices.place} pixels.{" "}
+          </Text>
+        </Card>
+      </Col>
+      <Col xs={24} sm={24} md={7}>
+        <Card title="Coupon Information">
+          <Alert
+            message="Important Note"
+            description="Expired coupons cannot be edited."
+            type="warning"
+            showIcon
+            className="mb-4"
+          />
+
+          <Alert
+            message="User-Specific Single Use"
+            description="Each user can use this coupon once. Example: 'WELCOME10' can be used once by each customer."
+            type="info"
+            showIcon
+            className="mb-2"
+          />
+
+          <Alert
+            message="User-Specific Multiple Use"
+            description="Each user can use this coupon multiple times. Example: 'LOYALTY20' can be used repeatedly by the same customer."
+            type="info"
+            showIcon
+            className="mb-2"
+          />
+
+          <Alert
+            message="One-Time Only"
+            description="Can only be used once by the first customer who applies it. Example: 'FLASH50' works only for the first person who uses it."
+            type="info"
+            showIcon
+            className="mb-2"
+          />
+
+          <Alert
+            message="Limited Uses"
+            description="Can be used by multiple people until it reaches its limit. Example: 'SUMMER2025' is available for all customers until it's been used the maximum number of times."
+            type="info"
+            showIcon
+          />
         </Card>
       </Col>
     </Row>
