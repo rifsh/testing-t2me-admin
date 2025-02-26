@@ -110,6 +110,28 @@ const EventDetailsField = () => {
             </Upload>
           </Form.Item>
           <></>
+          
+
+
+          <Text
+            type="warning"
+            style={{ padding: "00px 00px", fontSize: "11px" }}
+          >
+            {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
+            {" resolution "}
+            {ResolutionByServices.place} pixels.{" "}
+          </Text>
+
+          <Form.Item
+            name=""
+            label="Banner Images Url"
+            rules={rules.banner_url}
+            style={{ marginTop: "10px", padding: "0px" }}
+          >
+            <Input placeholder="Banner Images Url" />
+          </Form.Item>
+
+
           <Form.Item
             name=""
             label="Event Images"
@@ -132,24 +154,7 @@ const EventDetailsField = () => {
             </Upload>
           </Form.Item>
 
-
-          <Text
-            type="warning"
-            style={{ padding: "00px 00px", fontSize: "11px" }}
-          >
-            {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
-            {" resolution "}
-            {ResolutionByServices.place} pixels.{" "}
-          </Text>
-
-          <Form.Item
-            name=""
-            label="Banner Images Url"
-            rules={rules.banner_url}
-            style={{ marginTop: "10px", padding: "0px" }}
-          >
-            <Input placeholder="Banner Images Url" />
-          </Form.Item>
+          
         </Card>
         <Card>
           <Form.Item name="includedPrice" label="Included In the Price">
