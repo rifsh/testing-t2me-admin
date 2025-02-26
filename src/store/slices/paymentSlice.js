@@ -70,9 +70,9 @@ export const getSinglePayment = createAsyncThunk(
 export const addPayment = createAsyncThunk(
   "payment/add",
   async (paymentData, { rejectWithValue }) => {
+    console.log("Payment Added:", paymentData);
     try {
       const response = await PaymentService.addPayment(paymentData);
-      console.log("Payment Added:", response.data);
       return response.data;
     } catch (error) {
       console.error("Error in addPayment:", error);

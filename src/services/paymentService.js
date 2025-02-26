@@ -14,9 +14,15 @@ PaymentService.getAllPayment = function (pageData) {
 
 PaymentService.addPayment = function (paymentData) {
     return fetch({
-      url: `${ApiConstant.PAYMENT_ADD_URL}secured/payment`,
+      url: `${ApiConstant.PAYMENT_ADD_URL}`,
       method: "post",
       data: paymentData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      params: {
+        action: "submit",
+      },
     });  
 }
 
