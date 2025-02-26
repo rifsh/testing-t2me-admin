@@ -94,7 +94,10 @@ const PaymentFormFields = ({ mode, id }) => {
       return {
         service_name: service.name,
         description: service.description || '',
-        thumbnail_image: service.image && service.image[0]?.uid ? service.image[0].uid : null, // Extract uid
+         thumbnail_image: service.image && service.image[0]?.uid ? service.image[0].uid : null, // Extract uid
+        // thumbnail_image: service.thumbnail_image && service.thumbnail_image[0]?.uid
+        // ? service.thumbnail_image[0].uid
+        // : null,
         is_percentage: service.isPercentage || false,
         percentage_or_amount: service.percentageOrAmount || 0,
       };
@@ -336,7 +339,7 @@ const PaymentFormFields = ({ mode, id }) => {
                     icon={<PlusOutlined />}
                   >
                     Add Bank & Card Type
-                  </Button>
+                  </Button>   
                 </Form.Item>
               </>
             )}
@@ -357,6 +360,7 @@ const PaymentFormFields = ({ mode, id }) => {
         </div>
       </Card>
     </Form>
+    
   );
 };
 
