@@ -121,6 +121,7 @@ const CouponForm = ({ mode, coupon }) => {
         const formData = {
           ...values,
         };
+        console.log(formData, "coupon daata");
 
         dispatch(setSelectedSubmitItem(formData));
       }
@@ -210,14 +211,6 @@ const CouponForm = ({ mode, coupon }) => {
             ]}
           />
         </div>
-        <Col xs={24} sm={24} md={17}>
-          <Alert
-            message="Warning"
-            description="expired coupons are non-editable."
-            type="warning"
-            showIcon
-          />
-        </Col>
       </Form>
       <LoadingOverlay loading={loading} />
       <WarningModal
@@ -229,7 +222,7 @@ const CouponForm = ({ mode, coupon }) => {
         onSubmit={handleModalSubmit}
         onCancel={handleModalCancel}
         confirmText="Proceed"
-        cancelText="Back"  
+        cancelText="Back"
         loading={loading}
         tableConfig={{
           title: "Active Schedules",
