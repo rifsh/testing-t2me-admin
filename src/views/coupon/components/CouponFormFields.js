@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Input,
   Row,
@@ -32,13 +32,12 @@ import Utils from "utils/index";
 const { Text } = Typography;
 const { Group: RadioGroup } = Radio;
 
-function CouponFormFields(props) {
+function CouponFormFields({ form }) {
   const dispatch = useDispatch();
-  const [form] = Form.useForm();
   const startDate = Form.useWatch("start_date", form);
   const { isDateRequired } = useSelector((state) => state.coupons);
-  const [couponType, setCouponType] = useState("single");
-  const [couponCodeType, setCouponCodeType] = useState("single_use");
+  const [couponType, setCouponType] = useState(true);
+  const [couponCodeType, setCouponCodeType] = useState(false);
 
   // Each row can have up to MAX_FIELDS_PER_ROW fields
   const MAX_FIELDS_PER_ROW = 3;
@@ -66,10 +65,10 @@ function CouponFormFields(props) {
       setCouponFields(updatedFields);
 
       // Clear the form value for the deleted field
-      const currentValues = form.getFieldValue("coupon_codes") || {};
+      const currentValues = form.getFieldValue("key_words") || {};
       const newValues = { ...currentValues };
       delete newValues[idToDelete];
-      form.setFieldsValue({ coupon_codes: newValues });
+      form.setFieldsValue({ key_words: newValues });
     }
   };
 
@@ -94,9 +93,35 @@ function CouponFormFields(props) {
     return rows;
   };
 
+  // Initialize the form with existing values if editing
+  useEffect(() => {
+    const existingKeyWords = form.getFieldValue("key_words");
+    if (existingKeyWords && typeof existingKeyWords === "object") {
+      const ids = Object.keys(existingKeyWords).map((id) => parseInt(id));
+      if (ids.length > 0) {
+        const maxId = Math.max(...ids);
+        const fields = ids.map((id) => ({ id: parseInt(id) }));
+        setCouponFields(fields);
+      }
+    }
+  }, [form]);
+
+  // Ensure isDateRequired is synchronized with form values
+  useEffect(() => {
+    // When form loads with dates, make sure isDateRequired is set correctly
+    const startDateValue = form.getFieldValue("start_date");
+    const endDateValue = form.getFieldValue("end_date");
+    if (startDateValue || endDateValue) {
+      dispatch(setIsDateRequired(true));
+    }
+  }, [form, dispatch]);
+
   const handleDateRequiredChange = (e) => {
-    dispatch(setIsDateRequired(e.target.checked));
-    if (!e.target.checked) {
+    const isChecked = e.target.checked;
+    dispatch(setIsDateRequired(isChecked));
+
+    // When unchecking, clear dates
+    if (!isChecked) {
       form.setFieldsValue({
         start_date: null,
         end_date: null,
@@ -120,7 +145,11 @@ function CouponFormFields(props) {
     if (!startDate) {
       return false;
     }
-    return current && current < moment(startDate).startOf("day");
+    // Handle both moment and dayjs instances
+    const start = moment.isDayjs
+      ? startDate.startOf("day")
+      : moment(startDate).startOf("day");
+    return current && current < start;
   };
 
   const handleStartDateChange = () => {
@@ -150,21 +179,21 @@ function CouponFormFields(props) {
           </Form.Item>
 
           <Form.Item
-            name="coupon_type"
+            name="is_single"
             label="Coupon Type"
             rules={[{ required: true, message: "Please select coupon type" }]}
-            initialValue="single"
+            initialValue={true}
           >
             <RadioGroup onChange={handleCouponTypeChange} value={couponType}>
-              <Radio value="single">Single Use (One-time use per user)</Radio>
-              <Radio value="multiple">
+              <Radio value={true}>Single Use (One-time use per user)</Radio>
+              <Radio value={false}>
                 Multiple Use (Can be used multiple times by same user)
               </Radio>
             </RadioGroup>
           </Form.Item>
 
           <Form.Item
-            name="coupon_code_type"
+            name="is_reusable"
             label="How Can This Coupon Be Used"
             rules={[
               {
@@ -172,22 +201,22 @@ function CouponFormFields(props) {
                 message: "Please select how this coupon can be used",
               },
             ]}
-            initialValue="single_use"
+            initialValue={false}
           >
             <RadioGroup
               onChange={handleCouponCodeTypeChange}
               value={couponCodeType}
             >
-              <Radio value="single_use">
+              <Radio value={false}>
                 One-Time Only (Can be used just once by anyone)
               </Radio>
-              <Radio value="multi_use">
+              <Radio value={true}>
                 Limited Uses (Can be used by multiple people, up to a limit)
               </Radio>
             </RadioGroup>
           </Form.Item>
 
-          {couponCodeType === "multi_use" && (
+          {couponCodeType === true && (
             <Form.Item
               name="max_uses"
               label="Maximum Number of Uses"
@@ -230,7 +259,7 @@ function CouponFormFields(props) {
                     >
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <Form.Item
-                          name={[`coupon_codes`, `${field.id}`]}
+                          name={["key_words", `${field.id}`]}
                           rules={[
                             {
                               required: true,
@@ -289,23 +318,23 @@ function CouponFormFields(props) {
             </div>
           </Form.Item>
 
-          <Form.Item name="discount_type" label="Discount Type">
+          <Form.Item name="is_percentage" label="Discount Type">
             <Radio.Group>
-              <Radio value="percentage">Percentage</Radio>
-              <Radio value="amount">Amount</Radio>
+              <Radio value={true}>Percentage</Radio>
+              <Radio value={false}>Amount</Radio>
             </Radio.Group>
           </Form.Item>
 
           <Form.Item
             noStyle
             shouldUpdate={(prevValues, currentValues) =>
-              prevValues.discount_type !== currentValues.discount_type
+              prevValues.is_percentage !== currentValues.is_percentage
             }
           >
             {({ getFieldValue }) =>
-              getFieldValue("discount_type") === "percentage" ? (
+              getFieldValue("is_percentage") === true ? (
                 <Form.Item
-                  name="discount_percentage"
+                  name="discount_percentage_amount"
                   label="Discount Percentage"
                   rules={[
                     {
@@ -322,7 +351,8 @@ function CouponFormFields(props) {
                 >
                   <InputNumber
                     placeholder="Enter discount percentage"
-                    min={0} style={{ width: "100%" }}
+                    min={0}
+                    style={{ width: "100%" }}
                     max={100}
                     formatter={(value) => `${value}%`}
                     parser={(value) => value.replace("%", "")}
@@ -331,7 +361,7 @@ function CouponFormFields(props) {
               ) : (
                 <Form.Item
                   style={{ width: "100%" }}
-                  name="discount_amount"
+                  name="discount_percentage_amount"
                   label="Discount Amount"
                   rules={[
                     {
@@ -346,7 +376,8 @@ function CouponFormFields(props) {
                     },
                   ]}
                 >
-                  <InputNumber style={{ width: "100%" }}
+                  <InputNumber
+                    style={{ width: "100%" }}
                     placeholder="Enter discount amount"
                     min={0}
                     formatter={(value) => `$${value}`}
@@ -440,6 +471,12 @@ function CouponFormFields(props) {
               placeholder="Enter minimum purchase amount"
               onWheel={(e) => e.target.blur()}
             />
+          </Form.Item>
+          <Form.Item name="is_offline" label="Coupon Type" initialValue={true}>
+            <Radio.Group>
+              <Radio value={true}>Offline</Radio>
+              <Radio value={false}>Online</Radio>
+            </Radio.Group>
           </Form.Item>
           <Form.Item
             name="thumbnail_image"
