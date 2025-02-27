@@ -1,237 +1,348 @@
-import React, { useState } from "react";
-import { Modal, Button, Slider } from "antd";
-import ReactCrop from "react-image-crop";
-import "react-image-crop/dist/ReactCrop.css";
-import { message } from "antd";
+import React, { useState, useRef, useEffect } from "react";
+import { Modal, Button, Slider, Divider, Typography } from "antd";
 
-// Common resolutions for different use cases
-export const RESOLUTIONS = {
-  THUMBNAIL: {
-    SMALL: "100x100",
-    MEDIUM: "200x150",
-    LARGE: "300x200",
-  },
-  BANNER: {
-    SMALL: "600x200",
-    MEDIUM: "800x300",
-    LARGE: "1200x400",
-  },
-  SQUARE: {
-    SMALL: "200x200",
-    MEDIUM: "400x400",
-    LARGE: "600x600",
-  },
-  COUPON: {
-    SMALL: "200x100",
-    MEDIUM: "400x200",
-    LARGE: "600x300",
-  },
-  PROFILE: {
-    SMALL: "150x150",
-    MEDIUM: "300x300",
-    LARGE: "500x500",
-  },
-};
+const { Text } = Typography;
 
-// Utility function to validate image dimensions
-export const validateImageDimensions = (
-  file,
-  requiredWidth,
-  requiredHeight
-) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (e) => {
-      const img = new Image();
-      img.src = e.target.result;
-      img.onload = () => {
-        const { width, height } = img;
-        if (width === requiredWidth && height === requiredHeight) {
-          resolve(true);
-        } else {
-          message.error(
-            `Image must be exactly ${requiredWidth}x${requiredHeight} pixels`
-          );
-          reject(false);
-        }
-      };
-    };
-  });
-};
-
-// Utility function to check file size
-export const validateFileSize = (file, maxSize) => {
-  const isLessThanMaxSize = file.size / 1024 / 1024 < maxSize; // Convert to MB
-  if (!isLessThanMaxSize) {
-    message.error(`File must be smaller than ${maxSize}MB`);
-  }
-  return isLessThanMaxSize;
-};
-
-// Utility function to check file type
-export const validateFileType = (file, supportedFormats) => {
-  const isValidType = supportedFormats.some(
-    (format) =>
-      file.type === `image/${format}` ||
-      file.type === `image/${format.toLowerCase()}`
-  );
-  if (!isValidType) {
-    message.error(`Supported formats: ${supportedFormats.join(", ")}`);
-  }
-  return isValidType;
-};
-
-// Main utility function to handle image upload with crop option
-export const handleImageUpload = (file, options = {}) => {
-  const {
-    maxSize = 2, // Default max size: 2MB
-    supportedFormats = ["jpeg", "jpg", "png", "gif"],
-    requiredResolution = null, // If exact size is required (without cropping)
-    showCropper = true,
-    onSuccess,
-    onError,
-    resolutionOptions = [
-      RESOLUTIONS.THUMBNAIL.MEDIUM,
-      RESOLUTIONS.SQUARE.MEDIUM,
-      RESOLUTIONS.COUPON.MEDIUM,
-    ],
-    defaultResolution = RESOLUTIONS.SQUARE.MEDIUM,
-  } = options;
-
-  // Check file type and size first
-  if (
-    !validateFileType(file, supportedFormats) ||
-    !validateFileSize(file, maxSize)
-  ) {
-    if (onError) onError(file);
-    return false;
-  }
-
-  // If exact resolution is required and no cropper should be shown
-  if (requiredResolution && !showCropper) {
-    const [width, height] = requiredResolution.split("x").map(Number);
-    validateImageDimensions(file, width, height)
-      .then(() => {
-        if (onSuccess) onSuccess(file);
-      })
-      .catch(() => {
-        if (onError) onError(file);
-      });
-    return false;
-  }
-
-  // Create URL for the image to display in cropper
-  const fileUrl = URL.createObjectURL(file);
-
-  // Return data needed for cropper
-  return {
-    file,
-    fileUrl,
-    resolutionOptions,
-    defaultResolution,
-  };
-};
-
-// Convert dataURL to File
-export const dataURLtoFile = (dataUrl, filename) => {
-  const arr = dataUrl.split(",");
-  const mime = arr[0].match(/:(.*?);/)[1];
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-
-  return new File([u8arr], filename, { type: mime });
-};
+/**
+ * A reusable image cropper component that can be used throughout the application
+ * @param {Object} props Component props
+ * @param {boolean} props.visible Whether the cropper modal is visible
+ * @param {string} props.image Source of the image to crop (data URL or object URL)
+ * @param {Function} props.onCancel Callback when cropping is canceled
+ * @param {Function} props.onCrop Callback when cropping is completed, passes the cropped image file
+ * @param {Object} props.targetResolution Target resolution for the cropped image {width, height}
+ * @param {string} props.outputFormat Output format of the cropped image (default: 'image/png')
+ * @param {string} props.fileName Custom filename for the cropped image (default: original filename)
+ */
 const ImageCropper = ({
   visible,
-  imageUrl,
+  image,
   onCancel,
   onCrop,
-  aspectRatio = 1,
-  resolutionOptions,
-  defaultResolution,
+  targetResolution = { width: 1080, height: 1080 },
+  outputFormat = "image/png",
+  fileName = null,
 }) => {
-  const [crop, setCrop] = useState({
-    unit: "%",
-    width: 50,
-    height: 50,
-    x: 25,
-    y: 25,
-    aspect: aspectRatio,
-  });
-  const [completedCrop, setCompletedCrop] = useState(null);
-  const [imageRef, setImageRef] = useState(null);
+  const [cropData, setCropData] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [startPoint, setStartPoint] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [selectedResolution, setSelectedResolution] = useState(
-    defaultResolution || resolutionOptions[0]
+  const [aspectRatio, setAspectRatio] = useState(
+    targetResolution.width / targetResolution.height
   );
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
-  const onImageLoaded = (img) => {
-    setImageRef(img);
-    return false;
-  };
+  const containerRef = useRef(null);
+  const imageRef = useRef(null);
+  const cropBoxRef = useRef(null);
 
-  const handleResolutionChange = (resolution) => {
-    setSelectedResolution(resolution);
-    // Update aspect ratio based on selected resolution
-    const [width, height] = resolution.split("x").map(Number);
-    setCrop({
-      ...crop,
-      aspect: width / height,
+  // Update aspect ratio when target resolution changes
+  useEffect(() => {
+    setAspectRatio(targetResolution.width / targetResolution.height);
+  }, [targetResolution]);
+
+  // Initialize image dimensions when it loads
+  useEffect(() => {
+    if (image && visible && imageRef.current) {
+      const img = imageRef.current;
+
+      // Wait for the image to load to get its natural dimensions
+      const handleImageLoad = () => {
+        setImageSize({
+          width: img.width,
+          height: img.height,
+        });
+
+        // Initialize crop area after image is loaded
+        initializeCropArea();
+
+        // Remove event listener after it's fired
+        img.removeEventListener("load", handleImageLoad);
+      };
+
+      if (img.complete) {
+        handleImageLoad();
+      } else {
+        img.addEventListener("load", handleImageLoad);
+      }
+
+      return () => {
+        img.removeEventListener("load", handleImageLoad);
+      };
+    }
+  }, [image, visible]);
+
+  // Initialize the crop area with the correct aspect ratio
+  const initializeCropArea = () => {
+    if (!containerRef.current || !imageRef.current) return;
+
+    const container = containerRef.current;
+    const rect = container.getBoundingClientRect();
+    const containerWidth = rect.width;
+    const containerHeight = rect.height;
+
+    // Calculate the maximum size the crop box can be while maintaining aspect ratio
+    let cropWidth, cropHeight;
+
+    if (aspectRatio >= 1) {
+      // Wider than tall
+      cropWidth = Math.min(containerWidth * 0.8, imageRef.current.width * zoom);
+      cropHeight = cropWidth / aspectRatio;
+
+      // Ensure height fits within container
+      if (cropHeight > containerHeight * 0.8) {
+        cropHeight = containerHeight * 0.8;
+        cropWidth = cropHeight * aspectRatio;
+      }
+    } else {
+      // Taller than wide
+      cropHeight = Math.min(
+        containerHeight * 0.8,
+        imageRef.current.height * zoom
+      );
+      cropWidth = cropHeight * aspectRatio;
+
+      // Ensure width fits within container
+      if (cropWidth > containerWidth * 0.8) {
+        cropWidth = containerWidth * 0.8;
+        cropHeight = cropWidth / aspectRatio;
+      }
+    }
+
+    // Center the crop area
+    const x = (containerWidth - cropWidth) / 2;
+    const y = (containerHeight - cropHeight) / 2;
+
+    setCropData({
+      x,
+      y,
+      width: cropWidth,
+      height: cropHeight,
     });
   };
 
-  const handleComplete = (crop) => {
-    setCompletedCrop(crop);
+  // Handle zoom change
+  const handleZoomChange = (newZoom) => {
+    setZoom(newZoom);
+
+    // Recalculate crop box position to keep it centered when zooming
+    if (cropData.width > 0 && cropData.height > 0) {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const containerCenter = {
+        x: rect.width / 2,
+        y: rect.height / 2,
+      };
+
+      // Calculate the center of the current crop box
+      const cropBoxCenter = {
+        x: cropData.x + cropData.width / 2,
+        y: cropData.y + cropData.height / 2,
+      };
+
+      // Calculate the new position that keeps the crop box centered
+      const newX = cropBoxCenter.x - cropData.width / 2;
+      const newY = cropBoxCenter.y - cropData.height / 2;
+
+      setCropData((prev) => ({
+        ...prev,
+        x: newX,
+        y: newY,
+      }));
+    }
   };
 
-  const handleCropImage = () => {
-    if (imageRef && completedCrop) {
-      const [targetWidth, targetHeight] = selectedResolution
-        .split("x")
-        .map(Number);
+  // Start crop selection
+  const handleMouseDown = (e) => {
+    if (!image) return;
 
-      // Create canvas
-      const canvas = document.createElement("canvas");
-      const scaleX = imageRef.naturalWidth / imageRef.width;
-      const scaleY = imageRef.naturalHeight / imageRef.height;
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
+    const container = containerRef.current;
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-      const ctx = canvas.getContext("2d");
+    setStartPoint({ x, y });
 
-      // Set background to white (for transparent images)
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // If we're clicking inside the existing crop box, we'll move it instead of creating a new one
+    const cropBox = cropBoxRef.current;
+    if (cropBox) {
+      const isInside =
+        x >= cropData.x &&
+        x <= cropData.x + cropData.width &&
+        y >= cropData.y &&
+        y <= cropData.y + cropData.height;
 
-      // Draw the crop
-      ctx.drawImage(
-        imageRef,
-        completedCrop.x * scaleX,
-        completedCrop.y * scaleY,
-        completedCrop.width * scaleX,
-        completedCrop.height * scaleY,
+      if (isInside) {
+        // Moving existing box
+        setIsDragging("move");
+      } else {
+        // Creating new box
+        setIsDragging("create");
+        setCropData({
+          x,
+          y,
+          width: 0,
+          height: 0,
+        });
+      }
+    } else {
+      // No existing box, so create one
+      setIsDragging("create");
+      setCropData({
+        x,
+        y,
+        width: 0,
+        height: 0,
+      });
+    }
+  };
+
+  // Update crop selection while dragging
+  const handleMouseMove = (e) => {
+    if (!isDragging || !image) return;
+
+    const container = containerRef.current;
+    const rect = container.getBoundingClientRect();
+    const currentX = Math.max(
+      0,
+      Math.min(e.clientX - rect.left, container.offsetWidth)
+    );
+    const currentY = Math.max(
+      0,
+      Math.min(e.clientY - rect.top, container.offsetHeight)
+    );
+
+    if (isDragging === "create") {
+      // Calculate width and height of selection
+      let width = currentX - startPoint.x;
+      let height = width / aspectRatio;
+
+      // If dragging up/left, adjust the starting point
+      const x = width >= 0 ? startPoint.x : startPoint.x + width;
+      const y = height >= 0 ? startPoint.y : startPoint.y + height;
+
+      // Use absolute values for width and height
+      width = Math.abs(width);
+      height = Math.abs(height);
+
+      // Ensure the crop box stays within container bounds
+      const adjustedX = Math.max(0, Math.min(x, container.offsetWidth - width));
+      const adjustedY = Math.max(
         0,
-        0,
-        targetWidth,
-        targetHeight
+        Math.min(y, container.offsetHeight - height)
       );
 
-      // Convert to blob
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const croppedFile = new File([blob], "cropped-image.png", {
-            type: "image/png",
-          });
-          onCrop(croppedFile, selectedResolution);
-        }
-      }, "image/png");
+      setCropData({
+        x: adjustedX,
+        y: adjustedY,
+        width,
+        height,
+      });
+    } else if (isDragging === "move") {
+      // Moving the existing crop box
+      const dx = currentX - startPoint.x;
+      const dy = currentY - startPoint.y;
+
+      // Calculate new position with bounds checking
+      let newX = cropData.x + dx;
+      let newY = cropData.y + dy;
+
+      // Keep the crop box within the container boundaries
+      newX = Math.max(
+        0,
+        Math.min(newX, container.offsetWidth - cropData.width)
+      );
+      newY = Math.max(
+        0,
+        Math.min(newY, container.offsetHeight - cropData.height)
+      );
+
+      setCropData((prev) => ({
+        ...prev,
+        x: newX,
+        y: newY,
+      }));
+
+      setStartPoint({ x: currentX, y: currentY });
     }
+  };
+
+  // End crop selection
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Handle crop button click
+  const handleCrop = () => {
+    if (!image || !cropData.width || !cropData.height) return;
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = imageRef.current;
+
+    // Get the image's natural dimensions
+    const imgNaturalWidth = img.naturalWidth;
+    const imgNaturalHeight = img.naturalHeight;
+
+    // Get the displayed image dimensions
+    const displayedWidth = img.width * zoom;
+    const displayedHeight = img.height * zoom;
+
+    // Calculate scaling factor between natural and displayed sizes
+    const scaleX = imgNaturalWidth / displayedWidth;
+    const scaleY = imgNaturalHeight / displayedHeight;
+
+    // Calculate the image offset from container center
+    const container = containerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const containerCenterX = containerRect.width / 2;
+    const containerCenterY = containerRect.height / 2;
+
+    // Calculate where the image is positioned within the container
+    const imgLeft = containerCenterX - displayedWidth / 2;
+    const imgTop = containerCenterY - displayedHeight / 2;
+
+    // Calculate the crop coordinates in terms of the original image
+    const cropX = (cropData.x - imgLeft) * scaleX;
+    const cropY = (cropData.y - imgTop) * scaleY;
+    const cropWidth = cropData.width * scaleX;
+    const cropHeight = cropData.height * scaleY;
+
+    // Set canvas size to the target resolution
+    canvas.width = targetResolution.width;
+    canvas.height = targetResolution.height;
+
+    // Draw the cropped portion to the canvas, scaled to the target resolution
+    ctx.drawImage(
+      img,
+      Math.max(0, cropX),
+      Math.max(0, cropY),
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      targetResolution.width,
+      targetResolution.height
+    );
+
+    // Convert canvas to data URL
+    const croppedImageDataUrl = canvas.toDataURL(outputFormat);
+
+    // Use the original filename if provided, otherwise generate a unique name
+    const outputFileName =
+      fileName || `cropped_${Date.now()}.${outputFormat.split("/")[1]}`;
+
+    // Convert base64 to file
+    fetch(croppedImageDataUrl)
+      .then((res) => res.blob())
+      .then((blob) => {
+        const file = new File([blob], outputFileName, {
+          type: outputFormat,
+        });
+        onCrop(file);
+      });
   };
 
   return (
@@ -241,66 +352,93 @@ const ImageCropper = ({
       onCancel={onCancel}
       width={800}
       footer={[
-        <Button key="back" onClick={onCancel}>
+        <Button key="cancel" onClick={onCancel}>
           Cancel
         </Button>,
-        <Button key="submit" type="primary" onClick={handleCropImage}>
-          Crop
+        <Button
+          key="crop"
+          type="primary"
+          disabled={!cropData.width || !cropData.height}
+          onClick={handleCrop}
+        >
+          Crop & Save
         </Button>,
       ]}
     >
-      <div className="crop-container">
-        <div className="resolution-options">
-          <span>Select Resolution: </span>
-          {resolutionOptions.map((option) => (
-            <Button
-              key={option}
-              type={selectedResolution === option ? "primary" : "default"}
-              onClick={() => handleResolutionChange(option)}
-              style={{ margin: "0 5px" }}
-            >
-              {option}
-            </Button>
-          ))}
+      <div className="mb-4">
+        <Text>Zoom: {zoom.toFixed(1)}x</Text>
+        <Slider
+          min={1}
+          max={3}
+          step={0.1}
+          value={zoom}
+          onChange={handleZoomChange}
+        />
+      </div>
+
+      <div>
+        <Text type="secondary">
+          Target Resolution: {targetResolution.width} x{" "}
+          {targetResolution.height}
+        </Text>
+      </div>
+
+      <Divider />
+
+      <div
+        ref={containerRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        style={{
+          height: "400px",
+          width: "100%",
+          position: "relative",
+          overflow: "hidden",
+          background: "#f0f0f0",
+          border: "1px solid #d9d9d9",
+          borderRadius: "2px",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          {image && (
+            <img
+              ref={imageRef}
+              src={image}
+              alt="Original"
+              style={{
+                transform: `scale(${zoom})`,
+                transformOrigin: "center",
+                maxHeight: "380px",
+                maxWidth: "100%",
+              }}
+            />
+          )}
         </div>
 
-        <div className="zoom-control" style={{ margin: "10px 0" }}>
-          <span>Zoom: </span>
-          <Slider
-            min={0.5}
-            max={3}
-            step={0.1}
-            value={zoom}
-            onChange={setZoom}
+        {cropData.width > 0 && cropData.height > 0 && (
+          <div
+            ref={cropBoxRef}
             style={{
-              width: "200px",
-              display: "inline-block",
-              margin: "0 10px",
+              position: "absolute",
+              border: "2px solid #1890ff",
+              background: "rgba(24, 144, 255, 0.2)",
+              left: `${cropData.x}px`,
+              top: `${cropData.y}px`,
+              width: `${cropData.width}px`,
+              height: `${cropData.height}px`,
+              cursor: isDragging === "move" ? "move" : "crosshair",
             }}
           />
-        </div>
-
-        <div
-          className="crop-area"
-          style={{ overflow: "hidden", maxHeight: "500px" }}
-        >
-          <ReactCrop
-            src={imageUrl}
-            crop={crop}
-            onChange={setCrop}
-            onComplete={handleComplete}
-            onImageLoaded={onImageLoaded}
-            style={{ transform: `scale(${zoom})`, transformOrigin: "center" }}
-          />
-        </div>
-
-        <div className="crop-info" style={{ marginTop: "10px" }}>
-          <p>Selected Resolution: {selectedResolution}</p>
-          <p>
-            Drag to position and resize the crop area. Use zoom to adjust view
-            if needed.
-          </p>
-        </div>
+        )}
       </div>
     </Modal>
   );

@@ -1,48 +1,35 @@
-export const SupportImageFormat = [
-"JPEG", "JPG", "PNG", "GIF"
-]
+export const SupportImageFormat = ["JPEG", "JPG", "PNG", "GIF"];
 
-export const SupportVideoFormat = [
-    "MKV", "MP4", "AVI", "WEBM"
-]
-export const SupportFormatContent = [
-    "Please upload supported format file"
-]
+export const SupportVideoFormat = ["MKV", "MP4", "AVI", "WEBM"];
+export const SupportFormatContent = ["Please upload supported format file"];
 export const FileTypeImageOptions = [
-    { value: 'jpg', label: 'JPG' },
-    { value: 'jpeg', label: 'JPEG' },
-    { value: 'png', label: 'PNG' },
-    { value: 'gif', label: 'GIF' },
-]
+  { value: "jpg", label: "JPG" },
+  { value: "jpeg", label: "JPEG" },
+  { value: "png", label: "PNG" },
+  { value: "gif", label: "GIF" },
+];
 export const FileTypeVideoOptions = [
-    { value: 'mkv', label: 'MKV' },
-    { value: 'mp4', label: 'MP4' },
-    { value: 'avi', label: 'AVI' },
-    { value: 'webm', label: 'WEBM' },
-]
-export const ResolutionByServices={
-    place:"1600x615",
-    venue:"232X323",
-    
-}
+  { value: "mkv", label: "MKV" },
+  { value: "mp4", label: "MP4" },
+  { value: "avi", label: "AVI" },
+  { value: "webm", label: "WEBM" },
+];
+export const ResolutionByServices = {
+  place: "1600x615",
+  venue: "232X323",
+};
 
-export const SmallThumbnailresolution = [
-    "400X400"
-]
+export const SmallThumbnailresolution = ["400X400"];
 
-
-  export const FileTypeResolutions = [
-    { key: "small-thumbnail", resolution: "150X150" },
-    { key: "medium-thumbnail", resolution: "300X300" },
-    { key: "large-thumbnail", resolution: "600X600" },
-    { key: "profile-picture", resolution: "400X400" },
-    { key: "banner-image", resolution: "1920X1080" },
-    { key: "fullscreen-background", resolution: "2560X1440" },
-    { key: "mobile-header", resolution: "1080X1920" },
-  ];
-
-
-
+export const FileTypeResolutions = [
+  { key: "small-thumbnail", resolution: "150X150" },
+  { key: "medium-thumbnail", resolution: "300X300" },
+  { key: "large-thumbnail", resolution: "600X600" },
+  { key: "profile-picture", resolution: "400X400" },
+  { key: "banner-image", resolution: "1920X1080" },
+  { key: "fullscreen-background", resolution: "2560X1440" },
+  { key: "mobile-header", resolution: "1080X1920" },
+];
 
 /**
  * Converts size strings (e.g., "200MB") to bytes.
@@ -62,4 +49,8 @@ export const parseSizeToBytes = (size) => {
   }
 
   return 0; // Default to 0 if parsing fails
+};
+
+export const ThumbnailImageResolutions = {
+  OFFER: { width: 1080, height: 1080 },
 };
