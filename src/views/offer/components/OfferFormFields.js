@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Input,
   Row,
@@ -9,22 +9,17 @@ import {
   Checkbox,
   Button,
   Space,
-  Upload,
   Typography,
-  message,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsDateRequired } from "store/slices/offerSlice";
 import moment from "moment";
-import { UploadOutlined } from "@ant-design/icons";
 import {
   SupportImageFormat,
   SupportFormatContent,
   ResolutionByServices,
   ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
-import Utils from "utils/index";
-import ImageCropper from "components/util-components/Image/ImageCroping";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Text } = Typography;
@@ -202,7 +197,6 @@ function OfferFormFields() {
             label="Thumbnail Image"
             valuePropName="value"
             getValueFromEvent={normFile}
-            rules={rules.thumbnail_image}
             style={{ marginBottom: "0px", padding: "0px" }}
           >
             <ResizedImgePicker
