@@ -4,31 +4,26 @@ import {
   Card,
   Button,
   Input,
-  Upload,
   Space,
-  Checkbox,
   message,
   Select,
   Modal,
+  Row,
+  Col,
 } from "antd";
-import {
-  PlusOutlined,
-  MinusCircleOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { getVenues } from "store/slices/locationSlice";
 import { addPayment } from "store/slices/paymentSlice";
 import { RulesMessageConstants } from "constants/RulesConstant";
-import { fetchAllEvent, setSelectedEvent } from "store/slices/eventSlice";
-import {
-  SupportImageFormat,
-  ResolutionByServices,
-} from "constants/SupportFileConstants";
+import { fetchAllEvent } from "store/slices/eventSlice";
 import { useDispatch, useSelector } from "react-redux";
-import Utils from "utils/index";
+import { PAYMENT_METHODS } from "constants/PaymentConstants";
+import { processPaymentMethods } from "utils/PaymentUtils";
+import { PaymentMethodFields } from "./PaymentMethodFields";
+import AddOnServicesForm from "./AddOnServicesForm";
 
 const { Option } = Select;
 
@@ -82,26 +77,15 @@ const PaymentFormFields = ({ mode, id }) => {
         formData.append("additional_urls", formValues.additional_urls);
       }
 
-      const qrPayments = formValues.qrPayments || [];
-      const qrDetails = qrPayments.map((qr) => ({
-        payment_provider: qr.paymentProvider,
-        qr_code: qr.qrCode && qr.qrCode[0]?.uid ? qr.qrCode[0].uid : null,
-        image: qr.qrCode && qr.qrCode[0]?.uid ? qr.qrCode[0].uid : null,
-      }));
-      formData.append("payment_qr_details", JSON.stringify(qrDetails));
+      // Process payment methods using utility function
+      const paymentMethods = formValues.paymentMethods || [];
+      const processedPaymentMethods = processPaymentMethods(paymentMethods);
+      formData.append(
+        "payment_methods",
+        JSON.stringify(processedPaymentMethods)
+      );
 
-      const cardPayments = formValues.cardPayments || [];
-      const cardDetails = cardPayments.map((payment) => ({
-        bank_name: payment.bankName,
-        bank_code: payment.bankCode || "",
-        image: payment.image && payment.image[0]?.uid ? payment.image[0].uid : null,
-        is_debit: payment.cardType?.includes("debit") || false,
-        is_credit: payment.cardType?.includes("credit") || false,
-        is_master: payment.cardType?.includes("master") || false,
-        is_visa: payment.cardType?.includes("visa") || false,
-      }));
-      formData.append("payment_methods", JSON.stringify(cardDetails));
-
+      // Process services
       const services = formValues.services || [];
       const serviceDetails = services.map((service) => ({
         service_name: service.name,
@@ -143,241 +127,185 @@ const PaymentFormFields = ({ mode, id }) => {
 
   return (
     <>
-      <Form
-        form={form}
-        layout="vertical"
-        onFinishFailed={handleFinishFailed}
-      >
+      <Form form={form} layout="vertical" onFinishFailed={handleFinishFailed}>
         <Card title="Payment Form">
-          <PlaceWithCountryForm
-            form={form}
-            label="Place"
-            onSelect={(id) => {
-              dispatch(getVenues({ place_id: id }));
-              form.setFieldsValue({ venue_id: id });
-            }}
-            rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
-          />
-          <Form.Item
-            name="event_id"
-            label="Event"
-            rules={[{ required: false, message: "Please select an event" }]}
-          >
-            <Select
-              loading={loading}
-              className="w-100"
-              placeholder="Select an event"
-              onChange={handleSelectEvent}
-              allowClear
-              showSearch
-              filterOption={(input, option) =>
-                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }
-            >
-              {filteredEvents.map((event) => (
-                <Option key={event.id} value={event.id}>
-                  {event.event_name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item name="url" label="Terms and Conditions">
-            <Input placeholder="Enter your URL" type="text" />
-          </Form.Item>
-
-          <Form.Item name="additional_urls" label="Additional Urls">
-            <Input placeholder="Enter your URL" type="text" />
-          </Form.Item>
-        </Card>
-
-        <Card>
-        <Form.Item name="services" label="Add-On Services">
-          <Form.List name="services">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Space
-                    key={key}
-                    style={{ display: "flex", marginBottom: 8 }}
-                    align="baseline"
-                  >
-                    <Form.Item
-                      {...restField}
-                      name={[name, "name"]}
-                    >
-                      <Input placeholder="Service name" />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "image"]}
-                      valuePropName="fileList"
-                      getValueFromEvent={(e) =>
-                        Array.isArray(e) ? e : e?.fileList
-                      }
-                    >
-                      <Upload
-                        name="thumbnail_image"
-                        listType="picture"
-                        maxCount={1}
-                        beforeUpload={(file) =>
-                          Utils.handleBeforeUpload(
-                            file,
-                            ResolutionByServices.place
-                          )
-                        }
-                        accept={`.${SupportImageFormat.join(",.")}`}
-                      >
-                        <Button icon={<UploadOutlined />}>
-                          Click to upload
-                        </Button>
-                      </Upload>
-                    </Form.Item>
-                    <MinusCircleOutlined onClick={() => remove(name)} />
-                  </Space>
-                ))}
-                <Form.Item>
-                  <Button
-                    type="dashed"
-                    onClick={() => add()}
-                    block
-                    icon={<PlusOutlined />}
-                  >
-                    Add Service
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
-        </Form.Item>
-      </Card>
-
-      <Card>
-        <Form.Item name="qrPayments" label="QR Payments">
-          <Form.List name="qrPayments">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Space
-                    key={key}
-                    style={{ display: "flex", marginBottom: 8 }}
-                    align="baseline"
-                  >
-                    <Form.Item
-                      {...restField}
-                      name={[name, "paymentProvider"]}
-                    >
-                      <Input placeholder="Payment Provider" />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "qrCode"]}
-                      valuePropName="fileList"
-                      getValueFromEvent={(e) =>
-                        Array.isArray(e) ? e : e?.fileList
-                      }
-                    >
-                      <Upload
-                        name="qr_code"
-                        listType="picture"
-                        maxCount={1}
-                        beforeUpload={(file) =>
-                          Utils.handleBeforeUpload(
-                            file,
-                            ResolutionByServices.place
-                          )
-                        }
-                        accept={`.${SupportImageFormat.join(",.")}`}
-                      >
-                        <Button icon={<UploadOutlined />}>
-                          Upload QR Code
-                        </Button>
-                      </Upload>
-                    </Form.Item>
-                    <MinusCircleOutlined onClick={() => remove(name)} />
-                  </Space>
-                ))}
-                <Form.Item>
-                  <Button
-                    type="dashed"
-                    onClick={() => add()}
-                    block
-                    icon={<PlusOutlined />}
-                  >
-                    Add QR Payment
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
-        </Form.Item>
-      </Card>
-
-      <Card>
-        <Form.Item name="cardPayments" label="Add Payment Methods">
-          <Form.List name="cardPayments">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Space
-                    key={key}
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Form.Item
-                      {...restField}
-                      name={[name, "bankName"]}
-                    >
-                      <Input placeholder="Bank Name" />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "cardType"]}
-                    >
-                      <Checkbox.Group>
-                        <Checkbox value="debit">Debit Card</Checkbox>
-                        <Checkbox value="credit">Credit Card</Checkbox>
-                      </Checkbox.Group>
-                    </Form.Item>
-                    <MinusCircleOutlined onClick={() => remove(name)} />
-                  </Space>
-                ))}
-                <Form.Item>
-                  <Button
-                    type="dashed"
-                    onClick={() => add()}
-                    block
-                    icon={<PlusOutlined />}
-                  >
-                    Add Bank & Card Type
-                  </Button>   
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
-        </Form.Item>
-      </Card>
-
-        <Card>
-          <div className="container" style={{ padding: "0px" }}>
-            <Flex className="py-2" mobileFlex={false} justifyContent="flex-end">
-              <DiscardButton form={form} />
-              <div className="mb-3">
-                <Button
-                  onClick={handleSubmit}
-                  type="primary"
-                  htmlType="submit"
+          {/* Two fields in one row using Row and Col */}
+          <Row gutter={16}>
+            <Col span={12}>
+              <PlaceWithCountryForm
+                form={form}
+                label="Place"
+                onSelect={(id) => {
+                  dispatch(getVenues({ place_id: id }));
+                  form.setFieldsValue({ venue_id: id });
+                }}
+                rules={[
+                  { required: true, message: RulesMessageConstants.PLACE },
+                ]}
+              />
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="event_id"
+                label="Event"
+                rules={[{ required: false, message: "Please select an event" }]}
+              >
+                <Select
+                  loading={loading}
+                  className="w-100"
+                  placeholder="Select an event"
+                  onChange={handleSelectEvent}
+                  allowClear
+                  showSearch
+                  filterOption={(input, option) =>
+                    option.children
+                      .toLowerCase()
+                      .indexOf(input.toLowerCase()) >= 0
+                  }
                 >
-                  Submit
-                </Button>
-              </div>
-            </Flex>
-          </div>
+                  {filteredEvents.map((event) => (
+                    <Option key={event.id} value={event.id}>
+                      {event.event_name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="url" label="Terms and Conditions">
+                <Input placeholder="Enter your URL" type="text" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="additional_urls" label="Additional Urls">
+                <Input placeholder="Enter your URL" type="text" />
+              </Form.Item>
+            </Col>
+          </Row>
         </Card>
+
+        <Card title="Payment Methods">
+          <Form.List name="paymentMethods">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => {
+                  // Get the current payment type value for this field
+                  const paymentType = form.getFieldValue([
+                    "paymentMethods",
+                    name,
+                    "paymentType",
+                  ]);
+
+                  return (
+                    <Card
+                      key={key}
+                      style={{ marginBottom: 16 }}
+                      size="small"
+                      title={`Payment Method ${name + 1}`}
+                      extra={
+                        <MinusCircleOutlined onClick={() => remove(name)} />
+                      }
+                    >
+                      <Form.Item
+                        {...restField}
+                        name={[name, "paymentType"]}
+                        label="Payment Type"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Please select payment type",
+                          },
+                        ]}
+                      >
+                        <Select
+                          placeholder="Select payment type"
+                          onChange={() => {
+                            // When payment type changes, clear the dependent fields
+                            const currentValues = form.getFieldValue([
+                              "paymentMethods",
+                              name,
+                            ]);
+                            const newValues = {
+                              paymentType: currentValues.paymentType,
+                              paymentCharge: currentValues.paymentCharge,
+                              authorizedUrl: currentValues.authorizedUrl,
+                            };
+                            form.setFieldsValue({
+                              paymentMethods: {
+                                [name]: newValues,
+                              },
+                            });
+                          }}
+                        >
+                          {PAYMENT_METHODS.map((method) => (
+                            <Option key={method.value} value={method.value}>
+                              {method.label}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+
+                      {/* Two fields in one row in the Payment Method card */}
+                      <Row gutter={16}>
+                        <Col span={12}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "paymentCharge"]}
+                            label="Payment Charge (%)"
+                          >
+                            <Input
+                              placeholder="Enter payment charge"
+                              type="number"
+                              min={0}
+                              step={0.01}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "authorizedUrl"]}
+                            label="Authorized URL"
+                          >
+                            <Input placeholder="Enter authorized URL" />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+
+                      <PaymentMethodFields
+                        name={name}
+                        paymentType={paymentType}
+                        form={form}
+                      />
+                    </Card>
+                  );
+                })}
+                <Form.Item>
+                  <Button
+                    type="dashed"
+                    onClick={() => add()}
+                    block
+                    icon={<PlusOutlined />}
+                  >
+                    Add Payment Method
+                  </Button>
+                </Form.Item>
+              </>
+            )}
+          </Form.List>
+        </Card>
+
+        <AddOnServicesForm />
+        <Flex className="py-2" mobileFlex={false} justifyContent="flex-end">
+          <DiscardButton form={form} />
+          <div className="mb-3">
+            <Button onClick={handleSubmit} type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </div>
+        </Flex>
       </Form>
 
       {/* Confirmation Modal */}
