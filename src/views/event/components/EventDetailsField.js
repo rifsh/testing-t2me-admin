@@ -60,6 +60,7 @@ const EventDetailsField = () => {
           >
             <Input.TextArea rows={4} />
           </Form.Item>
+          </Card><Card>
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
@@ -123,7 +124,7 @@ const EventDetailsField = () => {
           </Text>
 
           <Form.Item
-            name=""
+            name="banner_image_url"
             label="Banner Images Url"
             rules={rules.banner_url}
             style={{ marginTop: "10px", padding: "0px" }}
@@ -133,7 +134,7 @@ const EventDetailsField = () => {
 
 
           <Form.Item
-            name=""
+            name="event_image"
             label="Event Images"
             valuePropName="fileList"
             getValueFromEvent={normFile}
@@ -142,7 +143,7 @@ const EventDetailsField = () => {
             style={{ marginBottom: "0px", padding: "0px" }}
           >
             <Upload
-              name=""
+              name="event_image"
               listType="picture"
               // beforeUpload={handleBeforeUpload}
               beforeUpload={(file) =>
@@ -157,8 +158,8 @@ const EventDetailsField = () => {
           
         </Card>
         <Card>
-          <Form.Item name="includedPrice" label="Included In the Price">
-            <Form.List name="includedPrice">
+          <Form.Item name="addOnServices" label="Add on Services">
+            <Form.List name="addOnServices">
               {(fields, { add, remove }) => (
                 <>
                   {fields.map(({ key, name, ...restField }) => (
@@ -168,7 +169,7 @@ const EventDetailsField = () => {
                         {...restField}
                         name={[name, "title"]}
                         label="Title"
-                        rules={[{ required: true, message: "Title is required" }]}
+                        rules={[{ required: false, message: "Title is required" }]}
                       >
                         <Input placeholder="Enter title" />
                       </Form.Item>
@@ -251,7 +252,7 @@ const EventDetailsField = () => {
                         {...restField}
                         name={[name, "questionTitle"]}
                         label="Question Title"
-                        rules={[{ required: true, message: "Question title is required" }]}
+                        rules={[{ required: false, message: "Question title is required" }]}
                       >
                         <Input placeholder="Enter question title" />
                       </Form.Item>
