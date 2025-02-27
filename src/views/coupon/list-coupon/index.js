@@ -132,8 +132,8 @@ const CouponList = () => {
     },
     {
       title: "Discount Percentage",
-      dataIndex: "discount_percentage",
-      sorter: (a, b) => a.discount_percentage - b.discount_percentage,
+      dataIndex: "discount_percentage_amount",
+      sorter: (a, b) => a.discount_percentage_amount - b.discount_percentage_amount,
       render: (value) => `${value}%`,
     },
     {
@@ -205,7 +205,7 @@ const CouponList = () => {
               {selectedCoupon.name}
             </Descriptions.Item>
             <Descriptions.Item label="Discount Percentage">
-              {selectedCoupon.discount_percentage}%
+              {selectedCoupon.discount_percentage_amount}%
             </Descriptions.Item>
             <Descriptions.Item label="Start Date">
               {selectedCoupon.start_date
