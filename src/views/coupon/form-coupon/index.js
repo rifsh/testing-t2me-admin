@@ -56,13 +56,31 @@ const CouponForm = ({ mode, coupon }) => {
 
   useEffect(() => {
     if (coupon && mode === "EDIT") {
+      // Format key_words for the form if present
+      let formattedKeyWords = {};
+      if (coupon.key_words && Array.isArray(coupon.key_words)) {
+        // Convert array of key_words to the expected object format
+        coupon.key_words.forEach((code, index) => {
+          formattedKeyWords[index + 1] = code;
+        });
+      } else if (coupon.key_words && typeof coupon.key_words === "object") {
+        // If already in object format, use directly
+        formattedKeyWords = coupon.key_words;
+      }
+
       const formData = {
         name: coupon.name,
-        coupon_code: coupon.coupon_code,
-        discount_percentage: coupon.discount_percentage,
-        date_required: coupon.date_required,
+        coupon_type: coupon.coupon_type || "single",
+        is_single: coupon.is_single !== undefined ? coupon.is_single : true,
+        is_reusable: coupon.is_reusable || false,
+        key_words: formattedKeyWords,
+        is_percentage:
+          coupon.is_percentage !== undefined ? coupon.is_percentage : true,
+        discount_percentage_amount:
+          coupon.discount_percentage_amount || coupon.discount_percentage_amount,
         max_uses: coupon.max_uses,
         min_purchase_amount: coupon.min_purchase_amount,
+        date_required: Boolean(coupon.date_required),
         thumbnail_image:
           coupon.thumbnail_image && coupon.thumbnail_image !== "images"
             ? [
@@ -76,33 +94,73 @@ const CouponForm = ({ mode, coupon }) => {
             : [],
       };
 
-      if (coupon.date_required && coupon.start_date && coupon.end_date) {
+      // Handle dates properly
+      if (coupon.start_date) {
         formData.start_date = dayjs(coupon.start_date);
+      }
+
+      if (coupon.end_date) {
         formData.end_date = dayjs(coupon.end_date);
       }
 
       form.setFieldsValue(formData);
 
-      dispatch(setIsDateRequired(coupon?.date_required));
+      // Set isDateRequired based on the coupon's existing date settings
+      dispatch(setIsDateRequired(Boolean(coupon.date_required)));
     }
-  }, [form, coupon]);
+  }, [form, coupon, dispatch, mode]);
+
+  // Process form values before submission
+  const processFormValues = (values) => {
+    const processedValues = { ...values };
+
+    // Process key_words from object to array
+    if (
+      processedValues.key_words &&
+      typeof processedValues.key_words === "object"
+    ) {
+      processedValues.key_words = Object.values(
+        processedValues.key_words
+      ).filter(Boolean);
+    }
+
+    // Set date_required explicitly based on current state
+    processedValues.date_required = isDateRequired;
+
+    // Process dates if they exist
+    if (isDateRequired) {
+      if (processedValues.start_date) {
+        // Handle both moment and dayjs objects
+        processedValues.start_date =
+          processedValues.start_date.format("YYYY-MM-DD");
+      }
+
+      if (processedValues.end_date) {
+        processedValues.end_date =
+          processedValues.end_date.format("YYYY-MM-DD");
+      }
+    } else {
+      // If dates not required, ensure they're cleared
+      processedValues.start_date = null;
+      processedValues.end_date = null;
+    }
+
+    return processedValues;
+  };
 
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
 
-      if (mode === "EDIT") {
-        if (isDateRequired) {
-          values.start_date = Utils.formatDate(values.start_date);
-          values.end_date = Utils.formatDate(values.end_date);
-        }
-        values.date_required = values.date_required ?? isDateRequired;
+      // Use the processFormValues function to handle all transformations
+      const processedValues = processFormValues(values);
 
+      if (mode === "EDIT") {
         const editData = {
-          ...values,
+          ...processedValues,
           id: coupon.id,
         };
-        console.log("Edit Data:", editData);
+
         const resultAction = await dispatch(
           editCoupon({ data: editData, action: ActionType.WARNING })
         );
@@ -112,16 +170,9 @@ const CouponForm = ({ mode, coupon }) => {
           dispatch(setCouponDialogVisible(true));
         }
       } else {
-        if (isDateRequired) {
-          values.start_date = Utils.formatDate(values.start_date);
-          values.end_date = Utils.formatDate(values.end_date);
-        }
-        values.date_required = values.date_required ?? isDateRequired;
-        // dispatch(setSelectedSubmitItem(values));
         const formData = {
-          ...values,
+          ...processedValues,
         };
-        console.log(formData, "coupon daata");
 
         dispatch(setSelectedSubmitItem(formData));
       }
@@ -146,11 +197,8 @@ const CouponForm = ({ mode, coupon }) => {
   const handleModalCancel = () => {
     dispatch(setCouponDialogVisible(false));
   };
+
   const handleWarningPagination = (page, size) => {
-    console.log("------------------------");
-
-    console.log("CHANIGN...........");
-
     dispatch(
       editCoupon({
         data: selectedCoupon,
@@ -171,6 +219,9 @@ const CouponForm = ({ mode, coupon }) => {
           heightUnit: "cm",
           widthUnit: "cm",
           weightUnit: "kg",
+          is_percentage: true,
+          coupon_type: "single",
+          is_reusable: false,
         }}
       >
         <PageHeaderAlt className="border-bottom" overlap>
@@ -206,7 +257,7 @@ const CouponForm = ({ mode, coupon }) => {
               {
                 label: "General",
                 key: "1",
-                children: <CouponFormFields />,
+                children: <CouponFormFields form={form} />,
               },
             ]}
           />
