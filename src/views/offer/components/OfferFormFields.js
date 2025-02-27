@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Input,
   Row,
@@ -21,8 +21,11 @@ import {
   SupportImageFormat,
   SupportFormatContent,
   ResolutionByServices,
+  ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
 import Utils from "utils/index";
+import ImageCropper from "components/util-components/Image/ImageCroping";
+import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Text } = Typography;
 const rules = {
@@ -54,6 +57,12 @@ const rules = {
     {
       required: true,
       message: "Please select the start date",
+    },
+  ],
+  thumbnail_image: [
+    {
+      required: true,
+      message: "Please upload a thumbnail image",
     },
   ],
 };
@@ -97,11 +106,12 @@ function OfferFormFields() {
     });
   };
 
+  // Normalize file list to ensure it's always an array
   const normFile = (e) => {
     if (Array.isArray(e)) {
       return e;
     }
-    return e?.fileList;
+    return e?.fileList || [];
   };
 
   return (
@@ -190,22 +200,16 @@ function OfferFormFields() {
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
-            valuePropName="fileList"
+            valuePropName="value"
             getValueFromEvent={normFile}
             rules={rules.thumbnail_image}
             style={{ marginBottom: "0px", padding: "0px" }}
           >
-            <Upload
-              name="thumbnail_image"
-              listType="picture"
+            <ResizedImgePicker
               maxCount={1}
-              beforeUpload={(file) =>
-                Utils.handleBeforeUpload(file, ResolutionByServices.place)
-              }
-              accept={`.${SupportImageFormat.join(",.")}`}
-            >
-              <Button icon={<UploadOutlined />}>Click to upload</Button>
-            </Upload>
+              targetResolution={ThumbnailImageResolutions.OFFER}
+              form={form}
+            />
           </Form.Item>
           <div>
             <Text
@@ -254,6 +258,8 @@ function OfferFormFields() {
           </Form.List>
         </Card>
       </Col>
+
+      {/* Image Cropper Modal */}
     </Row>
   );
 }
