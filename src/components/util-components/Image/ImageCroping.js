@@ -21,7 +21,7 @@ const ImageCropper = ({
   onCrop,
   targetResolution = { width: 1080, height: 1080 },
   outputFormat = "image/png",
-  fileName = null,
+  fileName = null,  
 }) => {
   const [cropData, setCropData] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [isDragging, setIsDragging] = useState(false);

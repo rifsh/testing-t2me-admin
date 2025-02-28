@@ -105,11 +105,6 @@ const CountryForm = ({ mode, placeId }) => {
       const values = await form.validateFields();
       console.log({ values });
 
-      const formData = new FormData();
-
-      // Object.keys(values).forEach((key) => {
-      //   formData.append(key, values[key]);
-      // });
       const data = {
         ...values,
       };
@@ -228,7 +223,7 @@ const CountryForm = ({ mode, placeId }) => {
               {
                 label: "General",
                 key: "1",
-                children: <CountryFormFields mode={mode} />,
+                children: <CountryFormFields mode={mode} form={form} />,
               },
             ]}
           />

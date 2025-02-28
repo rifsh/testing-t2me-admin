@@ -43,6 +43,12 @@ const ResizedImgePicker = ({
 
   // Image handling functions
   const beforeUpload = (file) => {
+    // Check if we've already reached the maximum number of files
+    if (fileList.length >= maxCount) {
+      message.warning(`You can only upload a maximum of ${maxCount} images.`);
+      return Upload.LIST_IGNORE;
+    }
+
     // Check file size and format using Utils helper
     const isValidFile = Utils.handleBeforeUpload(
       file,
@@ -90,19 +96,9 @@ const ResizedImgePicker = ({
       originFileObj: croppedFile,
     };
 
-    // Update file list based on maxCount
-    let newFileList;
-    if (maxCount === 1) {
-      newFileList = [newFile];
-    } else {
-      newFileList = [...fileList];
-      if (newFileList.length >= maxCount) {
-        // Replace the first item if we've reached the max count
-        newFileList[0] = newFile;
-      } else {
-        newFileList.push(newFile);
-      }
-    }
+    // Update file list by adding the new file
+    // Fixed logic: Just add the new file to the existing file list
+    const newFileList = [...fileList, newFile];
 
     setFileList(newFileList);
     setCurrentFileName(null);
