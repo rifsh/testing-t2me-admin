@@ -19,6 +19,7 @@ import tax from "./slices/taxSlice";
 import faqs from "./slices/faqSlice";
 import appinfo from "./slices/AppInfoSlice";
 import footer from "./slices/footerSlice";
+import leadEvents from "./slices/leadEventSlice";
 
 import layout from "./slices/layoutSlice";
 
@@ -50,6 +51,7 @@ const rootReducer = (asyncReducers = {}) => {
       faqs,
       appinfo,
       footer,
+      leadEvents,
       ...asyncReducers,
     });
 
