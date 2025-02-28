@@ -11,18 +11,23 @@ import {
   message,
 } from "antd";
 import React from "react";
-import { PlusOutlined, UploadOutlined, MinusCircleOutlined, } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  UploadOutlined,
+  MinusCircleOutlined,
+} from "@ant-design/icons";
 import {
   SupportImageFormat,
   SupportFormatContent,
   ResolutionByServices,
+  ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
 import Utils from "utils/index";
+import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Text } = Typography;
 
 const EventDetailsField = () => {
-
   const rules = {
     name: [{ required: true, message: "Please enter event name" }],
     description: [
@@ -41,7 +46,7 @@ const EventDetailsField = () => {
     if (Array.isArray(e)) {
       return e;
     }
-    return e?.fileList;
+    return e?.fileList || [];
   };
   const handleBeforeUpload = Utils.handleBeforeUpload;
 
@@ -60,27 +65,19 @@ const EventDetailsField = () => {
           >
             <Input.TextArea rows={4} />
           </Form.Item>
-          </Card><Card>
+        </Card>
+        <Card>
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
-            valuePropName="fileList"
+            valuePropName="value"
             getValueFromEvent={normFile}
             style={{ marginBottom: "0px", padding: "0px" }}
-            rules={rules.thumbnail_image}
           >
-            <Upload
-              name="thumbnail_image"
-              listType="picture"
+            <ResizedImgePicker
               maxCount={1}
-              // beforeUpload={handleBeforeUpload}
-              beforeUpload={(file) =>
-                Utils.handleBeforeUpload(file, ResolutionByServices.place)
-              }
-              accept={`.${SupportImageFormat.join(",.")}`}
-            >
-              <Button icon={<UploadOutlined />}>Click to upload</Button>
-            </Upload>
+              targetResolution={ThumbnailImageResolutions.EVENT}
+            />
           </Form.Item>
           <Text
             type="warning"
@@ -93,35 +90,15 @@ const EventDetailsField = () => {
           <Form.Item
             name="banner_images"
             label="Banner Images"
-            valuePropName="fileList"
+            valuePropName="value"
             getValueFromEvent={normFile}
-            rules={rules.banner_images}
             style={{ marginBottom: "0px", padding: "0px" }}
           >
-            <Upload
-              name="banner_images"
-              listType="picture"
-              // beforeUpload={handleBeforeUpload}
-              beforeUpload={(file) =>
-                Utils.handleBeforeUpload(file, ResolutionByServices.place)
-              }
-              accept={`.${SupportImageFormat.join(",.")}`}
-            >
-              <Button icon={<UploadOutlined />}>Click to upload banners</Button>
-            </Upload>
+            <ResizedImgePicker
+              maxCount={20}
+              targetResolution={ThumbnailImageResolutions.EVENT_BANNER}
+            />
           </Form.Item>
-          <></>
-          
-
-
-          <Text
-            type="warning"
-            style={{ padding: "00px 00px", fontSize: "11px" }}
-          >
-            {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
-            {" resolution "}
-            {ResolutionByServices.place} pixels.{" "}
-          </Text>
 
           <Form.Item
             name="banner_image_url"
@@ -132,7 +109,6 @@ const EventDetailsField = () => {
             <Input placeholder="Banner Images Url" />
           </Form.Item>
 
-
           <Form.Item
             name="event_image"
             label="Event Images"
@@ -142,20 +118,11 @@ const EventDetailsField = () => {
 
             style={{ marginBottom: "0px", padding: "0px" }}
           >
-            <Upload
-              name="event_image"
-              listType="picture"
-              // beforeUpload={handleBeforeUpload}
-              beforeUpload={(file) =>
-                Utils.handleBeforeUpload(file, ResolutionByServices.place)
-              }
-              accept={`.${SupportImageFormat.join(",.")}`}
-            >
-              <Button icon={<UploadOutlined />}>Click to upload banners</Button>
-            </Upload>
+            <ResizedImgePicker
+              maxCount={20}
+              targetResolution={ThumbnailImageResolutions.EVENT}
+            />
           </Form.Item>
-
-          
         </Card>
         <Card>
           <Form.Item name="addOnServices" label="Add on Services">
@@ -169,34 +136,56 @@ const EventDetailsField = () => {
                         {...restField}
                         name={[name, "title"]}
                         label="Title"
-                        rules={[{ required: false, message: "Title is required" }]}
+                        rules={[
+                          { required: true, message: "Title is required" },
+                        ]}
                       >
                         <Input placeholder="Enter title" />
                       </Form.Item>
 
                       {/* Nested Form.List for Price Included Fields */}
                       <Form.List name={[name, "priceIncludes"]}>
-                        {(priceFields, { add: addPrice, remove: removePrice }) => (
+                        {(
+                          priceFields,
+                          { add: addPrice, remove: removePrice }
+                        ) => (
                           <>
                             <Row gutter={16}>
-                              {priceFields.map(({ key: priceKey, name: priceName, ...priceRestField }) => (
-                                <Col span={12} key={priceKey}>
-                                  <Space
-                                    style={{ display: "flex", marginBottom: 8 }}
-                                    align="baseline"
-                                  >
-                                    <Form.Item
-                                      {...priceRestField}
-                                      name={[priceName, "priceInclude"]}
-                                      rules={[{ required: true, message: "Price include is required" }]}
-                                      style={{ width: "100%" }}
+                              {priceFields.map(
+                                ({
+                                  key: priceKey,
+                                  name: priceName,
+                                  ...priceRestField
+                                }) => (
+                                  <Col span={12} key={priceKey}>
+                                    <Space
+                                      style={{
+                                        display: "flex",
+                                        marginBottom: 8,
+                                      }}
+                                      align="baseline"
                                     >
-                                      <Input placeholder="Price Included" />
-                                    </Form.Item>
-                                    <MinusCircleOutlined onClick={() => removePrice(priceName)} />
-                                  </Space>
-                                </Col>
-                              ))}
+                                      <Form.Item
+                                        {...priceRestField}
+                                        name={[priceName, "priceInclude"]}
+                                        rules={[
+                                          {
+                                            required: true,
+                                            message:
+                                              "Price include is required",
+                                          },
+                                        ]}
+                                        style={{ width: "100%" }}
+                                      >
+                                        <Input placeholder="Price Included" />
+                                      </Form.Item>
+                                      <MinusCircleOutlined
+                                        onClick={() => removePrice(priceName)}
+                                      />
+                                    </Space>
+                                  </Col>
+                                )
+                              )}
                             </Row>
                             <Form.Item>
                               <Button
@@ -252,34 +241,58 @@ const EventDetailsField = () => {
                         {...restField}
                         name={[name, "questionTitle"]}
                         label="Question Title"
-                        rules={[{ required: false, message: "Question title is required" }]}
+                        rules={[
+                          {
+                            required: true,
+                            message: "Question title is required",
+                          },
+                        ]}
                       >
                         <Input placeholder="Enter question title" />
                       </Form.Item>
 
                       {/* Nested Form.List for Answers */}
                       <Form.List name={[name, "answers"]}>
-                        {(answerFields, { add: addAnswer, remove: removeAnswer }) => (
+                        {(
+                          answerFields,
+                          { add: addAnswer, remove: removeAnswer }
+                        ) => (
                           <>
                             <Row gutter={16}>
-                              {answerFields.map(({ key: answerKey, name: answerName, ...answerRestField }) => (
-                                <Col span={12} key={answerKey}>
-                                  <Space
-                                    style={{ display: "flex", marginBottom: 8 }}
-                                    align="baseline"
-                                  >
-                                    <Form.Item
-                                      {...answerRestField}
-                                      name={[answerName, "answer"]}
-                                      rules={[{ required: true, message: "Answer is required" }]}
-                                      style={{ width: "100%" }}
+                              {answerFields.map(
+                                ({
+                                  key: answerKey,
+                                  name: answerName,
+                                  ...answerRestField
+                                }) => (
+                                  <Col span={12} key={answerKey}>
+                                    <Space
+                                      style={{
+                                        display: "flex",
+                                        marginBottom: 8,
+                                      }}
+                                      align="baseline"
                                     >
-                                      <Input placeholder="Enter answer" />
-                                    </Form.Item>
-                                    <MinusCircleOutlined onClick={() => removeAnswer(answerName)} />
-                                  </Space>
-                                </Col>
-                              ))}
+                                      <Form.Item
+                                        {...answerRestField}
+                                        name={[answerName, "answer"]}
+                                        rules={[
+                                          {
+                                            required: true,
+                                            message: "Answer is required",
+                                          },
+                                        ]}
+                                        style={{ width: "100%" }}
+                                      >
+                                        <Input placeholder="Enter answer" />
+                                      </Form.Item>
+                                      <MinusCircleOutlined
+                                        onClick={() => removeAnswer(answerName)}
+                                      />
+                                    </Space>
+                                  </Col>
+                                )
+                              )}
                             </Row>
 
                             {/* Row-Wise Buttons for Add Answer and Remove Question Section */}
@@ -334,7 +347,6 @@ const EventDetailsField = () => {
             </Form.List>
           </Form.Item>
         </Card>
-
       </Col>
     </div>
   );

@@ -521,12 +521,15 @@ class Utils {
 
         if (key === "banner_images") {
           if (value.length === 0) {
-            formData.append(key, "");
+            formData.append(key, ""); // You might want to review this empty case too
           } else {
             value.forEach((image) => {
-              if (image.url) {
-                formData.append("banner_images", image.url);
-              }
+              // Remove this part or handle URLs differently
+              // if (image.url) {
+              //   formData.append("banner_images", image.url);
+              // }
+
+              // Only append actual file objects
               if (image.originFileObj) {
                 formData.append(key, image.originFileObj);
               }

@@ -26,8 +26,10 @@ import {
   SupportImageFormat,
   SupportFormatContent,
   ResolutionByServices,
+  ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
 import Utils from "utils/index";
+import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Text } = Typography;
 const { Group: RadioGroup } = Radio;
@@ -160,7 +162,7 @@ function CouponFormFields({ form }) {
     if (Array.isArray(e)) {
       return e;
     }
-    return e?.fileList;
+    return e?.fileList || [];
   };
 
   // Get rows for rendering
@@ -481,22 +483,17 @@ function CouponFormFields({ form }) {
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
-            valuePropName="fileList"
+            valuePropName="value"
             getValueFromEvent={normFile}
             style={{ marginBottom: "0px", padding: "0px" }}
           >
-            <Upload
-              name="thumbnail_image"
-              listType="picture"
+            <ResizedImgePicker
               maxCount={1}
-              beforeUpload={(file) =>
-                Utils.handleBeforeUpload(file, ResolutionByServices.place)
-              }
-              accept={`.${SupportImageFormat.join(",.")}`}
-            >
-              <Button icon={<UploadOutlined />}>Click to upload</Button>
-            </Upload>
+              targetResolution={ThumbnailImageResolutions.COUPON}
+              form={form}
+            />
           </Form.Item>
+
           <Text type="warning" style={{ padding: "0px 0px", fontSize: "11px" }}>
             {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
             {" resolution "}

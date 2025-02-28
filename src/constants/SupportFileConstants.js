@@ -52,5 +52,9 @@ export const parseSizeToBytes = (size) => {
 };
 
 export const ThumbnailImageResolutions = {
+  PLACE: { width: 1080, height: 720 },
+  EVENT_BANNER: { width: 2000, height: 720 },
+  EVENT: { width: 1080, height: 720 },
   OFFER: { width: 1080, height: 1080 },
+  COUPON: { width: 1080, height: 1080 },
 };
