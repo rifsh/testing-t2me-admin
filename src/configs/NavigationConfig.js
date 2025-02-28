@@ -215,6 +215,23 @@ const superAdminDashBoardNavTree = [
       },
     ],
   },
+  {
+    key: "LeadEventRequest",
+    path: `${APP_PREFIX_PATH}/forms`,
+    title: "Lead Event Request",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    submenu: [
+      {
+        key: "customerEvent.update",
+        path: `${APP_PREFIX_PATH}/leadevent/list`,
+        title: "sidenav.leadevent",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
+  },
 
   {
     key: "advertisement",

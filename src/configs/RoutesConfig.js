@@ -443,4 +443,16 @@ export const protectedRoutes = [
       import("views/app-managment/layout/app-info/add-info/index")
     ),
   },
+  {
+    key: "lead.event.list",
+    path: `${APP_PREFIX_PATH}/leadevent/list`,
+    component: React.lazy(() =>
+      import("views/leadevent/eventrequest-list")
+    ),
+  },
+  {
+    key: "lead.event..details",
+    path: `${APP_PREFIX_PATH}/leadevent/details/:eventId`,
+    component: React.lazy(() => import("views/leadevent/lead-details")),
+  },
 ];
