@@ -29,11 +29,13 @@ import {
   SupportImageFormat,
   SupportFormatContent,
   ResolutionByServices,
+  ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
+import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Text } = Typography;
 const ADD = "ADD";
@@ -95,11 +97,12 @@ const CategoryFormFields = ({ mode, category }) => {
       });
     }
   }, [mode, category, form]);
+
   const normFile = (e) => {
     if (Array.isArray(e)) {
       return e;
     }
-    return e?.fileList;
+    return e?.fileList || [];
   };
   const handleBeforeUpload = Utils.handleBeforeUpload;
 
@@ -190,23 +193,14 @@ const CategoryFormFields = ({ mode, category }) => {
             <Form.Item
               name="thumbnail_image"
               label="Thumbnail Image"
-              valuePropName="fileList"
+              valuePropName="value"
               getValueFromEvent={normFile}
-              rules={rules.thumbnail_image}
               style={{ marginBottom: "0px", padding: "0px" }}
             >
-              <Upload
-                name="thumbnail_image"
-                listType="picture"
+              <ResizedImgePicker
                 maxCount={1}
-                // beforeUpload={handleBeforeUpload}
-                beforeUpload={(file) =>
-                  Utils.handleBeforeUpload(file, ResolutionByServices.place)
-                }
-                accept={`.${SupportImageFormat.join(",.")}`}
-              >
-                <Button icon={<UploadOutlined />}>Click to upload</Button>
-              </Upload>
+                targetResolution={ThumbnailImageResolutions.CATEGORY}
+              />
             </Form.Item>
             <Text
               type="warning"

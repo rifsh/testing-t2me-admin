@@ -38,6 +38,7 @@ import {
   SupportImageFormat,
   SupportFormatContent,
   ResolutionByServices,
+  ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import LoadingOverlay from "components/util-components/Loader/index";
@@ -45,6 +46,7 @@ import { EditWarningAlert } from "components/util-components/EditWarningComponen
 import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
+import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -119,11 +121,12 @@ const VenueFormFields = ({ mode, venue }) => {
   const handlePlaceSelect = (id) => {
     dispatch(setSelectedPlace(id));
   };
+
   const normFile = (e) => {
     if (Array.isArray(e)) {
       return e;
     }
-    return e?.fileList;
+    return e?.fileList || [];
   };
 
   const handleBeforeUpload = Utils.handleBeforeUpload;
@@ -328,52 +331,37 @@ const VenueFormFields = ({ mode, venue }) => {
             <Form.Item
               name="thumbnail_image"
               label="Thumbnail Image"
-              valuePropName="fileList"
+              valuePropName="value"
               getValueFromEvent={normFile}
               style={{ marginBottom: "0px", padding: "0px" }}
             >
-              <Upload
-                name="thumbnail_image"
-                listType="picture"
+              <ResizedImgePicker
                 maxCount={1}
-                beforeUpload={(file) =>
-                  Utils.handleBeforeUpload(file, ResolutionByServices.place)
-                }
-                // beforeUpload={handleBeforeUpload}
-                accept={`.${SupportImageFormat.join(",.")}`}
-              >
-                <Button icon={<UploadOutlined />}>Click to upload</Button>
-              </Upload>
+                targetResolution={ThumbnailImageResolutions.VENUE}
+                form={form}
+              />
             </Form.Item>
+
             <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
               &{" resolution "}
-              {ResolutionByServices.place} pixels.{" "}
+              {ResolutionByServices.venue} pixels.{" "}
             </Text>
-
             <Form.Item
               name="banner_images"
               label="Banner Images"
-              valuePropName="fileList"
+              valuePropName="value"
               getValueFromEvent={normFile}
               style={{ marginBottom: "0px", padding: "0px" }}
             >
-              <Upload
-                name="banner_images"
-                listType="picture"
-                beforeUpload={(file) =>
-                  Utils.handleBeforeUpload(file, ResolutionByServices.place)
-                }
-                //beforeUpload={handleBeforeUpload}
-                accept={`.${SupportImageFormat.join(",.")}`}
-              >
-                <Button icon={<UploadOutlined />}>
-                  Click to upload banners
-                </Button>
-              </Upload>
+              <ResizedImgePicker
+                maxCount={20}
+                targetResolution={ThumbnailImageResolutions.PLACE}
+                form={form}
+              />
             </Form.Item>
             <Text
               type="warning"
