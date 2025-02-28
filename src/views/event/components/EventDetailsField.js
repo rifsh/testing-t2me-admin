@@ -75,7 +75,6 @@ const EventDetailsField = () => {
             <ResizedImgePicker
               maxCount={1}
               targetResolution={ThumbnailImageResolutions.EVENT}
-              form={form}
             />
           </Form.Item>
           <Text
@@ -117,7 +116,7 @@ const EventDetailsField = () => {
 
             style={{ marginBottom: "0px", padding: "0px" }}
           >
-             <ResizedImgePicker
+            <ResizedImgePicker
               maxCount={20}
               targetResolution={ThumbnailImageResolutions.EVENT}
             />
