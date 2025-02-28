@@ -65,6 +65,8 @@ const EventDetailsField = () => {
           >
             <Input.TextArea rows={4} />
           </Form.Item>
+        </Card>
+        <Card>
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
@@ -99,7 +101,7 @@ const EventDetailsField = () => {
           </Form.Item>
 
           <Form.Item
-            name=""
+            name="banner_image_url"
             label="Banner Images Url"
             rules={rules.banner_url}
             style={{ marginTop: "10px", padding: "0px" }}
@@ -108,7 +110,7 @@ const EventDetailsField = () => {
           </Form.Item>
 
           <Form.Item
-            name=""
+            name="event_image"
             label="Event Images"
             valuePropName="fileList"
             getValueFromEvent={normFile}
@@ -123,8 +125,8 @@ const EventDetailsField = () => {
           </Form.Item>
         </Card>
         <Card>
-          <Form.Item name="includedPrice" label="Included In the Price">
-            <Form.List name="includedPrice">
+          <Form.Item name="addOnServices" label="Add on Services">
+            <Form.List name="addOnServices">
               {(fields, { add, remove }) => (
                 <>
                   {fields.map(({ key, name, ...restField }) => (
