@@ -1,3 +1,4 @@
+import { EVENT_DATE_CONSTANTS } from "constants/ScheduleConstants";
 const { getCurrentTimeByTimezone } = require("utils/time_zone_util");
 export class ScheduleTimeValidator {
   static clearFieldValue = (form, removeItems = []) => {
@@ -166,10 +167,8 @@ export class ScheduleTimeValidator {
     // Get the current time based on the specified timezone
     const currentTime = new Date(getCurrentTimeByTimezone(timezone));
     const currentDate = currentTime.toISOString().split("T")[0]; // Extracts YYYY-MM-DD
-    console.log(currentDate, "currentDate");
 
     const selectedDate = date ? date.format("YYYY-MM-DD") : null;
-    console.log(selectedDate, "selectedDate");
 
     if (!selectedDate) {
       return { isValid: false, message: "Please select a valid date." };
@@ -182,17 +181,33 @@ export class ScheduleTimeValidator {
         message: "You can't choose a time before the current time.",
       };
     }
-    const values = form.getFieldValue();
+    const values = form.getFieldsValue();
     const adStartDate = values.ad_start_date_time
       ? values.ad_start_date_time.format("YYYY-MM-DD")
       : null;
-    console.log(adStartDate, "adStartDate");
     const bookingDate = values.booking_start_date_time
       ? values.booking_start_date_time.format("YYYY-MM-DD")
       : null;
     const start_date = values.start_date
       ? values.start_date.format("YYYY-MM-DD")
       : null;
+
+    if (start_date) {
+      const startDateObj = new Date(start_date);
+      const endDateObj = new Date(selectedDate);
+
+      const diffTime = endDateObj - startDateObj;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+      if (diffDays > EVENT_DATE_CONSTANTS.MAX_EVENT_DURATION_DAYS) {
+        return {
+          isValid: false,
+          isWarning: false,
+          clearFields: [],
+          message: `Event duration cannot exceed ${EVENT_DATE_CONSTANTS.MAX_EVENT_DURATION_DAYS} days`,
+        };
+      }
+    }
 
     if (adStartDate && selectedDate < adStartDate) {
       return {
@@ -212,8 +227,8 @@ export class ScheduleTimeValidator {
       return {
         isValid: false,
         isWarning: false,
-        clearFields: ["start_date", "end_date"],
-        message: "You can't choose a date before the Start Time",
+        clearFields: [],
+        message: "You can't choose a date before the Event Start Time",
       };
     } else {
       return { isValid: true, isWarning: false };

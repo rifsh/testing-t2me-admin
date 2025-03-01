@@ -10,6 +10,8 @@ import {
   Button,
   Space,
   Typography,
+  InputNumber,
+  Radio,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsDateRequired } from "store/slices/offerSlice";
@@ -117,11 +119,77 @@ function OfferFormFields() {
             <Input placeholder="Enter offer name" />
           </Form.Item>
           <Form.Item
-            name="discount_percentage"
-            label="Discount Percentage (%)"
-            rules={rules.discountPercentage}
+            name="is_percentage"
+            label="Discount Type"
+            initialValue={true}
           >
-            <Input placeholder="Enter discount percentage" />
+            <Radio.Group>
+              <Radio value={true}>Percentage</Radio>
+              <Radio value={false}>Amount</Radio>
+            </Radio.Group>
+          </Form.Item>
+
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) =>
+              prevValues.is_percentage !== currentValues.is_percentage
+            }
+          >
+            {({ getFieldValue }) =>
+              getFieldValue("is_percentage") === true ? (
+                <Form.Item
+                  name="discount_percentage_amount"
+                  label="Discount Percentage"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter discount percentage",
+                    },
+                    {
+                      type: "number",
+                      min: 0,
+                      max: 100,
+                      message: "Discount must be between 0 and 100",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    placeholder="Enter discount percentage"
+                    min={0}
+                    style={{ width: "100%" }}
+                    max={100}
+                    formatter={(value) => `${value}`}
+                    parser={(value) => value.replace("", "")}
+                  />
+                </Form.Item>
+              ) : (
+                <Form.Item
+                  style={{ width: "100%" }}
+                  name="discount_percentage_amount"
+                  label="Discount Amount"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter discount amount",
+                    },
+                    {
+                      type: "number",
+                      min: 0,
+                      message:
+                        "Discount amount must be greater than or equal to 0",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    style={{ width: "100%" }}
+                    placeholder="Enter discount amount"
+                    min={0}
+                    formatter={(value) => `${value}`}
+                    parser={(value) => value.replace("", "")}
+                  />
+                </Form.Item>
+              )
+            }
           </Form.Item>
           <Form.Item
             name="max_uses"

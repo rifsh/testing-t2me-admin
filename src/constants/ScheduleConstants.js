@@ -25,3 +25,7 @@ export const EVENT_TYPES = {
   CHANGE: "change",
   SELECT: "select",
 };
+
+  export const EVENT_DATE_CONSTANTS = {
+    MAX_EVENT_DURATION_DAYS: 30,
+  };
