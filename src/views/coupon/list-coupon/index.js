@@ -130,12 +130,12 @@ const CouponList = () => {
       dataIndex: "name",
       sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
     },
-    {
-      title: "Discount Percentage",
-      dataIndex: "discount_percentage_amount",
-      sorter: (a, b) => a.discount_percentage_amount - b.discount_percentage_amount,
-      render: (value) => `${value}%`,
-    },
+    // {
+    //   title: "Discount",
+    //   dataIndex: "discount_percentage_amount",
+    //   sorter: (a, b) => a.discount_percentage_amount - b.discount_percentage_amount,
+    //   render: (value) => `${value}%`,
+    // },
     {
       title: "Start Date",
       dataIndex: "start_date",

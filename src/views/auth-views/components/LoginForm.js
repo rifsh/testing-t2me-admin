@@ -175,7 +175,7 @@ export const LoginForm = (props) => {
           </Button>
         </Form.Item>
         <span>{APP_CURRENT_VERSION}</span>
-        {otherSignIn ? renderOtherSignIn : null}
+        {/* {otherSignIn ? renderOtherSignIn : null} */}
         {extra}
       </Form>
     </>

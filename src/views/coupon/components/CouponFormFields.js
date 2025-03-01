@@ -320,7 +320,11 @@ function CouponFormFields({ form }) {
             </div>
           </Form.Item>
 
-          <Form.Item name="is_percentage" label="Discount Type">
+          <Form.Item
+            name="is_percentage"
+            label="Discount Type"
+            initialValue={false}
+          >
             <Radio.Group>
               <Radio value={true}>Percentage</Radio>
               <Radio value={false}>Amount</Radio>
@@ -356,8 +360,8 @@ function CouponFormFields({ form }) {
                     min={0}
                     style={{ width: "100%" }}
                     max={100}
-                    formatter={(value) => `${value}%`}
-                    parser={(value) => value.replace("%", "")}
+                    formatter={(value) => `${value}`}
+                    parser={(value) => value.replace("", "")}
                   />
                 </Form.Item>
               ) : (
@@ -382,8 +386,8 @@ function CouponFormFields({ form }) {
                     style={{ width: "100%" }}
                     placeholder="Enter discount amount"
                     min={0}
-                    formatter={(value) => `$${value}`}
-                    parser={(value) => value.replace("$", "")}
+                    formatter={(value) => `${value}`}
+                    parser={(value) => value.replace("", "")}
                   />
                 </Form.Item>
               )
