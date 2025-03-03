@@ -374,6 +374,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
 
   const onFinish = async () => {
     try {
+      console.log(submitData, "asdfghj")
       if (mode === "EDIT") {
         const offers = {
           offer_ids: selectedOffers?.map((offer) => offer.id) || [],

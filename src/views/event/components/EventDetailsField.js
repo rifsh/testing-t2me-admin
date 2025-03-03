@@ -1,27 +1,7 @@
-import {
-  Card,
-  Col,
-  Form,
-  Input,
-  Space,
-  Button,
-  Upload,
-  Typography,
-  Row,
-  message,
-} from "antd";
+import { Card, Col, Form, Input, Space, Button, Typography, Row, } from "antd";
 import React from "react";
-import {
-  PlusOutlined,
-  UploadOutlined,
-  MinusCircleOutlined,
-} from "@ant-design/icons";
-import {
-  SupportImageFormat,
-  SupportFormatContent,
-  ResolutionByServices,
-  ThumbnailImageResolutions,
-} from "constants/SupportFileConstants";
+import { PlusOutlined, MinusCircleOutlined, } from "@ant-design/icons";
+import { SupportImageFormat, SupportFormatContent, ResolutionByServices,ThumbnailImageResolutions, } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
@@ -110,12 +90,10 @@ const EventDetailsField = () => {
           </Form.Item>
 
           <Form.Item
-            name="event_image"
+            name="event_images"
             label="Event Images"
             valuePropName="fileList"
             getValueFromEvent={normFile}
-            // rules={rules.banner_images}
-
             style={{ marginBottom: "0px", padding: "0px" }}
           >
             <ResizedImgePicker
@@ -125,13 +103,12 @@ const EventDetailsField = () => {
           </Form.Item>
         </Card>
         <Card>
-          <Form.Item name="addOnServices" label="Add on Services">
-            <Form.List name="addOnServices">
+          <Form.Item name="event_add_on_services" label="Add on Services">
+            <Form.List name="event_add_on_services">
               {(fields, { add, remove }) => (
                 <>
                   {fields.map(({ key, name, ...restField }) => (
                     <div key={key}>
-                      {/* Title Field */}
                       <Form.Item
                         {...restField}
                         name={[name, "title"]}
@@ -143,7 +120,6 @@ const EventDetailsField = () => {
                         <Input placeholder="Enter title" />
                       </Form.Item>
 
-                      {/* Nested Form.List for Price Included Fields */}
                       <Form.List name={[name, "priceIncludes"]}>
                         {(
                           priceFields,
@@ -187,7 +163,9 @@ const EventDetailsField = () => {
                                 )
                               )}
                             </Row>
-                            <Form.Item>
+                            <Row gutter={16}>
+                              <Col span={12}>
+
                               <Button
                                 type="dashed"
                                 onClick={() => addPrice()}
@@ -196,13 +174,9 @@ const EventDetailsField = () => {
                               >
                                 Add Price Included
                               </Button>
-                            </Form.Item>
-                          </>
-                        )}
-                      </Form.List>
-
-                      {/* Remove Title Section */}
-                      <Button
+                       </Col>
+                        <Col span={12}>
+                        <Button
                         type="dashed"
                         danger
                         onClick={() => remove(name)}
@@ -211,9 +185,14 @@ const EventDetailsField = () => {
                       >
                         Remove Title Section
                       </Button>
+                        </Col>
+                        </Row>
+                        </>
+                        )}
+                      </Form.List> 
                     </div>
                   ))}
-                  <Form.Item>
+                  <Form.Item style={{ marginTop: "16px" }}>
                     <Button
                       type="dashed"
                       onClick={() => add()}
@@ -230,20 +209,20 @@ const EventDetailsField = () => {
         </Card>
 
         <Card>
-          <Form.Item name="questionsAndAnswers" label="Questions and Answers">
-            <Form.List name="questionsAndAnswers">
+          <Form.Item name="event_qna" label="Questions and Answers">
+            <Form.List name="event_qna">
               {(fields, { add, remove }) => (
                 <>
                   {fields.map(({ key, name, ...restField }) => (
-                    <div key={key}>
+                    <div key={key} className="mb-10">
                       {/* Title Field for Question Section */}
                       <Form.Item
                         {...restField}
-                        name={[name, "questionTitle"]}
+                        name={[name, "title"]}
                         label="Question Title"
                         rules={[
                           {
-                            required: true,
+                            required: false,
                             message: "Question title is required",
                           },
                         ]}
@@ -251,21 +230,21 @@ const EventDetailsField = () => {
                         <Input placeholder="Enter question title" />
                       </Form.Item>
 
-                      {/* Nested Form.List for Answers */}
-                      <Form.List name={[name, "answers"]}>
+                      {/* Nested Form.List for QA (Question and Answer) */}
+                      <Form.List name={[name, "qna"]}>
                         {(
-                          answerFields,
-                          { add: addAnswer, remove: removeAnswer }
+                          qaFields,
+                          { add: addQA, remove: removeQA }
                         ) => (
                           <>
                             <Row gutter={16}>
-                              {answerFields.map(
+                              {qaFields.map(
                                 ({
-                                  key: answerKey,
-                                  name: answerName,
-                                  ...answerRestField
+                                  key: qaKey,
+                                  name: qaName,
+                                  ...qaRestField
                                 }) => (
-                                  <Col span={12} key={answerKey}>
+                                  <Col span={24} key={qaKey}>
                                     <Space
                                       style={{
                                         display: "flex",
@@ -273,21 +252,36 @@ const EventDetailsField = () => {
                                       }}
                                       align="baseline"
                                     >
+                                      {/* Question Field */}
                                       <Form.Item
-                                        {...answerRestField}
-                                        name={[answerName, "answer"]}
+                                        {...qaRestField}
+                                        name={[qaName, "question"]}
                                         rules={[
                                           {
-                                            required: true,
+                                            required: false,
+                                            message: "Question is required",
+                                          },
+                                        ]}
+                                      >
+                                        <Input placeholder="Enter question" />
+                                      </Form.Item>
+
+                                      <Form.Item
+                                        {...qaRestField}
+                                        name={[qaName, "answer"]}
+                                        rules={[
+                                          {
+                                            required: false,
                                             message: "Answer is required",
                                           },
                                         ]}
-                                        style={{ width: "100%" }}
                                       >
                                         <Input placeholder="Enter answer" />
                                       </Form.Item>
+
+                                      {/* Remove QA Button */}
                                       <MinusCircleOutlined
-                                        onClick={() => removeAnswer(answerName)}
+                                        onClick={() => removeQA(qaName)}
                                       />
                                     </Space>
                                   </Col>
@@ -295,16 +289,16 @@ const EventDetailsField = () => {
                               )}
                             </Row>
 
-                            {/* Row-Wise Buttons for Add Answer and Remove Question Section */}
-                            <Row gutter={16} style={{ marginBottom: 16 }}>
+                            {/* Add QA and Remove Question Section Buttons in the same row */}
+                            <Row gutter={16}>
                               <Col span={12}>
                                 <Button
-                                  type="dashed"
-                                  onClick={() => addAnswer()}
+                                  type="default"
+                                  onClick={() => addQA({ question: "", answer: "" })}
                                   block
                                   icon={<PlusOutlined />}
                                 >
-                                  Add Answer
+                                  Add Question and Answer
                                 </Button>
                               </Col>
                               <Col span={12}>
@@ -324,24 +318,23 @@ const EventDetailsField = () => {
                       </Form.List>
                     </div>
                   ))}
+         
+                    <Form.Item style={{ marginTop: "16px" }}>
+                      <Button
+                        type="default"
+                        onClick={() => {
+                          add({
+                            title: "",
+                            qa: [{ question: "", answer: "" }],
+                          });
+                        }}
+                        block
+                        icon={<PlusOutlined />}
+                      >
+                        Add Question Section
+                      </Button>
+                    </Form.Item>
 
-                  {/* Add Question Section Button */}
-                  <Form.Item>
-                    <Button
-                      type="dashed"
-                      onClick={() => {
-                        // Add a new question with an initial answer
-                        add({
-                          questionTitle: "", // Initialize question title
-                          answers: [{ answer: "" }], // Initialize with one answer
-                        });
-                      }}
-                      block
-                      icon={<PlusOutlined />}
-                    >
-                      Add Question Section
-                    </Button>
-                  </Form.Item>
                 </>
               )}
             </Form.List>
