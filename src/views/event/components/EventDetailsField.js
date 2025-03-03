@@ -1,7 +1,7 @@
 import { Card, Col, Form, Input, Space, Button, Typography, Row, } from "antd";
 import React from "react";
 import { PlusOutlined, MinusCircleOutlined, } from "@ant-design/icons";
-import { SupportImageFormat, SupportFormatContent, ResolutionByServices,ThumbnailImageResolutions, } from "constants/SupportFileConstants";
+import { SupportImageFormat, SupportFormatContent, ResolutionByServices, ThumbnailImageResolutions, } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
@@ -166,30 +166,30 @@ const EventDetailsField = () => {
                             <Row gutter={16}>
                               <Col span={12}>
 
-                              <Button
-                                type="dashed"
-                                onClick={() => addPrice()}
-                                block
-                                icon={<PlusOutlined />}
-                              >
-                                Add Price Included
-                              </Button>
-                       </Col>
-                        <Col span={12}>
-                        <Button
-                        type="dashed"
-                        danger
-                        onClick={() => remove(name)}
-                        block
-                        icon={<MinusCircleOutlined />}
-                      >
-                        Remove Title Section
-                      </Button>
-                        </Col>
-                        </Row>
-                        </>
+                                <Button
+                                  type="dashed"
+                                  onClick={() => addPrice()}
+                                  block
+                                  icon={<PlusOutlined />}
+                                >
+                                  Add Price Included
+                                </Button>
+                              </Col>
+                              <Col span={12}>
+                                <Button
+                                  type="dashed"
+                                  danger
+                                  onClick={() => remove(name)}
+                                  block
+                                  icon={<MinusCircleOutlined />}
+                                >
+                                  Remove Title Section
+                                </Button>
+                              </Col>
+                            </Row>
+                          </>
                         )}
-                      </Form.List> 
+                      </Form.List>
                     </div>
                   ))}
                   <Form.Item style={{ marginTop: "16px" }}>
@@ -318,31 +318,33 @@ const EventDetailsField = () => {
                       </Form.List>
                     </div>
                   ))}
-         
-                    <Form.Item style={{ marginTop: "16px" }}>
-                      <Button
-                        type="default"
-                        onClick={() => {
-                          add({
-                            title: "",
-                            qa: [{ question: "", answer: "" }],
-                          });
-                        }}
-                        block
-                        icon={<PlusOutlined />}
-                      >
-                        Add Question Section
-                      </Button>
-                    </Form.Item>
+
+                  <Form.Item style={{ marginTop: "16px" }}>
+                    <Button
+                      type="default"
+                      onClick={() => {
+                        add({
+                          title: "",
+                          qa: [{ question: "", answer: "" }],
+                        });
+                      }}
+                      block
+                      icon={<PlusOutlined />}
+                    >
+                      Add Question Section
+                    </Button>
+                  </Form.Item>
 
                 </>
               )}
             </Form.List>
           </Form.Item>
         </Card>
+        
       </Col>
     </div>
   );
 };
 
 export default EventDetailsField;
+
