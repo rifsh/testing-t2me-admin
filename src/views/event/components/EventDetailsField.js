@@ -93,7 +93,7 @@ const EventDetailsField = () => {
             name="event_images"
             label="Event Images"
             valuePropName="value"
-           getValueFromEvent={normFile}
+            getValueFromEvent={normFile}
             style={{ marginBottom: "0px", padding: "0px" }}
           >
             <ResizedImgePicker
@@ -101,7 +101,7 @@ const EventDetailsField = () => {
               targetResolution={ThumbnailImageResolutions.EVENT}
             />
           </Form.Item>
-          
+
         </Card>
         <Card>
           <Form.Item name="event_add_on_services" label="Add on Services">
@@ -341,7 +341,7 @@ const EventDetailsField = () => {
             </Form.List>
           </Form.Item>
         </Card>
-        
+
       </Col>
     </div>
   );
