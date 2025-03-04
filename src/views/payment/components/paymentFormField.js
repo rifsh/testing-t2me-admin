@@ -11,7 +11,6 @@ import {
   Row,
   Col,
 } from "antd";
-import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
@@ -20,10 +19,9 @@ import { addPayment } from "store/slices/paymentSlice";
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { PAYMENT_METHODS } from "constants/PaymentConstants";
 import { processPaymentMethods } from "utils/PaymentUtils";
-import { PaymentMethodFields } from "./PaymentMethodFields";
 import AddOnServicesForm from "./AddOnServicesForm";
+import PaymentMethodTabs from "./PaymentMethodTabs";
 
 const { Option } = Select;
 
@@ -35,6 +33,7 @@ const PaymentFormFields = ({ mode, id }) => {
   // State for confirmation modal
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [formValues, setFormValues] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     dispatch(fetchAllEvent({}));
@@ -44,10 +43,33 @@ const PaymentFormFields = ({ mode, id }) => {
     if (!id) return;
   };
 
+  const validatePaymentMethods = (paymentMethods) => {
+    if (!paymentMethods || paymentMethods.length === 0) {
+      message.error("At least one payment method is required");
+      return false;
+    }
+
+    // Check for duplicate payment methods
+    const paymentTypes = paymentMethods.map((method) => method.paymentType);
+    const uniquePaymentTypes = new Set(paymentTypes.filter(Boolean));
+
+    if (uniquePaymentTypes.size !== paymentTypes.filter(Boolean).length) {
+      message.error("Duplicate payment methods are not allowed");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
       console.log("Form values:", values);
+
+      // Validate payment methods
+      if (!validatePaymentMethods(values.paymentMethods)) {
+        return;
+      }
 
       // Set form values and open confirmation modal
       setFormValues(values);
@@ -60,6 +82,8 @@ const PaymentFormFields = ({ mode, id }) => {
   const handleModalConfirm = async () => {
     if (!formValues) return;
 
+    setSubmitting(true);
+
     try {
       const formData = new FormData();
 
@@ -69,8 +93,11 @@ const PaymentFormFields = ({ mode, id }) => {
         formData.append("event_id", formValues.event_id);
       }
 
-      if (formValues.url) {
-        formData.append("terms_and_conditions", formValues.url);
+      if (formValues.terms_and_conditions) {
+        formData.append(
+          "terms_and_conditions",
+          formValues.terms_and_conditions
+        );
       }
 
       if (formValues.additional_urls) {
@@ -97,6 +124,7 @@ const PaymentFormFields = ({ mode, id }) => {
         is_percentage: service.isPercentage || false,
         percentage_or_amount: service.percentageOrAmount || 0,
       }));
+
       formData.append("add_on_services", JSON.stringify(serviceDetails));
 
       console.log("FormData content:");
@@ -114,6 +142,8 @@ const PaymentFormFields = ({ mode, id }) => {
     } catch (error) {
       console.error("Error submitting form:", error);
       message.error("Failed to add payment details");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -174,7 +204,10 @@ const PaymentFormFields = ({ mode, id }) => {
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="url" label="Terms and Conditions">
+              <Form.Item
+                name="terms_and_conditions"
+                label="Terms and Conditions"
+              >
                 <Input placeholder="Enter your URL" type="text" />
               </Form.Item>
             </Col>
@@ -186,129 +219,24 @@ const PaymentFormFields = ({ mode, id }) => {
           </Row>
         </Card>
 
-        <Card title="Payment Methods">
-          <Form.List name="paymentMethods">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => {
-                  // Get the current payment type value for this field
-                  const paymentType = form.getFieldValue([
-                    "paymentMethods",
-                    name,
-                    "paymentType",
-                  ]);
+        <PaymentMethodTabs form={form} />
 
-                  return (
-                    <Card
-                      key={key}
-                      style={{ marginBottom: 16 }}
-                      size="small"
-                      title={`Payment Method ${name + 1}`}
-                      extra={
-                        <MinusCircleOutlined onClick={() => remove(name)} />
-                      }
-                    >
-                      <Form.Item
-                        {...restField}
-                        name={[name, "paymentType"]}
-                        label="Payment Type"
-                        rules={[
-                          {
-                            required: true,
-                            message: "Please select payment type",
-                          },
-                        ]}
-                      >
-                        <Select
-                          placeholder="Select payment type"
-                          onChange={() => {
-                            // When payment type changes, clear the dependent fields
-                            const currentValues = form.getFieldValue([
-                              "paymentMethods",
-                              name,
-                            ]);
-                            const newValues = {
-                              paymentType: currentValues.paymentType,
-                              paymentCharge: currentValues.paymentCharge,
-                              authorizedUrl: currentValues.authorizedUrl,
-                            };
-                            form.setFieldsValue({
-                              paymentMethods: {
-                                [name]: newValues,
-                              },
-                            });
-                          }}
-                        >
-                          {PAYMENT_METHODS.map((method) => (
-                            <Option key={method.value} value={method.value}>
-                              {method.label}
-                            </Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-
-                      {/* Two fields in one row in the Payment Method card */}
-                      <Row gutter={16}>
-                        <Col span={12}>
-                          <Form.Item
-                            {...restField}
-                            name={[name, "paymentCharge"]}
-                            label="Payment Charge (%)"
-                          >
-                            <Input
-                              placeholder="Enter payment charge"
-                              type="number"
-                              min={0}
-                              step={0.01}
-                            />
-                          </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                          <Form.Item
-                            {...restField}
-                            name={[name, "authorizedUrl"]}
-                            label="Authorized URL"
-                          >
-                            <Input placeholder="Enter authorized URL" />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-
-                      <PaymentMethodFields
-                        name={name}
-                        paymentType={paymentType}
-                        form={form}
-                      />
-                    </Card>
-                  );
-                })}
-                <Form.Item>
-                  <Button
-                    type="dashed"
-                    onClick={() => add()}
-                    block
-                    icon={<PlusOutlined />}
-                  >
-                    Add Payment Method
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
-        </Card>
-
-        <AddOnServicesForm />
+        <AddOnServicesForm form={form} />
         <Flex className="py-2" mobileFlex={false} justifyContent="flex-end">
           <DiscardButton form={form} />
           <div className="mb-3">
-            <Button onClick={handleSubmit} type="primary" htmlType="submit">
+            <Button
+              onClick={handleSubmit}
+              type="primary"
+              htmlType="submit"
+              loading={submitting}
+              disabled={submitting}
+            >
               Submit
             </Button>
           </div>
         </Flex>
       </Form>
-
-      {/* Confirmation Modal */}
       <Modal
         title="Confirm Submission"
         visible={isModalVisible}
@@ -316,6 +244,7 @@ const PaymentFormFields = ({ mode, id }) => {
         onCancel={handleModalCancel}
         okText="Confirm"
         cancelText="Cancel"
+        confirmLoading={submitting}
       >
         <p>Are you sure you want to submit the form?</p>
       </Modal>
