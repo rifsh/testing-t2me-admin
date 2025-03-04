@@ -232,7 +232,6 @@ const superAdminDashBoardNavTree = [
       },
     ],
   },
-
   {
     key: "advertisement",
     path: `${APP_PREFIX_PATH}/advertisement`,
@@ -261,6 +260,32 @@ const superAdminDashBoardNavTree = [
         key: "advertisement.schedule.list",
         path: `${APP_PREFIX_PATH}/advertisement/schedule/list`,
         title: "advertisement.schedule",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
+  },
+  {
+    key: "news-letter",
+    path: `${APP_PREFIX_PATH}/news-letter`,
+    title: "sidenav.news-letter",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    isGroupTitle: false,
+    submenu: [
+      {
+        key: "news-letter.list",
+        path: `${APP_PREFIX_PATH}/news-letter/list/`,
+        title: "sidenav.news-letter",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "news-letter.subscriber.list",
+        path: `${APP_PREFIX_PATH}/news-letter/subscriber/list/`,
+        title: "news-letter.subscriber.list",
         icon: OrderedListOutlined,
         breadcrumb: false,
         submenu: [],

@@ -243,6 +243,21 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/payment/edit-payment")),
   },
   {
+    key: "news-letter.list",
+    path: `${APP_PREFIX_PATH}/news-letter/list/`,
+    component: React.lazy(() => import("views/news-letter/newsLetter/list")),
+  },
+  {
+    key: "news-letter.add",
+    path: `${APP_PREFIX_PATH}/news-letter/add/`,
+    component: React.lazy(() => import("views/news-letter/newsLetter/add")),
+  },
+  {
+    key: "news-letter.subscriber.list",
+    path: `${APP_PREFIX_PATH}/news-letter/subscriber/list/`,
+    component: React.lazy(() => import("views/news-letter/subscribers/list")),
+  },
+  {
     key: "ticket.list",
     path: `${APP_PREFIX_PATH}/ticket/list`,
     component: React.lazy(() => import("views/ticket/list-ticket")),
