@@ -9,7 +9,15 @@ export const initialState = {
   error: null,
   searchTerm: "",
   statusFilter: "All",
+  eventDetails: {},
+  responseData: null,
+  responseMessage: null,
+  filteredEvents: [],
   pagination: { size: 10, page: 1, total: 0, pages: 1 },
+  // Add message-related state
+  messages: [],
+  messagesLoading: false,
+  messagesError: null
 };
 
 // Fetch all lead events
@@ -33,7 +41,7 @@ export const getSingleLeadEvents = createAsyncThunk(
   async (eventId, { rejectWithValue }) => {
     try {
       const response = await LeadEventService.getSingleleadEvent(eventId);
-      
+
       if (!response?.data) {
         return rejectWithValue("No data available for this event");
       }
@@ -41,7 +49,72 @@ export const getSingleLeadEvents = createAsyncThunk(
       return response.data[0];
     } catch (error) {
       console.error("Error fetching single lead event:", error);
-      return rejectWithValue(error.message || "Failed to fetch lead event details");
+      return rejectWithValue(
+        error.message || "Failed to fetch lead event details"
+      );
+    }
+  }
+);
+
+export const addLeadEvent = createAsyncThunk(
+  "leadEvents/addLeadEvent",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await LeadEventService.addLeadEvent(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to process event");
+    }
+  }
+);
+
+export const fetchAllEvent = createAsyncThunk(
+  "leadEvents/fetchAllEvent",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await LeadEventService.fetchAllLeadEvent(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+
+export const fetchLeadEventDetails = createAsyncThunk(
+  "event/fetchLeadEventDetails",
+  async (eventId, { rejectWithValue }) => {
+    try {
+      const response = await LeadEventService.fetchLeadEventDetails(eventId);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+
+export const fetchEventMessages = createAsyncThunk(
+  "leadEvents/fetchEventMessages",
+  async (eventId, { rejectWithValue }) => {
+    try {
+      const response = await LeadEventService.fetchLeadEventMessage(eventId);
+      console.log("Event messages fetched:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Event messages fetch failed", error);
+      return rejectWithValue(error.message || "Failed to fetch event messages");
+    }
+  }
+);
+
+export const sendEventMessage = createAsyncThunk(
+  "leadEvents/sendEventMessage",
+  async ({ data }, { rejectWithValue }) => {
+    try {
+      const response = await LeadEventService.sendLeadEventMessage(data);
+      return response;
+    } catch (error) {
+      console.error("Failed to send message", error);
+      return rejectWithValue(error.message || "Failed to send message");
     }
   }
 );
@@ -50,6 +123,26 @@ const leadEventSlice = createSlice({
   name: "leadEvents",
   initialState,
   reducers: {
+    filterEvent: (state, action) => {
+      const { searchTerm, status } = action.payload;
+
+      let event = state.events;
+      if (status && status !== "All") {
+        event = event.filter(
+          (offer) =>
+            (status === "Active" && offer.status === true) ||
+            (status === "Inactive" && offer.status === false)
+        );
+      }
+
+      if (searchTerm) {
+        event = event.filter((offer) =>
+          offer.event_name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      state.filteredEvents = event;
+    },
     setSearchTerm: (state, action) => {
       state.searchTerm = action.payload;
     },
@@ -77,6 +170,9 @@ const leadEventSlice = createSlice({
       }
 
       state.filteredLeadEvents = filteredLeadEvents;
+    },
+    clearMessages: (state) => {
+      state.messages = [];
     },
   },
   extraReducers: (builder) => {
@@ -114,9 +210,112 @@ const leadEventSlice = createSlice({
       .addCase(getSingleLeadEvents.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      
+      .addCase(addLeadEvent.pending, (state) => {
+        console.log("addLeadEvent - Pending State");
+        state.loading = true;
+        state.error = null;
+        state.responseMessage = null;
+      })
+      .addCase(addLeadEvent.fulfilled, (state, action) => {
+        console.log("addLeadEvent - Fulfilled", action.payload);
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(addLeadEvent.rejected, (state, action) => {
+        console.error("addLeadEvent - Rejected", action.payload);
+        state.loading = false;
+        state.error = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      
+      .addCase(fetchAllEvent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllEvent.fulfilled, (state, action) => {
+        state.loading = false;
+        state.events = action.payload.items;
+        state.filteredEvents = action.payload.items;
+        state.pagination = action.payload;
+      })
+      .addCase(fetchAllEvent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      .addCase(fetchLeadEventDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchLeadEventDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        const eventData = { ...action.payload[0] };
+
+        const uniqueOffers = eventData.event_offers.reduce((acc, current) => {
+          const isDuplicate = acc.find(
+            (item) => item.offer.id === current.offer.id
+          );
+          if (!isDuplicate) {
+            acc.push(current);
+          }
+          return acc;
+        }, []);
+
+        const uniqueCoupons = eventData.event_coupons.reduce((acc, current) => {
+          const isDuplicate = acc.find(
+            (item) => item.coupons.id === current.coupons.id
+          );
+          if (!isDuplicate) {
+            acc.push(current);
+          }
+          return acc;
+        }, []);
+
+        eventData.event_offers = uniqueOffers;
+        eventData.event_coupons = uniqueCoupons;
+
+        state.eventDetails = eventData;
+      })
+      .addCase(fetchLeadEventDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      // Handle fetchEventMessages cases
+      .addCase(fetchEventMessages.pending, (state) => {
+        state.messagesLoading = true;
+        state.messagesError = null;
+      })
+      .addCase(fetchEventMessages.fulfilled, (state, action) => {
+        state.messagesLoading = false;
+        state.messages = action.payload;
+      })
+      .addCase(fetchEventMessages.rejected, (state, action) => {
+        state.messagesLoading = false;
+        state.messagesError = action.payload;
+      })
+      
+      // Handle sendEventMessage cases
+      .addCase(sendEventMessage.pending, (state) => {
+        state.messagesLoading = true;
+        state.messagesError = null;
+      })
+      .addCase(sendEventMessage.fulfilled, (state, action) => {
+        state.messagesLoading = false;
+        // Add the new message to the messages array
+        state.messages.push(action.payload);
+      })
+      .addCase(sendEventMessage.rejected, (state, action) => {
+        state.messagesLoading = false;
+        state.messagesError = action.payload;
       });
   },
 });
 
-export const { setSearchTerm, setStatusFilter, filterLeadEvents } = leadEventSlice.actions;
+export const { setSearchTerm, setStatusFilter, filterLeadEvents, clearMessages } =
+  leadEventSlice.actions;
 export default leadEventSlice.reducer;
