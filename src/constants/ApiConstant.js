@@ -120,7 +120,7 @@ export const ApiConstant = {
   FOOTER_UPLOAD_URL: "/api/v1/app_management/secured/upload_footer",
 
   //Payment
-  PAYMENT_ADD_URL: "/api/v1/payment/",
+  PAYMENT_ADD_URL: "/api/v1/payment/secured/payment",
 
   // lead event list
   LEAD_EVENT_LIST: "/api/v1/events/secured/customer_event",
