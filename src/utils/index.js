@@ -570,15 +570,15 @@ class Utils {
           }
           return;
         }
-        // if (key === "event_add_on_services") {
-        //   // Handle event_add_on_services
-        //   const serializedServices = value.map((service) => ({
-        //     title: service.title,
-        //     priceIncludes: service.priceIncludes,
-        //   }));
-        //   formData.append(key, JSON.stringify(serializedServices)); // Serialize as JSON
-        //   return;
-        // }
+        if (key === "event_add_on_services") {
+          // Handle event_add_on_services
+          const serializedServices = value.map((service) => ({
+            title: service.title,
+            priceIncludes: service.priceIncludes,
+          }));
+          formData.append(key, JSON.stringify(serializedServices)); // Serialize as JSON
+          return;
+        }
         
         if (key === "isComingSoonImage") {
           if (value.length === 0) {
