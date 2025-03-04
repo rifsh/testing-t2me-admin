@@ -30,7 +30,6 @@ const PaymentFormFields = ({ mode, id }) => {
   const dispatch = useDispatch();
   const { filteredEvents = [], loading } = useSelector((state) => state.event);
 
-  // State for confirmation modal
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [formValues, setFormValues] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -48,16 +47,12 @@ const PaymentFormFields = ({ mode, id }) => {
       message.error("At least one payment method is required");
       return false;
     }
-
-    // Check for duplicate payment methods
     const paymentTypes = paymentMethods.map((method) => method.paymentType);
     const uniquePaymentTypes = new Set(paymentTypes.filter(Boolean));
-
     if (uniquePaymentTypes.size !== paymentTypes.filter(Boolean).length) {
       message.error("Duplicate payment methods are not allowed");
       return false;
     }
-
     return true;
   };
 
@@ -66,12 +61,10 @@ const PaymentFormFields = ({ mode, id }) => {
       const values = await form.validateFields();
       console.log("Form values:", values);
 
-      // Validate payment methods
       if (!validatePaymentMethods(values.paymentMethods)) {
         return;
       }
 
-      // Set form values and open confirmation modal
       setFormValues(values);
       setIsModalVisible(true);
     } catch (error) {
@@ -86,8 +79,7 @@ const PaymentFormFields = ({ mode, id }) => {
 
     try {
       const formData = new FormData();
-
-      formData.append("place_id", formValues.venue_id);
+      formData.append("place_id", formValues.place_id); // Use place_id, not venue_id
 
       if (formValues.event_id) {
         formData.append("event_id", formValues.event_id);
@@ -104,7 +96,6 @@ const PaymentFormFields = ({ mode, id }) => {
         formData.append("additional_urls", formValues.additional_urls);
       }
 
-      // Process payment methods using utility function
       const paymentMethods = formValues.paymentMethods || [];
       const processedPaymentMethods = processPaymentMethods(paymentMethods);
       formData.append(
@@ -112,7 +103,6 @@ const PaymentFormFields = ({ mode, id }) => {
         JSON.stringify(processedPaymentMethods)
       );
 
-      // Process services
       const services = formValues.services || [];
       const serviceDetails = services.map((service) => ({
         service_name: service.name,
@@ -124,7 +114,6 @@ const PaymentFormFields = ({ mode, id }) => {
         is_percentage: service.isPercentage || false,
         percentage_or_amount: service.percentageOrAmount || 0,
       }));
-
       formData.append("add_on_services", JSON.stringify(serviceDetails));
 
       console.log("FormData content:");
@@ -133,11 +122,10 @@ const PaymentFormFields = ({ mode, id }) => {
       }
 
       const result = await dispatch(addPayment(formData));
-
       if (result) {
         message.success("Payment details added successfully");
         form.resetFields();
-        setIsModalVisible(false); // Close the modal
+        setIsModalVisible(false);
       }
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -148,7 +136,7 @@ const PaymentFormFields = ({ mode, id }) => {
   };
 
   const handleModalCancel = () => {
-    setIsModalVisible(false); // Close the modal without submitting
+    setIsModalVisible(false);
   };
 
   const handleFinishFailed = (errorInfo) => {
@@ -159,15 +147,15 @@ const PaymentFormFields = ({ mode, id }) => {
     <>
       <Form form={form} layout="vertical" onFinishFailed={handleFinishFailed}>
         <Card title="Payment Form">
-          {/* Two fields in one row using Row and Col */}
           <Row gutter={16}>
             <Col span={12}>
               <PlaceWithCountryForm
                 form={form}
                 label="Place"
                 onSelect={(id) => {
-                  dispatch(getVenues({ place_id: id }));
-                  form.setFieldsValue({ venue_id: id });
+                  console.log("Selected place_id:", id);
+                  // Optionally dispatch getVenues if needed
+                  // dispatch(getVenues({ place_id: id }));
                 }}
                 rules={[
                   { required: true, message: RulesMessageConstants.PLACE },
@@ -220,7 +208,6 @@ const PaymentFormFields = ({ mode, id }) => {
         </Card>
 
         <PaymentMethodTabs form={form} />
-
         <AddOnServicesForm form={form} />
         <Flex className="py-2" mobileFlex={false} justifyContent="flex-end">
           <DiscardButton form={form} />

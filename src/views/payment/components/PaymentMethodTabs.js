@@ -9,6 +9,8 @@ import {
   Col,
   Tabs,
   message,
+  Radio,
+  InputNumber,
 } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { PAYMENT_METHODS } from "constants/PaymentConstants";
@@ -44,23 +46,32 @@ const PaymentMethodTabs = ({ form }) => {
   const removeTab = (targetKey) => {
     const paymentMethods = form.getFieldValue("paymentMethods") || [];
 
-    // Don't remove if there's only one payment method
     if (paymentMethods.length <= 1) {
       message.warning("At least one payment method is required");
       return;
     }
 
+    const targetIndex = Number(targetKey);
+
+    // Remove the selected payment method
     const newPaymentMethods = paymentMethods.filter(
-      (_, index) => index !== Number(targetKey)
+      (_, index) => index !== targetIndex
     );
 
+    // Update form values with filtered array
     form.setFieldsValue({ paymentMethods: newPaymentMethods });
 
+    // Adjust active tab if the removed tab was the active one
     if (activeKey === targetKey) {
-      const newActiveKey =
-        targetKey === "0" ? "0" : String(Number(targetKey) - 1);
-      setActiveKey(newActiveKey >= 0 ? newActiveKey : "0");
+      const newActiveKey = targetIndex === 0 ? "0" : String(targetIndex - 1);
+      setActiveKey(newActiveKey);
+    } else if (Number(activeKey) > targetIndex) {
+      // If active tab is after the removed tab, decrement active key
+      setActiveKey(String(Number(activeKey) - 1));
     }
+
+    // Force form to re-render immediately
+    forceUpdate({});
   };
 
   const checkDuplicatePaymentType = (index, value) => {
@@ -156,20 +167,95 @@ const PaymentMethodTabs = ({ form }) => {
         </Form.Item>
 
         <Row gutter={16}>
-          <Col span={12}>
+          <Col xs={24} md={8}>
             <Form.Item
-              name={["paymentMethods", index, "paymentCharge"]}
-              label="Payment Charge (%)"
+              name={["paymentMethods", index, "is_percentage"]}
+              label="Service charge Type"
+              initialValue={false}
             >
-              <Input
-                placeholder="Enter payment charge"
-                type="number"
-                min={0}
-                step={0.01}
-              />
+              <Radio.Group>
+                <Radio value={true}>Percentage</Radio>
+                <Radio value={false}>Amount</Radio>
+              </Radio.Group>
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col xs={24} md={6}>
+            <Form.Item
+              noStyle
+              shouldUpdate={(prevValues, currentValues) => {
+                return (
+                  prevValues.paymentMethods?.[index]?.is_percentage !==
+                  currentValues.paymentMethods?.[index]?.is_percentage
+                );
+              }}
+            >
+              {({ getFieldValue }) => {
+                const isPercentage = getFieldValue([
+                  "paymentMethods",
+                  index,
+                  "is_percentage",
+                ]);
+
+                if (isPercentage === true) {
+                  return (
+                    <Form.Item
+                      name={["paymentMethods", index, "percentage_or_amount"]}
+                      label="Service Charge Percentage"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please enter Service Charge percentage",
+                        },
+                        {
+                          type: "number",
+                          min: 0,
+                          max: 100,
+                          message: "Discount must be between 0 and 100",
+                        },
+                      ]}
+                    >
+                      <InputNumber
+                        placeholder="Enter Service Charge percentage"
+                        min={0}
+                        max={100}
+                        style={{ width: "100%" }}
+                        formatter={(value) => `${value}`}
+                        parser={(value) => value.replace("", "")}
+                      />
+                    </Form.Item>
+                  );
+                }
+
+                return (
+                  <Form.Item
+                    name={["paymentMethods", index, "payment_charge"]}
+                    label="Service Charge Amount"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter Service Charge amount",
+                      },
+                      {
+                        type: "number",
+                        min: 0,
+                        message:
+                          "Discount amount must be greater than or equal to 0",
+                      },
+                    ]}
+                  >
+                    <InputNumber
+                      style={{ width: "100%" }}
+                      placeholder="Enter Service Charge amount"
+                      min={0}
+                      formatter={(value) => `${value}`}
+                      parser={(value) => value.replace("", "")}
+                    />
+                  </Form.Item>
+                );
+              }}
+            </Form.Item>
+          </Col>
+          <Col span={10}>
             <Form.Item
               name={["paymentMethods", index, "authorizedUrl"]}
               label="Authorized URL"
