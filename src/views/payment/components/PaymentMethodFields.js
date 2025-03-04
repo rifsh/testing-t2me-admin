@@ -10,13 +10,18 @@ import Utils from "utils";
 
 const { Option } = Select;
 
-const PaymentMethodFields = ({ name, paymentType, form }) => {
-  if (!paymentType) return null;
+const PaymentMethodFields = ({ name, payment_type, form }) => {
+  if (!payment_type) return null;
 
-  const getFieldName = (fieldName) => ["paymentMethods", name, fieldName];
+  const getFieldName = (fieldName) => [
+    "payment_methods",
+    name,
+    "additional_details",
+    fieldName,
+  ];
 
   // Render fields based on payment type
-  switch (paymentType) {
+  switch (payment_type) {
     case "upi":
       return (
         <div className="payment-method-fields-upi">
@@ -84,25 +89,25 @@ const PaymentMethodFields = ({ name, paymentType, form }) => {
           </Form.Item>
         </div>
       );
-    case "ngenius":
+    case "ngenius": 
       return (
         <div className="payment-method-fields-ngenius">
           <Form.Item
-            name={getFieldName("merchantId")}
+            name={getFieldName("merchant_id")}
             label="Merchant ID"
             rules={[{ required: true, message: "Please enter merchant ID" }]}
           >
             <Input placeholder="Enter N-Genius merchant ID" />
           </Form.Item>
           <Form.Item
-            name={getFieldName("apiKey")}
+            name={getFieldName("api_key")}
             label="API Key"
             rules={[{ required: true, message: "Please enter API key" }]}
           >
             <Input.Password placeholder="Enter N-Genius API key" />
           </Form.Item>
           <Form.Item
-            name={getFieldName("outletReference")}
+            name={getFieldName("outlet_reference")}
             label="Outlet Reference"
             rules={[
               { required: true, message: "Please enter outlet reference" },

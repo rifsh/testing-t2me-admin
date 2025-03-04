@@ -29,32 +29,33 @@ const AddOnServicesForm = ({ form }) => {
   const [hasServices, setHasServices] = useState(true);
   const [tabKey, setTabKey] = useState(0); // Added to force re-render
 
-  // Sync hasServices with form values
   useEffect(() => {
-    const services = form.getFieldValue("services") || [];
-    setHasServices(services.length > 0);
+    const add_on_services = form.getFieldValue("add_on_services") || [];
+    setHasServices(add_on_services.length > 0);
   }, [form]);
 
   const addTab = () => {
-    const services = form.getFieldValue("services") || [];
-    const newServices = [...services, {}];
-    form.setFieldsValue({ services: newServices });
-    setActiveKey(String(services.length));
+    const add_on_services = form.getFieldValue("add_on_services") || [];
+    const newServices = [...add_on_services, {}];
+    form.setFieldsValue({ add_on_services: newServices });
+    setActiveKey(String(add_on_services.length));
     setHasServices(true);
     setTabKey((prev) => prev + 1); // Increment to force re-render
   };
 
   const removeTab = (targetKey) => {
-    const services = form.getFieldValue("services") || [];
+    const add_on_services = form.getFieldValue("add_on_services") || [];
     const targetIndex = Number(targetKey);
 
-    if (services.length <= 1) {
-      form.setFieldsValue({ services: [] });
+    if (add_on_services.length <= 1) {
+      form.setFieldsValue({ add_on_services: [] });
       setHasServices(false);
       setActiveKey("0");
     } else {
-      const newServices = services.filter((_, index) => index !== targetIndex);
-      form.setFieldsValue({ services: newServices });
+      const newServices = add_on_services.filter(
+        (_, index) => index !== targetIndex
+      );
+      form.setFieldsValue({ add_on_services: newServices });
       const newActiveKey =
         targetIndex <= Number(activeKey)
           ? String(Math.max(0, Number(activeKey) - 1))
@@ -67,8 +68,8 @@ const AddOnServicesForm = ({ form }) => {
   };
 
   const checkDuplicateServiceType = (index, value) => {
-    const services = form.getFieldValue("services") || [];
-    const duplicateFound = services.some(
+    const add_on_services = form.getFieldValue("add_on_services") || [];
+    const duplicateFound = add_on_services.some(
       (service, i) => i !== index && service?.service_name === value
     );
 
@@ -76,11 +77,11 @@ const AddOnServicesForm = ({ form }) => {
       message.error(
         "This service type is already added. Please select a different one."
       );
-      const updatedServices = [...services];
+      const updatedServices = [...add_on_services];
       if (updatedServices[index]) {
         updatedServices[index].service_name = undefined;
       }
-      form.setFieldsValue({ services: updatedServices });
+      form.setFieldsValue({ add_on_services: updatedServices });
       return false;
     }
     return true;
@@ -89,19 +90,19 @@ const AddOnServicesForm = ({ form }) => {
   const handleServiceTypeChange = (index, value) => {
     if (!checkDuplicateServiceType(index, value)) return;
 
-    const services = form.getFieldValue("services") || [];
-    const updatedServices = [...services];
+    const add_on_services = form.getFieldValue("add_on_services") || [];
+    const updatedServices = [...add_on_services];
     updatedServices[index] = { ...updatedServices[index], service_name: value };
-    form.setFieldsValue({ services: updatedServices });
+    form.setFieldsValue({ add_on_services: updatedServices });
   };
 
   const getTabItems = () => {
-    const services = form.getFieldValue("services") || [];
-    return services.map((_, index) => ({
+    const add_on_services = form.getFieldValue("add_on_services") || [];
+    return add_on_services.map((_, index) => ({
       key: String(index),
       label: `Service ${index + 1}`,
       children: renderServiceForm(index),
-      closable: true, // Enable closing via built-in close icon
+      closable: true,
     }));
   };
 
@@ -111,7 +112,7 @@ const AddOnServicesForm = ({ form }) => {
         <Col xs={24} md={8}>
           <Form.Item
             label="Service Type"
-            name={["services", name, "service_name"]}
+            name={["add_on_services", name, "service_name"]}
             rules={[{ required: true, message: "Service type is required" }]}
           >
             <Select
@@ -128,7 +129,7 @@ const AddOnServicesForm = ({ form }) => {
         </Col>
         <Col xs={24} md={8}>
           <Form.Item
-            name={["services", name, "is_percentage"]}
+            name={["add_on_services", name, "is_percentage"]}
             label="Service Charge Type"
             initialValue={false}
           >
@@ -142,19 +143,19 @@ const AddOnServicesForm = ({ form }) => {
           <Form.Item
             noStyle
             shouldUpdate={(prev, curr) =>
-              prev.services?.[name]?.is_percentage !==
-              curr.services?.[name]?.is_percentage
+              prev.add_on_services?.[name]?.is_percentage !==
+              curr.add_on_services?.[name]?.is_percentage
             }
           >
             {({ getFieldValue }) => {
               const isPercentage = getFieldValue([
-                "services",
+                "add_on_services",
                 name,
                 "is_percentage",
               ]);
               return isPercentage ? (
                 <Form.Item
-                  name={["services", name, "percentage_or_amount"]}
+                  name={["add_on_services", name, "percentage_or_amount"]}
                   label="Service Charge Percentage"
                   rules={[
                     { required: true, message: "Please enter percentage" },
@@ -177,7 +178,7 @@ const AddOnServicesForm = ({ form }) => {
                 </Form.Item>
               ) : (
                 <Form.Item
-                  name={["services", name, "percentage_or_amount"]}
+                  name={["add_on_services", name, "percentage_or_amount"]}
                   label="Service Charge Amount"
                   rules={[
                     { required: true, message: "Please enter amount" },
@@ -197,13 +198,13 @@ const AddOnServicesForm = ({ form }) => {
       </Row>
       <Form.Item
         label="Service Description"
-        name={["services", name, "description"]}
+        name={["add_on_services", name, "description"]}
         rules={[{ required: true, message: "Description is required" }]}
       >
         <TextArea placeholder="Describe this service" rows={3} />
       </Form.Item>
       <Form.Item label="Service Features">
-        <Form.List name={["services", name, "features"]}>
+        <Form.List name={["add_on_services", name, "service_features"]}>
           {(featureFields, { add: addFeature, remove: removeFeature }) => {
             const rows = [];
             let currentRow = [];
@@ -286,10 +287,10 @@ const AddOnServicesForm = ({ form }) => {
   return (
     <Card className="border border-gray-200 mb-6" title="Add-On Services">
       <Form form={form} layout="vertical">
-        <Form.Item name="services" initialValue={[{}]} noStyle />
+        <Form.Item name="add_on_services" initialValue={[{}]} noStyle />
         {hasServices ? (
           <Tabs
-            key={tabKey} // Force re-render when tabKey changes
+            key={tabKey}
             type="editable-card"
             activeKey={activeKey}
             onChange={setActiveKey}
@@ -302,7 +303,7 @@ const AddOnServicesForm = ({ form }) => {
           />
         ) : (
           <div className="text-center py-8">
-            <Empty description="No services added" />
+            <Empty description="No add_on_services added" />
             <Button
               type="primary"
               icon={<PlusOutlined />}

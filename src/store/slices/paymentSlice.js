@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { ALL_PAYMENT_MOCK_API, ENABLE_MOCK_API } from "configs/MockConfig";
 import PaymentMockData from "mock/data/paymentData";
 import PaymentService from "services/paymentService";
-  
+
 export const initialState = {
   loading: false,
   payments: [],
@@ -69,10 +69,10 @@ export const getSinglePayment = createAsyncThunk(
 // Add new payment
 export const addPayment = createAsyncThunk(
   "payment/add",
-  async (paymentData, { rejectWithValue }) => {
-    console.log("Payment Added:", paymentData);
+  async ({ data, action }, { rejectWithValue }) => {
+    console.log("Payment Added:", data);
     try {
-      const response = await PaymentService.addPayment(paymentData);
+      const response = await PaymentService.addPayment(data, action);
       return response.data;
     } catch (error) {
       console.error("Error in addPayment:", error);
@@ -133,8 +133,8 @@ const paymentSlice = createSlice({
       })
       .addCase(addPayment.fulfilled, (state, action) => {
         state.loading = false;
-        state.responseMessage = "Payment added successfully";
-        state.payments = [action.payload, ...state.payments]; // Prepend new payment to the list
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
         state.error = null;
       })
       .addCase(addPayment.rejected, (state, action) => {

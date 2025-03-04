@@ -25,9 +25,9 @@ const PaymentMethodTabs = ({ form }) => {
 
   useEffect(() => {
     // Initialize with one empty payment method if none exists
-    const paymentMethods = form.getFieldValue("paymentMethods");
-    if (!paymentMethods || paymentMethods.length === 0) {
-      form.setFieldsValue({ paymentMethods: [{}] });
+    const payment_methods = form.getFieldValue("payment_methods");
+    if (!payment_methods || payment_methods.length === 0) {
+      form.setFieldsValue({ payment_methods: [{}] });
     }
   }, [form]);
 
@@ -36,49 +36,42 @@ const PaymentMethodTabs = ({ form }) => {
   };
 
   const addTab = () => {
-    const paymentMethods = form.getFieldValue("paymentMethods") || [];
+    const payment_methods = form.getFieldValue("payment_methods") || [];
     const newPaymentMethod = {};
-    const newPaymentMethods = [...paymentMethods, newPaymentMethod];
-    form.setFieldsValue({ paymentMethods: newPaymentMethods });
-    setActiveKey(String(paymentMethods.length));
+    const newPaymentMethods = [...payment_methods, newPaymentMethod];
+    form.setFieldsValue({ payment_methods: newPaymentMethods });
+    setActiveKey(String(payment_methods.length));
   };
 
   const removeTab = (targetKey) => {
-    const paymentMethods = form.getFieldValue("paymentMethods") || [];
+    const payment_methods = form.getFieldValue("payment_methods") || [];
 
-    if (paymentMethods.length <= 1) {
+    if (payment_methods.length <= 1) {
       message.warning("At least one payment method is required");
       return;
     }
 
     const targetIndex = Number(targetKey);
 
-    // Remove the selected payment method
-    const newPaymentMethods = paymentMethods.filter(
+    const newPaymentMethods = payment_methods.filter(
       (_, index) => index !== targetIndex
     );
 
-    // Update form values with filtered array
-    form.setFieldsValue({ paymentMethods: newPaymentMethods });
-
-    // Adjust active tab if the removed tab was the active one
+    form.setFieldsValue({ payment_methods: newPaymentMethods });
     if (activeKey === targetKey) {
       const newActiveKey = targetIndex === 0 ? "0" : String(targetIndex - 1);
       setActiveKey(newActiveKey);
     } else if (Number(activeKey) > targetIndex) {
-      // If active tab is after the removed tab, decrement active key
       setActiveKey(String(Number(activeKey) - 1));
     }
-
-    // Force form to re-render immediately
     forceUpdate({});
   };
 
   const checkDuplicatePaymentType = (index, value) => {
-    const paymentMethods = form.getFieldValue("paymentMethods") || [];
+    const payment_methods = form.getFieldValue("payment_methods") || [];
 
-    const duplicateFound = paymentMethods.some(
-      (method, i) => i !== index && method && method.paymentType === value
+    const duplicateFound = payment_methods.some(
+      (method, i) => i !== index && method && method.payment_type === value
     );
 
     if (duplicateFound) {
@@ -86,21 +79,17 @@ const PaymentMethodTabs = ({ form }) => {
         "This payment method is already added. Please select a different one."
       );
 
-      // Create a copy of all current payment methods
-      const updatedPaymentMethods = [...paymentMethods];
-
-      // Only remove the paymentType field from the current item, preserving other fields
+      const updatedPaymentMethods = [...payment_methods];
       if (updatedPaymentMethods[index]) {
         updatedPaymentMethods[index] = {
           ...updatedPaymentMethods[index],
-          paymentType: undefined, // Set to undefined instead of deleting
+          payment_type: undefined,
         };
       }
 
-      // Force select element to clear its value visually
       setTimeout(() => {
         form.setFieldsValue({
-          paymentMethods: updatedPaymentMethods,
+          payment_methods: updatedPaymentMethods,
         });
       }, 0);
 
@@ -115,37 +104,33 @@ const PaymentMethodTabs = ({ form }) => {
       return;
     }
 
-    // When payment type changes, preserve only basic fields
-    const paymentMethods = form.getFieldValue("paymentMethods") || [];
-    const currentValues = paymentMethods[index] || {};
+    const payment_methods = form.getFieldValue("payment_methods") || [];
+    const currentValues = payment_methods[index] || {};
 
     const newValues = {
       ...currentValues,
-      paymentType: value,
+      payment_type: value,
     };
 
-    // Update just this specific payment method
-    const updatedPaymentMethods = [...paymentMethods];
+    const updatedPaymentMethods = [...payment_methods];
     updatedPaymentMethods[index] = newValues;
 
     form.setFieldsValue({
-      paymentMethods: updatedPaymentMethods,
+      payment_methods: updatedPaymentMethods,
     });
 
-    // Force re-render to immediately show the fields
     forceUpdate({});
   };
 
   const renderPaymentMethodForm = (index) => {
-    // Get the current payment type value for this field
-    const paymentMethods = form.getFieldValue("paymentMethods") || [];
-    const paymentMethod = paymentMethods[index] || {};
-    const paymentType = paymentMethod.paymentType;
+    const payment_methods = form.getFieldValue("payment_methods") || [];
+    const paymentMethod = payment_methods[index] || {};
+    const payment_type = paymentMethod.payment_type;
 
     return (
       <div className="p-4">
         <Form.Item
-          name={["paymentMethods", index, "paymentType"]}
+          name={["payment_methods", index, "payment_type"]}
           label="Payment Type"
           rules={[
             {
@@ -169,7 +154,7 @@ const PaymentMethodTabs = ({ form }) => {
         <Row gutter={16}>
           <Col xs={24} md={8}>
             <Form.Item
-              name={["paymentMethods", index, "is_percentage"]}
+              name={["payment_methods", index, "is_percentage"]}
               label="Service charge Type"
               initialValue={false}
             >
@@ -184,14 +169,14 @@ const PaymentMethodTabs = ({ form }) => {
               noStyle
               shouldUpdate={(prevValues, currentValues) => {
                 return (
-                  prevValues.paymentMethods?.[index]?.is_percentage !==
-                  currentValues.paymentMethods?.[index]?.is_percentage
+                  prevValues.payment_methods?.[index]?.is_percentage !==
+                  currentValues.payment_methods?.[index]?.is_percentage
                 );
               }}
             >
               {({ getFieldValue }) => {
                 const isPercentage = getFieldValue([
-                  "paymentMethods",
+                  "payment_methods",
                   index,
                   "is_percentage",
                 ]);
@@ -199,7 +184,7 @@ const PaymentMethodTabs = ({ form }) => {
                 if (isPercentage === true) {
                   return (
                     <Form.Item
-                      name={["paymentMethods", index, "percentage_or_amount"]}
+                      name={["payment_methods", index, "percentage_or_amount"]}
                       label="Service Charge Percentage"
                       rules={[
                         {
@@ -228,7 +213,7 @@ const PaymentMethodTabs = ({ form }) => {
 
                 return (
                   <Form.Item
-                    name={["paymentMethods", index, "payment_charge"]}
+                    name={["payment_methods", index, "payment_charge"]}
                     label="Service Charge Amount"
                     rules={[
                       {
@@ -236,19 +221,35 @@ const PaymentMethodTabs = ({ form }) => {
                         message: "Please enter Service Charge amount",
                       },
                       {
-                        type: "number",
-                        min: 0,
-                        message:
-                          "Discount amount must be greater than or equal to 0",
+                        validator: async (_, value) => {
+                          if (
+                            value === null ||
+                            value === undefined ||
+                            value === ""
+                          ) {
+                            return Promise.reject(
+                              new Error("Please enter Service Charge amount")
+                            );
+                          }
+
+                          // Convert to number and check if it's a valid positive number
+                          const numValue = Number(value);
+                          if (isNaN(numValue) || numValue < 0) {
+                            return Promise.reject(
+                              new Error(
+                                "Service Charge must be a non-negative number"
+                              )
+                            );
+                          }
+
+                          return Promise.resolve();
+                        },
                       },
                     ]}
                   >
-                    <InputNumber
+                    <Input
                       style={{ width: "100%" }}
                       placeholder="Enter Service Charge amount"
-                      min={0}
-                      formatter={(value) => `${value}`}
-                      parser={(value) => value.replace("", "")}
                     />
                   </Form.Item>
                 );
@@ -257,7 +258,7 @@ const PaymentMethodTabs = ({ form }) => {
           </Col>
           <Col span={10}>
             <Form.Item
-              name={["paymentMethods", index, "authorizedUrl"]}
+              name={["payment_methods", index, "authorized_url"]}
               label="Authorized URL"
             >
               <Input placeholder="Enter authorized URL" />
@@ -265,10 +266,10 @@ const PaymentMethodTabs = ({ form }) => {
           </Col>
         </Row>
 
-        {paymentType && (
+        {payment_type && (
           <PaymentMethodFields
             name={index}
-            paymentType={paymentType}
+            payment_type={payment_type}
             form={form}
           />
         )}
@@ -277,12 +278,12 @@ const PaymentMethodTabs = ({ form }) => {
   };
 
   const getTabItems = () => {
-    const paymentMethods = form.getFieldValue("paymentMethods") || [];
-    return paymentMethods.map((_, index) => ({
+    const payment_methods = form.getFieldValue("payment_methods") || [];
+    return payment_methods.map((_, index) => ({
       key: String(index),
       label: `Payment Method ${index + 1}`,
       children: renderPaymentMethodForm(index),
-      closeIcon: paymentMethods.length > 1 && (
+      closeIcon: payment_methods.length > 1 && (
         <MinusCircleOutlined
           onClick={(e) => {
             e.stopPropagation();
@@ -295,7 +296,7 @@ const PaymentMethodTabs = ({ form }) => {
 
   return (
     <Card title="Payment Methods">
-      <Form.Item name="paymentMethods" initialValue={[{}]} noStyle />
+      <Form.Item name="payment_methods" initialValue={[{}]} noStyle />
 
       <Tabs
         type="editable-card"

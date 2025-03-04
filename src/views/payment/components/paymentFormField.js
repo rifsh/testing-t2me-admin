@@ -22,6 +22,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { processPaymentMethods } from "utils/PaymentUtils";
 import AddOnServicesForm from "./AddOnServicesForm";
 import PaymentMethodTabs from "./PaymentMethodTabs";
+import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 
 const { Option } = Select;
 
@@ -29,8 +32,10 @@ const PaymentFormFields = ({ mode, id }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const { filteredEvents = [], loading } = useSelector((state) => state.event);
+  const { responseMessage,responseData } = useSelector((state) => state.payment);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [placeId, setPlaceId] = useState();
   const [formValues, setFormValues] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -59,93 +64,46 @@ const PaymentFormFields = ({ mode, id }) => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      const submitData = {
+        ...values,
+        place_id: placeId,
+      };
       console.log("Form values:", values);
 
-      if (!validatePaymentMethods(values.paymentMethods)) {
+      if (!validatePaymentMethods(submitData.payment_methods)) {
         return;
       }
 
-      setFormValues(values);
-      setIsModalVisible(true);
+      if (mode === "EDIT") {
+        // const editData = {
+        //   ...processedValues,
+        //   id: coupon.id,
+        // };
+        // const resultAction = await dispatch(
+        //   editCoupon({ data: editData, action: ActionType.WARNING })
+        // );
+        // if (editCoupon.fulfilled.match(resultAction)) {
+        //   dispatch(setSelectedCoupon(editData));
+        //   dispatch(setCouponDialogVisible(true));
+        // }
+      } else {
+        const formData = {
+          ...submitData,
+        };
+
+        dispatch(setSelectedSubmitItem(formData));
+      }
     } catch (error) {
       console.error("Validation Failed:", error);
-    }
-  };
-
-  const handleModalConfirm = async () => {
-    if (!formValues) return;
-
-    setSubmitting(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("place_id", formValues.place_id); // Use place_id, not venue_id
-
-      if (formValues.event_id) {
-        formData.append("event_id", formValues.event_id);
-      }
-
-      if (formValues.terms_and_conditions) {
-        formData.append(
-          "terms_and_conditions",
-          formValues.terms_and_conditions
-        );
-      }
-
-      if (formValues.additional_urls) {
-        formData.append("additional_urls", formValues.additional_urls);
-      }
-
-      const paymentMethods = formValues.paymentMethods || [];
-      const processedPaymentMethods = processPaymentMethods(paymentMethods);
-      formData.append(
-        "payment_methods",
-        JSON.stringify(processedPaymentMethods)
+      message.error(
+        error.message || "Please ensure all required fields are filled."
       );
-
-      const services = formValues.services || [];
-      const serviceDetails = services.map((service) => ({
-        service_name: service.name,
-        description: service.description || "",
-        thumbnail_image:
-          service.thumbnail_image && service.thumbnail_image[0]?.uid
-            ? service.thumbnail_image[0].uid
-            : null,
-        is_percentage: service.isPercentage || false,
-        percentage_or_amount: service.percentageOrAmount || 0,
-      }));
-      formData.append("add_on_services", JSON.stringify(serviceDetails));
-
-      console.log("FormData content:");
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-
-      const result = await dispatch(addPayment(formData));
-      if (result) {
-        message.success("Payment details added successfully");
-        form.resetFields();
-        setIsModalVisible(false);
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      message.error("Failed to add payment details");
-    } finally {
-      setSubmitting(false);
     }
-  };
-
-  const handleModalCancel = () => {
-    setIsModalVisible(false);
-  };
-
-  const handleFinishFailed = (errorInfo) => {
-    console.log("Form submission failed:", errorInfo);
   };
 
   return (
     <>
-      <Form form={form} layout="vertical" onFinishFailed={handleFinishFailed}>
+      <Form form={form} layout="vertical">
         <Card title="Payment Form">
           <Row gutter={16}>
             <Col span={12}>
@@ -153,9 +111,7 @@ const PaymentFormFields = ({ mode, id }) => {
                 form={form}
                 label="Place"
                 onSelect={(id) => {
-                  console.log("Selected place_id:", id);
-                  // Optionally dispatch getVenues if needed
-                  // dispatch(getVenues({ place_id: id }));
+                  setPlaceId(id);
                 }}
                 rules={[
                   { required: true, message: RulesMessageConstants.PLACE },
@@ -224,17 +180,12 @@ const PaymentFormFields = ({ mode, id }) => {
           </div>
         </Flex>
       </Form>
-      <Modal
-        title="Confirm Submission"
-        visible={isModalVisible}
-        onOk={handleModalConfirm}
-        onCancel={handleModalCancel}
-        okText="Confirm"
-        cancelText="Cancel"
-        confirmLoading={submitting}
-      >
-        <p>Are you sure you want to submit the form?</p>
-      </Modal>
+      <SubmitAndConfirmModal
+        responseData={responseData}
+        addFunction={mode === "EDIT" ? addPayment : addPayment}
+        navigationPath={`${APP_PREFIX_PATH}/tax/list`}
+        responseMessage={responseMessage}
+      />
     </>
   );
 };
