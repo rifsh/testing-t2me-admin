@@ -451,8 +451,25 @@ export const protectedRoutes = [
     ),
   },
   {
-    key: "lead.event..details",
+    key: "lead.event.convert",
+    path: `${APP_PREFIX_PATH}/leadevent/convert`,
+    component: React.lazy(() =>
+      import("views/leadevent/convertevent-list")
+    ),
+  },
+  {
+    key: "lead.event.details",
     path: `${APP_PREFIX_PATH}/leadevent/details/:eventId`,
     component: React.lazy(() => import("views/leadevent/lead-details")),
+  },
+  {
+    key: "lead.event.add",
+    path: `${APP_PREFIX_PATH}/leadevent/add/:eventId`,
+    component: React.lazy(() => import("views/leadevent/add-leadevent")),
+  },
+  {
+    key: "lead.event.convert.details",
+    path: `${APP_PREFIX_PATH}/leadevent/convert/details/:eventId`,
+    component: React.lazy(() => import("views/leadevent/convert-details")),
   },
 ];
