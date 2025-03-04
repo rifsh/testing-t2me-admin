@@ -1,6 +1,5 @@
 import React from "react";
-import { useParams } from "react-router-dom";
-import PaymentFormFields from "../components/PaymentFormField";
+import PaymentFormFields from "../components/paymentFormField";
 
 
 const EditPayment = () => {
