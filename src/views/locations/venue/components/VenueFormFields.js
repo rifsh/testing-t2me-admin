@@ -7,6 +7,7 @@ import {
   Form,
   Select,
   Button,
+  Space,
   message,
   Upload,
   Typography,
@@ -33,7 +34,11 @@ import { RulesMessageConstants } from "constants/RulesConstant";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import { UploadOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  UploadOutlined,
+  MinusCircleOutlined,
+} from "@ant-design/icons";
 import {
   SupportImageFormat,
   SupportFormatContent,
@@ -304,6 +309,16 @@ const VenueFormFields = ({ mode, venue }) => {
               </Select>
             </Form.Item>
             <Form.Item
+              name="description"
+              label="Description"
+             // rules={rules.description}
+            >
+              <Input.TextArea
+                rows={4}
+                placeholder="Enter venue description"
+              />
+            </Form.Item>
+            <Form.Item
               name="latitude"
               label="Latitude"
               rules={[
@@ -371,6 +386,115 @@ const VenueFormFields = ({ mode, venue }) => {
               &{" resolution "}
               {ResolutionByServices.place} pixels.{" "}
             </Text>
+            </Card>
+            <Card>
+                      <Form.Item name="event_add_on_services" label="Add on Services">
+                        <Form.List name="event_add_on_services">
+                          {(fields, { add, remove }) => (
+                            <>
+                              {fields.map(({ key, name, ...restField }) => (
+                                <div key={key}>
+                                  <Form.Item
+                                    {...restField}
+                                    name={[name, "title"]}
+                                    label="Title"
+                                    rules={[
+                                      { required: false, message: "Title is required" },
+                                    ]}
+                                  >
+                                    <Input placeholder="Enter title" />
+                                  </Form.Item>
+            
+                                  <Form.List name={[name, "priceIncludes"]}>
+                                    {(
+                                      priceFields,
+                                      { add: addPrice, remove: removePrice }
+                                    ) => (
+                                      <>
+                                        <Row gutter={16}>
+                                          {priceFields.map(
+                                            ({
+                                              key: priceKey,
+                                              name: priceName,
+                                              ...priceRestField
+                                            }) => (
+                                              <Col span={12} key={priceKey}>
+                                                <Space
+                                                  style={{
+                                                    display: "flex",
+                                                    marginBottom: 8,
+                                                  }}
+                                                  align="baseline"
+                                                >
+                                                  <Form.Item
+                                                    {...priceRestField}
+                                                    name={[priceName, "priceInclude"]}
+                                                    rules={[
+                                                      {
+                                                        required: true,
+                                                        message:
+                                                          "Price include is required",
+                                                      },
+                                                    ]}
+                                                    style={{ width: "100%" }}
+                                                  >
+                                                    <Input placeholder="Price Included" />
+                                                  </Form.Item>
+                                                  <MinusCircleOutlined
+                                                    onClick={() => removePrice(priceName)}
+                                                  />
+                                                </Space>
+                                              </Col>
+                                            )
+                                          )}
+                                        </Row>
+                                        <Row gutter={16}>
+                                          <Col span={12}>
+            
+                                          <Button
+                                            type="dashed"
+                                            onClick={() => addPrice()}
+                                            block
+                                            icon={<PlusOutlined />}
+                                          >
+                                            Add Price Included
+                                          </Button>
+                                   </Col>
+                                    <Col span={12}>
+                                    <Button
+                                    type="dashed"
+                                    danger
+                                    onClick={() => remove(name)}
+                                    block
+                                    icon={<MinusCircleOutlined />}
+                                  >
+                                    Remove Title Section
+                                  </Button>
+                                    </Col>
+                                    </Row>
+                                    </>
+                                    )}
+                                  </Form.List> 
+                                </div>
+                              ))}
+                              <Form.Item style={{ marginTop: "16px" }}>
+                                <Button
+                                  type="dashed"
+                                  onClick={() => add()}
+                                  block
+                                  icon={<PlusOutlined />}
+                                >
+                                  Add Title Section
+                                </Button>
+                              </Form.Item>
+                            </>
+                          )}
+                        </Form.List>
+                      </Form.Item>
+                    </Card>
+            
+
+            <Card>
 
             <div className="mb-3">
               <h3>Pick Location</h3>

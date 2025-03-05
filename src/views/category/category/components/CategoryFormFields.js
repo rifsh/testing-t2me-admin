@@ -12,7 +12,7 @@ import {
 } from "antd";
 import {
   addCategory,
-  updateCategory,
+  updateCategory,  
   editCategory,
   setCatDialogVisible,
   setCatModalLoading,

@@ -136,6 +136,14 @@ const MultyStepEventForm = ({ eventId, mode }) => {
               url: image.media_url,
             }))
           : [],
+          event_images: eventDetails.media
+          ? eventDetails.media.map((image, index) => ({
+              uid: `-${index + 1}`,
+              name: image.media_url.split("/").pop(),
+              status: "done",
+              url: image.media_url,
+            }))
+          : [],
       };
 
       form.setFieldsValue(formValues);
@@ -374,6 +382,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
 
   const onFinish = async () => {
     try {
+      console.log(submitData, "asdfghj")
       if (mode === "EDIT") {
         const offers = {
           offer_ids: selectedOffers?.map((offer) => offer.id) || [],
