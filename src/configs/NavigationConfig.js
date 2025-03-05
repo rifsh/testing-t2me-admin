@@ -134,6 +134,14 @@ const superAdminDashBoardNavTree = [
                 submenu: [],
               },
               {
+                key: 'seat.list',
+                path: `${APP_PREFIX_PATH}/seat/list`,
+                title: 'sidenav.seat',
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: []
+              },
+              {
                 key: "sidenav.payment",
                 path: `${APP_PREFIX_PATH}/payment/list`,
                 title: "sidenav.payment",
