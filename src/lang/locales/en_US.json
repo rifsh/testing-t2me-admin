@@ -22,6 +22,8 @@
 	"sidenav.seat": "Seat",
 	"sidenav.schedule": "Schedule",
 	"sidenav.payment": "Payment",
+	"sidenav.news-letter": "News letter",
+	"news-letter.subscriber.list": "Subscribers",
 	"sidenav.advertisements":"Advertisements",
 	"advertisement.category":"Ad Category",
 	"advertisement.banner":"Banners",
@@ -147,5 +149,6 @@
 	"sidenav.app.management.layout.faq": "Faq",
 	"sidenav.app.management.layout.info":"App-Info",
 	"sidenav.applications":"Applications",
-	"sidenav.leadevent": "Event Request List"
+	"sidenav.leadevent": "Event Request List",
+	"sidenav.leadevent.convert": "Event Convert Requests"
 }

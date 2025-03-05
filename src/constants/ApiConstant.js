@@ -23,8 +23,11 @@ export const ApiConstant = {
   SINGLE_PLACE_URL: "/api/v1/location/secured/singleplace",
   COUNTRY_DETAILS_URL: "/api/v1/location/secured/country/details",
   EVENT_URL: "/api/v1/events/secured/event",
+  LEAD_EVENT_URL: "/api/v1/events/secured/lead_event/creation",
   EVENT_VALIDATION_URL: "/api/v1/events/secured/validation_event",
   EVENT_DETAILS_URL: "/api/v1/events/secured/events/detail",
+  LEAD_EVENT_DETAILS_URL:"/api/v1/events/secured/lead_event/single",
+  LEAD_EVENT_MESSAGE_URL:"/api/v1/events/secured/lead_event/comment",
   PLACE_EVENTS_URL: "/api/v1/events/public/event",
   ORGANIZER_EVENTS_URL: "/api/v1/events/secured/event/organizer",
   EVENT_SUPPORT_AVAILABLE: "/api/v1/events/secured/events/support",
@@ -117,7 +120,7 @@ export const ApiConstant = {
   FOOTER_UPLOAD_URL: "/api/v1/app_management/secured/upload_footer",
 
   //Payment
-  PAYMENT_ADD_URL: "/api/v1/payment/",
+  PAYMENT_ADD_URL: "/api/v1/payment/secured/payment",
 
   // lead event list
   LEAD_EVENT_LIST: "/api/v1/events/secured/customer_event",

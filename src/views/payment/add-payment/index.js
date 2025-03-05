@@ -1,5 +1,5 @@
 import React from "react";
-import PaymentFormFields from '../components/paymentFormField';
+import PaymentFormFields from "../components/paymentFormField";
 
 const AddPayment = () => {
     return(

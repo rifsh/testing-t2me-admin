@@ -10,7 +10,9 @@ import {
   Divider,
   Space,
 } from "antd";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { getSingleLeadEvents } from "store/slices/leadEventSlice";
 import Loading from "components/shared-components/Loading";
@@ -47,9 +49,16 @@ const getStatusTag = (status) => {
 const SingleEventDetails = () => {
   const { eventId } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const { singleLeadEvent, loading, error } = useSelector(
     (state) => state.leadEvents
   );
+  const handleViewDetails = async (id) => {
+    await dispatch(getSingleLeadEvents(id));
+    navigate(`${APP_PREFIX_PATH}/leadevent/add/${id}`);
+    };
+    
 
   useEffect(() => {
     if (eventId && !singleLeadEvent) {
@@ -337,6 +346,7 @@ const SingleEventDetails = () => {
         >
           <Space size={16}>
             <Button
+            onClick={() => handleViewDetails(singleLeadEvent.id)}
               type="primary"
               size="large"
               shape="round"
