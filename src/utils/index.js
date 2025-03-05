@@ -570,26 +570,83 @@ class Utils {
           }
           return;
         }
+        // if (key === "event_add_on_services") {
+        //   // Handle event_add_on_services
+        //   const serializedServices = value.map((service) => ({
+        //     title: service.title,
+        //     services: service.add, // Use "add" instead of "priceIncludes"
+        //   }));
+        //   formData.append(key, JSON.stringify(serializedServices)); // Serialize as JSON
+        //   return;
+        // }
         if (key === "event_add_on_services") {
-          // Handle event_add_on_services
-          const serializedServices = value.map((service) => ({
-            title: service.title,
-            services: service.add, // Use "add" instead of "priceIncludes"
-          }));
-          formData.append(key, JSON.stringify(serializedServices)); // Serialize as JSON
+          if (!value || !Array.isArray(value)) {
+            formData.append(key, JSON.stringify([]));
+            return;
+          }
+        
+          const serializedServices = value
+            .filter((service) => service.title && Array.isArray(service.add))
+            .map((service) => ({
+              title: service.title,
+              services: service.add,
+            }));
+        
+          formData.append(key, JSON.stringify(serializedServices));
           return;
         }
-      
+        if (key === "venue_add_on_services") {
+          if (!value || !Array.isArray(value)) {
+            formData.append(key, JSON.stringify([]));
+            return;
+          }
+        
+          const serializedServices = value
+            .filter((service) => service.title && Array.isArray(service.add))
+            .map((service) => ({
+              title: service.title,
+              services: service.add,
+            }));
+        
+          formData.append(key, JSON.stringify(serializedServices));
+          return;
+        }
+
+        // if (key === "event_qna") {
+        //   // Handle event_qna
+        //   const serializedQNA = value.map((qna) => ({
+        //     title: qna.title,
+        //     qna: qna.qna.map((qa) => ({
+        //       question: qa.question,
+        //       answer: qa.answer,
+        //     })),
+        //   }));
+        //   formData.append(key, JSON.stringify(serializedQNA)); // Serialize as JSON
+        //   return;
+        // }
+
         if (key === "event_qna") {
-          // Handle event_qna
-          const serializedQNA = value.map((qna) => ({
-            title: qna.title,
-            qna: qna.qna.map((qa) => ({
-              question: qa.question,
-              answer: qa.answer,
-            })),
-          }));
-          formData.append(key, JSON.stringify(serializedQNA)); // Serialize as JSON
+          // If value is null, undefined, or not an array, pass an empty array
+          if (!value || !Array.isArray(value)) {
+            formData.append(key, JSON.stringify([])); // Pass an empty array
+            return;
+          }
+        
+          // Filter and map valid entries
+          const serializedQNA = value
+            .filter((qna) => qna.title && Array.isArray(qna.qna)) // Ensure title and qna exist
+            .map((qna) => ({
+              title: qna.title,
+              qna: qna.qna
+                .filter((qa) => qa.question && qa.answer) // Ensure question and answer exist
+                .map((qa) => ({
+                  question: qa.question,
+                  answer: qa.answer,
+                })),
+            }));
+        
+          // Append serialized JSON to formData
+          formData.append(key, JSON.stringify(serializedQNA));
           return;
         }
         

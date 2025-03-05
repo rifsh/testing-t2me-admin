@@ -150,6 +150,8 @@ const VenueFormFields = ({ mode, venue }) => {
         capacity: values.capacity || 0,
         indoor: values.indoor !== undefined ? values.indoor : false,
         address: values.address,
+        description: values.description,
+        venue_add_on_services: values.venue_add_on_services,
         id: venue.id,
       };
       console.log("Edit Data:", data);
@@ -191,6 +193,8 @@ const VenueFormFields = ({ mode, venue }) => {
           capacity: values.capacity || 0, // Ensure capacity is always a number
           indoor: values.indoor !== undefined ? values.indoor : false, // Ensure indoor is boolean
           address: values.address,
+          description: values.description,
+          venue_add_on_services: values.venue_add_on_services,
         };
 
         const resultAction = await dispatch(validatePlace(selectedPlace));
@@ -388,8 +392,8 @@ const VenueFormFields = ({ mode, venue }) => {
             </Text>
             </Card>
             <Card>
-                      <Form.Item name="event_add_on_services" label="Add on Services">
-                        <Form.List name="event_add_on_services">
+                      <Form.Item name="venue_add_on_services" label="Add on Services">
+                        <Form.List name="venue_add_on_services">
                           {(fields, { add, remove }) => (
                             <>
                               {fields.map(({ key, name, ...restField }) => (
@@ -398,89 +402,63 @@ const VenueFormFields = ({ mode, venue }) => {
                                     {...restField}
                                     name={[name, "title"]}
                                     label="Title"
-                                    rules={[
-                                      { required: false, message: "Title is required" },
-                                    ]}
+                                    //rules={[{ required: true, message: "Title is required" }]}
                                   >
                                     <Input placeholder="Enter title" />
                                   </Form.Item>
             
-                                  <Form.List name={[name, "priceIncludes"]}>
-                                    {(
-                                      priceFields,
-                                      { add: addPrice, remove: removePrice }
-                                    ) => (
+                                  <Form.List name={[name, "add"]}>
+                                    {(priceFields, { add: addPrice, remove: removePrice }) => (
                                       <>
                                         <Row gutter={16}>
-                                          {priceFields.map(
-                                            ({
-                                              key: priceKey,
-                                              name: priceName,
-                                              ...priceRestField
-                                            }) => (
-                                              <Col span={12} key={priceKey}>
-                                                <Space
-                                                  style={{
-                                                    display: "flex",
-                                                    marginBottom: 8,
-                                                  }}
-                                                  align="baseline"
+                                          {priceFields.map(({ key: priceKey, name: priceName, ...priceRestField }) => (
+                                            <Col span={12} key={priceKey}>
+                                              <Space style={{ display: "flex", marginBottom: 8 }} align="baseline">
+                                                <Form.Item
+                                                  {...priceRestField}
+                                                  name={[priceName]}
+                                                  //rules={[{ required: false, message: "Price include is required" }]}
+                                                  style={{ width: "100%" }}
                                                 >
-                                                  <Form.Item
-                                                    {...priceRestField}
-                                                    name={[priceName, "priceInclude"]}
-                                                    rules={[
-                                                      {
-                                                        required: true,
-                                                        message:
-                                                          "Price include is required",
-                                                      },
-                                                    ]}
-                                                    style={{ width: "100%" }}
-                                                  >
-                                                    <Input placeholder="Price Included" />
-                                                  </Form.Item>
-                                                  <MinusCircleOutlined
-                                                    onClick={() => removePrice(priceName)}
-                                                  />
-                                                </Space>
-                                              </Col>
-                                            )
-                                          )}
+                                                  <Input placeholder="Price Included" />
+                                                </Form.Item>
+                                                <MinusCircleOutlined onClick={() => removePrice(priceName)} />
+                                              </Space>
+                                            </Col>
+                                          ))}
                                         </Row>
                                         <Row gutter={16}>
                                           <Col span={12}>
-            
-                                          <Button
-                                            type="dashed"
-                                            onClick={() => addPrice()}
-                                            block
-                                            icon={<PlusOutlined />}
-                                          >
-                                            Add Price Included
-                                          </Button>
-                                   </Col>
-                                    <Col span={12}>
-                                    <Button
-                                    type="dashed"
-                                    danger
-                                    onClick={() => remove(name)}
-                                    block
-                                    icon={<MinusCircleOutlined />}
-                                  >
-                                    Remove Title Section
-                                  </Button>
-                                    </Col>
-                                    </Row>
-                                    </>
+                                            <Button
+                                              type="dashed"
+                                              onClick={() => addPrice("")} // Add an empty string to the array
+                                              block
+                                              icon={<PlusOutlined />}
+                                            >
+                                              Add Price Included
+                                            </Button>
+                                          </Col>
+                                          <Col span={12}>
+                                            <Button
+                                              type="dashed"
+                                              danger
+                                              onClick={() => remove(name)}
+                                              block
+                                              icon={<MinusCircleOutlined />}
+                                            >
+                                              Remove Title Section
+                                            </Button>
+                                          </Col>
+                                        </Row>
+                                      </>
                                     )}
-                                  </Form.List> 
+                                  </Form.List>
                                 </div>
                               ))}
                               <Form.Item style={{ marginTop: "16px" }}>
                                 <Button
                                   type="dashed"
-                                  onClick={() => add()}
+                                  onClick={() => add({ title: "", add: [] })}
                                   block
                                   icon={<PlusOutlined />}
                                 >
