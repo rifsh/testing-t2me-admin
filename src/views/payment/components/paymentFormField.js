@@ -185,7 +185,7 @@ const PaymentFormFields = ({ mode, id }) => {
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? addPayment : addPayment}
-        navigationPath={`${APP_PREFIX_PATH}/tax/list`}
+        navigationPath={`${APP_PREFIX_PATH}/payment/list`}
         responseMessage={responseMessage}
       />
     </>
