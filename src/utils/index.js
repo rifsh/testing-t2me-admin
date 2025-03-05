@@ -574,9 +574,22 @@ class Utils {
           // Handle event_add_on_services
           const serializedServices = value.map((service) => ({
             title: service.title,
-            priceIncludes: service.priceIncludes,
+            priceIncludes: service.add, // Use "add" instead of "priceIncludes"
           }));
           formData.append(key, JSON.stringify(serializedServices)); // Serialize as JSON
+          return;
+        }
+      
+        if (key === "event_qna") {
+          // Handle event_qna
+          const serializedQNA = value.map((qna) => ({
+            title: qna.title,
+            qna: qna.qna.map((qa) => ({
+              question: qa.question,
+              answer: qa.answer,
+            })),
+          }));
+          formData.append(key, JSON.stringify(serializedQNA)); // Serialize as JSON
           return;
         }
         
