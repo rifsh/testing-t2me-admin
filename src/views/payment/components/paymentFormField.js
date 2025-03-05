@@ -32,7 +32,9 @@ const PaymentFormFields = ({ mode, id }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const { filteredEvents = [], loading } = useSelector((state) => state.event);
-  const { responseMessage,responseData } = useSelector((state) => state.payment);
+  const { responseMessage, responseData } = useSelector(
+    (state) => state.payment
+  );
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [placeId, setPlaceId] = useState();

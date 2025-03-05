@@ -10,18 +10,10 @@ import {
   Col,
   Tag,
   Tooltip,
-  Divider,
   Badge,
 } from "antd";
 import dayjs from "dayjs";
-import {
-  FaCalendarAlt,
-  FaClock,
-  FaTicketAlt,
-  FaTag,
-  FaGift,
-  FaBuilding,
-} from "react-icons/fa";
+import { FaCalendarAlt, FaClock, FaTag, FaGift } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSingleSchedules } from "store/slices/scheduleSlice";
 import { useParams } from "react-router-dom";
@@ -106,11 +98,11 @@ const ScheduleDetails = () => {
                         {processedScheduleDetails.event.venues.map((venue) => (
                           <Col span={12} key={venue.id}>
                             {/* <Card size="small"> */}
-                              <Text strong>{venue.name}, </Text>
-                              <Text type="secondary">
-                                {venue.place?.name || "N/A"},{" "}
-                                {venue.place?.country?.name || "N/A"}
-                              </Text>
+                            <Text strong>{venue.name}, </Text>
+                            <Text type="secondary">
+                              {venue.place?.name || "N/A"},{" "}
+                              {venue.place?.country?.name || "N/A"}
+                            </Text>
                             {/* </Card> */}
                           </Col>
                         ))}
@@ -152,8 +144,7 @@ const ScheduleDetails = () => {
                     <Col span={8} key={timeSlot.id || timeIndex}>
                       <Card size="small">
                         <Text strong>
-                          {formatTime(timeSlot.start_time)} -{" "}
-                          {formatTime(timeSlot.end_time)}
+                          {timeSlot.start_time} - {timeSlot.end_time}
                         </Text>
                         {timeSlot.is_midnight && (
                           <Tooltip title="Runs past midnight">
