@@ -143,7 +143,7 @@ const PaymentList = () => {
         <Button
           type="primary"
           icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/payment/create`)}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/payment/add`)}
         >
           Add Payment
         </Button>
