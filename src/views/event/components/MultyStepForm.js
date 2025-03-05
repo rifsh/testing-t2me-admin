@@ -346,7 +346,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
   };
 
   const nextStep = async () => {
-    dispatch(setSubmitLoading(true));
+    dispatch(setSubmitLoading(false));
     try {
       const values = await form.validateFields();
 
