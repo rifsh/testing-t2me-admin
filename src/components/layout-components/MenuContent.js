@@ -11,7 +11,7 @@ import { onMobileNavToggle } from 'store/slices/themeSlice';
 
 const { useBreakpoint } = Grid;
 
-const MenuItem = ({title, icon, path}) => {
+const MenuItem = ({ title, icon, path }) => {
   const dispatch = useDispatch();
   const isMobile = !utils.getBreakPoint(useBreakpoint()).includes('lg');
 
@@ -32,16 +32,19 @@ const MenuItem = ({title, icon, path}) => {
 
 const getNavMenuItems = (navItem, type = 'side') => navItem.map(nav => ({
   key: nav.key,
-  label: <MenuItem title={nav.title} {...(nav.isGroupTitle ? {} : {path: nav.path, icon: nav.icon})} />,
-  ...(nav.isGroupTitle && type === 'side' ? {type: 'group'} : {}),
-  ...(nav.submenu.length > 0 ? {children: getNavMenuItems(nav.submenu, type)} : {})
+  label: <MenuItem title={nav.title} {...(nav.isGroupTitle ? {} : { path: nav.path, icon: nav.icon })} />,
+  ...(nav.isGroupTitle && type === 'side' ? { type: 'group' } : {}),
+  ...(nav.submenu?.length > 0 ? { children: getNavMenuItems(nav.submenu, type) } : {})
+
 }));
 
 const SideNavContent = (props) => {
   const { routeInfo, hideGroupTitle, sideNavTheme = SIDE_NAV_LIGHT } = props;
-  
+
   const menuItems = useMemo(() => {
     const navTree = navigationConfig();
+    console.log('navs',getNavMenuItems(navTree, 'side'));
+
     return getNavMenuItems(navTree, 'side');
   }, []);
 
@@ -65,15 +68,15 @@ const SideNavContent = (props) => {
 
 const TopNavContent = () => {
   const topNavColor = useSelector(state => state.theme.topNavColor);
-  
+
   const menuItems = useMemo(() => {
     const navTree = navigationConfig();
     return getNavMenuItems(navTree, 'top');
   }, []);
 
   return (
-    <Menu 
-      mode="horizontal" 
+    <Menu
+      mode="horizontal"
       style={{ backgroundColor: topNavColor }}
       items={menuItems}
     />

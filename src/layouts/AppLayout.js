@@ -73,7 +73,8 @@ export const AppLayout = ({ navCollapsed, navType, direction, children }) => {
             <HeaderNav isMobile={isMobile}/>
             {(isNavTop && !isMobile) ? <TopNav routeInfo={currentRouteInfo} /> : null}
             <Layout>
-                {(isNavSide && !isMobile) ? <SideNav routeInfo={currentRouteInfo} /> : null }
+                {(isNavSide && !isMobile) ? 
+                <SideNav routeInfo={currentRouteInfo} /> : null }
                 <Layout style={getLayoutDirectionGutter()}>
                     <AppContent isNavTop={isNavTop}>
                         <PageHeader display={currentRouteInfo?.breadcrumb} title={currentRouteInfo?.title} />

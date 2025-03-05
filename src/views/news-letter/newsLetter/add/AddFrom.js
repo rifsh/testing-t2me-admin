@@ -5,6 +5,11 @@ import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import AddNewsLetterFormFields from 'views/news-letter/components/AddNewsLetterFormFields';
 
 const AddFrom = () => {
+
+  const onChange = (key) => {
+    console.log(key);
+  };
+
   return (
     <>
       <Form
@@ -29,12 +34,18 @@ const AddFrom = () => {
 
         <div className="container">
           <Tabs
+            onChange={onchange}
             style={{ marginTop: 30 }}
             items={[
               {
                 label: "news letter",
                 key: "add-letter",
-                children: <AddNewsLetterFormFields />,
+                children: <AddNewsLetterFormFields type={'normal'}/>,
+              },
+              {
+                label: "Text formatter",
+                key: "text-formatter",
+                children: <AddNewsLetterFormFields type={'formatter'}/>,
               },
 
             ]}
