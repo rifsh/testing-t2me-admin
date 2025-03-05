@@ -574,7 +574,7 @@ class Utils {
           // Handle event_add_on_services
           const serializedServices = value.map((service) => ({
             title: service.title,
-            priceIncludes: service.add, // Use "add" instead of "priceIncludes"
+            services: service.add, // Use "add" instead of "priceIncludes"
           }));
           formData.append(key, JSON.stringify(serializedServices)); // Serialize as JSON
           return;
