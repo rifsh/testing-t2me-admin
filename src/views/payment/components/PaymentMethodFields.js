@@ -89,9 +89,9 @@ const PaymentMethodFields = ({ name, payment_type, form }) => {
           </Form.Item>
         </div>
       );
-    case "ngenius": 
+    case "n-genius": 
       return (
-        <div className="payment-method-fields-ngenius">
+        <div className="payment-method-fields-n-genius">
           <Form.Item
             name={getFieldName("merchant_id")}
             label="Merchant ID"
