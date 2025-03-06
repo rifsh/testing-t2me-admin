@@ -61,6 +61,31 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/event/list`,
     component: React.lazy(() => import("views/event/event-list")),
   },
+  {
+    key: "movie.screen",
+    path: `${APP_PREFIX_PATH}/screen/list`,
+    component: React.lazy(() => import("views/screen/screen-list")),
+  },
+  {
+    key: "movie.add",
+    path: `${APP_PREFIX_PATH}/screen/add`,
+    component: React.lazy(() => import("views/screen/screen-add")),
+  },
+  {
+    key: "movie.edit",
+    path: `${APP_PREFIX_PATH}/screen/list`,
+    component: React.lazy(() => import("views/screen/screen-edit")),
+  },
+  {
+    key: "movie.detail",
+    path: `${APP_PREFIX_PATH}/screen/list`,
+    component: React.lazy(() => import("views/screen/screen-detail")),
+  },
+  {
+    key: "movie.screen",
+    path: `${APP_PREFIX_PATH}/screen/list`,
+    component: React.lazy(() => import("views/screen/screen-list")),
+  },
 
   {
     key: "event.details",
@@ -234,7 +259,7 @@ export const protectedRoutes = [
   },
   {
     key: "payment.add",
-    path: `${APP_PREFIX_PATH}/payment/add`,
+    path: `${APP_PREFIX_PATH}/payment/payment`,
     component: React.lazy(() => import("views/payment/add-payment")),
   },
   {
@@ -466,25 +491,8 @@ export const protectedRoutes = [
     ),
   },
   {
-    key: "lead.event.convert",
-    path: `${APP_PREFIX_PATH}/leadevent/convert`,
-    component: React.lazy(() =>
-      import("views/leadevent/convertevent-list")
-    ),
-  },
-  {
-    key: "lead.event.details",
+    key: "lead.event..details",
     path: `${APP_PREFIX_PATH}/leadevent/details/:eventId`,
     component: React.lazy(() => import("views/leadevent/lead-details")),
-  },
-  {
-    key: "lead.event.add",
-    path: `${APP_PREFIX_PATH}/leadevent/add/:eventId`,
-    component: React.lazy(() => import("views/leadevent/add-leadevent")),
-  },
-  {
-    key: "lead.event.convert.details",
-    path: `${APP_PREFIX_PATH}/leadevent/convert/details/:eventId`,
-    component: React.lazy(() => import("views/leadevent/convert-details")),
   },
 ];

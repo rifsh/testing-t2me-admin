@@ -43,8 +43,6 @@ const SideNavContent = (props) => {
 
   const menuItems = useMemo(() => {
     const navTree = navigationConfig();
-    console.log('navs',getNavMenuItems(navTree, 'side'));
-
     return getNavMenuItems(navTree, 'side');
   }, []);
 
