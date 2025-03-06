@@ -89,6 +89,39 @@ const VenueDetails = () => {
             <Col span={12}>
               <Text strong>Longitude:</Text> {singleVenues.longitude || "Not Available"}
             </Col>
+            <Col span={12}>
+              <Text strong>Description:</Text> {singleVenues.description || "Not Available"}
+            </Col>
+          </Row>
+        </Card>
+      </Col>
+       <Col span={24}>
+        {/* Event Add on Services Section */}
+        <Card title={<span style={{ color: "#1890ff" }}>Event Add on Services</span>} bordered={false}>
+          <Row gutter={[24, 24]} justify="left">
+            {singleVenues.venue_add_on_services?.length > 0 ? (
+              singleVenues.venue_add_on_services.map((service, index) => (
+                <Col xs={24} sm={12} md={8} lg={6} key={index}>
+                  
+                    <div>
+                      <Title level={5} style={{ marginBottom: 10 }}>{service.title}</Title>
+      
+                      <div style={{ textAlign: "left" }}>
+                        {service.services.map((item, idx) => (
+                          <Text key={idx} style={{ display: "block", marginBottom: 5 }}>
+                            • {item}
+                          </Text>
+                        ))}
+                      </div>
+                    </div>
+                  
+                </Col>
+              ))
+            ) : (
+              <Col span={24} style={{ textAlign: "center" }}>
+                <Text>No Add on Services Available</Text>
+              </Col>
+            )}
           </Row>
         </Card>
       </Col>
