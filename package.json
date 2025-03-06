@@ -71,7 +71,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "CI=false REACT_APP_BUILD_TIMESTAMP=$(date +%Y-%m-%d:%H:%M:%S) react-scripts build",
+    "build": "CI=false REACT_APP_BUILD_TIMESTAMP=$(date +%Y-%m-%d' | '%I:%M%p) react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "dev": "concurrently \"npm run start\" \"gulp watch\""
