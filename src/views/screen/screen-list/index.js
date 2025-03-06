@@ -1,32 +1,121 @@
-import React from 'react'
-import { Card, Table, Select, Input, Button, Menu, message, Collapse, Dropdown, } from "antd";
+import React, { useState, useEffect } from 'react'
+import { Card, Table, Select, Input, Button, Dropdown, Tag, Badge, Space, Tooltip } from "antd";
 import Flex from 'components/shared-components/Flex';
-import { movieScreensMockData, newsLetterMockData } from './MockData';
-import { EditOutlined, EyeOutlined, FormOutlined, MoreOutlined } from "@ant-design/icons";
+import {
+    EditOutlined,
+    EyeOutlined,
+    FormOutlined,
+    MoreOutlined,
+    DeleteOutlined,
+    PlusOutlined,
+    FilterOutlined,
+    ExportOutlined
+} from "@ant-design/icons";
 import Utils from 'utils';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { useNavigate } from 'react-router-dom';
+import { screensMockData } from './MockData';
 
-const List = () => {
+const ScreenList = () => {
     const navigate = useNavigate();
     const { Search } = Input;
     const { Option } = Select;
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState(screensMockData);
+    const [filteredData, setFilteredData] = useState(screensMockData);
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 10,
+        total: screensMockData.length
+    });
+
+    const handleSearch = (value) => {
+        setLoading(true);
+
+        const filtered = screensMockData.filter(item =>
+            item.screen_name.toLowerCase().includes(value.toLowerCase()) ||
+            item.venue_name.toLowerCase().includes(value.toLowerCase()) ||
+            item.place_name.toLowerCase().includes(value.toLowerCase())
+        );
+
+        setFilteredData(filtered);
+        setPagination({
+            ...pagination,
+            total: filtered.length
+        });
+
+        setTimeout(() => {
+            setLoading(false);
+        }, 500);
+    };
+
+    const handleClearSearch = () => {
+        setFilteredData(screensMockData);
+        setPagination({
+            ...pagination,
+            total: screensMockData.length
+        });
+    };
+
+    const handleScreenTypeFilter = (value) => {
+        setLoading(true);
+
+        let filtered = screensMockData;
+        if (value !== 'all') {
+            filtered = screensMockData.filter(item => item.screen_type === value);
+        }
+
+        setFilteredData(filtered);
+        setPagination({
+            ...pagination,
+            total: filtered.length
+        });
+
+        setTimeout(() => {
+            setLoading(false);
+        }, 500);
+    };
 
     const handleUpdateStatus = (item) => {
-        const newStatus = !item.status;
-        const data = { status: newStatus, id: item.id };
+        // Handle status update logic here
+        console.log(`Updating status for screen: ${item.id}`);
+    };
+
+    const handleViewDetails = (row) => {
+        console.log("Viewing details for:", row);
+        // Navigate to details page
+        navigate(`${APP_PREFIX_PATH}/screen/details/${row.id}`);
+    };
+
+    const handleEditScreen = (row) => {
+        console.log("Editing screen:", row);
+        // Navigate to edit page
+        navigate(`${APP_PREFIX_PATH}/screen/edit/${row.id}`);
+    };
+
+    const handleDeleteScreen = (row) => {
+        console.log("Deleting screen:", row);
+        // Delete confirmation logic would go here
+    };
+
+    const handlePagination = (page, pageSize) => {
+        setPagination({
+            ...pagination,
+            current: page,
+            pageSize: pageSize
+        });
     };
 
     const getDropdownMenu = (row) => [
         {
-            key: "remark",
+            key: "edit",
             label: (
                 <Flex alignItems="center">
-                    <EditOutlined className='text-danger'/>
-                    <span className="ml-2">Delete</span>
+                    <EditOutlined />
+                    <span className="ml-2">Edit</span>
                 </Flex>
             ),
-            // onClick: () => handleEditTax(row.id),
+            onClick: () => handleEditScreen(row),
         },
         {
             key: "view",
@@ -36,34 +125,79 @@ const List = () => {
                     <span className="ml-2">View Details</span>
                 </Flex>
             ),
-            // onClick: () => showModal(row),
+            onClick: () => handleViewDetails(row),
+        },
+        {
+            key: "delete",
+            label: (
+                <Flex alignItems="center">
+                    <DeleteOutlined className='text-danger' />
+                    <span className="ml-2 text-danger">Delete</span>
+                </Flex>
+            ),
+            onClick: () => handleDeleteScreen(row),
         }
     ];
 
+    const getScreenTypeTag = (type) => {
+        const typeColors = {
+            'standard': 'blue',
+            'imax': 'purple',
+            'vip': 'gold',
+            '4dx': 'green',
+            '3d': 'cyan'
+        };
+
+        return (
+            <Tag color={typeColors[type] || 'default'}>
+                {type.toUpperCase()}
+            </Tag>
+        );
+    };
+
+    const getStatusBadge = (isActive) => {
+        return isActive ?
+            <Badge status="success" text="Active" /> :
+            <Badge status="error" text="Inactive" />;
+    };
+
     const tableColumns = [
         {
-            title: "Name",
+            title: "Screen Name",
             dataIndex: "screen_name",
-            sorter: (a, b) => Utils.antdTableSorter(a, b, "subject"),
+            sorter: (a, b) => Utils.antdTableSorter(a, b, "screen_name"),
+            render: (text, record) => (
+                <span className="font-weight-semibold">
+                    {text}
+                </span>
+            )
         },
         {
-            title: "Theater",
-            dataIndex: 'theater',
-            sorter: (a, b) => new Date(a.send_date) - new Date(b.send_date),
+            title: "Venue",
+            dataIndex: 'venue_name',
+            sorter: (a, b) => Utils.antdTableSorter(a, b, "venue_name"),
         },
         {
-            title: "Total seats",
-            dataIndex: 'total_seats',
-            sorter: (a, b) => Utils.antdTableSorter(a, b, "status"),
-        },
-        // Utils.statusColumnUtil(handleUpdateStatus),
-        {
-            title: "Available seats",
-            dataIndex: "available_seats",
+            title: "Location",
+            dataIndex: 'place_name',
+            sorter: (a, b) => Utils.antdTableSorter(a, b, "place_name"),
         },
         {
-            title: "Show time",
-            dataIndex: "show_time",
+            title: "Type",
+            dataIndex: 'screen_type',
+            sorter: (a, b) => Utils.antdTableSorter(a, b, "screen_type"),
+            render: (type) => getScreenTypeTag(type)
+        },
+        {
+            title: "Capacity",
+            dataIndex: 'capacity',
+            sorter: (a, b) => a.capacity - b.capacity,
+        },
+        {
+            title: "Status",
+            dataIndex: "is_active",
+            sorter: (a, b) => a.is_active - b.is_active,
+            render: (isActive) => getStatusBadge(isActive)
         },
         {
             title: "",
@@ -78,98 +212,86 @@ const List = () => {
 
     return (
         <>
-
-            <Card>
+            <Card title="Screen Management">
                 <Flex
                     alignItems="center"
                     justifyContent="space-between"
                     mobileFlex={false}
+                    className="mb-1"
                 >
-                    <Flex className="mb-1" mobileFlex={false}>
+                    <Flex className="mb-3" mobileFlex={false}>
                         <div className="mr-md-3 mb-3">
                             <Search
-                                placeholder="Search Event"
-                                // onChange={(e) => handleSearchIsEmpty(e.target.value)}
-                                // onSearch={(value) => handleSearch(value)}
-                                style={{ width: 200 }}
+                                placeholder="Search Screens"
+                                allowClear
+                                onSearch={handleSearch}
+                                onChange={(e) => e.target.value === "" && handleClearSearch()}
+                                style={{ width: 250 }}
                             />
+                        </div>
+                        <div className="mr-md-3 mb-3">
+                            <Select
+                                defaultValue="all"
+                                style={{ width: 150 }}
+                                onChange={handleScreenTypeFilter}
+                                placeholder="Filter by Type"
+                            >
+                                <Option value="all">All Types</Option>
+                                <Option value="standard">Standard</Option>
+                                <Option value="imax">IMAX</Option>
+                                <Option value="vip">VIP</Option>
+                                <Option value="4dx">4DX</Option>
+                                <Option value="3d">3D</Option>
+                            </Select>
                         </div>
                         <div className="mb-3">
                             <Select
-                                defaultValue="All"
-                                className="mr-2"
+                                defaultValue="all"
+                                style={{ width: 150 }}
+                                placeholder="Filter by Status"
                             >
-                                <Option value={null}>All</Option>
-                                <Option value={true}>Verified</Option>
-                                <Option value={false}>Unverified</Option>
+                                <Option value="all">All Status</Option>
+                                <Option value="active">Active</Option>
+                                <Option value="inactive">Inactive</Option>
                             </Select>
                         </div>
                     </Flex>
-                    <div>
-                        <Button
-                            type="primary"
-                            icon={<FormOutlined />}
-                            block
-                            onClick={() => navigate(`${APP_PREFIX_PATH}/screen/add`)}
-                        >
-                            Add
-                        </Button>
+                    <div className="mb-3">
+                        <Space>
+                            <Tooltip title="Export">
+                                <Button icon={<ExportOutlined />}>
+                                    Export
+                                </Button>
+                            </Tooltip>
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => navigate(`${APP_PREFIX_PATH}/screen/add`)}
+                            >
+                                Add Screen
+                            </Button>
+                        </Space>
                     </div>
                 </Flex>
                 <div className="table-responsive">
                     <Table
                         columns={tableColumns}
-                        dataSource={movieScreensMockData}
+                        dataSource={filteredData}
                         rowKey="id"
-                        loading={false}
-                    // pagination={{
-                    //     current: pagination.page,
-                    //     pageSize: pagination.size,
-                    //     total: pagination.total,
-                    //     onChange: (page, pageSize) => handlePagination(page, pageSize),
-                    // }}
+                        loading={loading}
+                        pagination={{
+                            current: pagination.current,
+                            pageSize: pagination.pageSize,
+                            total: pagination.total,
+                            onChange: (page, pageSize) => handlePagination(page, pageSize),
+                            showSizeChanger: true,
+                            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} screens`
+                        }}
                     />
                 </div>
-                {/* <WarningModal
-                    mode={"itemmodal"}
-                    visible={dialogVisible}
-                    title="Edit Event"
-                    details={TextConstants.DefaultEditContent1}
-                    warningMessage="Do you want to proceed to the edit page?"
-                    onSubmit={handleModalSubmit}
-                    onCancel={handleModalCancel}
-                    confirmText="Proceed to Edit"
-                    cancelText="Cancel"
-                    loading={modalLoading}
-                />
-
-                <UpdateStatusModal
-                    responseMessage={messages}
-                    editFunction={editEventStatus}
-                    editable_status={editable_status}
-                    getAllFunction={(pageData) => fetchAllEvent(pageData)}
-                    responseData={responseImpactData}
-                    tableConfig={{
-                        title: "Active Schedules",
-                        dataKey: "items",
-                    }}
-                    pageData={{ page: 1, size: 10 }}
-                    pagination={warningPagination}
-                    loading={loading}
-                />
-                <StatusSubmitAndConfirmModal
-                    editFunction={editEventStatus}
-                    getAllFunction={fetchAllEvent}
-                    responseData={responseData}
-                    responseMessage={messages}
-                    pageData={DEFAULT_PAGE_SIZE}
-                    onSubmitMessage={TextConstants.StatusUpdatedSuccess}
-                    onCloseMessage={TextConstants.StatusUpdateCanceled}
-                /> */}
             </Card>
-
         </>
     )
 }
 
-export default List
+export default ScreenList;
