@@ -1,0 +1,53 @@
+import React from 'react'
+import Flex from "components/shared-components/Flex";
+import { Tabs, Form } from "antd";
+import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
+import AddScreenFormFields from '../components/AddScreenFormFields';
+
+const AddFrom = () => {
+
+  const onChange = (key) => {
+    console.log(key);
+  };
+
+  return (
+    <>
+      <Form
+        layout="vertical"
+        name="category-form"
+        className="ant-advanced-search-form"
+      >
+        <PageHeaderAlt className="border-bottom" overlap>
+          <div className="container">
+            <Flex
+              className="py-2"
+              mobileFlex={false}
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <h2 className="mb-3">
+                Add Screen
+              </h2>
+            </Flex>
+          </div>
+        </PageHeaderAlt>
+
+        <div className="container">
+          <Tabs
+            onChange={onchange}
+            style={{ marginTop: 30 }}
+            items={[
+              {
+                label: "Screen",
+                key: "add-screen",
+                children: <AddScreenFormFields type={'screen'} />,
+              }
+            ]}
+          />
+        </div>
+      </Form>
+    </>
+  )
+}
+
+export default AddFrom
