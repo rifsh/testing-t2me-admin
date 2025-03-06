@@ -86,7 +86,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     (state) => state.organizerUpdates
   );
   const { selectedTax } = useSelector((state) => state.tax);
- const { selectedVenue, selectedVenueList } = useSelector(
+  const { selectedVenue, selectedVenueList } = useSelector(
     (state) => state.locations
   );
 
@@ -120,29 +120,29 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           eventDetails.event_coupons?.map((coupon) => coupon.coupons.id) || [],
         thumbnail_image: eventDetails.thumbnail_image
           ? [
-              {
-                uid: "-1",
-                name: eventDetails.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: eventDetails.thumbnail_image,
-              },
-            ]
+            {
+              uid: "-1",
+              name: eventDetails.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: eventDetails.thumbnail_image,
+            },
+          ]
           : [],
         banner_images: eventDetails.media
           ? eventDetails.media.map((image, index) => ({
-              uid: `-${index + 1}`,
-              name: image.media_url.split("/").pop(),
-              status: "done",
-              url: image.media_url,
-            }))
+            uid: `-${index + 1}`,
+            name: image.media_url.split("/").pop(),
+            status: "done",
+            url: image.media_url,
+          }))
           : [],
-          event_images: eventDetails.media
+        event_images: eventDetails.media
           ? eventDetails.media.map((image, index) => ({
-              uid: `-${index + 1}`,
-              name: image.media_url.split("/").pop(),
-              status: "done",
-              url: image.media_url,
-            }))
+            uid: `-${index + 1}`,
+            name: image.media_url.split("/").pop(),
+            status: "done",
+            url: image.media_url,
+          }))
           : [],
       };
 
@@ -388,7 +388,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           offer_ids: selectedOffers?.map((offer) => offer.id) || [],
           coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
         };
-     
+
         const data = {
           ...submitData,
           ...offers,
