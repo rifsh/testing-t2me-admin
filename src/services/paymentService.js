@@ -7,13 +7,13 @@ const PaymentService = {};
 
 PaymentService.getAllPayment = function (pageData) {
   return fetch({
-    url: `${ApiConstant.PAYMENT_URL}/list`,
+    url: ApiConstant.PAYMENT_URL,
     method: "get",
     params: Utils.filterParams(pageData),
   });
 };
 
-PaymentService.addPayment = function (paymentData,action) {
+PaymentService.addPayment = function (paymentData, action) {
   console.log(paymentData, "paymentData");
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(paymentData, {
@@ -22,7 +22,7 @@ PaymentService.addPayment = function (paymentData,action) {
   });
 
   return fetch({
-    url: `${ApiConstant.PAYMENT_ADD_URL}?action=${encodedAction}`,
+    url: `${ApiConstant.PAYMENT_URL}?action=${encodedAction}`,
     method: "POST",
     data: formData,
   });

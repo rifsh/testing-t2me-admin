@@ -32,7 +32,9 @@ const PaymentFormFields = ({ mode, id }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const { filteredEvents = [], loading } = useSelector((state) => state.event);
-  const { responseMessage,responseData } = useSelector((state) => state.payment);
+  const { responseMessage, responseData } = useSelector(
+    (state) => state.payment
+  );
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [placeId, setPlaceId] = useState();
@@ -183,7 +185,7 @@ const PaymentFormFields = ({ mode, id }) => {
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? addPayment : addPayment}
-        navigationPath={`${APP_PREFIX_PATH}/tax/list`}
+        navigationPath={`${APP_PREFIX_PATH}/payment/list`}
         responseMessage={responseMessage}
       />
     </>

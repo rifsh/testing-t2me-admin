@@ -8,7 +8,7 @@ export const initialState = {
   payments: [],
   singlePayment: null,
   error: null,
-  message: null,
+  // message: null,
   responseData: null,
   responseMessage: null,
   editable_status: null,
@@ -73,7 +73,7 @@ export const addPayment = createAsyncThunk(
     console.log("Payment Added:", data);
     try {
       const response = await PaymentService.addPayment(data, action);
-      return response.data;
+      return response;
     } catch (error) {
       console.error("Error in addPayment:", error);
       return rejectWithValue(error.response?.data || "Error Adding Payment");

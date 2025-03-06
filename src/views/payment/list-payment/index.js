@@ -1,11 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { Card, Button, Table, Menu, Collapse, Dropdown, Modal, Descriptions, Tag } from 'antd';
-import { FormOutlined, EditOutlined, EyeOutlined, MoreOutlined } from '@ant-design/icons';
+import {
+  Card,
+  Button,
+  Table,
+  Menu,
+  Collapse,
+  Dropdown,
+  Modal,
+  Descriptions,
+  Tag,
+} from "antd";
+import {
+  FormOutlined,
+  EditOutlined,
+  EyeOutlined,
+  MoreOutlined,
+} from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { fetchAllPayment } from "store/slices/paymentSlice";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Utils from "utils";
@@ -21,14 +36,14 @@ const PaymentList = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
 
   useEffect(() => {
-    // Fixed: Pass an object with size property
-    dispatch(fetchAllPayment({ size: DEFAULT_PAGE_SIZE, page: 1 }));
+    dispatch(fetchAllPayment(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
-  const showModal = (offer) => {
-    setSelectedPayment(offer);
+  const showModal = (payment) => {
+    setSelectedPayment(payment);
     setIsModalVisible(true);
   };
+
   const handleModalClose = () => {
     setIsModalVisible(false);
     setSelectedPayment(null);
@@ -47,9 +62,7 @@ const PaymentList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       ),
-      onClick: () => 
-        navigate(`${APP_PREFIX_PATH}/payment/details/${row.id}`), 
-        //showModal(row),
+      onClick: () => showModal(row),
     },
     {
       key: "remark",
@@ -59,103 +72,61 @@ const PaymentList = () => {
           <span className="ml-2">Edit Payment</span>
         </Flex>
       ),
-      onClick: () => navigate(`${APP_PREFIX_PATH}/payment/edit/`),
+      onClick: () => navigate(`${APP_PREFIX_PATH}/payment/edit/${row.id}`),
     },
   ];
 
   const tableColumns = [
     {
       title: "Place",
-      dataIndex: ["jsonData", "place_name"],
-      render: (name) => <span>{name || "N/A"}</span>,
-      sorter: (a, b) => Utils.antdTableSorter(a, b, ["jsonData", "place_name"]),
+      render: (row) => (
+        <div>
+          <img
+            src={row.place?.thumbnail_image}
+            alt={row.place?.name}
+            style={{
+              width: 50,
+              height: 50,
+              marginRight: 10,
+              objectFit: "cover",
+            }}
+          />
+          <span>{row.place?.name || "N/A"}</span>
+        </div>
+      ),
     },
     {
       title: "Event",
-      dataIndex: ["jsonData", "event"],
-      render: (name) => <span>{name || "N/A"}</span>,
-      sorter: (a, b) => Utils.antdTableSorter(a, b, ["jsonData", "event"]),
-    },
-    {
-      title: "Add on Services",
       render: (row) => (
-        <Collapse defaultActiveKey={[]} accordion>
-          {row.jsonData?.service_adons &&
-          row.jsonData.service_adons.length > 0 ? (
-            row.jsonData.service_adons.map((logo, index) => (
-              <Panel
-                header={logo.name}
-                key={index}
-                extra={<span>{logo.type}</span>}
-              >
-                <img
-                  key={logo.name}
-                  src={logo.logo}
-                  alt={logo.name}
-                  style={{ width: 50, marginRight: 8 }}
-                />
-              </Panel>
-            ))
-          ) : (
-            <Panel collapsible="disabled" header="" />
-          )}
-        </Collapse>
+        <div>
+          <img
+            src={row.event?.thumbnail_image}
+            alt={row.event?.event_name}
+            style={{
+              width: 50,
+              height: 50,
+              marginRight: 10,
+              objectFit: "cover",
+            }}
+          />
+          <span>{row.event?.event_name || "N/A"}</span>
+        </div>
       ),
     },
     {
-      title: "Card Types",
+      title: "Country",
+      render: (row) => <span>{row.place?.country?.name || "N/A"}</span>,
+    },
+    {
+      title: "Status",
       render: (row) => (
-        <Collapse defaultActiveKey={[]} accordion>
-          {row.jsonData?.payment_logos &&
-          row.jsonData.payment_logos.length > 0 ? (
-            row.jsonData.payment_logos.map((logo, index) => (
-              <Panel
-                header={logo.name}
-                key={index}
-                extra={<span>{logo.type}</span>}
-              >
-                <img
-                  key={logo.name}
-                  src={logo.logo}
-                  alt={logo.name}
-                  style={{ width: 50, marginRight: 8 }}
-                />
-              </Panel>
-            ))
-          ) : (
-            <Panel collapsible="disabled" header="" />
-          )}
-        </Collapse>
+        <Tag color={row.status ? "green" : "red"}>
+          {row.status ? "Active" : "Inactive"}
+        </Tag>
       ),
     },
     {
-      title: "Payments",
-      render: (row) => (
-        <Collapse defaultActiveKey={[]} accordion>
-          {row.jsonData?.payment_logos &&
-          row.jsonData.payment_logos.length > 0 ? (
-            row.jsonData.payment_logos.map((logo, index) => (
-              <Panel
-                header={logo.name}
-                key={index}
-                extra={<span>{logo.type}</span>}
-              >
-                <img
-                  key={logo.name}
-                  src={logo.logo}
-                  alt={logo.name}
-                  style={{ width: 50, marginRight: 8 }}
-                />
-              </Panel>
-            ))
-          ) : (
-            <Panel collapsible="disabled" header="No payment logos available" />
-          )}
-        </Collapse>
-      ),
-    },
-    {
-      title: "",
+      title: "Actions",
       dataIndex: "actions",
       render: (_, row) => (
         <Dropdown menu={{ items: dropdownMenu(row) }} trigger={["click"]}>
@@ -172,7 +143,7 @@ const PaymentList = () => {
         <Button
           type="primary"
           icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/payment/payment`)}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/payment/add`)}
         >
           Add Payment
         </Button>
@@ -192,110 +163,60 @@ const PaymentList = () => {
         />
       </div>
       <Modal
-        title="Payment Method Details"
+        title="Payment Details"
         open={isModalVisible}
         onCancel={handleModalClose}
         footer={null}
         width={800}
       >
         {selectedPayment && (
-          <Descriptions column={1} bordered>
-            <Descriptions.Item label="Place Name">
-              {selectedPayment.jsonData?.place_name || "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Event Name">
-              {selectedPayment.jsonData?.event || "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Add on Services">
-              {selectedPayment.jsonData?.service_adons?.length > 0 ? (
-                <div
+          <Descriptions column={2} bordered>
+            <Descriptions.Item label="Place">
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <img
+                  src={selectedPayment.place?.thumbnail_image}
+                  alt={selectedPayment.place?.name}
                   style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
+                    width: 50,
+                    height: 50,
+                    marginRight: 10,
+                    objectFit: "cover",
                   }}
-                >
-                  {selectedPayment.jsonData.service_adons.map(
-                    (service, index) => (
-                      <div
-                        key={index}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                        }}
-                      >
-                        <img
-                          src={service.logo}
-                          alt={service.name}
-                          style={{
-                            width: 50,
-                            height: 50,
-                            objectFit: "contain",
-                          }}
-                        />
-                        <div>
-                          <div>
-                            <strong>{service.name}</strong>
-                          </div>
-                          {service.type && (
-                            <Tag color="blue">{service.type}</Tag>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              ) : (
-                "No add-on services available"
-              )}
+                />
+                {selectedPayment.place?.name || "N/A"}
+              </div>
             </Descriptions.Item>
-            <Descriptions.Item label="Payments">
-              {selectedPayment.jsonData?.payment_logos?.length > 0 ? (
-                <div
+            <Descriptions.Item label="Country">
+              {selectedPayment.place?.country?.name || "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Event">
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <img
+                  src={selectedPayment.event?.thumbnail_image}
+                  alt={selectedPayment.event?.event_name}
                   style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
+                    width: 50,
+                    height: 50,
+                    marginRight: 10,
+                    objectFit: "cover",
                   }}
-                >
-                  {selectedPayment.jsonData.payment_logos.map(
-                    (payment, index) => (
-                      <div
-                        key={index}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                        }}
-                      >
-                        <img
-                          src={payment.logo}
-                          alt={payment.name}
-                          style={{
-                            width: 50,
-                            height: 50,
-                            objectFit: "contain",
-                          }}
-                        />
-                        <div>
-                          <div>
-                            <strong>{payment.name}</strong>
-                          </div>
-                          {payment.type && (
-                            <Tag color="green">{payment.type}</Tag>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              ) : (
-                "No payment methods available"
-              )}
+                />
+                {selectedPayment.event?.event_name || "N/A"}
+              </div>
             </Descriptions.Item>
-            <Descriptions.Item label="Url Terms & Conditions">
-              {/* {selectedOffer.max_uses} */}
+            <Descriptions.Item label="Event Description">
+              {selectedPayment.event?.description || "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Status">
+              <Tag color={selectedPayment.status ? "green" : "red"}>
+                {selectedPayment.status ? "Active" : "Inactive"}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Terms & Conditions">
+              {selectedPayment.terms_and_conditions || "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Additional URLs">
+              {selectedPayment.additional_urls || "N/A"}
             </Descriptions.Item>
           </Descriptions>
         )}
