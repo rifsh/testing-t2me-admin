@@ -254,11 +254,6 @@ const ScreenList = () => {
                     </Flex>
                     <div className="mb-3">
                         <Space>
-                            <Tooltip title="Export">
-                                <Button icon={<ExportOutlined />}>
-                                    Export
-                                </Button>
-                            </Tooltip>
                             <Button
                                 type="primary"
                                 icon={<PlusOutlined />}
