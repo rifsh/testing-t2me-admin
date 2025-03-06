@@ -16,7 +16,7 @@ import {
 } from "store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { APP_CURRENT_VERSION } from "configs/VersionConfig";
+import { APP_CURRENT_VERSION, BUILD_TIMESTAMP } from "configs/VersionConfig";
 
 export const LoginForm = (props) => {
   const navigate = useNavigate();
@@ -174,7 +174,7 @@ export const LoginForm = (props) => {
             Sign In
           </Button>
         </Form.Item>
-        <span>{APP_CURRENT_VERSION}</span>
+        <span>{APP_CURRENT_VERSION} - {BUILD_TIMESTAMP} </span>
         {/* {otherSignIn ? renderOtherSignIn : null} */}
         {extra}
       </Form>
