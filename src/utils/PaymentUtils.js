@@ -33,7 +33,7 @@ export const processPaymentMethods = (paymentMethods) => {
             bank_code: method.bankCode || "",
             image: method.bankImage && method.bankImage[0]?.uid ? method.bankImage[0].uid : null,
           };
-        case "ngenius":
+        case "n-genius":
           return {
             ...baseData,
             merchant_id: method.merchantId || "",
