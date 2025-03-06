@@ -93,6 +93,8 @@ const VenueFormFields = ({ mode, venue }) => {
         indoor: venue.indoor,
         latitude: venue.latitude,
         longitude: venue.longitude,
+        description: venue.description,
+        venue_add_on_services: venue.venue_add_on_services,
         banner_images: venue?.media
           ? venue?.media?.map((banner, index) => ({
               uid: `-banner-${index}`,
