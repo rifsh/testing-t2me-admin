@@ -9,160 +9,7 @@ import VenueListForm from 'components/util-components/FormItems/VenueList';
 import { useDispatch } from 'react-redux';
 import { getVenues, setSelectedVenueList } from 'store/slices/locationSlice';
 import { resetTicketSelection } from 'store/slices/ticketSlice';
-
-const { Option } = Select;
-const { Title } = Typography;
-const { TabPane } = Tabs;
-
-const ScreenForm = ({ form, index, onRemove, isOnlyScreen }) => {
-    const [message, setMessage] = useState("");
-    const rules = {
-        subject: [{ required: true, message: "Please enter screen name" }],
-        screen_type: [{ required: true, message: "Please select screen type" }],
-        capacity: [{ required: true, message: "Please enter screen capacity" }],
-        thumbnail_image: [{ required: true, message: "Please choose a screen image" }],
-    };
-
-    const normFile = (e) => {
-        if (Array.isArray(e)) {
-            return e;
-        }
-        return e?.fileList;
-    };
-
-    return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <Title level={5}>Screen {index + 1}</Title>
-                {!isOnlyScreen && (
-                    <Button
-                        type="text"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => onRemove(index)}
-                    >
-                        Remove
-                    </Button>
-                )}
-            </div>
-
-            <Form.Item name={['screens', index, 'screen_name']} label="Name" rules={rules.subject}>
-                <Input placeholder="Screen name" />
-            </Form.Item>
-
-            <Form.Item name={['screens', index, 'screen_type']} label="Screen Type" rules={rules.screen_type}>
-                <Select placeholder="Select screen type">
-                    <Option value="standard">Standard</Option>
-                    <Option value="imax">IMAX</Option>
-                    <Option value="vip">VIP</Option>
-                    <Option value="4dx">4DX</Option>
-                    <Option value="3d">3D</Option>
-                </Select>
-            </Form.Item>
-
-            <Form.Item name={['screens', index, 'capacity']} label="Capacity" rules={rules.capacity}>
-                <InputNumber min={1} placeholder="Total seats" style={{ width: '100%' }} />
-            </Form.Item>
-
-            <Form.Item name={['screens', index, 'description']} label="Description">
-                <ReactQuill
-                    theme="snow"
-                    onChange={(value) => {
-                        const values = form.getFieldsValue();
-                        const screens = values.screens || [];
-                        screens[index] = { ...screens[index], description: value };
-                        form.setFieldsValue({ screens });
-                    }}
-                />
-            </Form.Item>
-
-            <Form.Item name={['screens', index, 'is_active']} label="Active Status" valuePropName="checked" initialValue={true}>
-                <Switch defaultChecked />
-            </Form.Item>
-
-            <Form.Item
-                name={['screens', index, 'thumbnail_image']}
-                label="Screen Image"
-                valuePropName="fileList"
-                getValueFromEvent={normFile}
-                rules={rules.thumbnail_image}
-            >
-                <Upload
-                    accept={SupportImageFormat}
-                    listType="picture-card"
-                    beforeUpload={() => false}
-                    maxCount={1}
-                >
-                    <div>
-                        <UploadOutlined />
-                        <div style={{ marginTop: 8 }}>Upload</div>
-                    </div>
-                </Upload>
-            </Form.Item>
-
-            <Form.Item name={['screens', index, 'seat_structure_id']} label="Seat Structure">
-                <Select placeholder="Select seat structure">
-                    <Option value="1">Default Structure</Option>
-                    <Option value="2">Custom Structure 1</Option>
-                    <Option value="3">Custom Structure 2</Option>
-                </Select>
-            </Form.Item>
-
-            <Form.Item name={['screens', index, 'ticket_structure_id']} label="Ticket Structure">
-                <Select placeholder="Select ticket structure">
-                    <Option value="1">Default Pricing</Option>
-                    <Option value="2">Weekend Pricing</Option>
-                    <Option value="3">Holiday Pricing</Option>
-                </Select>
-            </Form.Item>
-
-            <Form.Item name={['screens', index, 'available_times']} label="Available Times">
-                <Select mode="multiple" placeholder="Select available time slots">
-                    <Option value="morning">Morning</Option>
-                    <Option value="afternoon">Afternoon</Option>
-                    <Option value="evening">Evening</Option>
-                    <Option value="night">Night</Option>
-                </Select>
-            </Form.Item>
-
-            <Card title="Additional Settings">
-                <Form.Item name={['screens', index, 'has_reserved_seating']} label="Reserved Seating" valuePropName="checked">
-                    <Switch />
-                </Form.Item>
-
-                <Form.Item name={['screens', index, 'accessibility_features']} label="Accessibility Features">
-                    <Select mode="multiple" placeholder="Select features">
-                        <Option value="wheelchair">Wheelchair Access</Option>
-                        <Option value="hearing_loop">Hearing Loop</Option>
-                        <Option value="audio_description">Audio Description</Option>
-                    </Select>
-                </Form.Item>
-
-                <Form.Item name={['screens', index, 'screen_technology']} label="Screen Technology">
-                    <Select placeholder="Select technology">
-                        <Option value="digital">Digital</Option>
-                        <Option value="laser">Laser Projection</Option>
-                        <Option value="dolby">Dolby Vision</Option>
-                    </Select>
-                </Form.Item>
-
-                <Form.Item name={['screens', index, 'audio_system']} label="Audio System">
-                    <Select placeholder="Select audio system">
-                        <Option value="standard">Standard</Option>
-                        <Option value="dolby_atmos">Dolby Atmos</Option>
-                        <Option value="dts">DTS-X</Option>
-                    </Select>
-                </Form.Item>
-
-                <Form.Item name={['screens', index, 'maintenance_schedule']} label="Maintenance Schedule">
-                    <DatePicker.RangePicker style={{ width: '100%' }} />
-                </Form.Item>
-            </Card>
-
-            <Divider />
-        </div>
-    );
-};
+import ScreenForm from './ScreenForm';
 
 const AddScreenFormFields = () => {
     const dispatch = useDispatch();
@@ -184,13 +31,9 @@ const AddScreenFormFields = () => {
         if (screens.length > 1) {
             const newScreens = screens.filter((_, i) => i !== index);
             setScreens(newScreens);
-
-            // Update form values to remove the deleted screen
             const values = form.getFieldsValue();
             const updatedScreens = values.screens.filter((_, i) => i !== index);
             form.setFieldsValue({ screens: updatedScreens });
-
-            // Set active tab to the first one if the active tab is removed
             if (Number(activeTab) === index) {
                 setActiveTab("0");
             } else if (Number(activeTab) > index) {
@@ -212,7 +55,6 @@ const AddScreenFormFields = () => {
     }
 
     const handleVenueSelect = (venue) => {
-        // Reset screens when venue changes
         form.resetFields(["screens"]);
         setScreens([{ key: 0 }]);
     }
@@ -221,7 +63,6 @@ const AddScreenFormFields = () => {
         event.preventDefault();
         form.validateFields().then(values => {
             console.log("Form submitted:", values);
-            // Handle form submission
         }).catch(errorInfo => {
             console.log("Validation failed:", errorInfo);
         });

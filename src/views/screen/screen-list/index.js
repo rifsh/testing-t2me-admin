@@ -77,25 +77,21 @@ const ScreenList = () => {
     };
 
     const handleUpdateStatus = (item) => {
-        // Handle status update logic here
         console.log(`Updating status for screen: ${item.id}`);
     };
 
     const handleViewDetails = (row) => {
         console.log("Viewing details for:", row);
-        // Navigate to details page
         navigate(`${APP_PREFIX_PATH}/screen/details/${row.id}`);
     };
 
     const handleEditScreen = (row) => {
         console.log("Editing screen:", row);
-        // Navigate to edit page
         navigate(`${APP_PREFIX_PATH}/screen/edit/${row.id}`);
     };
 
     const handleDeleteScreen = (row) => {
         console.log("Deleting screen:", row);
-        // Delete confirmation logic would go here
     };
 
     const handlePagination = (page, pageSize) => {
