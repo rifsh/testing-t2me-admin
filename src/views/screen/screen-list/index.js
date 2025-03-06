@@ -15,6 +15,7 @@ import Utils from 'utils';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { useNavigate } from 'react-router-dom';
 import { screensMockData } from './MockData';
+import { screenOptions } from 'constants/ScreenConstants';
 
 const ScreenList = () => {
     const navigate = useNavigate();
@@ -232,12 +233,9 @@ const ScreenList = () => {
                                 onChange={handleScreenTypeFilter}
                                 placeholder="Filter by Type"
                             >
-                                <Option value="all">All Types</Option>
-                                <Option value="standard">Standard</Option>
-                                <Option value="imax">IMAX</Option>
-                                <Option value="vip">VIP</Option>
-                                <Option value="4dx">4DX</Option>
-                                <Option value="3d">3D</Option>
+                                {screenOptions.filterTypes.map(screen => (
+                                    <Option key={screen.value} value={screen.value}>{screen.label}</Option>
+                                ))}
                             </Select>
                         </div>
                         <div className="mb-3">
@@ -246,9 +244,9 @@ const ScreenList = () => {
                                 style={{ width: 150 }}
                                 placeholder="Filter by Status"
                             >
-                                <Option value="all">All Status</Option>
-                                <Option value="active">Active</Option>
-                                <Option value="inactive">Inactive</Option>
+                                {screenOptions.statusOptions.map(status => (
+                                    <Option key={status.value} value={status.value}>{status.label}</Option>
+                                ))}
                             </Select>
                         </div>
                     </Flex>

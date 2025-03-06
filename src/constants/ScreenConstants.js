@@ -37,4 +37,17 @@ export const screenOptions = {
         { value: "dolby_atmos", label: "Dolby Atmos" },
         { value: "dts", label: "DTS-X" },
     ],
+    filterTypes: [
+        { label: "All Types", value: "all" },
+        { label: "Standard", value: "standard" },
+        { label: "IMAX", value: "imax" },
+        { label: "VIP", value: "vip" },
+        { label: "4DX", value: "4dx" },
+        { label: "3D", value: "3d" }
+    ],
+    statusOptions: [
+        { label: "All Status", value: "all" },
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" }
+    ]
 };
