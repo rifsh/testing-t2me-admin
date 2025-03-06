@@ -589,7 +589,7 @@ class Utils {
             .filter((service) => service.title && Array.isArray(service.add))
             .map((service) => ({
               title: service.title,
-              services: service.add,
+              services: service.services,
             }));
         
           formData.append(key, JSON.stringify(serializedServices));

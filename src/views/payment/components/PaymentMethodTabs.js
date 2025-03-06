@@ -184,7 +184,7 @@ const PaymentMethodTabs = ({ form }) => {
                 if (isPercentage === true) {
                   return (
                     <Form.Item
-                      name={["payment_methods", index, "percentage_or_amount"]}
+                      name={["payment_methods", index, "payment_charge"]}
                       label="Service Charge Percentage"
                       rules={[
                         {
