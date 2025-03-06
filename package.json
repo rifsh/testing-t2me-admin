@@ -70,11 +70,11 @@
     "web-vitals": "^0.2.4"
   },
   "scripts": {
+    "prebuild": "./write-commit.sh",
+    "build": "CI=false REACT_APP_BUILD_TIMESTAMP=$(date '+%Y-%m-%d | %I:%M%p') REACT_APP_COMMIT_HASH=$(cat commit-hash.txt) react-scripts build",
     "start": "react-scripts start",
-    "build": "CI=false REACT_APP_BUILD_TIMESTAMP=$(date +'%Y-%m-%d | %I:%M%p') react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "dev": "concurrently \"npm run start\" \"gulp watch\""  
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
