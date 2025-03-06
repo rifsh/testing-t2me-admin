@@ -131,6 +131,70 @@ const EventDetails = () => {
       </Col>
 
       <Col span={24}>
+  {/* Event Add on Services Section */}
+  <Card title={<span style={{ color: "#1890ff" }}>Event Add on Services</span>} bordered={false}>
+    <Row gutter={[24, 24]} justify="left">
+      {eventDetails.event_add_on_services?.length > 0 ? (
+        eventDetails.event_add_on_services.map((service, index) => (
+          <Col xs={24} sm={12} md={8} lg={6} key={index}>
+            
+              <div>
+                <Title level={5} style={{ marginBottom: 10 }}>{service.title}</Title>
+
+                <div style={{ textAlign: "left" }}>
+                  {service.services.map((item, idx) => (
+                    <Text key={idx} style={{ display: "block", marginBottom: 5 }}>
+                      • {item}
+                    </Text>
+                  ))}
+                </div>
+              </div>
+            
+          </Col>
+        ))
+      ) : (
+        <Col span={24} style={{ textAlign: "center" }}>
+          <Text>No Add on Services Available</Text>
+        </Col>
+      )}
+    </Row>
+  </Card>
+</Col>
+
+<Col span={24}>
+  <Card title={<span style={{ color: "#1890ff" }}>Event Q&A</span>} bordered={false}>
+    <Row gutter={[24, 24]} justify="left">
+      {eventDetails.event_qna?.length > 0 ? (
+        eventDetails.event_qna.map((qna, index) => (
+          <Col xs={24} sm={12} md={8} lg={6} key={index}>
+            <div>
+              <Title level={5} style={{ marginBottom: 10 }}>{qna.title}</Title>
+              <div style={{ textAlign: "left" }}>
+                {qna.qna.map((qa, idx) => (
+                  <div key={idx} style={{ marginBottom: 10 }}>
+                    <Text strong style={{ display: "block", marginBottom: 5 }}>
+                      Question: {qa.question}
+                    </Text>
+                    <Text style={{ display: "block", marginBottom: 5 }}>
+                      Answer: {qa.answer}
+                    </Text>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Col>
+        ))
+      ) : (
+        <Col span={24} style={{ textAlign: "center" }}>
+          <Text>No Q&A Available</Text>
+        </Col>
+      )}
+    </Row>
+  </Card>
+</Col>
+
+
+      <Col span={24}>
         <Card title="Event Offers" bordered={false}>
           <Row gutter={[16, 16]}>
             {eventDetails.event_offers.map((offer, index) => (
@@ -237,13 +301,40 @@ const EventDetails = () => {
           </Row>
         </Card>
       </Col>
-
-      {/* Action Button Section */}
-      <Col span={24} style={{ textAlign: "center", marginTop: "20px" }}>
-        <Button type="primary" size="large">
-          Register Now
-        </Button>
-      </Col>
+      <Col span={24}>
+  <Card
+    bordered={false}
+    cover={
+      eventDetails.event_images?.length > 0 ? (
+        <div style={{ height: 300, overflow: "hidden" }}>
+          <Image
+            alt="event image"
+            src={eventDetails.event_images[0].image} // Display the first image
+            height={300}
+            style={{ objectFit: "cover", width: "100%" }}
+          />
+        </div>
+      ) : (
+        <div
+          style={{
+            height: 300,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#f0f0f0",
+            color: "#888",
+          }}
+        >
+          No Image
+        </div>
+      )
+    }
+  >
+    <Title level={2} style={{ margin: "10px 0" }}>
+     event Image
+    </Title>
+  </Card>
+</Col>
     </Row>
   );
 };

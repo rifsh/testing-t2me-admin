@@ -47,7 +47,7 @@ CategoryService.getSingleCateory = function (category_id) {
 };
 CategoryService.getSingleSubCateory = function (subcategory_id) {
   return fetch({
-    url: `${ApiConstant.SUB_SINGLE_CATEGORY_URL}?subcategory=${subcategory_id}`,
+    url: `${ApiConstant.SUB_SINGLE_CATEGORY_URL}?subcategory_id=${subcategory_id}`,
     method: "get",
   });
 };
