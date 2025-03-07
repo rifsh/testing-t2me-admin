@@ -83,7 +83,7 @@ const ScreenList = () => {
 
     const handleViewDetails = (row) => {
         console.log("Viewing details for:", row);
-        navigate(`${APP_PREFIX_PATH}/screen/details/${row.id}`);
+        navigate(`${APP_PREFIX_PATH}/screen/detail/${row.id}`);
     };
 
     const handleEditScreen = (row) => {

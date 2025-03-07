@@ -78,7 +78,7 @@ export const protectedRoutes = [
   },
   {
     key: "movie.detail",
-    path: `${APP_PREFIX_PATH}/screen/list`,
+    path: `${APP_PREFIX_PATH}/screen/detail/:screenId`,
     component: React.lazy(() => import("views/screen/screen-detail")),
   },
   {
