@@ -589,7 +589,7 @@ class Utils {
             .filter((service) => service.title && Array.isArray(service.add))
             .map((service) => ({
               title: service.title,
-              services: service.services,
+              services: service.add,
             }));
         
           formData.append(key, JSON.stringify(serializedServices));
@@ -612,18 +612,6 @@ class Utils {
           return;
         }
 
-        // if (key === "event_qna") {
-        //   // Handle event_qna
-        //   const serializedQNA = value.map((qna) => ({
-        //     title: qna.title,
-        //     qna: qna.qna.map((qa) => ({
-        //       question: qa.question,
-        //       answer: qa.answer,
-        //     })),
-        //   }));
-        //   formData.append(key, JSON.stringify(serializedQNA)); // Serialize as JSON
-        //   return;
-        // }
 
         if (key === "event_qna") {
           // If value is null, undefined, or not an array, pass an empty array
