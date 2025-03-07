@@ -442,6 +442,8 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           ...venue_id,
           ...ticket_structure,
           ...offers,
+          event_add_on_services: !submitData.event_add_on_services ? [] : submitData.event_add_on_services,
+          event_qna: !submitData.event_qna ? [] : submitData.event_qna,
           max_tickets: parseInt(submitData.max_tickets || "0", 10),
         };
 
