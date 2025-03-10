@@ -94,7 +94,7 @@ const VenueFormFields = ({ mode, venue }) => {
         latitude: venue.latitude,
         longitude: venue.longitude,
         description: venue.description,
-        venue_add_on_services: venue.venue_add_on_services,
+        venue_add_on_services: !venue.venue_add_on_services ? [] : venue.venue_add_on_services,
         banner_images: venue?.media
           ? venue?.media?.map((banner, index) => ({
               uid: `-banner-${index}`,
@@ -153,7 +153,7 @@ const VenueFormFields = ({ mode, venue }) => {
         indoor: values.indoor !== undefined ? values.indoor : false,
         address: values.address,
         description: values.description,
-        venue_add_on_services: values.venue_add_on_services,
+        venue_add_on_services: !values.venue_add_on_services ? [] : values.venue_add_on_services,
         id: venue.id,
       };
       console.log("Edit Data:", data);
@@ -196,7 +196,7 @@ const VenueFormFields = ({ mode, venue }) => {
           indoor: values.indoor !== undefined ? values.indoor : false, // Ensure indoor is boolean
           address: values.address,
           description: values.description,
-          venue_add_on_services: values.venue_add_on_services,
+          venue_add_on_services: !values.venue_add_on_services ? [] : values.venue_add_on_services,
         };
 
         const resultAction = await dispatch(validatePlace(selectedPlace));
