@@ -114,7 +114,7 @@ const EventDetailsField = () => {
                         {...restField}
                         name={[name, "title"]}
                         label="Title"
-                        //rules={[{ required: true, message: "Title is required" }]}
+                        rules={[{ required: false, message: "Title is required" }]}
                       >
                         <Input placeholder="Enter title" />
                       </Form.Item>
@@ -129,7 +129,7 @@ const EventDetailsField = () => {
                                     <Form.Item
                                       {...priceRestField}
                                       name={[priceName]}
-                                      //rules={[{ required: false, message: "Price include is required" }]}
+                                      rules={[{ required: false, message: "Price include is required" }]}
                                       style={{ width: "100%" }}
                                     >
                                       <Input placeholder="Price Included" />
