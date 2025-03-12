@@ -3,6 +3,7 @@ export const RulesMessageConstants = {
   PLACE:"Please select a place",
   CAPACITY:"Please enter capacity",
   INDOOR:"Please specify indoor/outdoor",
+  DESCRIPTION:"Please enter descriptions"
 };
 
 export const RulesConstants = {
@@ -34,6 +35,12 @@ export const RulesConstants = {
     {
       required: true,
       message: "Please select a venue",
+    },
+  ],
+  description: [
+    {
+      required: true,
+      message: "Please enter descriptions",
     },
   ],
 };
