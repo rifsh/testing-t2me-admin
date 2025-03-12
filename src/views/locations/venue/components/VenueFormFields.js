@@ -317,7 +317,9 @@ const VenueFormFields = ({ mode, venue }) => {
             <Form.Item
               name="description"
               label="Description"
-             // rules={rules.description}
+              rules={[
+                { required: true, message: RulesMessageConstants.DESCRIPTION },
+              ]}
             >
               <Input.TextArea
                 rows={4}

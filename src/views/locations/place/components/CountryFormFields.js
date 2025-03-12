@@ -38,6 +38,12 @@ const rules = {
       message: "Please Choose a country",
     },
   ],
+  description: [
+    {
+      required: true,
+      message: "Please enter descriptions",
+    },
+  ],
   name: [
     {
       required: true,
@@ -139,7 +145,11 @@ const CountryFormFields = ({ mode, form }) => {
           <Form.Item name="name" label="Place" rules={rules.name}>
             <Input placeholder="Place Name" />
           </Form.Item>
-          <Form.Item name="description" label="Description" >
+          <Form.Item
+            name="description"
+            label="Description"
+            rules={rules.description}
+          >
             <ReactQuill />
           </Form.Item>
           <Form.Item
@@ -188,7 +198,6 @@ const CountryFormFields = ({ mode, form }) => {
           </Text>
         </Card>
         {mode === "EDIT" && <EditWarningAlert />}
-        
       </Col>
     </Row>
   );

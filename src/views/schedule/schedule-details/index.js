@@ -87,28 +87,15 @@ const ScheduleDetails = () => {
               <Descriptions.Item label="Event ID">
                 {processedScheduleDetails.event?.id || "N/A"}
               </Descriptions.Item>
-              <Descriptions.Item label="Venues">
-                {processedScheduleDetails.event?.venues?.length > 0 ? (
-                  <Collapse>
-                    <Panel
-                      header={`${processedScheduleDetails.event.venues.length} Venue(s) Available`}
-                      key="venues"
-                    >
-                      <Row gutter={[16, 16]}>
-                        {processedScheduleDetails.event.venues.map((venue) => (
-                          <Col span={12} key={venue.id}>
-                            {/* <Card size="small"> */}
-                            <Text strong>{venue.name}, </Text>
-                            <Text type="secondary">
-                              {venue.place?.name || "N/A"},{" "}
-                              {venue.place?.country?.name || "N/A"}
-                            </Text>
-                            {/* </Card> */}
-                          </Col>
-                        ))}
-                      </Row>
-                    </Panel>
-                  </Collapse>
+              <Descriptions.Item label="Venue">
+                {processedScheduleDetails.venue ? (
+                  <>
+                    <Text strong>{processedScheduleDetails.venue.name}, </Text>
+                    <Text type="secondary">
+                      {processedScheduleDetails.venue.place?.name || "N/A"},{" "}
+                      {processedScheduleDetails.venue.place?.country?.name || "N/A"}
+                    </Text>
+                  </>
                 ) : (
                   <Text>No venues available</Text>
                 )}
