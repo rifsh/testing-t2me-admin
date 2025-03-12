@@ -26,6 +26,7 @@ import {
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 import Utils from "utils/index";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
+import ReactQuill from "react-quill";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -138,6 +139,9 @@ const CountryFormFields = ({ mode, form }) => {
           <Form.Item name="name" label="Place" rules={rules.name}>
             <Input placeholder="Place Name" />
           </Form.Item>
+          <Form.Item name="description" label="Description" >
+            <ReactQuill />
+          </Form.Item>
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
@@ -184,6 +188,7 @@ const CountryFormFields = ({ mode, form }) => {
           </Text>
         </Card>
         {mode === "EDIT" && <EditWarningAlert />}
+        
       </Col>
     </Row>
   );

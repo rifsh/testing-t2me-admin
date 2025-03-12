@@ -36,6 +36,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
   const { currentStep, eventDetails, submitLoading } = useSelector(
     (state) => state.event
   );
+  const { selectedVenue } = useSelector((state) => state.locations);
   const { selectedSubmitItem } = useSelector((state) => state.modalSlice);
   const dispatch = useDispatch();
   const [form] = Form.useForm();
@@ -205,19 +206,29 @@ const MultyStepScheduleForm = ({ mode, id }) => {
                 endTime = dayjs(slot.end_time).format("HH:mm");
               }
 
-              const ticketStructureId = Array.isArray(slot.ticketType)
-                ? slot.ticketType[1]
-                : slot.ticketType;
-
-              // Find the relevant venue ticket structure
+              let ticketStructureId = null;
               let ticketSet = "";
-              eventDetails?.venue_ticket_structures?.forEach((venue) => {
-                venue.ticket_structures.forEach((ts) => {
-                  if (ts.ticket_structure === ticketStructureId) {
-                    ticketSet = ts.ticket_sets[0] || "";
+
+              if (eventDetails?.venue_ticket_structures) {
+                const selectedVenueTickets =
+                  eventDetails.venue_ticket_structures.find(
+                    (item) => item.venue.id === selectedVenue
+                  );
+
+                if (selectedVenueTickets?.ticket_structures) {
+                  const ticketSetName = Array.isArray(slot.ticketType)
+                    ? slot.ticketType[1]
+                    : slot.ticketType;
+
+                  for (const structure of selectedVenueTickets.ticket_structures) {
+                    if (structure.ticket_sets.includes(ticketSetName)) {
+                      ticketStructureId = structure.ticket_structure;
+                      ticketSet = ticketSetName;
+                      break;
+                    }
                   }
-                });
-              });
+                }
+              }
 
               return {
                 start_time: startTime,
@@ -242,6 +253,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         ),
         name: values.name,
         event_id: values.event_id,
+        venue_id: values.venue_id,
         show_dates,
         offer_ids: (selectedOffers || []).map((e) => ({
           offer_id: e.offer.id,
