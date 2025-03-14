@@ -7,20 +7,29 @@ import ResizedImgePicker from "components/util-components/Image/ResizedImgePicke
 
 const { Text } = Typography;
 
-const EventDetailsField = () => {
+const EventDetailsField = ({mode}) => {
+  // const rules = {
+  //   name: [{ required: true, message: "Please enter event name" }],
+  //   description: [
+  //     { required: true, message: "Please enter event description" },
+  //   ],
+  //   thumbnail_image: [
+  //     { required: true, message: "Please upload a thumbnail image" },
+  //   ],
+  //   banner_images: [
+  //     { required: true, message: "Please upload at least one banner image" },
+  //   ],
+  //   banner_url: [{ required: false, message: "Please enter banner image URL" }],
+  // };
+  const isLeadEditMode = mode === "EDITLEAD";
   const rules = {
-    name: [{ required: true, message: "Please enter event name" }],
-    description: [
-      { required: true, message: "Please enter event description" },
-    ],
-    thumbnail_image: [
-      { required: true, message: "Please upload a thumbnail image" },
-    ],
-    banner_images: [
-      { required: true, message: "Please upload at least one banner image" },
-    ],
-    banner_url: [{ required: false, message: "Please enter banner image URL" }],
+    name: isLeadEditMode ? [] : [{ required: true, message: "Please enter event name" }],
+    description: isLeadEditMode ? [] : [{ required: true, message: "Please enter event description" }],
+    thumbnail_image: isLeadEditMode ? [] : [{ required: true, message: "Please upload a thumbnail image" }],
+    banner_images: isLeadEditMode ? [] : [{ required: true, message: "Please upload at least one banner image" }],
+    banner_url:isLeadEditMode ? [] : [{ required: false, message: "Please enter banner image URL" }],
   };
+
 
   const normFile = (e) => {
     if (Array.isArray(e)) {
@@ -28,6 +37,7 @@ const EventDetailsField = () => {
     }
     return e?.fileList || [];
   };
+  console.log('mode details ..............',{mode})
   const handleBeforeUpload = Utils.handleBeforeUpload;
 
   return (

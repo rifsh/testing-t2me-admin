@@ -222,11 +222,7 @@ const SingleEventDetails = () => {
                       Location
                     </div>
                     <div>
-                      {singleLeadEvent.place?.name
-                        ? `${singleLeadEvent.place.name}, ${
-                            singleLeadEvent.place?.country?.name || ""
-                          }`
-                        : "Not specified"}
+                    {singleLeadEvent?.place_name || "Not specified"}
                     </div>
                   </div>
                 </div>

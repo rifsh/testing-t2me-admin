@@ -69,5 +69,36 @@ LeadEventService.sendLeadEventMessage = function (data) {
   });
 };
 
+LeadEventService.updateEvent = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
+  });
+  return fetch({
+    url: `${ApiConstant.EDIT_LEAD_EVENT_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: formData,
+    params: Utils.filterParams(pageData),
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+LeadEventService.EnrollUser = function (data) {
+  return fetch({
+    url: `${ApiConstant.LEAD_ENROL_USER}/${data.event_id}`,
+    method: "put",
+    data: data,
+    headers: {
+      "Content-Type": "application/json", 
+    },
+  });
+};
 
 export default LeadEventService;
