@@ -3,7 +3,7 @@ import { Card, Typography, Collapse, Col, Button, Space, Empty } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import {
   removeSpecificTicketSetforEvent,
-  removeTicketType
+  removeTicketType,
 } from "store/slices/ticketSlice";
 import { DeleteOutlined, CloseCircleOutlined } from "@ant-design/icons";
 
@@ -54,9 +54,9 @@ export const TicketSetDetails = () => {
           }
           className="mb-4"
         >
-          <Space direction="vertical" style={{ width: '100%' }}>
+          <Space direction="vertical" style={{ width: "100%" }}>
             <div className="mb-4">
-              <Space direction="vertical" style={{ width: '100%' }}>
+              <Space direction="vertical" style={{ width: "100%" }}>
                 <Space>
                   <Text strong>Venue ID:</Text>
                   <Text>{ticketType.venue_id}</Text>
@@ -78,37 +78,50 @@ export const TicketSetDetails = () => {
                   <Panel
                     key={`${typeIndex}-${setIndex}`}
                     header={
-                      <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                      <Space
+                        style={{
+                          width: "100%",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <Text>{ticketSet.ticket_set}</Text>
                         <Button
                           type="text"
                           size="small"
                           icon={<CloseCircleOutlined />}
-                          onClick={(e) => handleRemoveTicketSet(typeIndex, ticketSet.id, e)}
+                          onClick={(e) =>
+                            handleRemoveTicketSet(typeIndex, ticketSet.id, e)
+                          }
                           danger
                         />
                       </Space>
                     }
                   >
-                    {ticketSet.tickets && ticketSet.tickets.map((ticket, ticketIndex) => (
-                      <div
-                        key={`${typeIndex}-${setIndex}-${ticketIndex}`}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          padding: '8px 0',
-                          borderBottom: ticketIndex < ticketSet.tickets.length - 1 ? '1px solid #f0f0f0' : 'none'
-                        }}
-                      >
-                        <Text strong>{ticket.name}</Text>
-                        <Space>
-                          <Text type="secondary">{ticket.number_of_tickets || 0} Tickets</Text>
-                          <Text strong style={{ color: '#2ecc71' }}>
-                            ${ticket.price?.toFixed(2) || "0.00"}
-                          </Text>
-                        </Space>
-                      </div>
-                    ))}
+                    {ticketSet.tickets &&
+                      ticketSet.tickets.map((ticket, ticketIndex) => (
+                        <div
+                          key={`${typeIndex}-${setIndex}-${ticketIndex}`}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            padding: "8px 0",
+                            borderBottom:
+                              ticketIndex < ticketSet.tickets.length - 1
+                                ? "1px solid #f0f0f0"
+                                : "none",
+                          }}
+                        >
+                          <Text strong>{ticket.name}</Text>
+                          <Space>
+                            <Text type="secondary">
+                              {ticket.number_of_tickets || 0} Tickets
+                            </Text>
+                            <Text strong style={{ color: "#2ecc71" }}>
+                              ${ticket.price?.toFixed(2) || "0.00"}
+                            </Text>
+                          </Space>
+                        </div>
+                      ))}
                   </Panel>
                 ))}
               </Collapse>

@@ -24,6 +24,7 @@ import {
   SupportFormatContent,
   ResolutionByServices,
   SmallThumbnailresolution,
+  ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +39,7 @@ import { RulesMessageConstants } from "constants/RulesConstant";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import LoadingOverlay from "components/util-components/Loader/index";
 import { filterOption } from "components/util-components/FormItems/dropDownSearch";
+import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -86,6 +88,17 @@ const TaxFormFields = ({ mode, tax }) => {
                 },
               ]
             : [],
+        banner:
+          maintenanceData.banner &&
+          Array.isArray(maintenanceData.banner) &&
+          maintenanceData.banner.length > 0
+            ? maintenanceData.banner.map((url, index) => ({
+                uid: `-${index + 1}`,
+                name: url.split("/").pop(),
+                status: "done",
+                url: url,
+              }))
+            : [],
         maintenance_image:
           maintenanceData.maintenance_image &&
           maintenanceData.maintenance_image !== "images"
@@ -106,9 +119,11 @@ const TaxFormFields = ({ mode, tax }) => {
   const onFinish = async () => {
     const values = await form.validateFields();
     console.log("Form values:", values);
+
     const data = {
       ...values,
     };
+
     const resultAction = await dispatch(updateInfo(data)).unwrap();
     navigate(`${APP_PREFIX_PATH}/app/management/layout/app-info/list`);
     dispatch(fetchAppInfo());
@@ -119,7 +134,7 @@ const TaxFormFields = ({ mode, tax }) => {
     if (Array.isArray(e)) {
       return e;
     }
-    return e?.fileList;
+    return e?.fileList || [];
   };
 
   return (
@@ -257,6 +272,18 @@ const TaxFormFields = ({ mode, tax }) => {
               &{" resolution "}
               {ResolutionByServices.place} pixels.{" "}
             </Text>
+            <Form.Item
+              name="banner"
+              label="Home Banner"
+              valuePropName="value"
+              getValueFromEvent={normFile}
+              style={{ marginBottom: "0px", padding: "0px" }}
+            >
+              <ResizedImgePicker
+                maxCount={20}
+                targetResolution={ThumbnailImageResolutions.LANDING_PAGE_BANNER}
+              />
+            </Form.Item>
             <Flex
               className="py-2"
               mobileFlex={false}

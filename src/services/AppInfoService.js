@@ -15,7 +15,7 @@ AppInfoService.getInfo = function () {
 
 AppInfoService.updateInfo = function (data) {
   const formData = Utils.createFormData(data, {
-    fileKeys: ["maintenance_image", "isComingSoonImage"],
+    fileKeys: ["maintenance_image", "isComingSoonImage", "banner"],
     skipEmpty: true,
   });
   return fetch({

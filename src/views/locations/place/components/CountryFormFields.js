@@ -143,14 +143,15 @@ const CountryFormFields = ({ mode, form }) => {
             </Select>
           </Form.Item>
           <Form.Item name="name" label="Place" rules={rules.name}>
-            <Input placeholder="Place Name" />
+            <Input placeholder="Place Name"  />
           </Form.Item>
           <Form.Item
             name="description"
             label="Description"
+            
             rules={rules.description}
           >
-            <ReactQuill />
+            <ReactQuill  />
           </Form.Item>
           <Form.Item
             name="thumbnail_image"

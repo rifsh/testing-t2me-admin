@@ -240,7 +240,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
             }),
           };
         })
-        .filter(Boolean); // Remove any null entries
+        .filter(Boolean); 
 
       const submitData = {
         start_date: startDate,
