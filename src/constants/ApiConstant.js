@@ -1,6 +1,9 @@
 export const ApiConstant = {
   API_BASE_URL: "https://uat-tickets2me.mitetechnology.com",
   LOG_OUT: "/api/v1/auth/secured/logout",
+  LEAD_REGISTER:"/api/v1/auth/public/register/lead_organizer",
+  LEAD_OTP_VERIFY:"/api/v1/auth/public/lead_otp",
+  LEAD_OTP_RESEND:"/api/v1/auth/public/resend/otp",
   CATEGORY_URL: "/api/v1/events/secured/category",
   CATEGORY_STATUS_URL: "/api/v1/events/secured/category_status",
   SUB_CATEGORY_STATUS_URL: "/api/v1/events/secured/subcategory_status",
@@ -32,6 +35,8 @@ export const ApiConstant = {
   ORGANIZER_EVENTS_URL: "/api/v1/events/secured/event/organizer",
   EVENT_SUPPORT_AVAILABLE: "/api/v1/events/secured/events/support",
   EDIT_EVENT_URL: "/api/v1/events/secured/edit_event",
+  EDIT_LEAD_EVENT_URL: "/api/v1/events/secured/edit_lead_event",
+  LEAD_ENROL_USER: "/api/v1/events/secured/enroll_user_lead_event",
   EDIT_EVENT_STATUS_URL: "/api/v1/events/secured/edit_event_status",
   OFFER_URL: "/api/v1/offers/secured/offers",
   OFFER_STATUS_URL: "/api/v1/offers/secured/offers_status",

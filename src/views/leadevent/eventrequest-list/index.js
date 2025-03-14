@@ -99,24 +99,24 @@ const LeadEvent = () => {
     },
     {
       title: "Place",
-      dataIndex: "place",
-      render: (place) => place?.name || "N/A",
+      dataIndex: "place_name",
+      render: (place_name) => place_name || "N/A",
       sorter: (a, b) => {
-        const placeA = a.place?.name || "";
-        const placeB = b.place?.name || "";
+        const placeA = a.place_name || "";
+        const placeB = b.place_name || "";
         return placeA.localeCompare(placeB);
       },
     },
-    {
-      title: "Country",
-      dataIndex: "place",
-      render: (place) => place?.country?.name || "N/A",
-      sorter: (a, b) => {
-        const countryA = a.place?.country?.name || "";
-        const countryB = b.place?.country?.name || "";
-        return countryA.localeCompare(countryB);
-      },
-    },
+    // {
+    //   title: "Country",
+    //   dataIndex: "place",
+    //   render: (place) => place?.country?.name || "N/A",
+    //   sorter: (a, b) => {
+    //     const countryA = a.place?.country?.name || "";
+    //     const countryB = b.place?.country?.name || "";
+    //     return countryA.localeCompare(countryB);
+    //   },
+    // },
     {
       title: "Start Date",
       dataIndex: "start_date",

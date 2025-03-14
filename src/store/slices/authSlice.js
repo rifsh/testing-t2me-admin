@@ -57,18 +57,37 @@ export const signOut = createAsyncThunk(
 export const signUp = createAsyncThunk(
   "auth/register",
   async (data, { rejectWithValue }) => {
-    const { email, password } = data;
     try {
-      const response = await AuthService.register({ email, password });
-      const token = response.data.token;
-      localStorage.setItem(AUTH_TOKEN, token);
-      return token;
+      const response = await AuthService.register(data);
+      return response;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
     }
   }
 );
-
+export const verifyOtp = createAsyncThunk(
+  "auth/verifyOtp",
+  async (data, { rejectWithValue }) => {
+    try {
+      console.log('verify serviceeeeeeeeeeeeeeeeeeeee')
+      const response = await AuthService.verifyOtp(data);
+      return response;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Error");
+    }
+  }
+);
+export const ResendOtp = createAsyncThunk(
+  "auth/ResendOtp",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await AuthService.ResendOtp(data);
+      return response;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Error");
+    }
+  }
+);
 
 
 export const signInWithGoogle = createAsyncThunk(
@@ -185,13 +204,13 @@ export const authSlice = createSlice({
       })
       .addCase(signUp.fulfilled, (state, action) => {
         state.loading = false;
-        state.redirect = "/";
-        state.token = action.payload;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
       })
       .addCase(signUp.rejected, (state, action) => {
-        state.message = action.payload;
-        state.showMessage = true;
         state.loading = false;
+        state.error = action.payload;
       })
       .addCase(signInWithGoogle.pending, (state) => {
         state.loading = true;
@@ -218,7 +237,35 @@ export const authSlice = createSlice({
         state.message = action.payload;
         state.showMessage = true;
         state.loading = false;
-      });
+      })
+      .addCase(verifyOtp.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(verifyOtp.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(verifyOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(ResendOtp.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(ResendOtp.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(ResendOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      ;
   },
 });
 

@@ -711,6 +711,23 @@ const eventOrganaizerDashBoardNavTree = [
     ],
   },
   {
+    key: "LeadEventRequest",
+    path: `${APP_PREFIX_PATH}/forms`,
+    title: "Lead Event Request",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    submenu: [
+      {
+        key: "customerEvent.convert",
+        path: `${APP_PREFIX_PATH}/leadevent/convert`,
+        title: "sidenav.leadevent.convert",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
+  },
+  {
     key: "TrackRequest",
     path: `${APP_PREFIX_PATH}/forms`,
     title: "Track Request",
