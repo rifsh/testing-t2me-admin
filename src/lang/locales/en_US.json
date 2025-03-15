@@ -155,5 +155,6 @@
 	"sidenav.app.management.layout.info":"App-Info",
 	"sidenav.applications":"Applications",
 	"sidenav.leadevent": "Event Request List",
-	"sidenav.leadevent.convert": "Event Convert Requests"
+	"sidenav.leadevent.convert": "Event Convert Requests",
+	"sidenav.app.management.layout.terms":"Terms and Condition"
 }

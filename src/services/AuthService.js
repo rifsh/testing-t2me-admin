@@ -49,7 +49,22 @@ AuthService.ResendOtp = function (data) {
 		data: data,
 	})
 }
+AuthService.TermsCondition = function (data) {
 
+	return fetch({
+		url: ApiConstant.TERMS_AND_CONDITION,
+		method: 'get',
+	})
+}
+
+AuthService.PostTermsCondition = function (data) {
+
+	return fetch({
+		url: ApiConstant.POTS_TERMS_AND_CONDITION,
+		method: 'put',
+		data: data
+	})
+}
 
   
 
