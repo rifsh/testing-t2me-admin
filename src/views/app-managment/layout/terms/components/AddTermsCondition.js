@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Card, Form, Input, Button, Typography } from "antd";
+import { Card, Form, Input, Button, Typography, Space } from "antd";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { TermsCondition, PostTermsCondition } from "store/slices/authSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const AddTermsCondition = () => {
@@ -14,17 +15,14 @@ const AddTermsCondition = () => {
   const [form] = Form.useForm();
 
   const { termsConditionData, termsLoading } = useSelector((state) => state.auth);
-
-  // Local state to handle first-time load
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     dispatch(TermsCondition())
       .unwrap()
-      .finally(() => setLoading(false)); // Ensure loading stops after fetching data
+      .finally(() => setLoading(false));
   }, [dispatch]);
 
-  // Update form values when data loads
   useEffect(() => {
     if (termsConditionData) {
       form.setFieldsValue({
@@ -56,29 +54,43 @@ const AddTermsCondition = () => {
           layout="vertical"
           onFinish={onFinish}
           initialValues={{
-            last_updated: "",
             introduction: "",
             sections: [{ title: "", content: "" }],
             contact: "",
           }}
         >
-          {/* <Form.Item label="Last Updated" name="last_updated">
-            <Input placeholder="YYYY-MM-DD" />
-          </Form.Item> */}
+          {/* Introduction Field */}
+          <Card style={{ marginBottom: 20 }}>
+            <Text strong>Introduction:</Text>
+            <Form.Item
+              name="introduction"
+              rules={[{ required: true, message: "Introduction is required" }]}
+              style={{ marginTop: 10 }}
+            >
+              <TextArea rows={3} placeholder="Enter introduction" />
+            </Form.Item>
+          </Card>
 
-          <Form.Item
-            label="Introduction"
-            name="introduction"
-            rules={[{ required: true, message: "Introduction is required" }]}
-          >
-            <TextArea rows={3} placeholder="Enter introduction" />
-          </Form.Item>
-
+          {/* Sections */}
           <Form.List name="sections">
             {(fields, { add, remove }) => (
-              <>
+              <Space direction="vertical" style={{ width: "100%" }}>
                 {fields.map(({ key, name, ...restField }) => (
-                  <div key={key} style={{ marginBottom: 16, borderBottom: "1px solid #f0f0f0", paddingBottom: 8 }}>
+                  <Card
+                    key={key}
+                    title={`Section ${name + 1}`}
+                    extra={
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => remove(name)}
+                      >
+                        Remove
+                      </Button>
+                    }
+                    style={{ background: "#fafafa" }}
+                  >
                     <Form.Item
                       {...restField}
                       label="Section Title"
@@ -96,22 +108,25 @@ const AddTermsCondition = () => {
                     >
                       <TextArea rows={2} placeholder="Enter section content" />
                     </Form.Item>
-
-                    <Button danger onClick={() => remove(name)}>Remove Section</Button>
-                  </div>
+                  </Card>
                 ))}
-                <Button type="dashed" onClick={() => add()} style={{ marginBottom: 16 }}>
+                <Button type="dashed" onClick={() => add()} icon={<PlusOutlined />}>
                   Add Section
                 </Button>
-              </>
+              </Space>
             )}
           </Form.List>
 
-          <Form.Item label="Contact Email" name="contact">
-            <Input placeholder="Enter contact email" />
-          </Form.Item>
+          {/* Contact Email Field */}
+          <Card style={{ marginTop: 20 }}>
+            <Text strong>Contact Email:</Text>
+            <Form.Item name="contact" style={{ marginTop: 10 }}>
+              <Input placeholder="Enter contact email" />
+            </Form.Item>
+          </Card>
 
-          <Form.Item>
+          {/* Submit Button */}
+          <Form.Item style={{ marginTop: 20 }}>
             <Button type="primary" htmlType="submit" loading={termsLoading}>
               {termsConditionData ? "Update" : "Add"} Terms and Conditions
             </Button>
