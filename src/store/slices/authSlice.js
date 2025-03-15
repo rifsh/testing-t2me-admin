@@ -11,6 +11,8 @@ export const initialState = {
   redirect: "",
   userData: null,
   token: localStorage.getItem(AUTH_TOKEN) || null,
+  termsConditionData: null,
+  termsLoading: false,
 };
 export const signIn = createAsyncThunk(
   "auth/login",
@@ -38,21 +40,18 @@ export const signIn = createAsyncThunk(
 //   localStorage.removeItem(AUTH_TOKEN);
 //   return response.data;
 // });
-export const signOut = createAsyncThunk(
-  "auth/logout",
-  async () => {
-    try {
-      console.log("LOGOUT STARTED-----------------");
-      const response = await AuthService.logout();
-      // console.log("response data", response.data);
-      console.log("LOGOUT SUCCESS-----------------");
-      localStorage.removeItem(AUTH_TOKEN);
-      return response.data;
-    } catch (err) {
-      return err.response?.data?.message || "Error";
-    }
+export const signOut = createAsyncThunk("auth/logout", async () => {
+  try {
+    console.log("LOGOUT STARTED-----------------");
+    const response = await AuthService.logout();
+    // console.log("response data", response.data);
+    console.log("LOGOUT SUCCESS-----------------");
+    localStorage.removeItem(AUTH_TOKEN);
+    return response.data;
+  } catch (err) {
+    return err.response?.data?.message || "Error";
   }
-);
+});
 
 export const signUp = createAsyncThunk(
   "auth/register",
@@ -69,7 +68,7 @@ export const verifyOtp = createAsyncThunk(
   "auth/verifyOtp",
   async (data, { rejectWithValue }) => {
     try {
-      console.log('verify serviceeeeeeeeeeeeeeeeeeeee')
+      console.log("verify serviceeeeeeeeeeeeeeeeeeeee");
       const response = await AuthService.verifyOtp(data);
       return response;
     } catch (err) {
@@ -88,7 +87,6 @@ export const ResendOtp = createAsyncThunk(
     }
   }
 );
-
 
 export const signInWithGoogle = createAsyncThunk(
   "auth/signInWithGoogle",
@@ -124,6 +122,34 @@ export const getUserdata = createAsyncThunk(
       const response = localStorage.getItem(AUTH_TOKEN)
         ? jwtDecode(localStorage.getItem(AUTH_TOKEN))
         : null;
+      return response;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Error");
+    }
+  }
+);
+export const TermsCondition = createAsyncThunk(
+  "auth/termsCondition",
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log("FETCHING TERMS AND CONDITIONS");
+      const response = await AuthService.TermsCondition();
+      console.log(response, "TERMS AND CONDITIONS RESPONSE");
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue("Failed to fetch Terms and Conditions");
+    }
+  }
+);
+
+
+export const PostTermsCondition = createAsyncThunk(
+  "auth/PosttermsCondition",
+  async (data, { rejectWithValue }) => {
+    try {
+      console.log("FETCHING TERMS AND CONDITIONS");
+      const response = await AuthService.PostTermsCondition(data);
+      console.log(response, "POST TERMS AND CONDITIONS RESPONSE");
       return response;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
@@ -264,8 +290,34 @@ export const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
-      ;
+      .addCase(TermsCondition.pending, (state) => {
+        console.log("TermsCondition pending");
+        state.termsLoading = true;
+        state.error = null;
+      })
+      .addCase(TermsCondition.fulfilled, (state, { payload }) => {
+        console.log("TermsCondition fulfilled", payload);
+        state.termsLoading = false;
+        state.termsConditionData = payload;
+      })
+      .addCase(TermsCondition.rejected, (state, { payload }) => {
+        console.log("TermsCondition rejected", payload);
+        state.termsLoading = false;
+        state.error = payload;
+      })
+      .addCase(PostTermsCondition.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(PostTermsCondition.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(PostTermsCondition.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 

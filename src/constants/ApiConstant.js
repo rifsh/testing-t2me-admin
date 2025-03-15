@@ -4,6 +4,8 @@ export const ApiConstant = {
   LEAD_REGISTER:"/api/v1/auth/public/register/lead_organizer",
   LEAD_OTP_VERIFY:"/api/v1/auth/public/lead_otp",
   LEAD_OTP_RESEND:"/api/v1/auth/public/resend/otp",
+  TERMS_AND_CONDITION:"/api/v1/app_management/public/terms_condition",
+  POTS_TERMS_AND_CONDITION:"/api/v1/app_management/secured/terms_condition",
   CATEGORY_URL: "/api/v1/events/secured/category",
   CATEGORY_STATUS_URL: "/api/v1/events/secured/category_status",
   SUB_CATEGORY_STATUS_URL: "/api/v1/events/secured/subcategory_status",

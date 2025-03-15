@@ -491,6 +491,20 @@ export const protectedRoutes = [
     ),
   },
   {
+    key: "app.management.layout.terms.list",
+    path: `${APP_PREFIX_PATH}/app/management/layout/terms/list`,
+    component: React.lazy(() =>
+      import("views/app-managment/layout/terms/list-terms")
+    ),
+  },
+  {
+    key: "app.management.layout.terms.add",
+    path: `${APP_PREFIX_PATH}/app/management/layout/terms/add-terms`,
+    component: React.lazy(() =>
+      import("views/app-managment/layout/terms/add-term")
+    ),
+  },
+  {
     key: "lead.event.list",
     path: `${APP_PREFIX_PATH}/leadevent/list`,
     component: React.lazy(() =>

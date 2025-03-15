@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { connect, useDispatch } from "react-redux";
+import { connect, useDispatch, useSelector } from "react-redux";
 import {
   LockOutlined,
   MailOutlined,
@@ -7,7 +7,11 @@ import {
   PhoneOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import { Button, Form, Input, Alert, Upload, Space, Typography } from "antd";
+import { Button, Form, Input, Alert, Upload, Space,
+  Typography,
+  Modal,
+  Spin,
+} from "antd";
 import {
   signUp,
   showAuthMessage,
@@ -15,6 +19,7 @@ import {
   hideAuthMessage,
   verifyOtp,
   ResendOtp,
+  TermsCondition,
 } from "store/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -109,85 +114,154 @@ export const RegisterForm = (props) => {
     hideAuthMessage,
     allowRedirect = true,
   } = props;
+  const {
+    termsConditionData,
+    termsLoading,
+  } = useSelector((state) => state.auth) || {};
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
   const [showOtpField, setShowOtpField] = useState(false);
   const [otpResendTimer, setOtpResendTimer] = useState(0);
   const [registeredUser, setRegisteredUser] = useState(null);
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
+  const [formValues, setFormValues] = useState(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsLoadError, setTermsLoadError] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleRegistration = () => {
+
+  useEffect(() => {
+    dispatch(TermsCondition())
+    .unwrap()
+    .catch(() => {
+      setTermsLoadError(true);
+    });
+  }, [dispatch]);
+
+  console.log(
+    termsConditionData,
+    "THIS IS THE DATA IN UI ><><><><><><><><><><><>"
+  );
+
+  const handleSignUpClick = () => {
     form
       .validateFields()
       .then((values) => {
-        const { confirm, ...registrationData } = values;
+        setFormValues(values);
 
-        showLoading();
-        const updatedRegistrationData = { ...registrationData, lead_uid: id };
+        // If terms haven't been loaded yet, try loading them again
+        if (!termsConditionData && !termsLoading) {
+          console.log("CALED AGAIN >>>>>>>>>>>>>>>>> ");
 
-        setRegisteredUser(updatedRegistrationData);
-
-        signUp(updatedRegistrationData)
-          .then((response) => {
- 
-            console.log("Registration response:", response); // Add this for debugging
-
-
-            if (response && response.payload && response.payload.status) {
-              // Registration was successful
-              setShowOtpField(true);
-              startResendTimer();
-            } else {
-              // Handle unexpected response structure
-              console.log("Unexpected response structure:", response);
-              showAuthMessage(
-                "Registration failed due to an unexpected response format."
-              );
-            }
-          })
-          .catch((error) => {
-            console.log("Registration failed:", error);
-            showAuthMessage("Registration failed. Please try again.");
+          dispatch(TermsCondition())
+          .unwrap()
+          .catch(() => {
+            setTermsLoadError(true);
           });
+        }
+
+        setTermsModalVisible(true);
       })
       .catch((info) => {
         console.log("Validate Failed:", info);
       });
   };
-  const verifyotp = () => {
-	form.validateFields(["otp"]).then((values) => {
-	  showLoading();
-  
-	  dispatch(verifyOtp({ email: registeredUser.email, otp: values.otp, phone: registeredUser.phone }))
-		.unwrap() 
-		.then((response) => {
-		  console.log("OTP verified successfully:", response);
 
-		  navigate(`${APP_PREFIX_PATH}/login`);
-		})
-		.catch((error) => {
-		  console.error("OTP verification failed:", error);
-		  showAuthMessage("Invalid OTP. Please try again."); 
-		});
-	});
+  const handleTermsModalOk = () => {
+    setTermsModalVisible(false);
+    setTermsAccepted(true);
+
+
+    if (formValues) {
+      processRegistration(formValues);
+    }
   };
-  // Function to verify OTP
+
+  const handleTermsModalCancel = () => {
+    setTermsModalVisible(false);
+  };
+
+  const processRegistration = (values) => {
+    const { confirm, ...registrationData } = values;
+
+    showLoading();
+    
+    const updatedRegistrationData = {
+      ...registrationData,
+      lead_uid: id,
+      term: true,
+    };
+
+    setRegisteredUser(updatedRegistrationData);
+
+    console.log("Sending registration data:", updatedRegistrationData); // Debug log
+
+    signUp(updatedRegistrationData)
+      .then((response) => {
+        console.log("Registration response:", response); // Debug log
+
+        if (response && response.payload && response.payload.status) {
+          // Registration was successful
+          setShowOtpField(true);
+          startResendTimer();
+        } else {
+          // Handle unexpected response structure
+          console.log("Unexpected response structure:", response);
+          showAuthMessage(
+            "Registration failed due to an unexpected response format."
+          );
+        }
+      })
+      .catch((error) => {
+        console.log("Registration failed:", error);
+        showAuthMessage("Registration failed. Please try again.");
+      });
+  };
+
+  const verifyotp = () => {
+    form.validateFields(["otp"]).then((values) => {
+      showLoading();
+
+      dispatch(
+        verifyOtp({
+          email: registeredUser.email,
+          otp: values.otp,
+          phone: registeredUser.phone,
+          terms_accepted: termsAccepted,
+        })
+      )
+        .unwrap()
+        .then((response) => {
+          console.log("OTP verified successfully:", response);
+          navigate(`${APP_PREFIX_PATH}/login`);
+        })
+        .catch((error) => {
+          console.error("OTP verification failed:", error);
+          showAuthMessage("Invalid OTP. Please try again.");
+        });
+    });
+  };
 
   const startResendTimer = () => {
     setOtpResendTimer(60); // 60 seconds countdown
   };
 
   const handleResendOtp = () => {
-	dispatch(ResendOtp({ email: registeredUser.email }))
-	  .unwrap()
-	  .then(() => {
-		startResendTimer(); // Start the resend timer
-	  })
-	  .catch((error) => {
-		console.error("Failed to resend OTP:", error);
-		showAuthMessage("Failed to resend OTP. Please try again.");
-	  });
+    dispatch(
+      ResendOtp({
+        email: registeredUser.email,
+        terms_accepted: termsAccepted,
+      })
+    )
+      .unwrap()
+      .then(() => {
+        startResendTimer(); // Start the resend timer
+      })
+      .catch((error) => {
+        console.error("Failed to resend OTP:", error);
+        showAuthMessage("Failed to resend OTP. Please try again.");
+      });
   };
 
   useEffect(() => {
@@ -219,6 +293,11 @@ export const RegisterForm = (props) => {
     hideAuthMessage,
     showOtpField,
   ]);
+  console.log("=========compomemt==========================");
+  console.log(
+    "=========compomemt==========================",
+    termsConditionData
+  );
 
   return (
     <>
@@ -234,12 +313,7 @@ export const RegisterForm = (props) => {
 
       {!showOtpField ? (
         // Initial Registration Form
-        <Form
-          form={form}
-          layout="vertical"
-          name="register-form"
-          onFinish={handleRegistration}
-        >
+        <Form form={form} layout="vertical" name="register-form">
           <Form.Item
             name="username"
             label="Username"
@@ -280,7 +354,12 @@ export const RegisterForm = (props) => {
             <Input prefix={<PhoneOutlined className="text-primary" />} />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={loading}>
+            <Button
+              type="primary"
+              onClick={handleSignUpClick}
+              block
+              loading={loading}
+            >
               Sign Up
             </Button>
           </Form.Item>
@@ -295,7 +374,7 @@ export const RegisterForm = (props) => {
         >
           <Alert
             message="Verification Required"
-            description={`A 6-digit OTP has been sent to your phone number ${registeredUser?.email}. Please enter it below to verify your account.`}
+            description={`A 6-digit OTP has been sent to your phone number ${registeredUser?.phone} and email ${registeredUser?.email}. Please enter it below to verify your account.`}
             type="info"
             showIcon
             style={{ marginBottom: 20 }}
@@ -331,6 +410,63 @@ export const RegisterForm = (props) => {
           </Form.Item>
         </Form>
       )}
+
+      {/* Terms and Conditions Modal */}
+      <Modal
+        title="Terms and Conditions"
+        open={termsModalVisible}
+        onOk={handleTermsModalOk}
+        onCancel={handleTermsModalCancel}
+        footer={[
+          <Button key="cancel" onClick={handleTermsModalCancel}>
+            Cancel
+          </Button>,
+          <Button key="accept" type="primary" onClick={handleTermsModalOk}>
+            I Accept
+          </Button>,
+        ]}
+      >
+        <div style={{ maxHeight: "300px", overflow: "auto" }}>
+          {termsLoading ? (
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <Spin tip="Loading terms and conditions..." />
+            </div>
+          ) : termsLoadError ? (
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <Alert
+                message="Error"
+                description="Failed to load terms and conditions. Please try again later."
+                type="error"
+                showIcon
+              />
+            </div>
+          ) : termsConditionData ? (
+            <div>
+              {/* Render the introduction */}
+              <p>{termsConditionData.introduction}</p>
+
+              {/* Render each section */}
+              {termsConditionData.sections.map((section, index) => (
+                <div key={index}>
+                  <h4>{section.title}</h4>
+                  <p>{section.content}</p>
+                </div>
+              ))}
+
+              {/* Render the contact information */}
+              <p>{termsConditionData.contact}</p>
+            </div>
+          ) : (
+            <div>
+              <h3>Terms of Service</h3>
+              <p>
+                Terms and conditions are currently unavailable. Please try again
+                later.
+              </p>
+            </div>
+          )}
+        </div>
+      </Modal>
     </>
   );
 };
