@@ -16,6 +16,7 @@ import {
 import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { NEWS_LETTER } from 'constants/NewsLetterConstants';
 
 const AddNewsLetterFormFields = ({ type = 'normal' }) => {
     const [form] = Form.useForm();
@@ -68,18 +69,9 @@ const AddNewsLetterFormFields = ({ type = 'normal' }) => {
         }, 1000);
     };
 
-    const audienceOptions = [
-        { value: 'all', label: 'All Subscribers' },
-        { value: 'premium', label: 'Premium Members' },
-    ];
+    
 
-    const tagOptions = [
-        { value: 'announcement', label: 'Announcement' },
-        { value: 'update', label: 'Update' },
-        { value: 'promotion', label: 'Promotion' },
-        { value: 'event', label: 'Event' },
-        { value: 'news', label: 'News' }
-    ];
+    
 
     return (
         <div className="newsletter-builder">
@@ -210,7 +202,7 @@ const AddNewsLetterFormFields = ({ type = 'normal' }) => {
                                 >
                                     <Select
                                         placeholder="Select target audience"
-                                        options={audienceOptions}
+                                        options={NEWS_LETTER.audienceOptions}
                                         onChange={(value) => setAudience(value)}
                                     />
                                 </Form.Item>
