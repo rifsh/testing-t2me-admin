@@ -4,10 +4,11 @@
   "private": true,
   "dependencies": {
     "@aws-sdk/client-s3": "^3.758.0",
-    "@emotion/react": "^11.10.5",
-    "@emotion/styled": "^11.10.5",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@hello-pangea/dnd": "^16.0.0",
     "@meinefinsternis/react-horizontal-date-picker": "^1.0.1",
+    "@mui/material": "^6.4.7",
     "@reduxjs/toolkit": "^1.8.5",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",

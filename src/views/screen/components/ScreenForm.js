@@ -9,7 +9,7 @@ const { Option } = Select;
 const { Title } = Typography;
 const { TabPane } = Tabs;
 
-const ScreenForm = ({ form, index, onRemove, isOnlyScreen }) => {
+const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber  }) => {
     const [message, setMessage] = useState("");
     const rules = {
         subject: [{ required: true, message: "Please enter screen name" }],
@@ -41,6 +41,14 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen }) => {
                 )}
             </div>
 
+            <Form.Item
+                name={['screens', index, 'screen_number']}
+                hidden
+                initialValue={screenNumber}
+            >
+                <Input />
+            </Form.Item>
+
             <Form.Item name={['screens', index, 'screen_name']} label="Name" rules={rules.subject}>
                 <Input placeholder="Screen name" />
             </Form.Item>
@@ -57,39 +65,11 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen }) => {
             </Form.Item>
 
             <Form.Item name={['screens', index, 'description']} label="Description">
-                <ReactQuill
-                    theme="snow"
-                    onChange={(value) => {
-                        const values = form.getFieldsValue();
-                        const screens = values.screens || [];
-                        screens[index] = { ...screens[index], description: value };
-                        form.setFieldsValue({ screens });
-                    }}
-                />
+                <Input placeholder="Description" />
             </Form.Item>
 
             <Form.Item name={['screens', index, 'is_active']} label="Active Status" valuePropName="checked" initialValue={true}>
                 <Switch defaultChecked />
-            </Form.Item>
-
-            <Form.Item
-                name={['screens', index, 'thumbnail_image']}
-                label="Screen Image"
-                valuePropName="fileList"
-                getValueFromEvent={normFile}
-                rules={rules.thumbnail_image}
-            >
-                <Upload
-                    accept={SupportImageFormat}
-                    listType="picture-card"
-                    beforeUpload={() => false}
-                    maxCount={1}
-                >
-                    <div>
-                        <UploadOutlined />
-                        <div style={{ marginTop: 8 }}>Upload</div>
-                    </div>
-                </Upload>
             </Form.Item>
 
             <Form.Item name={['screens', index, 'seat_structure_id']} label="Seat Structure">
@@ -142,10 +122,6 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen }) => {
                             <Option key={value} value={value}>{label}</Option>
                         ))}
                     </Select>
-                </Form.Item>
-
-                <Form.Item name={['screens', index, 'maintenance_schedule']} label="Maintenance Schedule">
-                    <DatePicker.RangePicker style={{ width: '100%' }} />
                 </Form.Item>
             </Card>
 
