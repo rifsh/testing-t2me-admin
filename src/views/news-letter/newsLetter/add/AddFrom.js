@@ -38,7 +38,7 @@ const AddFrom = () => {
             style={{ marginTop: 30 }}
             items={[
               {
-                label: "news letter",
+                label: "News letter",
                 key: "add-letter",
                 children: <AddNewsLetterFormFields type={'normal'}/>,
               },
