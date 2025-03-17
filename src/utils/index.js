@@ -537,6 +537,24 @@ class Utils {
           }
           return;
         }
+        if (key === "banner") {
+          if (value.length === 0) {
+            formData.append(key, ""); // You might want to review this empty case too
+          } else {
+            value.forEach((image) => {
+              // Remove this part or handle URLs differently
+              // if (image.url) {
+              //   formData.append("banner_images", image.url);
+              // }
+
+              // Only append actual file objects
+              if (image.originFileObj) {
+                formData.append(key, image.originFileObj);
+              }
+            });
+          }
+          return;
+        }
         if (key === "event_images") {
           if (value.length === 0) {
             formData.append(key, ""); // You might want to review this empty case too

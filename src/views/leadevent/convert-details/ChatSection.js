@@ -1,69 +1,112 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Card, Input, Button, List, Avatar, Typography, Space, message, Spin } from "antd";
-import { SendOutlined, UserOutlined } from "@ant-design/icons";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { 
+  Card, 
+  Input, 
+  Button, 
+  List, 
+  Avatar, 
+  Typography, 
+  Space, 
+  message, 
+  Spin,
+  Empty
+} from "antd";
+import { SendOutlined, UserOutlined, MessageOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchEventMessages, sendEventMessage } from "store/slices/leadEventSlice";
 import moment from "moment";
-import { getCurrentUser } from "configs/UserAccessConfig";
+
 
 const { Text } = Typography;
 
-const ChatSection = ({ eventId }) => {
+const ChatSection = ({ eventId, getCurrentUser }) => {
   const dispatch = useDispatch();
-  const { messages, messagesLoading, messagesError } = useSelector((state) => state.leadEvents);
   
-  // Get current user from JWT token instead of Redux store
+  // Robust selector with type checking and fallback
+  const { messages, messagesLoading, messagesError } = useSelector((state) => {
+    const rawMessages = state.leadEvents.messages;
+    
+    // Ensure messages is always an array
+    const processedMessages = Array.isArray(rawMessages) 
+      ? rawMessages 
+      : (rawMessages && typeof rawMessages === 'object' 
+        ? Object.values(rawMessages) 
+        : []);
+    
+    return {
+      messages: processedMessages,
+      messagesLoading: state.leadEvents.messagesLoading,
+      messagesError: state.leadEvents.messagesError
+    };
+  });
+  
+  // Get current user from JWT token
   const currentUser = getCurrentUser();
   
   const [newMessage, setNewMessage] = useState("");
-  const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
+  // Fetch messages when component mounts or eventId changes
   useEffect(() => {
     if (eventId) {
       dispatch(fetchEventMessages(eventId));
     }
   }, [dispatch, eventId]);
 
-  // Function to scroll to the bottom of the chat container
+  // Debugging effect to log messages
+  useEffect(() => {
+    console.log('Messages:', {
+      type: typeof messages,
+      length: messages.length,
+      value: messages
+    });
+  }, [messages]);
+
+  // Error handling for messages fetch
+  useEffect(() => {
+    if (messagesError) {
+      message.error(messagesError?.toString() || "Failed to load messages");
+    }
+  }, [messagesError]);
+
+  // Scroll to bottom of chat
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   };
 
-  // Scroll to bottom whenever messages change
+  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Show error if messages API call fails
-  useEffect(() => {
-    if (messagesError) {
-      message.error(messagesError);
-    }
-  }, [messagesError]);
-
+  // Send message handler
   const handleSendMessage = async () => {
-    if (newMessage.trim()) {
-      try {
-        await dispatch(sendEventMessage({ 
-          data: { event_lead_id: eventId, content: newMessage } 
-        })).unwrap();
-        
-        setNewMessage("");
-        
-        // Refresh messages after sending
-        dispatch(fetchEventMessages(eventId));
-        
-        // Scroll to bottom after a short delay to ensure messages are updated
-        setTimeout(scrollToBottom, 100);
-      } catch (err) {
-        message.error("Failed to send message");
-      }
+    if (!newMessage.trim()) return;
+
+    try {
+      await dispatch(sendEventMessage({ 
+        data: { 
+          event_lead_id: eventId, 
+          content: newMessage.trim() 
+        } 
+      })).unwrap();
+      
+      setNewMessage("");
+      
+      // Refresh messages after sending
+      dispatch(fetchEventMessages(eventId));
+      
+      // Ensure scrolling after message send
+      setTimeout(scrollToBottom, 100);
+    } catch (err) {
+      message.error("Failed to send message");
+      console.error("Message send error:", err);
     }
   };
 
+  // Handle enter key for sending message
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -71,17 +114,49 @@ const ChatSection = ({ eventId }) => {
     }
   };
 
+  // Time formatting utility
   const formatTime = (timestamp) => {
     return moment(timestamp).format('h:mm A');
   };
 
+  // Check if message is from current user
   const isCurrentUserMessage = (msg) => {
-    return msg.user && currentUser && msg.user.id === currentUser.id;
+    return msg?.user && currentUser && msg.user.id === currentUser.id;
   };
 
+  // Validate message before rendering
   const isValidMessage = (msg) => {
-    return msg && msg.user && msg.content;
+    return msg 
+      && typeof msg === 'object'
+      && msg.user 
+      && msg.content 
+      && typeof msg.content === 'string';
   };
+
+  // Memoized filtered messages to prevent unnecessary re-renders
+  const filteredMessages = useMemo(() => 
+    (messages || []).filter(isValidMessage), 
+    [messages]
+  );
+
+  // Render loading state
+  if (messagesLoading && filteredMessages.length === 0) {
+    return (
+      <Card 
+        title={<span style={{ color: "#1890ff" }}>Event Chat</span>}
+        extra={<Spin size="small" />}
+      >
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '400px' 
+        }}>
+          <Spin size="large" tip="Loading messages..." />
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card 
@@ -107,15 +182,22 @@ const ChatSection = ({ eventId }) => {
           borderRadius: "5px"
         }}
       >
-        {messagesLoading && messages?.length === 0 ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
-            <Spin tip="Loading messages..." />
-          </div>
+        {filteredMessages.length === 0 ? (
+          <Empty 
+            image={<MessageOutlined style={{ fontSize: '48px', color: '#1890ff' }} />}
+            description="No messages yet"
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              height: '100%' 
+            }}
+          />
         ) : (
           <List
             itemLayout="horizontal"
-            dataSource={(messages || []).filter(isValidMessage)}
-            locale={{ emptyText: "No messages yet" }}
+            dataSource={filteredMessages}
             renderItem={(item) => {
               const userIsCurrentUser = isCurrentUserMessage(item);
               return (

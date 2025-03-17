@@ -9,9 +9,16 @@ export const publicRoutes = [
       import("views/auth-views/authentication/login")
     ),
   },
+  // {
+  //   key: "register",
+  //   path: `${AUTH_PREFIX_PATH}/register`,
+  //   component: React.lazy(() =>
+  //     import("views/auth-views/authentication/register")
+  //   ),
+  // },
   {
     key: "register",
-    path: `${AUTH_PREFIX_PATH}/register`,
+    path: `${AUTH_PREFIX_PATH}/register/*`,
     component: React.lazy(() =>
       import("views/auth-views/authentication/register")
     ),
@@ -484,6 +491,20 @@ export const protectedRoutes = [
     ),
   },
   {
+    key: "app.management.layout.terms.list",
+    path: `${APP_PREFIX_PATH}/app/management/layout/terms/list`,
+    component: React.lazy(() =>
+      import("views/app-managment/layout/terms/list-terms")
+    ),
+  },
+  {
+    key: "app.management.layout.terms.add",
+    path: `${APP_PREFIX_PATH}/app/management/layout/terms/add-terms`,
+    component: React.lazy(() =>
+      import("views/app-managment/layout/terms/add-term")
+    ),
+  },
+  {
     key: "lead.event.list",
     path: `${APP_PREFIX_PATH}/leadevent/list`,
     component: React.lazy(() =>
@@ -491,8 +512,28 @@ export const protectedRoutes = [
     ),
   },
   {
-    key: "lead.event..details",
+    key: "lead.event.details",
     path: `${APP_PREFIX_PATH}/leadevent/details/:eventId`,
     component: React.lazy(() => import("views/leadevent/lead-details")),
+  },
+  {
+    key: "lead.event.add",
+    path: `${APP_PREFIX_PATH}/leadevent/add/:eventId`,
+    component: React.lazy(() => import("views/leadevent/add-leadevent")),
+  },
+  {
+    key: "lead.event.convert.list",
+    path: `${APP_PREFIX_PATH}/leadevent/convert`,
+    component: React.lazy(() => import("views/leadevent/convertevent-list")),
+  },
+  {
+    key: "lead.event.convert.details",
+    path: `${APP_PREFIX_PATH}/leadevent/convert/details/:eventId`,
+    component: React.lazy(() => import("views/leadevent/convert-details")),
+  },
+  {
+    key: "lead.event.edit",
+    path: `${APP_PREFIX_PATH}/leadevent/edit/:eventId`,
+    component: React.lazy(() => import("views/leadevent/edit- leadevent")),
   },
 ];

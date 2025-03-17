@@ -94,7 +94,9 @@ const VenueFormFields = ({ mode, venue }) => {
         latitude: venue.latitude,
         longitude: venue.longitude,
         description: venue.description,
-        venue_add_on_services: venue.venue_add_on_services,
+        venue_add_on_services: !venue.venue_add_on_services
+          ? []
+          : venue.venue_add_on_services,
         banner_images: venue?.media
           ? venue?.media?.map((banner, index) => ({
               uid: `-banner-${index}`,
@@ -153,7 +155,9 @@ const VenueFormFields = ({ mode, venue }) => {
         indoor: values.indoor !== undefined ? values.indoor : false,
         address: values.address,
         description: values.description,
-        venue_add_on_services: values.venue_add_on_services,
+        venue_add_on_services: !values.venue_add_on_services
+          ? []
+          : values.venue_add_on_services,
         id: venue.id,
       };
       console.log("Edit Data:", data);
@@ -196,7 +200,9 @@ const VenueFormFields = ({ mode, venue }) => {
           indoor: values.indoor !== undefined ? values.indoor : false, // Ensure indoor is boolean
           address: values.address,
           description: values.description,
-          venue_add_on_services: values.venue_add_on_services,
+          venue_add_on_services: !values.venue_add_on_services
+            ? []
+            : values.venue_add_on_services,
         };
 
         const resultAction = await dispatch(validatePlace(selectedPlace));
@@ -317,12 +323,11 @@ const VenueFormFields = ({ mode, venue }) => {
             <Form.Item
               name="description"
               label="Description"
-             // rules={rules.description}
+              rules={[
+                { required: true, message: RulesMessageConstants.DESCRIPTION },
+              ]}
             >
-              <Input.TextArea
-                rows={4}
-                placeholder="Enter venue description"
-              />
+              <Input.TextArea rows={4} placeholder="Enter venue description" />
             </Form.Item>
             <Form.Item
               name="latitude"
@@ -392,91 +397,108 @@ const VenueFormFields = ({ mode, venue }) => {
               &{" resolution "}
               {ResolutionByServices.place} pixels.{" "}
             </Text>
-            </Card>
-            <Card>
-  <Form.Item name="venue_add_on_services" label="Add on Services">
-    <Form.List name="venue_add_on_services">
-      {(fields, { add, remove }) => (
-        <>
-          {fields.map(({ key, name, ...restField }) => (
-            <div key={key}>
-              <Form.Item
-                {...restField}
-                name={[name, "title"]}
-                label="Title"
-                //rules={[{ required: true, message: "Title is required" }]}
-              >
-                <Input placeholder="Enter title" />
-              </Form.Item>
-
-              {/* Use "services" instead of "add" to match the data structure */}
-              <Form.List name={[name, "services"]}>
-                {(serviceFields, { add: addService, remove: removeService }) => (
+          </Card>
+          <Card>
+            <Form.Item name="venue_add_on_services" label="Add on Services">
+              <Form.List name="venue_add_on_services">
+                {(fields, { add, remove }) => (
                   <>
-                    <Row gutter={16}>
-                      {serviceFields.map(({ key: serviceKey, name: serviceName, ...serviceRestField }) => (
-                        <Col span={12} key={serviceKey}>
-                          <Space style={{ display: "flex", marginBottom: 8 }} align="baseline">
-                            <Form.Item
-                              {...serviceRestField}
-                              name={[serviceName]}
-                              //rules={[{ required: false, message: "Service is required" }]}
-                              style={{ width: "100%" }}
-                            >
-                              <Input placeholder="Enter service" />
-                            </Form.Item>
-                            <MinusCircleOutlined onClick={() => removeService(serviceName)} />
-                          </Space>
-                        </Col>
-                      ))}
-                    </Row>
-                    <Row gutter={16}>
-                      <Col span={12}>
-                        <Button
-                          type="dashed"
-                          onClick={() => addService("")} // Add an empty string to the array
-                          block
-                          icon={<PlusOutlined />}
+                    {fields.map(({ key, name, ...restField }) => (
+                      <div key={key}>
+                        <Form.Item
+                          {...restField}
+                          name={[name, "title"]}
+                          label="Title"
+                          //rules={[{ required: true, message: "Title is required" }]}
                         >
-                          Add Service
-                        </Button>
-                      </Col>
-                      <Col span={12}>
-                        <Button
-                          type="dashed"
-                          danger
-                          onClick={() => remove(name)}
-                          block
-                          icon={<MinusCircleOutlined />}
-                        >
-                          Remove Title Section
-                        </Button>
-                      </Col>
-                    </Row>
+                          <Input placeholder="Enter title" />
+                        </Form.Item>
+
+                        {/* Use "services" instead of "add" to match the data structure */}
+                        <Form.List name={[name, "services"]}>
+                          {(
+                            serviceFields,
+                            { add: addService, remove: removeService }
+                          ) => (
+                            <>
+                              <Row gutter={16}>
+                                {serviceFields.map(
+                                  ({
+                                    key: serviceKey,
+                                    name: serviceName,
+                                    ...serviceRestField
+                                  }) => (
+                                    <Col span={12} key={serviceKey}>
+                                      <Space
+                                        style={{
+                                          display: "flex",
+                                          marginBottom: 8,
+                                        }}
+                                        align="baseline"
+                                      >
+                                        <Form.Item
+                                          {...serviceRestField}
+                                          name={[serviceName]}
+                                          //rules={[{ required: false, message: "Service is required" }]}
+                                          style={{ width: "100%" }}
+                                        >
+                                          <Input placeholder="Enter service" />
+                                        </Form.Item>
+                                        <MinusCircleOutlined
+                                          onClick={() =>
+                                            removeService(serviceName)
+                                          }
+                                        />
+                                      </Space>
+                                    </Col>
+                                  )
+                                )}
+                              </Row>
+                              <Row gutter={16}>
+                                <Col span={12}>
+                                  <Button
+                                    type="dashed"
+                                    onClick={() => addService("")} // Add an empty string to the array
+                                    block
+                                    icon={<PlusOutlined />}
+                                  >
+                                    Add Service
+                                  </Button>
+                                </Col>
+                                <Col span={12}>
+                                  <Button
+                                    type="dashed"
+                                    danger
+                                    onClick={() => remove(name)}
+                                    block
+                                    icon={<MinusCircleOutlined />}
+                                  >
+                                    Remove Title Section
+                                  </Button>
+                                </Col>
+                              </Row>
+                            </>
+                          )}
+                        </Form.List>
+                      </div>
+                    ))}
+                    <Form.Item style={{ marginTop: "16px" }}>
+                      <Button
+                        type="dashed"
+                        onClick={() => add({ title: "", services: [] })}
+                        block
+                        icon={<PlusOutlined />}
+                      >
+                        Add Title Section
+                      </Button>
+                    </Form.Item>
                   </>
                 )}
               </Form.List>
-            </div>
-          ))}
-          <Form.Item style={{ marginTop: "16px" }}>
-            <Button
-              type="dashed"
-              onClick={() => add({ title: "", services: [] })}
-              block
-              icon={<PlusOutlined />}
-            >
-              Add Title Section
-            </Button>
-          </Form.Item>
-        </>
-      )}
-    </Form.List>
-  </Form.Item>
-</Card>
-            
+            </Form.Item>
+          </Card>
 
-            <Card>
-
+          <Card>
             <div className="mb-3">
               <h3>Pick Location</h3>
               <MapContainer

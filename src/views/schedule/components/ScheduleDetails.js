@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Card, Form, Select, Input, DatePicker } from "antd";
+import React, { useEffect, useState } from "react";
+import { Card, Form, Select, Input } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllEvent, setSelectedEvent } from "store/slices/eventSlice";
 import {
@@ -12,29 +12,66 @@ const { Option } = Select;
 
 export function ScheduleDetails({ form }) {
   const dispatch = useDispatch();
-  const { filteredEvents = [], loading } = useSelector((state) => state.event);
+  const {
+    filteredEvents = [],
+    loading,
+    selectedEvent,
+  } = useSelector((state) => state.event);
 
   useEffect(() => {
-    dispatch(fetchAllEvent({}));
+    const fetchEvents = async () => {
+      try {
+        await dispatch(fetchAllEvent({})).unwrap();
+      } catch (error) {
+        console.error("Failed to fetch events:", error);
+      }
+    };
+    fetchEvents();
   }, [dispatch]);
+
   const handleSelectEvent = (id) => {
-    if (!id) return;
+    if (!id) {
+      dispatch(setSelectedEvent(null));
+      form.resetFields(["event_id", "venue_id"]);
+      dispatch(resetSchedule());
+      return;
+    }
+
+    const event = filteredEvents.find((event) => event.id === id);
+    if (!event) return;
 
     dispatch(setScheduleSelectTime(false));
-    dispatch(setSelectedEvent(id));
+    dispatch(setSelectedEvent(event));
 
-    const selectedEvent = filteredEvents.find((event) => event.id === id);
+    const venueId = event.venues?.[0]?.id || null;
+    dispatch(setSelectedVenue(venueId));
+    form.setFieldsValue({ event_id: id, venue_id: venueId });
 
-    if (selectedEvent && selectedEvent.venue) {
-      dispatch(setSelectedVenue(selectedEvent.venue.id));
-    }
     const currentValues = form.getFieldsValue();
     const valuesToKeep = {
       event_id: id,
+      venue_id: venueId,
       name: currentValues.name,
     };
     form.resetFields();
     form.setFieldsValue(valuesToKeep);
+
+    dispatch(resetSchedule());
+  };
+  const handleSelectVenue = (id) => {
+    if (!id) {
+      dispatch(setSelectedVenue(id));
+      return;
+    }
+    const currentValues = form.getFieldsValue();
+    const valuesToKeep = {
+      event_id: currentValues.event_id,
+      venue_id: id,
+      name: currentValues.name,
+    };
+    form.resetFields();
+    form.setFieldsValue(valuesToKeep);
+
     dispatch(resetSchedule());
   };
 
@@ -47,6 +84,7 @@ export function ScheduleDetails({ form }) {
       >
         <Input placeholder="Enter schedule name" />
       </Form.Item>
+
       <Form.Item
         name="event_id"
         label="Event"
@@ -60,16 +98,44 @@ export function ScheduleDetails({ form }) {
           allowClear
           showSearch
           filterOption={(input, option) =>
-            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            option?.label?.toLowerCase()?.includes(input.toLowerCase())
           }
         >
           {filteredEvents.map((event) => (
-            <Option key={event.id} value={event.id}>
+            <Option key={event.id} value={event.id} label={event.event_name}>
               {event.event_name}
             </Option>
           ))}
         </Select>
       </Form.Item>
+
+      {selectedEvent?.venues?.length > 0 && (
+        <Form.Item
+          name="venue_id"
+          label="Venue"
+          rules={[{ required: true, message: "Please select a venue" }]}
+        >
+          <Select
+            loading={loading}
+            className="w-100"
+            placeholder="Select a venue"
+            allowClear
+            showSearch
+            filterOption={(input, option) =>
+              option?.label?.toLowerCase()?.includes(input.toLowerCase())
+            }
+            onChange={(value) => {
+              handleSelectVenue(value);
+            }}
+          >
+            {selectedEvent?.venues?.map((venue) => (
+              <Option key={venue.id} value={venue.id} label={venue.name}>
+                {venue.name}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+      )}
     </Card>
   );
 }

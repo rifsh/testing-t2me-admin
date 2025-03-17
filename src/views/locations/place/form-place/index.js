@@ -87,6 +87,7 @@ const CountryForm = ({ mode, placeId }) => {
                   },
                 ]
               : [],
+          description: singlePlace.description,
         });
       }
     } else {

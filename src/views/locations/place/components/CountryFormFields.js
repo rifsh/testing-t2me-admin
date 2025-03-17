@@ -26,6 +26,7 @@ import {
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 import Utils from "utils/index";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
+import ReactQuill from "react-quill";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -35,6 +36,12 @@ const rules = {
     {
       required: true,
       message: "Please Choose a country",
+    },
+  ],
+  description: [
+    {
+      required: true,
+      message: "Please enter descriptions",
     },
   ],
   name: [
@@ -136,7 +143,15 @@ const CountryFormFields = ({ mode, form }) => {
             </Select>
           </Form.Item>
           <Form.Item name="name" label="Place" rules={rules.name}>
-            <Input placeholder="Place Name" />
+            <Input placeholder="Place Name"  />
+          </Form.Item>
+          <Form.Item
+            name="description"
+            label="Description"
+            
+            rules={rules.description}
+          >
+            <ReactQuill  />
           </Form.Item>
           <Form.Item
             name="thumbnail_image"

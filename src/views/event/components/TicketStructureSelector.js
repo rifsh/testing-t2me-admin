@@ -45,7 +45,7 @@ export const TicketStructureSelector = ({ form }) => {
         base_price: selectedStructure?.base_price,
         ticket_set: selectedSet?.ticket_set,
         tickets: selectedSet?.tickets,
-        id: selectedStructure.id,  // Using the structure ID directly
+        id: selectedStructure.id,  
         ticketStructureId: selectedStructure.id
       };
   

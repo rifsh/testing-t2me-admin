@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import LeadEventService from "services/LeadService";
+import LocationService from "services/LocationService";
 
 export const initialState = {
   loading: false,
@@ -17,7 +18,8 @@ export const initialState = {
   // Add message-related state
   messages: [],
   messagesLoading: false,
-  messagesError: null
+  messagesError: null,
+  responseImpactData: null,
 };
 
 // Fetch all lead events
@@ -118,6 +120,33 @@ export const sendEventMessage = createAsyncThunk(
     }
   }
 );
+export const EnrollUser = createAsyncThunk(
+  "leadEvents/EnrollUser",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await LeadEventService.EnrollUser(data);
+      return response;
+    } catch (error) {
+      console.error("Failed to enroll user", error);
+      return rejectWithValue(error.response?.data?.message);
+    }
+  }
+);
+export const editLeadEvent = createAsyncThunk(
+  "leadEvents/editLeadEvent",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      const response = await LeadEventService.updateEvent(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 
 const leadEventSlice = createSlice({
   name: "leadEvents",
@@ -211,7 +240,7 @@ const leadEventSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+
       .addCase(addLeadEvent.pending, (state) => {
         console.log("addLeadEvent - Pending State");
         state.loading = true;
@@ -231,7 +260,7 @@ const leadEventSlice = createSlice({
         state.error = action.payload.data;
         state.responseMessage = action.payload.status.message;
       })
-      
+
       .addCase(fetchAllEvent.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -246,7 +275,7 @@ const leadEventSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+
       .addCase(fetchLeadEventDetails.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -284,7 +313,7 @@ const leadEventSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+
       // Handle fetchEventMessages cases
       .addCase(fetchEventMessages.pending, (state) => {
         state.messagesLoading = true;
@@ -298,7 +327,7 @@ const leadEventSlice = createSlice({
         state.messagesLoading = false;
         state.messagesError = action.payload;
       })
-      
+
       // Handle sendEventMessage cases
       .addCase(sendEventMessage.pending, (state) => {
         state.messagesLoading = true;
@@ -312,10 +341,43 @@ const leadEventSlice = createSlice({
       .addCase(sendEventMessage.rejected, (state, action) => {
         state.messagesLoading = false;
         state.messagesError = action.payload;
-      });
+      })
+      .addCase(editLeadEvent.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(editLeadEvent.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.messages = payload.status.message;
+          state.editable_status = payload.status?.editable_status;
+        }
+      })
+      .addCase(editLeadEvent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(EnrollUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(EnrollUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(EnrollUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+;
   },
 });
 
-export const { setSearchTerm, setStatusFilter, filterLeadEvents, clearMessages } =
-  leadEventSlice.actions;
+export const {
+  setSearchTerm,
+  setStatusFilter,
+  filterLeadEvents,
+  clearMessages,
+} = leadEventSlice.actions;
 export default leadEventSlice.reducer;

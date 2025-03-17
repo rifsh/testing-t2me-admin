@@ -145,16 +145,7 @@ const SingleEventDetails = () => {
                       Venue
                     </div>
                     <div>
-                      {singleLeadEvent.venues?.length > 0
-                        ? singleLeadEvent.venues.map((venue, index) => (
-                            <span key={index}>
-                              {venue.name}
-                              {index < singleLeadEvent.venues.length - 1
-                                ? ", "
-                                : ""}
-                            </span>
-                          ))
-                        : "Not specified"}
+                    {singleLeadEvent?.venue_name || "Not specified"}
                     </div>
                   </div>
                 </div>
@@ -222,11 +213,7 @@ const SingleEventDetails = () => {
                       Location
                     </div>
                     <div>
-                      {singleLeadEvent.place?.name
-                        ? `${singleLeadEvent.place.name}, ${
-                            singleLeadEvent.place?.country?.name || ""
-                          }`
-                        : "Not specified"}
+                    {singleLeadEvent?.place_name || "Not specified"}
                     </div>
                   </div>
                 </div>

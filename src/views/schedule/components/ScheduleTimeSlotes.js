@@ -66,6 +66,7 @@ export function ScheduleTimeSlots({ form }) {
   }, [dispatch, form]);
 
   const { eventDetails } = useSelector((state) => state.event);
+  const { selectedVenue } = useSelector((state) => state.locations);
   const { timeSlots, activeTab, dates, slotStatus } = useSelector(
     (state) => state.schedules
   );
@@ -515,7 +516,7 @@ export function ScheduleTimeSlots({ form }) {
     // if (!validateDateRange(startDate, endDate)) return;
 
     const newDates = [];
-    let currentDate = dayjs(startDate); 
+    let currentDate = dayjs(startDate);
     const end = dayjs(endDate);
 
     while (currentDate.isSameOrBefore(end, "day")) {
@@ -527,7 +528,7 @@ export function ScheduleTimeSlots({ form }) {
     dispatch(setDates(newDates));
     dispatch(setActiveTab(newDates[0]));
 
-    // Initialize time slots for new dates with array   
+    // Initialize time slots for new dates with array
     const initialTimeSlots = {};
     newDates.forEach((date) => {
       // Ensure we always have an array, even if empty
@@ -621,19 +622,23 @@ export function ScheduleTimeSlots({ form }) {
   const ticketOptions = useMemo(() => {
     if (!eventDetails?.venue_ticket_structures) return [];
 
-    return eventDetails.venue_ticket_structures.map((venueData) => ({
-      value: venueData.venue.id,
-      label: venueData.venue.name,
-      children: venueData.ticket_structures.map((ticketType) => ({
-        value: ticketType.ticket_structure,
-        label: `Structure ${ticketType.ticket_structure}`,
-        children: ticketType.ticket_sets.map((ticketSet) => ({
-          value: ticketSet,
-          label: ticketSet,
-        })),
+    // Find the venue ticket structure for the selected venue
+    const venueTicketStructure = eventDetails.venue_ticket_structures.find(
+      (vts) => vts.venue.id === selectedVenue
+    );
+
+    if (!venueTicketStructure) return [];
+
+    // Map the ticket structures to the required format
+    return venueTicketStructure.ticket_structures.map((structure) => ({
+      value: structure.ticket_structure,
+      label: structure.ticket_structure_name,
+      children: structure.ticket_sets.map((set) => ({
+        value: set,
+        label: set,
       })),
     }));
-  }, [eventDetails]);
+  }, [eventDetails, selectedVenue]);
 
   const renderTimeDateTimeSlots = (dateStr) => {
     return (

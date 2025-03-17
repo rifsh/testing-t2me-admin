@@ -11,6 +11,8 @@ export const initialState = {
   redirect: "",
   userData: null,
   token: localStorage.getItem(AUTH_TOKEN) || null,
+  termsConditionData: null,
+  termsLoading: false,
 };
 export const signIn = createAsyncThunk(
   "auth/login",
@@ -38,38 +40,53 @@ export const signIn = createAsyncThunk(
 //   localStorage.removeItem(AUTH_TOKEN);
 //   return response.data;
 // });
-export const signOut = createAsyncThunk(
-  "auth/logout",
-  async () => {
-    try {
-      console.log("LOGOUT STARTED-----------------");
-      const response = await AuthService.logout();
-      // console.log("response data", response.data);
-      console.log("LOGOUT SUCCESS-----------------");
-      localStorage.removeItem(AUTH_TOKEN);
-      return response.data;
-    } catch (err) {
-      return err.response?.data?.message || "Error";
-    }
+export const signOut = createAsyncThunk("auth/logout", async () => {
+  try {
+    console.log("LOGOUT STARTED-----------------");
+    const response = await AuthService.logout();
+    // console.log("response data", response.data);
+    console.log("LOGOUT SUCCESS-----------------");
+    localStorage.removeItem(AUTH_TOKEN);
+    return response.data;
+  } catch (err) {
+    return err.response?.data?.message || "Error";
   }
-);
+});
 
 export const signUp = createAsyncThunk(
   "auth/register",
   async (data, { rejectWithValue }) => {
-    const { email, password } = data;
     try {
-      const response = await AuthService.register({ email, password });
-      const token = response.data.token;
-      localStorage.setItem(AUTH_TOKEN, token);
-      return token;
+      const response = await AuthService.register(data);
+      return response;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
     }
   }
 );
-
-
+export const verifyOtp = createAsyncThunk(
+  "auth/verifyOtp",
+  async (data, { rejectWithValue }) => {
+    try {
+      console.log("verify serviceeeeeeeeeeeeeeeeeeeee");
+      const response = await AuthService.verifyOtp(data);
+      return response;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Error");
+    }
+  }
+);
+export const ResendOtp = createAsyncThunk(
+  "auth/ResendOtp",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await AuthService.ResendOtp(data);
+      return response;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Error");
+    }
+  }
+);
 
 export const signInWithGoogle = createAsyncThunk(
   "auth/signInWithGoogle",
@@ -105,6 +122,34 @@ export const getUserdata = createAsyncThunk(
       const response = localStorage.getItem(AUTH_TOKEN)
         ? jwtDecode(localStorage.getItem(AUTH_TOKEN))
         : null;
+      return response;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Error");
+    }
+  }
+);
+export const TermsCondition = createAsyncThunk(
+  "auth/termsCondition",
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log("FETCHING TERMS AND CONDITIONS");
+      const response = await AuthService.TermsCondition();
+      console.log(response, "TERMS AND CONDITIONS RESPONSE");
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue("Failed to fetch Terms and Conditions");
+    }
+  }
+);
+
+
+export const PostTermsCondition = createAsyncThunk(
+  "auth/PosttermsCondition",
+  async (data, { rejectWithValue }) => {
+    try {
+      console.log("FETCHING TERMS AND CONDITIONS");
+      const response = await AuthService.PostTermsCondition(data);
+      console.log(response, "POST TERMS AND CONDITIONS RESPONSE");
       return response;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
@@ -185,13 +230,13 @@ export const authSlice = createSlice({
       })
       .addCase(signUp.fulfilled, (state, action) => {
         state.loading = false;
-        state.redirect = "/";
-        state.token = action.payload;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
       })
       .addCase(signUp.rejected, (state, action) => {
-        state.message = action.payload;
-        state.showMessage = true;
         state.loading = false;
+        state.error = action.payload;
       })
       .addCase(signInWithGoogle.pending, (state) => {
         state.loading = true;
@@ -218,6 +263,60 @@ export const authSlice = createSlice({
         state.message = action.payload;
         state.showMessage = true;
         state.loading = false;
+      })
+      .addCase(verifyOtp.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(verifyOtp.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(verifyOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(ResendOtp.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(ResendOtp.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(ResendOtp.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(TermsCondition.pending, (state) => {
+        console.log("TermsCondition pending");
+        state.termsLoading = true;
+        state.error = null;
+      })
+      .addCase(TermsCondition.fulfilled, (state, { payload }) => {
+        console.log("TermsCondition fulfilled", payload);
+        state.termsLoading = false;
+        state.termsConditionData = payload;
+      })
+      .addCase(TermsCondition.rejected, (state, { payload }) => {
+        console.log("TermsCondition rejected", payload);
+        state.termsLoading = false;
+        state.error = payload;
+      })
+      .addCase(PostTermsCondition.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(PostTermsCondition.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(PostTermsCondition.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
