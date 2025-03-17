@@ -12,8 +12,11 @@ const { Option } = Select;
 
 export function ScheduleDetails({ form }) {
   const dispatch = useDispatch();
-  const { filteredEvents = [], loading ,selectedEvent} = useSelector((state) => state.event);
-  
+  const {
+    filteredEvents = [],
+    loading,
+    selectedEvent,
+  } = useSelector((state) => state.event);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -40,7 +43,6 @@ export function ScheduleDetails({ form }) {
     dispatch(setScheduleSelectTime(false));
     dispatch(setSelectedEvent(event));
 
-
     const venueId = event.venues?.[0]?.id || null;
     dispatch(setSelectedVenue(venueId));
     form.setFieldsValue({ event_id: id, venue_id: venueId });
@@ -49,6 +51,22 @@ export function ScheduleDetails({ form }) {
     const valuesToKeep = {
       event_id: id,
       venue_id: venueId,
+      name: currentValues.name,
+    };
+    form.resetFields();
+    form.setFieldsValue(valuesToKeep);
+
+    dispatch(resetSchedule());
+  };
+  const handleSelectVenue = (id) => {
+    if (!id) {
+      dispatch(setSelectedVenue(id));
+      return;
+    }
+    const currentValues = form.getFieldsValue();
+    const valuesToKeep = {
+      event_id: currentValues.event_id,
+      venue_id: id,
       name: currentValues.name,
     };
     form.resetFields();
@@ -106,7 +124,9 @@ export function ScheduleDetails({ form }) {
             filterOption={(input, option) =>
               option?.label?.toLowerCase()?.includes(input.toLowerCase())
             }
-            onChange={(value) => dispatch(setSelectedVenue(value))}
+            onChange={(value) => {
+              handleSelectVenue(value);
+            }}
           >
             {selectedEvent?.venues?.map((venue) => (
               <Option key={venue.id} value={venue.id} label={venue.name}>

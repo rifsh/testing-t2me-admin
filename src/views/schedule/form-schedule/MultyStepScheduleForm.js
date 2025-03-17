@@ -159,88 +159,112 @@ const MultyStepScheduleForm = ({ mode, id }) => {
       const startDate = dayjs(values.start_date).format("YYYY-MM-DD");
       const endDate = dayjs(values.end_date).format("YYYY-MM-DD");
 
-      // Filter show_dates to only include dates within the main date range
       const show_dates = Object.entries(values.timeSlots || {})
-        .filter(([date]) => {
-          const currentDate = dayjs(date);
-          return (
-            currentDate.isSameOrAfter(startDate) &&
-            currentDate.isSameOrBefore(endDate)
-          );
-        })
-        .map(([date, slots]) => {
-          // Filter out slots that end after the main end date
-          const validSlots = slots.filter((slot) => {
-            const slotEndDate = slot.is_midnight_passed
-              ? dayjs(slot.show_end_date)
-              : dayjs(date);
-
-            return slotEndDate.isSameOrBefore(endDate);
-          });
-
-          // Only process dates that have valid slots
-          if (validSlots.length === 0) {
-            return null;
+      .filter(([date]) => {
+        const currentDate = dayjs(date);
+        return (
+          currentDate.isSameOrAfter(startDate) &&
+          currentDate.isSameOrBefore(endDate)
+        );
+      })
+      .map(([date, slots]) => {
+        // Filter out slots that end after the main end date
+        const validSlots = slots.filter((slot) => {
+          const slotEndDate = slot.is_midnight_passed
+            ? dayjs(slot.show_end_date)
+            : dayjs(date);
+    
+          return slotEndDate.isSameOrBefore(endDate);
+        });
+    
+        // Only process dates that have valid slots
+        if (validSlots.length === 0) {
+          return null;
+        }
+    
+        const latestEndDate = validSlots.reduce((latest, slot) => {
+          if (
+            slot.show_end_date &&
+            (!latest || dayjs(slot.show_end_date).isAfter(dayjs(latest)))
+          ) {
+            return dayjs(slot.show_end_date).format("YYYY-MM-DD");
           }
-
-          const latestEndDate = validSlots.reduce((latest, slot) => {
-            if (
-              slot.show_end_date &&
-              (!latest || dayjs(slot.show_end_date).isAfter(dayjs(latest)))
-            ) {
-              return dayjs(slot.show_end_date).format("YYYY-MM-DD");
+          return latest;
+        }, null);
+    
+        return {
+          id: null,
+          start_date: date,
+          end_date: latestEndDate || null,
+          show_times: validSlots.map((slot) => {
+            // Format time correctly
+            const startTime = dayjs(slot.start_time).format("hh:mm A");
+            let endTime;
+    
+            if (slot.is_midnight_passed && slot.show_end_date) {
+              endTime = dayjs(slot.show_end_date).format("hh:mm A");
+            } else if (slot.end_time) {
+              endTime = dayjs(slot.end_time).format("hh:mm A");
             }
-            return latest;
-          }, null);
-
-          return {
-            start_date: date,
-            end_date: latestEndDate || null,
-            show_times: validSlots.map((slot) => {
-              let startTime = dayjs(slot.start_time).format("HH:mm");
-              let endTime;
-
-              if (slot.is_midnight_passed && slot.show_end_date) {
-                endTime = dayjs(slot.show_end_date).format("HH:mm");
-              } else if (slot.end_time) {
-                endTime = dayjs(slot.end_time).format("HH:mm");
-              }
-
-              let ticketStructureId = null;
-              let ticketSet = "";
-
-              if (eventDetails?.venue_ticket_structures) {
-                const selectedVenueTickets =
-                  eventDetails.venue_ticket_structures.find(
-                    (item) => item.venue.id === selectedVenue
+    
+            // Extract ticket structure and set info from venue_ticket_structures
+            let eventTicketStructure = null;
+            
+            if (eventDetails?.venue_ticket_structures) {
+              // Find the venue ticket structure for the selected venue
+              const venueTicketStructure = eventDetails.venue_ticket_structures.find(
+                vts => vts.venue.id === selectedVenue
+              );
+              
+              if (venueTicketStructure) {
+                // Get the ticket set name from the slot
+                const ticketSetName = Array.isArray(slot.ticketType) 
+                  ? slot.ticketType[1] 
+                  : slot.ticketType;
+                  
+                // Find matching ticket structure that contains this ticket set
+                const matchingStructure = venueTicketStructure.ticket_structures.find(
+                  structure => structure.ticket_sets.includes(ticketSetName)
+                );
+                
+                if (matchingStructure) {
+                  // Now find or create the corresponding event_ticket_structure
+                  const existingEventTicketStructure = eventDetails.event_ticket_structures.find(
+                    ets => ets.ticket_structure.id === matchingStructure.ticket_structure && 
+                          ets.ticket_set === ticketSetName
                   );
-
-                if (selectedVenueTickets?.ticket_structures) {
-                  const ticketSetName = Array.isArray(slot.ticketType)
-                    ? slot.ticketType[1]
-                    : slot.ticketType;
-
-                  for (const structure of selectedVenueTickets.ticket_structures) {
-                    if (structure.ticket_sets.includes(ticketSetName)) {
-                      ticketStructureId = structure.ticket_structure;
-                      ticketSet = ticketSetName;
-                      break;
-                    }
+                  
+                  if (existingEventTicketStructure) {
+                    eventTicketStructure = existingEventTicketStructure;
+                  } else {
+                    // Create a reference structure that matches the expected format
+                    eventTicketStructure = {
+                      event_id: eventDetails.id,
+                      ticket_structure: {
+                        id: matchingStructure.ticket_structure,
+                        name: matchingStructure.ticket_structure_name,
+                        venue_id: selectedVenue
+                      },
+                      ticket_set: ticketSetName,
+                      matching_ticket_types: []
+                    };
                   }
                 }
               }
-
-              return {
-                start_time: startTime,
-                end_time: endTime,
-                ticket_structure_id: ticketStructureId,
-                ticket_set: ticketSet,
-                is_midnight: slot.is_midnight_passed ? "true" : "false",
-              };
-            }),
-          };
-        })
-        .filter(Boolean); 
+            }
+    
+            return {
+              id: null,
+              start_time: startTime,
+              end_time: endTime,
+              is_midnight: slot.is_midnight_passed,
+              show_time_ticket_types: [],
+              event_ticket_structures: eventTicketStructure
+            };
+          }),
+        };
+      })
+      .filter(Boolean);
 
       const submitData = {
         start_date: startDate,
