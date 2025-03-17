@@ -620,19 +620,23 @@ export function ScheduleTimeSlots({ form }) {
     value: dateStr,
   });
   const ticketOptions = useMemo(() => {
-    if (!eventDetails?.event_ticket_structures) return [];
-    
-    const filteredTicketStructures = eventDetails.event_ticket_structures.filter(ticketType => {
-      return ticketType.ticket_structure.venue_id === selectedVenue;
-    });
-    
-    return filteredTicketStructures.map((ticketType) => ({
-      value: ticketType.ticket_structure.id,
-      label: ticketType.ticket_structure.name,
-      children: [{
-        value: ticketType.ticket_set,
-        label: ticketType.ticket_set,
-      }],
+    if (!eventDetails?.venue_ticket_structures) return [];
+
+    // Find the venue ticket structure for the selected venue
+    const venueTicketStructure = eventDetails.venue_ticket_structures.find(
+      (vts) => vts.venue.id === selectedVenue
+    );
+
+    if (!venueTicketStructure) return [];
+
+    // Map the ticket structures to the required format
+    return venueTicketStructure.ticket_structures.map((structure) => ({
+      value: structure.ticket_structure,
+      label: structure.ticket_structure_name,
+      children: structure.ticket_sets.map((set) => ({
+        value: set,
+        label: set,
+      })),
     }));
   }, [eventDetails, selectedVenue]);
 
