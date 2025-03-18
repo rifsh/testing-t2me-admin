@@ -417,6 +417,7 @@ export const RegisterForm = (props) => {
         open={termsModalVisible}
         onOk={handleTermsModalOk}
         onCancel={handleTermsModalCancel}
+        width={800}
         footer={[
           <Button key="cancel" onClick={handleTermsModalCancel}>
             Cancel
@@ -426,7 +427,7 @@ export const RegisterForm = (props) => {
           </Button>,
         ]}
       >
-        <div style={{ maxHeight: "300px", overflow: "auto" }}>
+        <div style={{ maxHeight: "500px", overflow: "auto" }}> 
           {termsLoading ? (
             <div style={{ textAlign: "center", padding: "20px" }}>
               <Spin tip="Loading terms and conditions..." />
