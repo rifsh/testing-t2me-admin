@@ -1,25 +1,48 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Col, DatePicker, Form, Input, Row, Select, Upload, Switch, InputNumber, Space, Divider, Typography, Tabs } from 'antd'
-import { SupportImageFormat } from 'constants/SupportFileConstants';
-import { UploadOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Button, Card, Col, Form, Row, Space, Tabs, Alert, Spin, Typography } from 'antd'
+import { UploadOutlined, PlusOutlined, DeleteOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
-import ReactQuill from 'react-quill';
 import PlaceWithCountryForm from 'components/util-components/FormItems/PlaceWithCountryForm';
 import VenueListForm from 'components/util-components/FormItems/VenueList';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { getVenues, setSelectedVenueList } from 'store/slices/locationSlice';
 import { resetTicketSelection } from 'store/slices/ticketSlice';
+import { Collapse } from '@mui/material';
 import ScreenForm from './ScreenForm';
+
+const { Title, Text } = Typography;
 
 const AddScreenFormFields = () => {
     const dispatch = useDispatch();
     const [form] = Form.useForm();
     const [screens, setScreens] = useState([{ key: 0 }]);
     const [activeTab, setActiveTab] = useState("0");
+    const [isLoading, setIsLoading] = useState(false);
+    const [venueSelected, setVenueSelected] = useState(false);
+    
+    const { venues, loading: venuesLoading } = useSelector((state) => state.locations);
+    const { filteredTickets, loading: ticketsLoading } = useSelector((state) => state.tickets);
+
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
         venue: [{ required: true, message: "Please select a venue" }],
     };
+
+    useEffect(() => {
+        const currentValues = form.getFieldsValue();
+        if (!currentValues.screens) {
+            currentValues.screens = [];
+        }
+
+        screens.forEach((screen, index) => {
+            if (!currentValues.screens[index]) {
+                currentValues.screens[index] = {};
+            }
+            currentValues.screens[index].screen_number = `screen ${index + 1}`;
+        });
+
+        form.setFieldsValue(currentValues);
+    }, [screens, form]);
 
     const addScreen = () => {
         const newScreens = [...screens, { key: screens.length }];
@@ -43,7 +66,8 @@ const AddScreenFormFields = () => {
     };
 
     const handlePlaceSelect = (id) => {
-        dispatch(getVenues({ place_id: id }));
+        setIsLoading(true);
+        dispatch(getVenues({ place_id: id, is_indoor: true }));
         form.resetFields([
             "venue_id",
             "screens",
@@ -52,17 +76,23 @@ const AddScreenFormFields = () => {
         dispatch(resetTicketSelection());
         dispatch(setSelectedVenueList("clear"));
         setScreens([{ key: 0 }]);
+        setVenueSelected(false);
+        setIsLoading(false);
     }
 
     const handleVenueSelect = (venue) => {
+        setIsLoading(true);
         form.resetFields(["screens"]);
         setScreens([{ key: 0 }]);
+        setVenueSelected(!!venue);
+        setIsLoading(false);
     }
 
     const handleSubmit = (event) => {
         event.preventDefault();
         form.validateFields().then(values => {
             console.log("Form submitted:", values);
+            // You can add your API call here
         }).catch(errorInfo => {
             console.log("Validation failed:", errorInfo);
         });
@@ -72,7 +102,16 @@ const AddScreenFormFields = () => {
         <Form form={form} layout="vertical">
             <Row gutter={16} align="top">
                 <Col xs={24} sm={24} md={24}>
-                    <Card title="Venue Selection">
+                    <Card 
+                        title={
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <span>Venue Selection</span>
+                                <InfoCircleOutlined style={{ marginLeft: '8px', color: '#8c8c8c' }} />
+                            </div>
+                        }
+                        bordered
+                        className="venue-selection-card"
+                    >
                         <Row gutter={16}>
                             <Col xs={24} sm={12}>
                                 <PlaceWithCountryForm
@@ -94,51 +133,92 @@ const AddScreenFormFields = () => {
                         </Row>
                     </Card>
                 </Col>
+            </Row>
 
-                <Col xs={24} sm={24} md={24} style={{ marginTop: 16 }}>
-                    <Card
-                        title="Screen Information"
-                        extra={
-                            <Button
-                                type="primary"
-                                icon={<PlusOutlined />}
-                                onClick={addScreen}
-                            >
-                                Add Screen
-                            </Button>
-                        }
-                    >
-                        <Tabs
-                            activeKey={activeTab}
-                            onChange={setActiveTab}
-                            type="card"
-                            items={screens.map((screen, index) => ({
-                                label: `Screen ${index + 1}`,
-                                key: String(index),
-                                children: (
-                                    <ScreenForm
-                                        form={form}
-                                        index={index}
-                                        onRemove={removeScreen}
-                                        isOnlyScreen={screens.length === 1}
+            <div style={{ marginTop: 16 }}>
+                <Collapse in={!!form.getFieldValue('venue_id')}>
+                    <div>
+                            <div style={{ textAlign: 'center', padding: '20px' }}>
+                            </div>
+                            <>
+                                {filteredTickets && filteredTickets.length === 0 && venueSelected && (
+                                    <Alert
+                                        message="No Ticket Structures Available"
+                                        description="There are no ticket structures available for this venue. Please configure ticket structures before adding screens."
+                                        type="warning"
+                                        showIcon
+                                        style={{ marginBottom: '16px' }}
                                     />
-                                )
-                            }))}
-                        />
-                    </Card>
-                </Col>
-            </Row>
+                                )}
+                                
+                                <Col xs={24} sm={24} md={24}>
+                                    <Card
+                                        title={
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Title level={4}>Screen Information</Title>
+                                                <Button
+                                                    type="primary"
+                                                    icon={<PlusOutlined />}
+                                                    onClick={addScreen}
+                                                    disabled={!venueSelected}
+                                                >
+                                                    Add Screen
+                                                </Button>
+                                            </div>
+                                        }
+                                        bordered
+                                        className="screen-information-card"
+                                    >
+                                        {!venueSelected ? (
+                                            <Alert
+                                                message="Venue Required"
+                                                description="Please select a venue to configure screens."
+                                                type="info"
+                                                showIcon
+                                            />
+                                        ) : (
+                                            <Tabs
+                                                activeKey={activeTab}
+                                                onChange={setActiveTab}
+                                                type="card"
+                                                items={screens.map((screen, index) => ({
+                                                    label: `Screen ${index + 1}`,
+                                                    key: String(index),
+                                                    children: (
+                                                        <ScreenForm
+                                                            form={form}
+                                                            index={index}
+                                                            onRemove={removeScreen}
+                                                            isOnlyScreen={screens.length === 1}
+                                                            screenNumber={index + 1}
+                                                            venue_id={form.getFieldValue('venue_id')}
+                                                        />
+                                                    )
+                                                }))}
+                                            />
+                                        )}
+                                    </Card>
+                                </Col>
 
-            <Row justify="end" style={{ marginTop: '20px' }}>
-                <Space>
-                    <DiscardButton form={form} />
-                    <Button type="primary" onClick={handleSubmit}>
-                        Submit
-                    </Button>
-                </Space>
-            </Row>
+                                <Row justify="end" style={{ marginTop: '20px' }}>
+                                    <Space>
+                                        <DiscardButton form={form} />
+                                        <Button 
+                                            type="primary" 
+                                            onClick={handleSubmit}
+                                            disabled={!venueSelected || isLoading}
+                                            loading={isLoading}
+                                        >
+                                            Submit
+                                        </Button>
+                                    </Space>
+                                </Row>
+                            </>
+                    </div>
+                </Collapse>
+            </div>
         </Form>
     )
 }
 
-export default AddScreenFormFields
+export default AddScreenFormFields;
