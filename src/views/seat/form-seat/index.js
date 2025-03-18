@@ -6,6 +6,7 @@ import Flex from 'components/shared-components/Flex'
 import ProductListData from "assets/data/product-list.data.json"
 import SeatFormFields from '../components/SeatFormFields';
 import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
+import SeatEditor from '../components/SeatEditor';
 
 
 const getBase64 = (img, callback) => {
@@ -113,11 +114,13 @@ const SeatForm = props => {
 							{
 								label: 'General',
 								key: '1',
-								children: <SeatFormFields
-									uploadedImg={uploadedImg} 
-									uploadLoading={uploadLoading} 
-									handleUploadChange={handleUploadChange}
-								/>,
+								children:
+								//   <SeatFormFields
+								// 	uploadedImg={uploadedImg} 
+								// 	uploadLoading={uploadLoading} 
+								// 	handleUploadChange={handleUploadChange}
+								// /> , 
+								<SeatEditor/>
 							},
 						]}
 					/>

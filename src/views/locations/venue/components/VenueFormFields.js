@@ -52,6 +52,8 @@ import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
+import ReactQuill from "react-quill";
+import TextEditor from "components/util-components/FormItems/TextEditor";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -327,7 +329,9 @@ const VenueFormFields = ({ mode, venue }) => {
                 { required: true, message: RulesMessageConstants.DESCRIPTION },
               ]}
             >
-              <Input.TextArea rows={4} placeholder="Enter venue description" />
+              {" "}
+              <TextEditor />
+              {/* <Input.TextArea rows={4} placeholder="Enter venue description" /> */}
             </Form.Item>
             <Form.Item
               name="latitude"
