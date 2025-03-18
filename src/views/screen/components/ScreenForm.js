@@ -5,6 +5,7 @@ import { useDispatch } from 'react-redux';
 import { fetchAllTickets } from 'store/slices/ticketSlice';
 import { screenOptions } from 'constants/ScreenConstants';
 import TicketConfiguration from './TicketConfiguration';
+import ScreenTechnology from './ScreenTechnology';
 
 const { Option } = Select;
 const { Title } = Typography;
@@ -75,7 +76,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                         <InputNumber min={1} placeholder="Total seats" style={{ width: '100%' }} />
                     </Form.Item>
                 </Col>
-                <Col xs={24} md={12}>
+                {/* <Col xs={24} md={12}>
                     <Form.Item name={['screens', index, 'seat_structure_id']} label="Seat Structure">
                         <Select placeholder="Select seat structure">
                             {screenOptions.seatStructures.map(({ value, label }) => (
@@ -83,7 +84,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                             ))}
                         </Select>
                     </Form.Item>
-                </Col>
+                </Col> */}
             </Row>
 
             <Form.Item name={['screens', index, 'description']} label="Description">
@@ -97,16 +98,16 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
-                    <Form.Item name={['screens', index, 'has_reserved_seating']} label="Reserved Seating" valuePropName="checked">
+                    <Form.Item name={['screens', index, 'reserved_seating']} label="Reserved Seating" valuePropName="checked">
                         <Switch />
                     </Form.Item>
                 </Col>
             </Row>
 
             <TicketConfiguration
-            form={form} 
-            index={index} 
-            rules={rules} />
+                form={form}
+                index={index}
+                rules={rules} />
 
             <Form.Item name={['screens', index, 'available_times']} label="Available Times">
                 <Select mode="multiple" placeholder="Select available time slots">
@@ -119,7 +120,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
             <Card title="Additional Settings" style={{ marginBottom: '20px' }}>
                 <Row gutter={16}>
                     <Col xs={24} md={12}>
-                        <Form.Item name={['screens', index, 'accessibility_features']} label="Accessibility Features">
+                        <Form.Item name={['screens', index, 'accessibility']} label="Accessibility Features">
                             <Select mode="multiple" placeholder="Select features">
                                 {screenOptions.accessibilityFeatures.map(({ value, label }) => (
                                     <Option key={value} value={value}>{label}</Option>
@@ -128,17 +129,11 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                         </Form.Item>
                     </Col>
                     <Col xs={24} md={12}>
-                        <Form.Item name={['screens', index, 'screen_technology']} label="Screen Technology">
-                            <Select placeholder="Select technology">
-                                {screenOptions.screenTechnologies.map(({ value, label }) => (
-                                    <Option key={value} value={value}>{label}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
+                        <ScreenTechnology form={form} index={index} />
                     </Col>
                 </Row>
 
-                <Form.Item name={['screens', index, 'audio_system']} label="Audio System">
+                <Form.Item name={['screens', index, 'audio_id']} label="Audio System">
                     <Select placeholder="Select audio system">
                         {screenOptions.audioSystems.map(({ value, label }) => (
                             <Option key={value} value={value}>{label}</Option>
