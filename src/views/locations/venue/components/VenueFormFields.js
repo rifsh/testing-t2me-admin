@@ -336,31 +336,37 @@ const VenueFormFields = ({ mode, venue }) => {
             >
               <Input placeholder="Enter the address" />
             </Form.Item>
-            <Form.Item
-              name="capacity"
-              label="Capacity"
-              rules={[
-                { required: true, message: RulesMessageConstants.CAPACITY },
-              ]}
-            >
-              <Input
-                type="number"
-                placeholder="Enter capacity"
-                onWheel={(e) => e.target.blur()}
-              />
-            </Form.Item>
-            <Form.Item
-              name="indoor"
-              label="Indoor/Outdoor"
-              rules={[
-                { required: true, message: RulesMessageConstants.INDOOR },
-              ]}
-            >
-              <Select className="w-100" placeholder="Select type">
-                <Option value={true}>Indoor</Option>
-                <Option value={false}>Outdoor</Option>
-              </Select>
-            </Form.Item>
+            <Row gutter={5}>
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  name="capacity"
+                  label="Capacity"
+                  rules={[
+                    { required: true, message: RulesMessageConstants.CAPACITY },
+                  ]}
+                >
+                  <Input
+                    type="number"
+                    placeholder="Enter capacity"
+                    onWheel={(e) => e.target.blur()}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  name="indoor"
+                  label="Indoor/Outdoor"
+                  rules={[
+                    { required: true, message: RulesMessageConstants.INDOOR },
+                  ]}
+                >
+                  <Select className="w-100" placeholder="Select type">
+                    <Option value={true}>Indoor</Option>
+                    <Option value={false}>Outdoor</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
 
             <Form.Item
               noStyle
