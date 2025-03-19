@@ -266,7 +266,7 @@ export const protectedRoutes = [
   },
   {
     key: "payment.add",
-    path: `${APP_PREFIX_PATH}/payment/payment`,
+    path: `${APP_PREFIX_PATH}/payment/add`,
     component: React.lazy(() => import("views/payment/add-payment")),
   },
   {
@@ -507,9 +507,7 @@ export const protectedRoutes = [
   {
     key: "lead.event.list",
     path: `${APP_PREFIX_PATH}/leadevent/list`,
-    component: React.lazy(() =>
-      import("views/leadevent/eventrequest-list")
-    ),
+    component: React.lazy(() => import("views/leadevent/eventrequest-list")),
   },
   {
     key: "lead.event.details",
