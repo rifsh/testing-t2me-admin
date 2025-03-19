@@ -179,7 +179,7 @@ const SeatList = () => {
         />
       </div>
     </Card>
-  );
+      );
 };
 
 export default SeatList;

@@ -394,9 +394,22 @@ export const ticketSlice = createSlice({
       })
       .addCase(fetchAllTickets.fulfilled, (state, { payload }) => {
         state.loading = false;
-        console.warn("payload", payload);
-        state.filteredTickets = payload[0].items;
-        state.pagination = payload;
+        if (Array.isArray(payload) && payload.length > 0) {
+          state.filteredTickets = payload[0].items || [];
+          state.pagination = {
+            page: payload[0].page || 1,
+            size: payload[0].size || 10,
+            total: payload[0].total || 0,
+          };
+        } else {
+          // Handle non-array payload or direct payload structure
+          state.filteredTickets = payload.items || [];
+          state.pagination = {
+            page: payload.page || 1,
+            size: payload.size || 10,
+            total: payload.total || 0,
+          };
+        }
         state.editable_status = payload.editable_status;
       })
       .addCase(fetchAllTickets.rejected, (state, { payload }) => {

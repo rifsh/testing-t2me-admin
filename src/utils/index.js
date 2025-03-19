@@ -439,12 +439,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-          (document.cookie = cookie
-            .replace(/^ +/, "")
-            .replace(
-              /=.*/,
-              "=;expires=" + new Date(0).toUTCString() + ";path=/"
-            ))
+        (document.cookie = cookie
+          .replace(/^ +/, "")
+          .replace(
+            /=.*/,
+            "=;expires=" + new Date(0).toUTCString() + ";path=/"
+          ))
       );
 
     // Unregister Service Workers
@@ -602,14 +602,14 @@ class Utils {
             formData.append(key, JSON.stringify([]));
             return;
           }
-        
+
           const serializedServices = value
             .filter((service) => service.title && Array.isArray(service.add))
             .map((service) => ({
               title: service.title,
               services: service.add,
             }));
-        
+
           formData.append(key, JSON.stringify(serializedServices));
           return;
         }
@@ -618,14 +618,14 @@ class Utils {
             formData.append(key, JSON.stringify([]));
             return;
           }
-        
+
           const serializedServices = value
             .filter((service) => service.title && Array.isArray(service.add))
             .map((service) => ({
               title: service.title,
               services: service.add,
             }));
-        
+
           formData.append(key, JSON.stringify(serializedServices));
           return;
         }
@@ -637,7 +637,7 @@ class Utils {
             formData.append(key, JSON.stringify([])); // Pass an empty array
             return;
           }
-        
+
           // Filter and map valid entries
           const serializedQNA = value
             .filter((qna) => qna.title && Array.isArray(qna.qna)) // Ensure title and qna exist
@@ -650,12 +650,12 @@ class Utils {
                   answer: qa.answer,
                 })),
             }));
-        
+
           // Append serialized JSON to formData
           formData.append(key, JSON.stringify(serializedQNA));
           return;
         }
-        
+
         if (key === "isComingSoonImage") {
           if (value.length === 0) {
             formData.append(key, "");
@@ -682,6 +682,18 @@ class Utils {
         //   formData.append(key, value.join(','));
         //   return;
         // }
+        if (key === "audios") {
+          formData.append("audios", JSON.stringify(value));
+          return;
+        }
+        if (key === "screen_tech") {
+          formData.append("screen_tech", JSON.stringify(value));
+          return;
+        }
+        if (key === "accessbility_feature") {
+          formData.append("accessbility_feature", JSON.stringify(value));
+          return;
+        }
         if (key === "ticket_structure") {
           formData.append("ticket_structure", JSON.stringify(value));
           return;

@@ -60,6 +60,8 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 import VenueTechnology from "./VenueTechnology";
+import ReactQuill from "react-quill";
+import TextEditor from "components/util-components/FormItems/TextEditor";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -88,7 +90,6 @@ const VenueFormFields = ({ mode, venue }) => {
     validationStatus,
     placeValidationDialogVisible,
     message: warningMessage,
-    message,
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
@@ -147,79 +148,89 @@ const VenueFormFields = ({ mode, venue }) => {
   };
 
   const handleBeforeUpload = Utils.handleBeforeUpload;
-  
+
+
   const onFinish = async () => {
-    const values = await form.validateFields();
-      console.log("Form submitted:", values);
-    // form.validateFields().then(values => {
+    try {
+      // Validate form fields
+      const values = await form.validateFields();
 
-    // }).catch(errorInfo => {
-    //   console.log("Validation failed:", errorInfo);
-    // });
+      if (mode === "EDIT") {
+        console.log("ITS AN EDITTTTTTTTTTTTT");
 
-    if (mode === "EDIT") {
-      console.log("ITS AN EDITTTTTTTTTTTTT");
+        // Prepare data for edit mode
+        const data = {
+          ...values,
+          place_id: selectedPlace ?? venue.place?.id,
+          latitude: coordinates.lat || 0,
+          longitude: coordinates.lng || 0,
+          capacity: values.capacity || 0,
+          indoor: values.indoor !== undefined ? values.indoor : false,
+          address: values.address,
+          description: values.description,
+          audios: !values.audios ? [] : values.audios,
+          screen_tech: !values.screen_tech ? [] : values.screen_tech,
+          accessbility_feature: !values.accessbility_feature ? [] : values.accessbility_feature,
+          venue_add_on_services: !values.venue_add_on_services
+            ? []
+            : values.venue_add_on_services,
+          id: venue.id,
+        };
+        console.log("Edit Data:", data);
 
-      // If placeId exists, it's an edit (Edit mode)
-      const data = {
-        ...values,
-        place_id: selectedPlace ?? venue.place?.id,
-        latitude: coordinates.lat || 0,
-        longitude: coordinates.lng || 0,
-        capacity: values.capacity || 0,
-        indoor: values.indoor !== undefined ? values.indoor : false,
-        address: values.address,
-        description: values.description,
-        venue_add_on_services: !values.venue_add_on_services
-          ? []
-          : values.venue_add_on_services,
-        id: venue.id,
-      };
-      console.log("Edit Data:", data);
+        // Validate place
+        const resultAction = await dispatch(
+          validatePlace(selectedPlace ?? venue.place?.id)
+        );
 
-      const resultAction = await dispatch(
-        validatePlace(selectedPlace ?? venue.place?.id)
-      );
+        if (validatePlace.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setPlaceValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            const editResultAction = await dispatch(
+              editVenue({ data, action: ActionType.WARNING })
+            );
 
-      if (validatePlace.fulfilled.match(resultAction)) {
-        const response = resultAction.payload;
-        if (response.message === "warning") {
-          dispatch(setPlaceValidationDialogVisible(true));
-        } else if (response.data && response.data[0]?.validation_status) {
-          const resultAction = await dispatch(
-            editVenue({ data, action: ActionType.WARNING })
-          );
-
-          if (editVenue.fulfilled.match(resultAction)) {
-            dispatch(setSelectedVenue(data));
-            dispatch(setLocationDialogVisible(true));
+            if (editVenue.fulfilled.match(editResultAction)) {
+              dispatch(setSelectedVenue(data));
+              dispatch(setLocationDialogVisible(true));
+            } else if (editVenue.rejected.match(editResultAction)) {
+              // Handle API validation errors
+              const error = editResultAction.error;
+              if (error.message) {
+                message.error(error.message); // Show error message to the user
+              }
+            }
           }
         }
-      }
-    } else {
-      try {
-        console.log("Form valuexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs:", values);
+      } else {
+        console.log("Form values:", values);
 
         if (!selectedPlace) {
           message.error("Place ID is missing. Please select a place.");
           return;
         }
 
-        // Provide default values for missing fields
+        // Prepare data for add mode
         const formData = {
           ...values,
           place_id: selectedPlace,
-          latitude: coordinates.lat || 0, // Use 0 if undefined
-          longitude: coordinates.lng || 0, // Use 0 if undefined
-          capacity: values.capacity || 0, // Ensure capacity is always a number
-          indoor: values.indoor !== undefined ? values.indoor : false, // Ensure indoor is boolean
+          latitude: coordinates.lat || 0,
+          longitude: coordinates.lng || 0,
+          capacity: values.capacity || 0,
+          indoor: values.indoor !== undefined ? values.indoor : false,
           address: values.address,
           description: values.description,
+          audios: !values.audios ? [] : values.audios,
+          screen_tech: !values.screen_tech ? [] : values.screen_tech,
+          accessbility_feature: !values.accessbility_feature ? [] : values.accessbility_feature,
           venue_add_on_services: !values.venue_add_on_services
             ? []
             : values.venue_add_on_services,
         };
 
+        // Validate place
         const resultAction = await dispatch(validatePlace(selectedPlace));
 
         if (validatePlace.fulfilled.match(resultAction)) {
@@ -229,10 +240,26 @@ const VenueFormFields = ({ mode, venue }) => {
           } else if (response.data && response.data[0]?.validation_status) {
             dispatch(setSelectedSubmitItem(formData));
           }
+        } else if (validatePlace.rejected.match(resultAction)) {
+          // Handle API validation errors
+          const error = resultAction.error;
+          if (error.message) {
+            message.error(error.message); // Show error message to the user
+          }
         }
-        // dispatch(setSelectedSubmitItem(formData));
-      } catch (errorInfo) {
-        console.error("Validation Failed:", errorInfo);
+      }
+    } catch (errorInfo) {
+      console.error("Validation Failed:", errorInfo);
+
+      // Handle form validation errors
+      if (errorInfo.errorFields) {
+        message.error(`Please fill all the required fields`);
+        errorInfo.errorFields.forEach((field) => {
+          // message.error(`${field.name.join(".")}: ${field.errors.join(", ")}`);
+          // message.error(`Fill all the required fields`);
+        });
+      } else {
+        message.error("An unexpected error occurred. Please try again.");
       }
     }
   };
@@ -358,7 +385,8 @@ const VenueFormFields = ({ mode, venue }) => {
                 { required: true, message: RulesMessageConstants.DESCRIPTION },
               ]}
             >
-              <Input.TextArea rows={4} placeholder="Enter venue description" />
+              <TextEditor />
+              {/* <Input.TextArea rows={4} placeholder="Enter venue description" /> */}
             </Form.Item>
             <Form.Item
               name="thumbnail_image"
