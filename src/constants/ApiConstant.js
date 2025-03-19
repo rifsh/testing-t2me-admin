@@ -98,6 +98,9 @@ export const ApiConstant = {
   EVENT_ORGANIZER_EVENT_UPDATE_RECHANGES:
     "/api/v1/events/secured/organizer_event_secondary_update",
 
+  //  SCREEN API ENDPOINTS
+  ADD_SCREEN_URL: "/api/v1/moies/secured/screens/creation",
+
   // VALIDATION API ENDPOINTS
 
   PLACE_VALIDATE_URL: "/api/v1/validation/secured/validate_place",

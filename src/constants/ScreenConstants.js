@@ -23,19 +23,19 @@ export const screenOptions = {
         { value: "night", label: "Night" },
     ],
     accessibilityFeatures: [
-        { value: "wheelchair", label: "Wheelchair Access" },
-        { value: "hearing_loop", label: "Hearing Loop" },
-        { value: "audio_description", label: "Audio Description" },
+        { value: 1, label: "Wheelchair Access" },
+        { value: 2, label: "Hearing Loop" },
+        { value: 3, label: "Audio Description" },
     ],
     screenTechnologies: [
-        { value: "digital", label: "Digital" },
-        { value: "laser", label: "Laser Projection" },
-        { value: "dolby", label: "Dolby Vision" },
+        { value: 1, label: "Digital" },
+        { value: 2, label: "Laser Projection" },
+        { value: 3, label: "Dolby Vision" },
     ],
     audioSystems: [
-        { value: "standard", label: "Standard" },
-        { value: "dolby_atmos", label: "Dolby Atmos" },
-        { value: "dts", label: "DTS-X" },
+        { value: 1, label: "Standard" },
+        { value: 2, label: "Dolby Atmos" },
+        { value: 3, label: "DTS-X" },
     ],
     filterTypes: [
         { label: "All Types", value: "all" },

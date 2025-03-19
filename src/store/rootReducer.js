@@ -1,6 +1,7 @@
 // rootReducer.js
 import { combineReducers } from "redux";
 import theme from "./slices/themeSlice";
+import screen from "./slices/screenSlice";
 import auth from "./slices/authSlice";
 import category from "./slices/categorySlice";
 import adCategory from "./slices/adCategorySlice";
@@ -30,6 +31,7 @@ const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
     const combinedReducer = combineReducers({
       theme,
+      screen,
       auth,
       category,
       users,
