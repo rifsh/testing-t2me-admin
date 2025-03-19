@@ -103,6 +103,9 @@ const VenueFormFields = ({ mode, venue }) => {
         latitude: venue.latitude,
         longitude: venue.longitude,
         description: venue.description,
+        screen_tech: venue.screen_tech || [],
+        audios: venue.audio || [],
+        accessbility_feature: venue.accessibility || [],
         venue_add_on_services: !venue.venue_add_on_services
           ? []
           : venue.venue_add_on_services,
@@ -127,6 +130,7 @@ const VenueFormFields = ({ mode, venue }) => {
             ]
             : [],
       });
+
     }
   }, [form, venue, mode]);
 
