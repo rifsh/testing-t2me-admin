@@ -100,6 +100,9 @@ export const ApiConstant = {
 
   //  SCREEN API ENDPOINTS
   ADD_SCREEN_URL: "/api/v1/moies/secured/screens/creation",
+  FETCH_SCREEN_TECH_URL: "/api/v1/moies/secured/screens/tech",
+  FETCH_SCREEN_AUDIO_URL: "/api/v1/moies/secured/screens/audio",
+  FETCH_SCREEN_FEATURE_URL: "/api/v1/moies/secured/screens/feature",
 
   // VALIDATION API ENDPOINTS
 

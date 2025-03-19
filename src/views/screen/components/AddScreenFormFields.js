@@ -240,7 +240,7 @@ const AddScreenFormFields = () => {
                 </Collapse>
             </div>
 
-            <SubmitAndConfirmModal 
+            <SubmitAndConfirmModal
                 responseData={screenResponse}
                 addFunction={createScreen}
                 navigationPath={`${APP_PREFIX_PATH}/screen/list`}

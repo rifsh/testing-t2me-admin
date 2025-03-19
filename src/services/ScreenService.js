@@ -14,5 +14,25 @@ ScreenService.addScreen = function (data, action) {
         data: data,
     });
 };
-
+ScreenService.fetchScreenTech = function (pageData) {
+    return fetch({
+        url: ApiConstant.FETCH_SCREEN_TECH_URL,
+        method: "get",
+        params: Utils.filterParams(pageData),
+    });
+};
+ScreenService.fetchScreenAudio = function (pageData) {
+    return fetch({
+        url: ApiConstant.FETCH_SCREEN_AUDIO_URL,
+        method: "get",
+        params: Utils.filterParams(pageData),
+    });
+};
+ScreenService.fetchScreenFeatures = function (pageData) {
+    return fetch({
+        url: ApiConstant.FETCH_SCREEN_FEATURE_URL,
+        method: "get",
+        params: Utils.filterParams(pageData),
+    });
+};
 export default ScreenService;

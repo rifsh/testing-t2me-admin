@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Form, Input, Select, Switch, InputNumber, Typography, Row, Col } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllTickets } from 'store/slices/ticketSlice';
 import { screenOptions } from 'constants/ScreenConstants';
-import TicketConfiguration from './TicketConfiguration';
-import ScreenTechnology from './ScreenTechnology';
+import ScreenTechListForm from 'components/util-components/FormItems/ScreenTechListForm';
+import { fetchScreenAudio, fetchScreenFeatures, fetchScreenTech } from 'store/slices/screenSlice';
 
 const { Option } = Select;
 const { Title } = Typography;
@@ -13,6 +13,7 @@ const { Title } = Typography;
 const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_id }) => {
     const [message, setMessage] = useState('');
     const dispatch = useDispatch();
+    const { screenTechnologies, screenAudioTechnologies, screenFeatures, techLoading } = useSelector((state) => state.screen);
 
     const rules = {
         subject: [{ required: true, message: 'Please enter screen name' }],
@@ -26,8 +27,17 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
     useEffect(() => {
         if (venue_id) {
             dispatch(fetchAllTickets({ venue_id: venue_id }));
+            dispatch(fetchScreenTech({ venue_id: venue_id }));
+            dispatch(fetchScreenAudio({ venue_id: venue_id }));
+            dispatch(fetchScreenFeatures({ venue_id: venue_id }));
+            console.log(screenTechnologies);
+
         }
     }, [venue_id, dispatch]);
+
+    const handleScreenTech = (venue) => {
+
+    }
 
     return (
         <div className="screen-form-container">
@@ -104,10 +114,10 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                 </Col>
             </Row>
 
-            <TicketConfiguration
+            {/* <TicketConfiguration
                 form={form}
                 index={index}
-                rules={rules} />
+                rules={rules} /> */}
 
             <Form.Item name={['screens', index, 'available_times']} label="Available Times">
                 <Select mode="multiple" placeholder="Select available time slots">
@@ -122,21 +132,27 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                     <Col xs={24} md={12}>
                         <Form.Item name={['screens', index, 'accessibility']} label="Accessibility Features">
                             <Select mode="multiple" placeholder="Select features">
-                                {screenOptions.accessibilityFeatures.map(({ value, label }) => (
-                                    <Option key={value} value={value}>{label}</Option>
+                                {screenFeatures.map((value) => (
+                                    <Option key={value.id} value={value.id}>{value.name}</Option>
                                 ))}
                             </Select>
                         </Form.Item>
                     </Col>
                     <Col xs={24} md={12}>
-                        <ScreenTechnology form={form} index={index} />
+                        <Form.Item name={['screens', index, 'screen_technology_id']} label="Screen Technology">
+                            <Select placeholder="Select technology">
+                                {screenTechnologies.map((value) => (
+                                    <Option key={value?.id} value={value?.id}>{value?.name}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
                     </Col>
                 </Row>
 
                 <Form.Item name={['screens', index, 'audio_id']} label="Audio System">
                     <Select placeholder="Select audio system">
-                        {screenOptions.audioSystems.map(({ value, label }) => (
-                            <Option key={value} value={value}>{label}</Option>
+                        {screenAudioTechnologies.map((value) => (
+                            <Option key={value.id} value={value.id}>{value.name}</Option>
                         ))}
                     </Select>
                 </Form.Item>
