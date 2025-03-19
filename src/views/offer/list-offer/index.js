@@ -165,7 +165,7 @@ const OfferList = () => {
         dataSource={filteredOffers}
         rowKey="id"
         loading={loading}
-        pagination={{
+        pagination={{  
           current: pagination.page,
           pageSize: pagination.size,
           total: pagination.total,

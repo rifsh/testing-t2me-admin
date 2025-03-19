@@ -56,9 +56,9 @@ const TicketList = () => {
     dispatch(fetchAllTickets(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
-  const handlePagination = (page, size) => {
-    dispatch(fetchAllTickets({ page: page, size: size }));
-  };
+const handlePagination = (page, pageSize) => {
+  dispatch(fetchAllTickets({ page: page, size: pageSize }));
+};
 
   const [selectedVenue, setSelectedVenue] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -133,7 +133,7 @@ const TicketList = () => {
           current: pagination.page,
           pageSize: pagination.size,
           total: pagination.total,
-          onChange: (page, pageSize) => handlePagination(page, pageSize),
+          onChange: handlePagination,
         }}
         columns={[
           {
@@ -214,7 +214,7 @@ const TicketList = () => {
                           </li>
                         ))}
                       </ul>
-                    </Panel>
+                    </Panel> 
                   ))
                 ) : (
                   <Panel
