@@ -1,12 +1,25 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Tabs, Button, Input, Row, Col, Form } from 'antd';
 import { DesktopOutlined, SoundOutlined, SafetyOutlined, PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 
 const VenueTechnology = ({ form }) => {
+
+    useEffect(() => {
+        // if (venueData) {
+        //     form.setFieldsValue({
+        //         screen_tech: venueData.screen_tech || [],
+        //         audios: venueData.audio || [],
+        //         accessbility_feature: venueData.accessibility || []
+        //     });
+        // }
+        console.log("edited", form.getFieldsValue());
+
+    }, [form]);
+
     return (
         <>
             <Tabs defaultActiveKey="screen" style={{ marginBottom: '24px' }}>
-                <Tabs.TabPane tab={<span><DesktopOutlined /> Screen Technology</span>} key="screen">
+                <Tabs.TabPane tab={<span><DesktopOutlined /> Screen Technology</span>} key="screen" forceRender>
                     <Form.List name="screen_tech">
                         {(fields, { add, remove }) => (
                             <>
@@ -50,7 +63,7 @@ const VenueTechnology = ({ form }) => {
                     </Form.List>
                 </Tabs.TabPane>
 
-                <Tabs.TabPane tab={<span><SoundOutlined /> Audio Technology</span>} key="audio">
+                <Tabs.TabPane tab={<span><SoundOutlined /> Audio Technology</span>} key="audio" forceRender>
                     <Form.List name="audios">
                         {(fields, { add, remove }) => (
                             <>
@@ -94,7 +107,7 @@ const VenueTechnology = ({ form }) => {
                     </Form.List>
                 </Tabs.TabPane>
 
-                <Tabs.TabPane tab={<span><SafetyOutlined /> Accessibility Features</span>} key="accessibility">
+                <Tabs.TabPane tab={<span><SafetyOutlined /> Accessibility Features</span>} key="accessibility" forceRender>
                     <Form.List name="accessbility_feature">
                         {(fields, { add, remove }) => (
                             <>
