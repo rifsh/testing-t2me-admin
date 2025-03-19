@@ -11,6 +11,10 @@ import {
   message,
   Upload,
   Typography,
+  Tabs,
+  Checkbox,
+  InputNumber,
+  Rate,
 } from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -38,6 +42,9 @@ import {
   PlusOutlined,
   UploadOutlined,
   MinusCircleOutlined,
+  DesktopOutlined,
+  SoundOutlined,
+  SafetyOutlined,
 } from "@ant-design/icons";
 import {
   SupportImageFormat,
@@ -52,6 +59,7 @@ import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
+import VenueTechnology from "./VenueTechnology";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -99,23 +107,23 @@ const VenueFormFields = ({ mode, venue }) => {
           : venue.venue_add_on_services,
         banner_images: venue?.media
           ? venue?.media?.map((banner, index) => ({
-              uid: `-banner-${index}`,
-              name: banner?.media_url.split("/").pop(),
-              status: "done",
-              url: banner?.media_url,
-            }))
+            uid: `-banner-${index}`,
+            name: banner?.media_url.split("/").pop(),
+            status: "done",
+            url: banner?.media_url,
+          }))
           : [],
 
         thumbnail_image:
           venue.thumbnail_image && venue.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: venue.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: venue.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: venue.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: venue.thumbnail_image,
+              },
+            ]
             : [],
       });
     }
@@ -139,8 +147,15 @@ const VenueFormFields = ({ mode, venue }) => {
   };
 
   const handleBeforeUpload = Utils.handleBeforeUpload;
+  
   const onFinish = async () => {
     const values = await form.validateFields();
+      console.log("Form submitted:", values);
+    // form.validateFields().then(values => {
+
+    // }).catch(errorInfo => {
+    //   console.log("Validation failed:", errorInfo);
+    // });
 
     if (mode === "EDIT") {
       console.log("ITS AN EDITTTTTTTTTTTTT");
@@ -272,14 +287,6 @@ const VenueFormFields = ({ mode, venue }) => {
               {mode === "ADD" ? "Add Venue" : "Edit Venue"}
             </h2>
 
-            <Form.Item
-              name="address"
-              label="Address"
-              rules={[{ required: true, message: "Please enter the address" }]}
-            >
-              <Input placeholder="Enter the address" />
-            </Form.Item>
-
             <PlaceWithCountryForm
               form={form}
               label={"Place"}
@@ -293,6 +300,14 @@ const VenueFormFields = ({ mode, venue }) => {
               rules={[{ required: true, message: RulesMessageConstants.VENUE }]}
             >
               <Input placeholder="Enter the venue name" />
+            </Form.Item>
+
+            <Form.Item
+              name="address"
+              label="Address"
+              rules={[{ required: true, message: "Please enter the address" }]}
+            >
+              <Input placeholder="Enter the address" />
             </Form.Item>
             <Form.Item
               name="capacity"
@@ -310,7 +325,6 @@ const VenueFormFields = ({ mode, venue }) => {
             <Form.Item
               name="indoor"
               label="Indoor/Outdoor"
-              FTRDESW
               rules={[
                 { required: true, message: RulesMessageConstants.INDOOR },
               ]}
@@ -320,6 +334,23 @@ const VenueFormFields = ({ mode, venue }) => {
                 <Option value={false}>Outdoor</Option>
               </Select>
             </Form.Item>
+
+            <Form.Item
+              noStyle
+              shouldUpdate={(prevValues, currentValues) => prevValues.indoor !== currentValues.indoor}
+            >
+              {({ getFieldValue }) => {
+                return getFieldValue('indoor') === true ? (
+                  <div className="venue-features-container">
+                    <h4>Venue Technology & Features</h4>
+                    <VenueTechnology
+                      form={form}
+                    />
+                  </div>
+                ) : null;
+              }}
+            </Form.Item>
+
             <Form.Item
               name="description"
               label="Description"
@@ -328,31 +359,6 @@ const VenueFormFields = ({ mode, venue }) => {
               ]}
             >
               <Input.TextArea rows={4} placeholder="Enter venue description" />
-            </Form.Item>
-            <Form.Item
-              name="latitude"
-              label="Latitude"
-              rules={[
-                {
-                  required: true,
-                  message: "Please select a location on the map",
-                },
-              ]}
-            >
-              <Input value={coordinates.lat} readOnly />
-            </Form.Item>
-
-            <Form.Item
-              name="longitude"
-              label="Longitude"
-              rules={[
-                {
-                  required: true,
-                  message: "Please select a location on the map",
-                },
-              ]}
-            >
-              <Input value={coordinates.lng} readOnly />
             </Form.Item>
             <Form.Item
               name="thumbnail_image"
@@ -398,6 +404,8 @@ const VenueFormFields = ({ mode, venue }) => {
               {ResolutionByServices.place} pixels.{" "}
             </Text>
           </Card>
+
+          {/* Rest of the form remains the same */}
           <Card>
             <Form.Item name="venue_add_on_services" label="Add on Services">
               <Form.List name="venue_add_on_services">
@@ -409,12 +417,10 @@ const VenueFormFields = ({ mode, venue }) => {
                           {...restField}
                           name={[name, "title"]}
                           label="Title"
-                          //rules={[{ required: true, message: "Title is required" }]}
                         >
                           <Input placeholder="Enter title" />
                         </Form.Item>
 
-                        {/* Use "services" instead of "add" to match the data structure */}
                         <Form.List name={[name, "services"]}>
                           {(
                             serviceFields,
@@ -439,7 +445,6 @@ const VenueFormFields = ({ mode, venue }) => {
                                         <Form.Item
                                           {...serviceRestField}
                                           name={[serviceName]}
-                                          //rules={[{ required: false, message: "Service is required" }]}
                                           style={{ width: "100%" }}
                                         >
                                           <Input placeholder="Enter service" />
@@ -458,7 +463,7 @@ const VenueFormFields = ({ mode, venue }) => {
                                 <Col span={12}>
                                   <Button
                                     type="dashed"
-                                    onClick={() => addService("")} // Add an empty string to the array
+                                    onClick={() => addService("")}
                                     block
                                     icon={<PlusOutlined />}
                                   >
@@ -497,7 +502,31 @@ const VenueFormFields = ({ mode, venue }) => {
               </Form.List>
             </Form.Item>
           </Card>
+          <Form.Item
+            name="latitude"
+            label="Latitude"
+            rules={[
+              {
+                required: true,
+                message: "Please select a location on the map",
+              },
+            ]}
+          >
+            <Input value={coordinates.lat} readOnly />
+          </Form.Item>
 
+          <Form.Item
+            name="longitude"
+            label="Longitude"
+            rules={[
+              {
+                required: true,
+                message: "Please select a location on the map",
+              },
+            ]}
+          >
+            <Input value={coordinates.lng} readOnly />
+          </Form.Item>
           <Card>
             <div className="mb-3">
               <h3>Pick Location</h3>
