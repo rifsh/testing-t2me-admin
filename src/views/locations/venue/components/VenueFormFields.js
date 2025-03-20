@@ -462,7 +462,7 @@ const VenueFormFields = ({ mode, venue }) => {
                                     block
                                     icon={<PlusOutlined />}
                                   >
-                                    Service
+                                    Add Service
                                   </Button>
                                 </Col>
                                 <Col span={12}>
