@@ -19,8 +19,7 @@ export const screenOptions = {
     availableTimes: [
         { value: "morning", label: "Morning" },
         { value: "afternoon", label: "Afternoon" },
-        { value: "evening", label: "Evening" },
-        { value: "night", label: "Night" },
+        { value: "night", label: "Midnight" },
     ],
     accessibilityFeatures: [
         { value: 1, label: "Wheelchair Access" },

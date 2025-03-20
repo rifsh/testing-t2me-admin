@@ -4,275 +4,290 @@ import {
     Col,
     Row,
     Typography,
-    Tabs,
     Descriptions,
     Tag,
     Space,
-    Button,
     Divider,
     Image,
-    Empty
+    Empty,
 } from 'antd';
 import {
-    EditOutlined,
-    DeleteOutlined,
-    ArrowLeftOutlined,
     EnvironmentOutlined,
-    ProjectOutlined,
-    TeamOutlined
+    TeamOutlined,
+    SoundOutlined,
+    VideoCameraOutlined,
+    CalendarOutlined,
+    CheckCircleOutlined,
+    CloseCircleOutlined
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { fetchScreenById } from 'store/slices/screenSlice';
+import Flex from 'components/shared-components/Flex';
+import LoadingOverlay from 'components/util-components/Loader';
+import BackPageButoon from 'components/Buttons/BackPageButoon';
+import { mockTimeSlots } from 'constants/TimeSlots';
 
-const { Title, Text } = Typography;
-const { TabPane } = Tabs;
+const { Title, Text, Paragraph } = Typography;
 
-const ScreenDetailsView = () => {
+const ScreenDetailView = () => {
     const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const { venueId } = useParams();
-    const [loading, setLoading] = useState(true);
-    const [venueDetails, setVenueDetails] = useState(null);
-    const [screens, setScreens] = useState([]);
-    const [activeTab, setActiveTab] = useState("0");
+    const { screenId } = useParams();
 
-    // Simulating fetching venue and screen data
+    const [screenData, setScreenData] = useState(null);
+
+    const { response, loading: screenLoading } = useSelector((state) => state.screen);
+
     useEffect(() => {
-        // Replace with actual API call
-        const fetchData = async () => {
-            try {
-                // Simulate API delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
+        dispatch(fetchScreenById({ screen_id: screenId }));
+    }, [screenId, dispatch]);
 
-                // Sample data - replace with actual API response
-                const mockVenueData = {
-                    id: venueId,
-                    name: "Cinema Palace",
-                    place: "New York",
-                    country: "United States",
-                    address: "123 Movie Street, NY 10001"
-                };
 
-                const mockScreensData = [
-                    {
-                        id: "scr001",
-                        name: "Screen 1",
-                        capacity: 150,
-                        screen_type: "2D",
-                        facilities: ["Recliner Seats", "Dolby Sound"],
-                        seating_layout: "/images/seating/screen1.jpg",
-                        is_active: true,
-                        description: "Our main screen with premium viewing experience"
-                    },
-                    {
-                        id: "scr002",
-                        name: "Screen 2",
-                        capacity: 120,
-                        screen_type: "3D",
-                        facilities: ["Regular Seats", "Dolby Atmos"],
-                        seating_layout: "/images/seating/screen2.jpg",
-                        is_active: true,
-                        description: "3D-enabled screen with stunning audio"
-                    }
-                ];
+    const getAccessibilityTags = (accessibilityList) => {
+        if (!accessibilityList || accessibilityList.length === 0) {
+            return <Tag color="default">None</Tag>;
+        }
 
-                setVenueDetails(mockVenueData);
-                setScreens(mockScreensData);
-                setLoading(false);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-                setLoading(false);
-            }
+        return accessibilityList.map(item => (
+            <Tag key={item.id} color="purple">{item.name}</Tag>
+        ));
+    };
+
+    const getScreenTypeTag = (technology) => {
+        if (!technology) return <Tag color="default">Standard</Tag>;
+
+        const typeColors = {
+            '4k': 'magenta',
+            '8k': 'magenta',
+            'standard': 'blue',
+            'imax': 'purple',
+            'vip': 'gold',
+            '4dx': 'green',
+            '3d': 'cyan'
         };
 
-        fetchData();
-    }, [venueId]);
-
-    const handleEditScreen = (screenId) => {
-        navigate(`/venues/${venueId}/screens/${screenId}/edit`);
-    };
-
-    const handleDeleteScreen = (screenId) => {
-        // Implement confirmation modal and delete logic
-        console.log("Delete screen:", screenId);
-    };
-
-    const handleBackToList = () => {
-        navigate('/venues');
-    };
-
-    const handleAddNewScreen = () => {
-        navigate(`/venues/${venueId}/screens/add`);
-    };
-
-    const renderScreenContent = (screen, index) => {
         return (
-            <div className="screen-details-container">
-                <Row gutter={[16, 16]}>
-                    <Col span={24}>
-                        <Card>
-                            <Row justify="space-between" align="middle">
-                                <Col>
-                                    <Title level={4}>{screen.name}</Title>
-                                </Col>
-                                <Col>
-                                    <Space>
-                                        <Button
-                                            icon={<EditOutlined />}
-                                            onClick={() => handleEditScreen(screen.id)}
-                                        >
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            danger
-                                            icon={<DeleteOutlined />}
-                                            onClick={() => handleDeleteScreen(screen.id)}
-                                        >
-                                            Delete
-                                        </Button>
-                                    </Space>
-                                </Col>
-                            </Row>
-
-                            <Divider />
-
-                            <Descriptions bordered column={{ xxl: 3, xl: 3, lg: 3, md: 2, sm: 1, xs: 1 }}>
-                                <Descriptions.Item label="Screen Type">
-                                    <Tag color="blue">{screen.screen_type}</Tag>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Capacity">
-                                    <Tag icon={<TeamOutlined />}>{screen.capacity} seats</Tag>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Status">
-                                    {screen.is_active ?
-                                        <Tag color="green">Active</Tag> :
-                                        <Tag color="red">Inactive</Tag>
-                                    }
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Facilities" span={3}>
-                                    {screen.facilities.map(facility => (
-                                        <Tag key={facility} color="cyan" style={{ margin: '0 8px 8px 0' }}>
-                                            {facility}
-                                        </Tag>
-                                    ))}
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Description" span={3}>
-                                    {screen.description}
-                                </Descriptions.Item>
-                            </Descriptions>
-
-                            <Divider orientation="left">Seating Layout</Divider>
-
-                            <div className="seating-layout-container">
-                                {/* Placeholder for seating layout */}
-                                <div className="layout-placeholder" style={{ textAlign: 'center' }}>
-                                    <Image
-                                        width={400}
-                                        height={300}
-                                        src="/api/placeholder/400/300"
-                                        alt="Seating Layout"
-                                        fallback="/api/placeholder/400/300"
-                                    />
-                                </div>
-                            </div>
-                        </Card>
-                    </Col>
-                </Row>
-            </div>
+            <Tag color={typeColors[technology.name.toLowerCase()] || 'blue'}>
+                {technology.name.toUpperCase()}
+            </Tag>
         );
     };
 
-    if (loading) {
-        return (
-            <Card loading={true}>
-                <div style={{ height: 400 }}></div>
-            </Card>
-        );
-    }
+    const getAudioTag = (audio) => {
+        if (!audio) return <Tag color="default">Standard</Tag>;
 
-    if (!venueDetails) {
+        const audioColors = {
+            'dolby': 'orange',
+            'dolby atmos': 'volcano',
+            'dts': 'gold',
+            'thx': 'lime'
+        };
+
         return (
-            <Card>
-                <Empty
-                    description="Venue not found"
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                />
-                <div style={{ textAlign: 'center', marginTop: 16 }}>
-                    <Button type="primary" onClick={handleBackToList}>
-                        Back to Venues
-                    </Button>
-                </div>
-            </Card>
+            <Tag icon={<SoundOutlined />} color={audioColors[audio.name.toLowerCase()] || 'orange'}>
+                {audio.name.toUpperCase()}
+            </Tag>
+        );
+    };
+
+    const getSeatingLabel = (isReserved) => {
+        return isReserved ?
+            <Tag icon={<CheckCircleOutlined />} color="green">Reserved Seating</Tag> :
+            <Tag icon={<CloseCircleOutlined />} color="orange">Open Seating</Tag>;
+    };
+
+    if (screenLoading) {
+        return (
+            <LoadingOverlay loading={true} />
+
         );
     }
 
     return (
         <>
-            <Row style={{ marginBottom: 16 }}>
-                <Col>
-                    <Button
-                        icon={<ArrowLeftOutlined />}
-                        onClick={handleBackToList}
-                    >
-                        Back to Venues
-                    </Button>
-                </Col>
-            </Row>
+            <BackPageButoon
+                path='/screen/list'
+            />
 
-            <Card
-                title={
-                    <Space>
-                        <EnvironmentOutlined />
-                        <span>{venueDetails.name}</span>
-                    </Space>
-                }
-                extra={
-                    <Button
-                        type="primary"
-                        icon={<ProjectOutlined />}
-                        onClick={handleAddNewScreen}
-                    >
-                        Add New Screen
-                    </Button>
-                }
-            >
-                <Descriptions column={{ xxl: 3, xl: 3, lg: 2, md: 2, sm: 1, xs: 1 }} style={{ marginBottom: 16 }}>
-                    <Descriptions.Item label="Place">{venueDetails.place}</Descriptions.Item>
-                    <Descriptions.Item label="Country">{venueDetails.country}</Descriptions.Item>
-                    <Descriptions.Item label="Address">{venueDetails.address}</Descriptions.Item>
-                </Descriptions>
+            <Card>
+                <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+                    <Col>
+                        <Title level={3}>
+                            <Space>
+                                <VideoCameraOutlined />
+                                {response?.screen_name}
+                                <Text type="secondary" style={{ fontSize: '16px' }}>({response?.screen_number})</Text>
+                            </Space>
+                        </Title>
+                    </Col>
+                </Row>
+
+                <Divider orientation="left" >Screen Information</Divider>
+
+                <Row gutter={[24, 24]}>
+                    <Col xs={24} lg={16}>
+                        <Descriptions
+                            bordered
+                            column={{ xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1 }}
+                            size="middle"
+                        >
+                            <Descriptions.Item label="Venue" span={2}>
+                                <Space>
+                                    <EnvironmentOutlined />
+                                    <Text strong>{response?.venue?.name || 'N/A'}</Text>
+                                </Space>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Location">
+                                {response?.venue?.place?.name || 'N/A'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Country">
+                                {response?.venue?.place?.country?.name || 'N/A'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Technology">
+                                {getScreenTypeTag(response?.screen_technology)}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Audio System">
+                                {getAudioTag(response?.audio)}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Capacity">
+                                <Tag icon={<TeamOutlined />} color="blue">
+                                    {response?.capacity} seats
+                                </Tag>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Seating Type">
+                                {getSeatingLabel(response?.reserved_seating)}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Accessibility Features" span={2}>
+                                {getAccessibilityTags(response?.accessibilty)}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Description" span={2}>
+                                {response?.description || 'No description available'}
+                            </Descriptions.Item>
+                        </Descriptions>
+                    </Col>
+
+                    <Col xs={24} lg={8}>
+                        <Card title="Technology Overview" bordered={false} className="h-100">
+                            <Flex flexDirection="column" justifyContent="space-between" className="h-100">
+                                <div>
+                                    <Paragraph>
+                                        <Space direction="vertical" style={{ width: '100%' }}>
+                                            <Flex justifyContent="space-between">
+                                                <Text strong>Screen Type:</Text>
+                                                {getScreenTypeTag(response?.screen_technology)}
+                                            </Flex>
+                                            <Flex justifyContent="space-between">
+                                                <Text strong>Audio System:</Text>
+                                                {getAudioTag(response?.audio)}
+                                            </Flex>
+                                            <Flex justifyContent="space-between">
+                                                <Text strong>Seating:</Text>
+                                                {getSeatingLabel(response?.reserved_seating)}
+                                            </Flex>
+                                        </Space>
+                                    </Paragraph>
+
+                                    {response?.screen_technology?.description && (
+                                        <>
+                                            <Divider />
+                                            <Title level={5}>Technology Details</Title>
+                                            <Paragraph>
+                                                {response?.screen_technology.description}
+                                            </Paragraph>
+                                        </>
+                                    )}
+
+                                    {response?.audio?.description && (
+                                        <>
+                                            <Divider />
+                                            <Title level={5}>Audio System Details</Title>
+                                            <Paragraph>
+                                                {response?.audio.description}
+                                            </Paragraph>
+                                        </>
+                                    )}
+                                </div>
+                            </Flex>
+                        </Card>
+                    </Col>
+                </Row>
+
+                <Divider orientation="left">Seating Layout</Divider>
+
+                {response?.seat_structure_id ? (
+                    <div className="seating-layout-container">
+                        {/* Real seating layout would be integrated here */}
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                            <Image
+                                width={600}
+                                src="/api/placeholder/600/400"
+                                alt="Seating Layout"
+                                fallback="/api/placeholder/600/400"
+                            />
+                        </div>
+                    </div>
+                ) : (
+                    <Empty
+                        description="No seating layout available"
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    />
+                )}
+
+                {response?.time_slots && response.time_slots.length > 0 && (
+                    <>
+                        <Divider orientation="left">
+                            <Space>
+                                <CalendarOutlined />
+                                Available Time Slots
+                            </Space>
+                        </Divider>
+
+                        {response.time_slots.map((slotType, typeIndex) => (
+                            <React.Fragment key={typeIndex}>
+                                <Title level={5} style={{ marginTop: typeIndex > 0 ? 16 : 0 }}>
+                                    {slotType}
+                                </Title>
+                                <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                                    {mockTimeSlots[slotType]?.map((timeRange, timeIndex) => (
+                                        <Col key={`${typeIndex}-${timeIndex}`} xs={24} sm={12} md={8} lg={6}>
+                                            <Card
+                                                size="small"
+                                                style={{ textAlign: 'center' }}
+                                            >
+                                                <Text>{timeRange}</Text>
+                                            </Card>
+                                        </Col>
+                                    ))}
+                                </Row>
+                            </React.Fragment>
+                        ))}
+                    </>
+                )}
+
+                {/* {screenDetail.screen_ticket_structure && screenDetail.screen_ticket_structure.length > 0 && (
+                    <>
+                        <Divider orientation="left">
+                            <Space>
+                                <SettingOutlined />
+                                Ticket Structure
+                            </Space>
+                        </Divider>
+
+                        <Row gutter={[16, 16]}>
+                            {screenDetail.screen_ticket_structure.map((ticket, index) => (
+                                <Col key={index} xs={24} sm={12} md={8} lg={6}>
+                                    <Card size="small">
+                                        <Text>{ticket}</Text>
+                                    </Card>
+                                </Col>
+                            ))}
+                        </Row>
+                    </>
+                )} */}
             </Card>
 
-            <div style={{ marginTop: 16 }}>
-                <Card
-                    title="Screen Details"
-                    className="screen-details-card"
-                >
-                    {screens.length > 0 ? (
-                        <Tabs
-                            activeKey={activeTab}
-                            onChange={setActiveTab}
-                            type="card"
-                            items={screens.map((screen, index) => ({
-                                label: screen.name,
-                                key: String(index),
-                                children: renderScreenContent(screen, index)
-                            }))}
-                        />
-                    ) : (
-                        <Empty description="No screens found for this venue">
-                            <Button
-                                type="primary"
-                                onClick={handleAddNewScreen}
-                            >
-                                Add Screen
-                            </Button>
-                        </Empty>
-                    )}
-                </Card>
-            </div>
         </>
     );
 };
 
-export default ScreenDetailsView;
+export default ScreenDetailView;

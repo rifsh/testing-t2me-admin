@@ -16,24 +16,62 @@ import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { useNavigate } from 'react-router-dom';
 import { screensMockData } from './MockData';
 import { screenOptions } from 'constants/ScreenConstants';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchScreenData } from 'store/slices/screenSlice';
+import { setEditItemId } from 'store/slices/categorySlice';
+import { setLocationDialogVisible } from 'store/slices/locationSlice';
+import WarningModal from 'components/util-components/ModalItems/WarningModal';
+import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatusModal';
 
 const ScreenList = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const { Search } = Input;
     const { Option } = Select;
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(screensMockData);
-    const [filteredData, setFilteredData] = useState(screensMockData);
+    const [filteredData, setFilteredData] = useState([]);
     const [pagination, setPagination] = useState({
         current: 1,
         pageSize: 10,
-        total: screensMockData.length
+        total: 0
     });
+    const { response, loading: screenLoader, screens: screenResponse, message: screenMessage } = useSelector((state) => state.screen);
+
+    useEffect(() => {
+        dispatch(fetchScreenData());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (response && response.items) {
+            const formattedData = Object.values(response.items).map(item => ({
+                id: item.id,
+                screen_name: item.screen_name,
+                screen_number: item.screen_number,
+                venue_name: item.venue?.name || 'N/A',
+                place_name: item.venue?.place?.name || 'N/A',
+                screen_type: item.screen_technology?.name || 'standard',
+                capacity: item.capacity,
+                is_active: true,
+                audio_system: item.audio?.name || 'N/A',
+                reserved_seating: item.reserved_seating,
+                description: item.description,
+                // Add any other fields you need for your table
+            }));
+
+            setData(formattedData);
+            setFilteredData(formattedData);
+            setPagination({
+                ...pagination,
+                total: formattedData.length
+            });
+        }
+    }, [response]);
 
     const handleSearch = (value) => {
         setLoading(true);
 
-        const filtered = screensMockData.filter(item =>
+        const filtered = data.filter(item =>
             item.screen_name.toLowerCase().includes(value.toLowerCase()) ||
             item.venue_name.toLowerCase().includes(value.toLowerCase()) ||
             item.place_name.toLowerCase().includes(value.toLowerCase())
@@ -51,19 +89,19 @@ const ScreenList = () => {
     };
 
     const handleClearSearch = () => {
-        setFilteredData(screensMockData);
+        setFilteredData(data);
         setPagination({
             ...pagination,
-            total: screensMockData.length
+            total: data.length
         });
     };
 
     const handleScreenTypeFilter = (value) => {
         setLoading(true);
 
-        let filtered = screensMockData;
+        let filtered = data;
         if (value !== 'all') {
-            filtered = screensMockData.filter(item => item.screen_type === value);
+            filtered = data.filter(item => item.screen_type === value);
         }
 
         setFilteredData(filtered);
@@ -77,8 +115,24 @@ const ScreenList = () => {
         }, 500);
     };
 
-    const handleUpdateStatus = (item) => {
-        console.log(`Updating status for screen: ${item.id}`);
+    const handleStatusFilter = (value) => {
+        setLoading(true);
+
+        let filtered = data;
+        if (value !== 'all') {
+            const isActive = value === 'active';
+            filtered = data.filter(item => item.is_active === isActive);
+        }
+
+        setFilteredData(filtered);
+        setPagination({
+            ...pagination,
+            total: filtered.length
+        });
+
+        setTimeout(() => {
+            setLoading(false);
+        }, 500);
     };
 
     const handleViewDetails = (row) => {
@@ -87,12 +141,9 @@ const ScreenList = () => {
     };
 
     const handleEditScreen = (row) => {
-        console.log("Editing screen:", row);
-        navigate(`${APP_PREFIX_PATH}/screen/edit/${row.id}`);
-    };
-
-    const handleDeleteScreen = (row) => {
-        console.log("Deleting screen:", row);
+        console.log("Editing screen:", row.id);
+        dispatch(setEditItemId(row.id));
+        dispatch(setLocationDialogVisible(true));
     };
 
     const handlePagination = (page, pageSize) => {
@@ -124,16 +175,6 @@ const ScreenList = () => {
             ),
             onClick: () => handleViewDetails(row),
         },
-        {
-            key: "delete",
-            label: (
-                <Flex alignItems="center">
-                    <DeleteOutlined className='text-danger' />
-                    <span className="ml-2 text-danger">Delete</span>
-                </Flex>
-            ),
-            onClick: () => handleDeleteScreen(row),
-        }
     ];
 
     const getScreenTypeTag = (type) => {
@@ -142,11 +183,13 @@ const ScreenList = () => {
             'imax': 'purple',
             'vip': 'gold',
             '4dx': 'green',
-            '3d': 'cyan'
+            '3d': 'cyan',
+            '4k': 'magenta',
+            'dolby': 'orange'
         };
 
         return (
-            <Tag color={typeColors[type] || 'default'}>
+            <Tag color={typeColors[type.toLowerCase()] || 'default'}>
                 {type.toUpperCase()}
             </Tag>
         );
@@ -165,7 +208,7 @@ const ScreenList = () => {
             sorter: (a, b) => Utils.antdTableSorter(a, b, "screen_name"),
             render: (text, record) => (
                 <span className="font-weight-semibold">
-                    {text}
+                    {text} <small>({record.screen_number})</small>
                 </span>
             )
         },
@@ -180,15 +223,28 @@ const ScreenList = () => {
             sorter: (a, b) => Utils.antdTableSorter(a, b, "place_name"),
         },
         {
-            title: "Type",
+            title: "Technology",
             dataIndex: 'screen_type',
             sorter: (a, b) => Utils.antdTableSorter(a, b, "screen_type"),
             render: (type) => getScreenTypeTag(type)
         },
         {
+            title: "Audio",
+            dataIndex: 'audio_system',
+            sorter: (a, b) => Utils.antdTableSorter(a, b, "audio_system"),
+            render: (type) => type && getScreenTypeTag(type)
+        },
+        {
             title: "Capacity",
             dataIndex: 'capacity',
             sorter: (a, b) => a.capacity - b.capacity,
+        },
+        {
+            title: "Seating",
+            dataIndex: 'reserved_seating',
+            render: (reserved) => reserved ?
+                <Tag color="green">Reserved</Tag> :
+                <Tag color="orange">Open</Tag>
         },
         {
             title: "Status",
@@ -209,7 +265,7 @@ const ScreenList = () => {
 
     return (
         <>
-            <Card title="Screen Management">
+            <Card>
                 <Flex
                     alignItems="center"
                     justifyContent="space-between"
@@ -243,6 +299,7 @@ const ScreenList = () => {
                                 defaultValue="all"
                                 style={{ width: 150 }}
                                 placeholder="Filter by Status"
+                                onChange={handleStatusFilter}
                             >
                                 {screenOptions.statusOptions.map(status => (
                                     <Option key={status.value} value={status.value}>{status.label}</Option>
@@ -267,7 +324,7 @@ const ScreenList = () => {
                         columns={tableColumns}
                         dataSource={filteredData}
                         rowKey="id"
-                        loading={loading}
+                        loading={screenLoader || loading}
                         pagination={{
                             current: pagination.current,
                             pageSize: pagination.pageSize,
@@ -278,6 +335,33 @@ const ScreenList = () => {
                         }}
                     />
                 </div>
+
+                {/* <WarningModal
+                    mode={"itemmodal"}
+                    visible={dialogVisible}
+                    title="Edit Venue"
+                    details={TextConstants.DefaultEditContent1}
+                    warningMessage="Do you want to proceed to the edit page?"
+                    onSubmit={handleModalSubmit}
+                    onCancel={handleModalCancel}
+                    confirmText="Proceed to Edit"
+                    cancelText="Cancel"
+                    loading={modalLoading}
+                />
+                <UpdateStatusModal
+                    responseMessage={message}
+                    editFunction={editVenueStatus}
+                    getAllFunction={(pageData) => getVenues(pageData)}
+                    pageData={{ page: 1, size: 10 }}
+                    tableConfig={{
+                        title: "Active Schedules",
+                        dataKey: "items",
+                    }}
+                    editable_status={editable_status}
+                    responseData={responseImpactData}
+                    pagination={warningPagination}
+                    loading={loading}
+                /> */}
             </Card>
         </>
     )
