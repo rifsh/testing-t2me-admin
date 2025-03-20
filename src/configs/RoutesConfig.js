@@ -80,7 +80,7 @@ export const protectedRoutes = [
   },
   {
     key: "movie.edit",
-    path: `${APP_PREFIX_PATH}/screen/list`,
+    path: `${APP_PREFIX_PATH}/screen/edit/:screenId`,
     component: React.lazy(() => import("views/screen/screen-edit")),
   },
   {

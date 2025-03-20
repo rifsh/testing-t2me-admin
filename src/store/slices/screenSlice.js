@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import ScreenService from "services/ScreenService";
 
 const initialState = {
-    response: [],
+    response: null,
     screenTechResponse: [],
     screenTechnologies: [],
     screenAudioResponse: [],
@@ -61,6 +61,28 @@ export const createScreen = createAsyncThunk(
         }
     }
 );
+export const fetchScreenData = createAsyncThunk(
+    "screen/fetchScreenData",
+    async (pageData, { rejectWithValue }) => {
+        try {
+            const response = await ScreenService.getScreens(pageData);
+            return response.data[0];
+        } catch (error) {
+            return rejectWithValue(error.message || "Failed to fetch screen features");
+        }
+    }
+);
+export const fetchScreenById = createAsyncThunk(
+    "screen/fetchScreenById",
+    async (screen_id, { rejectWithValue }) => {
+        try {
+            const response = await ScreenService.getScreenById(screen_id);
+            return response.data[0];
+        } catch (error) {
+            return rejectWithValue(error.message || "Failed to fetch screen features");
+        }
+    }
+);
 
 const screenSlice = createSlice({
     name: "screen",
@@ -111,10 +133,31 @@ const screenSlice = createSlice({
             })
             .addCase(createScreen.fulfilled, (state, action) => {
                 state.loading = false;
-                state.response = action.payload;
-                state.screens = action.payload.data.screens
+                state.response = action.payload.data;
             })
             .addCase(createScreen.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(fetchScreenData.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchScreenData.fulfilled, (state, action) => {
+                state.loading = false;
+                state.response = action.payload;
+            })
+            .addCase(fetchScreenData.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(fetchScreenById.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchScreenById.fulfilled, (state, action) => {
+                state.loading = false;
+                state.response = action.payload;
+            })
+            .addCase(fetchScreenById.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

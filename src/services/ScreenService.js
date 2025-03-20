@@ -14,6 +14,20 @@ ScreenService.addScreen = function (data, action) {
         data: data,
     });
 };
+ScreenService.getScreens = function (pageData) {
+    return fetch({
+        url: ApiConstant.GET_ALL_SCREEN_URL,
+        method: "get",
+        // params: Utils.filterParams(pageData),
+    });
+};
+ScreenService.getScreenById = function (screen_id) {
+    return fetch({
+        url: ApiConstant.GET_SCREEN_ById_URL,
+        method: "get",
+        params: Utils.filterParams(screen_id),
+    });
+};
 ScreenService.fetchScreenTech = function (pageData) {
     return fetch({
         url: ApiConstant.FETCH_SCREEN_TECH_URL,

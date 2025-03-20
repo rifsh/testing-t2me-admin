@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Card, Col, Form, Row, Space, Tabs, Alert, Spin, Typography } from 'antd'
-import { UploadOutlined, PlusOutlined, DeleteOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { Button, Card, Col, Form, Row, Space, Tabs, Alert, Typography, message } from 'antd'
+import { PlusOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 import PlaceWithCountryForm from 'components/util-components/FormItems/PlaceWithCountryForm';
 import VenueListForm from 'components/util-components/FormItems/VenueList';
 import { useDispatch, useSelector } from 'react-redux';
-import { getVenues, setPlaceValidationDialogVisible, setSelectedVenueList, validateVenue } from 'store/slices/locationSlice';
+import { getVenues, setPlaceValidationDialogVisible, setSelectedPlace, setSelectedVenue, setSelectedVenueList, validatePlace, validateVenue } from 'store/slices/locationSlice';
 import { resetTicketSelection } from 'store/slices/ticketSlice';
 import { Collapse } from '@mui/material';
 import ScreenForm from './ScreenForm';
 import { createScreen } from 'store/slices/screenSlice';
-import { ActionType } from 'utils/api/warning-submit-util';
 import { setSelectedSubmitItem } from 'store/slices/modalSlice';
 import { SubmitAndConfirmModal } from 'components/util-components/ModalItems/SubmitConfirmModal';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import LoadingOverlay from 'components/util-components/Loader';
 
 const { Title, Text } = Typography;
 
@@ -25,8 +25,9 @@ const AddScreenFormFields = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [venueSelected, setVenueSelected] = useState(false);
 
-    const { response, loading, error, message, screens: screenResponse } = useSelector((state) => state.screen);
-    const { filteredTickets, loading: ticketsLoading } = useSelector((state) => state.tickets);
+    const { response, loading, screens: ScreenResponse, message: screenMessage } = useSelector((state) => state.screen);
+    // const { filteredTickets, loading: ticketsLoading } = useSelector((state) => state.tickets);
+    const { selectedVenue, selectedPlace } = useSelector((state) => state.locations);
 
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
@@ -47,7 +48,10 @@ const AddScreenFormFields = () => {
         });
 
         form.setFieldsValue(currentValues);
-    }, [screens, form]);
+        console.log('resaan', response);
+        console.log('resaan', ScreenResponse[0]);
+
+    }, [screens, form, dispatch, response]);
 
     const addScreen = () => {
         const newScreens = [...screens, { key: screens.length }];
@@ -79,6 +83,7 @@ const AddScreenFormFields = () => {
         ]);
 
         dispatch(resetTicketSelection());
+        dispatch(setSelectedPlace(id));
         dispatch(setSelectedVenueList("clear"));
         setScreens([{ key: 0 }]);
         setVenueSelected(false);
@@ -87,36 +92,43 @@ const AddScreenFormFields = () => {
 
     const handleVenueSelect = (venue) => {
         setIsLoading(true);
+        console.log("venue", venue);
         form.resetFields(["screens"]);
         setScreens([{ key: 0 }]);
         setVenueSelected(!!venue);
+        dispatch(setSelectedVenue(venue))
         setIsLoading(false);
     }
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-
         try {
-            form.validateFields().then(values => {
-                const response = dispatch(createScreen({ data: values, action: ActionType.SUBMIT }))
-                dispatch(setSelectedSubmitItem(values));
-                console.log("Form submitted:", values);
-            }).catch(errorInfo => {
-                console.log("Validation failed:", errorInfo);
-            });
-            // const resultAction = dispatch(validateVenue(values.venue_id));
-
-            // if (validateVenue.fulfilled.match(resultAction)) {
-            //     const response = resultAction.payload;
-            //     if (response.message === "warning") {
-            //         dispatch(setPlaceValidationDialogVisible(true));
-            //     } else if (response.data && response.data[0]?.validation_status) {
-            //         dispatch(setSelectedSubmitItem(values));
-            //     }
-            // }
-
-        } catch (error) {
-
+            const values = await form.validateFields();
+            console.log('values', values);
+            
+            const resultAction = await dispatch(validateVenue(values.venue_id));
+            if (validateVenue.fulfilled.match(resultAction)) {
+                const response = resultAction.payload;
+                if (response.message === "warning") {
+                    dispatch(setPlaceValidationDialogVisible(true));
+                } else if (response.data && response.data[0]?.validation_status) {
+                    dispatch(setSelectedSubmitItem(values));
+                }
+            } else if (validatePlace.rejected.match(resultAction)) {
+                const error = resultAction.error;
+                if (error.message) {
+                    message.error(error.message);
+                }
+            }
+        } catch (errorInfo) {
+            if (errorInfo.errorFields) {
+                message.error("Please fill all the required fields.");
+                errorInfo.errorFields.forEach((field) => {
+                    console.log(`Field Error: ${field.name.join(".")} - ${field.errors.join(", ")}`);
+                });
+            } else {
+                message.error("An unexpected error occurred. Please try again.");
+            }
         }
     };
 
@@ -163,7 +175,7 @@ const AddScreenFormFields = () => {
                         <div style={{ textAlign: 'center', padding: '20px' }}>
                         </div>
                         <>
-                            {filteredTickets && filteredTickets.length === 0 && venueSelected && (
+                            {/* {filteredTickets && filteredTickets.length === 0 && venueSelected && (
                                 <Alert
                                     message="No Ticket Structures Available"
                                     description="There are no ticket structures available for this venue. Please configure ticket structures before adding screens."
@@ -171,7 +183,7 @@ const AddScreenFormFields = () => {
                                     showIcon
                                     style={{ marginBottom: '16px' }}
                                 />
-                            )}
+                            )} */}
 
                             <Col xs={24} sm={24} md={24}>
                                 <Card
@@ -240,11 +252,12 @@ const AddScreenFormFields = () => {
                 </Collapse>
             </div>
 
+            <LoadingOverlay loading={false} />
             <SubmitAndConfirmModal
-                responseData={screenResponse}
+                responseData={response}
                 addFunction={createScreen}
                 navigationPath={`${APP_PREFIX_PATH}/screen/list`}
-                responseMessage={message}
+                responseMessage={screenMessage}
             />
         </Form>
     )

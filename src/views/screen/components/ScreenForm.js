@@ -4,7 +4,6 @@ import { DeleteOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllTickets } from 'store/slices/ticketSlice';
 import { screenOptions } from 'constants/ScreenConstants';
-import ScreenTechListForm from 'components/util-components/FormItems/ScreenTechListForm';
 import { fetchScreenAudio, fetchScreenFeatures, fetchScreenTech } from 'store/slices/screenSlice';
 
 const { Option } = Select;
@@ -34,10 +33,6 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
 
         }
     }, [venue_id, dispatch]);
-
-    const handleScreenTech = (venue) => {
-
-    }
 
     return (
         <div className="screen-form-container">
@@ -86,7 +81,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                         <InputNumber min={1} placeholder="Total seats" style={{ width: '100%' }} />
                     </Form.Item>
                 </Col>
-                {/* <Col xs={24} md={12}>
+                <Col xs={24} md={12}>
                     <Form.Item name={['screens', index, 'seat_structure_id']} label="Seat Structure">
                         <Select placeholder="Select seat structure">
                             {screenOptions.seatStructures.map(({ value, label }) => (
@@ -94,7 +89,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                             ))}
                         </Select>
                     </Form.Item>
-                </Col> */}
+                </Col>
             </Row>
 
             <Form.Item name={['screens', index, 'description']} label="Description">
@@ -102,13 +97,19 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
             </Form.Item>
 
             <Row gutter={16}>
-                <Col xs={24} md={12}>
+                {/* <Col xs={24} md={12}>
                     <Form.Item name={['screens', index, 'is_active']} label="Active Status" valuePropName="checked" initialValue={true}>
                         <Switch defaultChecked />
                     </Form.Item>
-                </Col>
+                </Col> */}
                 <Col xs={24} md={12}>
-                    <Form.Item name={['screens', index, 'reserved_seating']} label="Reserved Seating" valuePropName="checked">
+                    <Form.Item
+                        name={['screens', index, 'reserved_seating']}
+                        label="Reserved Seating"
+                        valuePropName="checked"
+                        initialValue={true}
+                        normalize={(value) => value || false}
+                    >
                         <Switch />
                     </Form.Item>
                 </Col>
@@ -119,10 +120,10 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                 index={index}
                 rules={rules} /> */}
 
-            <Form.Item name={['screens', index, 'available_times']} label="Available Times">
+            <Form.Item name={['screens', index, 'time_slots']} label="Available Times">
                 <Select mode="multiple" placeholder="Select available time slots">
                     {screenOptions.availableTimes.map(({ value, label }) => (
-                        <Option key={value} value={value}>{label}</Option>
+                        <Option key={value} value={label}>{label}</Option>
                     ))}
                 </Select>
             </Form.Item>
