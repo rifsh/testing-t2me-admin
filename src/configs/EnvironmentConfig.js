@@ -12,7 +12,7 @@ const demo = {
 };
 // temp
 const prod = {
-  API_ENDPOINT_URL: "https://uat-tickets2me.mitetechnology.in",
+  API_ENDPOINT_URL: "https://service.tickets2me.com",
 };
 
 const test = {
