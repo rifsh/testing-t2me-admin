@@ -60,9 +60,9 @@ export function ScheduleDetails({ form }) {
   };
   const handleSelectVenue = (id) => {
     if (!id) {
-      dispatch(setSelectedVenue(id));
       return;
     }
+    dispatch(setSelectedVenue(id));
     const currentValues = form.getFieldsValue();
     const valuesToKeep = {
       event_id: currentValues.event_id,
