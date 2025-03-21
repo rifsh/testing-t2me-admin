@@ -5,29 +5,33 @@ import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 import PlaceWithCountryForm from 'components/util-components/FormItems/PlaceWithCountryForm';
 import VenueListForm from 'components/util-components/FormItems/VenueList';
 import { useDispatch, useSelector } from 'react-redux';
-import { getVenues, setPlaceValidationDialogVisible, setSelectedPlace, setSelectedVenue, setSelectedVenueList, validatePlace, validateVenue } from 'store/slices/locationSlice';
+import { getVenues, setLocationDialogVisible, setPlaceValidationDialogVisible, setSelectedPlace, setSelectedVenue, setSelectedVenueList, validatePlace, validateVenue } from 'store/slices/locationSlice';
 import { resetTicketSelection } from 'store/slices/ticketSlice';
 import { Collapse } from '@mui/material';
 import ScreenForm from './ScreenForm';
-import { createScreen } from 'store/slices/screenSlice';
+import { createScreen, editScreen, fetchScreenById } from 'store/slices/screenSlice';
 import { setSelectedSubmitItem } from 'store/slices/modalSlice';
 import { SubmitAndConfirmModal } from 'components/util-components/ModalItems/SubmitConfirmModal';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import LoadingOverlay from 'components/util-components/Loader';
+import WarningModal from 'components/util-components/ModalItems/WarningModal';
+import { ActionType } from 'utils/api/warning-submit-util';
 
 const { Title, Text } = Typography;
 
-const AddScreenFormFields = () => {
+const AddScreenFormFields = ({ mode, screenId }) => {
     const dispatch = useDispatch();
     const [form] = Form.useForm();
     const [screens, setScreens] = useState([{ key: 0 }]);
     const [activeTab, setActiveTab] = useState("0");
     const [isLoading, setIsLoading] = useState(false);
     const [venueSelected, setVenueSelected] = useState(false);
+    const [placeSelected, setPlaceSelected] = useState(false);
+    const [venueId, setVenueId] = useState(null);
 
-    const { response, loading, screens: ScreenResponse, message: screenMessage } = useSelector((state) => state.screen);
+    const { response, singleResponse, message: screenMessage, loading } = useSelector((state) => state.screen);
+    const { dialogVisible } = useSelector((state) => state.locations);
     // const { filteredTickets, loading: ticketsLoading } = useSelector((state) => state.tickets);
-    const { selectedVenue, selectedPlace } = useSelector((state) => state.locations);
 
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
@@ -48,10 +52,44 @@ const AddScreenFormFields = () => {
         });
 
         form.setFieldsValue(currentValues);
-        console.log('resaan', response);
-        console.log('resaan', ScreenResponse[0]);
+        if (mode === 'EDIT') {
+            dispatch(fetchScreenById({ screen_id: screenId }));
+        }
+    }, [screens, form, dispatch, response, mode, screenId]);
 
-    }, [screens, form, dispatch, response]);
+    useEffect(() => {
+        if (singleResponse) {
+            setSelectedVenue(true)
+            console.log('Received singleResponse:', singleResponse);
+            // console.log('Received singleResponse:', form.getFieldValue());
+            if (mode === 'EDIT' && !placeSelected) {
+                setVenueId(singleResponse?.venue?.id)
+                const formValues = {
+                    place: singleResponse?.venue?.place?.name || undefined,
+                    venue_id: singleResponse?.venue?.name || undefined,
+                    screens: [{
+                        screen_name: singleResponse?.screen_name || '',
+                        screen_number: singleResponse?.screen_number || '',
+                        screen_type: singleResponse?.screen_type || '',
+                        capacity: singleResponse?.capacity || '',
+                        description: singleResponse?.description || '',
+                        reserved_seating: singleResponse?.reserved_seating,
+                        time_slots: singleResponse?.time_slots || [],
+                        accessibility: singleResponse.accessibilty.map((values) => values.id) || [],
+                        screen_technology_id: singleResponse?.screen_technology.id,
+                        audio_id: singleResponse?.audio.id,
+                    }]
+                };
+
+                console.log('Setting form values:', formValues);
+                form.setFieldsValue(formValues);
+
+                setTimeout(() => {
+                    form.validateFields(['place', 'venue_id']);
+                }, 0);
+            }
+        }
+    }, [singleResponse, form, placeSelected === false]);
 
     const addScreen = () => {
         const newScreens = [...screens, { key: screens.length }];
@@ -75,13 +113,15 @@ const AddScreenFormFields = () => {
     };
 
     const handlePlaceSelect = (id) => {
+        console.log('place', id);
+
         setIsLoading(true);
         dispatch(getVenues({ place_id: id, is_indoor: true }));
         form.resetFields([
             "venue_id",
             "screens",
         ]);
-
+        setPlaceSelected(true);
         dispatch(resetTicketSelection());
         dispatch(setSelectedPlace(id));
         dispatch(setSelectedVenueList("clear"));
@@ -96,6 +136,7 @@ const AddScreenFormFields = () => {
         form.resetFields(["screens"]);
         setScreens([{ key: 0 }]);
         setVenueSelected(!!venue);
+        setVenueId(venue);
         dispatch(setSelectedVenue(venue))
         setIsLoading(false);
     }
@@ -105,21 +146,62 @@ const AddScreenFormFields = () => {
         try {
             const values = await form.validateFields();
             console.log('values', values);
-            
-            const resultAction = await dispatch(validateVenue(values.venue_id));
-            if (validateVenue.fulfilled.match(resultAction)) {
-                const response = resultAction.payload;
-                if (response.message === "warning") {
-                    dispatch(setPlaceValidationDialogVisible(true));
-                } else if (response.data && response.data[0]?.validation_status) {
-                    dispatch(setSelectedSubmitItem(values));
+            if (mode === "ADD") {
+                const resultAction = await dispatch(validateVenue(values.venue_id));
+                if (validateVenue.fulfilled.match(resultAction)) {
+                    const response = resultAction.payload;
+                    if (response.message === "warning") {
+                        dispatch(setPlaceValidationDialogVisible(true));
+                    } else if (response.data && response.data[0]?.validation_status) {
+                        dispatch(setSelectedSubmitItem(values));
+                    }
+                } else if (validatePlace.rejected.match(resultAction)) {
+                    const error = resultAction.error;
+                    if (error.message) {
+                        message.error(error.message);
+                    }
                 }
-            } else if (validatePlace.rejected.match(resultAction)) {
-                const error = resultAction.error;
-                if (error.message) {
-                    message.error(error.message);
+            } else {
+                const data = {
+                    ...values,
+                    id: singleResponse?.id,
+
+                    venue_id: venueId
+                }
+                const [screens] = data.screens
+                const updatedScreen = {
+                    ...screens,
+                    venue_id: venueId,
+                    id: singleResponse?.id,
+                };
+                
+                const resultAction = await dispatch(validateVenue(venueId));
+                if (validateVenue.fulfilled.match(resultAction)) {
+                    const response = resultAction.payload;
+                    if (response.message === "warning") {
+                        dispatch(setPlaceValidationDialogVisible(true));
+                    } else if (response.data && response.data[0]?.validation_status) {
+                        console.log('updated',updatedScreen);
+                        const editResult = await dispatch(editScreen({ updatedScreen, action: ActionType.WARNING }))
+
+                        if (editScreen.fulfilled.match(editResult)) {
+                            dispatch(setSelectedVenue(data));
+                            dispatch(setLocationDialogVisible(true));
+                        } else if (editScreen.rejected.match(editResult)) {
+                            const error = editResult.error;
+                            if (error.message) {
+                                message.error(error.message);
+                            }
+                        }
+                    }
+                } else if (validatePlace.rejected.match(resultAction)) {
+                    const error = resultAction.error;
+                    if (error.message) {
+                        message.error(error.message);
+                    }
                 }
             }
+
         } catch (errorInfo) {
             if (errorInfo.errorFields) {
                 message.error("Please fill all the required fields.");
@@ -139,7 +221,11 @@ const AddScreenFormFields = () => {
                     <Card
                         title={
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <span>Venue Selection</span>
+                                {mode === "ADD" ? (
+                                    <span>Venue Selection</span>
+                                ) : (
+                                    <span>Selecte loaction</span>
+                                )}
                                 <InfoCircleOutlined style={{ marginLeft: '8px', color: '#8c8c8c' }} />
                             </div>
                         }
@@ -190,20 +276,20 @@ const AddScreenFormFields = () => {
                                     title={
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <Title level={4}>Screen Information</Title>
-                                            <Button
+                                            {mode === 'ADD' && < Button
                                                 type="primary"
                                                 icon={<PlusOutlined />}
                                                 onClick={addScreen}
                                                 disabled={!venueSelected}
                                             >
                                                 Add Screen
-                                            </Button>
+                                            </Button>}
                                         </div>
                                     }
                                     bordered
                                     className="screen-information-card"
                                 >
-                                    {!venueSelected ? (
+                                    {!form.getFieldValue('venue_id') ? (
                                         <Alert
                                             message="Venue Required"
                                             description="Please select a venue to configure screens."
@@ -225,7 +311,7 @@ const AddScreenFormFields = () => {
                                                         onRemove={removeScreen}
                                                         isOnlyScreen={screens.length === 1}
                                                         screenNumber={index + 1}
-                                                        venue_id={form.getFieldValue('venue_id')}
+                                                        venue_id={mode === 'ADD' ? form.getFieldValue('venue_id') : venueId}
                                                     />
                                                 )
                                             }))}
@@ -240,7 +326,7 @@ const AddScreenFormFields = () => {
                                     <Button
                                         type="primary"
                                         onClick={handleSubmit}
-                                        disabled={!venueSelected || isLoading}
+                                        disabled={!form.getFieldValue('venue_id') || isLoading}
                                         loading={isLoading}
                                     >
                                         Submit
@@ -250,16 +336,35 @@ const AddScreenFormFields = () => {
                         </>
                     </div>
                 </Collapse>
-            </div>
+            </div >
 
-            <LoadingOverlay loading={false} />
+            <LoadingOverlay loading={loading} />
+            {/* <WarningModal
+                visible={dialogVisible}
+                title="Confirm Action"
+                details={warningMessage}
+                responseData={responseImpactData}
+                warningMessage="Do you want to continue?"
+                onSubmit={handleModalSubmit}
+                onCancel={handleModalCancel}
+                confirmText="Proceed"
+                cancelText="Back"
+                loading={loading}
+                tableConfig={{
+                    title: "Active Schedules",
+                    dataKey: "items",
+                }}
+                editable_status={editable_status}
+                pagination={warningPagination}
+                onPaginationChange={handleWarningPagination}
+            /> */}
             <SubmitAndConfirmModal
                 responseData={response}
-                addFunction={createScreen}
+                addFunction={mode === 'ADD' ? createScreen : () => editScreen({ screen_id: 3 })}
                 navigationPath={`${APP_PREFIX_PATH}/screen/list`}
                 responseMessage={screenMessage}
             />
-        </Form>
+        </Form >
     )
 }
 

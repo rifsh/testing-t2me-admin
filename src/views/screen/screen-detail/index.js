@@ -33,10 +33,7 @@ const { Title, Text, Paragraph } = Typography;
 const ScreenDetailView = () => {
     const dispatch = useDispatch();
     const { screenId } = useParams();
-
-    const [screenData, setScreenData] = useState(null);
-
-    const { response, loading: screenLoading } = useSelector((state) => state.screen);
+    const { singleResponse, loading: screenLoading } = useSelector((state) => state.screen);
 
     useEffect(() => {
         dispatch(fetchScreenById({ screen_id: screenId }));
@@ -115,8 +112,8 @@ const ScreenDetailView = () => {
                         <Title level={3}>
                             <Space>
                                 <VideoCameraOutlined />
-                                {response?.screen_name}
-                                <Text type="secondary" style={{ fontSize: '16px' }}>({response?.screen_number})</Text>
+                                {singleResponse?.screen_name}
+                                <Text type="secondary" style={{ fontSize: '16px' }}>({singleResponse?.screen_number})</Text>
                             </Space>
                         </Title>
                     </Col>
@@ -134,34 +131,35 @@ const ScreenDetailView = () => {
                             <Descriptions.Item label="Venue" span={2}>
                                 <Space>
                                     <EnvironmentOutlined />
-                                    <Text strong>{response?.venue?.name || 'N/A'}</Text>
+                                    <Text strong>{singleResponse?.venue?.name || 'N/A'}</Text>
                                 </Space>
                             </Descriptions.Item>
                             <Descriptions.Item label="Location">
-                                {response?.venue?.place?.name || 'N/A'}
+                                {singleResponse?.venue?.place?.name || 'N/A'}
                             </Descriptions.Item>
                             <Descriptions.Item label="Country">
-                                {response?.venue?.place?.country?.name || 'N/A'}
+                                {singleResponse?.venue?.place?.country?.name || 'N/A'}
                             </Descriptions.Item>
                             <Descriptions.Item label="Technology">
-                                {getScreenTypeTag(response?.screen_technology)}
+                                {getScreenTypeTag(singleResponse?.screen_technology)}
                             </Descriptions.Item>
                             <Descriptions.Item label="Audio System">
-                                {getAudioTag(response?.audio)}
+                                {getAudioTag(singleResponse?.audio)}
                             </Descriptions.Item>
                             <Descriptions.Item label="Capacity">
                                 <Tag icon={<TeamOutlined />} color="blue">
-                                    {response?.capacity} seats
+                                    {singleResponse?.capacity} seats
                                 </Tag>
                             </Descriptions.Item>
                             <Descriptions.Item label="Seating Type">
-                                {getSeatingLabel(response?.reserved_seating)}
+                                {getSeatingLabel(singleResponse?.reserved_seating)}
                             </Descriptions.Item>
                             <Descriptions.Item label="Accessibility Features" span={2}>
-                                {getAccessibilityTags(response?.accessibilty)}
+                                {getAccessibilityTags(singleResponse?.accessibilty)}
                             </Descriptions.Item>
                             <Descriptions.Item label="Description" span={2}>
-                                {response?.description || 'No description available'}
+                                {/* {singleResponse?.description || 'No description available'} */}
+                                <div dangerouslySetInnerHTML={{ __html: singleResponse?.description || 'No description available' }} />
                             </Descriptions.Item>
                         </Descriptions>
                     </Col>
@@ -174,35 +172,35 @@ const ScreenDetailView = () => {
                                         <Space direction="vertical" style={{ width: '100%' }}>
                                             <Flex justifyContent="space-between">
                                                 <Text strong>Screen Type:</Text>
-                                                {getScreenTypeTag(response?.screen_technology)}
+                                                {getScreenTypeTag(singleResponse?.screen_technology)}
                                             </Flex>
                                             <Flex justifyContent="space-between">
                                                 <Text strong>Audio System:</Text>
-                                                {getAudioTag(response?.audio)}
+                                                {getAudioTag(singleResponse?.audio)}
                                             </Flex>
                                             <Flex justifyContent="space-between">
                                                 <Text strong>Seating:</Text>
-                                                {getSeatingLabel(response?.reserved_seating)}
+                                                {getSeatingLabel(singleResponse?.reserved_seating)}
                                             </Flex>
                                         </Space>
                                     </Paragraph>
 
-                                    {response?.screen_technology?.description && (
+                                    {singleResponse?.screen_technology?.description && (
                                         <>
                                             <Divider />
                                             <Title level={5}>Technology Details</Title>
                                             <Paragraph>
-                                                {response?.screen_technology.description}
+                                                {singleResponse?.screen_technology.description}
                                             </Paragraph>
                                         </>
                                     )}
 
-                                    {response?.audio?.description && (
+                                    {singleResponse?.audio?.description && (
                                         <>
                                             <Divider />
                                             <Title level={5}>Audio System Details</Title>
                                             <Paragraph>
-                                                {response?.audio.description}
+                                                {singleResponse?.audio.description}
                                             </Paragraph>
                                         </>
                                     )}
@@ -214,7 +212,7 @@ const ScreenDetailView = () => {
 
                 <Divider orientation="left">Seating Layout</Divider>
 
-                {response?.seat_structure_id ? (
+                {singleResponse?.seat_structure_id ? (
                     <div className="seating-layout-container">
                         {/* Real seating layout would be integrated here */}
                         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
@@ -233,7 +231,7 @@ const ScreenDetailView = () => {
                     />
                 )}
 
-                {response?.time_slots && response.time_slots.length > 0 && (
+                {singleResponse?.time_slots && singleResponse.time_slots.length > 0 && (
                     <>
                         <Divider orientation="left">
                             <Space>
@@ -242,7 +240,7 @@ const ScreenDetailView = () => {
                             </Space>
                         </Divider>
 
-                        {response.time_slots.map((slotType, typeIndex) => (
+                        {singleResponse.time_slots.map((slotType, typeIndex) => (
                             <React.Fragment key={typeIndex}>
                                 <Title level={5} style={{ marginTop: typeIndex > 0 ? 16 : 0 }}>
                                     {slotType}
