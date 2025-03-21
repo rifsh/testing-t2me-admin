@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllTickets } from 'store/slices/ticketSlice';
 import { screenOptions } from 'constants/ScreenConstants';
 import { fetchScreenAudio, fetchScreenFeatures, fetchScreenTech } from 'store/slices/screenSlice';
+import TextEditor from 'components/util-components/FormItems/TextEditor';
 
 const { Option } = Select;
 const { Title } = Typography;
@@ -92,8 +93,12 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                 </Col>
             </Row>
 
-            <Form.Item name={['screens', index, 'description']} label="Description">
-                <Input.TextArea rows={3} placeholder="Description" />
+            <Form.Item
+                name={['screens', index, 'description']}
+                label="Description"
+            >
+                <TextEditor />
+                {/* <Input.TextArea rows={4} placeholder="Enter venue description" /> */}
             </Form.Item>
 
             <Row gutter={16}>

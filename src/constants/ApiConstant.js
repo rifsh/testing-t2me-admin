@@ -100,6 +100,7 @@ export const ApiConstant = {
 
   //  SCREEN API ENDPOINTS
   ADD_SCREEN_URL: "/api/v1/moies/secured/screens/creation",
+  EDIT_SCREEN_URL: "/api/v1/moies/secured/screens/edit",
   GET_ALL_SCREEN_URL: "/api/v1/moies/secured/screens",
   GET_SCREEN_ById_URL: "/api/v1/moies/secured/screens/single",
   FETCH_SCREEN_TECH_URL: "/api/v1/moies/secured/screens/tech",

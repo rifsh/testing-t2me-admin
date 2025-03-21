@@ -4,7 +4,7 @@ import AddFrom from './AddFrom'
 const add = () => {
   return (
     <div>
-      <AddFrom mode={'ADD'} />
+      <AddFrom />
     </div>
   )
 }

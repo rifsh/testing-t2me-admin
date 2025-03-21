@@ -4,11 +4,7 @@ import { Tabs, Form } from "antd";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import AddScreenFormFields from '../components/AddScreenFormFields';
 
-const AddFrom = () => {
-
-  const onChange = (key) => {
-    console.log(key);
-  };
+const AddFrom = ({ mode, screenId }) => {
 
   return (
     <>
@@ -25,9 +21,15 @@ const AddFrom = () => {
               justifyContent="space-between"
               alignItems="center"
             >
-              <h2 className="mb-3">
-                Add Screen
-              </h2>
+              {mode === 'ADD' ? (
+                <h2 className="mb-3">
+                  Add Screen
+                </h2>
+              ) : (
+                <h2 className="mb-3">
+                  Edit Screen
+                </h2>
+              )}
             </Flex>
           </div>
         </PageHeaderAlt>
@@ -40,7 +42,7 @@ const AddFrom = () => {
               {
                 label: "Screen",
                 key: "add-screen",
-                children: <AddScreenFormFields type={'screen'} />,
+                children: <AddScreenFormFields type={'screen'} mode={mode} screenId={screenId} />,
               }
             ]}
           />

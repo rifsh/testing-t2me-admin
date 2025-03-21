@@ -17,29 +17,26 @@ import { useNavigate } from 'react-router-dom';
 import { screensMockData } from './MockData';
 import { screenOptions } from 'constants/ScreenConstants';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchScreenData } from 'store/slices/screenSlice';
+import { fetchScreenData, setScreenEditItemId } from 'store/slices/screenSlice';
 import { setEditItemId } from 'store/slices/categorySlice';
-import { setLocationDialogVisible } from 'store/slices/locationSlice';
+import { setLocationDialogVisible, setLocationModalLoading } from 'store/slices/locationSlice';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatusModal';
+import { DEFAULT_PAGE_SIZE } from 'constants/PageConstants';
+import SearchBarWithStatus from 'components/util-components/Search/SearchBarWithStatus';
+import { TextConstants } from 'constants/TextConstant';
 
 const ScreenList = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { Search } = Input;
-    const { Option } = Select;
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(screensMockData);
     const [filteredData, setFilteredData] = useState([]);
-    const [pagination, setPagination] = useState({
-        current: 1,
-        pageSize: 10,
-        total: 0
-    });
-    const { response, loading: screenLoader, screens: screenResponse, message: screenMessage } = useSelector((state) => state.screen);
+    const { response, loading: screenLoader, pagination, editItemId } = useSelector((state) => state.screen);
+    const { dialogVisible, modalLoading } = useSelector((state) => state.locations);
 
     useEffect(() => {
-        dispatch(fetchScreenData());
+        dispatch(fetchScreenData(DEFAULT_PAGE_SIZE));
     }, [dispatch]);
 
     useEffect(() => {
@@ -61,79 +58,8 @@ const ScreenList = () => {
 
             setData(formattedData);
             setFilteredData(formattedData);
-            setPagination({
-                ...pagination,
-                total: formattedData.length
-            });
         }
     }, [response]);
-
-    const handleSearch = (value) => {
-        setLoading(true);
-
-        const filtered = data.filter(item =>
-            item.screen_name.toLowerCase().includes(value.toLowerCase()) ||
-            item.venue_name.toLowerCase().includes(value.toLowerCase()) ||
-            item.place_name.toLowerCase().includes(value.toLowerCase())
-        );
-
-        setFilteredData(filtered);
-        setPagination({
-            ...pagination,
-            total: filtered.length
-        });
-
-        setTimeout(() => {
-            setLoading(false);
-        }, 500);
-    };
-
-    const handleClearSearch = () => {
-        setFilteredData(data);
-        setPagination({
-            ...pagination,
-            total: data.length
-        });
-    };
-
-    const handleScreenTypeFilter = (value) => {
-        setLoading(true);
-
-        let filtered = data;
-        if (value !== 'all') {
-            filtered = data.filter(item => item.screen_type === value);
-        }
-
-        setFilteredData(filtered);
-        setPagination({
-            ...pagination,
-            total: filtered.length
-        });
-
-        setTimeout(() => {
-            setLoading(false);
-        }, 500);
-    };
-
-    const handleStatusFilter = (value) => {
-        setLoading(true);
-
-        let filtered = data;
-        if (value !== 'all') {
-            const isActive = value === 'active';
-            filtered = data.filter(item => item.is_active === isActive);
-        }
-
-        setFilteredData(filtered);
-        setPagination({
-            ...pagination,
-            total: filtered.length
-        });
-
-        setTimeout(() => {
-            setLoading(false);
-        }, 500);
-    };
 
     const handleViewDetails = (row) => {
         console.log("Viewing details for:", row);
@@ -141,17 +67,24 @@ const ScreenList = () => {
     };
 
     const handleEditScreen = (row) => {
-        console.log("Editing screen:", row.id);
-        dispatch(setEditItemId(row.id));
+        console.log("Editing screen:", row);
+        dispatch(setScreenEditItemId(row.id));
         dispatch(setLocationDialogVisible(true));
     };
 
+    const handleModalSubmit = async () => {
+        dispatch(setLocationModalLoading(true));
+        navigate(`${APP_PREFIX_PATH}/screen/edit/${editItemId}`);
+        dispatch(setLocationDialogVisible(false));
+        dispatch(setLocationModalLoading(false));
+    };
+
+    const handleModalCancel = () => {
+        dispatch(setLocationDialogVisible(false));
+    };
+
     const handlePagination = (page, pageSize) => {
-        setPagination({
-            ...pagination,
-            current: page,
-            pageSize: pageSize
-        });
+        dispatch(fetchScreenData({ page: page, size: pageSize }));
     };
 
     const getDropdownMenu = (row) => [
@@ -272,52 +205,18 @@ const ScreenList = () => {
                     mobileFlex={false}
                     className="mb-1"
                 >
-                    <Flex className="mb-3" mobileFlex={false}>
-                        <div className="mr-md-3 mb-3">
-                            <Search
-                                placeholder="Search Screens"
-                                allowClear
-                                onSearch={handleSearch}
-                                onChange={(e) => e.target.value === "" && handleClearSearch()}
-                                style={{ width: 250 }}
-                            />
-                        </div>
-                        <div className="mr-md-3 mb-3">
-                            <Select
-                                defaultValue="all"
-                                style={{ width: 150 }}
-                                onChange={handleScreenTypeFilter}
-                                placeholder="Filter by Type"
-                            >
-                                {screenOptions.filterTypes.map(screen => (
-                                    <Option key={screen.value} value={screen.value}>{screen.label}</Option>
-                                ))}
-                            </Select>
-                        </div>
-                        <div className="mb-3">
-                            <Select
-                                defaultValue="all"
-                                style={{ width: 150 }}
-                                placeholder="Filter by Status"
-                                onChange={handleStatusFilter}
-                            >
-                                {screenOptions.statusOptions.map(status => (
-                                    <Option key={status.value} value={status.value}>{status.label}</Option>
-                                ))}
-                            </Select>
-                        </div>
-                    </Flex>
-                    <div className="mb-3">
-                        <Space>
-                            <Button
-                                type="primary"
-                                icon={<PlusOutlined />}
-                                onClick={() => navigate(`${APP_PREFIX_PATH}/screen/add`)}
-                            >
-                                Add Screen
-                            </Button>
-                        </Space>
-                    </div>
+                    <SearchBarWithStatus
+                        fetchFunction={fetchScreenData}
+                    />
+                    <Space>
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() => navigate(`${APP_PREFIX_PATH}/screen/add`)}
+                        >
+                            Add Screen
+                        </Button>
+                    </Space>
                 </Flex>
                 <div className="table-responsive">
                     <Table
@@ -330,17 +229,16 @@ const ScreenList = () => {
                             pageSize: pagination.pageSize,
                             total: pagination.total,
                             onChange: (page, pageSize) => handlePagination(page, pageSize),
-                            showSizeChanger: true,
                             showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} screens`
                         }}
                     />
                 </div>
 
-                {/* <WarningModal
+                <WarningModal
                     mode={"itemmodal"}
                     visible={dialogVisible}
-                    title="Edit Venue"
-                    details={TextConstants.DefaultEditContent1}
+                    title="Edit Screen"
+                    details={TextConstants.DefaultEditContent3}
                     warningMessage="Do you want to proceed to the edit page?"
                     onSubmit={handleModalSubmit}
                     onCancel={handleModalCancel}
@@ -348,7 +246,7 @@ const ScreenList = () => {
                     cancelText="Cancel"
                     loading={modalLoading}
                 />
-                <UpdateStatusModal
+                {/* <UpdateStatusModal
                     responseMessage={message}
                     editFunction={editVenueStatus}
                     getAllFunction={(pageData) => getVenues(pageData)}
@@ -362,7 +260,7 @@ const ScreenList = () => {
                     pagination={warningPagination}
                     loading={loading}
                 /> */}
-            </Card>
+            </Card >
         </>
     )
 }

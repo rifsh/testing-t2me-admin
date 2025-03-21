@@ -3,12 +3,15 @@ import ScreenService from "services/ScreenService";
 
 const initialState = {
     response: null,
+    editResponse: null,
+    singleResponse: null,
     screenTechResponse: [],
     screenTechnologies: [],
     screenAudioResponse: [],
     screenAudioTechnologies: [],
     screenFeaturesResponse: [],
     screenFeatures: [],
+    editItemId: null,
     screens: [],
     loading: false,
     techLoading: false,
@@ -61,6 +64,19 @@ export const createScreen = createAsyncThunk(
         }
     }
 );
+export const editScreen = createAsyncThunk(
+    "screen/editScreen",
+    async ({ updatedScreen, action, pageData }, { rejectWithValue }) => {        
+        console.log('updated', updatedScreen);
+        
+        try {
+            const response = await ScreenService.editScreen(updatedScreen, action, pageData );
+            return response;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || "Error creating screen");
+        }
+    }
+);
 export const fetchScreenData = createAsyncThunk(
     "screen/fetchScreenData",
     async (pageData, { rejectWithValue }) => {
@@ -88,7 +104,9 @@ const screenSlice = createSlice({
     name: "screen",
     initialState,
     reducers: {
-
+        setScreenEditItemId(state, action) {
+            state.editItemId = action.payload;
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -139,12 +157,24 @@ const screenSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
+            .addCase(editScreen.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(editScreen.fulfilled, (state, action) => {
+                state.loading = false;
+                state.editResponse = action.payload.data;
+            })
+            .addCase(editScreen.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
             .addCase(fetchScreenData.pending, (state) => {
                 state.loading = true;
             })
             .addCase(fetchScreenData.fulfilled, (state, action) => {
                 state.loading = false;
                 state.response = action.payload;
+                state.pagination = action.payload;
             })
             .addCase(fetchScreenData.rejected, (state, action) => {
                 state.loading = false;
@@ -155,7 +185,7 @@ const screenSlice = createSlice({
             })
             .addCase(fetchScreenById.fulfilled, (state, action) => {
                 state.loading = false;
-                state.response = action.payload;
+                state.singleResponse = action.payload;
             })
             .addCase(fetchScreenById.rejected, (state, action) => {
                 state.loading = false;
@@ -164,6 +194,6 @@ const screenSlice = createSlice({
     },
 });
 
-export const { } = screenSlice.actions;
+export const { setScreenEditItemId } = screenSlice.actions;
 
 export default screenSlice.reducer;

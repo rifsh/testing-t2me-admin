@@ -14,11 +14,32 @@ ScreenService.addScreen = function (data, action) {
         data: data,
     });
 };
+ScreenService.editScreen = function (
+    updatedScreen,
+    action,
+    pageData = { page: 1, size: 10 }
+) {
+    const encodedAction = encodeURIComponent(handleAction(action));
+    const formData = Utils.createFormData(updatedScreen, {
+        fileKeys: ["thumbnail_image"],
+        skipEmpty: true,
+    });
+
+    return fetch({
+        url: `${ApiConstant.EDIT_SCREEN_URL}?screen_id=${updatedScreen.id}&action=${encodedAction}`,
+        method: "put",
+        data: updatedScreen,
+        // params: Utils.filterParams(pageData),
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+};
 ScreenService.getScreens = function (pageData) {
     return fetch({
         url: ApiConstant.GET_ALL_SCREEN_URL,
         method: "get",
-        // params: Utils.filterParams(pageData),
+        params: Utils.filterParams(pageData),
     });
 };
 ScreenService.getScreenById = function (screen_id) {
