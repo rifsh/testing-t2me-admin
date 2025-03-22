@@ -5,7 +5,9 @@ const initialState = {
     response: null,
     editResponse: null,
     singleResponse: null,
+    editable_status: null,
     screenTechResponse: [],
+    editBodyData: [],
     screenTechnologies: [],
     screenAudioResponse: [],
     screenAudioTechnologies: [],
@@ -16,6 +18,7 @@ const initialState = {
     loading: false,
     techLoading: false,
     error: null,
+    warningMessage: null,
     message: null,
     pagination: { size: 10, page: 1 }
 };
@@ -66,11 +69,20 @@ export const createScreen = createAsyncThunk(
 );
 export const editScreen = createAsyncThunk(
     "screen/editScreen",
-    async ({ updatedScreen, action, pageData }, { rejectWithValue }) => {        
-        console.log('updated', updatedScreen);
-        
+    async ({ data, action, pageData }, { rejectWithValue }) => {
         try {
-            const response = await ScreenService.editScreen(updatedScreen, action, pageData );
+            const response = await ScreenService.editScreen(data, action, pageData);
+            return response;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || "Error creating screen");
+        }
+    }
+);
+export const editScreenStatus = createAsyncThunk(
+    "screen/editScreenStatus",
+    async ({ data, action, pageData }, { rejectWithValue }) => {
+        try {
+            const response = await ScreenService.editScreenStatus(data, action, pageData);
             return response;
         } catch (error) {
             return rejectWithValue(error.response?.data || "Error creating screen");
@@ -106,6 +118,9 @@ const screenSlice = createSlice({
     reducers: {
         setScreenEditItemId(state, action) {
             state.editItemId = action.payload;
+        },
+        setScreenEditData(state, action) {
+            state.editBodyData = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -160,11 +175,29 @@ const screenSlice = createSlice({
             .addCase(editScreen.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(editScreen.fulfilled, (state, action) => {
+            .addCase(editScreen.fulfilled, (state, { payload }) => {
                 state.loading = false;
-                state.editResponse = action.payload.data;
+                state.response = payload.data;
+                if (payload.status) {
+                    state.message = payload.status.message;
+                }
             })
             .addCase(editScreen.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(editScreenStatus.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(editScreenStatus.fulfilled, (state, { payload }) => {
+                state.loading = false;
+                state.response = payload.data;
+                if (payload.status) {
+                    state.message = payload.status.message;
+                    state.editable_status = payload.status?.editable_status;
+                }
+            })
+            .addCase(editScreenStatus.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
@@ -194,6 +227,6 @@ const screenSlice = createSlice({
     },
 });
 
-export const { setScreenEditItemId } = screenSlice.actions;
+export const { setScreenEditItemId, setScreenEditData } = screenSlice.actions;
 
 export default screenSlice.reducer;

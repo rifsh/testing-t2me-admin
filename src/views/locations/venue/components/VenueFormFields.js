@@ -89,7 +89,7 @@ const VenueFormFields = ({ mode, venue }) => {
     ValidateData,
     validationStatus,
     placeValidationDialogVisible,
-    message: warningMessage,
+    message:  warningMessage,
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
@@ -180,7 +180,6 @@ const VenueFormFields = ({ mode, venue }) => {
             : values.venue_add_on_services,
           id: venue.id,
         };
-        console.log("Edit Data:", data);
 
         // Validate place
         const resultAction = await dispatch(

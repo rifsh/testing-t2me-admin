@@ -17,22 +17,25 @@ ScreenService.addScreen = function (data, action) {
 ScreenService.editScreen = function (
     updatedScreen,
     action,
-    pageData = { page: 1, size: 10 }
 ) {
     const encodedAction = encodeURIComponent(handleAction(action));
-    const formData = Utils.createFormData(updatedScreen, {
-        fileKeys: ["thumbnail_image"],
-        skipEmpty: true,
-    });
 
     return fetch({
         url: `${ApiConstant.EDIT_SCREEN_URL}?screen_id=${updatedScreen.id}&action=${encodedAction}`,
         method: "put",
-        data: updatedScreen,
-        // params: Utils.filterParams(pageData),
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
+        data: updatedScreen
+    });
+};
+ScreenService.editScreenStatus = function (
+    updatedScreen,
+    action,
+) {
+    const encodedAction = encodeURIComponent(handleAction(action));
+
+    return fetch({
+        url: `${ApiConstant.EDIT_SCREEN_STATUS_URL}?screen_id=${updatedScreen.id}&action=${encodedAction}`,
+        method: "put",
+        data: updatedScreen
     });
 };
 ScreenService.getScreens = function (pageData) {
