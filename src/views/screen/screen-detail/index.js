@@ -94,8 +94,7 @@ const ScreenDetailView = () => {
 
     return (
         <>
-            <BackPageButoon path='/screen/list' />
-
+            {/* <BackPageButoon path='/screen/list' /> */}
             <Card
                 className="screen-detail-card"
                 style={{
