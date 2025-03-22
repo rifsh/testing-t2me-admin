@@ -19,12 +19,14 @@ import { screenOptions } from 'constants/ScreenConstants';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchScreenData, setScreenEditItemId } from 'store/slices/screenSlice';
 import { setEditItemId } from 'store/slices/categorySlice';
-import { setLocationDialogVisible, setLocationModalLoading } from 'store/slices/locationSlice';
+import { editVenueStatus, getVenues, setLocationDialogVisible, setLocationModalLoading } from 'store/slices/locationSlice';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatusModal';
 import { DEFAULT_PAGE_SIZE } from 'constants/PageConstants';
 import SearchBarWithStatus from 'components/util-components/Search/SearchBarWithStatus';
 import { TextConstants } from 'constants/TextConstant';
+import { setDialogVisible } from 'store/slices/eventSlice';
+import { setSelectedItem } from 'store/slices/modalSlice';
 
 const ScreenList = () => {
     const navigate = useNavigate();
@@ -42,6 +44,7 @@ const ScreenList = () => {
     useEffect(() => {
         if (response && response.items) {
             const formattedData = Object.values(response.items).map(item => ({
+                status: item.status,
                 id: item.id,
                 screen_name: item.screen_name,
                 screen_number: item.screen_number,
@@ -128,6 +131,17 @@ const ScreenList = () => {
         );
     };
 
+    const handleUpdateStatus = (item) => {
+        console.log("status", item.status);
+
+        const newStatus = !item.status;
+        const data = { status: newStatus, id: item.id };
+        console.log('status', data);
+
+        dispatch(setSelectedItem(data));
+        dispatch(setDialogVisible(true));
+    };
+
     const getStatusBadge = (isActive) => {
         return isActive ?
             <Badge status="success" text="Active" /> :
@@ -179,12 +193,7 @@ const ScreenList = () => {
                 <Tag color="green">Reserved</Tag> :
                 <Tag color="orange">Open</Tag>
         },
-        {
-            title: "Status",
-            dataIndex: "is_active",
-            sorter: (a, b) => a.is_active - b.is_active,
-            render: (isActive) => getStatusBadge(isActive)
-        },
+        Utils.statusColumnUtil(handleUpdateStatus),
         {
             title: "",
             dataIndex: "actions",
@@ -247,7 +256,7 @@ const ScreenList = () => {
                     loading={modalLoading}
                 />
                 {/* <UpdateStatusModal
-                    responseMessage={message}
+                    responseMessage={'message'}
                     editFunction={editVenueStatus}
                     getAllFunction={(pageData) => getVenues(pageData)}
                     pageData={{ page: 1, size: 10 }}

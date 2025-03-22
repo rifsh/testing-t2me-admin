@@ -31,12 +31,14 @@ export const SubmitAndConfirmModal = ({
       dispatch(
         addFunction({ data: selectedSubmitItem, action: ActionType.SUBMIT })
       ).then((result) => {
-        if (addFunction.fulfilled.match(result)) {
+        if (addFunction.fulfilled?.match(result)) {
           dispatch(setResponseDialogVisible(true));
         } else {
           dispatch(resetStatusModalState());
           message.error(TextConstants.ErrorSubmittingItem);
         }
+      }).catch((err) => {
+        console.log("ssss", err);
       });
     }
   }, [selectedSubmitItem, dispatch, addFunction]);

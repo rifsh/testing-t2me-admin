@@ -5,11 +5,11 @@ import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 import PlaceWithCountryForm from 'components/util-components/FormItems/PlaceWithCountryForm';
 import VenueListForm from 'components/util-components/FormItems/VenueList';
 import { useDispatch, useSelector } from 'react-redux';
-import { getVenues, setLocationDialogVisible, setPlaceValidationDialogVisible, setSelectedPlace, setSelectedVenue, setSelectedVenueList, validatePlace, validateVenue } from 'store/slices/locationSlice';
+import { getVenues, setLocationDialogVisible, setLocationModalLoading, setPlaceValidationDialogVisible, setSelectedPlace, setSelectedVenue, setSelectedVenueList, validatePlace, validateVenue } from 'store/slices/locationSlice';
 import { resetTicketSelection } from 'store/slices/ticketSlice';
 import { Collapse } from '@mui/material';
 import ScreenForm from './ScreenForm';
-import { createScreen, editScreen, fetchScreenById } from 'store/slices/screenSlice';
+import { createScreen, editScreen, fetchScreenById, setScreenEditData } from 'store/slices/screenSlice';
 import { setSelectedSubmitItem } from 'store/slices/modalSlice';
 import { SubmitAndConfirmModal } from 'components/util-components/ModalItems/SubmitConfirmModal';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
@@ -29,7 +29,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     const [placeSelected, setPlaceSelected] = useState(false);
     const [venueId, setVenueId] = useState(null);
 
-    const { response, singleResponse, message: screenMessage, loading } = useSelector((state) => state.screen);
+    const { response, singleResponse, message: screenMessage, loading, editResponse, editBodyData } = useSelector((state) => state.screen);
     const { dialogVisible } = useSelector((state) => state.locations);
     // const { filteredTickets, loading: ticketsLoading } = useSelector((state) => state.tickets);
 
@@ -59,9 +59,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
 
     useEffect(() => {
         if (singleResponse) {
-            setSelectedVenue(true)
-            console.log('Received singleResponse:', singleResponse);
-            // console.log('Received singleResponse:', form.getFieldValue());
+            setSelectedVenue(true);
             if (mode === 'EDIT' && !placeSelected) {
                 setVenueId(singleResponse?.venue?.id)
                 const formValues = {
@@ -76,7 +74,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                         reserved_seating: singleResponse?.reserved_seating,
                         time_slots: singleResponse?.time_slots || [],
                         accessibility: singleResponse.accessibilty.map((values) => values.id) || [],
-                        screen_technology_id: singleResponse?.screen_technology.id,
+                        screen_technology_id: Number(singleResponse?.screen_technology.id),
                         audio_id: singleResponse?.audio.id,
                     }]
                 };
@@ -145,7 +143,6 @@ const AddScreenFormFields = ({ mode, screenId }) => {
         event.preventDefault();
         try {
             const values = await form.validateFields();
-            console.log('values', values);
             if (mode === "ADD") {
                 const resultAction = await dispatch(validateVenue(values.venue_id));
                 if (validateVenue.fulfilled.match(resultAction)) {
@@ -174,18 +171,17 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                     venue_id: venueId,
                     id: singleResponse?.id,
                 };
-                
+                dispatch(setScreenEditData(updatedScreen))
                 const resultAction = await dispatch(validateVenue(venueId));
                 if (validateVenue.fulfilled.match(resultAction)) {
                     const response = resultAction.payload;
                     if (response.message === "warning") {
                         dispatch(setPlaceValidationDialogVisible(true));
                     } else if (response.data && response.data[0]?.validation_status) {
-                        console.log('updated',updatedScreen);
-                        const editResult = await dispatch(editScreen({ updatedScreen, action: ActionType.WARNING }))
+                        const editResult = await dispatch(editScreen({ data: updatedScreen, action: ActionType.WARNING }))
 
                         if (editScreen.fulfilled.match(editResult)) {
-                            dispatch(setSelectedVenue(data));
+                            dispatch(setScreenEditData(updatedScreen));
                             dispatch(setLocationDialogVisible(true));
                         } else if (editScreen.rejected.match(editResult)) {
                             const error = editResult.error;
@@ -212,6 +208,22 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                 message.error("An unexpected error occurred. Please try again.");
             }
         }
+    };
+
+    const handleModalSubmit = async () => {
+        dispatch(setLocationModalLoading(true));
+        const resultAction = await dispatch(
+            editScreen({ data: editBodyData, action: ActionType.SUBMIT })
+        );
+        dispatch(setLocationModalLoading(false));
+        dispatch(setLocationDialogVisible(false));
+        if (editScreen.fulfilled?.match(resultAction)) {
+            dispatch(setSelectedSubmitItem(editBodyData));
+        }
+    };
+
+    const handleModalCancel = () => {
+        dispatch(setLocationDialogVisible(false));
     };
 
     return (
@@ -339,11 +351,11 @@ const AddScreenFormFields = ({ mode, screenId }) => {
             </div >
 
             <LoadingOverlay loading={loading} />
-            {/* <WarningModal
+            <WarningModal
                 visible={dialogVisible}
                 title="Confirm Action"
-                details={warningMessage}
-                responseData={responseImpactData}
+                details={screenMessage}
+                responseData={editResponse}
                 warningMessage="Do you want to continue?"
                 onSubmit={handleModalSubmit}
                 onCancel={handleModalCancel}
@@ -354,13 +366,13 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                     title: "Active Schedules",
                     dataKey: "items",
                 }}
-                editable_status={editable_status}
-                pagination={warningPagination}
-                onPaginationChange={handleWarningPagination}
-            /> */}
+            // editable_status={editable_status}
+            // pagination={warningPagination}
+            // onPaginationChange={handleWarningPagination}
+            />
             <SubmitAndConfirmModal
                 responseData={response}
-                addFunction={mode === 'ADD' ? createScreen : () => editScreen({ screen_id: 3 })}
+                addFunction={mode === 'ADD' ? createScreen : editScreen}
                 navigationPath={`${APP_PREFIX_PATH}/screen/list`}
                 responseMessage={screenMessage}
             />
