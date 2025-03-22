@@ -5,6 +5,7 @@ const initialState = {
     response: null,
     editResponse: null,
     singleResponse: null,
+    editable_status: null,
     screenTechResponse: [],
     editBodyData: [],
     screenTechnologies: [],
@@ -71,6 +72,17 @@ export const editScreen = createAsyncThunk(
     async ({ data, action, pageData }, { rejectWithValue }) => {
         try {
             const response = await ScreenService.editScreen(data, action, pageData);
+            return response;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || "Error creating screen");
+        }
+    }
+);
+export const editScreenStatus = createAsyncThunk(
+    "screen/editScreenStatus",
+    async ({ data, action, pageData }, { rejectWithValue }) => {
+        try {
+            const response = await ScreenService.editScreenStatus(data, action, pageData);
             return response;
         } catch (error) {
             return rejectWithValue(error.response?.data || "Error creating screen");
@@ -166,12 +178,26 @@ const screenSlice = createSlice({
             .addCase(editScreen.fulfilled, (state, { payload }) => {
                 state.loading = false;
                 state.response = payload.data;
-                // state.editResponse = action.payload.data;
                 if (payload.status) {
                     state.message = payload.status.message;
                 }
             })
             .addCase(editScreen.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(editScreenStatus.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(editScreenStatus.fulfilled, (state, { payload }) => {
+                state.loading = false;
+                state.response = payload.data;
+                if (payload.status) {
+                    state.message = payload.status.message;
+                    state.editable_status = payload.status?.editable_status;
+                }
+            })
+            .addCase(editScreenStatus.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

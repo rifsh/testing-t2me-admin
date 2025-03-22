@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { screensMockData } from './MockData';
 import { screenOptions } from 'constants/ScreenConstants';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchScreenData, setScreenEditItemId } from 'store/slices/screenSlice';
+import { editScreenStatus, fetchScreenData, setScreenEditItemId } from 'store/slices/screenSlice';
 import { setEditItemId } from 'store/slices/categorySlice';
 import { editVenueStatus, getVenues, setLocationDialogVisible, setLocationModalLoading } from 'store/slices/locationSlice';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
@@ -25,8 +25,8 @@ import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatu
 import { DEFAULT_PAGE_SIZE } from 'constants/PageConstants';
 import SearchBarWithStatus from 'components/util-components/Search/SearchBarWithStatus';
 import { TextConstants } from 'constants/TextConstant';
-import { setDialogVisible } from 'store/slices/eventSlice';
-import { setSelectedItem } from 'store/slices/modalSlice';
+import { setDialogVisible, setSelectedItem } from 'store/slices/modalSlice';
+import StatusSubmitAndConfirmModal from 'components/util-components/ModalItems/StatusSubmitModal';
 
 const ScreenList = () => {
     const navigate = useNavigate();
@@ -34,7 +34,7 @@ const ScreenList = () => {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(screensMockData);
     const [filteredData, setFilteredData] = useState([]);
-    const { response, loading: screenLoader, pagination, editItemId } = useSelector((state) => state.screen);
+    const { response, loading: screenLoader, pagination, editItemId, responseData, message, editable_status } = useSelector((state) => state.screen);
     const { dialogVisible, modalLoading } = useSelector((state) => state.locations);
 
     useEffect(() => {
@@ -132,20 +132,10 @@ const ScreenList = () => {
     };
 
     const handleUpdateStatus = (item) => {
-        console.log("status", item.status);
-
         const newStatus = !item.status;
         const data = { status: newStatus, id: item.id };
-        console.log('status', data);
-
         dispatch(setSelectedItem(data));
         dispatch(setDialogVisible(true));
-    };
-
-    const getStatusBadge = (isActive) => {
-        return isActive ?
-            <Badge status="success" text="Active" /> :
-            <Badge status="error" text="Inactive" />;
     };
 
     const tableColumns = [
@@ -255,9 +245,9 @@ const ScreenList = () => {
                     cancelText="Cancel"
                     loading={modalLoading}
                 />
-                {/* <UpdateStatusModal
-                    responseMessage={'message'}
-                    editFunction={editVenueStatus}
+                <UpdateStatusModal
+                    responseMessage={message}
+                    editFunction={editScreenStatus}
                     getAllFunction={(pageData) => getVenues(pageData)}
                     pageData={{ page: 1, size: 10 }}
                     tableConfig={{
@@ -265,10 +255,20 @@ const ScreenList = () => {
                         dataKey: "items",
                     }}
                     editable_status={editable_status}
-                    responseData={responseImpactData}
-                    pagination={warningPagination}
+                    responseData={responseData}
+                    // pagination={warningPagination}
                     loading={loading}
-                /> */}
+                />
+
+                <StatusSubmitAndConfirmModal
+                    editFunction={editScreenStatus}
+                    getAllFunction={fetchScreenData}
+                    responseData={response}
+                    responseMessage={message}
+                    pageData={DEFAULT_PAGE_SIZE}
+                    onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+                    onCloseMessage={TextConstants.StatusUpdateCanceled}
+                />
             </Card >
         </>
     )
