@@ -268,7 +268,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
             </Row>
 
             <>
-                {!venueSelected && < Alert
+                {!venueSelected && mode === 'ADD' && < Alert
                     message="Venue Required"
                     description="Please select a venue to configure screens."
                     type="info"
@@ -310,7 +310,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                     bordered
                                     className="screen-information-card"
                                 >
-                                    {!venueSelected ? (
+                                    {!venueSelected && mode === 'ADD' ? (
                                         <Alert
                                             message="Venue Required"
                                             description="Please select a venue to configure screens."
