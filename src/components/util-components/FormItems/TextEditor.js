@@ -15,7 +15,7 @@ const TextEditor = ({ value, onChange }) => {
           [{ indent: "-1" }, { indent: "+1" }],
           [{ align: [] }],
           ["clean"],
-          ['link', 'image'],
+          ['link'],
         ],
       }}
     />

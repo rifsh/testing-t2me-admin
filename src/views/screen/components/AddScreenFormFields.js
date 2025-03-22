@@ -267,6 +267,15 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                 </Col>
             </Row>
 
+            <>
+                {!venueSelected && < Alert
+                    message="Venue Required"
+                    description="Please select a venue to configure screens."
+                    type="info"
+                    showIcon
+                />}
+            </>
+
             <div style={{ marginTop: 16 }}>
                 <Collapse in={!!form.getFieldValue('venue_id')}>
                     <div>
@@ -301,7 +310,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                     bordered
                                     className="screen-information-card"
                                 >
-                                    {!form.getFieldValue('venue_id') ? (
+                                    {!venueSelected ? (
                                         <Alert
                                             message="Venue Required"
                                             description="Please select a venue to configure screens."
