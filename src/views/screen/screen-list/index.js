@@ -138,6 +138,12 @@ const ScreenList = () => {
         dispatch(setDialogVisible(true));
     };
 
+    const getStatusBadge = (isActive) => {
+        return isActive ?
+            <Badge status="success" text="Active" /> :
+            <Badge status="error" text="Inactive" />;
+    };
+
     const tableColumns = [
         {
             title: "Screen Name",
@@ -180,8 +186,10 @@ const ScreenList = () => {
             title: "Seating",
             dataIndex: 'reserved_seating',
             render: (reserved) => reserved ?
-                <Tag color="green">Reserved</Tag> :
-                <Tag color="orange">Open</Tag>
+                <Badge status="success" text="Reserved" /> :
+                <Badge status="error" text="Open" />
+            //     <Badge status="success" text="Active" /> :
+            // <Badge status="error" text="Inactive" />;
         },
         Utils.statusColumnUtil(handleUpdateStatus),
         {
