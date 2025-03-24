@@ -1,32 +1,69 @@
-import React, { useState } from 'react'
-import { Button, Card, DatePicker, Form, Input, Select, Upload, Switch, InputNumber, Divider, Typography, Tabs } from 'antd'
-import { SupportImageFormat } from 'constants/SupportFileConstants';
-import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
-import ReactQuill from 'react-quill';
+import React, { useEffect, useState } from 'react';
+import { Button, Card, Form, Input, Select, Switch, InputNumber, Typography, Row, Col, Alert } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchAllTickets } from 'store/slices/ticketSlice';
 import { screenOptions } from 'constants/ScreenConstants';
+import { fetchScreenAudio, fetchScreenFeatures, fetchScreenTech } from 'store/slices/screenSlice';
+import TextEditor from 'components/util-components/FormItems/TextEditor';
 
 const { Option } = Select;
 const { Title } = Typography;
-const { TabPane } = Tabs;
 
-const ScreenForm = ({ form, index, onRemove, isOnlyScreen }) => {
-    const [message, setMessage] = useState("");
+const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_id }) => {
+    const [message, setMessage] = useState('');
+    const dispatch = useDispatch();
+    const { screenTechnologies, screenAudioTechnologies, screenFeatures, techLoading } = useSelector((state) => state.screen);
+
     const rules = {
-        subject: [{ required: true, message: "Please enter screen name" }],
-        screen_type: [{ required: true, message: "Please select screen type" }],
-        capacity: [{ required: true, message: "Please enter screen capacity" }],
-        thumbnail_image: [{ required: true, message: "Please choose a screen image" }],
+        subject: [{ required: true, message: 'Please enter screen name' }],
+        screen_type: [{ required: true, message: 'Please select screen type' }],
+        capacity: [{ required: true, message: 'Please enter screen capacity' }],
+        thumbnail_image: [{ required: true, message: 'Please choose a screen image' }],
+        ticket_structure: [{ required: true, message: 'Please select a ticket structure' }],
+        ticket_sets: [{ required: true, message: 'Please select at least one ticket set' }],
+        accessibility: [{ required: true, message: 'Please select at least one Accessibility feature' }],
+        screen_technology_id: [{ required: true, message: 'Please select at least one Screen technology' }],
+        audio_id: [{ required: true, message: 'Please select at least one Audio technology' }],
     };
 
-    const normFile = (e) => {
-        if (Array.isArray(e)) {
-            return e;
+    const [dataStatus, setDataStatus] = useState({
+        technologiesEmpty: false,
+        audioEmpty: false,
+        featuresEmpty: false
+    });
+
+    useEffect(() => {
+        if (venue_id) {
+            dispatch(fetchAllTickets({ venue_id: venue_id }));
+            dispatch(fetchScreenTech({ venue_id: venue_id }));
+            dispatch(fetchScreenAudio({ venue_id: venue_id }));
+            dispatch(fetchScreenFeatures({ venue_id: venue_id }));
+            console.log(screenTechnologies);
+
         }
-        return e?.fileList;
+    }, [venue_id, dispatch]);
+
+    useEffect(() => {
+        setDataStatus({
+            technologiesEmpty: !techLoading && (!screenTechnologies || screenTechnologies.length === 0),
+            audioEmpty: !techLoading && (!screenAudioTechnologies || screenAudioTechnologies.length === 0),
+            featuresEmpty: !techLoading && (!screenFeatures || screenFeatures.length === 0)
+        });
+    }, [screenTechnologies, screenAudioTechnologies, screenFeatures, techLoading]);
+
+    const showAlert = dataStatus.technologiesEmpty || dataStatus.audioEmpty || dataStatus.featuresEmpty;
+    const generateAlertMessage = () => {
+        const missingData = [];
+        if (dataStatus.technologiesEmpty) missingData.push('Screen Technologies');
+        if (dataStatus.audioEmpty) missingData.push('Audio Technologies');
+        if (dataStatus.featuresEmpty) missingData.push('Screen Features');
+
+        return `No data available for: ${missingData.join(', ')}. Please add data before proceeding.`;
     };
 
     return (
-        <div>
+        <div className="screen-form-container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <Title level={5}>Screen {index + 1}</Title>
                 {!isOnlyScreen && (
@@ -41,117 +78,124 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen }) => {
                 )}
             </div>
 
-            <Form.Item name={['screens', index, 'screen_name']} label="Name" rules={rules.subject}>
-                <Input placeholder="Screen name" />
-            </Form.Item>
-
-            <Form.Item name={['screens', index, 'screen_type']} label="Screen Type" rules={rules.screen_type}>
-                <Select placeholder="Select screen type">
-                    {screenOptions.screenTypes.map(screen => (
-                        <Option key={screen.value} value={screen.value}>{screen.label}</Option>
-                    ))}
-                </Select>
-            </Form.Item>
-            <Form.Item name={['screens', index, 'capacity']} label="Capacity" rules={rules.capacity}>
-                <InputNumber min={1} placeholder="Total seats" style={{ width: '100%' }} />
-            </Form.Item>
-
-            <Form.Item name={['screens', index, 'description']} label="Description">
-                <ReactQuill
-                    theme="snow"
-                    onChange={(value) => {
-                        const values = form.getFieldsValue();
-                        const screens = values.screens || [];
-                        screens[index] = { ...screens[index], description: value };
-                        form.setFieldsValue({ screens });
-                    }}
+            {showAlert && (
+                <Alert
+                    message="Missing Data"
+                    description={generateAlertMessage()}
+                    type="warning"
+                    showIcon
+                    style={{ marginBottom: '16px' }}
                 />
-            </Form.Item>
-
-            <Form.Item name={['screens', index, 'is_active']} label="Active Status" valuePropName="checked" initialValue={true}>
-                <Switch defaultChecked />
-            </Form.Item>
+            )}
 
             <Form.Item
-                name={['screens', index, 'thumbnail_image']}
-                label="Screen Image"
-                valuePropName="fileList"
-                getValueFromEvent={normFile}
-                rules={rules.thumbnail_image}
+                name={['screens', index, 'screen_number']}
+                hidden
+                initialValue={screenNumber}
             >
-                <Upload
-                    accept={SupportImageFormat}
-                    listType="picture-card"
-                    beforeUpload={() => false}
-                    maxCount={1}
-                >
-                    <div>
-                        <UploadOutlined />
-                        <div style={{ marginTop: 8 }}>Upload</div>
-                    </div>
-                </Upload>
+                <Input />
             </Form.Item>
 
-            <Form.Item name={['screens', index, 'seat_structure_id']} label="Seat Structure">
-                <Select placeholder="Select seat structure">
-                    {screenOptions.seatStructures.map(({ value, label }) => (
-                        <Option key={value} value={value}>{label}</Option>
-                    ))}
-                </Select>
+            <Row gutter={16}>
+                <Col xs={24} md={12}>
+                    <Form.Item name={['screens', index, 'screen_name']} label="Name" rules={rules.subject}>
+                        <Input placeholder="Screen name" />
+                    </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                    <Form.Item name={['screens', index, 'screen_type']} label="Screen Type" rules={rules.screen_type}>
+                        <Select placeholder="Select screen type">
+                            {screenOptions.screenTypes.map((screen) => (
+                                <Option key={screen.value} value={screen.value}>{screen.label}</Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                </Col>
+            </Row>
+
+            <Row gutter={16}>
+                <Col xs={24} md={12}>
+                    <Form.Item name={['screens', index, 'capacity']} label="Capacity" rules={rules.capacity}>
+                        <InputNumber min={1} placeholder="Total seats" style={{ width: '100%' }} />
+                    </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                    <Form.Item name={['screens', index, 'seat_structure_id']} label="Seat Structure">
+                        <Select placeholder="Select seat structure">
+                            {screenOptions.seatStructures.map(({ value, label }) => (
+                                <Option key={value} value={value}>{label}</Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                </Col>
+            </Row>
+
+            <Form.Item
+                name={['screens', index, 'description']}
+                label="Description"
+            >
+                <TextEditor />
             </Form.Item>
 
-            <Form.Item name={['screens', index, 'ticket_structure_id']} label="Ticket Structure">
-                <Select placeholder="Select ticket structure">
-                    {screenOptions.ticketStructures.map(({ value, label }) => (
-                        <Option key={value} value={value}>{label}</Option>
-                    ))}
-                </Select>
-            </Form.Item>
+            <Row gutter={16}>
+                <Col xs={24} md={12}>
+                    <Form.Item
+                        name={['screens', index, 'reserved_seating']}
+                        label="Reserved Seating"
+                        valuePropName="checked"
+                        initialValue={true}
+                        normalize={(value) => value || false}
+                    >
+                        <Switch />
+                    </Form.Item>
+                </Col>
+            </Row>
 
-            <Form.Item name={['screens', index, 'available_times']} label="Available Times">
+            {/* <TicketConfiguration
+                form={form}
+                index={index}
+                rules={rules} /> */}
+
+            <Form.Item name={['screens', index, 'time_slots']} label="Available Times">
                 <Select mode="multiple" placeholder="Select available time slots">
                     {screenOptions.availableTimes.map(({ value, label }) => (
-                        <Option key={value} value={value}>{label}</Option>
+                        <Option key={value} value={label}>{label}</Option>
                     ))}
                 </Select>
             </Form.Item>
 
-            <Card title="Additional Settings">
-                <Form.Item name={['screens', index, 'has_reserved_seating']} label="Reserved Seating" valuePropName="checked">
-                    <Switch />
-                </Form.Item>
+            <Card title="Additional Settings" style={{ marginBottom: '20px' }}>
+                <Row gutter={16}>
+                    <Col xs={24} md={12}>
+                        <Form.Item name={['screens', index, 'accessibility']} label="Accessibility Features" rules={rules.accessibility}>
+                            <Select mode="multiple" placeholder="Select features">
+                                {screenFeatures.map((value) => (
+                                    <Option key={value.id} value={value.id}>{value.name}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                        <Form.Item name={['screens', index, 'screen_technology_id']} label="Screen Technology" rules={rules.screen_technology_id}>
+                            <Select placeholder="Select technology">
+                                {screenTechnologies.map((value) => (
+                                    <Option key={value?.id} value={value?.id}>{value?.name}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </Col>
+                </Row>
 
-                <Form.Item name={['screens', index, 'accessibility_features']} label="Accessibility Features">
-                    <Select mode="multiple" placeholder="Select features">
-                        {screenOptions.accessibilityFeatures.map(({ value, label }) => (
-                            <Option key={value} value={value}>{label}</Option>
-                        ))}
-                    </Select>
-                </Form.Item>
-                <Form.Item name={['screens', index, 'screen_technology']} label="Screen Technology">
-                    <Select placeholder="Select technology">
-                        {screenOptions.screenTechnologies.map(({ value, label }) => (
-                            <Option key={value} value={value}>{label}</Option>
-                        ))}
-                    </Select>
-                </Form.Item>
-
-                <Form.Item name={['screens', index, 'audio_system']} label="Audio System">
+                <Form.Item name={['screens', index, 'audio_id']} label="Audio System" rules={rules.audio_id}>
                     <Select placeholder="Select audio system">
-                        {screenOptions.audioSystems.map(({ value, label }) => (
-                            <Option key={value} value={value}>{label}</Option>
+                        {screenAudioTechnologies.map((value) => (
+                            <Option key={value.id} value={value.id}>{value.name}</Option>
                         ))}
                     </Select>
-                </Form.Item>
-
-                <Form.Item name={['screens', index, 'maintenance_schedule']} label="Maintenance Schedule">
-                    <DatePicker.RangePicker style={{ width: '100%' }} />
                 </Form.Item>
             </Card>
-
-            <Divider />
         </div>
     );
 };
 
-export default ScreenForm
+export default ScreenForm;

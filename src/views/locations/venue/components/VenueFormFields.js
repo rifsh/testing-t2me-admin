@@ -11,6 +11,10 @@ import {
   message,
   Upload,
   Typography,
+  Tabs,
+  Checkbox,
+  InputNumber,
+  Rate,
 } from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -38,6 +42,9 @@ import {
   PlusOutlined,
   UploadOutlined,
   MinusCircleOutlined,
+  DesktopOutlined,
+  SoundOutlined,
+  SafetyOutlined,
 } from "@ant-design/icons";
 import {
   SupportImageFormat,
@@ -52,6 +59,7 @@ import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
+import VenueTechnology from "./VenueTechnology";
 import ReactQuill from "react-quill";
 import TextEditor from "components/util-components/FormItems/TextEditor";
 
@@ -81,8 +89,7 @@ const VenueFormFields = ({ mode, venue }) => {
     ValidateData,
     validationStatus,
     placeValidationDialogVisible,
-    message: warningMessage,
-    message,
+    message:  warningMessage,
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
@@ -96,30 +103,34 @@ const VenueFormFields = ({ mode, venue }) => {
         latitude: venue.latitude,
         longitude: venue.longitude,
         description: venue.description,
+        screen_tech: venue.screen_tech || [],
+        audios: venue.audio || [],
+        accessbility_feature: venue.accessibility || [],
         venue_add_on_services: !venue.venue_add_on_services
           ? []
           : venue.venue_add_on_services,
         banner_images: venue?.media
           ? venue?.media?.map((banner, index) => ({
-              uid: `-banner-${index}`,
-              name: banner?.media_url.split("/").pop(),
-              status: "done",
-              url: banner?.media_url,
-            }))
+            uid: `-banner-${index}`,
+            name: banner?.media_url.split("/").pop(),
+            status: "done",
+            url: banner?.media_url,
+          }))
           : [],
 
         thumbnail_image:
           venue.thumbnail_image && venue.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: venue.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: venue.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: venue.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: venue.thumbnail_image,
+              },
+            ]
             : [],
       });
+
     }
   }, [form, venue, mode]);
 
@@ -141,72 +152,88 @@ const VenueFormFields = ({ mode, venue }) => {
   };
 
   const handleBeforeUpload = Utils.handleBeforeUpload;
+
+
   const onFinish = async () => {
-    const values = await form.validateFields();
+    try {
+      // Validate form fields
+      const values = await form.validateFields();
 
-    if (mode === "EDIT") {
-      console.log("ITS AN EDITTTTTTTTTTTTT");
+      if (mode === "EDIT") {
+        console.log("ITS AN EDITTTTTTTTTTTTT");
 
-      // If placeId exists, it's an edit (Edit mode)
-      const data = {
-        ...values,
-        place_id: selectedPlace ?? venue.place?.id,
-        latitude: coordinates.lat || 0,
-        longitude: coordinates.lng || 0,
-        capacity: values.capacity || 0,
-        indoor: values.indoor !== undefined ? values.indoor : false,
-        address: values.address,
-        description: values.description,
-        venue_add_on_services: !values.venue_add_on_services
-          ? []
-          : values.venue_add_on_services,
-        id: venue.id,
-      };
-      console.log("Edit Data:", data);
+        // Prepare data for edit mode
+        const data = {
+          ...values,
+          place_id: selectedPlace ?? venue.place?.id,
+          latitude: coordinates.lat || 0,
+          longitude: coordinates.lng || 0,
+          capacity: values.capacity || 0,
+          indoor: values.indoor !== undefined ? values.indoor : false,
+          address: values.address,
+          description: values.description,
+          audios: !values.audios ? [] : values.audios,
+          screen_tech: !values.screen_tech ? [] : values.screen_tech,
+          accessbility_feature: !values.accessbility_feature ? [] : values.accessbility_feature,
+          venue_add_on_services: !values.venue_add_on_services
+            ? []
+            : values.venue_add_on_services,
+          id: venue.id,
+        };
 
-      const resultAction = await dispatch(
-        validatePlace(selectedPlace ?? venue.place?.id)
-      );
+        // Validate place
+        const resultAction = await dispatch(
+          validatePlace(selectedPlace ?? venue.place?.id)
+        );
 
-      if (validatePlace.fulfilled.match(resultAction)) {
-        const response = resultAction.payload;
-        if (response.message === "warning") {
-          dispatch(setPlaceValidationDialogVisible(true));
-        } else if (response.data && response.data[0]?.validation_status) {
-          const resultAction = await dispatch(
-            editVenue({ data, action: ActionType.WARNING })
-          );
+        if (validatePlace.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setPlaceValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            const editResultAction = await dispatch(
+              editVenue({ data, action: ActionType.WARNING })
+            );
 
-          if (editVenue.fulfilled.match(resultAction)) {
-            dispatch(setSelectedVenue(data));
-            dispatch(setLocationDialogVisible(true));
+            if (editVenue.fulfilled.match(editResultAction)) {
+              dispatch(setSelectedVenue(data));
+              dispatch(setLocationDialogVisible(true));
+            } else if (editVenue.rejected.match(editResultAction)) {
+              // Handle API validation errors
+              const error = editResultAction.error;
+              if (error.message) {
+                message.error(error.message); // Show error message to the user
+              }
+            }
           }
         }
-      }
-    } else {
-      try {
-        console.log("Form valuexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxs:", values);
+      } else {
+        console.log("Form values:", values);
 
         if (!selectedPlace) {
           message.error("Place ID is missing. Please select a place.");
           return;
         }
 
-        // Provide default values for missing fields
+        // Prepare data for add mode
         const formData = {
           ...values,
           place_id: selectedPlace,
-          latitude: coordinates.lat || 0, // Use 0 if undefined
-          longitude: coordinates.lng || 0, // Use 0 if undefined
-          capacity: values.capacity || 0, // Ensure capacity is always a number
-          indoor: values.indoor !== undefined ? values.indoor : false, // Ensure indoor is boolean
+          latitude: coordinates.lat || 0,
+          longitude: coordinates.lng || 0,
+          capacity: values.capacity || 0,
+          indoor: values.indoor !== undefined ? values.indoor : false,
           address: values.address,
           description: values.description,
+          audios: !values.audios ? [] : values.audios,
+          screen_tech: !values.screen_tech ? [] : values.screen_tech,
+          accessbility_feature: !values.accessbility_feature ? [] : values.accessbility_feature,
           venue_add_on_services: !values.venue_add_on_services
             ? []
             : values.venue_add_on_services,
         };
 
+        // Validate place
         const resultAction = await dispatch(validatePlace(selectedPlace));
 
         if (validatePlace.fulfilled.match(resultAction)) {
@@ -216,10 +243,26 @@ const VenueFormFields = ({ mode, venue }) => {
           } else if (response.data && response.data[0]?.validation_status) {
             dispatch(setSelectedSubmitItem(formData));
           }
+        } else if (validatePlace.rejected.match(resultAction)) {
+          // Handle API validation errors
+          const error = resultAction.error;
+          if (error.message) {
+            message.error(error.message); // Show error message to the user
+          }
         }
-        // dispatch(setSelectedSubmitItem(formData));
-      } catch (errorInfo) {
-        console.error("Validation Failed:", errorInfo);
+      }
+    } catch (errorInfo) {
+      console.error("Validation Failed:", errorInfo);
+
+      // Handle form validation errors
+      if (errorInfo.errorFields) {
+        message.error(`Please fill all the required fields`);
+        errorInfo.errorFields.forEach((field) => {
+          // message.error(`${field.name.join(".")}: ${field.errors.join(", ")}`);
+          // message.error(`Fill all the required fields`);
+        });
+      } else {
+        message.error("An unexpected error occurred. Please try again.");
       }
     }
   };
@@ -274,14 +317,6 @@ const VenueFormFields = ({ mode, venue }) => {
               {mode === "ADD" ? "Add Venue" : "Edit Venue"}
             </h2>
 
-            <Form.Item
-              name="address"
-              label="Address"
-              rules={[{ required: true, message: "Please enter the address" }]}
-            >
-              <Input placeholder="Enter the address" />
-            </Form.Item>
-
             <PlaceWithCountryForm
               form={form}
               label={"Place"}
@@ -296,32 +331,62 @@ const VenueFormFields = ({ mode, venue }) => {
             >
               <Input placeholder="Enter the venue name" />
             </Form.Item>
+
             <Form.Item
-              name="capacity"
-              label="Capacity"
-              rules={[
-                { required: true, message: RulesMessageConstants.CAPACITY },
-              ]}
+              name="address"
+              label="Address"
+              rules={[{ required: true, message: "Please enter the address" }]}
             >
-              <Input
-                type="number"
-                placeholder="Enter capacity"
-                onWheel={(e) => e.target.blur()}
-              />
+              <Input placeholder="Enter the address" />
             </Form.Item>
+            <Row gutter={5}>
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  name="capacity"
+                  label="Capacity"
+                  rules={[
+                    { required: true, message: RulesMessageConstants.CAPACITY },
+                  ]}
+                >
+                  <Input
+                    type="number"
+                    placeholder="Enter capacity"
+                    onWheel={(e) => e.target.blur()}
+                  />
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  name="indoor"
+                  label="Indoor/Outdoor"
+                  rules={[
+                    { required: true, message: RulesMessageConstants.INDOOR },
+                  ]}
+                >
+                  <Select className="w-100" placeholder="Select type">
+                    <Option value={true}>Indoor</Option>
+                    <Option value={false}>Outdoor</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+
             <Form.Item
-              name="indoor"
-              label="Indoor/Outdoor"
-              FTRDESW
-              rules={[
-                { required: true, message: RulesMessageConstants.INDOOR },
-              ]}
+              noStyle
+              shouldUpdate={(prevValues, currentValues) => prevValues.indoor !== currentValues.indoor}
             >
-              <Select className="w-100" placeholder="Select type">
-                <Option value={true}>Indoor</Option>
-                <Option value={false}>Outdoor</Option>
-              </Select>
+              {({ getFieldValue }) => {
+                return getFieldValue('indoor') === true ? (
+                  <div className="venue-features-container">
+                    <h4>Venue Technology & Features</h4>
+                    <VenueTechnology
+                      form={form}
+                    />
+                  </div>
+                ) : null;
+              }}
             </Form.Item>
+
             <Form.Item
               name="description"
               label="Description"
@@ -329,34 +394,8 @@ const VenueFormFields = ({ mode, venue }) => {
                 { required: true, message: RulesMessageConstants.DESCRIPTION },
               ]}
             >
-              {" "}
               <TextEditor />
               {/* <Input.TextArea rows={4} placeholder="Enter venue description" /> */}
-            </Form.Item>
-            <Form.Item
-              name="latitude"
-              label="Latitude"
-              rules={[
-                {
-                  required: true,
-                  message: "Please select a location on the map",
-                },
-              ]}
-            >
-              <Input value={coordinates.lat} readOnly />
-            </Form.Item>
-
-            <Form.Item
-              name="longitude"
-              label="Longitude"
-              rules={[
-                {
-                  required: true,
-                  message: "Please select a location on the map",
-                },
-              ]}
-            >
-              <Input value={coordinates.lng} readOnly />
             </Form.Item>
             <Form.Item
               name="thumbnail_image"
@@ -402,6 +441,8 @@ const VenueFormFields = ({ mode, venue }) => {
               {ResolutionByServices.place} pixels.{" "}
             </Text>
           </Card>
+
+          {/* Rest of the form remains the same */}
           <Card>
             <Form.Item name="venue_add_on_services" label="Add on Services">
               <Form.List name="venue_add_on_services">
@@ -413,12 +454,10 @@ const VenueFormFields = ({ mode, venue }) => {
                           {...restField}
                           name={[name, "title"]}
                           label="Title"
-                          //rules={[{ required: true, message: "Title is required" }]}
                         >
                           <Input placeholder="Enter title" />
                         </Form.Item>
 
-                        {/* Use "services" instead of "add" to match the data structure */}
                         <Form.List name={[name, "services"]}>
                           {(
                             serviceFields,
@@ -443,7 +482,6 @@ const VenueFormFields = ({ mode, venue }) => {
                                         <Form.Item
                                           {...serviceRestField}
                                           name={[serviceName]}
-                                          //rules={[{ required: false, message: "Service is required" }]}
                                           style={{ width: "100%" }}
                                         >
                                           <Input placeholder="Enter service" />
@@ -462,7 +500,7 @@ const VenueFormFields = ({ mode, venue }) => {
                                 <Col span={12}>
                                   <Button
                                     type="dashed"
-                                    onClick={() => addService("")} // Add an empty string to the array
+                                    onClick={() => addService("")}
                                     block
                                     icon={<PlusOutlined />}
                                   >
@@ -501,7 +539,31 @@ const VenueFormFields = ({ mode, venue }) => {
               </Form.List>
             </Form.Item>
           </Card>
+          <Form.Item
+            name="latitude"
+            label="Latitude"
+            rules={[
+              {
+                required: true,
+                message: "Please select a location on the map",
+              },
+            ]}
+          >
+            <Input value={coordinates.lat} readOnly />
+          </Form.Item>
 
+          <Form.Item
+            name="longitude"
+            label="Longitude"
+            rules={[
+              {
+                required: true,
+                message: "Please select a location on the map",
+              },
+            ]}
+          >
+            <Input value={coordinates.lng} readOnly />
+          </Form.Item>
           <Card>
             <div className="mb-3">
               <h3>Pick Location</h3>

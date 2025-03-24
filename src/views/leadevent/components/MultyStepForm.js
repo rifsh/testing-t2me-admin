@@ -97,30 +97,30 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         event_name: singleLeadEvent.event_name,
         description: singleLeadEvent.description,
         place: singleLeadEvent.place?.name,
-        venue_id: singleLeadEvent.venues?.map((venue) => venue.id) || [],
+        // venue_id: singleLeadEvent.venues?.map((venue) => venue.id) || [],
       };
 
       form.setFieldsValue(formValues);
 
-      const placeIds = singleLeadEvent.venues
-        ?.map((venue) => venue.place?.id)
-        .filter((id) => id);
+      // const placeIds = singleLeadEvent.venues
+      //   ?.map((venue) => venue.place?.id)
+      //   .filter((id) => id);
 
-      if (placeIds.length > 0) {
+      // if (placeIds.length > 0) {
         // Clear previously selected venues
-        dispatch(setSelectedVenueList("clear"));
+        // dispatch(setSelectedVenueList("clear"));
 
         // Fetch venues for the place
-        dispatch(getVenues({ place_id: placeIds[0] }));
+        // dispatch(getVenues({ place_id: placeIds[0] }));
 
         // Store venue IDs that need to be selected once venues are loaded
-        const venueIdsToSelect =
-          singleLeadEvent.venues?.map((venue) => venue.id) || [];
-        sessionStorage.setItem(
-          "venueIdsToSelect",
-          JSON.stringify(venueIdsToSelect)
-        );
-      }
+        // const venueIdsToSelect =
+        //   singleLeadEvent.venues?.map((venue) => venue.id) || [];
+        // sessionStorage.setItem(
+        //   "venueIdsToSelect",
+        //   JSON.stringify(venueIdsToSelect)
+        // );
+      // }
     }
   }, [
     singleLeadEvent,

@@ -1,11 +1,11 @@
 export const ApiConstant = {
   API_BASE_URL: "https://uat-tickets2me.mitetechnology.com",
   LOG_OUT: "/api/v1/auth/secured/logout",
-  LEAD_REGISTER:"/api/v1/auth/public/register/lead_organizer",
-  LEAD_OTP_VERIFY:"/api/v1/auth/public/lead_otp",
-  LEAD_OTP_RESEND:"/api/v1/auth/public/resend/otp",
-  TERMS_AND_CONDITION:"/api/v1/app_management/public/terms_condition",
-  POTS_TERMS_AND_CONDITION:"/api/v1/app_management/secured/terms_condition",
+  LEAD_REGISTER: "/api/v1/auth/public/register/lead_organizer",
+  LEAD_OTP_VERIFY: "/api/v1/auth/public/lead_otp",
+  LEAD_OTP_RESEND: "/api/v1/auth/public/resend/otp",
+  TERMS_AND_CONDITION: "/api/v1/app_management/public/terms_condition",
+  POTS_TERMS_AND_CONDITION: "/api/v1/app_management/secured/terms_condition",
   CATEGORY_URL: "/api/v1/events/secured/category",
   CATEGORY_STATUS_URL: "/api/v1/events/secured/category_status",
   SUB_CATEGORY_STATUS_URL: "/api/v1/events/secured/subcategory_status",
@@ -31,8 +31,8 @@ export const ApiConstant = {
   LEAD_EVENT_URL: "/api/v1/events/secured/lead_event/creation",
   EVENT_VALIDATION_URL: "/api/v1/events/secured/validation_event",
   EVENT_DETAILS_URL: "/api/v1/events/secured/events/detail",
-  LEAD_EVENT_DETAILS_URL:"/api/v1/events/secured/lead_event/single",
-  LEAD_EVENT_MESSAGE_URL:"/api/v1/events/secured/lead_event/comment",
+  LEAD_EVENT_DETAILS_URL: "/api/v1/events/secured/lead_event/single",
+  LEAD_EVENT_MESSAGE_URL: "/api/v1/events/secured/lead_event/comment",
   PLACE_EVENTS_URL: "/api/v1/events/public/event",
   ORGANIZER_EVENTS_URL: "/api/v1/events/secured/event/organizer",
   EVENT_SUPPORT_AVAILABLE: "/api/v1/events/secured/events/support",
@@ -97,6 +97,16 @@ export const ApiConstant = {
   EVENT_ORGANIZER_EVENT_UPDATE: "/api/v1/events/secured/organizer_event_update",
   EVENT_ORGANIZER_EVENT_UPDATE_RECHANGES:
     "/api/v1/events/secured/organizer_event_secondary_update",
+
+  //  SCREEN API ENDPOINTS
+  ADD_SCREEN_URL: "/api/v1/moies/secured/screens/creation",
+  EDIT_SCREEN_URL: "/api/v1/moies/secured/screens/edit",
+  EDIT_SCREEN_STATUS_URL: "/api/v1/moies/secured/screens/edit_status",
+  GET_ALL_SCREEN_URL: "/api/v1/moies/secured/screens",
+  GET_SCREEN_ById_URL: "/api/v1/moies/secured/screens/single",
+  FETCH_SCREEN_TECH_URL: "/api/v1/moies/secured/screens/tech",
+  FETCH_SCREEN_AUDIO_URL: "/api/v1/moies/secured/screens/audio",
+  FETCH_SCREEN_FEATURE_URL: "/api/v1/moies/secured/screens/feature",
 
   // VALIDATION API ENDPOINTS
 
