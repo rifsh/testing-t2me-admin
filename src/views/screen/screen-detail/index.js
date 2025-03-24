@@ -271,6 +271,22 @@ const ScreenDetailView = () => {
                         </Row>
 
                         <Divider />
+                        <Card
+                            title={
+                                <Space>
+                                    <InfoCircleOutlined />
+                                    Description
+                                </Space>
+                            }
+                            bordered
+                            style={{ marginBottom: 24 }}
+                        >
+                            <div
+                                className="screen-description"
+                                dangerouslySetInnerHTML={{ __html: singleResponse?.description || 'No description available' }}
+                            />
+                        </Card>
+                        <Divider />
 
                         <Card
                             title={<span><AppstoreOutlined /> Accessibility Features</span>}
@@ -295,24 +311,6 @@ const ScreenDetailView = () => {
                             ) : (
                                 <Empty description="No accessibility features available" />
                             )}
-                        </Card>
-
-                        <Divider />
-
-                        <Card
-                            title={
-                                <Space>
-                                    <InfoCircleOutlined />
-                                    Description
-                                </Space>
-                            }
-                            bordered
-                            style={{ marginBottom: 24 }}
-                        >
-                            <div
-                                className="screen-description"
-                                dangerouslySetInnerHTML={{ __html: singleResponse?.description || 'No description available' }}
-                            />
                         </Card>
                     </TabPane>
 

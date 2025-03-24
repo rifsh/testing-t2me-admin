@@ -38,21 +38,6 @@ const ScreenList = () => {
 
     useEffect(() => {
         if (response && response.items) {
-            const formattedData = Object.values(response.items).map(item => ({
-                status: item.status,
-                id: item.id,
-                screen_name: item.screen_name,
-                screen_number: item.screen_number,
-                venue_name: item.venue?.name || 'N/A',
-                place_name: item.venue?.place?.name || 'N/A',
-                screen_type: item.screen_technology?.name || 'standard',
-                capacity: item.capacity,
-                is_active: true,
-                audio_system: item.audio?.name || 'N/A',
-                reserved_seating: item.reserved_seating,
-                description: item.description,
-            }));
-
             const newFormattedData = response.items.map((value) => ({
                 venue_id: value.id,
                 venue_name: value.name,
@@ -69,9 +54,7 @@ const ScreenList = () => {
                     ...screen,
                 }))
             );
-            console.log("responseformatter", processedData);
-
-            setData(formattedData);
+            setData(processedData);
             setFilteredData(processedData);
         }
     }, [response]);
