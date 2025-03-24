@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
+import '../sceen.css'
 import { Card, Table, Button, Dropdown, Tag, Badge, Space } from "antd";
 import Flex from 'components/shared-components/Flex';
 import {
