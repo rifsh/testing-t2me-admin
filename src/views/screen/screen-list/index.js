@@ -1,25 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { Card, Table, Select, Input, Button, Dropdown, Tag, Badge, Space, Tooltip } from "antd";
+import { Card, Table, Button, Dropdown, Tag, Badge, Space } from "antd";
 import Flex from 'components/shared-components/Flex';
 import {
     EditOutlined,
     EyeOutlined,
-    FormOutlined,
     MoreOutlined,
-    DeleteOutlined,
     PlusOutlined,
-    FilterOutlined,
-    ExportOutlined
 } from "@ant-design/icons";
 import Utils from 'utils';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { useNavigate } from 'react-router-dom';
 import { screensMockData } from './MockData';
-import { screenOptions } from 'constants/ScreenConstants';
 import { useDispatch, useSelector } from 'react-redux';
 import { editScreenStatus, fetchScreenData, setScreenEditItemId } from 'store/slices/screenSlice';
-import { setEditItemId } from 'store/slices/categorySlice';
-import { editVenueStatus, getVenues, setLocationDialogVisible, setLocationModalLoading } from 'store/slices/locationSlice';
+import { getVenues, setLocationDialogVisible, setLocationModalLoading } from 'store/slices/locationSlice';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatusModal';
 import { DEFAULT_PAGE_SIZE } from 'constants/PageConstants';
@@ -56,11 +50,28 @@ const ScreenList = () => {
                 audio_system: item.audio?.name || 'N/A',
                 reserved_seating: item.reserved_seating,
                 description: item.description,
-                // Add any other fields you need for your table
             }));
 
+            const newFormattedData = response.items.map((value) => ({
+                venue_id: value.id,
+                venue_name: value.name,
+                movie_screens: value.movie_screen
+            }))
+
+            const processedData = newFormattedData.flatMap((venue) =>
+                venue.movie_screens.map((screen, index) => ({
+                    key: `${venue.venue_id}-${screen.id}`,
+                    venue_name: venue.venue_name,
+                    venue_id: venue.venue_id,
+                    rowSpan: index === 0 ? venue.movie_screens.length : 0, // Merge venue name cells
+                    isFirstRow: index === 0, // Mark first row of each venue
+                    ...screen,
+                }))
+            );
+            console.log("responseformatter", processedData);
+
             setData(formattedData);
-            setFilteredData(formattedData);
+            setFilteredData(processedData);
         }
     }, [response]);
 
@@ -125,7 +136,7 @@ const ScreenList = () => {
         };
 
         return (
-            <Tag color={typeColors[type.toLowerCase()] || 'default'}>
+            <Tag color={typeColors[type?.toLowerCase()] || 'default'}>
                 {type.toUpperCase()}
             </Tag>
         );
@@ -146,50 +157,52 @@ const ScreenList = () => {
 
     const tableColumns = [
         {
+            title: "Venue Name",
+            dataIndex: "venue_name",
+            key: "venue_name",
+            render: (value, row) => ({
+                children: value,
+                props: { rowSpan: row.rowSpan },
+            }),
+        },
+        {
             title: "Screen Name",
             dataIndex: "screen_name",
-            sorter: (a, b) => Utils.antdTableSorter(a, b, "screen_name"),
-            render: (text, record) => (
-                <span className="font-weight-semibold">
-                    {text} <small>({record.screen_number})</small>
-                </span>
-            )
-        },
-        {
-            title: "Venue",
-            dataIndex: 'venue_name',
-            sorter: (a, b) => Utils.antdTableSorter(a, b, "venue_name"),
-        },
-        {
-            title: "Location",
-            dataIndex: 'place_name',
-            sorter: (a, b) => Utils.antdTableSorter(a, b, "place_name"),
-        },
-        {
-            title: "Technology",
-            dataIndex: 'screen_type',
-            sorter: (a, b) => Utils.antdTableSorter(a, b, "screen_type"),
-            render: (type) => getScreenTypeTag(type)
-        },
-        {
-            title: "Audio",
-            dataIndex: 'audio_system',
-            sorter: (a, b) => Utils.antdTableSorter(a, b, "audio_system"),
-            render: (type) => type && getScreenTypeTag(type)
+            key: "screen_name",
+
         },
         {
             title: "Capacity",
-            dataIndex: 'capacity',
-            sorter: (a, b) => a.capacity - b.capacity,
+            dataIndex: "capacity",
+            key: "capacity",
         },
         {
-            title: "Seating",
-            dataIndex: 'reserved_seating',
+            title: "Screen Type",
+            dataIndex: "screen_type",
+            key: "screen_type",
+            render: (type) => getScreenTypeTag(type ? type : 'N/A')
+        },
+        {
+            title: "Reserved Seating",
+            dataIndex: "reserved_seating",
+            key: "reserved_seating",
             render: (reserved) => reserved ?
                 <Badge status="success" text="Reserved" /> :
                 <Badge status="error" text="Open" />
-            //     <Badge status="success" text="Active" /> :
-            // <Badge status="error" text="Inactive" />;
+        },
+        {
+            title: "Technology",
+            dataIndex: "screen_technology",
+            key: "screen_technology",
+            render: (type) => getScreenTypeTag(type.name ? type.name : 'N/A')
+
+        },
+        {
+            title: "Audio",
+            dataIndex: "audio",
+            key: "audio",
+            render: (type) => getScreenTypeTag(type.name ? type.name : 'N/A')
+
         },
         Utils.statusColumnUtil(handleUpdateStatus),
         {
@@ -238,6 +251,7 @@ const ScreenList = () => {
                             onChange: (page, pageSize) => handlePagination(page, pageSize),
                             showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} screens`
                         }}
+                        rowClassName={(record) => (record.isFirstRow ? "venue-header-row" : "")}
                     />
                 </div>
 
