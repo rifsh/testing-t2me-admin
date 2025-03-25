@@ -6,9 +6,9 @@ import Flex from "components/shared-components/Flex";
 import ProductListData from "assets/data/product-list.data.json";
 import SeatFormFields from "../components/SeatFormFields";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import SeatEditor from "../components/SeatEditor";
+
 import SeatingCanvas from "../components/SeatingCanvas";
-import SeatingChart from "../components/SeatingChart";
+
 
 const getBase64 = (img, callback) => {
   const reader = new FileReader();

@@ -7,30 +7,32 @@ import { addSeat } from "store/slices/seatSlice";
 const GridSeatCreator = ({ onClose }) => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const categories = useSelector(state => state.seat.categories);
-  const activeCategory = useSelector(state => state.seat.activeCategory);
+  const categories = useSelector((state) => state.seat.categories);
+  const activeCategory = useSelector((state) => state.seat.activeCategory);
 
   const handleCreateGrid = (values) => {
     const { rows, columns, spacing, startX, startY, categoryId } = values;
-    
+
     // Generate a unique grid ID to identify seats from the same grid
     const gridId = `grid-${Date.now()}`;
-    
+
     // Create grid of seats
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < columns; c++) {
         const x = startX + c * spacing;
         const y = startY + r * spacing;
-        dispatch(addSeat({ 
-          x, 
-          y, 
-          gridId,
-          gridPosition: { row: r, column: c },
-          categoryId
-        }));
+        dispatch(
+          addSeat({
+            x,
+            y,
+            gridId,
+            gridPosition: { row: r, column: c },
+            categoryId,
+          })
+        );
       }
     }
-    
+
     onClose();
   };
 
@@ -44,7 +46,7 @@ const GridSeatCreator = ({ onClose }) => {
         spacing: 30,
         startX: 50,
         startY: 50,
-        categoryId: activeCategory
+        categoryId: activeCategory,
       }}
       onFinish={handleCreateGrid}
     >
@@ -87,14 +89,14 @@ const GridSeatCreator = ({ onClose }) => {
       >
         <InputNumber />
       </Form.Item>
-      
+
       <Form.Item
         name="categoryId"
         label="Seat Category"
         rules={[{ required: true, message: "Please select a category" }]}
       >
         <Select>
-          {categories.map(category => (
+          {categories.map((category) => (
             <Select.Option key={category.id} value={category.id}>
               {category.name}
             </Select.Option>
@@ -116,7 +118,7 @@ const GridSeatCreator = ({ onClose }) => {
 
 const GridSeatButton = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  
+
   return (
     <>
       <Tooltip title="Create Grid of Seats">
@@ -125,14 +127,14 @@ const GridSeatButton = () => {
           style={{
             backgroundColor: "white",
             border: "1px solid #d9d9d9",
-            padding: '4px 8px',
-            cursor: 'pointer'
+            padding: "4px 8px",
+            cursor: "pointer",
           }}
         >
           <TableOutlined />
         </button>
       </Tooltip>
-      
+
       <Modal
         title="Create Grid of Seats"
         open={modalVisible}
