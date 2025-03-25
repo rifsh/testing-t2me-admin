@@ -5,6 +5,7 @@ export const initialState = {
   scale: 1,
   selectedSeats: [],
   showGrid: false,
+  drawings: [],
   categories: [
     { id: "standard", name: "Standard", color: "#ffffff" },
     { id: "premium", name: "Premium", color: "#ffe0b2" },
@@ -27,7 +28,8 @@ const seatSlice = createSlice({
         ...action.payload,
         categoryId,
         seatNumber,
-        label: `${category.name.charAt(0)}${seatNumber}`,
+        label: `${category.name.charAt(0)}`,
+        // label: `${category.name.charAt(0)}${seatNumber}`,
       });
     },
     moveSeat: (state, action) => {
@@ -139,6 +141,128 @@ const seatSlice = createSlice({
         }
       });
     },
+    alignSeats: (state, action) => {
+      const { alignType } = action.payload;
+
+      // Ensure we have at least 2 selected seats to align
+      if (state.selectedSeats.length < 2) return;
+
+      // Get the selected seats
+      const selectedSeatObjects = state.selectedSeats.map(
+        (index) => state.seats[index]
+      );
+
+      switch (alignType) {
+        case "left": {
+          // Align to the leftmost x-coordinate
+          const leftmostX = Math.min(
+            ...selectedSeatObjects.map((seat) => seat.x)
+          );
+          state.selectedSeats.forEach((index) => {
+            state.seats[index].x = leftmostX;
+          });
+          break;
+        }
+        case "center": {
+          // Align to the average x-coordinate
+          const avgX =
+            selectedSeatObjects.reduce((sum, seat) => sum + seat.x, 0) /
+            selectedSeatObjects.length;
+          state.selectedSeats.forEach((index) => {
+            state.seats[index].x = avgX;
+          });
+          break;
+        }
+        case "right": {
+          // Align to the rightmost x-coordinate
+          const rightmostX = Math.max(
+            ...selectedSeatObjects.map((seat) => seat.x)
+          );
+          state.selectedSeats.forEach((index) => {
+            state.seats[index].x = rightmostX;
+          });
+          break;
+        }
+        case "top": {
+          // Align to the topmost y-coordinate
+          const topmostY = Math.min(
+            ...selectedSeatObjects.map((seat) => seat.y)
+          );
+          state.selectedSeats.forEach((index) => {
+            state.seats[index].y = topmostY;
+          });
+          break;
+        }
+        case "bottom": {
+          // Align to the bottommost y-coordinate
+          const bottommostY = Math.max(
+            ...selectedSeatObjects.map((seat) => seat.y)
+          );
+          state.selectedSeats.forEach((index) => {
+            state.seats[index].y = bottommostY;
+          });
+          break;
+        }
+        case "distribute": {
+          // Distribute selected seats evenly along x-axis
+          if (state.selectedSeats.length < 3) return;
+
+          // Sort selected seats by x-coordinate
+          const sortedIndices = [...state.selectedSeats].sort(
+            (a, b) => state.seats[a].x - state.seats[b].x
+          );
+
+          // Get first and last seat x-coordinates
+          const firstX = state.seats[sortedIndices[0]].x;
+          const lastX = state.seats[sortedIndices[sortedIndices.length - 1]].x;
+
+          // Calculate even spacing
+          const spacing = (lastX - firstX) / (sortedIndices.length - 1);
+
+          // Redistribute x-coordinates
+          sortedIndices.forEach((index, position) => {
+            state.seats[index].x = firstX + position * spacing;
+          });
+          break;
+        }
+        default:
+          return;
+      }
+    },
+    duplicateSelectedSeats: (state) => {
+      if (state.selectedSeats.length === 0) return;
+
+      // Create duplicates with slight offset
+      const duplicatedSeats = state.selectedSeats.map((index) => {
+        const originalSeat = state.seats[index];
+        const duplicatedSeat = {
+          ...originalSeat,
+          x: originalSeat.x + 20, // Offset by 20 pixels
+          y: originalSeat.y + 20,
+          label: `${originalSeat.label}`, // Modify label to indicate it's a copy
+        };
+        return duplicatedSeat;
+      });
+
+      // Add duplicated seats to the state
+      state.seats.push(...duplicatedSeats);
+
+      // Update selected seats to the new duplicates
+      state.selectedSeats = duplicatedSeats.map((seat) =>
+        state.seats.indexOf(seat)
+      );
+    },
+    addDrawing: (state, action) => {
+      state.drawings.push(action.payload);
+    },
+    clearDrawings: (state) => {
+      state.drawings = [];
+    },
+    deleteDrawing: (state, action) => {
+      state.drawings = state.drawings.filter(
+        (_, index) => index !== action.payload
+      );
+    },
   },
 });
 
@@ -158,6 +282,11 @@ export const {
   updateCategory,
   deleteCategory,
   updateSeatCategory,
+  alignSeats,
+  duplicateSelectedSeats,
+  addDrawing,
+  clearDrawings,
+  deleteDrawing,
 } = seatSlice.actions;
 
 export const getAllSeats = (state) => state.seat.seats;

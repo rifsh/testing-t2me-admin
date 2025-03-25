@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Stage, Layer } from "react-konva";
+import { Stage, Layer, Rect, Circle, Line } from "react-konva";
 import { useSelector, useDispatch } from "react-redux";
 
 import {
@@ -14,6 +14,11 @@ import Toolbar from "./Toolbar";
 import Seat from "./Seat";
 import Grid from "./Grid";
 import SelectionRectangle from "./SelectionRectangle";
+import { SidebarProvider, useSidebar } from "utils/hooks/useSidebar";
+import DynamicSidebar from "./DynamicSidebar";
+import SeatCurve from "./SeatCurve";
+import DrawingTool from "./DrawingTool";
+import { SeatUtils } from "./seatUtils";
 
 // Minimum distance between seats (in pixels)
 const MIN_SEAT_DISTANCE = 25;
@@ -24,6 +29,8 @@ const SeatCanvas = () => {
   const scale = useSelector((state) => state.seat.scale);
   const selectedSeats = useSelector((state) => state.seat.selectedSeats);
   const showGrid = useSelector((state) => state.seat.showGrid);
+  const drawings = useSelector((state) => state.seat.drawings);
+  const categories = useSelector((state) => state.seat.categories);
 
   const dispatch = useDispatch();
   const stageContainerRef = useRef(null);
@@ -34,6 +41,7 @@ const SeatCanvas = () => {
   const [selectionEnd, setSelectionEnd] = useState(null);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const { openSidebar, closeSidebar } = useSidebar();
 
   // Multi-drag state
   const [isDraggingMultiple, setIsDraggingMultiple] = useState(false);
@@ -41,9 +49,65 @@ const SeatCanvas = () => {
   const [dragStartPoint, setDragStartPoint] = useState(null);
 
   // Tool state management
-  const [tool, setTool] = useState("add"); // "add", "select", "clickSelect", "drag"
+  const [tool, setTool] = useState("add");
+  const renderDrawings = () => {
+    return drawings.map((drawing, index) => {
+      const category = categories.find((cat) => cat.id === drawing.categoryId);
+      const color = category ? category.color : "#000000";
 
-  // Reset selection state when tool changes
+      switch (drawing.type) {
+        case "line":
+          return (
+            <Line
+              key={`drawing-${index}`}
+              points={drawing.points}
+              stroke={color}
+              strokeWidth={2}
+            />
+          );
+        case "curve":
+          return (
+            <Line
+              key={`drawing-${index}`}
+              points={drawing.points}
+              stroke={color}
+              strokeWidth={2}
+              tension={0.5}
+              lineCap="round"
+              lineJoin="round"
+            />
+          );
+        case "square":
+          return (
+            <Rect
+              key={`drawing-${index}`}
+              x={drawing.x}
+              y={drawing.y}
+              width={drawing.width}
+              height={drawing.height}
+              stroke={color}
+              strokeWidth={2}
+              fill="transparent"
+            />
+          );
+        case "circle":
+          return (
+            <Circle
+              key={`drawing-${index}`}
+              x={drawing.x}
+              y={drawing.y}
+              radius={drawing.radius}
+              stroke={color}
+              strokeWidth={2}
+              fill="transparent"
+            />
+          );
+        default:
+          return null;
+      }
+    });
+  };
+
   useEffect(() => {
     setSelectionStart(null);
     setSelectionEnd(null);
@@ -51,6 +115,13 @@ const SeatCanvas = () => {
     setIsDraggingMultiple(false);
   }, [tool]);
 
+  useEffect(() => {
+    if (selectedSeats.length > 0) {
+      openSidebar(<SeatCurve />);
+    } else {
+      closeSidebar();
+    }
+  }, [selectedSeats, openSidebar, closeSidebar]);
   // Check if a position would cause overlap with existing seats
   const wouldOverlap = (x, y, excludeIndices = []) => {
     for (let i = 0; i < seats.length; i++) {
@@ -381,19 +452,7 @@ const SeatCanvas = () => {
     }
   };
 
-  // Set cursor based on current tool
-  const getCursor = () => {
-    switch (tool) {
-      case "select":
-        return "crosshair";
-      case "clickSelect":
-        return "pointer";
-      case "drag":
-        return isDraggingMultiple ? "grabbing" : "move";
-      default:
-        return "default";
-    }
-  };
+
 
   // Toggle fullscreen mode
   const toggleFullscreen = () => {
@@ -473,18 +532,24 @@ const SeatCanvas = () => {
   // Force re-render trick
   const [, updateState] = useState();
   const forceUpdate = () => updateState({});
-
   return (
-    <div>
+    <SidebarProvider>
+    <div style={{ position: "relative" }}>
       <Toolbar
         activeTool={tool}
         onToolChange={setTool}
         showGrid={showGrid}
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
-        onToggleGrid={() => dispatch(toggleGrid())}
       />
-      <div ref={stageContainerRef} style={{ position: "relative" }}>
+      <DynamicSidebar />
+      <div 
+        ref={stageContainerRef} 
+        style={{ 
+          position: "relative", 
+          cursor: SeatUtils.getCursor(tool,isDraggingMultiple) 
+        }}
+      >
         <Stage
           ref={stageRef}
           width={dimensions.width}
@@ -493,54 +558,66 @@ const SeatCanvas = () => {
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp} // Also end selection/drag if mouse leaves the stage
+          onMouseLeave={handleMouseUp}
           style={{
             border: "1px solid black",
-            cursor: getCursor(),
-            userSelect: "none", // Prevent text selection during selection
+            userSelect: "none",
           }}
           scaleX={scale}
           scaleY={scale}
         >
-          <Layer>
-            {/* Grid component */}
-            {showGrid && (
-              <Grid
-                width={dimensions.width / scale}
-                height={dimensions.height / scale}
-                size={20}
-              />
-            )}
-
-            {/* Seat components */}
-            {seats.map((seat, index) => (
-              <Seat
-                key={index}
-                seat={seat}
-                index={index}
-                isSelected={selectedSeats.includes(index)}
-                draggable={
-                  tool === "drag" &&
-                  (!isDraggingMultiple || !selectedSeats.includes(index))
-                }
-                onDragEnd={(e) => handleSeatDragEnd(index, e)}
-                id={`seat-${index}`} // Add ID for easier selection in drag logic
-              />
-            ))}
-
-            {/* Selection rectangle - only shown when selecting or just finished selecting */}
-            {(isSelecting || (selectionStart && selectionEnd)) &&
-              tool === "select" && (
-                <SelectionRectangle
-                  selectionRect={getSelectionRect()}
-                  isSelecting={isSelecting}
-                  onSelectionEnd={handleSelectionEnd}
+            <Layer>
+              {/* Grid */}
+              {showGrid && (
+                <Grid
+                  width={dimensions.width / scale}
+                  height={dimensions.height / scale}
+                  size={20}
                 />
               )}
-          </Layer>
-        </Stage>
+
+              {/* Seats */}
+              {seats.map((seat, index) => (
+                <Seat
+                  key={index}
+                  seat={seat}
+                  index={index}
+                  isSelected={selectedSeats.includes(index)}
+                  draggable={
+                    tool === "drag" &&
+                    (!isDraggingMultiple || !selectedSeats.includes(index))
+                  }
+                  onDragEnd={(e) => handleSeatDragEnd(index, e)}
+                  id={`seat-${index}`}
+                />
+              ))}
+
+              {/* Previously drawn objects */}
+              {renderDrawings()}
+
+              {/* Selection rectangle */}
+              {(isSelecting || (selectionStart && selectionEnd)) &&
+                tool === "select" && (
+                  <SelectionRectangle
+                    selectionRect={getSelectionRect()}
+                    isSelecting={isSelecting}
+                    onSelectionEnd={handleSelectionEnd}
+                  />
+                )}
+            </Layer>
+          </Stage>
+
+          {["line", "square", "circle", "curve"].includes(tool) && (
+            <DrawingTool
+              activeTool={tool}
+              scale={scale}
+              width={dimensions.width}
+              height={dimensions.height}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
