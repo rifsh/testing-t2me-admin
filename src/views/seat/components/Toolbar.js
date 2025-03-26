@@ -9,6 +9,7 @@ import {
   duplicateSelectedSeats,
 } from "store/slices/seatSlice";
 import { Tooltip } from "antd";
+import { RiRectangleLine } from "react-icons/ri";
 import {
   ExpandOutlined,
   SelectOutlined,
@@ -28,12 +29,13 @@ import {
   MinusOutlined,
   BorderlessTableOutlined,
 } from "@ant-design/icons";
-import { PiBezierCurve } from "react-icons/pi";
+import { PiBezierCurve, PiPencilLineBold } from "react-icons/pi";
 import AlignmentSelector from "./AlignmentSelector";
 import GridSeatButton from "./GridSeatButton";
 import CategorySelector from "./CategorySelector";
 import { useSidebar } from "utils/hooks/useSidebar";
 import SeatCurve from "./SeatCurve";
+import { FaRegCircle } from "react-icons/fa";
 
 const buttonStyle = (isActive) => ({
   backgroundColor: isActive ? "#e6f7ff" : "white",
@@ -68,6 +70,7 @@ const Toolbar = ({
 
   // Get selected seats from Redux store
   const selectedSeats = useSelector((state) => state.seat.selectedSeats);
+
   // Tool buttons configuration
   const toolButtons = [
     {
@@ -91,6 +94,7 @@ const Toolbar = ({
       icon: <DragOutlined />,
     },
   ];
+
   const drawingButtons = [
     {
       tooltip: "Select/Move",
@@ -98,9 +102,14 @@ const Toolbar = ({
       icon: <FormOutlined />,
     },
     {
-      tooltip: "Draw Line",
+      tooltip: "Straight Line",
       tool: "line",
       icon: <MinusOutlined />,
+    },
+    {
+      tooltip: "Freehand Draw",
+      tool: "freehand",
+      icon: <PiPencilLineBold />,
     },
     {
       tooltip: "Draw Square",
@@ -117,10 +126,22 @@ const Toolbar = ({
       tool: "curve",
       icon: <PiBezierCurve />,
     },
+    {
+      tooltip: "Draw Square with Seats",
+      tool: "drawSquare",
+      icon: <RiRectangleLine />,
+    },
+    {
+      tooltip: "Draw Circle with Seats",
+      tool: "drawCircle",
+      icon: <FaRegCircle />,
+    },
   ];
+
   const handleOpenSeatCurveSidebar = () => {
     openSidebar(<SeatCurve />);
   };
+
   return (
     <div
       style={{
@@ -210,7 +231,6 @@ const Toolbar = ({
 
       <ToolbarDivider />
 
-      {/* Display options section */}
       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
         <ToolbarButton
           tooltip="Toggle Grid"

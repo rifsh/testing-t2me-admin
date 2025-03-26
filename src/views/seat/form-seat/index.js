@@ -8,6 +8,7 @@ import SeatFormFields from "../components/SeatFormFields";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 
 import SeatingCanvas from "../components/SeatingCanvas";
+import { useSelector } from "react-redux";
 
 
 const getBase64 = (img, callback) => {
@@ -64,26 +65,34 @@ const SeatForm = (props) => {
     }
   };
 
+  const seats = useSelector((state) => state.seat.seats);
+  const exportSeatData = () => {
+    const jsonData = JSON.stringify(seats, null, 2);
+    console.log('Seat Data JSON:', jsonData);
+    return jsonData;
+  };
   const onFinish = () => {
-    setSubmitLoading(true);
-    form
-      .validateFields()
-      .then((values) => {
-        setTimeout(() => {
-          setSubmitLoading(false);
-          if (mode === ADD) {
-            message.success(`Created ${values.name} to product list`);
-          }
-          if (mode === EDIT) {
-            message.success(`Product saved`);
-          }
-        }, 1500);
-      })
-      .catch((info) => {
-        setSubmitLoading(false);
-        console.log("info", info);
-        message.error("Please enter all required field ");
-      });
+
+    exportSeatData()
+    // setSubmitLoading(true);
+    // form
+    //   .validateFields()
+    //   .then((values) => {
+    //     setTimeout(() => {
+    //       setSubmitLoading(false);
+    //       if (mode === ADD) {
+    //         message.success(`Created ${values.name} to product list`);
+    //       }
+    //       if (mode === EDIT) {
+    //         message.success(`Product saved`);
+    //       }
+    //     }, 1500);
+    //   })
+    //   .catch((info) => {
+    //     setSubmitLoading(false);
+    //     console.log("info", info);
+    //     message.error("Please enter all required field ");
+    //   });
   };
 
   return (
