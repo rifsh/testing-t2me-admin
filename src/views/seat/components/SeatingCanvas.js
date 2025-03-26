@@ -13,6 +13,7 @@ import DynamicSidebar from "./DynamicSidebar";
 import { SeatUtils } from "../utils/seatUtils";
 import { createMouseUtils } from "../utils/mouseUtils";
 import DrawingTool from "./DrawingTool";
+import SeatShapeContainer from "./SeatShapeContainer";
 
 const SeatCanvas = () => {
   // Redux state
@@ -236,6 +237,17 @@ const SeatCanvas = () => {
               scale={scale}
               width={dimensions.width}
               height={dimensions.height}
+            />
+          )}
+
+          {/* New SeatShapeContainer for drawSquare and drawCircle tools */}
+          {["drawSquare", "drawCircle"].includes(tool) && (
+            <SeatShapeContainer
+              activeTool={tool}
+              scale={scale}
+              width={dimensions.width}
+              height={dimensions.height}
+              onComplete={() => setTool("select")} // Optional: switch back to select tool after drawing
             />
           )}
         </div>

@@ -9,6 +9,7 @@ import {
   duplicateSelectedSeats,
 } from "store/slices/seatSlice";
 import { Tooltip } from "antd";
+import { RiRectangleLine } from "react-icons/ri";
 import {
   ExpandOutlined,
   SelectOutlined,
@@ -34,6 +35,7 @@ import GridSeatButton from "./GridSeatButton";
 import CategorySelector from "./CategorySelector";
 import { useSidebar } from "utils/hooks/useSidebar";
 import SeatCurve from "./SeatCurve";
+import { FaRegCircle } from "react-icons/fa";
 
 const buttonStyle = (isActive) => ({
   backgroundColor: isActive ? "#e6f7ff" : "white",
@@ -123,6 +125,16 @@ const Toolbar = ({
       tooltip: "Draw Curve",
       tool: "curve",
       icon: <PiBezierCurve />,
+    },
+    {
+      tooltip: "Draw Square with Seats",
+      tool: "drawSquare",
+      icon: <RiRectangleLine />,
+    },
+    {
+      tooltip: "Draw Circle with Seats",
+      tool: "drawCircle",
+      icon: <FaRegCircle />,
     },
   ];
 
