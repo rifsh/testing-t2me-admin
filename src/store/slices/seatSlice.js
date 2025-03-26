@@ -262,6 +262,25 @@ const seatSlice = createSlice({
       state.drawings = state.drawings.filter(
         (_, index) => index !== action.payload
       );
+    },updateDrawing: (state, action) => {
+      const { index, updates } = action.payload;
+      if (index >= 0 && index < state.drawings.length) {
+        // Merge the updates with the existing drawing
+        state.drawings[index] = {
+          ...state.drawings[index],
+          ...updates
+        };
+      }
+    },
+    updateDrawingColor: (state, action) => {
+      const { index, color, fill } = action.payload;
+      if (index >= 0 && index < state.drawings.length) {
+        state.drawings[index] = {
+          ...state.drawings[index],
+          color,
+          fill: fill ? color : state.drawings[index].fill
+        };
+      }
     },
   },
 });
@@ -286,7 +305,8 @@ export const {
   duplicateSelectedSeats,
   addDrawing,
   clearDrawings,
-  deleteDrawing,
+  deleteDrawing,updateDrawing,
+  updateDrawingColor,
 } = seatSlice.actions;
 
 export const getAllSeats = (state) => state.seat.seats;
