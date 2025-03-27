@@ -12,17 +12,28 @@ import {
   message,
   Collapse,
   Form,
-  Input
+  Input,
+  Popover,
 } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchLeadEventDetails, EnrollUser } from "store/slices/leadEventSlice";
 import Loading from "components/shared-components/Loading";
 import ChatSection from "./ChatSection";
-import { EditOutlined, UserAddOutlined, SwapOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  UserAddOutlined,
+  SwapOutlined,
+  LeftOutlined,
+  RightOutlined,
+  MessageOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
+import thumb from "../../../assets/preview/thumnail image.png";
+import banner from "../../../assets/preview/banner image.png";
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
@@ -44,8 +55,27 @@ const EventDetails = () => {
     (state) => state.leadEvents
   );
   const [enrollModalVisible, setEnrollModalVisible] = useState(false);
+  const [mediaPreviewVisible, setMediaPreviewVisible] = useState(false);
   const [convertModalVisible, setConvertModalVisible] = useState(false);
-  const [form] = Form.useForm()
+  const [chatCollapsed, setChatCollapsed] = useState(false);
+  const [form] = Form.useForm();
+  const [previewVisible, setPreviewVisible] = useState(false);
+
+  // Handle responsive behavior
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+      // Auto-collapse chat on mobile
+      if (window.innerWidth < 768 && !chatCollapsed) {
+        setChatCollapsed(true);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [chatCollapsed]);
 
   const mediaImages = eventDetails?.media?.map((item) => item.media_url) || [];
   const currentUser = getCurrentUser();
@@ -70,24 +100,21 @@ const EventDetails = () => {
     setEnrollModalVisible(true);
   };
 
-  // const handleEnrollSubmit = () => {
-  //   message.success("User enrollment successful!");
-  //   setEnrollModalVisible(false);
-  // };
   const handleEnrollSubmit = async () => {
     try {
-      const values = await form.validateFields(); 
+      const values = await form.validateFields();
       const data = {
-        event_id: eventId, 
+        event_id: eventId,
         email: values.email,
       };
-  
-      const response = await dispatch(EnrollUser(data)).unwrap(); 
-      message.success(response.status?.message || "User enrolled successfully!"); 
-      setEnrollModalVisible(false); 
-      form.resetFields(); 
-      
-     
+
+      const response = await dispatch(EnrollUser(data)).unwrap();
+      message.success(
+        response.status?.message || "User enrolled successfully!"
+      );
+      setEnrollModalVisible(false);
+      form.resetFields();
+
       dispatch(fetchLeadEventDetails(eventId));
     } catch (error) {
       console.error("Enrollment failed:", error);
@@ -103,9 +130,64 @@ const EventDetails = () => {
     setConvertModalVisible(false);
   };
 
+  // Toggle chat visibility
+  const toggleChat = () => {
+    setChatCollapsed(!chatCollapsed);
+  };
+
   if (loading) return <Loading />;
   if (error) return <div>Error: {error}</div>;
   if (!eventDetails) return <div>No Event Details Found</div>;
+
+  // Calculate column spans based on chat visibility
+  const mainColSpan = chatCollapsed ? 24 : windowWidth >= 992 ? 16 : 24;
+  const chatColSpan = chatCollapsed ? 0 : windowWidth >= 992 ? 8 : 24;
+
+  // Preview content for different sections
+  const previewContent = {
+    eventUsers: (
+      <Card style={{ width: 300 }}>
+        <div style={{ textAlign: "center" }}>
+          <Image
+            src="https://randomuser.me/api/portraits/women/44.jpg"
+            width={100}
+            height={100}
+            style={{ borderRadius: "50%" }}
+          />
+          <Title level={5} style={{ marginTop: 10 }}>
+            Jane Doe
+          </Title>
+          <Text type="secondary">Attendee</Text>
+        </div>
+      </Card>
+    ),
+    eventOffers: (
+      <Card style={{ width: 300, backgroundColor: "#F1FAEC" }}>
+        <Title level={4} style={{ color: "darkred" }}>
+          Summer Special
+        </Title>
+        <Text>20% Discount</Text>
+        <br />
+        <Text>Valid until: 2023-12-31</Text>
+      </Card>
+    ),
+    eventCoupons: (
+      <Card style={{ width: 300, backgroundColor: "#F6FFFF" }}>
+        <Title level={4} style={{ color: "darkred" }}>
+          Early Bird
+        </Title>
+        <Text>15% Discount</Text>
+        <br />
+        <Text>Valid until: 2023-11-30</Text>
+      </Card>
+    ),
+    mediaGallery: (
+      <div style={{ width: 300 }}>
+        <Image src={banner} width={300} height={200} />
+        <Text>Event photo preview</Text>
+      </div>
+    ),
+  };
 
   return (
     <Row gutter={[16, 16]} style={{ padding: "20px" }}>
@@ -137,8 +219,59 @@ const EventDetails = () => {
           }
           extra={
             <Space style={{ marginBottom: "15px" }}>
+              {/* Preview button with Modal for full image */}
+              <Modal
+                title="Event Preview"
+                open={previewVisible}
+                onCancel={() => setPreviewVisible(false)}
+                footer={null}
+                width="50%"
+                bodyStyle={{
+                  padding: 0,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                style={{ maxWidth: "90vw" }}
+              >
+                <div
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "80vh",
+                    overflow: "auto",
+                  }}
+                >
+                  <img
+                    src={thumb}
+                    alt="Event Preview"
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      display: "block",
+                    }}
+                  />
+                </div>
+              </Modal>
+              <Button
+                type="default"
+                icon={<EyeOutlined />}
+                onClick={() => setPreviewVisible(true)}
+              >
+                Preview
+              </Button>
+
+              {/* Chat toggle button */}
+              <Button
+                type="default"
+                icon={chatCollapsed ? <MessageOutlined /> : <RightOutlined />}
+                onClick={toggleChat}
+              >
+                {chatCollapsed ? "Show Chat" : "Hide Chat"}
+              </Button>
+
               {/* Hide Enroll User button if user is Event Organizer */}
-              {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
+              {currentUser.role_id !==
+                UserRoleConstants.eventOrganizerRoleId && (
                 <Button
                   type="primary"
                   icon={<UserAddOutlined />}
@@ -157,7 +290,8 @@ const EventDetails = () => {
               </Button>
 
               {/* Hide Convert button if user is Event Organizer */}
-              {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
+              {currentUser.role_id !==
+                UserRoleConstants.eventOrganizerRoleId && (
                 <Button
                   type="primary"
                   danger
@@ -175,7 +309,6 @@ const EventDetails = () => {
             </Space>
           }
         >
-          {" "}
           <Title level={2} style={{ margin: "10px 0" }}>
             {eventDetails.event_name}
           </Title>
@@ -184,7 +317,8 @@ const EventDetails = () => {
       </Col>
 
       <Row gutter={[16, 16]} style={{ width: "100%" }}>
-        <Col xs={24} lg={16}>
+        {/* Main Content */}
+        <Col xs={24} lg={mainColSpan} style={{ transition: "all 0.3s ease" }}>
           {/* Event Overview Section */}
           <Col span={24} style={{ marginBottom: "16px" }}>
             <Card
@@ -221,86 +355,123 @@ const EventDetails = () => {
 
           {/* Event Users Section */}
           <Col span={24} style={{ marginBottom: "16px" }}>
-            <Card
-              title={<span style={{ color: "#1890ff" }}>Event Users</span>}
-              bordered={false}
-              extra={
-                <Button
-                  type="link"
-                  icon={<UserAddOutlined />}
-                  onClick={handleEnrollUser}
-                  style={{ marginBottom: "10px" }}
-                >
-                  Add User
-                </Button>
-              }
-            >
-              <Row gutter={[24, 24]} justify="center">
-                {eventDetails.users && eventDetails.users.length > 0 ? (
-                  eventDetails.users.map((user, index) => (
-                    <Col xs={24} sm={12} md={8} lg={8} key={index}>
-                      <Card
-                        hoverable
-                        style={{
-                          textAlign: "center",
-                          borderRadius: 10,
-                          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                          padding: 15,
-                        }}
-                      >
-                        <div>
-                          {user.thumbnail_image ? (
-                            <Image
-                              alt="User Thumbnail"
-                              src={user.thumbnail_image}
-                              height={100}
-                              width={100}
-                              style={{
-                                objectFit: "cover",
-                                borderRadius: "50%",
-                                marginBottom: 10,
-                              }}
-                            />
-                          ) : (
-                            <div
-                              style={{
-                                height: 100,
-                                width: 100,
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                backgroundColor: "#f0f0f0",
-                                color: "#888",
-                                borderRadius: "50%",
-                                margin: "0 auto 10px",
-                              }}
-                            >
-                              No Image
-                            </div>
-                          )}
-                          <Title level={5} style={{ marginBottom: 5 }}>
-                            {user.username}
-                          </Title>
-                          <Text type="secondary">
-                            {user.role?.name || "N/A"}
-                          </Text>
-                        </div>
-                      </Card>
+            <Collapse defaultActiveKey={["1"]}>
+              <Panel
+                header={
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <span>Event Users</span>
+                    <Popover
+                      content={previewContent.eventUsers}
+                      title="Preview"
+                      trigger="hover"
+                    >
+                      <Button
+                        type="text"
+                        icon={<EyeOutlined />}
+                        style={{ marginLeft: "auto" }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </Popover>
+                  </div>
+                }
+                key="1"
+              >
+                <Row gutter={[24, 24]} justify="center">
+                  {eventDetails.users && eventDetails.users.length > 0 ? (
+                    eventDetails.users.map((user, index) => (
+                      <Col xs={24} sm={12} md={8} lg={8} key={index}>
+                        <Card
+                          hoverable
+                          style={{
+                            textAlign: "center",
+                            borderRadius: 10,
+                            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                            padding: 15,
+                          }}
+                        >
+                          <div>
+                            {user.thumbnail_image ? (
+                              <Image
+                                alt="User Thumbnail"
+                                src={user.thumbnail_image}
+                                height={100}
+                                width={100}
+                                style={{
+                                  objectFit: "cover",
+                                  borderRadius: "50%",
+                                  marginBottom: 10,
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  height: 100,
+                                  width: 100,
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  backgroundColor: "#f0f0f0",
+                                  color: "#888",
+                                  borderRadius: "50%",
+                                  margin: "0 auto 10px",
+                                }}
+                              >
+                                No Image
+                              </div>
+                            )}
+                            <Title level={5} style={{ marginBottom: 5 }}>
+                              {user.username}
+                            </Title>
+                            <Text type="secondary">
+                              {user.role?.name || "N/A"}
+                            </Text>
+                          </div>
+                        </Card>
+                      </Col>
+                    ))
+                  ) : (
+                    <Col span={24} style={{ textAlign: "center" }}>
+                      <Text>No Users Associated</Text>
                     </Col>
-                  ))
-                ) : (
-                  <Col span={24} style={{ textAlign: "center" }}>
-                    <Text>No Users Associated</Text>
-                  </Col>
-                )}
-              </Row>
-            </Card>
+                  )}
+                </Row>
+                {/* Add User Button */}
+                <div style={{ textAlign: "center", marginTop: 16 }}>
+                  <Button
+                    type="primary"
+                    icon={<UserAddOutlined />}
+                    onClick={handleEnrollUser}
+                  >
+                    Add User
+                  </Button>
+                </div>
+              </Panel>
+            </Collapse>
           </Col>
 
           {/* Event Offers Section */}
           <Col span={24} style={{ marginBottom: "16px" }}>
             <Collapse defaultActiveKey={["1"]}>
-              <Panel header="Event Offers" key="1">
+              <Panel
+                header={
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <span>Event Offers</span>
+                    <Popover
+                      content={previewContent.eventOffers}
+                      title="Preview"
+                      trigger="hover"
+                    >
+                      <Button
+                        type="text"
+                        icon={<EyeOutlined />}
+                        style={{ marginLeft: "auto" }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </Popover>
+                  </div>
+                }
+                key="1"
+              >
                 <Row gutter={[16, 16]}>
                   {eventDetails.event_offers &&
                   eventDetails.event_offers.length > 0 ? (
@@ -360,7 +531,26 @@ const EventDetails = () => {
           {/* Event Coupon Section */}
           <Col span={24} style={{ marginBottom: "16px" }}>
             <Collapse defaultActiveKey={["1"]}>
-              <Panel header="Event Coupons" key="1">
+              <Panel
+                header={
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <span>Event Coupons</span>
+                    <Popover
+                      content={previewContent.eventCoupons}
+                      title="Preview"
+                      trigger="hover"
+                    >
+                      <Button
+                        type="text"
+                        icon={<EyeOutlined />}
+                        style={{ marginLeft: "auto" }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </Popover>
+                  </div>
+                }
+                key="1"
+              >
                 <Row gutter={[16, 16]}>
                   {eventDetails.event_coupons &&
                   eventDetails.event_coupons.length > 0 ? (
@@ -418,8 +608,25 @@ const EventDetails = () => {
           </Col>
 
           {/* Media Gallery Section */}
+          {/* Media Gallery Section */}
           <Collapse defaultActiveKey={["1"]}>
-            <Panel header="Media Gallery" key="1">
+            <Panel
+              header={
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <span>Media Gallery</span>
+                  <Button
+                    type="text"
+                    icon={<EyeOutlined />}
+                    style={{ marginLeft: "auto" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMediaPreviewVisible(true);
+                    }}
+                  />
+                </div>
+              }
+              key="1"
+            >
               {mediaImages.length > 0 && (
                 <Col span={24} style={{ marginBottom: "16px" }}>
                   <Card
@@ -444,13 +651,71 @@ const EventDetails = () => {
               )}
             </Panel>
           </Collapse>
+
+          {/* Media Preview Modal */}
+          <Modal
+            title="Media Gallery Preview"
+            open={mediaPreviewVisible}
+            onCancel={() => setMediaPreviewVisible(false)}
+            footer={null}
+            width="auto"
+            bodyStyle={{
+              padding: 0,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            style={{ maxWidth: "90vw" }}
+          >
+            <div
+              style={{ maxWidth: "100%", maxHeight: "80vh", overflow: "auto" }}
+            >
+              <img
+                src={banner}
+                alt="Media Gallery Preview"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                }}
+              />
+            </div>
+          </Modal>
         </Col>
 
-        <Col xs={24} lg={8}>
-          <ChatSection eventId={eventId} getCurrentUser={getCurrentUser} />
-        </Col>
+        {/* Chat Section */}
+        {!chatCollapsed && (
+          <Col
+            xs={24}
+            lg={chatColSpan}
+            style={{
+              transition: "all 0.3s ease",
+              position: windowWidth >= 992 ? "relative" : "fixed",
+              top: windowWidth >= 992 ? "auto" : "50px",
+              right: windowWidth >= 992 ? "auto" : "0",
+              bottom: windowWidth >= 992 ? "auto" : "0",
+              width: windowWidth >= 992 ? "auto" : "80%",
+              height: windowWidth >= 992 ? "auto" : "calc(100vh - 50px)",
+              zIndex: windowWidth >= 992 ? "auto" : "1000",
+              backgroundColor: windowWidth >= 992 ? "transparent" : "#f9f9f9",
+              boxShadow:
+                windowWidth >= 992 ? "none" : "-2px 0 10px rgba(0,0,0,0.1)",
+              padding: windowWidth >= 992 ? "0" : "10px",
+            }}
+          >
+            <div style={{ position: "relative" }}>
+              <ChatSection
+                eventId={eventId}
+                getCurrentUser={getCurrentUser}
+                isCollapsed={chatCollapsed}
+                onToggleCollapse={toggleChat}
+              />
+            </div>
+          </Col>
+        )}
       </Row>
 
+      {/* Floating Action Buttons */}
       <div
         style={{
           position: "fixed",
@@ -460,23 +725,36 @@ const EventDetails = () => {
           flexDirection: "column",
           gap: "10px",
           zIndex: 1000,
-          "@media (min-width: 992px)": {
-            display: "none",
-          },
         }}
         className="lg:hidden"
       >
-           {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
+        {/* Chat toggle button for mobile */}
         <Button
           type="primary"
           shape="circle"
           size="large"
-          icon={<UserAddOutlined />}
-          onClick={handleEnrollUser}
-          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
+          icon={<MessageOutlined />}
+          onClick={toggleChat}
+          style={{
+            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+            backgroundColor: "#1890ff",
+            display: chatCollapsed ? "flex" : "none",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
         />
-      )}
-        
+
+        {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
+          <Button
+            type="primary"
+            shape="circle"
+            size="large"
+            icon={<UserAddOutlined />}
+            onClick={handleEnrollUser}
+            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
+          />
+        )}
+
         <Button
           type="default"
           shape="circle"
@@ -485,21 +763,22 @@ const EventDetails = () => {
           onClick={() => handleEditEvent(eventDetails.id)}
           style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}
         />
-         {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
-        <Button
-          type="primary"
-          danger
-          shape="circle"
-          size="large"
-          icon={<SwapOutlined />}
-          onClick={handleConvertEvent}
-          style={{
-            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-            backgroundColor: "#ff4d4f",
-            borderColor: "#ff4d4f",
-          }}
-        />
-      )}
+
+        {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
+          <Button
+            type="primary"
+            danger
+            shape="circle"
+            size="large"
+            icon={<SwapOutlined />}
+            onClick={handleConvertEvent}
+            style={{
+              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              backgroundColor: "#ff4d4f",
+              borderColor: "#ff4d4f",
+            }}
+          />
+        )}
       </div>
 
       {/* Enrollment Modal */}
@@ -529,7 +808,6 @@ const EventDetails = () => {
           </Form.Item>
         </Form>
       </Modal>
-
 
       {/* Convert Confirmation Modal */}
       <Modal

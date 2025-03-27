@@ -9,17 +9,25 @@ import {
   Space, 
   message, 
   Spin,
-  Empty
+  Empty,
+  Tooltip
 } from "antd";
-import { SendOutlined, UserOutlined, MessageOutlined, PaperClipOutlined,CloseOutlined } from "@ant-design/icons";
+import { 
+  SendOutlined, 
+  UserOutlined, 
+  MessageOutlined, 
+  PaperClipOutlined,
+  CloseOutlined,
+  LeftOutlined,
+  RightOutlined
+} from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchEventMessages, sendEventMessage } from "store/slices/leadEventSlice";
 import moment from "moment";
 
-
 const { Text } = Typography;
 
-const ChatSection = ({ eventId, getCurrentUser }) => {
+const ChatSection = ({ eventId, getCurrentUser, isCollapsed, onToggleCollapse }) => {
   const dispatch = useDispatch();
   
   // Robust selector with type checking and fallback
@@ -46,9 +54,20 @@ const ChatSection = ({ eventId, getCurrentUser }) => {
   const [newMessage, setNewMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
   const chatContainerRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch messages when component mounts or eventId changes
   useEffect(() => {
@@ -106,7 +125,6 @@ const ChatSection = ({ eventId, getCurrentUser }) => {
       }
     }
   };
-
 
   const triggerFileSelect = () => {
     fileInputRef.current.click();
@@ -204,6 +222,13 @@ const ChatSection = ({ eventId, getCurrentUser }) => {
     return parts[parts.length - 1];
   };
 
+  // Handle collapse toggle
+  const handleToggleCollapse = () => {
+    if (onToggleCollapse) {
+      onToggleCollapse();
+    }
+  };
+
   // Render message content based on whether it's a file URL or text
   const renderMessageContent = (content) => {
     if (isFileUrl(content)) {
@@ -235,24 +260,6 @@ const ChatSection = ({ eventId, getCurrentUser }) => {
               padding: "10px",
               backgroundColor: "#fff"
             }}>
-              {/* <div style={{ display: "flex", alignItems: "center" }}>
-                <div style={{ 
-                  width: "40px", 
-                  height: "40px", 
-                  backgroundColor: "", 
-                  display: "flex", 
-                  justifyContent: "center", 
-                  alignItems: "center",
-                  borderRadius: "5px",
-                  color: "white",
-                  fontWeight: "bold"
-                }}> */}
-                  {/* PDF */}
-                {/* </div>
-                <div style={{ marginLeft: "10px", maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  <Text ellipsis>{fileName}</Text>
-                </div>
-              </div> */}
               <div style={{ marginTop: "8px", display: "flex", justifyContent: "space-between" }}>
                 <Button
                   type="primary"
@@ -335,7 +342,18 @@ const ChatSection = ({ eventId, getCurrentUser }) => {
   if (messagesLoading && filteredMessages.length === 0) {
     return (
       <Card 
-        title={<span style={{ color: "#1890ff" }}>Event Chat</span>}
+        title={
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "#1890ff" }}>Event Chat</span>
+            <Tooltip title={isCollapsed ? "Show Chat" : "Hide Chat"}>
+              <Button
+                type="text"
+                icon={isCollapsed ? <MessageOutlined /> : <RightOutlined />}
+                onClick={handleToggleCollapse}
+              />
+            </Tooltip>
+          </div>
+        }
         extra={<Spin size="small" />}
       >
         <div style={{ 
@@ -352,9 +370,26 @@ const ChatSection = ({ eventId, getCurrentUser }) => {
 
   return (
     <Card 
-      title={<span style={{ color: "#1890ff" }}>Event Chat</span>}
+      title={
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ color: "#1890ff" }}>Event Chat</span>
+          <Tooltip title={isCollapsed ? "Show Chat" : "Hide Chat"}>
+            <Button
+              type="text"
+              icon={windowWidth < 992 ? <LeftOutlined /> : <RightOutlined />}
+              onClick={handleToggleCollapse}
+            />
+          </Tooltip>
+        </div>
+      }
       bordered={false}
-      style={{ height: "500px", display: "flex", flexDirection: "column" }}
+      style={{ 
+        height: "500px", 
+        display: "flex", 
+        flexDirection: "column",
+        boxShadow: windowWidth < 992 ? "-2px 0 10px rgba(0,0,0,0.1)" : "none",
+        transition: "all 0.3s ease"
+      }}
       bodyStyle={{ 
         height: "100%", 
         display: "flex", 

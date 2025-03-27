@@ -1,4 +1,4 @@
-import { Button, Form, message, message as antdMessage,Spin } from "antd";
+import { Button, Form, message, message as antdMessage, Spin } from "antd";
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
@@ -13,7 +13,7 @@ import {
   setSubmitLoading,
   resetState,
   checkEventValidation,
-  fetchEventDetails
+  fetchEventDetails,
 } from "store/slices/eventSlice";
 import {
   updateOrganizerEvent,
@@ -60,10 +60,10 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
     isCommentModalVisible,
     comment,
     actionType,
-    responseDataEvent, responseMessageEvent, message
+    responseDataEvent, responseMessageEvent, message,
   } = useSelector((state) => state.organizerUpdates);
-  console.log("------------------", eventId)
-  console.log("------------------", mode)
+  console.log("------------------", eventId);
+  console.log("------------------", mode);
 
   useEffect(() => {
     if (mode === "ORGEDIT") {
@@ -72,14 +72,10 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
       }
     } else if (mode === "EDIT") {
       if (eventId) {
-        dispatch(fetchEventDetails(eventId))
+        dispatch(fetchEventDetails(eventId));
       }
     }
-
   }, [dispatch]);
-
-
-
 
   useEffect(() => {
     console.log(mode,"-----------------MODE");
@@ -108,13 +104,37 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
             },
           ]
           : [],
+        event_images: eventDetails.event_images
+          ? eventDetails.event_images.map((image, index) => ({
+              uid: `-${index + 1}`,
+              name: image.image.split("/").pop(),
+              status: "done",
+              url: image.image,
+            }))
+          : [],
+        event_add_on_services: eventDetails.event_add_on_services
+          ? eventDetails.event_add_on_services.map((service) => ({
+              title: service.title,
+              add: service.services || [],
+            }))
+          : [],
+        // Auto-fill Questions and Answers
+        event_qna: eventDetails.event_qna
+          ? eventDetails.event_qna.map((qnaSection) => ({
+              title: qnaSection.title,
+              qna: qnaSection.qna.map((item) => ({
+                question: item.question,
+                answer: item.answer,
+              })),
+            }))
+          : [],
       });
     } else if (mode === "ORGEDIT") {
       console.log("ENTERED TO FIELDs--------------");
 
       if (singleOrganizerUpdate.updated_fields != null) {
         form.setFieldsValue({
-          event_name: singleOrganizerUpdate.updated_fields?.event_name ?? singleOrganizerUpdate.events.event_name,
+          event_name: singleOrganizerUpdate.updated_fields?.event_name ?? singleOrganizerUpdate.events?.event_name,
           description: singleOrganizerUpdate.updated_fields?.description ?? singleOrganizerUpdate.events.description,
           banner_images: singleOrganizerUpdate.updated_fields?.banner_images
             ? singleOrganizerUpdate.updated_fields?.banner_images?.map((banner, index) => ({
@@ -131,47 +151,75 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
                 url: banner,
               }))
               : [],
-          thumbnail_image: singleOrganizerUpdate.updated_fields?.thumbnail_image ?? singleOrganizerUpdate.events.thumbnail_image
-            ? [
-              {
-                uid: "-1",
-                name: singleOrganizerUpdate.updated_fields?.thumbnail_image ?? singleOrganizerUpdate.events.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: singleOrganizerUpdate.updated_fields?.thumbnail_image ?? singleOrganizerUpdate.events.thumbnail_image,
-              },
-            ]
+            // 
+          event_images: singleOrganizerUpdate.updated_fields?.event_images
+            ? singleOrganizerUpdate.updated_fields?.event_images?.map(
+                (image, index) => ({
+                  uid: `-image-${index}`,
+                  name: image.split("/").pop(),
+                  status: "done",
+                  url: image,
+                })
+              )
+            : singleOrganizerUpdate?.events?.event_images
+            ? singleOrganizerUpdate.events?.event_images?.map(
+                (image, index) => ({
+                  uid: `-image-${index}`,
+                  name: image?.image.split("/").pop(),
+                  status: "done",
+                  url: image?.image,
+                })
+              )
             : [],
+          thumbnail_image:
+            singleOrganizerUpdate.updated_fields?.thumbnail_image ??
+            singleOrganizerUpdate.events.thumbnail_image
+              ? [
+                  {
+                    uid: "-1",
+                    name:
+                      singleOrganizerUpdate.updated_fields?.thumbnail_image ??
+                      singleOrganizerUpdate.events.thumbnail_image
+                        .split("/")
+                        .pop(),
+                    status: "done",
+                    url:
+                      singleOrganizerUpdate.updated_fields?.thumbnail_image ??
+                      singleOrganizerUpdate.events.thumbnail_image,
+                  },
+                ]
+              : [],
         });
-
-
       } else {
         form.setFieldsValue({
-          event_name: singleOrganizerUpdate.events.event_name,
-          description: singleOrganizerUpdate.events.description,
+          event_name: singleOrganizerUpdate?.events?.event_name,
+          description: singleOrganizerUpdate?.events?.description,
           banner_images: singleOrganizerUpdate?.events?.banner_images
-            ? singleOrganizerUpdate.events?.banner_images?.map((banner, index) => ({
-              uid: `-banner-${index}`,
-              name: banner.split("/").pop(),
-              status: "done",
-              url: banner,
-            }))
+            ? singleOrganizerUpdate.events?.banner_images?.map(
+                (banner, index) => ({
+                  uid: `-banner-${index}`,
+                  name: banner.split("/").pop(),
+                  status: "done",
+                  url: banner,
+                })
+              )
             : [],
-          thumbnail_image: singleOrganizerUpdate.events.thumbnail_image
+          thumbnail_image: singleOrganizerUpdate?.events?.thumbnail_image
             ? [
-              {
-                uid: "-1",
-                name: singleOrganizerUpdate.events.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: singleOrganizerUpdate.events.thumbnail_image,
-              },
-            ]
+                {
+                  uid: "-1",
+                  name: singleOrganizerUpdate.events.thumbnail_image
+                    .split("/")
+                    .pop(),
+                  status: "done",
+                  url: singleOrganizerUpdate.events.thumbnail_image,
+                },
+              ]
             : [],
         });
       }
-
     }
   }, [mode, eventDetails, form]);
-
 
   // useEffect(() => {
   //   dispatch(resetState());
@@ -211,10 +259,79 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
 
     if (mode === "EDIT") {
       if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
+        console.log(
+          "<><><><><><><><><><><><><><><><><><>",
+          eventDetails.thumbnail_image
+        );
+        const getThumbnailPayload = (thumbnail) => {
+          if (!thumbnail || !thumbnail[0]) return undefined;
 
+          // If new file uploaded
+          if (thumbnail[0].originFileObj) {
+            return thumbnail[0].originFileObj; // Return File object
+          }
+
+          // If existing image
+          if (thumbnail[0].url) {
+            return thumbnail[0].url; // Return URL string
+          }
+
+          return undefined;
+        };
+        const getBannerImagesPayload = (banners) => {
+          if (!banners || banners.length === 0) return [];
+
+          return banners
+            .map((banner, index) => {
+              if (banner.originFileObj) {
+                // If a new file is uploaded
+                return banner.originFileObj;
+              } else if (banner.url) {
+                // If existing image
+                return banner.url;
+              }
+              return null;
+            })
+            .filter(Boolean); // Remove any null values
+        };
+        const getEventImagesPayload = (event_images) => {
+          if (!event_images || event_images.length === 0) return [];
+
+          return event_images
+            .map((image, index) => {
+              if (image.originFileObj) {
+                // If a new file is uploaded
+                return image.originFileObj;
+              } else if (image.url) {
+                // If existing image
+                return image.url;
+              }
+              return null;
+            })
+            .filter(Boolean); // Remove any null values
+        };
 
         const data = {
-          ...values,
+          event_name: values.event_name,
+          description: values.description,
+          banner_images: getBannerImagesPayload(values.banner_images),
+          thumbnail_image: getThumbnailPayload(values.thumbnail_image),
+          event_images: getEventImagesPayload(values.event_images),
+          event_add_on_services: values.event_add_on_services 
+          ? values.event_add_on_services.map(service => ({
+            title: service.title,
+            services: service.add || []
+          }))
+          : [],
+        event_qna: values.event_qna 
+          ? values.event_qna.map(qnaSection => ({
+            title: qnaSection.title,
+            qna: qnaSection.qna.map(qa => ({
+              question: qa.question,
+              answer: qa.answer
+            }))
+          }))
+          : [],
           id: eventId,
         };
         console.log("Edit Data:", data);
@@ -273,33 +390,30 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
         comments: comment
       };
 
-      console.log("...............", data)
+      console.log("...............", data);
       const resultAction = await dispatch(
         updateOrganizerReChanges({
           data: data,
-          action: ActionType.SUBMIT
+          action: ActionType.SUBMIT,
         })
       );
 
       if (updateOrganizerReChanges.fulfilled.match(resultAction)) {
         console.log("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEssss");
-        dispatch(setComment(''));
+        dispatch(setComment(""));
         dispatch(setCommentModalVisibility(false));
         dispatch(setSelectedSubmitItem(data));
         message.success(`Update ${actionType}ed successfully`);
         dispatch(fetchSingleOrganizerUpdate(eventId));
         // navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`);
-
       }
       // dispatch(setSelectedSubmitItem(data));
-
     } catch (error) {
       message.error(`Failed to ${actionType} the update`);
     }
 
-    dispatch(setComment(''));
+    dispatch(setComment(""));
     dispatch(setCommentModalVisibility(false));
-
   };
 
   const prevStep = () => {
