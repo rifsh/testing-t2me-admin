@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Stage, Layer } from "react-konva";
 import { useSelector, useDispatch } from "react-redux";
 
-import { clearSelection } from "store/slices/seatSlice";
+import { clearSelection, saveState } from "store/slices/seatSlice";
 
 import Toolbar from "./Toolbar";
 import Seat from "./Seat";
@@ -28,6 +28,9 @@ const SeatCanvas = () => {
   const stageContainerRef = useRef(null);
   const stageRef = useRef(null);
 
+  // Scroll state
+  const [scrollPosition, setScrollPosition] = useState({ x: 0, y: 0 });
+
   // Selection rectangle state
   const [selectionStart, setSelectionStart] = useState(null);
   const [selectionEnd, setSelectionEnd] = useState(null);
@@ -43,71 +46,74 @@ const SeatCanvas = () => {
   // Tool state management
   const [tool, setTool] = useState("add");
 
+  // State for canvas dimensions
+  const [dimensions, setDimensions] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight - 120,
+  });
+
   // Create mouse utilities with current state
   const mouseUtils = createMouseUtils(
-    dispatch, 
-    seats, 
-    scale, 
-    selectedSeats, 
+    dispatch,
+    seats,
+    scale,
+    selectedSeats,
     tool
   );
 
-  // Similar existing useEffect hooks remain unchanged
+  // Resize handler
+  useEffect(() => {
+    const handleResize = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight - 120,
+      });
+    };
 
-  // Handle stage click using mouse utils
-  const handleStageClick = (e) => {
-    mouseUtils.handleStageClick(e);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Fullscreen event listeners
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(
+        document.fullscreenElement !== null ||
+          document.webkitFullscreenElement !== null ||
+          document.msFullscreenElement !== null
+      );
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("msfullscreenchange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange
+      );
+      document.removeEventListener(
+        "msfullscreenchange",
+        handleFullscreenChange
+      );
+    };
+  }, []);
+
+  // Scroll handling
+  const handleWheel = (e) => {
+    e.evt.preventDefault(); // Prevent default scrolling
+
+    // Adjust scroll speed and enable both horizontal and vertical scrolling
+    const scrollSpeed = 1;
+    const newScrollX = scrollPosition.x - e.evt.deltaX * scrollSpeed;
+    const newScrollY = scrollPosition.y - e.evt.deltaY * scrollSpeed;
+
+    setScrollPosition({ x: newScrollX, y: newScrollY });
   };
 
-  // Handle mouse down using mouse utils
-  const handleMouseDown = (e) => {
-    mouseUtils.handleMouseDown(
-      e, 
-      setSelectionStart, 
-      setSelectionEnd, 
-      setIsSelecting,
-      setIsDraggingMultiple, 
-      setDragStartPoint, 
-      setDragStartPositions
-    );
-  };
-
-  // Handle mouse move using mouse utils
-  const handleMouseMove = (e) => {
-    mouseUtils.handleMouseMove(
-      e, 
-      isSelecting, 
-      isDraggingMultiple,
-      selectionStart, 
-      dragStartPoint,
-      setSelectionEnd, 
-      dragStartPositions
-    );
-  };
-
-  // Handle mouse up using mouse utils
-  const handleMouseUp = (e) => {
-    mouseUtils.handleMouseUp(
-      e, 
-      isSelecting, 
-      isDraggingMultiple,
-      dragStartPoint, 
-      dragStartPositions,
-      setIsSelecting, 
-      setIsDraggingMultiple,
-      setDragStartPositions, 
-      setDragStartPoint,
-      setSelectionStart, 
-      setSelectionEnd
-    );
-  };
-
-  // Handle seat drag end using mouse utils
-  const handleSeatDragEnd = (index, e) => {
-    mouseUtils.handleSeatDragEnd(index, e);
-  };
-
-  // Toggle fullscreen mode
+  // Toggle fullscreen
   const toggleFullscreen = () => {
     if (!isFullscreen) {
       if (stageContainerRef.current.requestFullscreen) {
@@ -128,6 +134,69 @@ const SeatCanvas = () => {
     }
   };
 
+  // Modify mouse event handlers to account for scroll position
+  const adjustEventForScroll = (e) => ({
+    ...e,
+    evt: {
+      ...e.evt,
+      offsetX: e.evt.offsetX - scrollPosition.x,
+      offsetY: e.evt.offsetY - scrollPosition.y,
+    },
+  });
+
+  const handleStageClick = (e) => {
+    dispatch(saveState());
+    mouseUtils.handleStageClick(adjustEventForScroll(e));
+  };
+
+  const handleMouseDown = (e) => {
+    dispatch(saveState());
+    mouseUtils.handleMouseDown(
+      adjustEventForScroll(e),
+      setSelectionStart,
+      setSelectionEnd,
+      setIsSelecting,
+      setIsDraggingMultiple,
+      setDragStartPoint,
+      setDragStartPositions
+    );
+  };
+
+  const handleMouseUp = (e) => {
+    dispatch(saveState());
+    mouseUtils.handleMouseUp(
+      adjustEventForScroll(e),
+      isSelecting,
+      isDraggingMultiple,
+      dragStartPoint,
+      dragStartPositions,
+      setIsSelecting,
+      setIsDraggingMultiple,
+      setDragStartPositions,
+      setDragStartPoint,
+      setSelectionStart,
+      setSelectionEnd
+    );
+  };
+
+  const handleMouseMove = (e) => {
+    const adjustedEvent = adjustEventForScroll(e);
+    mouseUtils.handleMouseMove(
+      adjustedEvent,
+      isSelecting,
+      isDraggingMultiple,
+      selectionStart,
+      dragStartPoint,
+      setSelectionEnd,
+      dragStartPositions
+    );
+  };
+
+  const handleSeatDragEnd = (index, e) => {
+    dispatch(saveState());
+    mouseUtils.handleSeatDragEnd(index, e);
+  };
+
   // Calculate the rectangle coordinates for rendering
   const getSelectionRect = () => {
     if (!selectionStart || !selectionEnd) return null;
@@ -140,24 +209,16 @@ const SeatCanvas = () => {
     };
   };
 
-  // Get current stage dimensions
-  const getStageDimensions = () => {
-    if (isFullscreen) {
-      return {
-        width: window.innerWidth,
-        height: window.innerHeight - 60, // Adjust for toolbar height
-      };
-    }
-    return { width: 800, height: 600 };
-  };
-
-  const dimensions = getStageDimensions();
-
-  // Existing useEffect hooks for fullscreen and sidebar
-
   return (
     <SidebarProvider>
-      <div style={{ position: "relative" }}>
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "100vh",
+          overflow: "hidden",
+        }}
+      >
         <Toolbar
           activeTool={tool}
           onToolChange={setTool}
@@ -170,7 +231,11 @@ const SeatCanvas = () => {
           ref={stageContainerRef}
           style={{
             position: "relative",
+            width: "100%",
+            height: "calc(100vh - 120px)",
             cursor: SeatUtils.getCursor(tool, isDraggingMultiple),
+            backgroundColor: "#f0f0f0",
+            overflow: "hidden",
           }}
         >
           <Stage
@@ -182,15 +247,17 @@ const SeatCanvas = () => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
             style={{
-              border: "1px solid black",
+              border: "1px solid #d9d9d9",
               userSelect: "none",
             }}
             scaleX={scale}
             scaleY={scale}
+            x={scrollPosition.x}
+            y={scrollPosition.y}
           >
             <Layer>
-              {/* Grid */}
               {showGrid && (
                 <Grid
                   width={dimensions.width / scale}
@@ -199,7 +266,6 @@ const SeatCanvas = () => {
                 />
               )}
 
-              {/* Seats */}
               {seats.map((seat, index) => (
                 <Seat
                   key={index}
@@ -240,14 +306,13 @@ const SeatCanvas = () => {
             />
           )}
 
-          {/* New SeatShapeContainer for drawSquare and drawCircle tools */}
           {["drawSquare", "drawCircle"].includes(tool) && (
             <SeatShapeContainer
               activeTool={tool}
               scale={scale}
               width={dimensions.width}
               height={dimensions.height}
-              onComplete={() => setTool("select")} // Optional: switch back to select tool after drawing
+              onComplete={() => setTool("select")}
             />
           )}
         </div>

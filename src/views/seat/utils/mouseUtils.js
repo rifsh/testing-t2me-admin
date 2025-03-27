@@ -65,20 +65,20 @@ export const createMouseUtils = (
       setIsSelecting,
       setIsDraggingMultiple,
       setDragStartPoint,
-      setDragStartPositions
+      setDragStartPositions,
     ) => {
       if (tool === "select") {
         const stage = e.target.getStage();
         const pointerPos = stage.getPointerPosition();
-
+    
         // Convert to world coordinates
         const worldX = pointerPos.x / scale;
         const worldY = pointerPos.y / scale;
-
+    
         setSelectionStart({ x: worldX, y: worldY });
         setSelectionEnd({ x: worldX, y: worldY });
         setIsSelecting(true);
-
+    
         // Only clear selection if not holding shift
         if (!e.evt.shiftKey) {
           dispatch(clearSelection());
@@ -87,17 +87,17 @@ export const createMouseUtils = (
         // Check if we clicked on a selected seat to start multi-drag
         const stage = e.target.getStage();
         const pointerPos = stage.getPointerPosition();
-
+    
         // Convert to world coordinates
         const worldX = pointerPos.x / scale;
         const worldY = pointerPos.y / scale;
-
+    
         const clickedSeatIndex = SeatUtils.findClickedSeat(
           seats,
           worldX,
           worldY
         );
-
+    
         if (
           clickedSeatIndex !== -1 &&
           selectedSeats.includes(clickedSeatIndex)
@@ -105,7 +105,7 @@ export const createMouseUtils = (
           // Start multi-drag operation
           setIsDraggingMultiple(true);
           setDragStartPoint({ x: worldX, y: worldY });
-
+    
           // Store the initial positions of all selected seats
           const startPositions = selectedSeats.map((index) => ({
             index,
@@ -113,9 +113,13 @@ export const createMouseUtils = (
             startY: seats[index].y,
           }));
           setDragStartPositions(startPositions);
-
-          // Prevent default to avoid unwanted behavior
-          e.evt.preventDefault();
+    
+          // Prevent default more safely
+          if (e.evt && typeof e.evt.preventDefault === 'function') {
+            e.evt.preventDefault();
+          } else if (e.evt && e.evt.originalEvent && typeof e.evt.originalEvent.preventDefault === 'function') {
+            e.evt.originalEvent.preventDefault();
+          }
         }
       }
     },
