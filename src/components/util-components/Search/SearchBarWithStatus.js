@@ -10,7 +10,7 @@ const SearchBarWithStatus = ({
   fetchFunction,
   additionalFilters = [],
   isStatus = true,
-
+  placeholder = 'Search',
 }) => {
   const dispatch = useDispatch();
   const [searchValue, setSearchValue] = useState(null);
@@ -135,7 +135,7 @@ const SearchBarWithStatus = ({
         style={{ width: !isStatus && "100%" }}
       >
         <Search
-          placeholder="Search"
+          placeholder={placeholder}
           onChange={(e) => handleSearchIsEmpty(e.target.value)}
           onSearch={handleSearch}
           style={{ width: isStatus ? 200 : "100%" }}
@@ -190,7 +190,7 @@ const SearchBarWithStatus = ({
               >
                 <Option value={null}>All</Option>
                 {filter.options.map((option) => {
-                  if (!option) return null; 
+                  if (!option) return null;
                   const value = option.id;
                   const label = filter.additionalField ? option[filter.additionalField] : option.name;
                   return value && label ? (
