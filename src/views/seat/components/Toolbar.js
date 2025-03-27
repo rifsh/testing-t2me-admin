@@ -7,6 +7,10 @@ import {
   deleteSelectedSeats,
   toggleGrid,
   duplicateSelectedSeats,
+  saveState,
+  undo,
+  redo,
+  resetState,
 } from "store/slices/seatSlice";
 import { Tooltip } from "antd";
 import { RiRectangleLine } from "react-icons/ri";
@@ -28,7 +32,13 @@ import {
   FormOutlined,
   MinusOutlined,
   BorderlessTableOutlined,
+  UndoOutlined,
+  RedoOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
+import { IoFilterCircleOutline } from "react-icons/io5";
+import { LuSquareMenu } from "react-icons/lu";
+
 import { PiBezierCurve, PiPencilLineBold } from "react-icons/pi";
 import AlignmentSelector from "./AlignmentSelector";
 import GridSeatButton from "./GridSeatButton";
@@ -37,25 +47,41 @@ import { useSidebar } from "utils/hooks/useSidebar";
 import SeatCurve from "./SeatCurve";
 import { FaRegCircle } from "react-icons/fa";
 
+// Button styling function
 const buttonStyle = (isActive) => ({
   backgroundColor: isActive ? "#e6f7ff" : "white",
   border: isActive ? "1px solid #1890ff" : "1px solid #d9d9d9",
   padding: "4px 8px",
   cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
 });
 
-// Component for toolbar buttons
-const ToolbarButton = ({ tooltip, onClick, active, icon }) => (
+// Toolbar Button Component
+const ToolbarButton = ({
+  tooltip,
+  onClick,
+  active,
+  icon,
+  disabled = false,
+}) => (
   <Tooltip title={tooltip}>
-    <button onClick={onClick} style={buttonStyle(active)}>
+    <button onClick={onClick} style={buttonStyle(active)} disabled={disabled}>
       {icon}
     </button>
   </Tooltip>
 );
 
-// Section divider component
+// Section Divider Component
 const ToolbarDivider = () => (
-  <div style={{ borderRight: "1px solid #eee", marginRight: "10px" }} />
+  <div
+    style={{
+      borderRight: "1px solid #eee",
+      height: "24px",
+      marginRight: "10px",
+    }}
+  />
 );
 
 const Toolbar = ({
@@ -68,30 +94,34 @@ const Toolbar = ({
   const dispatch = useDispatch();
   const { openSidebar } = useSidebar();
 
-  // Get selected seats from Redux store
+  // Selectors
   const selectedSeats = useSelector((state) => state.seat.selectedSeats);
+  const { past, future } = useSelector((state) => ({
+    past: state.seat.past,
+    future: state.seat.future,
+  }));
 
   // Tool buttons configuration
   const toolButtons = [
     {
       tooltip: "Add Seats",
       tool: "add",
-      icon: <PlusCircleOutlined />,
+      icon: <PlusCircleOutlined size={20} />,
     },
     {
       tooltip: "Select Seats (Rectangle)",
       tool: "select",
-      icon: <SelectOutlined />,
+      icon: <SelectOutlined size={20} />,
     },
     {
       tooltip: "Click Select",
       tool: "clickSelect",
-      icon: <AimOutlined />,
+      icon: <AimOutlined size={20} />,
     },
     {
       tooltip: "Drag Seats",
       tool: "drag",
-      icon: <DragOutlined />,
+      icon: <DragOutlined size={20} />,
     },
   ];
 
@@ -99,47 +129,54 @@ const Toolbar = ({
     {
       tooltip: "Select/Move",
       tool: "move",
-      icon: <FormOutlined />,
+      icon: <FormOutlined size={20} />,
     },
     {
       tooltip: "Straight Line",
       tool: "line",
-      icon: <MinusOutlined />,
+      icon: <MinusOutlined size={20} />,
     },
     {
       tooltip: "Freehand Draw",
       tool: "freehand",
-      icon: <PiPencilLineBold />,
+      icon: <PiPencilLineBold size={20} v />,
     },
     {
       tooltip: "Draw Square",
       tool: "square",
-      icon: <BorderOutlined />,
+      icon: <BorderOutlined size={20} />,
     },
     {
       tooltip: "Draw Circle",
       tool: "circle",
-      icon: <SignatureOutlined />,
+      icon: <FaRegCircle size={20} />,
     },
     {
       tooltip: "Draw Curve",
       tool: "curve",
-      icon: <PiBezierCurve />,
+      icon: <PiBezierCurve size={20} />,
     },
     {
       tooltip: "Draw Square with Seats",
       tool: "drawSquare",
-      icon: <RiRectangleLine />,
+      icon: <LuSquareMenu size={20} />,
     },
     {
       tooltip: "Draw Circle with Seats",
       tool: "drawCircle",
-      icon: <FaRegCircle />,
+      icon: <IoFilterCircleOutline size={20} />,
     },
   ];
 
+  // Handler for opening seat curve sidebar
   const handleOpenSeatCurveSidebar = () => {
     openSidebar(<SeatCurve />);
+  };
+
+  // Wrapper for dispatching actions with state saving
+  const dispatchWithSave = (action) => {
+    dispatch(saveState());
+    dispatch(action);
   };
 
   return (
@@ -147,115 +184,148 @@ const Toolbar = ({
       style={{
         marginBottom: "10px",
         display: "flex",
+        flexDirection: "column",
         gap: "10px",
-        alignItems: "center",
       }}
     >
-      {/* Tool selection section */}
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-        {toolButtons.map(({ tooltip, tool, icon }) => (
+      {/* First Line: Main Tools and Drawing Tools */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "10px",
+          alignItems: "center",
+        }}
+      >
+        {/* Tool Selection */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          {toolButtons.map(({ tooltip, tool, icon }) => (
+            <ToolbarButton
+              key={tool}
+              tooltip={tooltip}
+              onClick={() => onToolChange(tool)}
+              active={activeTool === tool}
+              icon={icon}
+            />
+          ))}
+        </div>
+
+        {/* Drawing Tools */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          {drawingButtons.map(({ tooltip, tool, icon }) => (
+            <ToolbarButton
+              key={tool}
+              tooltip={tooltip}
+              onClick={() => onToolChange(tool)}
+              active={activeTool === tool}
+              icon={icon}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Second Line: Additional Controls and Advanced Features */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "10px",
+          alignItems: "center",
+        }}
+      >
+        {/* Category Selector */}
+        <CategorySelector />
+        <ToolbarDivider />
+
+        {/* Alignment Selector */}
+        <AlignmentSelector />
+        <ToolbarDivider />
+
+        {/* Seat Manipulation */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <GridSeatButton />
           <ToolbarButton
-            key={tool}
-            tooltip={tooltip}
-            onClick={() => onToolChange(tool)}
-            active={activeTool === tool}
-            icon={icon}
+            tooltip="Delete Selected"
+            onClick={() => dispatchWithSave(deleteSelectedSeats())}
+            icon={<DeleteOutlined />}
           />
-        ))}
-      </div>
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-        {drawingButtons.map(({ tooltip, tool, icon }) => (
           <ToolbarButton
-            key={tool}
-            tooltip={tooltip}
-            onClick={() => onToolChange(tool)}
-            active={activeTool === tool}
-            icon={icon}
+            tooltip="Duplicate Selected"
+            onClick={() => dispatchWithSave(duplicateSelectedSeats())}
+            icon={<CopyOutlined />}
           />
-        ))}
+        </div>
+        <ToolbarDivider />
+
+        {/* History Management */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <ToolbarButton
+            tooltip="Undo"
+            onClick={() => dispatch(undo())}
+            icon={<UndoOutlined />}
+            disabled={past.length === 0}
+          />
+          <ToolbarButton
+            tooltip="Redo"
+            onClick={() => dispatch(redo())}
+            icon={<RedoOutlined />}
+            disabled={future.length === 0}
+          />
+          <ToolbarButton
+            tooltip="Reset Canvas"
+            onClick={() => dispatchWithSave(resetState())}
+            icon={<ReloadOutlined />}
+          />
+        </div>
+        <ToolbarDivider />
+
+        {/* Zoom Controls */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <ToolbarButton
+            tooltip="Zoom In"
+            onClick={() => dispatch(zoomIn())}
+            icon={<ZoomInOutlined />}
+          />
+          <ToolbarButton
+            tooltip="Zoom Out"
+            onClick={() => dispatch(zoomOut())}
+            icon={<ZoomOutOutlined />}
+          />
+          <ToolbarButton
+            tooltip="Fit to Screen"
+            onClick={() => dispatch(fitToScreen())}
+            icon={<ExpandOutlined />}
+          />
+        </div>
+        <ToolbarDivider />
+
+        {/* Grid and Fullscreen */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <ToolbarButton
+            tooltip="Toggle Grid"
+            onClick={() => dispatch(toggleGrid())}
+            active={showGrid}
+            icon={<BorderlessTableOutlined />}
+          />
+          <ToolbarButton
+            tooltip={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            onClick={onToggleFullscreen}
+            active={isFullscreen}
+            icon={
+              isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />
+            }
+          />
+        </div>
+
+        {/* Seat Configuration (Conditional) */}
+        {selectedSeats.length > 0 && (
+          <ToolbarButton
+            tooltip="Seat Configuration"
+            onClick={handleOpenSeatCurveSidebar}
+            icon={<MenuUnfoldOutlined />}
+          />
+        )}
       </div>
-
-      <ToolbarDivider />
-
-      {/* Category selector */}
-      <CategorySelector />
-
-      <ToolbarDivider />
-
-      {/* Alignment Selector */}
-      <AlignmentSelector />
-
-      <ToolbarDivider />
-
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-        <GridSeatButton />
-        <ToolbarButton
-          tooltip="Delete Selected"
-          onClick={() => dispatch(deleteSelectedSeats())}
-          active={false}
-          icon={<DeleteOutlined />}
-        />{" "}
-        <ToolbarButton
-          tooltip="Duplicate Selected"
-          onClick={() => dispatch(duplicateSelectedSeats())}
-          active={false}
-          icon={<CopyOutlined />}
-        />
-      </div>
-
-      <ToolbarDivider />
-
-      {/* Zoom controls section */}
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-        <ToolbarButton
-          tooltip="Zoom In"
-          onClick={() => dispatch(zoomIn())}
-          active={false}
-          icon={<ZoomInOutlined />}
-        />
-
-        <ToolbarButton
-          tooltip="Zoom Out"
-          onClick={() => dispatch(zoomOut())}
-          active={false}
-          icon={<ZoomOutOutlined />}
-        />
-
-        <ToolbarButton
-          tooltip="Fit to Screen"
-          onClick={() => dispatch(fitToScreen())}
-          active={false}
-          icon={<ExpandOutlined />}
-        />
-      </div>
-
-      <ToolbarDivider />
-
-      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-        <ToolbarButton
-          tooltip="Toggle Grid"
-          onClick={() => dispatch(toggleGrid())}
-          active={showGrid}
-          icon={<BorderlessTableOutlined />}
-        />
-
-        <ToolbarButton
-          tooltip={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-          onClick={onToggleFullscreen}
-          active={isFullscreen}
-          icon={
-            isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />
-          }
-        />
-      </div>
-      {selectedSeats.length > 0 && (
-        <ToolbarButton
-          tooltip="Seat Configuration"
-          onClick={handleOpenSeatCurveSidebar}
-          active={false}
-          icon={<MenuUnfoldOutlined />}
-        />
-      )}
     </div>
   );
 };

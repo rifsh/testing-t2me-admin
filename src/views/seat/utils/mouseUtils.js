@@ -65,7 +65,7 @@ export const createMouseUtils = (
       setIsSelecting,
       setIsDraggingMultiple,
       setDragStartPoint,
-      setDragStartPositions
+      setDragStartPositions,
     ) => {
       if (tool === "select") {
         const stage = e.target.getStage();

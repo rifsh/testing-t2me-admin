@@ -12,6 +12,9 @@ export const initialState = {
     { id: "vip", name: "VIP", color: "#ffccbc" },
   ],
   activeCategory: "standard",
+  past: [],
+  present: null,
+  future: [],
 };
 
 const seatSlice = createSlice({
@@ -39,10 +42,12 @@ const seatSlice = createSlice({
       }
     },
     zoomIn: (state) => {
-      state.scale = Math.min(state.scale + 0.1, 3);
+      // state.scale = Math.min(state.scale + 0.1, 3);
+      state.scale = Math.min(state.scale + 0.1, 5);
     },
     zoomOut: (state) => {
-      state.scale = Math.max(state.scale - 0.1, 0.5);
+      // state.scale = Math.max(state.scale - 0.1, 0.5);
+      state.scale = Math.max(state.scale - 0.1, 0.2);
     },
     fitToScreen: (state) => {
       state.scale = 1;
@@ -52,6 +57,15 @@ const seatSlice = createSlice({
     },
     clearSelection: (state) => {
       state.selectedSeats = [];
+    },moveSeatsByOffset: (state, action) => {
+      const { dx, dy } = action.payload;
+      
+      // Move all seats by the specified offset
+      state.seats = state.seats.map(seat => ({
+        ...seat,
+        x: seat.x + dx,
+        y: seat.y + dy
+      }));
     },
     toggleSeatSelection: (state, action) => {
       const seatIndex = action.payload;
@@ -262,13 +276,14 @@ const seatSlice = createSlice({
       state.drawings = state.drawings.filter(
         (_, index) => index !== action.payload
       );
-    },updateDrawing: (state, action) => {
+    },
+    updateDrawing: (state, action) => {
       const { index, updates } = action.payload;
       if (index >= 0 && index < state.drawings.length) {
         // Merge the updates with the existing drawing
         state.drawings[index] = {
           ...state.drawings[index],
-          ...updates
+          ...updates,
         };
       }
     },
@@ -278,9 +293,94 @@ const seatSlice = createSlice({
         state.drawings[index] = {
           ...state.drawings[index],
           color,
-          fill: fill ? color : state.drawings[index].fill
+          fill: fill ? color : state.drawings[index].fill,
         };
       }
+    },
+    saveState: (state) => {
+      // Create a snapshot of the current state
+      const stateCopy = {
+        seats: [...state.seats],
+        scale: state.scale,
+        selectedSeats: [...state.selectedSeats],
+        showGrid: state.showGrid,
+        drawings: [...state.drawings],
+        categories: [...state.categories],
+        activeCategory: state.activeCategory,
+      };
+
+      // Add current state to past if it's not the first state
+      if (state.present !== null) {
+        state.past.push(state.present);
+      }
+
+      // Set current state as present and clear future
+      state.present = stateCopy;
+      state.future = [];
+
+      // Limit history to prevent memory issues
+      if (state.past.length > 20) {
+        state.past.shift();
+      }
+    },
+    undo: (state) => {
+      // If no past states, do nothing
+      if (state.past.length === 0) return;
+
+      // Move current state to future
+      state.future.unshift(state.present);
+
+      // Get the last state from past and make it present
+      const previousState = state.past.pop();
+      state.present = previousState;
+
+      // Restore state properties
+      state.seats = [...previousState.seats];
+      state.scale = previousState.scale;
+      state.selectedSeats = [...previousState.selectedSeats];
+      state.showGrid = previousState.showGrid;
+      state.drawings = [...previousState.drawings];
+      state.categories = [...previousState.categories];
+      state.activeCategory = previousState.activeCategory;
+    },
+    redo: (state) => {
+      // If no future states, do nothing
+      if (state.future.length === 0) return;
+
+      // Move current state to past
+      state.past.push(state.present);
+
+      // Get the first state from future and make it present
+      const nextState = state.future.shift();
+      state.present = nextState;
+
+      // Restore state properties
+      state.seats = [...nextState.seats];
+      state.scale = nextState.scale;
+      state.selectedSeats = [...nextState.selectedSeats];
+      state.showGrid = nextState.showGrid;
+      state.drawings = [...nextState.drawings];
+      state.categories = [...nextState.categories];
+      state.activeCategory = nextState.activeCategory;
+    },
+    resetState: (state) => {
+      // Reset to initial state, keeping history
+      const resetState = { ...initialState };
+
+      // Save current state to past before resetting
+      if (state.present !== null) {
+        state.past.push(state.present);
+      }
+
+      state.present = resetState;
+      state.future = [];
+      state.seats = resetState.seats;
+      state.scale = resetState.scale;
+      state.selectedSeats = resetState.selectedSeats;
+      state.showGrid = resetState.showGrid;
+      state.drawings = resetState.drawings;
+      state.categories = resetState.categories;
+      state.activeCategory = resetState.activeCategory;
     },
   },
 });
@@ -305,8 +405,13 @@ export const {
   duplicateSelectedSeats,
   addDrawing,
   clearDrawings,
-  deleteDrawing,updateDrawing,
+  deleteDrawing,  moveSeatsByOffset,
+  updateDrawing,
   updateDrawingColor,
+  saveState,
+  undo,
+  redo,
+  resetState,
 } = seatSlice.actions;
 
 export const getAllSeats = (state) => state.seat.seats;
