@@ -42,14 +42,15 @@ const seatSlice = createSlice({
       }
     },
     zoomIn: (state) => {
-      // state.scale = Math.min(state.scale + 0.1, 3);
-      state.scale = Math.min(state.scale + 0.1, 5);
+      // Limit zoom in to 5x
+      state.scale = Math.min(state.scale * 1.1, 5);
     },
     zoomOut: (state) => {
-      // state.scale = Math.max(state.scale - 0.1, 0.5);
-      state.scale = Math.max(state.scale - 0.1, 0.2);
+      // Limit zoom out to 0.2x
+      state.scale = Math.max(state.scale / 1.1, 0.2);
     },
     fitToScreen: (state) => {
+      // Reset to default zoom
       state.scale = 1;
     },
     selectSeats: (state, action) => {

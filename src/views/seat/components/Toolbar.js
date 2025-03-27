@@ -46,6 +46,7 @@ import CategorySelector from "./CategorySelector";
 import { useSidebar } from "utils/hooks/useSidebar";
 import SeatCurve from "./SeatCurve";
 import { FaRegCircle } from "react-icons/fa";
+import SeatManagementSidebar from "./SeatManagementSidebar";
 
 // Button styling function
 const buttonStyle = (isActive) => ({
@@ -170,10 +171,10 @@ const Toolbar = ({
 
   // Handler for opening seat curve sidebar
   const handleOpenSeatCurveSidebar = () => {
-    openSidebar(<SeatCurve />);
+    openSidebar(<SeatManagementSidebar />);
   };
 
-  // Wrapper for dispatching actions with state saving
+  // Wrapper for dispatching actions with stat  e saving
   const dispatchWithSave = (action) => {
     dispatch(saveState());
     dispatch(action);
@@ -317,14 +318,13 @@ const Toolbar = ({
           />
         </div>
 
-        {/* Seat Configuration (Conditional) */}
-        {selectedSeats.length > 0 && (
+     
           <ToolbarButton
             tooltip="Seat Configuration"
             onClick={handleOpenSeatCurveSidebar}
             icon={<MenuUnfoldOutlined />}
           />
-        )}
+        
       </div>
     </div>
   );

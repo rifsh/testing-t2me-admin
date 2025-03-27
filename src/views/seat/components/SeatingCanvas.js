@@ -28,6 +28,9 @@ const SeatCanvas = () => {
   const stageContainerRef = useRef(null);
   const stageRef = useRef(null);
 
+  // Scroll state
+  const [scrollPosition, setScrollPosition] = useState({ x: 0, y: 0 });
+
   // Selection rectangle state
   const [selectionStart, setSelectionStart] = useState(null);
   const [selectionEnd, setSelectionEnd] = useState(null);
@@ -46,7 +49,7 @@ const SeatCanvas = () => {
   // State for canvas dimensions
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth,
-    height: window.innerHeight - 120, // Adjust for toolbar and potential headers
+    height: window.innerHeight - 120,
   });
 
   // Create mouse utilities with current state
@@ -98,6 +101,18 @@ const SeatCanvas = () => {
     };
   }, []);
 
+  // Scroll handling
+  const handleWheel = (e) => {
+    e.evt.preventDefault(); // Prevent default scrolling
+
+    // Adjust scroll speed and enable both horizontal and vertical scrolling
+    const scrollSpeed = 1;
+    const newScrollX = scrollPosition.x - e.evt.deltaX * scrollSpeed;
+    const newScrollY = scrollPosition.y - e.evt.deltaY * scrollSpeed;
+
+    setScrollPosition({ x: newScrollX, y: newScrollY });
+  };
+
   // Toggle fullscreen
   const toggleFullscreen = () => {
     if (!isFullscreen) {
@@ -119,16 +134,25 @@ const SeatCanvas = () => {
     }
   };
 
-  // Handle stage click using mouse utils
+  // Modify mouse event handlers to account for scroll position
+  const adjustEventForScroll = (e) => ({
+    ...e,
+    evt: {
+      ...e.evt,
+      offsetX: e.evt.offsetX - scrollPosition.x,
+      offsetY: e.evt.offsetY - scrollPosition.y,
+    },
+  });
+
   const handleStageClick = (e) => {
     dispatch(saveState());
-    mouseUtils.handleStageClick(e);
+    mouseUtils.handleStageClick(adjustEventForScroll(e));
   };
 
   const handleMouseDown = (e) => {
     dispatch(saveState());
     mouseUtils.handleMouseDown(
-      e,
+      adjustEventForScroll(e),
       setSelectionStart,
       setSelectionEnd,
       setIsSelecting,
@@ -141,7 +165,7 @@ const SeatCanvas = () => {
   const handleMouseUp = (e) => {
     dispatch(saveState());
     mouseUtils.handleMouseUp(
-      e,
+      adjustEventForScroll(e),
       isSelecting,
       isDraggingMultiple,
       dragStartPoint,
@@ -155,15 +179,10 @@ const SeatCanvas = () => {
     );
   };
 
-  const handleSeatDragEnd = (index, e) => {
-    dispatch(saveState());
-    mouseUtils.handleSeatDragEnd(index, e);
-  };
-
-  // Handle mouse move using mouse utils
   const handleMouseMove = (e) => {
+    const adjustedEvent = adjustEventForScroll(e);
     mouseUtils.handleMouseMove(
-      e,
+      adjustedEvent,
       isSelecting,
       isDraggingMultiple,
       selectionStart,
@@ -171,6 +190,11 @@ const SeatCanvas = () => {
       setSelectionEnd,
       dragStartPositions
     );
+  };
+
+  const handleSeatDragEnd = (index, e) => {
+    dispatch(saveState());
+    mouseUtils.handleSeatDragEnd(index, e);
   };
 
   // Calculate the rectangle coordinates for rendering
@@ -208,9 +232,10 @@ const SeatCanvas = () => {
           style={{
             position: "relative",
             width: "100%",
-            height: "calc(100vh - 120px)", // Adjust based on toolbar height
+            height: "calc(100vh - 120px)",
             cursor: SeatUtils.getCursor(tool, isDraggingMultiple),
-            backgroundColor: "#f0f0f0", // Optional: add a light background
+            backgroundColor: "#f0f0f0",
+            overflow: "hidden",
           }}
         >
           <Stage
@@ -222,15 +247,17 @@ const SeatCanvas = () => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
             style={{
               border: "1px solid #d9d9d9",
               userSelect: "none",
             }}
             scaleX={scale}
             scaleY={scale}
+            x={scrollPosition.x}
+            y={scrollPosition.y}
           >
             <Layer>
-              {/* Grid */}
               {showGrid && (
                 <Grid
                   width={dimensions.width / scale}
@@ -239,7 +266,6 @@ const SeatCanvas = () => {
                 />
               )}
 
-              {/* Seats */}
               {seats.map((seat, index) => (
                 <Seat
                   key={index}
