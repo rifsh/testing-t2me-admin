@@ -55,6 +55,7 @@ const EventDetails = () => {
     (state) => state.leadEvents
   );
   const [enrollModalVisible, setEnrollModalVisible] = useState(false);
+  const [mediaPreviewVisible, setMediaPreviewVisible] = useState(false);
   const [convertModalVisible, setConvertModalVisible] = useState(false);
   const [chatCollapsed, setChatCollapsed] = useState(false);
   const [form] = Form.useForm();
@@ -619,7 +620,7 @@ const EventDetails = () => {
                     style={{ marginLeft: "auto" }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setPreviewVisible(true);
+                      setMediaPreviewVisible(true);
                     }}
                   />
                 </div>
@@ -654,8 +655,8 @@ const EventDetails = () => {
           {/* Media Preview Modal */}
           <Modal
             title="Media Gallery Preview"
-            open={previewVisible}
-            onCancel={() => setPreviewVisible(false)}
+            open={mediaPreviewVisible}
+            onCancel={() => setMediaPreviewVisible(false)}
             footer={null}
             width="auto"
             bodyStyle={{

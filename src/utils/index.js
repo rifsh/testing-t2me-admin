@@ -439,12 +439,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-        (document.cookie = cookie
-          .replace(/^ +/, "")
-          .replace(
-            /=.*/,
-            "=;expires=" + new Date(0).toUTCString() + ";path=/"
-          ))
+          (document.cookie = cookie
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date(0).toUTCString() + ";path=/"
+            ))
       );
 
     // Unregister Service Workers
@@ -521,17 +521,22 @@ class Utils {
 
         if (key === "banner_images") {
           if (value.length === 0) {
-            formData.append(key, ""); // You might want to review this empty case too
+            formData.append(key, ""); // Handle empty case
           } else {
             value.forEach((image) => {
-              // Remove this part or handle URLs differently
-              // if (image.url) {
-              //   formData.append("banner_images", image.url);
-              // }
+              if (!image) return;
 
-              // Only append actual file objects
+              // Case 1: New file upload (append the File object)
               if (image.originFileObj) {
                 formData.append(key, image.originFileObj);
+              }
+              // Case 2: Existing URL (append as string)
+              else {
+                // Handle both string URLs and objects with URL property
+                const url = typeof image === "string" ? image : image.url;
+                if (url) {
+                  formData.append(key, url);
+                }
               }
             });
           }
@@ -543,9 +548,9 @@ class Utils {
           } else {
             value.forEach((image) => {
               // Remove this part or handle URLs differently
-              // if (image.url) {
-              //   formData.append("banner_images", image.url);
-              // }
+              if (image.url) {
+                formData.append("banner_images", image.url);
+              }
 
               // Only append actual file objects
               if (image.originFileObj) {
@@ -557,17 +562,22 @@ class Utils {
         }
         if (key === "event_images") {
           if (value.length === 0) {
-            formData.append(key, ""); // You might want to review this empty case too
+            formData.append(key, ""); // Handle empty case
           } else {
             value.forEach((image) => {
-              // Remove this part or handle URLs differently
-              // if (image.url) {
-              //   formData.append("banner_images", image.url);
-              // }
-
-              // Only append actual file objects
+              if (!image) return;
+              
+              // Case 1: New file upload (append the File object)
               if (image.originFileObj) {
                 formData.append(key, image.originFileObj);
+              } 
+              // Case 2: Existing URL (append as string)
+              else {
+                // Handle both string URLs and objects with URL property
+                const url = typeof image === 'string' ? image : image.url;
+                if (url) {
+                  formData.append(key, url);
+                }
               }
             });
           }
@@ -721,8 +731,23 @@ class Utils {
         return;
       }
 
-      if (options.fileKeys.includes(key) && value?.[0]) {
-        formData.append(key, value[0].originFileObj || value[0]);
+      if (options.fileKeys.includes(key)) {
+        // Case 1: Value is a URL string (existing image)
+        if (typeof value === "string" && value.startsWith("http")) {
+          formData.append(key, value);
+        }
+        // Case 2: Value is a File object (new upload)
+        else if (value instanceof File) {
+          formData.append(key, value);
+        }
+        // Case 3: Value is from Ant Design Upload component (array with originFileObj)
+        else if (Array.isArray(value) && value[0]) {
+          if (value[0].originFileObj) {
+            formData.append(key, value[0].originFileObj);
+          } else if (value[0].url) {
+            formData.append(key, value[0].url);
+          }
+        }
         return;
       }
 
