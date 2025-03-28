@@ -1,133 +1,163 @@
-import React, { useState, useEffect } from 'react'
-import PageHeaderAlt from 'components/layout-components/PageHeaderAlt'
-import { Tabs, Form, Button, message } from 'antd';
-import Flex from 'components/shared-components/Flex'
+import React, { useState, useEffect } from "react";
+import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
+import { Tabs, Form, Button, message } from "antd";
+import Flex from "components/shared-components/Flex";
 
-import ProductListData from "assets/data/product-list.data.json"
-import SeatFormFields from '../components/SeatFormFields';
-import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
-import SeatEditor from '../components/SeatEditor';
+import ProductListData from "assets/data/product-list.data.json";
+import SeatFormFields from "../components/SeatFormFields";
+import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+
+import SeatingCanvas from "../components/SeatingCanvas";
+import { useSelector } from "react-redux";
 
 
 const getBase64 = (img, callback) => {
   const reader = new FileReader();
-  reader.addEventListener('load', () => callback(reader.result));
+  reader.addEventListener("load", () => callback(reader.result));
   reader.readAsDataURL(img);
-}
+};
 
-const ADD = 'ADD'
-const EDIT = 'EDIT'
+const ADD = "ADD";
+const EDIT = "EDIT";
 
-const SeatForm = props => {
+const SeatForm = (props) => {
+  const { mode = ADD, param } = props;
 
-	const { mode = ADD, param } = props
+  const [form] = Form.useForm();
+  const [uploadedImg, setImage] = useState("");
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
 
-	const [form] = Form.useForm();
-	const [uploadedImg, setImage] = useState('')
-	const [uploadLoading, setUploadLoading] = useState(false)
-	const [submitLoading, setSubmitLoading] = useState(false)
+  useEffect(() => {
+    if (mode === EDIT) {
+      console.log("is edit");
+      console.log("props", props);
+      const { id } = param;
+      const produtId = parseInt(id);
+      const productData = ProductListData.filter(
+        (product) => product.id === produtId
+      );
+      const product = productData[0];
+      form.setFieldsValue({
+        comparePrice: 0.0,
+        cost: 0.0,
+        taxRate: 6,
+        description:
+          "There are many variations of passages of Lorem Ipsum available.",
+        category: product.category,
+        name: product.name,
+        price: product.price,
+      });
+      setImage(product.image);
+    }
+  }, [form, mode, param, props]);
 
-	useEffect(() => {
-    	if(mode === EDIT) {
-			console.log('is edit')
-			console.log('props', props)
-			const { id } = param
-			const produtId = parseInt(id)
-			const productData = ProductListData.filter( product => product.id === produtId)
-			const product = productData[0]
-			form.setFieldsValue({
-				comparePrice: 0.00,
-				cost: 0.00,
-				taxRate: 6,
-				description: 'There are many variations of passages of Lorem Ipsum available.',
-				category: product.category,
-				name: product.name,
-				price: product.price
-			});
-			setImage(product.image)
-		}
-  	}, [form, mode, param, props]);
+  const handleUploadChange = (info) => {
+    if (info.file.status === "uploading") {
+      setUploadLoading(true);
+      return;
+    }
+    if (info.file.status === "done") {
+      getBase64(info.file.originFileObj, (imageUrl) => {
+        setImage(imageUrl);
+        setUploadLoading(true);
+      });
+    }
+  };
 
-	const handleUploadChange = info => {
-		if (info.file.status === 'uploading') {
-			setUploadLoading(true)
-			return;
-		}
-		if (info.file.status === 'done') {
-			getBase64(info.file.originFileObj, imageUrl =>{
-				setImage(imageUrl)
-				setUploadLoading(true)
-			});
-		}
-	};
+  const seats = useSelector((state) => state.seat.seats);
+  const exportSeatData = () => {
+    const jsonData = JSON.stringify(seats, null, 2);
+    console.log('Seat Data JSON:', jsonData);
+    return jsonData;
+  };
+  const onFinish = () => {
 
-	const onFinish = () => {
-		setSubmitLoading(true)
-		form.validateFields().then(values => {
-			setTimeout(() => {
-				setSubmitLoading(false)
-				if(mode === ADD) {
-					message.success(`Created ${values.name} to product list`);
-				}
-				if(mode === EDIT) {
-					message.success(`Product saved`);
-				}
-			}, 1500);
-		}).catch(info => {
-			setSubmitLoading(false)
-			console.log('info', info)
-			message.error('Please enter all required field ');
-		});
-	};
+    exportSeatData()
+    // setSubmitLoading(true);
+    // form
+    //   .validateFields()
+    //   .then((values) => {
+    //     setTimeout(() => {
+    //       setSubmitLoading(false);
+    //       if (mode === ADD) {
+    //         message.success(`Created ${values.name} to product list`);
+    //       }
+    //       if (mode === EDIT) {
+    //         message.success(`Product saved`);
+    //       }
+    //     }, 1500);
+    //   })
+    //   .catch((info) => {
+    //     setSubmitLoading(false);
+    //     console.log("info", info);
+    //     message.error("Please enter all required field ");
+    //   });
+  };
 
-	return (
-		<>
-			<Form
-				layout="vertical"
-				form={form}
-				name="advanced_search"
-				className="ant-advanced-search-form"
-				initialValues={{
-					heightUnit: 'cm',
-					widthUnit: 'cm',
-					weightUnit: 'kg'
-				}}
-			>
-				<PageHeaderAlt className="border-bottom" overlap>
-					<div className="container">
-						<Flex className="py-2" mobileFlex={false} justifyContent="space-between" alignItems="center">
-							<h2 className="mb-3">{mode === 'ADD'? 'Add New Offer' : `Edit Offer`} </h2>
-							<div className="mb-3">
-							<DiscardButton form={form} />
-								<Button type="primary" onClick={() => onFinish()} htmlType="submit" loading={submitLoading} >
-									{mode === 'ADD'? 'Add' : `Save`}
-								</Button>
-							</div>
-						</Flex>
-					</div>
-				</PageHeaderAlt>
-				<div className="container">
-					<Tabs 
-						defaultActiveKey="1" 
-						style={{marginTop: 30}}
-						items={[
-							{
-								label: 'General',
-								key: '1',
-								children:
-								//   <SeatFormFields
-								// 	uploadedImg={uploadedImg} 
-								// 	uploadLoading={uploadLoading} 
-								// 	handleUploadChange={handleUploadChange}
-								// /> , 
-								<SeatEditor/>
-							},
-						]}
-					/>
-				</div>
-			</Form>
-		</>
-	)
-}
+  return (
+    <>
+      <Form
+        layout="vertical"
+        form={form}
+        name="advanced_search"
+        className="ant-advanced-search-form"
+        initialValues={{
+          heightUnit: "cm",
+          widthUnit: "cm",
+          weightUnit: "kg",
+        }}
+      >
+        <PageHeaderAlt className="border-bottom" overlap>
+          <div className="container">
+            <Flex
+              className="py-2"
+              mobileFlex={false}
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <h2 className="mb-3">
+                {mode === "ADD" ? "Add New Offer" : `Edit Offer`}{" "}
+              </h2>
+              <div className="mb-3">
+                <DiscardButton form={form} />
+                <Button
+                  type="primary"
+                  onClick={() => onFinish()}
+                  htmlType="submit"
+                  loading={submitLoading}
+                >
+                  {mode === "ADD" ? "Add" : `Save`}
+                </Button>
+              </div>
+            </Flex>
+          </div>
+        </PageHeaderAlt>
+        <div className="container">
+          <Tabs
+            defaultActiveKey="1"
+            style={{ marginTop: 30 }}
+            items={[
+              {
+                label: "General",
+                key: "1",
+                children: (
+                  //   <SeatFormFields
+                  // 	uploadedImg={uploadedImg}
+                  // 	uploadLoading={uploadLoading}
+                  // 	handleUploadChange={handleUploadChange}
+                  // /> ,
+                  // <SeatEditor/>
+                  <SeatingCanvas/>
+                //   <SeatingChart />
+                ),
+              },
+            ]}
+          />
+        </div>
+      </Form>
+    </>
+  );
+};
 
-export default SeatForm
+export default SeatForm;

@@ -136,12 +136,12 @@ const MultyStepEventForm = ({ eventId, mode }) => {
             url: image.media_url,
           }))
           : [],
-        event_images: eventDetails.media
-          ? eventDetails.media.map((image, index) => ({
+        event_images: eventDetails.event_images
+          ? eventDetails.event_images.map((image, index) => ({
             uid: `-${index + 1}`,
-            name: image.media_url.split("/").pop(),
+            name: image.image.split("/").pop(),
             status: "done",
-            url: image.media_url,
+            url: image.image,
           }))
           : [],
       };

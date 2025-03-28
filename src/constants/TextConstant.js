@@ -22,5 +22,6 @@ export const TextConstants = {
   CurrentUser: -1,
   DefaultEditContent2: "The changes may or may not have assigned schedules and could impact other elements in the forms, such as events, offers, venues.Please review these areas carefully to ensure that the changes do not unintentionally affect the form's structure or functionality.",
   DefaultEditContent1: "The changes may or may not have assigned schedules and could impact other elements in the forms, such as events, offers, venues.Please review these areas carefully to ensure that the changes do not unintentionally affect the form's structure or functionality.",
-  IssuesContent:"The issues listed here have been open for more than 3 days without resolution. Please prioritize them urgently and take the necessary actions to close them at the earliest."
+  DefaultEditContent3: "The changes do not have assigned schedules but could impact other elements in the forms such as venue, Audio feature , Screen technology and accessbility feature  that can be scheduled for the future.Please review these areas carefully to ensure the changes do not unintentionally affect the form's structure or functionality.",
+  IssuesContent: "The issues listed here have been open for more than 3 days without resolution. Please prioritize them urgently and take the necessary actions to close them at the earliest."
 }

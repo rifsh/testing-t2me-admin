@@ -1,9 +1,15 @@
 import React from 'react'
+import AddFrom from '../screen-add/AddFrom'
+import { useParams } from 'react-router-dom'
 
-const index = () => {
+const EditScreen = () => {
+    const { screenId } = useParams();
+
     return (
-        <div>index</div>
+        <div>
+            <AddFrom mode={'EDIT'} screenId={screenId} />
+        </div>
     )
 }
 
-export default index
+export default EditScreen

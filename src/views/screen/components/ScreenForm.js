@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Form, Input, Select, Switch, InputNumber, Typography, Row, Col } from 'antd';
+import { Button, Card, Form, Input, Select, Switch, InputNumber, Typography, Row, Col, Alert } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllTickets } from 'store/slices/ticketSlice';
 import { screenOptions } from 'constants/ScreenConstants';
 import { fetchScreenAudio, fetchScreenFeatures, fetchScreenTech } from 'store/slices/screenSlice';
+import TextEditor from 'components/util-components/FormItems/TextEditor';
 
 const { Option } = Select;
 const { Title } = Typography;
@@ -21,7 +22,16 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
         thumbnail_image: [{ required: true, message: 'Please choose a screen image' }],
         ticket_structure: [{ required: true, message: 'Please select a ticket structure' }],
         ticket_sets: [{ required: true, message: 'Please select at least one ticket set' }],
+        accessibility: [{ required: true, message: 'Please select at least one Accessibility feature' }],
+        screen_technology_id: [{ required: true, message: 'Please select at least one Screen technology' }],
+        audio_id: [{ required: true, message: 'Please select at least one Audio technology' }],
     };
+
+    const [dataStatus, setDataStatus] = useState({
+        technologiesEmpty: false,
+        audioEmpty: false,
+        featuresEmpty: false
+    });
 
     useEffect(() => {
         if (venue_id) {
@@ -33,6 +43,24 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
 
         }
     }, [venue_id, dispatch]);
+
+    useEffect(() => {
+        setDataStatus({
+            technologiesEmpty: !techLoading && (!screenTechnologies || screenTechnologies.length === 0),
+            audioEmpty: !techLoading && (!screenAudioTechnologies || screenAudioTechnologies.length === 0),
+            featuresEmpty: !techLoading && (!screenFeatures || screenFeatures.length === 0)
+        });
+    }, [screenTechnologies, screenAudioTechnologies, screenFeatures, techLoading]);
+
+    const showAlert = dataStatus.technologiesEmpty || dataStatus.audioEmpty || dataStatus.featuresEmpty;
+    const generateAlertMessage = () => {
+        const missingData = [];
+        if (dataStatus.technologiesEmpty) missingData.push('Screen Technologies');
+        if (dataStatus.audioEmpty) missingData.push('Audio Technologies');
+        if (dataStatus.featuresEmpty) missingData.push('Screen Features');
+
+        return `No data available for: ${missingData.join(', ')}. Please add data before proceeding.`;
+    };
 
     return (
         <div className="screen-form-container">
@@ -49,6 +77,16 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                     </Button>
                 )}
             </div>
+
+            {showAlert && (
+                <Alert
+                    message="Missing Data"
+                    description={generateAlertMessage()}
+                    type="warning"
+                    showIcon
+                    style={{ marginBottom: '16px' }}
+                />
+            )}
 
             <Form.Item
                 name={['screens', index, 'screen_number']}
@@ -92,16 +130,14 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                 </Col>
             </Row>
 
-            <Form.Item name={['screens', index, 'description']} label="Description">
-                <Input.TextArea rows={3} placeholder="Description" />
+            <Form.Item
+                name={['screens', index, 'description']}
+                label="Description"
+            >
+                <TextEditor />
             </Form.Item>
 
             <Row gutter={16}>
-                {/* <Col xs={24} md={12}>
-                    <Form.Item name={['screens', index, 'is_active']} label="Active Status" valuePropName="checked" initialValue={true}>
-                        <Switch defaultChecked />
-                    </Form.Item>
-                </Col> */}
                 <Col xs={24} md={12}>
                     <Form.Item
                         name={['screens', index, 'reserved_seating']}
@@ -131,7 +167,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
             <Card title="Additional Settings" style={{ marginBottom: '20px' }}>
                 <Row gutter={16}>
                     <Col xs={24} md={12}>
-                        <Form.Item name={['screens', index, 'accessibility']} label="Accessibility Features">
+                        <Form.Item name={['screens', index, 'accessibility']} label="Accessibility Features" rules={rules.accessibility}>
                             <Select mode="multiple" placeholder="Select features">
                                 {screenFeatures.map((value) => (
                                     <Option key={value.id} value={value.id}>{value.name}</Option>
@@ -140,7 +176,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                         </Form.Item>
                     </Col>
                     <Col xs={24} md={12}>
-                        <Form.Item name={['screens', index, 'screen_technology_id']} label="Screen Technology">
+                        <Form.Item name={['screens', index, 'screen_technology_id']} label="Screen Technology" rules={rules.screen_technology_id}>
                             <Select placeholder="Select technology">
                                 {screenTechnologies.map((value) => (
                                     <Option key={value?.id} value={value?.id}>{value?.name}</Option>
@@ -150,7 +186,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                     </Col>
                 </Row>
 
-                <Form.Item name={['screens', index, 'audio_id']} label="Audio System">
+                <Form.Item name={['screens', index, 'audio_id']} label="Audio System" rules={rules.audio_id}>
                     <Select placeholder="Select audio system">
                         {screenAudioTechnologies.map((value) => (
                             <Option key={value.id} value={value.id}>{value.name}</Option>
