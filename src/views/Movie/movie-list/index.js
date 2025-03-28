@@ -140,7 +140,7 @@ const Index = () => {
         <Card>
             <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: "10px" }}>
                 <SearchBarWithStatus placeholder="Search by title or genre" />
-                <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/movies/add')}>
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/movie/add')}>
                     Add Movie
                 </Button>
             </Space>

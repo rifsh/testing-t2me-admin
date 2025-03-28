@@ -94,9 +94,14 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/screen/screen-list")),
   },
   {
-    key: "movie.movie",
+    key: "movie.movie.list",
     path: `${APP_PREFIX_PATH}/movie/list`,
     component: React.lazy(() => import("views/Movie/movie-list")),
+  },
+  {
+    key: "movie.movie.add",
+    path: `${APP_PREFIX_PATH}/movie/add`,
+    component: React.lazy(() => import("views/Movie/movie-add")),
   },
 
   {

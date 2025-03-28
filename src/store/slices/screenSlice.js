@@ -5,6 +5,7 @@ const initialState = {
     response: null,
     editResponse: null,
     singleResponse: null,
+    singleScreen: [],
     editable_status: null,
     screenTechResponse: [],
     editBodyData: [],
@@ -125,6 +126,9 @@ const screenSlice = createSlice({
         },
         setAvailableSeat(state, action) {
             state.availableSeats = action.payload
+        },
+        setSelectedScreenData(state, action) {
+            state.singleScreen = action.payload
         }
     },
     extraReducers: (builder) => {
@@ -231,6 +235,6 @@ const screenSlice = createSlice({
     },
 });
 
-export const { setScreenEditItemId, setScreenEditData,setAvailableSeat } = screenSlice.actions;
+export const { setScreenEditItemId, setScreenEditData, setAvailableSeat, setSelectedScreenData } = screenSlice.actions;
 
 export default screenSlice.reducer;
