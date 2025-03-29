@@ -456,11 +456,14 @@ export const protectedRoutes = [
     ),
   },
   {
-    key: "organiser.update",
-    path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
-    component: React.lazy(() =>
-      import("views/track-team/event-organizer/update-list/index.js")
-    ),
+    key: "event.type.list",
+    path: `${APP_PREFIX_PATH}/event/type/list`,
+    component: React.lazy(() => import("views/event-type/list-type")),
+  },
+  {
+    key: "event.type.list",
+    path: `${APP_PREFIX_PATH}/event/type/add`,
+    component: React.lazy(() => import("views/event-type/add-type")),
   },
   {
     key: "advertisement.category.edit",

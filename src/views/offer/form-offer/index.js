@@ -58,7 +58,8 @@ const OfferForm = ({ mode, offer }) => {
     if (offer && mode === "EDIT") {
       const formData = {
         name: offer.name,
-        discount_percentage: offer.discount_percentage,
+        discount_percentage_amount: offer.discount_percentage_amount,
+        is_percentage: offer.is_percentage,
         max_uses: offer.max_uses,
         date_required: offer.date_required,
         key_words: offer.key_words,
