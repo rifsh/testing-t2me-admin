@@ -133,7 +133,6 @@ const MovieDetailsForm = () => {
                                 <Option key={value} value={value}>{value}</Option>
                             ))}
                         </Select>
-                        {/* <TimePicker format="HH:mm" use12Hours style={{ width: "100%" }} /> */}
                     </Form.Item>
                 </Col>
 
@@ -148,7 +147,7 @@ const MovieDetailsForm = () => {
                 </Col>
 
                 <Col xs={24}>
-                    <Form.Item name={`poster`} label="Upload Poster">
+                    <Form.Item name={`poster`}>
                         <Form.Item
                             name="poster_image"
                             label="Poster Image"

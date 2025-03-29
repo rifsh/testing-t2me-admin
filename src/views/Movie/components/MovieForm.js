@@ -24,11 +24,13 @@ import {
 } from "@ant-design/icons";
 import MovieDetailsForm from "./MovieDetailsForm";
 import CastDetailsForm from "./CastDetailsForm";
+import MovieMediaUploader from "./MediaPreviewManager";
+import MovieProductionForm from "./MovieProductionForm";
 
 const { TextArea } = Input;
 const { Option } = Select;
 
-const MovieForm = ({ }) => {
+const MovieForm = ({ form }) => {
     const [poster, setPoster] = useState(null);
     const [castMembers, setCastMembers] = useState([]);
 
@@ -67,10 +69,16 @@ const MovieForm = ({ }) => {
         <div>
             <Tabs defaultActiveKey="1">
                 <Tabs.TabPane tab="Movie Details" key="1">
-                    <MovieDetailsForm />
+                    <MovieDetailsForm form={form} />
                 </Tabs.TabPane>
-                <Tabs.TabPane tab="Cast Details" key="2">
-                    <CastDetailsForm />
+                <Tabs.TabPane tab="Production Details" key="2">
+                    <MovieProductionForm/>
+                </Tabs.TabPane>
+                <Tabs.TabPane tab="Cast Details" key="3">
+                    <CastDetailsForm form={form} />
+                </Tabs.TabPane>
+                <Tabs.TabPane tab="Preview Details" key="4">
+                    <MovieMediaUploader form={form} />
                 </Tabs.TabPane>
             </Tabs>
         </div>

@@ -103,6 +103,11 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/movie/add`,
     component: React.lazy(() => import("views/Movie/movie-add")),
   },
+  {
+    key: "movie.movie.details",
+    path: `${APP_PREFIX_PATH}/movie/details`,
+    component: React.lazy(() => import("views/Movie/movie-detail")),
+  },
 
   {
     key: "event.details",
