@@ -211,6 +211,32 @@ const superAdminDashBoardNavTree = [
               }
             ],
           },
+          {
+            key: "dine",
+            path: `${APP_PREFIX_PATH}/services/submenu3`,
+            title: "sidenav.dine",
+            icon: DashboardOutlined,
+            breadcrumb: false,
+            isGroupTitle: false,
+            submenu: [
+              {
+                key: "dine.dine",
+                path: `${APP_PREFIX_PATH}/services/submenu3/nested5`,
+                title: "sidenav.dine",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                isGroupTitle: false,
+              },
+              {
+                key: "dine.schedule",
+                path: `${APP_PREFIX_PATH}/services/submenu3/nested5`,
+                title: "sidenav.dine.schedule",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                isGroupTitle: false,
+              },
+            ],
+          },
         ],
       },
     ],
