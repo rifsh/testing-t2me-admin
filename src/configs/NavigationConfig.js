@@ -202,8 +202,8 @@ const superAdminDashBoardNavTree = [
                 isGroupTitle: false,
               },
               {
-                key: "schedule",
-                path: `${APP_PREFIX_PATH}/services/submenu3/nested5`,
+                key: "movie.schedule",
+                path: `${APP_PREFIX_PATH}/movie-schedule/list`,
                 title: "sidenav.movie.schedule",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
