@@ -227,12 +227,22 @@ export const protectedRoutes = [
   {
     key: "seat.list",
     path: `${APP_PREFIX_PATH}/seat/list`,
-    component: React.lazy(() => import("views/seat/list-seat")),
+    component: React.lazy(() => import("views/seat/stadium/list-seat")),
   },
   {
     key: "seat.add",
     path: `${APP_PREFIX_PATH}/seat/add`,
-    component: React.lazy(() => import("views/seat/add-seat")),
+    component: React.lazy(() => import("views/seat/stadium/add-seat")),
+  },
+  {
+    key: "seat.movie.list",
+    path: `${APP_PREFIX_PATH}/seat/movie/list`,
+    component: React.lazy(() => import("views/seat/movie/list-seat")),
+  },
+  {
+    key: "seat.add",
+    path: `${APP_PREFIX_PATH}/seat/movie/add`,
+    component: React.lazy(() => import("views/seat/movie/add-seat")),
   },
   {
     key: "schedule.list",

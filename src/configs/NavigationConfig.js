@@ -210,6 +210,13 @@ const superAdminDashBoardNavTree = [
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 isGroupTitle: false,
+              },{
+                key: "seat.list",
+                path: `${APP_PREFIX_PATH}/seat/movie/list`,
+                title: "sidenav.seat",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
               },
               {
                 key: "movie.screen",
