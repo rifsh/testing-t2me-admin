@@ -8,18 +8,25 @@ import {
     Row,
     Col,
     Upload,
-    TimePicker,
+    DatePicker,
     InputNumber,
     message,
+    Space,
+    Avatar,
 } from "antd";
 import {
     UploadOutlined,
     PlusOutlined,
+    UserOutlined,
+    DollarOutlined,
+    CalendarOutlined,
+    BankOutlined
 } from "@ant-design/icons";
 import TextEditor from "components/util-components/FormItems/TextEditor";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 import { ThumbnailImageResolutions } from "constants/SupportFileConstants";
 import { useSelector } from "react-redux";
+import { actorsData } from "../movie-list/MockData";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -30,6 +37,15 @@ const MovieDetailsForm = () => {
 
     const genres = ["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Thriller", "Animation"];
     const languages = ["English", "Hindi", "French", "Spanish", "Chinese", "Tamil", "Malayalam"];
+    const currencies = ["USD", "EUR", "GBP", "INR", "JPY", "AUD"];
+    const productionStatuses = [
+        "Development",
+        "Pre-Production",
+        "Filming",
+        "Post-Production",
+        "Completed",
+        "Released"
+    ];
 
     const normFile = (e) => {
         if (Array.isArray(e)) {
@@ -38,16 +54,24 @@ const MovieDetailsForm = () => {
         return e?.fileList || [];
     };
 
-    useEffect(() => {
-        console.log(singleScreen.time_slots)
-    }, [singleScreen])
+    // Format currency input
+    const currencyFormatter = (value) => {
+        if (!value) return '';
+        return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    const currencyParser = (value) => {
+        if (!value) return '';
+        return value.replace(/\$\s?|(,*)/g, '');
+    };
 
     return (
         <Card title="Movie Details" bordered>
             <Row gutter={16}>
+                {/* Basic Information */}
                 <Col xs={24} sm={12}>
                     <Form.Item
-                        name={`movie_name`}
+                        name="movie_name"
                         label="Movie Name"
                         rules={[{ required: true, message: "Please enter movie name" }]}
                     >
@@ -57,7 +81,7 @@ const MovieDetailsForm = () => {
 
                 <Col xs={24} sm={12}>
                     <Form.Item
-                        name={`duration`}
+                        name="duration"
                         label="Duration (Minutes)"
                         rules={[{ required: true, message: "Enter duration" }]}
                     >
@@ -65,9 +89,99 @@ const MovieDetailsForm = () => {
                     </Form.Item>
                 </Col>
 
+                {/* Financial Information */}
                 <Col xs={24} sm={12}>
                     <Form.Item
-                        name={`genres`}
+                        name="budget"
+                        label="Budget"
+                    >
+                        <InputNumber
+                            style={{ width: '100%' }}
+                            min={0}
+                            formatter={currencyFormatter}
+                            parser={currencyParser}
+                            addonBefore={
+                                <Form.Item name="budget_currency" noStyle initialValue="USD">
+                                    <Select style={{ width: 80 }}>
+                                        {currencies.map(currency => (
+                                            <Option key={currency} value={currency}>{currency}</Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            }
+                        />
+                    </Form.Item>
+                </Col>
+
+                <Col xs={24} sm={12}>
+                    <Form.Item
+                        name="box_office"
+                        label="Box Office Revenue"
+                    >
+                        <InputNumber
+                            style={{ width: '100%' }}
+                            min={0}
+                            formatter={currencyFormatter}
+                            parser={currencyParser}
+                            addonBefore={
+                                <Form.Item name="box_office_currency" noStyle initialValue="USD">
+                                    <Select style={{ width: 80 }}>
+                                        {currencies.map(currency => (
+                                            <Option key={currency} value={currency}>{currency}</Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            }
+                        />
+                    </Form.Item>
+                </Col>
+
+                {/* Dates */}
+                <Col xs={24} sm={12}>
+                    <Form.Item
+                        name="release_date"
+                        label="Release Date"
+                    >
+                        <DatePicker style={{ width: '100%' }} />
+                    </Form.Item>
+                </Col>
+
+                {/* <Col xs={24} sm={12}>
+                    <Form.Item
+                        name="production_status"
+                        label="Production Status"
+                    >
+                        <Select placeholder="Select status">
+                            {productionStatuses.map(status => (
+                                <Option key={status} value={status}>{status}</Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                </Col> */}
+
+                {/* Production Details */}
+                <Col xs={24} sm={12}>
+                    <Form.Item
+                        name="production_company"
+                        label="Production Company"
+                    >
+                        <Input placeholder="Enter production company" />
+                    </Form.Item>
+                </Col>
+
+                {/* <Col xs={24} sm={12}>
+                    <Form.Item
+                        name="distributor"
+                        label="Distributor"
+                    >
+                        <Input placeholder="Enter distributor" />
+                    </Form.Item>
+                </Col> */}
+
+                {/* Existing Fields */}
+                <Col xs={24} sm={12}>
+                    <Form.Item
+                        name="genres"
                         label="Genres"
                         rules={[{ required: true, message: "Select genres" }]}
                     >
@@ -81,7 +195,7 @@ const MovieDetailsForm = () => {
 
                 <Col xs={24} sm={12}>
                     <Form.Item
-                        name={`language`}
+                        name="language"
                         label="Language"
                         rules={[{ required: true, message: "Select language" }]}
                     >
@@ -95,7 +209,7 @@ const MovieDetailsForm = () => {
 
                 <Col xs={24} sm={12}>
                     <Form.Item
-                        name={`rating`}
+                        name="rating"
                         label="Rating (out of 10)"
                         rules={[
                             { required: true, message: "Please enter movie rating" },
@@ -113,41 +227,58 @@ const MovieDetailsForm = () => {
                     </Form.Item>
                 </Col>
 
+                <Col xs={24} sm={12}>
+                    <Form.Item
+                        name="selectedActors"
+                        label="Cast"
+                        rules={[
+                            {
+                                required: true,
+                                message: 'Please select at least one actor'
+                            },
+                            {
+                                validator: (_, value) =>
+                                    value && value.length <= 5
+                                        ? Promise.resolve()
+                                        : Promise.reject(new Error('Maximum 5 actors allowed'))
+                            }
+                        ]}
+                    >
+                        <Select
+                            mode="multiple"
+                            placeholder="Select actors"
+                            optionLabelProp="label"
+                            style={{ width: '100%' }}
+                            options={actorsData.map(actor => ({
+                                value: actor.id,
+                                label: actor.name,
+                                image: actor.imageUrl,
+                            }))}
+                            optionRender={(option) => (
+                                <Space>
+                                    <Avatar
+                                        src={option.data.image}
+                                        icon={<UserOutlined />}
+                                        size={40}
+                                    />
+                                    <span>{option.data.label}</span>
+                                </Space>
+                            )}
+                        />
+                    </Form.Item>
+                </Col>
+
                 <Col xs={24}>
                     <Form.Item
-                        name={`description`}
+                        name="description"
                         label="Description"
                     >
                         <TextEditor />
                     </Form.Item>
                 </Col>
 
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name={`showtime`}
-                        label="Showtime"
-                        rules={[{ required: true, message: "Select showtime" }]}
-                    >
-                        <Select mode="multiple" placeholder="Select available time slots">
-                            {singleScreen.time_slots?.map((value) => (
-                                <Option key={value} value={value}>{value}</Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                </Col>
-
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name={`ticket_price`}
-                        label="Ticket Price (₹)"
-                        rules={[{ required: true, message: "Enter ticket price" }]}
-                    >
-                        <InputNumber min={50} max={500} style={{ width: "100%" }} />
-                    </Form.Item>
-                </Col>
-
                 <Col xs={24}>
-                    <Form.Item name={`poster`}>
+                    <Form.Item name="poster">
                         <Form.Item
                             name="poster_image"
                             label="Poster Image"

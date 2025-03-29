@@ -45,3 +45,31 @@ export const moviesMockData = [
         status: true
     }
 ];
+
+export const actorsData = [
+    {
+        id: 1,
+        name: 'Robert Downey Jr.',
+        imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQa9ElacJ76aBNfYLuDHzIm_YJeBUu5JmFv8Q&s',
+    },
+    {
+        id: 2,
+        name: 'Scarlett Johansson',
+        imageUrl: 'https://via.placeholder.com/150',
+    },
+    {
+        id: 3,
+        name: 'Chris Evans',
+        imageUrl: 'https://via.placeholder.com/150',
+    },
+    {
+        id: 4,
+        name: 'Mark Ruffalo',
+        imageUrl: 'https://via.placeholder.com/150',
+    },
+    {
+        id: 5,
+        name: 'Chris Hemsworth',
+        imageUrl: 'https://via.placeholder.com/150',
+    },
+];

@@ -187,19 +187,6 @@ const MovieProductionForm = () => {
                         ))}
                     </div>
                 )}
-
-                <Divider />
-
-                <Form.Item>
-                    <Button
-                        type="primary"
-                        htmlType="submit"
-                        icon={<SaveOutlined />}
-                        size="large"
-                    >
-                        Save Production Details
-                    </Button>
-                </Form.Item>
             </Form>
         </Card>
     );

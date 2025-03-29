@@ -2,59 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Dropdown, Tag, Badge, Space } from "antd";
 import { EditOutlined, EyeOutlined, MoreOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-// import { fetchMovies, setMovieEditItemId, editMovieStatus } from 'store/slices/movieSlice';
-import { setDialogVisible, setSelectedItem } from 'store/slices/modalSlice';
-import WarningModal from 'components/util-components/ModalItems/WarningModal';
-import StatusSubmitAndConfirmModal from 'components/util-components/ModalItems/StatusSubmitModal';
+import { useDispatch } from 'react-redux';
+import { setSelectedItem } from 'store/slices/modalSlice';
 import SearchBarWithStatus from 'components/util-components/Search/SearchBarWithStatus';
-import { DEFAULT_PAGE_SIZE } from 'constants/PageConstants';
 import { moviesMockData } from './MockData';
+import { APP_PREFIX_PATH } from 'configs/AppConfig';
 
 const Index = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const [loading, setLoading] = useState(false);
-    const [data, setData] = useState(moviesMockData);
-    const [filteredData, setFilteredData] = useState([]);
-
-    // const { dialogVisible, modalLoading } = useSelector((state) => state.modal);
-
+    
     useEffect(() => {
-        // dispatch(fetchMovies(DEFAULT_PAGE_SIZE));
     }, [dispatch]);
 
     useEffect(() => {
-        // if (response && response.items) {
-        //     const formattedData = response.items.map((movie) => ({
-        //         key: movie.id,
-        //         ...movie
-        //     }));
-        //     setData(formattedData);
-        //     setFilteredData(formattedData);
-        // }
     }, []);
 
     const handleViewDetails = (movie) => {
-        navigate(`/movies/detail/${movie.id}`);
+        navigate(`${APP_PREFIX_PATH}/movie/details`);
     };
 
     const handleEditMovie = (movie) => {
-        // dispatch(setMovieEditItemId(movie.id));
-        // dispatch(setDialogVisible(true));
     };
 
     const handleModalSubmit = () => {
-        // navigate(`/movies/edit/${movie.id}`);
-        // dispatch(setDialogVisible(false));
     };
 
     const handleModalCancel = () => {
-        // dispatch(setDialogVisible(false));
     };
 
     const handlePagination = (page, pageSize) => {
-        // dispatch(fetchMovies({ page, size: pageSize }));
     };
 
     const getDropdownMenu = (movie) => [
@@ -87,7 +64,6 @@ const Index = () => {
     const handleUpdateStatus = (movie) => {
         const newStatus = !movie.status;
         dispatch(setSelectedItem({ status: newStatus, id: movie.id }));
-        // dispatch(setDialogVisible(true));
     };
 
     const tableColumns = [
@@ -149,14 +125,14 @@ const Index = () => {
                 columns={tableColumns}
                 dataSource={moviesMockData}
                 rowKey="id"
-                // loading={movieLoader || loading}
-                // pagination={{
-                //     current: pagination.current,
-                //     pageSize: pagination.pageSize,
-                //     total: pagination.total,
-                //     onChange: handlePagination,
-                //     showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} movies`
-                // }}
+            // loading={movieLoader || loading}
+            // pagination={{
+            //     current: pagination.current,
+            //     pageSize: pagination.pageSize,
+            //     total: pagination.total,
+            //     onChange: handlePagination,
+            //     showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} movies`
+            // }}
             />
 
             {/* <WarningModal

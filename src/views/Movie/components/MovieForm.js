@@ -71,12 +71,9 @@ const MovieForm = ({ form }) => {
                 <Tabs.TabPane tab="Movie Details" key="1">
                     <MovieDetailsForm form={form} />
                 </Tabs.TabPane>
-                <Tabs.TabPane tab="Production Details" key="2">
+                {/* <Tabs.TabPane tab="Production Details" key="2">
                     <MovieProductionForm/>
-                </Tabs.TabPane>
-                <Tabs.TabPane tab="Cast Details" key="3">
-                    <CastDetailsForm form={form} />
-                </Tabs.TabPane>
+                </Tabs.TabPane> */}
                 <Tabs.TabPane tab="Preview Details" key="4">
                     <MovieMediaUploader form={form} />
                 </Tabs.TabPane>

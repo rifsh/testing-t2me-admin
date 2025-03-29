@@ -36,11 +36,9 @@ const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
 
 const MovieDetails = () => {
-    // State for media preview modal
     const [previewVisible, setPreviewVisible] = useState(false);
     const [currentPreview, setCurrentPreview] = useState(null);
 
-    // Sample movie data
     const movie = {
         id: "1",
         title: "The Spectrum Chronicles",
@@ -117,22 +115,18 @@ const MovieDetails = () => {
         ]
     };
 
-    // Find primary trailer and poster
     const primaryTrailer = movie.media.find(m => m.type === 'trailer' && m.isPrimary);
     const primaryPoster = movie.media.find(m => m.type === 'poster' && m.isPrimary);
 
-    // Filter media by type
     const getMediaByType = (type) => {
         return movie.media.filter(m => m.type === type);
     };
 
-    // Handle preview click
     const handlePreview = (media) => {
         setCurrentPreview(media);
         setPreviewVisible(true);
     };
 
-    // Render media preview modal content
     const renderPreviewContent = () => {
         if (!currentPreview) return null;
 
@@ -155,17 +149,8 @@ const MovieDetails = () => {
 
     return (
         <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-            {/* Admin Actions Bar */}
-            <Row justify="end" style={{ marginBottom: '20px' }}>
-                <Space>
-                    <Button icon={<EditOutlined />}>Edit Movie</Button>
-                    <Button icon={<DownloadOutlined />}>Export</Button>
-                </Space>
-            </Row>
 
-            {/* Hero Section */}
             <Row gutter={[24, 24]}>
-                {/* Poster Column */}
                 <Col xs={24} sm={24} md={8} lg={6} xl={6}>
                     <Card
                         bordered={false}
@@ -180,7 +165,6 @@ const MovieDetails = () => {
                     />
                 </Col>
 
-                {/* Movie Details Column */}
                 <Col xs={24} sm={24} md={16} lg={18} xl={18}>
                     <Card bordered={false}>
                         <Row justify="space-between" align="top">
@@ -293,7 +277,6 @@ const MovieDetails = () => {
                 </Col>
             </Row>
 
-            {/* Media Sections */}
             <Card style={{ marginTop: '24px' }}>
                 <Tabs defaultActiveKey="all">
                     <TabPane tab="All Media" key="all">
@@ -447,25 +430,9 @@ const MovieDetails = () => {
                             ))}
                         </Row>
                     </TabPane>
-
-                    <TabPane tab="Awards" key="awards">
-                        <List
-                            itemLayout="horizontal"
-                            dataSource={movie.awards}
-                            renderItem={award => (
-                                <List.Item>
-                                    <List.Item.Meta
-                                        avatar={<Avatar icon={<TrophyOutlined />} style={{ backgroundColor: '#faad14' }} />}
-                                        title={award}
-                                    />
-                                </List.Item>
-                            )}
-                        />
-                    </TabPane>
                 </Tabs>
             </Card>
 
-            {/* Media Preview Modal */}
             <Modal
                 title={currentPreview?.title}
                 visible={previewVisible}
