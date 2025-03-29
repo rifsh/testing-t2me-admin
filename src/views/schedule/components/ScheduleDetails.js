@@ -10,7 +10,7 @@ import { setSelectedVenue } from "store/slices/locationSlice";
 
 const { Option } = Select;
 
-export function ScheduleDetails({ form }) {
+export function ScheduleDetails({ form, type }) {
   const dispatch = useDispatch();
   const {
     filteredEvents = [],
@@ -85,7 +85,7 @@ export function ScheduleDetails({ form }) {
         <Input placeholder="Enter schedule name" />
       </Form.Item>
 
-      <Form.Item
+      {type === "event" && <Form.Item
         name="event_id"
         label="Event"
         rules={[{ required: true, message: "Please select an event" }]}
@@ -107,7 +107,31 @@ export function ScheduleDetails({ form }) {
             </Option>
           ))}
         </Select>
-      </Form.Item>
+      </Form.Item>}
+
+      {type === 'movie' && <Form.Item
+        name="movie"
+        label="Movie"
+        rules={[{ required: true, message: "Please select an event" }]}
+      >
+        <Select
+          loading={loading}
+          className="w-100"
+          placeholder="Select an event"
+          onChange={handleSelectEvent}
+          allowClear
+          showSearch
+          filterOption={(input, option) =>
+            option?.label?.toLowerCase()?.includes(input.toLowerCase())
+          }
+        >
+          {filteredEvents.map((event) => (
+            <Option key={event.id} value={event.id} label={event.event_name}>
+              {event.event_name}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>}
 
       {selectedEvent?.venues?.length > 0 && (
         <Form.Item

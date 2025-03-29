@@ -210,6 +210,7 @@ const ScreenList = () => {
                     className="mb-1"
                 >
                     <SearchBarWithStatus
+                        placeholder='Search with Venue or Screen name'
                         fetchFunction={fetchScreenData}
                     />
                     <Space>

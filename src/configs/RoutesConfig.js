@@ -93,6 +93,41 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/screen/list`,
     component: React.lazy(() => import("views/screen/screen-list")),
   },
+  {
+    key: "movie.movie.list",
+    path: `${APP_PREFIX_PATH}/movie/list`,
+    component: React.lazy(() => import("views/Movie/movie-list")),
+  },
+  {
+    key: "movie.movie.add",
+    path: `${APP_PREFIX_PATH}/movie/add`,
+    component: React.lazy(() => import("views/Movie/movie-add")),
+  },
+  {
+    key: "movie.movie.details",
+    path: `${APP_PREFIX_PATH}/movie/details`,
+    component: React.lazy(() => import("views/Movie/movie-detail")),
+  },
+  {
+    key: "movie.cast",
+    path: `${APP_PREFIX_PATH}/cast/list`,
+    component: React.lazy(() => import("views/Movie/cast/cast-list"))
+  },
+  {
+    key: "movie.cast.add",
+    path: `${APP_PREFIX_PATH}/cast/add`,
+    component: React.lazy(() => import("views/Movie/cast/cast-add"))
+  },
+  {
+    key: "movie.cast.details",
+    path: `${APP_PREFIX_PATH}/cast/details`,
+    component: React.lazy(() => import("views/Movie/cast/cast-details"))
+  },
+  {
+    key: "movie.schedule",
+    path: `${APP_PREFIX_PATH}/movie-schedule/list`,
+    component: React.lazy(() => import("views/Movie/Schedule/schedule-list"))
+  },
 
   {
     key: "event.details",

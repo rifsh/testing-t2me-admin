@@ -4,21 +4,46 @@ import { DeleteOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllTickets } from 'store/slices/ticketSlice';
 import { screenOptions } from 'constants/ScreenConstants';
-import { fetchScreenAudio, fetchScreenFeatures, fetchScreenTech } from 'store/slices/screenSlice';
+import { fetchScreenAudio, fetchScreenFeatures, fetchScreenTech, setAvailableSeat } from 'store/slices/screenSlice';
 import TextEditor from 'components/util-components/FormItems/TextEditor';
 
 const { Option } = Select;
 const { Title } = Typography;
 
-const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_id }) => {
+const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_id, capacity }) => {
     const [message, setMessage] = useState('');
     const dispatch = useDispatch();
-    const { screenTechnologies, screenAudioTechnologies, screenFeatures, techLoading } = useSelector((state) => state.screen);
+    const { screenTechnologies, screenAudioTechnologies, screenFeatures, techLoading, availableSeats } = useSelector((state) => state.screen);
 
     const rules = {
         subject: [{ required: true, message: 'Please enter screen name' }],
         screen_type: [{ required: true, message: 'Please select screen type' }],
-        capacity: [{ required: true, message: 'Please enter screen capacity' }],
+        capacity: [
+            { required: true, message: 'Please enter screen capacity' },
+            {
+                validator: (_, value) => {
+                    const currentScreens = form.getFieldValue('screens') || [];
+
+                    const totalScreenCapacity = currentScreens.reduce((total, screen, screenIndex) => {
+                        if (screenIndex === index) return total;
+
+                        return total + (screen?.capacity || 0);
+                    }, 0);
+
+                    const proposedTotalCapacity = totalScreenCapacity + (value || 0);
+
+                    if (value && proposedTotalCapacity > availableSeats) {
+                        return Promise.reject(`Total screen capacities (${proposedTotalCapacity}) cannot exceed venue capacity of ${availableSeats}`);
+                    }
+
+                    if (value && value > availableSeats) {
+                        return Promise.reject(`Screen capacity cannot exceed venue capacity of ${availableSeats}`);
+                    }
+
+                    return Promise.resolve();
+                }
+            }
+        ],
         thumbnail_image: [{ required: true, message: 'Please choose a screen image' }],
         ticket_structure: [{ required: true, message: 'Please select a ticket structure' }],
         ticket_sets: [{ required: true, message: 'Please select at least one ticket set' }],
@@ -39,10 +64,9 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
             dispatch(fetchScreenTech({ venue_id: venue_id }));
             dispatch(fetchScreenAudio({ venue_id: venue_id }));
             dispatch(fetchScreenFeatures({ venue_id: venue_id }));
-            console.log(screenTechnologies);
-
+            dispatch(setAvailableSeat(capacity));
         }
-    }, [venue_id, dispatch]);
+    }, [venue_id, dispatch, capacity]);
 
     useEffect(() => {
         setDataStatus({
@@ -78,7 +102,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                 )}
             </div>
 
-            {showAlert && (
+            {showAlert && !techLoading && (
                 <Alert
                     message="Missing Data"
                     description={generateAlertMessage()}
@@ -115,8 +139,18 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
 
             <Row gutter={16}>
                 <Col xs={24} md={12}>
-                    <Form.Item name={['screens', index, 'capacity']} label="Capacity" rules={rules.capacity}>
-                        <InputNumber min={1} placeholder="Total seats" style={{ width: '100%' }} />
+                    <Form.Item
+                        name={['screens', index, 'capacity']}
+                        label="Capacity"
+                        rules={rules.capacity}
+                        tooltip={`Maximum available capacity: ${availableSeats}`}
+                    >
+                        <InputNumber
+                            min={1}
+                            max={availableSeats}
+                            placeholder={`Total venue capacity: ${availableSeats}`}
+                            style={{ width: '100%' }}
+                        />
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
