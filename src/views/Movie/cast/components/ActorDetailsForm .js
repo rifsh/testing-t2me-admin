@@ -199,59 +199,6 @@ const ActorDetailsForm = () => {
                         </Form.Item>
                     </Col>
 
-                    {/* Career Information */}
-                    <Col xs={24}>
-                        <Divider />
-                        <Title level={4}>
-                            <TrophyOutlined /> Career Information
-                        </Title>
-                    </Col>
-
-                    <Col xs={24} md={12}>
-                        <Form.Item
-                            name="debutYear"
-                            label="Debut Year"
-                        >
-                            <DatePicker
-                                picker="year"
-                                style={{ width: '100%' }}
-                                placeholder="Select debut year"
-                            />
-                        </Form.Item>
-                    </Col>
-
-                    <Col xs={24} md={12}>
-                        <Form.Item
-                            name="awards"
-                            label="Notable Awards"
-                        >
-                            <Select
-                                mode="tags"
-                                placeholder="Enter notable awards"
-                                tokenSeparators={[',']}
-                            >
-                                <Option value="oscar">Oscar</Option>
-                                <Option value="golden_globe">Golden Globe</Option>
-                                <Option value="emmy">Emmy</Option>
-                                <Option value="bafta">BAFTA</Option>
-                            </Select>
-                        </Form.Item>
-                    </Col>
-
-                    <Col xs={24}>
-                        <Form.Item
-                            name="notableWorks"
-                            label="Notable Works"
-                        >
-                            <Select
-                                mode="tags"
-                                placeholder="Enter notable movies/shows"
-                                tokenSeparators={[',']}
-                            >
-                            </Select>
-                        </Form.Item>
-                    </Col>
-
                     {/* About Section */}
                     <Col xs={24}>
                         <Divider />

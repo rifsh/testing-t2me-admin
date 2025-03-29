@@ -75,11 +75,11 @@ const Index = () => {
     };
 
     const handleViewDetails = (actor) => {
-        navigate(`/actors/detail/${actor.id}`);
+        navigate(`${APP_PREFIX_PATH}/cast/details`);
     };
 
     const handleEditActor = (actor) => {
-        navigate(`/actors/edit/${actor.id}`);
+        // navigate(`/actors/edit/${actor.id}`);
     };
 
     const getDropdownMenu = (actor) => [
@@ -189,14 +189,14 @@ const Index = () => {
             <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: "10px" }}>
                 <SearchBarWithStatus
                     placeholder="Search by name or nationality"
-                    // onSearch={(value) => {
-                    //     setFilteredData(
-                    //         actors.filter(actor =>
-                    //             actor.name.toLowerCase().includes(value.toLowerCase()) ||
-                    //             (actor.nationality && actor.nationality.toLowerCase().includes(value.toLowerCase()))
-                    //         )
-                    //     }}
-                    // }
+                // onSearch={(value) => {
+                //     setFilteredData(
+                //         actors.filter(actor =>
+                //             actor.name.toLowerCase().includes(value.toLowerCase()) ||
+                //             (actor.nationality && actor.nationality.toLowerCase().includes(value.toLowerCase()))
+                //         )
+                //     }}
+                // }
                 />
                 <Button
                     type="primary"

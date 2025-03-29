@@ -119,6 +119,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/Movie/cast/cast-add"))
   },
   {
+    key: "movie.cast.details",
+    path: `${APP_PREFIX_PATH}/cast/details`,
+    component: React.lazy(() => import("views/Movie/cast/cast-details"))
+  },
+  {
     key: "movie.schedule",
     path: `${APP_PREFIX_PATH}/movie-schedule/list`,
     component: React.lazy(() => import("views/Movie/Schedule/schedule-list"))
