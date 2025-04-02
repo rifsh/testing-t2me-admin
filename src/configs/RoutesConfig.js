@@ -436,9 +436,14 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/event-type/list-type")),
   },
   {
-    key: "event.type.list",
+    key: "event.type.add",
     path: `${APP_PREFIX_PATH}/event/type/add`,
     component: React.lazy(() => import("views/event-type/add-type")),
+  },
+  {
+    key: "event.type.edit",
+    path: `${APP_PREFIX_PATH}/event/type/edit/:typeId`,
+    component: React.lazy(() => import("views/event-type/edit-type")),
   },
   {
     key: "advertisement.category.edit",
