@@ -69,6 +69,7 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         isGroupTitle: false,
         submenu: [
+          
           {
             key: "general",
             path: `${APP_PREFIX_PATH}/services/submenu1`,
@@ -77,6 +78,15 @@ const superAdminDashBoardNavTree = [
             breadcrumb: false,
             isGroupTitle: false,
             submenu: [
+              {
+              key: "event.type",
+              path: `${APP_PREFIX_PATH}/event/type/list`,
+              title: "sidenav.event.type",
+              icon: DashboardOutlined,
+              breadcrumb: false,
+              isGroupTitle: false,
+              submenu: [],
+            },
               {
                 key: "place.list",
                 path: `${APP_PREFIX_PATH}/place/list`,
@@ -134,12 +144,12 @@ const superAdminDashBoardNavTree = [
                 submenu: [],
               },
               {
-                key: 'seat.list',
+                key: "seat.list",
                 path: `${APP_PREFIX_PATH}/seat/list`,
-                title: 'sidenav.seat',
+                title: "sidenav.seat",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
-                submenu: []
+                submenu: [],
               },
               {
                 key: "sidenav.payment",
@@ -151,6 +161,7 @@ const superAdminDashBoardNavTree = [
               },
             ],
           },
+
           {
             key: "event",
             path: `${APP_PREFIX_PATH}/services/submenu2`,
@@ -186,20 +197,35 @@ const superAdminDashBoardNavTree = [
             isGroupTitle: false,
             submenu: [
               {
-                key: "movie",
-                path: `${APP_PREFIX_PATH}/services/submenu3/nested5`,
+                key: "movie.movie",
+                path: `${APP_PREFIX_PATH}/movie/list`,
                 title: "sidenav.movie.movies",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 isGroupTitle: false,
               },
               {
-                key: "schedule",
-                path: `${APP_PREFIX_PATH}/services/submenu3/nested5`,
+                key: "movie.cast",
+                path: `${APP_PREFIX_PATH}/cast/list`,
+                title: "sidenav.movie.cast",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                isGroupTitle: false,
+              },
+              {
+                key: "movie.schedule",
+                path: `${APP_PREFIX_PATH}/movie-schedule/list`,
                 title: "sidenav.movie.schedule",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 isGroupTitle: false,
+              },{
+                key: "seat.list",
+                path: `${APP_PREFIX_PATH}/seat/movie/list`,
+                title: "sidenav.seat",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
               },
               {
                 key: "movie.screen",
@@ -208,7 +234,7 @@ const superAdminDashBoardNavTree = [
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 isGroupTitle: false,
-              }
+              },
             ],
           },
           {

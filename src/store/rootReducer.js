@@ -16,6 +16,7 @@ import tickets from "./slices/ticketSlice";
 import schedules from "./slices/scheduleSlice";
 import modalSlice from "./slices/modalSlice";
 import seat from "./slices/seatSlice";
+import movieSeatSlice from "./slices/movieSeatSlice";
 import organizerUpdates from "./slices/EventOrganizerSlice";
 import tax from "./slices/taxSlice";
 import faqs from "./slices/faqSlice";
@@ -56,6 +57,7 @@ const rootReducer = (asyncReducers = {}) => {
       appinfo,
       footer,
       leadEvents,
+      movieSeatSlice,
       ...asyncReducers,
     });
 
