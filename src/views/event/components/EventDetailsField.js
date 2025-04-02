@@ -83,7 +83,7 @@ const EventDetailsField = ({ mode }) => {
     <div>
       <Col xs={24} sm={24} md={17}>
         <Card title="Event Info">
-          <Form.Item name="event_type" label="Event Type" rules={rules.name}>
+          <Form.Item name="event_type_id" label="Event Type" rules={rules.name}>
             <Select
               loading={loading}
               style={{ width: "100%" }}
