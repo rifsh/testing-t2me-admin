@@ -69,7 +69,7 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         isGroupTitle: false,
         submenu: [
-          
+
           {
             key: "general",
             path: `${APP_PREFIX_PATH}/services/submenu1`,
@@ -79,14 +79,14 @@ const superAdminDashBoardNavTree = [
             isGroupTitle: false,
             submenu: [
               {
-              key: "event.type",
-              path: `${APP_PREFIX_PATH}/event/type/list`,
-              title: "sidenav.event.type",
-              icon: DashboardOutlined,
-              breadcrumb: false,
-              isGroupTitle: false,
-              submenu: [],
-            },
+                key: "event.type",
+                path: `${APP_PREFIX_PATH}/event/type/list`,
+                title: "sidenav.event.type",
+                icon: DashboardOutlined,
+                breadcrumb: false,
+                isGroupTitle: false,
+                submenu: [],
+              },
               {
                 key: "place.list",
                 path: `${APP_PREFIX_PATH}/place/list`,
@@ -219,7 +219,8 @@ const superAdminDashBoardNavTree = [
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 isGroupTitle: false,
-              },{
+              },
+              {
                 key: "seat.list",
                 path: `${APP_PREFIX_PATH}/seat/movie/list`,
                 title: "sidenav.seat",
@@ -239,7 +240,7 @@ const superAdminDashBoardNavTree = [
           },
           {
             key: "dine",
-            path: `${APP_PREFIX_PATH}/services/submenu3`,
+            path: `${APP_PREFIX_PATH}/dine/list`,
             title: "sidenav.dine",
             icon: DashboardOutlined,
             breadcrumb: false,
@@ -247,7 +248,7 @@ const superAdminDashBoardNavTree = [
             submenu: [
               {
                 key: "dine.dine",
-                path: `${APP_PREFIX_PATH}/services/submenu3/nested5`,
+                path: `${APP_PREFIX_PATH}/dine/list`,
                 title: "sidenav.dine",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
@@ -255,7 +256,7 @@ const superAdminDashBoardNavTree = [
               },
               {
                 key: "dine.schedule",
-                path: `${APP_PREFIX_PATH}/services/submenu3/nested5`,
+                path: `${APP_PREFIX_PATH}/dine/add`,
                 title: "sidenav.dine.schedule",
                 icon: OrderedListOutlined,
                 breadcrumb: false,

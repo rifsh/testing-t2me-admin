@@ -128,7 +128,26 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/movie-schedule/list`,
     component: React.lazy(() => import("views/Movie/Schedule/schedule-list"))
   },
-
+  {
+    key: "dine.list",
+    path: `${APP_PREFIX_PATH}/dine/list`,
+    component: React.lazy(() => import("views/dine/list-dine"))
+  },
+  {
+    key: "dine.add",
+    path: `${APP_PREFIX_PATH}/dine/add`,
+    component: React.lazy(() => import("views/dine/add-dine"))
+  },
+  {
+    key: "dine.edit",
+    path: `${APP_PREFIX_PATH}/movie-schedule/list`,
+    component: React.lazy(() => import("views/Movie/Schedule/schedule-list"))
+  },
+  {
+    key: "dine.details",
+    path: `${APP_PREFIX_PATH}/movie-schedule/list`,
+    component: React.lazy(() => import("views/Movie/Schedule/schedule-list"))
+  },
   {
     key: "event.details",
     path: `${APP_PREFIX_PATH}/event/details/:eventId`,
