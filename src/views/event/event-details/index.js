@@ -29,7 +29,19 @@ import OffersCouponsTab from "../components/OffersCouponsTab ";
 import ImagesTab from "../components/ImagesTab";
 import { EnrollUser } from "store/slices/leadEventSlice";
 import { UserAddOutlined } from "@ant-design/icons";
+import { UserRoleConstants } from "constants/UserRoleConstant";
+import { getCurrentUser } from "configs/UserAccessConfig";
+
 const { Title, Text } = Typography;
+export const getUserRole = () => {
+  const currentUser = getCurrentUser();
+  switch (currentUser.role_id) {
+    case UserRoleConstants.superAdminRoleId:
+      return UserRoleConstants.superAdmin;
+    case UserRoleConstants.eventSupportingTeamRoleId:
+      return UserRoleConstants.eventSupportingTeam;
+  }
+};
 
 const EventDetails = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -39,6 +51,7 @@ const EventDetails = () => {
   const mediaImages = eventDetails.media?.map((item) => item.media_url) || [];
   const [form] = Form.useForm();
   const [enrollModalVisible, setEnrollModalVisible] = useState(false);
+  const currentUser = getCurrentUser();
 
   // Check if thumbnail image is missing or contains a default value
   const isNoImage =
@@ -203,6 +216,7 @@ const EventDetails = () => {
                 <Typography.Title level={4} style={{ margin: 0 }}>
                   Event Users
                 </Typography.Title>
+                {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
                 <Button
                   type="primary"
                   icon={<UserAddOutlined />}
@@ -210,6 +224,7 @@ const EventDetails = () => {
                 >
                   Add User
                 </Button>
+              )}
               </div>
               
               {eventDetails.users?.length > 0 ? (
