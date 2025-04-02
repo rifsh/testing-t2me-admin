@@ -32,6 +32,7 @@ import {
 } from '@ant-design/icons';
 import moment from 'moment';
 import TextEditor from 'components/util-components/FormItems/TextEditor';
+import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -534,24 +535,18 @@ const AddFields = () => {
 
                     <Divider />
 
-                    <Form.Item>
+                    <Row justify="end" style={{ marginTop: '20px' }}>
                         <Space>
+                            <DiscardButton form={form} />
                             <Button
                                 type="primary"
-                                htmlType="submit"
-                                icon={<SaveOutlined />}
-                                loading={loading}
+                                onClick={handleSubmit}
+                                disabled={!form.getFieldValue('venue_id')}
                             >
-                                Add Dining Venue
-                            </Button>
-                            <Button
-                                icon={<RollbackOutlined />}
-                                onClick={() => window.history.back()}
-                            >
-                                Cancel
+                                Submit
                             </Button>
                         </Space>
-                    </Form.Item>
+                    </Row>
                 </Form>
             </Card>
         </div>
