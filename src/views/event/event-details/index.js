@@ -12,13 +12,9 @@ import ServicesTab from "../components/ServicesTab ";
 import FaqTab from "../components/FaqTab ";
 import OffersCouponsTab from "../components/OffersCouponsTab ";
 import ImagesTab from "../components/ImagesTab";
-
 const { Title, Text } = Typography;
 
-
-
 const EventDetails = () => {
-  // const EventDetailsPage = ({ eventDetails, mediaImages, isNoImage }) => {
   const [activeTab, setActiveTab] = useState('1');
   const { eventId } = useParams();
   const dispatch = useDispatch();
@@ -99,7 +95,7 @@ const EventDetails = () => {
           )
         }
       >
-        <div style={{ padding: "8px 0" }}>
+        <div className="p-0 md:px-[8px] md:py-0">
           <Text style={{ fontSize: "16px", lineHeight: "1.6" }}>{eventDetails.description}</Text>
         </div>
       </Card>
