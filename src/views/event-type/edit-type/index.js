@@ -2,19 +2,25 @@ import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import EventTypeForm from "../form-type";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCouponDetails } from "store/slices/couponSlice";
+import { fetchEventTypeDetails } from "store/slices/eventSlice";
+import LoadingOverlay from "components/util-components/Loader/index";
 
-const EditEvent = () => {
+const EditEventType = () => {
   const dispatch = useDispatch();
-  const { couponId } = useParams();
-  const { couponDetails } = useSelector((state) => state.coupons);
-  useEffect(() => {
-    if (couponId) {
-      dispatch(fetchCouponDetails(couponId));
-    }
-  }, [dispatch, couponId]);
+  const { typeId } = useParams();
+  const { eventTypeDetails, loading } = useSelector((state) => state.event);
 
-  return <EventTypeForm mode={"EDIT"} coupon={couponDetails}/>;
+  useEffect(() => {
+    if (typeId) {
+      dispatch(fetchEventTypeDetails(typeId));
+    }
+  }, [dispatch, typeId]);
+
+  if (loading || !eventTypeDetails) {
+    return <LoadingOverlay loading={true} />;
+  }
+
+  return <EventTypeForm mode={"EDIT"} type={eventTypeDetails} />;
 };
 
-export default EditEvent;
+export default EditEventType;

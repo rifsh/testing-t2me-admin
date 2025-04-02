@@ -3,12 +3,13 @@ import { Input, Row, Col, Card, Form, Alert, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchEventTypeOption } from "store/slices/eventSlice";
 
-function EventTypeFormFields({ form }) {
+function EventTypeFormFields({ form, mode }) {
   const dispatch = useDispatch();
-  const { type_option } = useSelector((state) => state.event);
+  const { type_option, loading } = useSelector((state) => state.event);
 
   useEffect(() => {
     dispatch(fetchEventTypeOption());
+   
   }, [dispatch]);
 
   return (
@@ -22,26 +23,34 @@ function EventTypeFormFields({ form }) {
           >
             <Select
               placeholder="Select Type Name"
-              options={type_option?.map((item) => ({
-                label: item.option,
-                value: item.option,
-              }))}
+              options={
+                type_option?.map((item) => ({
+                  label: item.option,
+                  value: item.option,
+                })) || []
+              }
               allowClear
+              loading={loading}
+              disabled={loading || mode === "EDIT"}
             />
           </Form.Item>
           <Form.Item
             name="display_name"
             label="Name"
-            rules={[{ required: true, message: "Please select a type name" }]}
+            rules={[{ required: true, message: "Please enter a display name" }]}
           >
-            <Input placeholder="Enter Description" />
+            <Input placeholder="Enter Display Name" />
           </Form.Item>
           <Form.Item
             name="description"
             label="Description"
             rules={[{ required: true, message: "Please enter description" }]}
           >
-            <Input placeholder="Enter Description" />
+            <Input.TextArea
+              placeholder="Enter Description"
+              rows={4}
+              maxLength={500}
+            />
           </Form.Item>
         </Card>
       </Col>
