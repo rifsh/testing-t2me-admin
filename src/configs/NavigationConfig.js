@@ -69,15 +69,7 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         isGroupTitle: false,
         submenu: [
-          {
-            key: "event.type",
-            path: `${APP_PREFIX_PATH}/event/type/list`,
-            title: "sidenav.event.type",
-            icon: DashboardOutlined,
-            breadcrumb: false,
-            isGroupTitle: false,
-            submenu: [],
-          },
+          
           {
             key: "general",
             path: `${APP_PREFIX_PATH}/services/submenu1`,
@@ -86,6 +78,15 @@ const superAdminDashBoardNavTree = [
             breadcrumb: false,
             isGroupTitle: false,
             submenu: [
+              {
+              key: "event.type",
+              path: `${APP_PREFIX_PATH}/event/type/list`,
+              title: "sidenav.event.type",
+              icon: DashboardOutlined,
+              breadcrumb: false,
+              isGroupTitle: false,
+              submenu: [],
+            },
               {
                 key: "place.list",
                 path: `${APP_PREFIX_PATH}/place/list`,

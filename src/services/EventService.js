@@ -19,6 +19,19 @@ EventsService.addEvent = function (data, action) {
     data: formData,
   });
 };
+EventsService.addEventType = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
+
+  return fetch({
+    url: `${ApiConstant.EVENT_TYPE_URL}?action=${encodedAction}`,
+    method: "POST",
+    data: data,
+  });
+};
 
 EventsService.getAllEvent = function (pageData) {
   // const params = {};
@@ -42,6 +55,12 @@ EventsService.checkValidation = function () {
 EventsService.fetchEventDetails = function (eventId) {
   return fetch({
     url: `${ApiConstant.EVENT_DETAILS_URL}?event_id=${eventId}`,
+    method: "get",
+  });
+};
+EventsService.fetchEventTypeOption = function () {
+  return fetch({
+    url: `${ApiConstant.EVENT_TYPE_OPTION_URL}`,
     method: "get",
   });
 };
