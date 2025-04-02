@@ -234,6 +234,21 @@ export const editEventStatus = createAsyncThunk(
     }
   }
 );
+export const editEventTypeStatus = createAsyncThunk(
+  "event/editEventTypeStatus",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      const response = await EventService.editEventTypeStatus(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 
 export const validateMultipleEvent = createAsyncThunk(
   "event/validateMultiple",
@@ -446,6 +461,24 @@ const eventSlice = createSlice({
         }
       })
       .addCase(editEventStatus.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
+      .addCase(editEventTypeStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editEventTypeStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.messages = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(editEventTypeStatus.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to edit event";
       })
