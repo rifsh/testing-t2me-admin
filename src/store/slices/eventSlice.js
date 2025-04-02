@@ -10,6 +10,7 @@ import EventService from "services/EventService";
 const initialState = {
   eventDetails: {},
   events: [],
+  eventType: [],
   filteredEvents: [],
   loading: false,
   error: null,
@@ -125,6 +126,17 @@ export const fetchAllEvent = createAsyncThunk(
         const response = await EventService.getAllEvent(pageData);
         return response.data[0];
       }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+export const fetchEventType = createAsyncThunk(
+  "event/fetchEventType",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await EventService.fetchEventType(pageData);
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
     }
@@ -408,6 +420,19 @@ const eventSlice = createSlice({
         state.pagination = action.payload;
       })
       .addCase(fetchAllEvent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchEventType.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchEventType.fulfilled, (state, action) => {
+        state.loading = false;
+        state.eventType = action.payload.items;
+        state.pagination = action.payload;
+      })
+      .addCase(fetchEventType.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

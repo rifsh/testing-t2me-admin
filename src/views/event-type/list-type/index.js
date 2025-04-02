@@ -38,6 +38,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import { fetchEventType } from "store/slices/eventSlice";
 
 const { Option } = Select;
 
@@ -50,23 +51,24 @@ const CouponList = () => {
     editable_status,
     loading,
     message,
+    eventType,
     editItemId,
     dialogVisible,
     warningPagination,
     modalLoading,
     responseImpactData,
-  } = useSelector((state) => state.coupons);
+  } = useSelector((state) => state.event);
   const { responseData } = useSelector((state) => state.modalSlice);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchAllCoupons(DEFAULT_PAGE_SIZE));
+    dispatch(fetchEventType(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
   const handlePagination = (page, size) => {
-    dispatch(fetchAllCoupons({ page: page, size: size }));
+    dispatch(fetchEventType({ page: page, size: size }));
   };
   const showModal = (coupon) => {
     setSelectedCoupon(coupon);
@@ -126,33 +128,20 @@ const CouponList = () => {
 
   const tableColumns = [
     {
-      title: "Coupon Name",
+      title: "Type Name",
       dataIndex: "name",
       sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
     },
-    // {
-    //   title: "Discount",
-    //   dataIndex: "discount_percentage_amount",
-    //   sorter: (a, b) => a.discount_percentage_amount - b.discount_percentage_amount,
-    //   render: (value) => `${value}%`,
-    // },
+
     {
-      title: "Start Date",
-      dataIndex: "start_date",
-      defaultSortOrder: "descend",
-      sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
-      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
+      title: "Name",
+      dataIndex: "display_name",
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "display_name"),
     },
     {
-      title: "End Date",
-      dataIndex: "end_date",
-      sorter: (a, b) => new Date(b.end_date) - new Date(a.end_date),
-      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
-    },
-    {
-      title: "Max Uses",
-      dataIndex: "max_uses",
-      sorter: (a, b) => a.max_uses - b.max_uses,
+      title: "Description",
+      dataIndex: "description",
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "description"),
     },
     Utils.statusColumnUtil(handleUpdateStatus),
     {
@@ -175,13 +164,13 @@ const CouponList = () => {
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/event/type/add`)}
         >
-          Add Coupon
+          Add Event Type
         </Button>
       </Flex>
 
       <Table
         columns={tableColumns}
-        dataSource={filteredCoupons}
+        dataSource={eventType}
         rowKey="id"
         loading={loading}
         pagination={{
