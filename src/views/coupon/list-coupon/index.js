@@ -78,7 +78,7 @@ const CouponList = () => {
     setSelectedCoupon(null);
   };
 
-  const handleUpdateStatus = (item) => {
+  const handleUpdateStatus = (item) => { 
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
