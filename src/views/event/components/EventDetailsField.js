@@ -1,13 +1,31 @@
-import { Card, Col, Form, Input, Space, Button, Typography, Row, } from "antd";
-import React from "react";
-import { PlusOutlined, MinusCircleOutlined, } from "@ant-design/icons";
-import { SupportImageFormat, SupportFormatContent, ResolutionByServices, ThumbnailImageResolutions, } from "constants/SupportFileConstants";
+import {
+  Card,
+  Col,
+  Form,
+  Input,
+  Space,
+  Button,
+  Typography,
+  Row,
+  Select,
+} from "antd";
+import React, { useEffect } from "react";
+import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
+import {
+  SupportImageFormat,
+  SupportFormatContent,
+  ResolutionByServices,
+  ThumbnailImageResolutions,
+} from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
+import { fetchEventType } from "store/slices/eventSlice";
+import { useDispatch, useSelector } from "react-redux";
 
+const { Option } = Select;
 const { Text } = Typography;
 
-const EventDetailsField = ({mode}) => {
+const EventDetailsField = ({ mode }) => {
   // const rules = {
   //   name: [{ required: true, message: "Please enter event name" }],
   //   description: [
@@ -23,13 +41,27 @@ const EventDetailsField = ({mode}) => {
   // };
   const isLeadEditMode = mode === "EDITLEAD";
   const rules = {
-    name: isLeadEditMode ? [] : [{ required: true, message: "Please enter event name" }],
-    description: isLeadEditMode ? [] : [{ required: true, message: "Please enter event description" }],
-    thumbnail_image: isLeadEditMode ? [] : [{ required: true, message: "Please upload a thumbnail image" }],
-    banner_images: isLeadEditMode ? [] : [{ required: true, message: "Please upload at least one banner image" }],
-    banner_url:isLeadEditMode ? [] : [{ required: false, message: "Please enter banner image URL" }],
+    name: isLeadEditMode
+      ? []
+      : [{ required: true, message: "Please enter event name" }],
+    description: isLeadEditMode
+      ? []
+      : [{ required: true, message: "Please enter event description" }],
+    thumbnail_image: isLeadEditMode
+      ? []
+      : [{ required: true, message: "Please upload a thumbnail image" }],
+    banner_images: isLeadEditMode
+      ? []
+      : [
+          {
+            required: true,
+            message: "Please upload at least one banner image",
+          },
+        ],
+    banner_url: isLeadEditMode
+      ? []
+      : [{ required: false, message: "Please enter banner image URL" }],
   };
-
 
   const normFile = (e) => {
     if (Array.isArray(e)) {
@@ -37,13 +69,33 @@ const EventDetailsField = ({mode}) => {
     }
     return e?.fileList || [];
   };
-  console.log('mode details ..............',{mode})
+  console.log("mode details ..............", { mode });
+  const dispatch = useDispatch();
   const handleBeforeUpload = Utils.handleBeforeUpload;
+  const { eventType, loading } = useSelector((state) => state.event);
 
+  useEffect(() => {
+    if (!eventType.length) {
+      dispatch(fetchEventType({ active: true }));
+    }
+  }, [dispatch, eventType.length]);
   return (
     <div>
       <Col xs={24} sm={24} md={17}>
         <Card title="Event Info">
+          <Form.Item name="event_type" label="Event Type" rules={rules.name}>
+            <Select
+              loading={loading}
+              style={{ width: "100%" }}
+              placeholder="Select event type"
+            >
+              {eventType.map((type) => (
+                <Option key={type.id} value={type.id}>
+                  {type.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
           <Form.Item name="event_name" label="Event name" rules={rules.name}>
             <Input placeholder="Event Name" />
           </Form.Item>
@@ -111,7 +163,6 @@ const EventDetailsField = ({mode}) => {
               targetResolution={ThumbnailImageResolutions.EVENT}
             />
           </Form.Item>
-
         </Card>
         <Card>
           <Form.Item name="event_add_on_services" label="Add on Services">
@@ -124,30 +175,55 @@ const EventDetailsField = ({mode}) => {
                         {...restField}
                         name={[name, "title"]}
                         label="Title"
-                        rules={[{ required: false, message: "Title is required" }]}
+                        rules={[
+                          { required: false, message: "Title is required" },
+                        ]}
                       >
                         <Input placeholder="Enter title" />
                       </Form.Item>
 
                       <Form.List name={[name, "add"]}>
-                        {(priceFields, { add: addPrice, remove: removePrice }) => (
+                        {(
+                          priceFields,
+                          { add: addPrice, remove: removePrice }
+                        ) => (
                           <>
                             <Row gutter={16}>
-                              {priceFields.map(({ key: priceKey, name: priceName, ...priceRestField }) => (
-                                <Col span={12} key={priceKey}>
-                                  <Space style={{ display: "flex", marginBottom: 8 }} align="baseline">
-                                    <Form.Item
-                                      {...priceRestField}
-                                      name={[priceName]}
-                                      rules={[{ required: false, message: "Price include is required" }]}
-                                      style={{ width: "100%" }}
+                              {priceFields.map(
+                                ({
+                                  key: priceKey,
+                                  name: priceName,
+                                  ...priceRestField
+                                }) => (
+                                  <Col span={12} key={priceKey}>
+                                    <Space
+                                      style={{
+                                        display: "flex",
+                                        marginBottom: 8,
+                                      }}
+                                      align="baseline"
                                     >
-                                      <Input placeholder="Price Included" />
-                                    </Form.Item>
-                                    <MinusCircleOutlined onClick={() => removePrice(priceName)} />
-                                  </Space>
-                                </Col>
-                              ))}
+                                      <Form.Item
+                                        {...priceRestField}
+                                        name={[priceName]}
+                                        rules={[
+                                          {
+                                            required: false,
+                                            message:
+                                              "Price include is required",
+                                          },
+                                        ]}
+                                        style={{ width: "100%" }}
+                                      >
+                                        <Input placeholder="Price Included" />
+                                      </Form.Item>
+                                      <MinusCircleOutlined
+                                        onClick={() => removePrice(priceName)}
+                                      />
+                                    </Space>
+                                  </Col>
+                                )
+                              )}
                             </Row>
                             <Row gutter={16}>
                               <Col span={12}>
@@ -277,7 +353,9 @@ const EventDetailsField = ({mode}) => {
                               <Col span={12}>
                                 <Button
                                   type="default"
-                                  onClick={() => addQNA({ question: "", answer: "" })}
+                                  onClick={() =>
+                                    addQNA({ question: "", answer: "" })
+                                  }
                                   block
                                   icon={<PlusOutlined />}
                                 >
@@ -323,11 +401,9 @@ const EventDetailsField = ({mode}) => {
             </Form.List>
           </Form.Item>
         </Card>
-
       </Col>
     </div>
   );
 };
 
 export default EventDetailsField;
-
