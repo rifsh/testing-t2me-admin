@@ -13,6 +13,7 @@ const initialState = {
   filteredEvents: [],
   loading: false,
   error: null,
+  type_option: null,
   selectedCoupons: [],
   editItemId: null,
   selectedOffers: [],
@@ -50,6 +51,17 @@ export const fetchEventDetails = createAsyncThunk(
         const response = await EventService.fetchEventDetails(eventId);
         return response.data;
       }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+export const fetchEventTypeOption = createAsyncThunk(
+  "event/fetchEventTypeOption",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await EventService.fetchEventTypeOption();
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
     }
@@ -144,6 +156,17 @@ export const addEvent = createAsyncThunk(
   async ({ data, action }, { rejectWithValue }) => {
     try {
       const response = await EventService.addEvent(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to process event");
+    }
+  }
+);
+export const addEventType = createAsyncThunk(
+  "event/addEventType",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await EventService.addEventType(data, action);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to process event");
@@ -320,6 +343,25 @@ const eventSlice = createSlice({
         state.error = action.payload.data;
         state.responseMessage = action.payload.status.message;
       })
+      .addCase(addEventType.pending, (state) => {
+        console.log("addEventType - Pending State");
+        state.loading = true;
+        state.error = null;
+        state.responseMessage = null;
+      })
+      .addCase(addEventType.fulfilled, (state, action) => {
+        console.log("addEventType - Fulfilled", action.payload);
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(addEventType.rejected, (state, action) => {
+        console.error("addEventType - Rejected", action.payload);
+        state.loading = false;
+        state.error = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
       .addCase(editEvent.pending, (state) => {
         state.loading = true;
       })
@@ -366,6 +408,19 @@ const eventSlice = createSlice({
         state.pagination = action.payload;
       })
       .addCase(fetchAllEvent.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchEventTypeOption.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchEventTypeOption.fulfilled, (state, action) => {
+        state.loading = false;
+        state.type_option = action.payload.data;
+      })
+
+      .addCase(fetchEventTypeOption.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

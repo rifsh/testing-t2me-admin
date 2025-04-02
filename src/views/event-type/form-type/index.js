@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import { Tabs, Form, Button, message, Alert, Col } from "antd";
 import Flex from "components/shared-components/Flex";
-import EventTypeFormFields from "../components/CouponFormFields";
+import EventTypeFormFields from "../components/EventTypeFormFields";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
@@ -23,6 +23,7 @@ import dayjs from "dayjs";
 import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
+import { addEventType } from "store/slices/eventSlice";
 
 const ADD = "ADD";
 // const EDIT = 'EDIT'
@@ -42,7 +43,7 @@ const EventTypeForm = ({ mode, coupon }) => {
     message: warningMessage,
     submitPagination,
     modalLoading,
-  } = useSelector((state) => state.coupons);
+  } = useSelector((state) => state.event);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -285,7 +286,7 @@ const EventTypeForm = ({ mode, coupon }) => {
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={mode === "EDIT" ? editCoupon : addCoupon}
+        addFunction={mode === "EDIT" ? editCoupon : addEventType}
         navigationPath={`${APP_PREFIX_PATH}/coupon/list`}
         responseMessage={responseMessage}
         pagination={submitPagination}

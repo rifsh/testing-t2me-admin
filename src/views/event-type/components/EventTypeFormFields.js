@@ -1,8 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Input, Row, Col, Card, Form, Alert, Select } from "antd";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchEventTypeOption } from "store/slices/eventSlice";
 
 function EventTypeFormFields({ form }) {
-  const typeOptions = [];
+  const dispatch = useDispatch();
+  const { type_option } = useSelector((state) => state.event);
+
+  useEffect(() => {
+    dispatch(fetchEventTypeOption());
+  }, [dispatch]);
 
   return (
     <Row gutter={16}>
@@ -10,14 +17,24 @@ function EventTypeFormFields({ form }) {
         <Card title="Type Details">
           <Form.Item
             name="name"
-            label="Type Name"
+            label="Type"
             rules={[{ required: true, message: "Please select a type name" }]}
           >
             <Select
               placeholder="Select Type Name"
-              options={typeOptions}
+              options={type_option?.map((item) => ({
+                label: item.option,
+                value: item.option,
+              }))}
               allowClear
             />
+          </Form.Item>
+          <Form.Item
+            name="display_name"
+            label="Name"
+            rules={[{ required: true, message: "Please select a type name" }]}
+          >
+            <Input placeholder="Enter Description" />
           </Form.Item>
           <Form.Item
             name="description"
