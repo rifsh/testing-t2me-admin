@@ -66,6 +66,20 @@ export const getSinglePayment = createAsyncThunk(
   }
 );
 
+//payments methods
+
+export const fetchAllPaymentMethod = createAsyncThunk(
+  "paymentMethod/fetchAll",
+  async (_, { rejectWithValue }) => {  
+    try {
+      const response = await PaymentService.getPaymentsMethod();
+      return response.data; 
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Error Fetching Payments");
+    }
+  }
+);
+
 // Add new payment
 export const addPayment = createAsyncThunk(
   "payment/add",
@@ -141,6 +155,19 @@ const paymentSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.responseMessage = "Failed to add payment";
+      })
+
+      .addCase(fetchAllPaymentMethod.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllPaymentMethod.fulfilled, (state, action) => {
+        state.loading = false;
+        state.methods = action.payload;
+      })
+      .addCase(fetchAllPaymentMethod.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ;
       });
   },
 });

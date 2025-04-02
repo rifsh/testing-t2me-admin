@@ -13,6 +13,21 @@ PaymentService.getAllPayment = function (pageData) {
   });
 };
 
+PaymentService.getAllPayment = function (pageData) {
+  return fetch({
+    url: ApiConstant.PAYMENT_URL,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
+
+PaymentService.getPaymentsMethod = function () {
+  return fetch({
+    url: ApiConstant.PAYMENT_METHOD,
+    method: "get",
+  });
+};
+
 PaymentService.addPayment = function (paymentData, action) {
   console.log(paymentData, "paymentData");
   const encodedAction = encodeURIComponent(handleAction(action));
