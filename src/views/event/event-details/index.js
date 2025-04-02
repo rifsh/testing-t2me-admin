@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Typography, Space, Image, Button, Carousel, Badge, Tag, Avatar, Empty, List, Collapse, Divider, Progress, Tabs } from "antd";
+import { Card, Row, Typography, Image, Empty, Tabs } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import { fetchEventDetails } from "store/slices/eventSlice";
 import Loading from "components/shared-components/Loading";
-import Panel from "antd/es/splitter/Panel";
 import TabPane from "antd/es/tabs/TabPane";
 import EventOverviewTab from "../components/EventOverviewTab";
 import EventUsersTab from "../components/EventUsersTab";
@@ -12,13 +11,9 @@ import ServicesTab from "../components/ServicesTab ";
 import FaqTab from "../components/FaqTab ";
 import OffersCouponsTab from "../components/OffersCouponsTab ";
 import ImagesTab from "../components/ImagesTab";
-
 const { Title, Text } = Typography;
 
-
-
 const EventDetails = () => {
-  // const EventDetailsPage = ({ eventDetails, mediaImages, isNoImage }) => {
   const [activeTab, setActiveTab] = useState('1');
   const { eventId } = useParams();
   const dispatch = useDispatch();
@@ -43,7 +38,6 @@ const EventDetails = () => {
 
   return (
     <div style={{
-      maxWidth: "1200px",
       margin: "0 auto",
       padding: "24px"
     }}>
@@ -99,7 +93,7 @@ const EventDetails = () => {
           )
         }
       >
-        <div style={{ padding: "8px 0" }}>
+        <div className="p-0 md:px-[8px] md:py-0">
           <Text style={{ fontSize: "16px", lineHeight: "1.6" }}>{eventDetails.description}</Text>
         </div>
       </Card>

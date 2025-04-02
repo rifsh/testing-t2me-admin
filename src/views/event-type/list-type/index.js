@@ -3,7 +3,6 @@ import {
   Card,
   Table,
   Select,
-  Input,
   Button,
   Modal,
   Descriptions,
@@ -11,8 +10,6 @@ import {
 } from "antd";
 import {
   EyeOutlined,
-  PlusCircleOutlined,
-  SearchOutlined,
   FormOutlined,
   MoreOutlined,
   EditOutlined,
@@ -24,10 +21,10 @@ import {
   fetchEventType,
   editEventStatus,
   fetchAllEvent,
-  filterEvent,
   setModalLoading,
   setDialogVisible,
   setEditItemId,
+  editEventTypeStatus,
 } from "store/slices/eventSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import {
@@ -144,7 +141,7 @@ const EventTypeList = () => {
       dataIndex: "description",
       sorter: (a, b) => Utils.antdTableSorter(a, b, "description"),
     },
-    Utils.statusColumnUtil(handleUpdateStatus),
+    // Utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "",
       dataIndex: "actions",
@@ -222,9 +219,9 @@ const EventTypeList = () => {
 
       <UpdateStatusModal
         responseMessage={messages}
-        editFunction={editEventStatus}
+        editFunction={editEventTypeStatus}
         editable_status={editable_status}
-        getAllFunction={(pageData) => fetchAllEvent(pageData)}
+        getAllFunction={(pageData) => fetchEventType(pageData)}
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
@@ -236,8 +233,8 @@ const EventTypeList = () => {
       />
 
       <StatusSubmitAndConfirmModal
-        editFunction={editEventStatus}
-        getAllFunction={fetchAllEvent}
+        editFunction={editEventTypeStatus}
+        getAllFunction={fetchEventType}
         responseData={responseData}
         responseMessage={messages}
         pageData={DEFAULT_PAGE_SIZE}
