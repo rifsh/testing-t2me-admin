@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Typography, Space, Image, Button, Carousel, Badge, Tag, Avatar, Empty, List, Collapse, Divider, Progress, Tabs } from "antd";
+import { Card, Row, Typography, Image, Empty, Tabs } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import { fetchEventDetails } from "store/slices/eventSlice";
 import Loading from "components/shared-components/Loading";
-import Panel from "antd/es/splitter/Panel";
 import TabPane from "antd/es/tabs/TabPane";
 import EventOverviewTab from "../components/EventOverviewTab";
 import EventUsersTab from "../components/EventUsersTab";
