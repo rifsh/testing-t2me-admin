@@ -148,6 +148,19 @@ EventsService.editEventStatus = function (
     params: Utils.filterParams(pageData),
   });
 };
+EventsService.editEventTypeStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.EVENT_TYPE_DETAILS_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+    params: Utils.filterParams(pageData),
+  });
+};
 
 EventsService.validateMultiEvent = function (eventIds) {
   const queryString = eventIds.map((id) => `event_ids=${id}`).join("&");
