@@ -1,13 +1,25 @@
-import React, { useEffect } from "react";
-import { Card, Row, Col, Typography, Space, Image, Button,Carousel } from "antd";
+import React, { useEffect, useState } from "react";
+import { Card, Row, Col, Typography, Space, Image, Button, Carousel, Badge, Tag, Avatar, Empty, List, Collapse, Divider, Progress, Tabs } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import { fetchEventDetails } from "store/slices/eventSlice";
 import Loading from "components/shared-components/Loading";
+import Panel from "antd/es/splitter/Panel";
+import TabPane from "antd/es/tabs/TabPane";
+import EventOverviewTab from "../components/EventOverviewTab";
+import EventUsersTab from "../components/EventUsersTab";
+import ServicesTab from "../components/ServicesTab ";
+import FaqTab from "../components/FaqTab ";
+import OffersCouponsTab from "../components/OffersCouponsTab ";
+import ImagesTab from "../components/ImagesTab";
 
 const { Title, Text } = Typography;
 
+
+
 const EventDetails = () => {
+  // const EventDetailsPage = ({ eventDetails, mediaImages, isNoImage }) => {
+  const [activeTab, setActiveTab] = useState('1');
   const { eventId } = useParams();
   const dispatch = useDispatch();
   const { eventDetails, loading, error } = useSelector((state) => state.event);
@@ -20,322 +32,167 @@ const EventDetails = () => {
     eventDetails.thumbnail_image === "";
 
   useEffect(() => {
-    if (eventId && !eventDetails) {
+    if (eventId) {
       dispatch(fetchEventDetails(eventId));
     }
-  }, [dispatch, eventId, eventDetails]);
+  }, [dispatch, eventId]);
 
   if (loading) return <Loading />;
   if (error) return <div>Error: {error}</div>;
   if (!eventDetails) return <div>No Event Details Found</div>;
 
   return (
-    <Row gutter={[16, 16]} style={{ padding: "20px" }}>
-      {/* Event Image Section */}
-      <Col span={24}>
-        <Card
-          bordered={false}
-          cover={
-            isNoImage ? (
-              <div
-                style={{
-                  height: 300,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#f0f0f0",
-                  color: "#888",
-                }}
-              >
-                No Image
-              </div>
-            ) : (
-              <Image
-                alt="place thumbnail"
-                src={eventDetails.thumbnail_image}
-                height={300}
-                style={{ objectFit: "cover" }}
-              />
-            )
-          }
-        >
-          <Title level={2} style={{ margin: "10px 0" }}>
-            {eventDetails.event_name}
-          </Title>
-          <Text>{eventDetails.description}</Text>
-        </Card>
-      </Col>
-
-      {/* Event Overview Section */}
-      <Col span={24}>
-        <Card
-          title={<span style={{ color: "#1890ff" }}>Event Overview</span>}
-          bordered={false}
-        >
-          <Row gutter={[16, 16]}>
-            <Col span={12}>
-              <Text strong>Venue:</Text>{" "}
-              {eventDetails.venue_events?.map((venueEvent, index) => (
-                <span key={index}>
-                  {venueEvent.venue.name}
-                  {index < eventDetails.venue_events.length - 1 ? ", " : ""}
-                </span>
-              )) || "N/A"}
-            </Col>
-            <Col span={12}>
-              <Text strong>Available Seats:</Text> {eventDetails.max_tickets}
-            </Col>
-            <Col span={12}>
-              <Text strong>Category:</Text> {eventDetails.category?.name??"N/A"}
-            </Col>
-            <Col span={12}>
-              <Text strong>Sub Category:</Text> {eventDetails.sub_category?.name??"N/A"}
-            </Col>
-          </Row>
-        </Card>
-      </Col>
-
-
-      <Col span={24}>
-        <Card title={<span style={{ color: "#1890ff" }}>Event Users</span>} bordered={false}>
-          <Row gutter={[24, 24]} justify="center">
-            {eventDetails.users?.length > 0 ? (
-              eventDetails.users.map((user, index) => (
-                <Col xs={24} sm={12} md={8} lg={6} key={index}>
-                  <Card hoverable style={{ textAlign: "center", borderRadius: 10, boxShadow: "0 4px 8px rgba(0,0,0,0.1)", padding: 15 }}>
-                    <div>
-                      {user.thumbnail_image ? (
-                        <Image
-                          alt="User Thumbnail"
-                          src={user.thumbnail_image}
-                          height={100}
-                          width={100}
-                          style={{ objectFit: "cover", borderRadius: "50%", marginBottom: 10 }}
-                        />
-                      ) : (
-                        <div style={{ height: 100, width: 100, display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#f0f0f0", color: "#888", borderRadius: "50%", margin: "0 auto 10px" }}>No Image</div>
-                      )}
-                      <Title level={5} style={{ marginBottom: 5 }}>{user.username}</Title>
-                      <Text type="secondary">{user.role?.name || "N/A"}</Text>
-                    </div>
-                  </Card>
-                </Col>
-              ))
-            ) : (
-              <Col span={24} style={{ textAlign: "center" }}>
-                <Text>No Users Associated</Text>
-              </Col>
-            )}
-          </Row>
-        </Card>
-      </Col>
-
-      <Col span={24}>
-  {/* Event Add on Services Section */}
-  <Card title={<span style={{ color: "#1890ff" }}>Event Add on Services</span>} bordered={false}>
-    <Row gutter={[24, 24]} justify="left">
-      {eventDetails.event_add_on_services?.length > 0 ? (
-        eventDetails.event_add_on_services.map((service, index) => (
-          <Col xs={24} sm={12} md={8} lg={6} key={index}>
-            
-              <div>
-                <Title level={5} style={{ marginBottom: 10 }}>{service.title}</Title>
-
-                <div style={{ textAlign: "left" }}>
-                  {service.services.map((item, idx) => (
-                    <Text key={idx} style={{ display: "block", marginBottom: 5 }}>
-                      • {item}
-                    </Text>
-                  ))}
-                </div>
-              </div>
-            
-          </Col>
-        ))
-      ) : (
-        <Col span={24} style={{ textAlign: "center" }}>
-          <Text>No Add on Services Available</Text>
-        </Col>
-      )}
-    </Row>
-  </Card>
-</Col>
-
-<Col span={24}>
-  <Card title={<span style={{ color: "#1890ff" }}>Event Q&A</span>} bordered={false}>
-    <Row gutter={[24, 24]} justify="left">
-      {eventDetails.event_qna?.length > 0 ? (
-        eventDetails.event_qna.map((qna, index) => (
-          <Col xs={24} sm={12} md={8} lg={6} key={index}>
-            <div>
-              <Title level={5} style={{ marginBottom: 10 }}>{qna.title}</Title>
-              <div style={{ textAlign: "left" }}>
-                {qna.qna.map((qa, idx) => (
-                  <div key={idx} style={{ marginBottom: 10 }}>
-                    <Text strong style={{ display: "block", marginBottom: 5 }}>
-                      Question: {qa.question}
-                    </Text>
-                    <Text style={{ display: "block", marginBottom: 5 }}>
-                      Answer: {qa.answer}
-                    </Text>
-                  </div>
-                ))}
+    <div style={{
+      maxWidth: "1200px",
+      margin: "0 auto",
+      padding: "24px"
+    }}>
+      <Card
+        bordered={false}
+        className="event-header-card"
+        style={{
+          borderRadius: "12px",
+          overflow: "hidden",
+          // boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+          marginBottom: "24px"
+        }}
+        cover={
+          isNoImage ? (
+            <div
+              style={{
+                height: 400,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#f5f5f5",
+                color: "#888",
+              }}
+            >
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "24px", marginBottom: "8px" }}>No Image Available</div>
+                <div>Event visual will appear here when uploaded</div>
               </div>
             </div>
-          </Col>
-        ))
-      ) : (
-        <Col span={24} style={{ textAlign: "center" }}>
-          <Text>No Q&A Available</Text>
-        </Col>
-      )}
-    </Row>
-  </Card>
-</Col>
-
-
-      <Col span={24}>
-        <Card title="Event Offers" bordered={false}>
-          <Row gutter={[16, 16]}>
-            {eventDetails.event_offers.map((offer, index) => (
-              <Col xs={24} sm={12} md={8} lg={10} key={index}>
-                <Card hoverable style={{ backgroundColor: "#F1FAEC" }}>
-                  <h2 style={{ color: "darkred" }}>{offer.offer.name}</h2>
-                  <Row justify={"space-between"}>
-                    <Text>{offer.offer.discount_percentage}% Discount</Text>
-                    <Text>Max Users: {offer.offer.max_uses}</Text>
-                  </Row>
-                  <Row justify={"space-between"}>
-                    <Text>Valid From: {offer.offer.start_date}</Text>
-                    <Text>Valid To: {offer.offer.end_date}</Text>
-                  </Row>
-                 
-                  <div style={{ marginTop: "10px" }}>
-                    {offer.offer.thumbnail_image !== "images" && offer.offer.thumbnail_image ? (
-                      <Image
-                        alt="offer thumbnail"
-                        src={offer.offer.thumbnail_image}
-                        height={100}
-                        style={{ objectFit: "cover" }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          height: 100,
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          backgroundColor: "#f0f0f0",
-                          color: "#888",
-                        }}
-                      >
-                        No Image
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </Card>
-      </Col>
-
-      <Col span={24}>
-        <Card title="Event Coupon" bordered={false}>
-          <Row gutter={[16, 16]}>
-            {eventDetails.event_coupons.map((coupon, index) => (
-              <Col xs={24} sm={12} md={8} lg={10} key={index}>
-                <Card hoverable style={{ backgroundColor: "#F6FFFF" }}>
-                  <h2 style={{ color: "darkred" }}>{coupon.coupons.name}</h2>
-                  <Row justify={"space-between"}>
-                    <Text>{coupon.coupons.discount_percentage}% Discount</Text>
-                    <Text>Max Users: {coupon.coupons.max_uses}</Text>
-                  </Row>
-                  <Row justify={"space-between"}>
-                    <Text>Valid From: {coupon.coupons.start_date}</Text>
-                    <Text>Valid To: {coupon.coupons.end_date}</Text>
-                  </Row>
-                  {/* Check if the coupon has a valid image */}
-                  <div style={{ marginTop: "10px" }}>
-                    {coupon.coupons.thumbnail_image !== "images" && coupon.coupons.thumbnail_image ? (
-                      <Image
-                        alt="coupon thumbnail"
-                        src={coupon.coupons.thumbnail_image}
-                        height={100}
-                        style={{ objectFit: "cover" }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          height: 100,
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          backgroundColor: "#f0f0f0",
-                          color: "#888",
-                        }}
-                      >
-                        No Image
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              </Col>
-            ))}
-            {mediaImages.length > 0 && (
-        <Col span={24}>
-          <Card
-            title={<span style={{ color: "#1890ff" }}>Media Gallery</span>}
-            bordered={false}
-          >
-            <Carousel autoplay>
-              {mediaImages.map((url, index) => (
-                <div key={index}>
-                  <Image alt={`media image ${index + 1}`} src={url} height={300} />
-                </div>
-              ))}
-            </Carousel>
-          </Card>
-        </Col>
-      )}
-          </Row>
-        </Card>
-      </Col>
-      <Col span={24}>
-  <Card
-    bordered={false}
-    cover={
-      eventDetails.event_images?.length > 0 ? (
-        <div style={{ height: 300, overflow: "hidden" }}>
-          <Image
-            alt="event image"
-            src={eventDetails.event_images[0].image} // Display the first image
-            height={300}
-            style={{ objectFit: "cover", width: "100%" }}
-          />
+          ) : (
+            <div style={{ position: "relative" }}>
+              <Image
+                alt="event thumbnail"
+                src={eventDetails.thumbnail_image}
+                height={400}
+                width={'100%'}
+                style={{ objectFit: "cover" }}
+              />
+              <div style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                background: "linear-gradient(transparent, rgba(0,0,0,0.8))",
+                padding: "60px 24px 24px",
+                color: "white"
+              }}>
+                <Title level={2} style={{ margin: "0", color: "white" }}>
+                  {eventDetails.event_name}
+                </Title>
+              </div>
+            </div>
+          )
+        }
+      >
+        <div style={{ padding: "8px 0" }}>
+          <Text style={{ fontSize: "16px", lineHeight: "1.6" }}>{eventDetails.description}</Text>
         </div>
-      ) : (
-        <div
-          style={{
-            height: 300,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "#f0f0f0",
-            color: "#888",
+      </Card>
+
+      <Card
+        bordered={false}
+        style={{
+          borderRadius: "12px",
+          // boxShadow: "0 2px 8px rgba(0,0,0,0.06)"
+        }}
+        bodyStyle={{ padding: "0" }}
+      >
+        <Tabs
+          defaultActiveKey="1"
+          onChange={setActiveTab}
+          type="card"
+          size="large"
+          style={{ padding: "0 16px" }}
+          tabBarStyle={{
+            marginBottom: "0",
+            borderBottom: "1px solid #f0f0f0",
+            backgroundColor: "#fafafa",
+            borderTopLeftRadius: "12px",
+            borderTopRightRadius: "12px",
+            padding: "8px 8px 0"
           }}
         >
-          No Image
-        </div>
-      )
-    }
-  >
-    <Title level={2} style={{ margin: "10px 0" }}>
-     event Image
-    </Title>
-  </Card>
-</Col>
-    </Row>
+          <TabPane
+            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="info">ℹ️</span> Overview</span>}
+            key="1"
+          >
+            <EventOverviewTab eventDetails={eventDetails} mediaImages={mediaImages} />
+          </TabPane>
+
+          <TabPane
+            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="team">👥</span> Event Users</span>}
+            key="2"
+          >
+            <div style={{ padding: "24px" }}>
+              {eventDetails.users?.length > 0 ? (
+                <Row gutter={[24, 24]} justify="start">
+                  {eventDetails?.users.map((user, index) => (
+                    <EventUsersTab key={index} user={user} />
+                  ))}
+                </Row>
+              ) : (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="No Event Users associated with this event yet"
+                  style={{ margin: "40px 0" }}
+                />
+              )}
+            </div>
+          </TabPane>
+
+          <TabPane
+            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="services">🛍️</span> Services</span>}
+            key="3"
+          >
+            <div style={{ padding: "24px" }}>
+              <ServicesTab eventDetails={eventDetails} />
+            </div>
+          </TabPane>
+
+          <TabPane
+            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="faq">❓</span> FAQ</span>}
+            key="4"
+          >
+            <div style={{ padding: "24px" }}>
+              <FaqTab eventDetails={eventDetails} />
+            </div>
+          </TabPane>
+
+          <TabPane
+            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="offers">🏷️</span> Offers & Coupons</span>}
+            key="5"
+          >
+            <div style={{ padding: "24px" }}>
+              <OffersCouponsTab eventDetails={eventDetails} />
+            </div>
+          </TabPane>
+
+          <TabPane
+            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="images">🖼️</span> Images</span>}
+            key="6"
+          >
+            <div style={{ padding: "24px" }}>
+              <ImagesTab eventDetails={eventDetails} />
+            </div>
+          </TabPane>
+        </Tabs>
+      </Card>
+    </div>
   );
 };
 

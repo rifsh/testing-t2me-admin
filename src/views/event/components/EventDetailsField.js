@@ -198,7 +198,7 @@ const EventDetailsField = ({mode}) => {
             <Form.List name="event_qna">
               {(fields, { add, remove }) => (
                 <>
-                  {fields.map(({ key, name, ...restField }) => (
+                  {fields?.map(({ key, name, ...restField }) => (
                     <div key={key} className="mb-10">
                       {/* Title Field for Question Section */}
                       <Form.Item
