@@ -3,7 +3,6 @@ import {
   Card,
   Table,
   Select,
-  Input,
   Button,
   Modal,
   Descriptions,
@@ -11,8 +10,6 @@ import {
 } from "antd";
 import {
   EyeOutlined,
-  PlusCircleOutlined,
-  SearchOutlined,
   FormOutlined,
   MoreOutlined,
   EditOutlined,
@@ -24,7 +21,6 @@ import {
   fetchEventType,
   editEventStatus,
   fetchAllEvent,
-  filterEvent,
   setModalLoading,
   setDialogVisible,
   setEditItemId,

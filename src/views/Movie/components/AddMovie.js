@@ -14,7 +14,7 @@ import {
 } from "@ant-design/icons";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import VenueListForm from "components/util-components/FormItems/VenueList";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
     getSingleVenues,
     getVenues,
