@@ -78,7 +78,8 @@ const EventTypeForm = ({ mode, coupon }) => {
         is_percentage:
           coupon.is_percentage !== undefined ? coupon.is_percentage : true,
         discount_percentage_amount:
-          coupon.discount_percentage_amount || coupon.discount_percentage_amount,
+          coupon.discount_percentage_amount ||
+          coupon.discount_percentage_amount,
         max_uses: coupon.max_uses,
         min_purchase_amount: coupon.min_purchase_amount,
         date_required: Boolean(coupon.date_required),
@@ -234,7 +235,7 @@ const EventTypeForm = ({ mode, coupon }) => {
               alignItems="center"
             >
               <h2 className="mb-3">
-                {mode === "ADD" ? "Add New Coupon" : `Edit Coupon`}{" "}
+                {mode === "ADD" ? "Add New Type" : `Edit Type`}{" "}
               </h2>
               <div className="mb-3">
                 <DiscardButton form={form} />
@@ -287,7 +288,7 @@ const EventTypeForm = ({ mode, coupon }) => {
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? editCoupon : addEventType}
-        navigationPath={`${APP_PREFIX_PATH}/coupon/list`}
+        navigationPath={`${APP_PREFIX_PATH}/event/type/list`}
         responseMessage={responseMessage}
         pagination={submitPagination}
       />
