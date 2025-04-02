@@ -70,6 +70,12 @@ EventsService.fetchEventDetails = function (eventId) {
     method: "get",
   });
 };
+EventsService.fetchEventTypeDetails = function (typeId) {
+  return fetch({
+    url: `${ApiConstant.EVENT_TYPE_DETAILS_URL}?event_type_id=${typeId}`,
+    method: "get",
+  });
+};
 EventsService.fetchEventTypeOption = function () {
   return fetch({
     url: `${ApiConstant.EVENT_TYPE_OPTION_URL}`,
@@ -113,6 +119,20 @@ EventsService.updateEvent = function (
     headers: {
       "Content-Type": "multipart/form-data",
     },
+  });
+};
+EventsService.updateEventType = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  
+  return fetch({
+    url: `${ApiConstant.EVENT_TYPE_DETAILS_URL}?event_type_id=${data.id}&action=${encodedAction}`,
+    params: Utils.filterParams(pageData),
+    method: "put",
+    data: data,
   });
 };
 EventsService.editEventStatus = function (

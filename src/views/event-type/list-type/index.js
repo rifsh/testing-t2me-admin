@@ -21,16 +21,19 @@ import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  editCoupon,
-  editCouponStatus,
-  fetchAllCoupons,
-  filterCoupons,
+  fetchEventType,
+  editEventStatus,
+  fetchAllEvent,
+  filterEvent,
+  setModalLoading,
+  setDialogVisible,
   setEditItemId,
-  setCouponDialogVisible,
-  setCouponModalLoading,
-} from "store/slices/couponSlice";
+} from "store/slices/eventSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
+import {
+  setDialogVisible as setModalDialogVisible,
+  setSelectedItem,
+} from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
@@ -38,20 +41,18 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
-import { fetchEventType } from "store/slices/eventSlice";
 
 const { Option } = Select;
 
-const CouponList = () => {
+const EventTypeList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const {
-    filteredCoupons,
+    eventType,
     pagination,
     editable_status,
     loading,
-    message,
-    eventType,
+    messages,
     editItemId,
     dialogVisible,
     warningPagination,
@@ -61,7 +62,7 @@ const CouponList = () => {
   const { responseData } = useSelector((state) => state.modalSlice);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [selectedEventType, setSelectedEventType] = useState(null);
 
   useEffect(() => {
     dispatch(fetchEventType(DEFAULT_PAGE_SIZE));
@@ -70,37 +71,38 @@ const CouponList = () => {
   const handlePagination = (page, size) => {
     dispatch(fetchEventType({ page: page, size: size }));
   };
-  const showModal = (coupon) => {
-    setSelectedCoupon(coupon);
+
+  const showModal = (eventType) => {
+    setSelectedEventType(eventType);
     setIsModalVisible(true);
   };
 
   const handleModalClose = () => {
     setIsModalVisible(false);
-    setSelectedCoupon(null);
+    setSelectedEventType(null);
   };
 
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
+    dispatch(setModalDialogVisible(true));
+  };
+
+  const handleEditType = (id) => {
+    dispatch(setEditItemId(id));
     dispatch(setDialogVisible(true));
   };
-  const handleEditTax = (id) => {
-    dispatch(setEditItemId(id));
-    dispatch(setCouponDialogVisible(true));
-  };
-  const handleModalSubmit = async () => {
-    dispatch(setCouponModalLoading(true));
-    navigate(`${APP_PREFIX_PATH}/coupon/edit/${editItemId}`);
 
-    console.log(editItemId, "9234239423490823498234098234908");
-    dispatch(setCouponDialogVisible(false));
-    dispatch(setCouponModalLoading(false));
+  const handleModalSubmit = async () => {
+    dispatch(setModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/event/type/edit/${editItemId}`);
+    dispatch(setDialogVisible(false));
+    dispatch(setModalLoading(false));
   };
 
   const handleModalCancel = () => {
-    dispatch(setCouponDialogVisible(false));
+    dispatch(setDialogVisible(false));
   };
 
   const getDropdownMenu = (row) => [
@@ -115,14 +117,14 @@ const CouponList = () => {
       onClick: () => showModal(row),
     },
     {
-      key: "remark",
+      key: "edit",
       label: (
         <Flex alignItems="center">
           <EditOutlined />
-          <span className="ml-2">Edit Coupon</span>
+          <span className="ml-2">Edit Event Type</span>
         </Flex>
       ),
-      onClick: () => handleEditTax(row.id),
+      onClick: () => handleEditType(row.id),
     },
   ];
 
@@ -132,7 +134,6 @@ const CouponList = () => {
       dataIndex: "name",
       sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
     },
-
     {
       title: "Name",
       dataIndex: "display_name",
@@ -158,7 +159,7 @@ const CouponList = () => {
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={fetchAllCoupons} />
+        <SearchBarWithStatus fetchFunction={fetchAllEvent} />
         <Button
           type="primary"
           icon={<FormOutlined />}
@@ -182,69 +183,34 @@ const CouponList = () => {
       />
 
       <Modal
-        title="Coupon Details"
+        title="Event Type Details"
         open={isModalVisible}
         onCancel={handleModalClose}
         footer={null}
         width={800}
       >
-        {selectedCoupon && (
+        {selectedEventType && (
           <Descriptions column={1} bordered>
-            <Descriptions.Item label="Coupon Name">
-              {selectedCoupon.name}
+            <Descriptions.Item label="Type Name">
+              {selectedEventType.name}
             </Descriptions.Item>
-            <Descriptions.Item label="Discount Percentage">
-              {selectedCoupon.discount_percentage_amount}%
+            <Descriptions.Item label="Display Name">
+              {selectedEventType.display_name}
             </Descriptions.Item>
-            <Descriptions.Item label="Start Date">
-              {selectedCoupon.start_date
-                ? new Date(selectedCoupon.start_date).toLocaleDateString()
-                : "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="End Date">
-              {selectedCoupon.end_date
-                ? new Date(selectedCoupon.end_date).toLocaleDateString()
-                : "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Max Uses">
-              {selectedCoupon.max_uses}
+            <Descriptions.Item label="Description">
+              {selectedEventType.description || "No description available"}
             </Descriptions.Item>
             <Descriptions.Item label="Status">
-              {selectedCoupon.status ? "Active" : "Inactive"}
+              {selectedEventType.status ? "Active" : "Inactive"}
             </Descriptions.Item>
-            <Descriptions.Item label="Keywords">
-              {selectedCoupon.key_words?.length > 0
-                ? selectedCoupon.key_words.join(", ")
-                : "None"}
-            </Descriptions.Item>
-            {/* <Descriptions.Item label="Coupon Description">
-              {selectedCoupon.description || "No description available"}
-            </Descriptions.Item> */}
-            {selectedCoupon.thumbnail_image &&
-            selectedCoupon.thumbnail_image !== "images" ? (
-              <Descriptions.Item label="Thumbnail Image">
-                <img
-                  src={selectedCoupon.thumbnail_image}
-                  alt="Offer Thumbnail"
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "200px",
-                    objectFit: "contain",
-                  }}
-                />
-              </Descriptions.Item>
-            ) : (
-              <Descriptions.Item label="Thumbnail Image">
-                No image available
-              </Descriptions.Item>
-            )}
           </Descriptions>
         )}
       </Modal>
+
       <WarningModal
         mode={"itemmodal"}
         visible={dialogVisible}
-        title="Edit Coupon"
+        title="Edit Event Type"
         details={TextConstants.DefaultEditContent1}
         warningMessage="Do you want to proceed to the edit page?"
         onSubmit={handleModalSubmit}
@@ -253,11 +219,12 @@ const CouponList = () => {
         cancelText="Cancel"
         loading={modalLoading}
       />
+
       <UpdateStatusModal
-        responseMessage={message}
-        editFunction={editCouponStatus}
+        responseMessage={messages}
+        editFunction={editEventStatus}
         editable_status={editable_status}
-        getAllFunction={(pageData) => fetchAllCoupons(pageData)}
+        getAllFunction={(pageData) => fetchAllEvent(pageData)}
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
@@ -267,11 +234,12 @@ const CouponList = () => {
         pagination={warningPagination}
         loading={loading}
       />
+
       <StatusSubmitAndConfirmModal
-        editFunction={editCouponStatus}
-        getAllFunction={fetchAllCoupons}
+        editFunction={editEventStatus}
+        getAllFunction={fetchAllEvent}
         responseData={responseData}
-        responseMessage={message}
+        responseMessage={messages}
         pageData={DEFAULT_PAGE_SIZE}
         onSubmitMessage={TextConstants.StatusUpdatedSuccess}
         onCloseMessage={TextConstants.StatusUpdateCanceled}
@@ -280,4 +248,4 @@ const CouponList = () => {
   );
 };
 
-export default CouponList;
+export default EventTypeList;
