@@ -203,7 +203,7 @@ const Index = () => {
                     icon={<UserAddOutlined />}
                     onClick={() => navigate(`${APP_PREFIX_PATH}/cast/add`)}
                 >
-                    Add Actor
+                    Add
                 </Button>
             </Space>
 

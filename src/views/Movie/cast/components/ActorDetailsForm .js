@@ -1,5 +1,5 @@
 // ActorDetails.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Form,
     Input,
@@ -23,6 +23,7 @@ import TextEditor from 'components/util-components/FormItems/TextEditor';
 import ResizedImgePicker from 'components/util-components/Image/ResizedImgePicker';
 import { ThumbnailImageResolutions } from 'constants/SupportFileConstants';
 import { OCCUPATIONS } from 'mock/data/CastData';
+import moment from 'moment'; // Make sure moment is imported
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -35,6 +36,35 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
         return e?.fileList || [];
     };
 
+    const calculateAge = (date) => {
+        if (!date) {
+            form.setFieldsValue({ age: '' });
+            return;
+        }
+
+        const today = new Date();
+        let age = today.getFullYear() - date.$y;
+
+        const monthDiff = today.getMonth() - date.$M + 1;
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.$D)) {
+            age--;
+        }
+
+        form.setFieldsValue({ age });
+    };
+
+    const handleBirthDateChange = (date) => {
+        calculateAge(date);
+    };
+
+    useEffect(() => {
+        const birthDate = form.getFieldValue('birthDate');
+        if (birthDate) {
+            const age = calculateAge(birthDate);
+            form.setFieldsValue({ age });
+        }
+    }, [form]);
+
     return (
         <Card className="actor-details-card">
             <Form
@@ -44,11 +74,6 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                 scrollToFirstError
             >
                 <Row gutter={24}>
-                    <Col xs={24}>
-                        <Title level={4}>
-                            <IdcardOutlined /> Personal Information
-                        </Title>
-                    </Col>
 
                     <Col xs={24} md={12}>
                         <Form.Item
@@ -101,12 +126,27 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                             <DatePicker
                                 style={{ width: '100%' }}
                                 placeholder="Select birth date"
+                                disabledDate={(current) => current && current > new Date()}
                                 format="YYYY-MM-DD"
                                 prefix={<CalendarOutlined />}
+                                onChange={handleBirthDateChange}
                             />
                         </Form.Item>
                     </Col>
 
+                    <Col xs={24} md={12}>
+                        <Form.Item
+                            name="age"
+                            label="Age"
+                        >
+                            <Input
+                                placeholder="Calculated from birth date"
+                                disabled
+                                suffix="years"
+                                style={{ color: '#000' }}
+                            />
+                        </Form.Item>
+                    </Col>
                     <Col xs={24} md={12}>
                         <Form.Item
                             name="nationality"
@@ -144,7 +184,6 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                         </Form.Item>
                     </Col>
 
-                    {/* About Section */}
                     <Col xs={24}>
                         <Divider />
                         <Title level={4}>

@@ -60,7 +60,7 @@ const AddPage = () => {
             >
                 <Tabs defaultActiveKey="1">
                     <Tabs.TabPane
-                        tab={<span><UserOutlined /> Actor Details</span>}
+                        tab={<span>Actor Details</span>}
                         key="1"
                     >
                         <ActorDetails

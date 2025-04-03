@@ -2,6 +2,7 @@
 import { combineReducers } from "redux";
 import theme from "./slices/themeSlice";
 import screen from "./slices/screenSlice";
+import cast from './slices/castSlice'
 import auth from "./slices/authSlice";
 import category from "./slices/categorySlice";
 import adCategory from "./slices/adCategorySlice";
@@ -23,9 +24,7 @@ import faqs from "./slices/faqSlice";
 import appinfo from "./slices/AppInfoSlice";
 import footer from "./slices/footerSlice";
 import leadEvents from "./slices/leadEventSlice";
-
 import layout from "./slices/layoutSlice";
-
 import issue from "./slices/IssueSlice";
 import payment from "./slices/paymentSlice";
 
@@ -34,6 +33,7 @@ const rootReducer = (asyncReducers = {}) => {
     const combinedReducer = combineReducers({
       theme,
       screen,
+      cast,
       auth,
       category,
       users,
