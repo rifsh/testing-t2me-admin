@@ -140,7 +140,7 @@ const AddFields = () => {
     };
 
     return (
-        <div style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+        <div style={{ minHeight: '100vh' }}>
             <Card>
                 <Title level={4}>Add New Dining Venue</Title>
                 <Text type="secondary">Fill in the details below to add a new dining venue to your ticket booking system.</Text>
