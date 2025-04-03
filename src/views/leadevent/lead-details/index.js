@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   Row,
@@ -9,6 +9,11 @@ import {
   Avatar,
   Divider,
   Space,
+  Alert,
+  Form,
+  Modal,
+  message,
+  Radio
 } from "antd";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useSelector, useDispatch } from "react-redux";
@@ -25,7 +30,11 @@ import {
   GlobalOutlined,
   TeamOutlined,
   CloseCircleOutlined,
+  ExclamationCircleOutlined,
+  UndoOutlined,
+  RightOutlined
 } from "@ant-design/icons";
+import { LeadStatus } from "store/slices/leadEventSlice";
 
 const { Title, Text } = Typography;
 
@@ -50,16 +59,95 @@ const SingleEventDetails = () => {
   const { eventId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [form] = Form.useForm();
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [reactivateModalVisible, setReactivateModalVisible] = useState(false);
+  const [moduleSelectionModalVisible, setModuleSelectionModalVisible] = useState(false);
+  const [selectedModuleType, setSelectedModuleType] = useState('events');
 
   const { singleLeadEvent, loading, error } = useSelector(
     (state) => state.leadEvents
   );
+  
   const handleViewDetails = async (id) => {
     await dispatch(getSingleLeadEvents(id));
     navigate(`${APP_PREFIX_PATH}/leadevent/add/${id}`);
-    };
+  };
+  
+  const handleRejectRequest = () => {
+    setRejectModalVisible(true);
+  };
+
+  const handleReactivateRequest = () => {
+    setReactivateModalVisible(true);
+  };
+  
+  const handleRejectSubmit = async () => {
+    try {
+      const data = {
+        event_id: eventId,
+        status: "REJECTED" 
+      };
+
+      const response = await dispatch(LeadStatus(data)).unwrap();
+      message.success(
+        response.status?.message || "Request rejected successfully!"
+      );
+      setRejectModalVisible(false);
+      // Refresh the event data
+      dispatch(getSingleLeadEvents(eventId));
+    } catch (error) {
+      console.error("Rejection failed:", error);
+      message.error("Failed to reject the request. Please try again.");
+    }
+  };
+
+  const handleReactivateSubmit = async () => {
+    try {
+      const data = {
+        event_id: eventId,
+        status: "PENDING" 
+      };
+
+      const response = await dispatch(LeadStatus(data)).unwrap();
+      message.success(
+        response.status?.message || "Request reactivated successfully!"
+      );
+      setReactivateModalVisible(false);
+      // Refresh the event data
+      dispatch(getSingleLeadEvents(eventId));
+    } catch (error) {
+      console.error("Reactivation failed:", error);
+      message.error("Failed to reactivate the request. Please try again.");
+    }
+  };
+  
+  const handleOpenModuleSelectionModal = () => {
+    setModuleSelectionModalVisible(true);
+  };
+
+  const handleModuleSelectionChange = (e) => {
+    setSelectedModuleType(e.target.value);
+  };
+
+  const handleModuleSelectionSubmit = () => {
+    setModuleSelectionModalVisible(false);
     
 
+    if (selectedModuleType === 'events') {
+
+      handleViewDetails(singleLeadEvent.id);
+    } else if (selectedModuleType === 'movies') {
+ 
+      message.info("The Movies module is under development and will be available soon.");
+      
+    } else if (selectedModuleType === 'dineIn') {
+
+      message.info("The Dine-In module is currently in progress and will be launched soon.");
+
+    }
+  };
+  
   useEffect(() => {
     if (eventId && !singleLeadEvent) {
       dispatch(getSingleLeadEvents(eventId));
@@ -82,12 +170,17 @@ const SingleEventDetails = () => {
       </div>
     );
 
+  const moduleTypeOptions = [
+    { label: 'Events', value: 'events' },
+    { label: 'Movies', value: 'movies' },
+    { label: 'Dine In', value: 'dineIn' }
+  ];
+
   return (
     <>
       <Row gutter={[24, 24]} style={{ padding: 24 }}>
         {/* Event Details */}
         <Col span={24}>
-          {/* <EventDetails event={singleLeadEvent} /> */}
           <Card
             title={
               <div
@@ -144,9 +237,7 @@ const SingleEventDetails = () => {
                     <div style={{ fontWeight: "600", marginBottom: 2 }}>
                       Venue
                     </div>
-                    <div>
-                    {singleLeadEvent?.venue_name || "Not specified"}
-                    </div>
+                    <div>{singleLeadEvent?.venue_name || "Not specified"}</div>
                   </div>
                 </div>
               </Col>
@@ -212,21 +303,14 @@ const SingleEventDetails = () => {
                     <div style={{ fontWeight: "600", marginBottom: 2 }}>
                       Location
                     </div>
-                    <div>
-                    {singleLeadEvent?.place_name || "Not specified"}
-                    </div>
+                    <div>{singleLeadEvent?.place_name || "Not specified"}</div>
                   </div>
                 </div>
               </Col>
             </Row>
           </Card>
         </Col>
-
         <Col span={24}>
-          {/* <EventAdmin
-          admin={singleLeadEvent.customer}
-          contact={singleLeadEvent}
-        /> */}
           <Card
             title={
               <span
@@ -326,45 +410,207 @@ const SingleEventDetails = () => {
             </Row>
           </Card>
         </Col>
-
         <Col
           span={24}
           style={{ textAlign: "center", marginTop: 20, marginBottom: 10 }}
         >
-          <Space size={16}>
-            <Button
-            onClick={() => handleViewDetails(singleLeadEvent.id)}
-              type="primary"
-              size="large"
-              shape="round"
+          {singleLeadEvent.approval_status === "approved" ? (
+            <Alert
+              message="This event has already been converted."
+              type="success"
+              showIcon
               style={{
-                height: 48,
-                paddingLeft: 32,
-                paddingRight: 32,
                 fontSize: 16,
-                boxShadow: "0 2px 6px rgba(24, 144, 255, 0.4)",
+                fontWeight: 600,
+                padding: "12px 24px",
+                borderRadius: 8,
+                maxWidth: 400,
+                margin: "0 auto",
               }}
-            >
-              Convert
-            </Button>
-            <Button
-              type="primary"
-              danger
-              size="large"
-              shape="round"
-              icon={<CloseCircleOutlined />}
-              style={{
-                height: 48,
-                paddingLeft: 32,
-                paddingRight: 32,
-                fontSize: 16,
-                boxShadow: "0 2px 6px rgba(255, 77, 79, 0.4)",
-              }}
-            >
-              Reject
-            </Button>
-          </Space>
+            />
+          ) : singleLeadEvent.approval_status === "rejected" ? (
+            <>
+              <Alert
+                message="This event request has been rejected."
+                type="error"
+                showIcon
+                style={{
+                  fontSize: 16,
+                  fontWeight: 600,
+                  padding: "12px 24px",
+                  borderRadius: 8,
+                  maxWidth: 400,
+                  margin: "0 auto 20px auto",
+                }}
+              />
+              <Button
+                type="primary"
+                size="large"
+                shape="round"
+                icon={<UndoOutlined />}
+                onClick={handleReactivateRequest}
+                style={{
+                  height: 48,
+                  paddingLeft: 32,
+                  paddingRight: 32,
+                  fontSize: 16,
+                  boxShadow: "0 2px 6px rgba(24, 144, 255, 0.4)",
+                }}
+              >
+                Reactivate
+              </Button>
+            </>
+          ) : (
+            <Space size={16}>
+              <Button
+                onClick={handleOpenModuleSelectionModal}
+                type="primary"
+                size="large"
+                shape="round"
+                style={{
+                  height: 48,
+                  paddingLeft: 32,
+                  paddingRight: 32,
+                  fontSize: 16,
+                  boxShadow: "0 2px 6px rgba(24, 144, 255, 0.4)",
+                }}
+              >
+                Proceed
+              </Button>
+
+              <Button
+                type="primary"
+                danger
+                size="large"
+                shape="round"
+                icon={<CloseCircleOutlined />}
+                onClick={handleRejectRequest}
+                style={{
+                  height: 48,
+                  paddingLeft: 32,
+                  paddingRight: 32,
+                  fontSize: 16,
+                  boxShadow: "0 2px 6px rgba(255, 77, 79, 0.4)",
+                }}
+              >
+                Reject
+              </Button>
+            </Space>
+          )}
         </Col>
+        
+        {/* Reject Modal */}
+        <Modal
+          title={
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <ExclamationCircleOutlined style={{ color: "#ff4d4f", fontSize: "20px", marginRight: "10px" }} />
+              <span>Confirm Rejection</span>
+            </div>
+          }
+          open={rejectModalVisible}
+          onCancel={() => setRejectModalVisible(false)}
+          footer={[
+            <Button key="back" onClick={() => setRejectModalVisible(false)}>
+              Cancel
+            </Button>,
+            <Button key="submit" type="primary" danger onClick={handleRejectSubmit}>
+              Yes, Reject
+            </Button>,
+          ]}
+        >
+          <Alert
+            message="Warning"
+            description="Do you really want to reject this request?"
+            type="warning"
+            showIcon
+            style={{ marginBottom: "16px" }}
+          />
+        </Modal>
+        
+        {/* Reactivate Modal */}
+        <Modal
+          title={
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <UndoOutlined style={{ color: "#1890ff", fontSize: "20px", marginRight: "10px" }} />
+              <span>Confirm Reactivation</span>
+            </div>
+          }
+          open={reactivateModalVisible}
+          onCancel={() => setReactivateModalVisible(false)}
+          footer={[
+            <Button key="back" onClick={() => setReactivateModalVisible(false)}>
+              Cancel
+            </Button>,
+            <Button key="submit" type="primary" onClick={handleReactivateSubmit}>
+              Yes, Reactivate
+            </Button>,
+          ]}
+        >
+          <Alert
+            message="Reactivation Notice"
+            description="You are about to reactivate this previously rejected event request. This will change its status back to pending and make it available for processing. Are you sure you want to continue?"
+            type="info"
+            showIcon
+            style={{ marginBottom: "16px" }}
+          />
+        </Modal>
+        
+        {/* Module Type Selection Modal */}
+        <Modal
+          title={
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <span style={{ fontSize: "18px", fontWeight: "bold" }}>
+                Select  Type
+              </span>
+            </div>
+          }
+          open={moduleSelectionModalVisible}
+          onCancel={() => setModuleSelectionModalVisible(false)}
+          footer={[
+            <Button key="back" onClick={() => setModuleSelectionModalVisible(false)}>
+              Cancel
+            </Button>,
+            <Button 
+              key="submit" 
+              type="primary" 
+              onClick={handleModuleSelectionSubmit}
+              icon={<RightOutlined />}
+            >
+              Next
+            </Button>,
+          ]}
+        >
+          <div style={{ padding: "16px 0" }}>
+            <Radio.Group 
+              value={selectedModuleType}
+              onChange={handleModuleSelectionChange}
+              style={{ width: "100%" }}
+            >
+              <Space direction="vertical" style={{ width: "100%" }}>
+                {moduleTypeOptions.map(option => (
+                  <Radio.Button 
+                    key={option.value} 
+                    value={option.value}
+                    style={{
+                      width: "100%",
+                      height: "60px",
+                      display: "flex",
+                      alignItems: "center",
+                      paddingLeft: "20px",
+                      marginBottom: "12px",
+                      borderRadius: "8px",
+                      fontSize: "16px",
+                      boxShadow: selectedModuleType === option.value ? "0 2px 8px rgba(24, 144, 255, 0.2)" : "none",
+                      border: selectedModuleType === option.value ? "2px solid #1890ff" : "1px solid #d9d9d9"
+                    }}
+                  >
+                    {option.label}
+                  </Radio.Button>
+                ))}
+              </Space>
+            </Radio.Group>
+          </div>
+        </Modal>
       </Row>
     </>
   );

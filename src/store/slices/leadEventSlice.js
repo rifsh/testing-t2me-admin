@@ -132,6 +132,18 @@ export const EnrollUser = createAsyncThunk(
     }
   }
 );
+export const LeadStatus = createAsyncThunk(
+  "leadEvents/LeadStatus",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await LeadEventService.leadstatus(data);
+      return response;
+    } catch (error) {
+      console.error("Failed to update lead status", error);
+      return rejectWithValue(error.response?.data?.message);
+    }
+  }
+);
 export const editLeadEvent = createAsyncThunk(
   "leadEvents/editLeadEvent",
   async ({ data, action, pageData }, { rejectWithValue }) => {
@@ -367,6 +379,19 @@ const leadEventSlice = createSlice({
         state.responseMessage = action.payload.status.message;
       })
       .addCase(EnrollUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(LeadStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(LeadStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(LeadStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
