@@ -23,6 +23,7 @@ import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 import TextEditor from 'components/util-components/FormItems/TextEditor';
 import ResizedImgePicker from 'components/util-components/Image/ResizedImgePicker';
 import { ThumbnailImageResolutions } from 'constants/SupportFileConstants';
+import { OCCUPATIONS } from 'mock/data/CastDara';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -135,11 +136,11 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                                 placeholder="Select or enter occupations"
                                 tokenSeparators={[',']}
                             >
-                                <Option value="actor">Actor</Option>
-                                <Option value="director">Director</Option>
-                                <Option value="producer">Producer</Option>
-                                <Option value="writer">Writer</Option>
-                                <Option value="musician">Musician</Option>
+                                {OCCUPATIONS.map(occ => (
+                                    <Option key={occ.value} value={occ.value}>
+                                        {occ.label}
+                                    </Option>
+                                ))}
                             </Select>
                         </Form.Item>
                     </Col>
