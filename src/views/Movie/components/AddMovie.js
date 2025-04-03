@@ -28,44 +28,56 @@ import Title from "antd/es/typography/Title";
 import MovieForm from "./MovieForm";
 import { Collapse } from "@mui/material";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import { setSelectedScreenData } from "store/slices/screenSlice";
 
 const AddMovie = ({ mode = "ADD" }) => {
     const [form] = Form.useForm();
     const dispatch = useDispatch();
-    const [isLoading, setIsLoading] = useState(false);
+    const [selectedFields, setSelectedFields] = useState({
+        selectedVenue: null,
+        selectedScreen: null,
+    })
 
     const handlePlaceSelect = (id) => {
-        setIsLoading(true);
         dispatch(getVenues({ place_id: id, is_indoor: true }));
-        form.setFieldValue("venue_id", "");
+        form.setFieldValue("venue_id", undefined);
+        form.setFieldValue("screen_id", undefined);
         dispatch(resetTicketSelection());
+        setSelectedFields({ selectedScreen: null, selectedVenue: null });
         dispatch(setSelectedPlace(id));
         dispatch(setSelectedVenueList("clear"));
         form.resetFields('venue_id')
-        setIsLoading(false);
     };
 
     const handleVenueSelect = (venue) => {
-        form.setFieldValue("screen_id", "");
-        setIsLoading(true);
+        form.setFieldValue("screen_id", undefined);
+        setSelectedFields({ selectedScreen: null, selectedVenue: venue });
         dispatch(setSelectedVenue(venue));
         dispatch(getSingleVenues(venue));
-        setIsLoading(false);
     };
+
+    const handleScreenSelect = (screen) => {
+        setSelectedFields({ ...selectedFields, selectedScreen: screen });
+        dispatch(setSelectedScreenData(screen))
+
+    }
 
     const handleSubmit = () => {
         form.validateFields()
             .then(values => {
                 console.log("Form values:", values);
-                setIsLoading(true);
                 // Add API call or dispatch action
-                setIsLoading(false);
             })
             .catch(errorInfo => {
                 console.error("Validation failed:", errorInfo);
                 message.error("Please fill in all required fields");
             });
     };
+
+    useEffect(() => {
+        console.log("mainForm", form.getFieldValue());
+
+    }, [form])
 
     return (
         <Form form={form} layout="vertical">
@@ -102,37 +114,34 @@ const AddMovie = ({ mode = "ADD" }) => {
                         <ScreenListForm
                             form={form}
                             label="Choose Screen"
+                            onSelect={handleScreenSelect}
                             rules={[{ required: true, message: "Please select a screen" }]}
                         />
                     </Card>
                 </Col>
             </Row>
 
-            {!form.getFieldValue('venue_id') && <Alert
-                message="Theater Required"
-                description="Please select a theater to configure the movie."
-                type="info"
-                showIcon
-            />}
+            {(!selectedFields.selectedVenue || !selectedFields.selectedScreen) && (
+                <Alert
+                    message="Venue and screen Required"
+                    description="Please select a venue and screen to configure the movie."
+                    type="info"
+                    showIcon
+                />
+            )}
+
 
             <div style={{ marginTop: 16 }}>
-                <Collapse in={!!form.getFieldValue('venue_id')}>
+                <Collapse in={!!selectedFields.selectedScreen}>
                     <Col xs={24} sm={24} md={24}>
                         <Card
                             title={<Title level={4}>Movie Information</Title>}
                             bordered
                             className="movie-information-card"
                         >
-                            {form.getFieldValue('venue_id') ? (
+                            {selectedFields.selectedScreen &&
                                 <MovieForm form={form} theater_id={form.getFieldValue('theater_id')} />
-                            ) : (
-                                <Alert
-                                    message="Theater Required"
-                                    description="Please select a theater to configure the movie."
-                                    type="info"
-                                    showIcon
-                                />
-                            )}
+                            }
                         </Card>
                     </Col>
                     <Row justify="end" style={{ marginTop: '20px' }}>
