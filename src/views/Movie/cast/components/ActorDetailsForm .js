@@ -19,11 +19,10 @@ import {
     TeamOutlined,
     InfoCircleOutlined
 } from '@ant-design/icons';
-import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 import TextEditor from 'components/util-components/FormItems/TextEditor';
 import ResizedImgePicker from 'components/util-components/Image/ResizedImgePicker';
 import { ThumbnailImageResolutions } from 'constants/SupportFileConstants';
-import { OCCUPATIONS } from 'mock/data/CastDara';
+import { OCCUPATIONS } from 'mock/data/CastData';
 
 const { Title } = Typography;
 const { Option } = Select;
