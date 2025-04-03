@@ -1,10 +1,10 @@
 import React from 'react'
-import ActorDetailsForm from '../components/ActorDetailsForm '
+import CelebrityManager from '../components/AddPage'
 
 const Index = () => {
     return (
         <div>
-            <ActorDetailsForm />
+            <CelebrityManager />
         </div>
     )
 }
