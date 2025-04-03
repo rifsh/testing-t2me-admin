@@ -1,70 +1,33 @@
-import React, { useState } from 'react';
+// ActorDetails.js
+import React from 'react';
 import {
     Form,
     Input,
     Select,
     DatePicker,
-    Upload,
-    Button,
     Card,
     Row,
     Col,
     Divider,
     Typography,
-    message,
     Space
 } from 'antd';
 import {
     UserOutlined,
     IdcardOutlined,
     CalendarOutlined,
-    UploadOutlined,
-    SaveOutlined,
     TeamOutlined,
-    TrophyOutlined,
     InfoCircleOutlined
 } from '@ant-design/icons';
-import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 import TextEditor from 'components/util-components/FormItems/TextEditor';
 import ResizedImgePicker from 'components/util-components/Image/ResizedImgePicker';
 import { ThumbnailImageResolutions } from 'constants/SupportFileConstants';
+import { OCCUPATIONS } from 'mock/data/CastData';
 
-const { TextArea } = Input;
 const { Title } = Typography;
 const { Option } = Select;
 
-const ActorDetailsForm = () => {
-    const [form] = Form.useForm();
-    const [loading, setLoading] = useState(false);
-
-    // Handle form submission
-    const handleSubmit = (values) => {
-        setLoading(true);
-        console.log('Form values:', values);
-
-        // Simulate API call
-        setTimeout(() => {
-            message.success('Actor details saved successfully!');
-            setLoading(false);
-        }, 1500);
-    };
-
-    // Configuration for file upload
-    const uploadProps = {
-        name: 'profileImage',
-        action: 'https://www.mocky.io/v2/5cc8019d300000980a055e76', // Replace with your API endpoint
-        headers: {
-            authorization: 'authorization-text',
-        },
-        onChange(info) {
-            if (info.file.status === 'done') {
-                message.success(`${info.file.name} uploaded successfully`);
-            } else if (info.file.status === 'error') {
-                message.error(`${info.file.name} upload failed.`);
-            }
-        },
-    };
-
+const ActorDetails = ({ form, onSubmit, loading }) => {
     const normFile = (e) => {
         if (Array.isArray(e)) {
             return e;
@@ -74,19 +37,13 @@ const ActorDetailsForm = () => {
 
     return (
         <Card className="actor-details-card">
-            <Title level={2}>
-                <UserOutlined /> Actor Details
-            </Title>
-            <Divider />
-
             <Form
                 form={form}
                 layout="vertical"
-                onFinish={handleSubmit}
+                onFinish={onSubmit}
                 scrollToFirstError
             >
                 <Row gutter={24}>
-                    {/* Personal Information Section */}
                     <Col xs={24}>
                         <Title level={4}>
                             <IdcardOutlined /> Personal Information
@@ -130,7 +87,6 @@ const ActorDetailsForm = () => {
                             <Select placeholder="Select gender">
                                 <Option value="male">Male</Option>
                                 <Option value="female">Female</Option>
-                                <Option value="non-binary">Non-Binary</Option>
                                 <Option value="other">Other</Option>
                             </Select>
                         </Form.Item>
@@ -153,6 +109,23 @@ const ActorDetailsForm = () => {
 
                     <Col xs={24} md={12}>
                         <Form.Item
+                            name="nationality"
+                            label="Nationality"
+                        >
+                            <Input placeholder="Enter nationality" />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                        <Form.Item
+                            name="birth_place"
+                            label="Birth place"
+                        >
+                            <Input placeholder="Enter birth place" />
+                        </Form.Item>
+                    </Col>
+
+                    <Col xs={24} md={12}>
+                        <Form.Item
                             name="occupation"
                             label="Occupation"
                             rules={[{ required: true, message: 'Please enter occupation' }]}
@@ -162,39 +135,11 @@ const ActorDetailsForm = () => {
                                 placeholder="Select or enter occupations"
                                 tokenSeparators={[',']}
                             >
-                                <Option value="actor">Actor</Option>
-                                <Option value="director">Director</Option>
-                                <Option value="producer">Producer</Option>
-                                <Option value="writer">Writer</Option>
-                                <Option value="musician">Musician</Option>
-                            </Select>
-                        </Form.Item>
-                    </Col>
-
-                    <Col xs={24} md={12}>
-                        <Form.Item
-                            name="nationality"
-                            label="Nationality"
-                        >
-                            <Input placeholder="Enter nationality" />
-                        </Form.Item>
-                    </Col>
-
-                    <Col xs={24} md={12}>
-                        <Form.Item
-                            name="languages"
-                            label="Languages Spoken"
-                        >
-                            <Select
-                                mode="tags"
-                                placeholder="Select or enter languages"
-                                tokenSeparators={[',']}
-                            >
-                                <Option value="english">English</Option>
-                                <Option value="spanish">Spanish</Option>
-                                <Option value="french">French</Option>
-                                <Option value="mandarin">Mandarin</Option>
-                                <Option value="hindi">Hindi</Option>
+                                {OCCUPATIONS.map(occ => (
+                                    <Option key={occ.value} value={occ.value}>
+                                        {occ.label}
+                                    </Option>
+                                ))}
                             </Select>
                         </Form.Item>
                     </Col>
@@ -241,22 +186,10 @@ const ActorDetailsForm = () => {
                             />
                         </Form.Item>
                     </Col>
-
-                </Row>
-                <Row justify="end" style={{ marginTop: '20px' }}>
-                    <Space>
-                        <DiscardButton form={form} />
-                        <Button
-                            type="primary"
-                            onClick={handleSubmit}
-                        >
-                            Submit
-                        </Button>
-                    </Space>
                 </Row>
             </Form>
         </Card>
     );
 };
 
-export default ActorDetailsForm;
+export default ActorDetails;

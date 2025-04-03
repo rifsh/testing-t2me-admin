@@ -13,8 +13,9 @@ import {
   InputNumber,
 } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
-import { PAYMENT_METHODS } from "constants/PaymentConstants";
 import PaymentMethodFields from "./PaymentMethodFields";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllPaymentMethod } from "store/slices/paymentSlice";
 
 const { Option } = Select;
 
@@ -22,6 +23,24 @@ const PaymentMethodTabs = ({ form }) => {
   const [activeKey, setActiveKey] = useState("0");
   // Force re-render when payment type changes
   const [, forceUpdate] = useState({});
+
+  const dispatch = useDispatch();
+  const {
+    methods: paymentMethods,
+    loading,
+    error,
+  } = useSelector((state) => state.payment);
+
+  useEffect(() => {
+    dispatch(fetchAllPaymentMethod());
+  }, [dispatch]);
+  console.log(paymentMethods);
+
+  useEffect(() => {
+    if (error) {
+      message.error(error);
+    }
+  }, [error]);
 
   useEffect(() => {
     // Initialize with one empty payment method if none exists
@@ -140,14 +159,28 @@ const PaymentMethodTabs = ({ form }) => {
           ]}
         >
           <Select
-            placeholder="Select payment type"
+            placeholder={
+              loading ? "Loading payment methods..." : "Select payment type"
+            }
             onChange={(value) => handlePaymentTypeChange(index, value)}
+            loading={loading}
+            disabled={loading || error}
           >
-            {PAYMENT_METHODS.map((method) => (
-              <Option key={method.value} value={method.value}>
-                {method.label}
+            {error ? (
+              <Option disabled value="error">
+                Failed to load payment methods
               </Option>
-            ))}
+            ) : paymentMethods.length > 0 ? (
+              paymentMethods.map((method) => (
+                <Option key={method.id} value={method.id}>
+                  {method.name}
+                </Option>
+              ))
+            ) : (
+              <Option disabled value="no-data">
+                No payment methods available
+              </Option>
+            )}
           </Select>
         </Form.Item>
 

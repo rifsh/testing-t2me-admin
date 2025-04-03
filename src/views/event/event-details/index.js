@@ -1,10 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Typography, Space, Image, Button, Carousel, Badge, Tag, Avatar, Empty, List, Collapse, Divider, Progress, Tabs } from "antd";
+import {
+  Card,
+  Row,
+  Col,
+  Typography,
+  Space,
+  Image,
+  Button,
+  Carousel,
+  Form,
+  message,
+  Modal,
+  Alert,
+  Input,
+  Tabs,
+  Empty,
+} from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import { fetchEventDetails } from "store/slices/eventSlice";
 import Loading from "components/shared-components/Loading";
-import Panel from "antd/es/splitter/Panel";
 import TabPane from "antd/es/tabs/TabPane";
 import EventOverviewTab from "../components/EventOverviewTab";
 import EventUsersTab from "../components/EventUsersTab";
@@ -12,18 +27,31 @@ import ServicesTab from "../components/ServicesTab ";
 import FaqTab from "../components/FaqTab ";
 import OffersCouponsTab from "../components/OffersCouponsTab ";
 import ImagesTab from "../components/ImagesTab";
+import { EnrollUser } from "store/slices/leadEventSlice";
+import { UserAddOutlined } from "@ant-design/icons";
+import { UserRoleConstants } from "constants/UserRoleConstant";
+import { getCurrentUser } from "configs/UserAccessConfig";
 
 const { Title, Text } = Typography;
-
-
+export const getUserRole = () => {
+  const currentUser = getCurrentUser();
+  switch (currentUser.role_id) {
+    case UserRoleConstants.superAdminRoleId:
+      return UserRoleConstants.superAdmin;
+    case UserRoleConstants.eventSupportingTeamRoleId:
+      return UserRoleConstants.eventSupportingTeam;
+  }
+};
 
 const EventDetails = () => {
-  // const EventDetailsPage = ({ eventDetails, mediaImages, isNoImage }) => {
-  const [activeTab, setActiveTab] = useState('1');
+  const [activeTab, setActiveTab] = useState("1");
   const { eventId } = useParams();
   const dispatch = useDispatch();
   const { eventDetails, loading, error } = useSelector((state) => state.event);
   const mediaImages = eventDetails.media?.map((item) => item.media_url) || [];
+  const [form] = Form.useForm();
+  const [enrollModalVisible, setEnrollModalVisible] = useState(false);
+  const currentUser = getCurrentUser();
 
   // Check if thumbnail image is missing or contains a default value
   const isNoImage =
@@ -36,17 +64,39 @@ const EventDetails = () => {
       dispatch(fetchEventDetails(eventId));
     }
   }, [dispatch, eventId]);
+  const handleEnrollUser = () => {
+    setEnrollModalVisible(true);
+  };
+  const handleEnrollSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      const data = {
+        event_id: eventId,
+        email: values.email,
+      };
+
+      const response = await dispatch(EnrollUser(data)).unwrap();
+      message.success(
+        response.status?.message || "User enrolled successfully!"
+      );
+      setEnrollModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error("Enrollment failed:", error);
+    }
+  };
 
   if (loading) return <Loading />;
   if (error) return <div>Error: {error}</div>;
   if (!eventDetails) return <div>No Event Details Found</div>;
 
   return (
-    <div style={{
-      maxWidth: "1200px",
-      margin: "0 auto",
-      padding: "24px"
-    }}>
+    <div
+      style={{
+        margin: "0 auto",
+        padding: "24px",
+      }}
+    >
       <Card
         bordered={false}
         className="event-header-card"
@@ -54,7 +104,7 @@ const EventDetails = () => {
           borderRadius: "12px",
           overflow: "hidden",
           // boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-          marginBottom: "24px"
+          marginBottom: "24px",
         }}
         cover={
           isNoImage ? (
@@ -69,7 +119,9 @@ const EventDetails = () => {
               }}
             >
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "24px", marginBottom: "8px" }}>No Image Available</div>
+                <div style={{ fontSize: "24px", marginBottom: "8px" }}>
+                  No Image Available
+                </div>
                 <div>Event visual will appear here when uploaded</div>
               </div>
             </div>
@@ -79,18 +131,20 @@ const EventDetails = () => {
                 alt="event thumbnail"
                 src={eventDetails.thumbnail_image}
                 height={400}
-                width={'100%'}
+                width={"100%"}
                 style={{ objectFit: "cover" }}
               />
-              <div style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                background: "linear-gradient(transparent, rgba(0,0,0,0.8))",
-                padding: "60px 24px 24px",
-                color: "white"
-              }}>
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  background: "linear-gradient(transparent, rgba(0,0,0,0.8))",
+                  padding: "60px 24px 24px",
+                  color: "white",
+                }}
+              >
                 <Title level={2} style={{ margin: "0", color: "white" }}>
                   {eventDetails.event_name}
                 </Title>
@@ -99,8 +153,10 @@ const EventDetails = () => {
           )
         }
       >
-        <div style={{ padding: "8px 0" }}>
-          <Text style={{ fontSize: "16px", lineHeight: "1.6" }}>{eventDetails.description}</Text>
+        <div className="p-0 md:px-[8px] md:py-0">
+          <Text style={{ fontSize: "16px", lineHeight: "1.6" }}>
+            {eventDetails.description}
+          </Text>
         </div>
       </Card>
 
@@ -124,21 +180,53 @@ const EventDetails = () => {
             backgroundColor: "#fafafa",
             borderTopLeftRadius: "12px",
             borderTopRightRadius: "12px",
-            padding: "8px 8px 0"
+            padding: "8px 8px 0",
           }}
         >
           <TabPane
-            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="info">ℹ️</span> Overview</span>}
+            tab={
+              <span style={{ padding: "0 8px" }}>
+                <span role="img" aria-label="info">
+                  ℹ️
+                </span>{" "}
+                Overview
+              </span>
+            }
             key="1"
           >
-            <EventOverviewTab eventDetails={eventDetails} mediaImages={mediaImages} />
+            <EventOverviewTab
+              eventDetails={eventDetails}
+              mediaImages={mediaImages}
+            />
           </TabPane>
 
           <TabPane
-            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="team">👥</span> Event Users</span>}
+            tab={
+              <span style={{ padding: "0 8px" }}>
+                <span role="img" aria-label="team">
+                  👥
+                </span>{" "}
+                Event Users
+              </span>
+            }
             key="2"
           >
-            <div style={{ padding: "24px" }}>
+            <div style={{ padding: "24px 24px 0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <Typography.Title level={4} style={{ margin: 0 }}>
+                  Event Users
+                </Typography.Title>
+                {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
+                <Button
+                  type="primary"
+                  icon={<UserAddOutlined />}
+                  onClick={handleEnrollUser}
+                >
+                  Add User
+                </Button>
+              )}
+              </div>
+              
               {eventDetails.users?.length > 0 ? (
                 <Row gutter={[24, 24]} justify="start">
                   {eventDetails?.users.map((user, index) => (
@@ -156,7 +244,14 @@ const EventDetails = () => {
           </TabPane>
 
           <TabPane
-            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="services">🛍️</span> Services</span>}
+            tab={
+              <span style={{ padding: "0 8px" }}>
+                <span role="img" aria-label="services">
+                  🛍️
+                </span>{" "}
+                Services
+              </span>
+            }
             key="3"
           >
             <div style={{ padding: "24px" }}>
@@ -165,7 +260,14 @@ const EventDetails = () => {
           </TabPane>
 
           <TabPane
-            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="faq">❓</span> FAQ</span>}
+            tab={
+              <span style={{ padding: "0 8px" }}>
+                <span role="img" aria-label="faq">
+                  ❓
+                </span>{" "}
+                FAQ
+              </span>
+            }
             key="4"
           >
             <div style={{ padding: "24px" }}>
@@ -174,7 +276,14 @@ const EventDetails = () => {
           </TabPane>
 
           <TabPane
-            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="offers">🏷️</span> Offers & Coupons</span>}
+            tab={
+              <span style={{ padding: "0 8px" }}>
+                <span role="img" aria-label="offers">
+                  🏷️
+                </span>{" "}
+                Offers & Coupons
+              </span>
+            }
             key="5"
           >
             <div style={{ padding: "24px" }}>
@@ -183,7 +292,14 @@ const EventDetails = () => {
           </TabPane>
 
           <TabPane
-            tab={<span style={{ padding: "0 8px" }}><span role="img" aria-label="images">🖼️</span> Images</span>}
+            tab={
+              <span style={{ padding: "0 8px" }}>
+                <span role="img" aria-label="images">
+                  🖼️
+                </span>{" "}
+                Images
+              </span>
+            }
             key="6"
           >
             <div style={{ padding: "24px" }}>
@@ -192,6 +308,32 @@ const EventDetails = () => {
           </TabPane>
         </Tabs>
       </Card>
+      <Modal
+        title="Enroll User to Event"
+        open={enrollModalVisible}
+        onCancel={() => setEnrollModalVisible(false)}
+        footer={[
+          <Button key="back" onClick={() => setEnrollModalVisible(false)}>
+            Cancel
+          </Button>,
+          <Button key="submit" type="primary" onClick={handleEnrollSubmit}>
+            Enroll
+          </Button>,
+        ]}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="email"
+            label="User Email"
+            rules={[
+              { required: true, message: "Please enter the user's email" },
+              { type: "email", message: "Please enter a valid email" },
+            ]}
+          >
+            <Input placeholder="Enter user email" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

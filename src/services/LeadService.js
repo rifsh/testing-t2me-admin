@@ -100,5 +100,15 @@ LeadEventService.EnrollUser = function (data) {
     },
   });
 };
+LeadEventService.leadstatus = function (data) {
+  return fetch({
+    url: `${ApiConstant.LEAD_EVENT_STATUS}?lead_event_id=${data.event_id}`,
+    method: "put",
+    data: data,
+    headers: {
+      "Content-Type": "application/json", 
+    },
+  });
+};
 
 export default LeadEventService;

@@ -1,9 +1,12 @@
 import React from "react";
-import { Card, Col, Image, Typography } from "antd";
+import { Card, Col, Image, Typography, Avatar } from "antd";
+import { UserOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
 const EventUsersTab = ({ user }) => {
+    const showAvatar = !user.thumbnail_image || user.thumbnail_image.includes("images");
+
     return (
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
             <Card
@@ -19,7 +22,17 @@ const EventUsersTab = ({ user }) => {
                 bodyStyle={{ padding: "16px 8px" }}
             >
                 <div style={{ marginBottom: "8px" }}>
-                    {user.thumbnail_image ? (
+                    {showAvatar ? (
+                        <Avatar
+                            size={80}
+                            icon={<UserOutlined />}
+                            style={{
+                                backgroundColor: "#f0f7ff",
+                                color: "#1890ff",
+                                fontSize: "32px",
+                            }}
+                        />
+                    ) : (
                         <Image
                             alt="User Thumbnail"
                             src={user.thumbnail_image}
@@ -32,23 +45,6 @@ const EventUsersTab = ({ user }) => {
                             }}
                             preview={false}
                         />
-                    ) : (
-                        <div
-                            style={{
-                                height: 80,
-                                width: 80,
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                backgroundColor: "#f0f7ff",
-                                color: "#1890ff",
-                                borderRadius: "50%",
-                                margin: "0 auto",
-                                fontSize: "24px"
-                            }}
-                        >
-                            {user.username ? user.username.charAt(0).toUpperCase() : "U"}
-                        </div>
                     )}
                 </div>
                 <Title level={5} style={{ marginBottom: "4px", fontSize: "16px" }}>
@@ -59,7 +55,7 @@ const EventUsersTab = ({ user }) => {
                 </Text>
             </Card>
         </Col>
-    )
-}
+    );
+};
 
-export default EventUsersTab
+export default EventUsersTab;
