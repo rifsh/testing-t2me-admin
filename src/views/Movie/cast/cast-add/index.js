@@ -4,7 +4,7 @@ import CelebrityManager from '../components/AddPage'
 const Index = () => {
     return (
         <div>
-            <CelebrityManager />
+            <CelebrityManager mode='ADD'/>
         </div>
     )
 }

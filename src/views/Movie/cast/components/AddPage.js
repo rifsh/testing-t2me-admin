@@ -13,34 +13,46 @@ import {
 } from '@ant-design/icons';
 import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 import ActorDetails from './ActorDetailsForm ';
+import { SubmitAndConfirmModal } from 'components/util-components/ModalItems/SubmitConfirmModal';
+import { createPersonality } from 'store/slices/castSlice';
+import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import { useDispatch, useSelector } from 'react-redux';
+import { setSelectedSubmitItem } from 'store/slices/modalSlice';
+import { ActionType } from 'utils/api/warning-submit-util';
 
 const { Title } = Typography;
 
-const AddPage = () => {
+const AddPage = ({ mode = 'ADD' }) => {
+    const dispatch = useDispatch();
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const [familyMembers, setFamilyMembers] = useState([]);
+    const { response } = useSelector((state => state.cast));
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         setLoading(true);
 
-        form.validateFields().then(values => {
-            const completeData = {
-                ...values,
-                familyMembers: familyMembers
-            };
+        try {
+            const values = await form.validateFields();
+            if (mode === 'ADD') {
+                const formattedData = {
+                    ...values,
+                    birthDate: values.birthDate.format("YYYY-MM-DD")
+                }
+                console.log(formattedData);
+                dispatch(createPersonality({ data: formattedData, action: ActionType.SUBMIT }))
+                dispatch(setSelectedSubmitItem(formattedData));
 
-            console.log('Form submission data:', completeData);
-
-            setTimeout(() => {
-                message.success('Actor details saved successfully!');
-                setLoading(false);
-            }, 1500);
-        }).catch(error => {
-            console.error('Form validation failed:', error);
-            setLoading(false);
-            message.error('Please check the form for errors');
-        });
+            }
+        } catch (errorInfo) {
+            if (errorInfo.errorFields) {
+                message.error("Please fill all the required fields.");
+                errorInfo.errorFields.forEach((field) => {
+                    console.log(`Field Error: ${field.name.join(".")} - ${field.errors.join(", ")}`);
+                });
+            } else {
+                message.error("An unexpected error occurred. Please try again.");
+            }
+        }
     };
 
     return (
@@ -76,13 +88,20 @@ const AddPage = () => {
                             type="primary"
                             htmlType="submit"
                             onClick={handleSubmit}
-                            loading={loading}
+                        // loading={loading}
                         >
                             Submit
                         </Button>
                     </Space>
                 </Row>
             </Form>
+
+            <SubmitAndConfirmModal
+                responseData={response}
+                addFunction={mode === 'ADD' ? createPersonality : createPersonality}
+                navigationPath={`${APP_PREFIX_PATH}/cast/list`}
+            // responseMessage={screenMessage}
+            />
         </div>
     );
 };

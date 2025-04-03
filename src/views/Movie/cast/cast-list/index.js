@@ -1,69 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Dropdown, Tag, Badge, Space, Avatar, Typography } from "antd";
-import { EditOutlined, EyeOutlined, MoreOutlined, PlusOutlined, UserAddOutlined } from "@ant-design/icons";
+import { EditOutlined, EyeOutlined, MoreOutlined, UserAddOutlined } from "@ant-design/icons";
 import { useNavigate } from 'react-router-dom';
 import SearchBarWithStatus from 'components/util-components/Search/SearchBarWithStatus';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchPersonalitiesData } from 'store/slices/castSlice';
+import { DEFAULT_PAGE_SIZE } from 'constants/PageConstants';
 
 const { Text } = Typography;
 
 const Index = () => {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
-    const [actors, setActors] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
+    const { response, loading, pagination } = useSelector((state => state.cast));
 
     useEffect(() => {
-        // Simulate API call
-        setLoading(true);
-        setTimeout(() => {
-            const mockData = [
-                {
-                    id: 1,
-                    name: 'Robert Downey Jr.',
-                    alsoKnownAs: 'RDJ',
-                    gender: 'male',
-                    birthDate: '1965-04-04',
-                    occupation: ['actor', 'producer'],
-                    nationality: 'American',
-                    notableWorks: ['Iron Man', 'Avengers', 'Sherlock Holmes'],
-                    awards: ['Golden Globe', 'BAFTA'],
-                    profileImage: 'https://via.placeholder.com/150',
-                    status: true
-                },
-                {
-                    id: 2,
-                    name: 'Scarlett Johansson',
-                    alsoKnownAs: 'ScarJo',
-                    gender: 'female',
-                    birthDate: '1984-11-22',
-                    occupation: ['actress', 'singer'],
-                    nationality: 'American',
-                    notableWorks: ['Black Widow', 'Lost in Translation'],
-                    awards: ['BAFTA', 'Tony Award'],
-                    profileImage: 'https://via.placeholder.com/150',
-                    status: true
-                },
-                {
-                    id: 3,
-                    name: 'Tom Hanks',
-                    gender: 'male',
-                    birthDate: '1956-07-09',
-                    occupation: ['actor', 'director', 'producer'],
-                    nationality: 'American',
-                    notableWorks: ['Forrest Gump', 'Saving Private Ryan'],
-                    awards: ['Academy Award', 'Golden Globe'],
-                    profileImage: 'https://via.placeholder.com/150',
-                    status: false
-                }
-            ];
-            setActors(mockData);
-            setFilteredData(mockData);
-            setLoading(false);
-        }, 1000);
-    }, []);
+        dispatch(fetchPersonalitiesData(DEFAULT_PAGE_SIZE));
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (response && response.items) {
+            setFilteredData(response.items);
+        }
+    }, [response]);
 
     const calculateAge = (birthDate) => {
+        if (!birthDate) return '-';
+
         const today = new Date();
         const birth = new Date(birthDate);
         let age = today.getFullYear() - birth.getFullYear();
@@ -75,24 +40,14 @@ const Index = () => {
     };
 
     const handleViewDetails = (actor) => {
-        navigate(`${APP_PREFIX_PATH}/cast/details`);
+        navigate(`${APP_PREFIX_PATH}/cast/details/${actor.id}`);
     };
 
     const handleEditActor = (actor) => {
-        // navigate(`/actors/edit/${actor.id}`);
+        navigate(`${APP_PREFIX_PATH}/cast/edit/${actor.id}`);
     };
 
     const getDropdownMenu = (actor) => [
-        {
-            key: "edit",
-            label: (
-                <Space>
-                    <EditOutlined />
-                    <span>Edit</span>
-                </Space>
-            ),
-            onClick: () => handleEditActor(actor),
-        },
         {
             key: "view",
             label: (
@@ -102,23 +57,44 @@ const Index = () => {
                 </Space>
             ),
             onClick: () => handleViewDetails(actor),
+        },
+        {
+            key: "edit",
+            label: (
+                <Space>
+                    <EditOutlined />
+                    <span>Edit</span>
+                </Space>
+            ),
+            onClick: () => handleEditActor(actor),
         }
     ];
 
-    const getStatusBadge = (status) => (
-        status ? <Badge status="success" text="Active" /> : <Badge status="error" text="Inactive" />
-    );
+    const handleSearch = (value) => {
+        if (response && response.items) {
+            const filtered = response.items.filter(actor =>
+                actor.name.toLowerCase().includes(value.toLowerCase()) ||
+                (actor.nationality && actor.nationality.toLowerCase().includes(value.toLowerCase())) ||
+                (actor.also_known_as && actor.also_known_as.toLowerCase().includes(value.toLowerCase()))
+            );
+            setFilteredData(filtered);
+        }
+    };
+
+    const handlePagination = (page, pageSize) => {
+        dispatch(fetchPersonalitiesData({ page: page, size: pageSize }));
+    };
 
     const tableColumns = [
         {
             title: "Profile",
-            dataIndex: "profileImage",
-            key: "profileImage",
+            dataIndex: "thumbnail_image",
+            key: "thumbnail_image",
             width: 80,
-            render: (_, record) => (
+            render: (image, record) => (
                 <Avatar
-                    src={record.profileImage}
-                    size={40}
+                    src={image || "https://via.placeholder.com/150"}
+                    size={60}
                     alt={record.name}
                 />
             ),
@@ -130,9 +106,9 @@ const Index = () => {
             render: (text, record) => (
                 <Space direction="vertical" size={0}>
                     <Text strong>{text}</Text>
-                    {record.alsoKnownAs && (
+                    {record.also_known_as && (
                         <Text type="secondary" style={{ fontSize: '12px' }}>
-                            AKA: {record.alsoKnownAs}
+                            AKA: {record.also_known_as}
                         </Text>
                     )}
                 </Space>
@@ -142,36 +118,36 @@ const Index = () => {
             title: "Gender",
             dataIndex: "gender",
             key: "gender",
-            render: (gender) => (
+            render: (gender) => gender ? (
                 <Tag color={gender === 'male' ? 'blue' : gender === 'female' ? 'magenta' : 'purple'}>
                     {gender.charAt(0).toUpperCase() + gender.slice(1)}
                 </Tag>
-            ),
+            ) : '-',
         },
         {
             title: "Age",
             dataIndex: "birthDate",
             key: "age",
-            render: (birthDate) => calculateAge(birthDate),
+            render: (_, record) => calculateAge(record.birthDate),
         },
         {
             title: "Occupation",
             dataIndex: "occupation",
             key: "occupation",
-            render: (occupations) => (
+            render: (occupations) => occupations && occupations.length > 0 ? (
                 <Space size={[0, 4]} wrap>
                     {occupations.slice(0, 2).map(occ => (
                         <Tag key={occ}>{occ}</Tag>
                     ))}
                     {occupations.length > 2 && <Tag>+{occupations.length - 2}</Tag>}
                 </Space>
-            ),
+            ) : '-',
         },
         {
-            title: "Status",
-            dataIndex: "status",
-            key: "status",
-            render: (status) => getStatusBadge(status),
+            title: "Nationality",
+            dataIndex: "nationality",
+            key: "nationality",
+            render: (nationality) => nationality || '-',
         },
         {
             title: "Actions",
@@ -189,14 +165,7 @@ const Index = () => {
             <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: "10px" }}>
                 <SearchBarWithStatus
                     placeholder="Search by name or nationality"
-                // onSearch={(value) => {
-                //     setFilteredData(
-                //         actors.filter(actor =>
-                //             actor.name.toLowerCase().includes(value.toLowerCase()) ||
-                //             (actor.nationality && actor.nationality.toLowerCase().includes(value.toLowerCase()))
-                //         )
-                //     }}
-                // }
+                    onSearch={handleSearch}
                 />
                 <Button
                     type="primary"
@@ -213,10 +182,11 @@ const Index = () => {
                 rowKey="id"
                 loading={loading}
                 pagination={{
-                    pageSize: 10,
-                    showTotal: (total) => `${total} actors`,
-                    showSizeChanger: true,
-                    pageSizeOptions: ['10', '20', '50']
+                    current: pagination.current,
+                    pageSize: pagination.pageSize,
+                    total: pagination.total,
+                    onChange: (page, pageSize) => handlePagination(page, pageSize),
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} screens`
                 }}
             />
         </Card>

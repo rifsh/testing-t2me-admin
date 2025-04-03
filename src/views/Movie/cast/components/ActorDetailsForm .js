@@ -29,6 +29,7 @@ const { Title } = Typography;
 const { Option } = Select;
 
 const ActorDetails = ({ form, onSubmit, loading }) => {
+
     const normFile = (e) => {
         if (Array.isArray(e)) {
             return e;
@@ -87,8 +88,10 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
 
                     <Col xs={24} md={12}>
                         <Form.Item
-                            name="alsoKnownAs"
+                            name="also_known_as"
                             label="Also Known As"
+                            rules={[{ required: true, message: 'Please enter actor another name' }]}
+
                         >
                             <Input placeholder="Enter nicknames or stage names" />
                         </Form.Item>
@@ -96,7 +99,7 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
 
                     <Col xs={24} md={12}>
                         <Form.Item
-                            name="spouseName"
+                            name="spouse_name"
                             label="Spouse/Partner Name"
                         >
                             <Input placeholder="Enter spouse or partner name" prefix={<TeamOutlined />} />
@@ -138,6 +141,7 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                         <Form.Item
                             name="age"
                             label="Age"
+                            rules={[{ required: true, message: 'Age is required' }]}
                         >
                             <Input
                                 placeholder="Calculated from birth date"
@@ -151,6 +155,7 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                         <Form.Item
                             name="nationality"
                             label="Nationality"
+                            rules={[{ required: true, message: 'Please enter nationality' }]}
                         >
                             <Input placeholder="Enter nationality" />
                         </Form.Item>
@@ -168,7 +173,7 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                         <Form.Item
                             name="occupation"
                             label="Occupation"
-                            rules={[{ required: true, message: 'Please enter occupation' }]}
+                            rules={[{ required: true, message: 'Please add occupation' }]}
                         >
                             <Select
                                 mode="tags"
@@ -213,8 +218,9 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                     {/* Profile Image */}
                     <Col xs={24}>
                         <Form.Item
-                            name="profileImage"
+                            name="thumbnail_image"
                             label="Upload Profile Image"
+                            rules={[{ required: true, message: 'Please add a profile image' }]}
                             valuePropName="value"
                             getValueFromEvent={normFile}
                             style={{ marginBottom: "0px", padding: "0px" }}

@@ -114,7 +114,8 @@ const CategoryFormFields = ({ mode, category }) => {
         const formData = {
           ...values,
         };
-
+        console.log(formData);
+        
         dispatch(setSelectedSubmitItem(formData));
 
         // const resultAction = await dispatch(addCategory(values));

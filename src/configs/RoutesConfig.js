@@ -120,7 +120,7 @@ export const protectedRoutes = [
   },
   {
     key: "movie.cast.details",
-    path: `${APP_PREFIX_PATH}/cast/details`,
+    path: `${APP_PREFIX_PATH}/cast/details/:id`,
     component: React.lazy(() => import("views/Movie/cast/cast-details"))
   },
   {
