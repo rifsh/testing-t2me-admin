@@ -32,6 +32,7 @@ import {
   FileTypeImageOptions,
   FileTypeResolutions,
 } from "constants/SupportFileConstants";
+import { AdvCategoryCode } from "constants/AppConstants";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -158,8 +159,27 @@ const CategoryFormFields = ({ mode, category }) => {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
+          <Form.Item
+            name="category_code"
+            label="Code"
+            rules={rules.category_code}
+          >
+            <Select
+              loading={loading}
+              mode="single"
+              style={{ width: "100%" }}
+              placeholder="Please select Code"
+              showSearch
+            >
+              {AdvCategoryCode.map((item) => (
+                <Select.Option key={item} value={item}>
+                  {item}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
           <Form form={form} layout="vertical">
-            <Form.Item name="name" label="Category" rules={rules.name}>
+            <Form.Item name="name" label="Category Name" rules={rules.name}>
               <Input placeholder="Category" />
             </Form.Item>
             <Form.Item
@@ -172,13 +192,7 @@ const CategoryFormFields = ({ mode, category }) => {
                 placeholder="Enter category description"
               />
             </Form.Item>
-            <Form.Item
-              name="category_code"
-              label="Code"
-              rules={rules.category_code}
-            >
-              <Input placeholder="Code" />
-            </Form.Item>
+
             <Form.Item
               name="min_size"
               label="Min Size (MB)"
