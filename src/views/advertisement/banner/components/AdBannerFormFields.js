@@ -26,7 +26,7 @@ import {
   setAdBannerModalLoading,
 } from "store/slices/advertisementSlice";
 import { getPlaces } from "store/slices/locationSlice";
-import { fetchEventOnPlaces } from "store/slices/eventSlice";
+import { fetchEventOnPlaces, fetchEventType } from "store/slices/eventSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ActionType } from "utils/api/warning-submit-util";
@@ -68,6 +68,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const { eventType } = useSelector((state) => state.event);
 
   const { places } = useSelector((state) => state.locations);
   const { eventOnPlaces } = useSelector((state) => state.event);
@@ -97,13 +98,16 @@ const AdBannerFormFields = ({ mode, banner }) => {
       dispatch(fetchAdCategories({}));
       console.log(filteredAdCategories.length);
     }
+    if (!eventType.length) {
+      dispatch(fetchEventType({ active: true }));
+    }
     if (places.length === 0) {
       dispatch(getPlaces({}));
       console.log(
         "fetching places ---------------------------------------------->"
       );
     }
-  }, [dispatch, filteredAdCategories, places]);
+  }, [dispatch, eventType, filteredAdCategories, places]);
 
   useEffect(() => {
     if (error) {
@@ -261,6 +265,20 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 ) : (
                   <Option disabled>No category available</Option>
                 )}
+              </Select>
+            </Form.Item>
+            <Form.Item name="event_type_id" label="Event Type (Optional)">
+              <Select
+                removeIcon={true}
+                loading={loading}
+                style={{ width: "100%" }}
+                placeholder="Select event type"
+              >
+                {eventType.map((type) => (
+                  <Option key={type.id} value={type.id}>
+                    {type.name}
+                  </Option>
+                ))}
               </Select>
             </Form.Item>
             <Form.Item name="name" label="Name" rules={rules.name}>
