@@ -8,11 +8,14 @@ const initialState = {
     singleResponse: null,
     personalities: null,
     submitMessage: null,
+    message: null,
+    editData: [],
+    editable_status: null,
     pagination: { size: 10, page: 1 }
 };
 
 export const createPersonality = createAsyncThunk(
-    "screen/addPersonality",
+    "cast/addPersonality",
     async ({ data, action }, { rejectWithValue }) => {
 
         try {
@@ -25,25 +28,47 @@ export const createPersonality = createAsyncThunk(
     }
 );
 export const fetchPersonalitiesData = createAsyncThunk(
-    "screen/fetchPersonalitiesData",
+    "cast/fetchPersonalitiesData",
     async (pageData, { rejectWithValue }) => {
         try {
             const response = await PersonalityService.getPersonalityData(pageData);
             return response.data[0];
 
         } catch (error) {
-            return rejectWithValue(error.message || "Failed to fetch screen features");
+            return rejectWithValue(error.message || "Failed to fetch cast features");
         }
     }
 );
 export const fetchPersonalitiesById = createAsyncThunk(
-    "screen/fetchPersonalitiesById",
+    "cast/fetchPersonalitiesById",
     async (person_id, { rejectWithValue }) => {
         try {
             const response = await PersonalityService.getPersonalityDataById(person_id);
             return response.data[0];
         } catch (error) {
-            return rejectWithValue(error.message || "Failed to fetch screen features");
+            return rejectWithValue(error.message || "Failed to fetch Personality");
+        }
+    }
+);
+export const editPersonality = createAsyncThunk(
+    "cast/editPersonality",
+    async ({ data, action }, { rejectWithValue }) => {
+        try {
+            const response = await PersonalityService.editPersonality(data, action);
+            return response;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || "Error editing personality");
+        }
+    }
+);
+export const editPersonalityStatus = createAsyncThunk(
+    "cast/editPersonalityStatus",
+    async ({ data, action }, { rejectWithValue }) => {
+        try {
+            const response = await PersonalityService.editStatus(data, action);
+            return response;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || "Error updating status");
         }
     }
 );
@@ -54,6 +79,9 @@ const castSlice = createSlice({
     reducers: {
         setPersonalityEditId(state, action) {
             state.editId = action.payload
+        },
+        setPersonalityEditData(state, action) {
+            state.editData = action.payload
         }
     },
     extraReducers: (builder) => {
@@ -75,6 +103,7 @@ const castSlice = createSlice({
             .addCase(fetchPersonalitiesData.fulfilled, (state, action) => {
                 state.loading = false;
                 state.response = action.payload;
+                state.pagination = action.payload;
             })
             .addCase(fetchPersonalitiesData.rejected, (state) => {
                 state.loading = false;
@@ -89,9 +118,37 @@ const castSlice = createSlice({
             .addCase(fetchPersonalitiesById.rejected, (state) => {
                 state.loading = false;
             })
+            .addCase(editPersonality.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(editPersonality.fulfilled, (state, { payload }) => {
+                state.loading = false;
+                state.response = payload.data;
+                if (payload.status) {
+                    state.message = payload.status.message;
+                    state.editable_status = payload.status?.editable_status;
+                }
+            })
+            .addCase(editPersonality.rejected, (state) => {
+                state.loading = false;
+            })
+            .addCase(editPersonalityStatus.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(editPersonalityStatus.fulfilled, (state, { payload }) => {
+                state.loading = false;
+                state.response = payload.data;
+                if (payload.status) {
+                    state.message = payload.status.message;
+                    state.editable_status = payload.status?.editable_status;
+                }
+            })
+            .addCase(editPersonalityStatus.rejected, (state) => {
+                state.loading = false;
+            })
     },
 });
 
-export const { setPersonalityEditId } = castSlice.actions;
+export const { setPersonalityEditId, setPersonalityEditData } = castSlice.actions;
 
 export default castSlice.reducer;

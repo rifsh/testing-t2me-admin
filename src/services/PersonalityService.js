@@ -34,5 +34,33 @@ PersonalityService.getPersonalityDataById = function (person_id) {
         params: Utils.filterParams(person_id),
     });
 };
+PersonalityService.editPersonality = function (
+    updatedPersonality,
+    action,
+) {
+    const formData = Utils.createFormData(updatedPersonality, {
+        fileKeys: ["thumbnail_image"],
+        skipEmpty: true,
+    });
+    const encodedAction = encodeURIComponent(handleAction(action));
+
+    return fetch({
+        url: `${ApiConstant.EDIT_PERSONALITY_URL}?person_id=${updatedPersonality.id}&action=${encodedAction}`,
+        method: "put",
+        data: formData
+    });
+};
+PersonalityService.editStatus = function (
+    updatedPersonality,
+    action,
+) {
+    const encodedAction = encodeURIComponent(handleAction(action));
+
+    return fetch({
+        url: `${ApiConstant.EDIT_PERSONALITY_STATUS_URL}?person_id=${updatedPersonality.id}&action=${encodedAction}`,
+        method: "put",
+        data: updatedPersonality
+    });
+};
 
 export default PersonalityService;

@@ -14,7 +14,7 @@ import {
 import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 import ActorDetails from './ActorDetailsForm ';
 import { SubmitAndConfirmModal } from 'components/util-components/ModalItems/SubmitConfirmModal';
-import { createPersonality, fetchPersonalitiesById } from 'store/slices/castSlice';
+import { createPersonality, editPersonality, fetchPersonalitiesById, setPersonalityEditData } from 'store/slices/castSlice';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedSubmitItem } from 'store/slices/modalSlice';
@@ -23,14 +23,16 @@ import { MODE } from 'constants/TextConstant';
 import { useParams } from 'react-router-dom';
 import dayjs from "dayjs";
 import LoadingOverlay from 'components/util-components/Loader';
+import WarningModal from 'components/util-components/ModalItems/WarningModal';
+import { setLocationDialogVisible, setLocationModalLoading } from 'store/slices/locationSlice';
 
 const { Title } = Typography;
 
-const AddPage = ({ mode = 'ADD' }) => {
-    const { id } = useParams()
+const AddPage = ({ mode = 'ADD', id }) => {
     const dispatch = useDispatch();
     const [form] = Form.useForm();
-    const { response, loading, submitMessage } = useSelector((state => state.cast));
+    const { response, loading, submitMessage, message, editData } = useSelector((state => state.cast));
+    const { dialogVisible } = useSelector((state) => state.locations);
 
     useEffect(() => {
         if (mode === MODE.EDIT) {
@@ -75,10 +77,22 @@ const AddPage = ({ mode = 'ADD' }) => {
                     ...values,
                     birthDate: values.birthDate.format("YYYY-MM-DD")
                 }
-                console.log(formattedData);
                 dispatch(createPersonality({ data: formattedData, action: ActionType.SUBMIT }))
                 dispatch(setSelectedSubmitItem(formattedData));
+                console.log("forma", formattedData);
 
+            } else {
+                const formattedData = {
+                    ...values,
+                    id: id,
+                    birthDate: values.birthDate.format("YYYY-MM-DD")
+                }
+                dispatch(setPersonalityEditData(formattedData));
+                const resultAction = await dispatch(
+                    editPersonality({ data: formattedData, action: ActionType.WARNING })
+                );
+                dispatch(setLocationDialogVisible(true));
+                console.log("forma", formattedData);
             }
         } catch (errorInfo) {
             if (errorInfo.errorFields) {
@@ -90,6 +104,22 @@ const AddPage = ({ mode = 'ADD' }) => {
                 message.error("An unexpected error occurred. Please try again.");
             }
         }
+    };
+
+    const handleModalSubmit = async () => {
+        dispatch(setLocationModalLoading(true));
+        const resultAction = await dispatch(
+            editPersonality({ data: editData, action: ActionType.SUBMIT })
+        );
+        dispatch(setLocationModalLoading(false));
+        dispatch(setLocationDialogVisible(false));
+        if (editPersonality.fulfilled?.match(resultAction)) {
+            dispatch(setSelectedSubmitItem(editData));
+        }
+    };
+
+    const handleModalCancel = () => {
+        dispatch(setLocationDialogVisible(false));
     };
 
     return (
@@ -132,10 +162,28 @@ const AddPage = ({ mode = 'ADD' }) => {
                 </Row>
             </Form>
             <LoadingOverlay loading={loading} />
+
+            <WarningModal
+                visible={dialogVisible}
+                title="Confirm Action"
+                details={message}
+                responseData={response}
+                warningMessage="Do you want to continue?"
+                onSubmit={handleModalSubmit}
+                onCancel={handleModalCancel}
+                confirmText="Proceed"
+                cancelText="Back"
+                loading={loading}
+                tableConfig={{
+                    title: "Active Schedules",
+                    dataKey: "items",
+                }}
+            />
+
             <SubmitAndConfirmModal
                 responseData={response}
-                addFunction={mode === 'ADD' ? createPersonality : createPersonality}
-                navigationPath={`${APP_PREFIX_PATH}/cast/list`}
+                addFunction={mode === 'ADD' ? createPersonality : editPersonality}
+                navigationPath={`${APP_PREFIX_PATH}/personality/list`}
                 responseMessage={submitMessage}
             />
         </div>

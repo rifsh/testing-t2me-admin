@@ -25,27 +25,19 @@ import {
 import TextEditor from "components/util-components/FormItems/TextEditor";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 import { ThumbnailImageResolutions } from "constants/SupportFileConstants";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { actorsData } from "../movie-list/MockData";
+import { fetchPersonalitiesData } from "store/slices/castSlice";
 
 const { TextArea } = Input;
 const { Option } = Select;
 
 const MovieDetailsForm = () => {
-    const [poster, setPoster] = useState(null);
-    const { singleScreen } = useSelector((state) => state.screen);
-
+    const dispatch = useDispatch();
+    const { response } = useSelector((state => state.cast))
     const genres = ["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Thriller", "Animation"];
     const languages = ["English", "Hindi", "French", "Spanish", "Chinese", "Tamil", "Malayalam"];
     const currencies = ["USD", "EUR", "GBP", "INR", "JPY", "AUD"];
-    const productionStatuses = [
-        "Development",
-        "Pre-Production",
-        "Filming",
-        "Post-Production",
-        "Completed",
-        "Released"
-    ];
 
     const normFile = (e) => {
         if (Array.isArray(e)) {
@@ -64,6 +56,16 @@ const MovieDetailsForm = () => {
         if (!value) return '';
         return value.replace(/\$\s?|(,*)/g, '');
     };
+
+    useEffect(() => {
+        dispatch(fetchPersonalitiesData(10))
+    }, [dispatch])
+
+    useEffect(() => {
+        if (response) {
+            console.log("responsemovie", response)
+        }
+    }, [response])
 
     return (
         <Card title="Movie Details" bordered>

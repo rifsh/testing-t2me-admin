@@ -5,12 +5,16 @@ import { useNavigate } from 'react-router-dom';
 import SearchBarWithStatus from 'components/util-components/Search/SearchBarWithStatus';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchPersonalitiesData, setPersonalityEditId } from 'store/slices/castSlice';
+import { editPersonalityStatus, fetchPersonalitiesData, setPersonalityEditId } from 'store/slices/castSlice';
 import { DEFAULT_PAGE_SIZE } from 'constants/PageConstants';
 import { setEditItemId } from 'store/slices/categorySlice';
 import { setLocationDialogVisible, setLocationModalLoading } from 'store/slices/locationSlice';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import { TextConstants } from 'constants/TextConstant';
+import Utils from 'utils';
+import { setDialogVisible, setSelectedItem } from 'store/slices/modalSlice';
+import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatusModal';
+import StatusSubmitAndConfirmModal from 'components/util-components/ModalItems/StatusSubmitModal';
 
 const { Text } = Typography;
 
@@ -18,10 +22,8 @@ const Index = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [filteredData, setFilteredData] = useState([]);
-    const { response, loading, pagination, editId } = useSelector((state => state.cast));
+    const { response, loading, pagination, editId, editable_status, message } = useSelector((state => state.cast));
     const {
-        pagination: locationPagination,
-        loading: locationLoading,
         dialogVisible,
         modalLoading,
     } = useSelector((state) => state.locations);
@@ -100,6 +102,13 @@ const Index = () => {
         dispatch(fetchPersonalitiesData({ page: page, size: pageSize }));
     };
 
+    const handleUpdateStatus = (item) => {
+        const newStatus = !item.status;
+        const data = { status: newStatus, id: item.id };
+        dispatch(setSelectedItem(data));
+        dispatch(setDialogVisible(true));
+    };
+
     const tableColumns = [
         {
             title: "Profile",
@@ -164,6 +173,8 @@ const Index = () => {
             key: "nationality",
             render: (nationality) => nationality || '-',
         },
+        Utils.statusColumnUtil(handleUpdateStatus),
+
         {
             title: "Actions",
             dataIndex: "actions",
@@ -199,8 +210,8 @@ const Index = () => {
                     rowKey="id"
                     loading={loading}
                     pagination={{
-                        current: pagination.current,
-                        pageSize: pagination.pageSize,
+                        current: pagination.page,
+                        pageSize: pagination.size,
                         total: pagination.total,
                         onChange: (page, pageSize) => handlePagination(page, pageSize),
                         showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} Profiles`
@@ -211,13 +222,36 @@ const Index = () => {
                 mode={"itemmodal"}
                 visible={dialogVisible}
                 title="Edit Personality Profile"
-                details={TextConstants.DefaultEditContent1}
+                details={TextConstants.DefaultEditContent4}
                 warningMessage="Do you want to proceed to the edit page?"
                 onSubmit={handleModalSubmit}
                 onCancel={handleModalCancel}
                 confirmText="Proceed to Edit"
                 cancelText="Cancel"
                 loading={modalLoading}
+            />
+
+            <UpdateStatusModal
+                responseMessage={message}
+                editFunction={editPersonalityStatus}
+                getAllFunction={(pageData) => fetchPersonalitiesData(pageData)}
+                tableConfig={{
+                    title: "Active Schedules",
+                    dataKey: "items",
+                }}
+                editable_status={editable_status}
+                responseData={response}
+                loading={loading}
+            />
+
+            <StatusSubmitAndConfirmModal
+                editFunction={editPersonalityStatus}
+                getAllFunction={fetchPersonalitiesData}
+                responseData={response}
+                responseMessage={message}
+                pageData={DEFAULT_PAGE_SIZE}
+                onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+                onCloseMessage={TextConstants.StatusUpdateCanceled}
             />
         </>
     );
