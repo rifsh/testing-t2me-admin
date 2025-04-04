@@ -125,22 +125,27 @@ const EventDetails = () => {
               </div>
             </div>
           ) : (
-            <div style={{ position: "relative" }}>
-              {/* <Image
-                alt="event thumbnail"
-                src={eventDetails.thumbnail_image}
-                height={400}
-                width={"100%"}
-                style={{ objectFit: "cover" }}
-              /> */}
+            <div style={{ position: "relative", width: "100%" }}>
               <Carousel autoplay dots={{ className: "custom-carousel-dots" }}>
                 {mediaImages.map((url, index) => (
-                  <div key={index} style={{ borderRadius: "8px", overflow: "hidden" }}>
+                  <div
+                    key={index}
+                    style={{
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                      width: "100%"
+                    }}
+                  >
                     <Image
                       alt={`media image ${index + 1}`}
                       src={url}
                       height={400}
-                      style={{ width: "100%", objectFit: "cover" }}
+                      width="100%"
+                      style={{
+                        width: "100%",
+                        objectFit: "cover",
+                        display: "block"
+                      }}
                     />
                   </div>
                 ))}
