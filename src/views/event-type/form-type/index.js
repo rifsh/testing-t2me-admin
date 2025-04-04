@@ -55,9 +55,9 @@ const EventTypeForm = ({ mode, type }) => {
           ...values,
           id: type?.id || 0,
         };
+        console.log(editData);
 
         dispatch(setSelectedSubmitItem(editData));
-      
       } else {
         const formData = {
           ...values,
@@ -117,16 +117,15 @@ const EventTypeForm = ({ mode, type }) => {
             ]}
           />
         </div>
+        <SubmitAndConfirmModal
+          responseData={responseData}
+          addFunction={mode === "EDIT" ? updateEventType : addEventType}
+          navigationPath={`${APP_PREFIX_PATH}/event/type/list`}
+          responseMessage={responseMessage}
+          pagination={submitPagination}
+        />
       </Form>
-      <LoadingOverlay loading={loading} />
-
-      <SubmitAndConfirmModal
-        responseData={responseData}
-        addFunction={mode === "EDIT" ? updateEventType : addEventType}
-        navigationPath={`${APP_PREFIX_PATH}/event/type/list`}
-        responseMessage={responseMessage}
-        pagination={submitPagination}
-      />
+      {/* <LoadingOverlay loading={loading} /> */}
     </>
   );
 };
