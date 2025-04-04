@@ -210,7 +210,7 @@ const Index = () => {
             <WarningModal
                 mode={"itemmodal"}
                 visible={dialogVisible}
-                title="Edit Venue"
+                title="Edit Personality Profile"
                 details={TextConstants.DefaultEditContent1}
                 warningMessage="Do you want to proceed to the edit page?"
                 onSubmit={handleModalSubmit}
