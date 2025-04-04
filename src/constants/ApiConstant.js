@@ -42,6 +42,7 @@ export const ApiConstant = {
   EDIT_EVENT_URL: "/api/v1/events/secured/edit_event",
   EDIT_LEAD_EVENT_URL: "/api/v1/events/secured/edit_lead_event",
   LEAD_ENROL_USER: "/api/v1/events/secured/enroll_user_lead_event",
+  LEAD_EVENT_STATUS: "/api/v1/events/secured/edit_lead_event_status",
   EDIT_EVENT_STATUS_URL: "/api/v1/events/secured/edit_event_status",
   OFFER_URL: "/api/v1/offers/secured/offers",
   OFFER_STATUS_URL: "/api/v1/offers/secured/offers_status",
@@ -141,6 +142,7 @@ export const ApiConstant = {
 
   //Payment
   PAYMENT_URL: "/api/v1/payment/secured/payment",
+  PAYMENT_METHOD: "/api/v1/payment/secured/payment/methods",
 
   // lead event list
   LEAD_EVENT_LIST: "/api/v1/events/secured/customer_event",

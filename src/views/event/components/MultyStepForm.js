@@ -56,6 +56,7 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { getEventFormSteps } from "configs/UserAccessConfig";
 import getEventFormItems from "configs/UserAccessConfig";
+import { getSingleLeadEvents, addLeadEvent } from "store/slices/leadEventSlice";
 
 const MultyStepEventForm = ({ eventId, mode }) => {
   const {
@@ -77,6 +78,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     eventType,
     messages: warningMessage,
   } = useSelector((state) => state.event);
+  const { singleLeadEvent, error } = useSelector((state) => state.leadEvents);
   const { ticketTypes, filteredTickets, availableTicketTyps } = useSelector(
     (state) => state.tickets
   );
@@ -96,6 +98,57 @@ const MultyStepEventForm = ({ eventId, mode }) => {
       dispatch(fetchEventType({ active: true }));
     }
   }, [dispatch, eventType.length]);
+
+  useEffect(() => {
+    if (mode === "LEAD" && eventId && !singleLeadEvent) {
+      dispatch(getSingleLeadEvents(eventId));
+    }
+  }, [dispatch, mode, eventId, singleLeadEvent]);
+
+  useEffect(() => {
+    if (
+      mode === "LEAD" &&
+      singleLeadEvent &&
+      !selectedOffers.length &&
+      !selectedCoupons.length
+    ) {
+      const formValues = {
+        event_name: singleLeadEvent.event_name,
+        description: singleLeadEvent.description,
+        place: singleLeadEvent.place?.name,
+        // venue_id: singleLeadEvent.venues?.map((venue) => venue.id) || [],
+      };
+
+      form.setFieldsValue(formValues);
+
+      // const placeIds = singleLeadEvent.venues
+      //   ?.map((venue) => venue.place?.id)
+      //   .filter((id) => id);
+
+      // if (placeIds.length > 0) {
+      // Clear previously selected venues
+      // dispatch(setSelectedVenueList("clear"));
+
+      // Fetch venues for the place
+      // dispatch(getVenues({ place_id: placeIds[0] }));
+
+      // Store venue IDs that need to be selected once venues are loaded
+      // const venueIdsToSelect =
+      //   singleLeadEvent.venues?.map((venue) => venue.id) || [];
+      // sessionStorage.setItem(
+      //   "venueIdsToSelect",
+      //   JSON.stringify(venueIdsToSelect)
+      // );
+      // }
+    }
+  }, [
+    singleLeadEvent,
+    mode,
+    form,
+    dispatch,
+    availableTicketTyps,
+    filteredTickets,
+  ]);
 
   useEffect(() => {
     if (
@@ -450,8 +503,6 @@ const MultyStepEventForm = ({ eventId, mode }) => {
             : submitData.event_add_on_services,
           event_qna: !submitData.event_qna ? [] : submitData.event_qna,
           max_tickets: parseInt(submitData.max_tickets || "0", 10),
-          event_type_id:
-            eventType.find((item) => item.type === "General")?.id || 1,
         };
 
         console.log("HELOOOOOOOOOOOOOOOO");
@@ -478,6 +529,8 @@ const MultyStepEventForm = ({ eventId, mode }) => {
       dispatch(setSubmitLoading(false));
     }
   };
+  console.log("....................asxas<><><>.", eventId);
+
   const handleWarningPagination = (page, size) => {
     console.log("------------------------");
 

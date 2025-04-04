@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, Row, Col, Typography, Space, Image, Button, Carousel, Badge, Tag, Avatar, Empty, List, Collapse, Divider, Progress, Tabs } from "antd";
+import { Card, Row, Col, Image, Carousel } from "antd";
 
 const EventOverviewTab = ({ mediaImages, eventDetails }) => {
     return (

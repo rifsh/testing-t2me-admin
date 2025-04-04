@@ -89,7 +89,7 @@ const PaymentMethodFields = ({ name, payment_type, form }) => {
           </Form.Item>
         </div>
       );
-    case "n-genius": 
+    case "n-genius":
       return (
         <div className="payment-method-fields-n-genius">
           <Form.Item

@@ -69,7 +69,7 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         isGroupTitle: false,
         submenu: [
-          
+
           {
             key: "general",
             path: `${APP_PREFIX_PATH}/services/submenu1`,
@@ -79,14 +79,14 @@ const superAdminDashBoardNavTree = [
             isGroupTitle: false,
             submenu: [
               {
-              key: "event.type",
-              path: `${APP_PREFIX_PATH}/event/type/list`,
-              title: "sidenav.event.type",
-              icon: DashboardOutlined,
-              breadcrumb: false,
-              isGroupTitle: false,
-              submenu: [],
-            },
+                key: "event.type",
+                path: `${APP_PREFIX_PATH}/event/type/list`,
+                title: "sidenav.event.type",
+                icon: DashboardOutlined,
+                breadcrumb: false,
+                isGroupTitle: false,
+                submenu: [],
+              },
               {
                 key: "place.list",
                 path: `${APP_PREFIX_PATH}/place/list`,
@@ -197,17 +197,33 @@ const superAdminDashBoardNavTree = [
             isGroupTitle: false,
             submenu: [
               {
-                key: "movie.movie",
-                path: `${APP_PREFIX_PATH}/movie/list`,
-                title: "sidenav.movie.movies",
+                key: "movie.screen",
+                path: `${APP_PREFIX_PATH}/screen/list`,
+                title: "sidenav.screen",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 isGroupTitle: false,
               },
               {
+                key: "seat.list",
+                path: `${APP_PREFIX_PATH}/seat/movie/list`,
+                title: "sidenav.seat",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
+              },
+              {
                 key: "movie.cast",
                 path: `${APP_PREFIX_PATH}/cast/list`,
                 title: "sidenav.movie.cast",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                isGroupTitle: false,
+              },
+              {
+                key: "movie.movie",
+                path: `${APP_PREFIX_PATH}/movie/list`,
+                title: "sidenav.movie.movies",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 isGroupTitle: false,
@@ -219,22 +235,8 @@ const superAdminDashBoardNavTree = [
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 isGroupTitle: false,
-              },{
-                key: "seat.list",
-                path: `${APP_PREFIX_PATH}/seat/movie/list`,
-                title: "sidenav.seat",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
               },
-              {
-                key: "movie.screen",
-                path: `${APP_PREFIX_PATH}/screen/list`,
-                title: "sidenav.screen",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                isGroupTitle: false,
-              },
+
             ],
           },
         ],
@@ -306,15 +308,16 @@ const superAdminDashBoardNavTree = [
         icon: OrderedListOutlined,
         breadcrumb: false,
         submenu: [],
-      },
-      {
-        key: "customerEvent.convert",
-        path: `${APP_PREFIX_PATH}/leadevent/convert`,
-        title: "sidenav.leadevent.convert",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
+      }
+      /////////////////
+      // {
+      //   key: "customerEvent.convert",
+      //   path: `${APP_PREFIX_PATH}/leadevent/convert`,
+      //   title: "sidenav.leadevent.convert",
+      //   icon: OrderedListOutlined,
+      //   breadcrumb: false,
+      //   submenu: [],
+      // },
     ],
   },
   {
@@ -744,23 +747,23 @@ const eventOrganaizerDashBoardNavTree = [
       },
     ],
   },
-  {
-    key: "LeadEventRequest",
-    path: `${APP_PREFIX_PATH}/forms`,
-    title: "Lead Event Request",
-    icon: DashboardOutlined,
-    breadcrumb: false,
-    submenu: [
-      {
-        key: "customerEvent.convert",
-        path: `${APP_PREFIX_PATH}/leadevent/convert`,
-        title: "sidenav.leadevent.convert",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-    ],
-  },
+  // {
+  //   key: "LeadEventRequest",
+  //   path: `${APP_PREFIX_PATH}/forms`,
+  //   title: "Lead Event Request",
+  //   icon: DashboardOutlined,
+  //   breadcrumb: false,
+  //   submenu: [
+  //     {
+  //       key: "customerEvent.convert",
+  //       path: `${APP_PREFIX_PATH}/leadevent/convert`,
+  //       title: "sidenav.leadevent.convert",
+  //       icon: OrderedListOutlined,
+  //       breadcrumb: false,
+  //       submenu: [],
+  //     },
+  //   ],
+  // },
   {
     key: "TrackRequest",
     path: `${APP_PREFIX_PATH}/forms`,
