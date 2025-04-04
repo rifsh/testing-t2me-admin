@@ -141,7 +141,7 @@ const EventTypeList = () => {
       dataIndex: "description",
       sorter: (a, b) => Utils.antdTableSorter(a, b, "description"),
     },
-    // Utils.statusColumnUtil(handleUpdateStatus),
+    Utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "",
       dataIndex: "actions",
