@@ -1,7 +1,8 @@
 import React from 'react'
 import { Card, Row, Col, Image, Carousel } from "antd";
 
-const EventOverviewTab = ({ mediaImages, eventDetails }) => {
+const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
+
     return (
         <div style={{ padding: "24px" }}>
             <Row gutter={[24, 24]}>
@@ -82,7 +83,7 @@ const EventOverviewTab = ({ mediaImages, eventDetails }) => {
                 </Col>
 
                 <Col xs={24} md={12}>
-                    {mediaImages?.length > 0 ? (
+                    {!isNoImage ? (
                         <Card
                             title="Media Gallery"
                             bordered={false}
@@ -97,18 +98,14 @@ const EventOverviewTab = ({ mediaImages, eventDetails }) => {
                                 color: "#1890ff"
                             }}
                         >
-                            <Carousel autoplay dots={{ className: "custom-carousel-dots" }}>
-                                {mediaImages.map((url, index) => (
-                                    <div key={index} style={{ borderRadius: "8px", overflow: "hidden" }}>
-                                        <Image
-                                            alt={`media image ${index + 1}`}
-                                            src={url}
-                                            height={250}
-                                            style={{ width: "100%", objectFit: "cover" }}
-                                        />
-                                    </div>
-                                ))}
-                            </Carousel>
+                            <div style={{ borderRadius: "8px", overflow: "hidden" }}>
+                                <Image
+                                    alt={`media image`}
+                                    src={eventDetails.thumbnail_image}
+                                    height={250}
+                                    style={{ width: "100%", objectFit: "cover" }}
+                                />
+                            </div>
                         </Card>
                     ) : (
                         <Card
