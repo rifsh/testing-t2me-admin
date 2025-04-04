@@ -159,6 +159,7 @@ const CategoryFormFields = ({ mode, category }) => {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
+          <Form form={form} layout="vertical">
           <Form.Item
             name="category_code"
             label="Code"
@@ -178,7 +179,6 @@ const CategoryFormFields = ({ mode, category }) => {
               ))}
             </Select>
           </Form.Item>
-          <Form form={form} layout="vertical">
             <Form.Item name="name" label="Category Name" rules={rules.name}>
               <Input placeholder="Category" />
             </Form.Item>
