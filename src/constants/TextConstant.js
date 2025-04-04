@@ -28,6 +28,6 @@ export const TextConstants = {
 }
 
 export const MODE = {
-  Add: "EDIT",
+  ADD: "ADD",
   EDIT: "EDIT"
 }

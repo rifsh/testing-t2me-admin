@@ -20,7 +20,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedSubmitItem } from 'store/slices/modalSlice';
 import { ActionType } from 'utils/api/warning-submit-util';
 import { MODE } from 'constants/TextConstant';
-import { useParams } from 'react-router-dom';
 import dayjs from "dayjs";
 import LoadingOverlay from 'components/util-components/Loader';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
