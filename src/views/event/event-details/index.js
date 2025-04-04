@@ -103,11 +103,10 @@ const EventDetails = () => {
         style={{
           borderRadius: "12px",
           overflow: "hidden",
-          // boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
           marginBottom: "24px",
         }}
         cover={
-          isNoImage ? (
+          mediaImages?.length === 0 ? (
             <div
               style={{
                 height: 400,
@@ -126,14 +125,31 @@ const EventDetails = () => {
               </div>
             </div>
           ) : (
-            <div style={{ position: "relative" }}>
-              <Image
-                alt="event thumbnail"
-                src={eventDetails.thumbnail_image}
-                height={400}
-                width={"100%"}
-                style={{ objectFit: "cover" }}
-              />
+            <div style={{ position: "relative", width: "100%" }}>
+              <Carousel autoplay dots={{ className: "custom-carousel-dots" }}>
+                {mediaImages.map((url, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                      width: "100%"
+                    }}
+                  >
+                    <Image
+                      alt={`media image ${index + 1}`}
+                      src={url}
+                      height={400}
+                      width="100%"
+                      style={{
+                        width: "100%",
+                        objectFit: "cover",
+                        display: "block"
+                      }}
+                    />
+                  </div>
+                ))}
+              </Carousel>
               <div
                 style={{
                   position: "absolute",
@@ -195,6 +211,7 @@ const EventDetails = () => {
             key="1"
           >
             <EventOverviewTab
+              isNoImage={isNoImage}
               eventDetails={eventDetails}
               mediaImages={mediaImages}
             />
@@ -217,16 +234,16 @@ const EventDetails = () => {
                   Event Users
                 </Typography.Title>
                 {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
-                <Button
-                  type="primary"
-                  icon={<UserAddOutlined />}
-                  onClick={handleEnrollUser}
-                >
-                  Add User
-                </Button>
-              )}
+                  <Button
+                    type="primary"
+                    icon={<UserAddOutlined />}
+                    onClick={handleEnrollUser}
+                  >
+                    Add User
+                  </Button>
+                )}
               </div>
-              
+
               {eventDetails.users?.length > 0 ? (
                 <Row gutter={[24, 24]} justify="start">
                   {eventDetails?.users.map((user, index) => (
