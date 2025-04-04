@@ -112,6 +112,14 @@ export const ApiConstant = {
   FETCH_SCREEN_AUDIO_URL: "/api/v1/moies/secured/screens/audio",
   FETCH_SCREEN_FEATURE_URL: "/api/v1/moies/secured/screens/feature",
 
+  //PERSONALITY_API_ENDPOINTS
+  ADD_PERSONALITY_URL: "/api/v1/moies/secured/personality",
+  GET_PERSONALITY_URL: "/api/v1/moies/secured/personality",
+  GET_PERSONALITYBYID_URL: "/api/v1/moies/secured/personality/single",
+  EDIT_PERSONALITY_STATUS_URL: "/api/v1/moies/secured/personality/edit_status",
+  EDIT_PERSONALITY_URL: "/api/v1/moies/secured/personality/edit",
+
+
   // VALIDATION API ENDPOINTS
 
   PLACE_VALIDATE_URL: "/api/v1/validation/secured/validate_place",

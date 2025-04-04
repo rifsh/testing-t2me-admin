@@ -1,5 +1,4 @@
-// ActorDetails.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Form,
     Input,
@@ -10,11 +9,9 @@ import {
     Col,
     Divider,
     Typography,
-    Space
 } from 'antd';
 import {
     UserOutlined,
-    IdcardOutlined,
     CalendarOutlined,
     TeamOutlined,
     InfoCircleOutlined
@@ -27,13 +24,44 @@ import { OCCUPATIONS } from 'mock/data/CastData';
 const { Title } = Typography;
 const { Option } = Select;
 
-const ActorDetails = ({ form, onSubmit, loading }) => {
+const ActorDetails = ({ form, onSubmit }) => {
+
     const normFile = (e) => {
         if (Array.isArray(e)) {
             return e;
         }
         return e?.fileList || [];
     };
+
+    const calculateAge = (date) => {
+        if (!date) {
+            form.setFieldsValue({ age: '' });
+            return;
+        }
+
+        const today = new Date();
+        let age = today.getFullYear() - date.$y;
+
+        const monthDiff = today.getMonth() - date.$M + 1;
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.$D)) {
+            age--;
+        }
+
+        form.setFieldsValue({ age });
+    };
+
+    const handleBirthDateChange = (date) => {
+        calculateAge(date);
+    };
+
+    useEffect(() => {
+        const birthDate = form.getFieldValue('birthDate');
+        if (birthDate) {
+            const age = calculateAge(birthDate);
+            form.setFieldsValue({ age });
+        }
+    }, [form]);
+
 
     return (
         <Card className="actor-details-card">
@@ -44,11 +72,6 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                 scrollToFirstError
             >
                 <Row gutter={24}>
-                    <Col xs={24}>
-                        <Title level={4}>
-                            <IdcardOutlined /> Personal Information
-                        </Title>
-                    </Col>
 
                     <Col xs={24} md={12}>
                         <Form.Item
@@ -62,8 +85,10 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
 
                     <Col xs={24} md={12}>
                         <Form.Item
-                            name="alsoKnownAs"
+                            name="also_known_as"
                             label="Also Known As"
+                            rules={[{ required: true, message: 'Please enter actor another name' }]}
+
                         >
                             <Input placeholder="Enter nicknames or stage names" />
                         </Form.Item>
@@ -71,7 +96,7 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
 
                     <Col xs={24} md={12}>
                         <Form.Item
-                            name="spouseName"
+                            name="spouse_name"
                             label="Spouse/Partner Name"
                         >
                             <Input placeholder="Enter spouse or partner name" prefix={<TeamOutlined />} />
@@ -101,16 +126,33 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                             <DatePicker
                                 style={{ width: '100%' }}
                                 placeholder="Select birth date"
+                                disabledDate={(current) => current && current > new Date()}
                                 format="YYYY-MM-DD"
                                 prefix={<CalendarOutlined />}
+                                onChange={handleBirthDateChange}
                             />
                         </Form.Item>
                     </Col>
 
                     <Col xs={24} md={12}>
                         <Form.Item
+                            name="age"
+                            label="Age"
+                            rules={[{ required: true, message: 'Age is required' }]}
+                        >
+                            <Input
+                                placeholder="Calculated from birth date"
+                                disabled
+                                suffix="years"
+                                style={{ color: '#000' }}
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                        <Form.Item
                             name="nationality"
                             label="Nationality"
+                            rules={[{ required: true, message: 'Please enter nationality' }]}
                         >
                             <Input placeholder="Enter nationality" />
                         </Form.Item>
@@ -128,7 +170,7 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                         <Form.Item
                             name="occupation"
                             label="Occupation"
-                            rules={[{ required: true, message: 'Please enter occupation' }]}
+                            rules={[{ required: true, message: 'Please add occupation' }]}
                         >
                             <Select
                                 mode="tags"
@@ -144,7 +186,6 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                         </Form.Item>
                     </Col>
 
-                    {/* About Section */}
                     <Col xs={24}>
                         <Divider />
                         <Title level={4}>
@@ -162,20 +203,21 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                         </Form.Item>
                     </Col>
 
-                    <Col xs={24}>
+                    {/* <Col xs={24}>
                         <Form.Item
                             name="funFacts"
                             label="Fun Facts"
                         >
                             <TextEditor />
                         </Form.Item>
-                    </Col>
+                    </Col> */}
 
                     {/* Profile Image */}
                     <Col xs={24}>
                         <Form.Item
-                            name="profileImage"
+                            name="thumbnail_image"
                             label="Upload Profile Image"
+                            rules={[{ required: true, message: 'Please add a profile image' }]}
                             valuePropName="value"
                             getValueFromEvent={normFile}
                             style={{ marginBottom: "0px", padding: "0px" }}

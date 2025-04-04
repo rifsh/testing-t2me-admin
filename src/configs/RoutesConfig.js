@@ -110,18 +110,23 @@ export const protectedRoutes = [
   },
   {
     key: "movie.cast",
-    path: `${APP_PREFIX_PATH}/cast/list`,
+    path: `${APP_PREFIX_PATH}/personality/list`,
     component: React.lazy(() => import("views/Movie/cast/cast-list"))
   },
   {
     key: "movie.cast.add",
-    path: `${APP_PREFIX_PATH}/cast/add`,
+    path: `${APP_PREFIX_PATH}/personality/add`,
     component: React.lazy(() => import("views/Movie/cast/cast-add"))
   },
   {
     key: "movie.cast.details",
-    path: `${APP_PREFIX_PATH}/cast/details`,
+    path: `${APP_PREFIX_PATH}/personality/details/:id`,
     component: React.lazy(() => import("views/Movie/cast/cast-details"))
+  },
+  {
+    key: "movie.cast.details",
+    path: `${APP_PREFIX_PATH}/personality/edit/:id`,
+    component: React.lazy(() => import("views/Movie/cast/cast-edit"))
   },
   {
     key: "movie.schedule",

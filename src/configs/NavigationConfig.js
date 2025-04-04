@@ -214,7 +214,7 @@ const superAdminDashBoardNavTree = [
               },
               {
                 key: "movie.cast",
-                path: `${APP_PREFIX_PATH}/cast/list`,
+                path: `${APP_PREFIX_PATH}/personality/list`,
                 title: "sidenav.movie.cast",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
