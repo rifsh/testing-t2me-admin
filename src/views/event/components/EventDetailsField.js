@@ -72,18 +72,18 @@ const EventDetailsField = ({ mode }) => {
   console.log("mode details ..............", { mode });
   const dispatch = useDispatch();
   const handleBeforeUpload = Utils.handleBeforeUpload;
-  const { eventType, loading } = useSelector((state) => state.event);
+  // const { eventType, loading } = useSelector((state) => state.event);
 
-  useEffect(() => {
-    if (!eventType.length) {
-      dispatch(fetchEventType({ active: true }));
-    }
-  }, [dispatch, eventType.length]);
+  // useEffect(() => {
+  //   if (!eventType.length) {
+  //     dispatch(fetchEventType({ active: true }));
+  //   }
+  // }, [dispatch, eventType.length]); 
   return (
     <div>
       <Col xs={24} sm={24} md={17}>
         <Card title="Event Info">
-          <Form.Item name="event_type_id" label="Event Type" rules={rules.name}>
+          {/* <Form.Item name="event_type_id" label="Event Type" rules={rules.name}>
             <Select
               loading={loading}
               style={{ width: "100%" }}
@@ -93,9 +93,9 @@ const EventDetailsField = ({ mode }) => {
                 <Option key={type.id} value={type.id}>
                   {type.name}
                 </Option>
-              ))}
+              ))} 
             </Select>
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item name="event_name" label="Event name" rules={rules.name}>
             <Input placeholder="Event Name" />
           </Form.Item>
