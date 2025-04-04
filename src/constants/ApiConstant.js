@@ -34,6 +34,7 @@ export const ApiConstant = {
   EVENT_TYPE_OPTION_URL: "/api/v1/events/secured/event_type/options",
   EVENT_TYPE_URL: "/api/v1/events/secured/event_type",
   EVENT_TYPE_DETAILS_URL: "/api/v1/events/secured/event_type/detail",
+  EVENT_TYPE_STATUS_URL: "/api/v1/events/secured/event_type/status",
   LEAD_EVENT_DETAILS_URL: "/api/v1/events/secured/lead_event/single",
   LEAD_EVENT_MESSAGE_URL: "/api/v1/events/secured/lead_event/comment",
   PLACE_EVENTS_URL: "/api/v1/events/public/event",

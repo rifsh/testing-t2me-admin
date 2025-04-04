@@ -8,10 +8,10 @@ function EventTypeFormFields({ form, mode }) {
   const { type_option, loading } = useSelector((state) => state.event);
 
   useEffect(() => {
-    dispatch(fetchEventTypeOption());
-   
+    if (mode !== "EDIT") {
+      dispatch(fetchEventTypeOption());
+    }
   }, [dispatch]);
-
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
