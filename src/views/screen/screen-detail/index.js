@@ -153,7 +153,7 @@ const ScreenDetailView = () => {
                         key="details"
                     >
                         <Row gutter={[24, 24]}>
-                            <Col xs={24} lg={16}>
+                            <Col xs={24} lg={16} style={{maxHeight:"200px"}}>
                                 <Card
                                     title={
                                         <Space>

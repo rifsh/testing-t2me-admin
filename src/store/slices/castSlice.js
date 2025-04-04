@@ -4,8 +4,10 @@ import PersonalityService from "services/PersonalityService";
 const initialState = {
     loading: false,
     response: null,
+    editId: null,
     singleResponse: null,
     personalities: null,
+    submitMessage: null,
     pagination: { size: 10, page: 1 }
 };
 
@@ -50,7 +52,9 @@ const castSlice = createSlice({
     name: "screen",
     initialState,
     reducers: {
-
+        setPersonalityEditId(state, action) {
+            state.editId = action.payload
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -59,7 +63,8 @@ const castSlice = createSlice({
             })
             .addCase(createPersonality.fulfilled, (state, action) => {
                 state.loading = false;
-                state.response = action.payload
+                state.response = action.payload;
+                state.submitMessage = action.payload.status.message;
             })
             .addCase(createPersonality.rejected, (state) => {
                 state.loading = false;
@@ -69,7 +74,7 @@ const castSlice = createSlice({
             })
             .addCase(fetchPersonalitiesData.fulfilled, (state, action) => {
                 state.loading = false;
-                state.response = action.payload
+                state.response = action.payload;
             })
             .addCase(fetchPersonalitiesData.rejected, (state) => {
                 state.loading = false;
@@ -87,6 +92,6 @@ const castSlice = createSlice({
     },
 });
 
-export const { } = castSlice.actions;
+export const { setPersonalityEditId } = castSlice.actions;
 
 export default castSlice.reducer;

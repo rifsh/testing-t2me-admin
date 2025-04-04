@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Form,
     Button,
@@ -14,23 +14,60 @@ import {
 import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 import ActorDetails from './ActorDetailsForm ';
 import { SubmitAndConfirmModal } from 'components/util-components/ModalItems/SubmitConfirmModal';
-import { createPersonality } from 'store/slices/castSlice';
+import { createPersonality, fetchPersonalitiesById } from 'store/slices/castSlice';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedSubmitItem } from 'store/slices/modalSlice';
 import { ActionType } from 'utils/api/warning-submit-util';
+import { MODE } from 'constants/TextConstant';
+import { useParams } from 'react-router-dom';
+import dayjs from "dayjs";
+import LoadingOverlay from 'components/util-components/Loader';
 
 const { Title } = Typography;
 
 const AddPage = ({ mode = 'ADD' }) => {
+    const { id } = useParams()
     const dispatch = useDispatch();
     const [form] = Form.useForm();
-    const [loading, setLoading] = useState(false);
-    const { response } = useSelector((state => state.cast));
+    const { response, loading, submitMessage } = useSelector((state => state.cast));
+
+    useEffect(() => {
+        if (mode === MODE.EDIT) {
+            dispatch(fetchPersonalitiesById({ person_id: id }))
+        }
+    }, [id])
+
+    useEffect(() => {
+        if (response) {
+            console.log("oned", response.birthDate)
+            form.setFieldsValue({
+                name: response.name,
+                also_known_as: response.also_known_as,
+                spouse_name: response.spouse_name,
+                gender: response.gender,
+                birthDate: response.birthDate ? dayjs(response.birthDate, "YYYY-MM-DD") : undefined,
+                age: response.age,
+                nationality: response.nationality,
+                birth_place: response.birth_place,
+                occupation: response.occupation,
+                biography: response.biography,
+                thumbnail_image:
+                    response.thumbnail_image && response.thumbnail_image !== "images"
+                        ? [
+                            {
+                                uid: "-1",
+                                name: response.thumbnail_image.split("/").pop(),
+                                status: "done",
+                                url: response.thumbnail_image,
+                            },
+                        ]
+                        : [],
+            })
+        }
+    }, [response])
 
     const handleSubmit = async () => {
-        setLoading(true);
-
         try {
             const values = await form.validateFields();
             if (mode === 'ADD') {
@@ -77,7 +114,6 @@ const AddPage = ({ mode = 'ADD' }) => {
                     >
                         <ActorDetails
                             form={form}
-                            loading={loading}
                         />
                     </Tabs.TabPane>
                 </Tabs>
@@ -88,19 +124,19 @@ const AddPage = ({ mode = 'ADD' }) => {
                             type="primary"
                             htmlType="submit"
                             onClick={handleSubmit}
-                        // loading={loading}
+                            loading={loading}
                         >
                             Submit
                         </Button>
                     </Space>
                 </Row>
             </Form>
-
+            <LoadingOverlay loading={loading} />
             <SubmitAndConfirmModal
                 responseData={response}
                 addFunction={mode === 'ADD' ? createPersonality : createPersonality}
                 navigationPath={`${APP_PREFIX_PATH}/cast/list`}
-            // responseMessage={screenMessage}
+                responseMessage={submitMessage}
             />
         </div>
     );

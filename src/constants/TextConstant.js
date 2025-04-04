@@ -25,3 +25,8 @@ export const TextConstants = {
   DefaultEditContent3: "The changes do not have assigned schedules but could impact other elements in the forms such as venue, Audio feature , Screen technology and accessbility feature  that can be scheduled for the future.Please review these areas carefully to ensure the changes do not unintentionally affect the form's structure or functionality.",
   IssuesContent: "The issues listed here have been open for more than 3 days without resolution. Please prioritize them urgently and take the necessary actions to close them at the earliest."
 }
+
+export const MODE = {
+  Add: "EDIT",
+  EDIT: "EDIT"
+}

@@ -1,4 +1,3 @@
-// ActorDetails.js
 import React, { useEffect } from 'react';
 import {
     Form,
@@ -10,11 +9,9 @@ import {
     Col,
     Divider,
     Typography,
-    Space
 } from 'antd';
 import {
     UserOutlined,
-    IdcardOutlined,
     CalendarOutlined,
     TeamOutlined,
     InfoCircleOutlined
@@ -23,12 +20,11 @@ import TextEditor from 'components/util-components/FormItems/TextEditor';
 import ResizedImgePicker from 'components/util-components/Image/ResizedImgePicker';
 import { ThumbnailImageResolutions } from 'constants/SupportFileConstants';
 import { OCCUPATIONS } from 'mock/data/CastData';
-import moment from 'moment'; // Make sure moment is imported
 
 const { Title } = Typography;
 const { Option } = Select;
 
-const ActorDetails = ({ form, onSubmit, loading }) => {
+const ActorDetails = ({ form, onSubmit }) => {
 
     const normFile = (e) => {
         if (Array.isArray(e)) {
@@ -65,6 +61,7 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
             form.setFieldsValue({ age });
         }
     }, [form]);
+
 
     return (
         <Card className="actor-details-card">
@@ -206,14 +203,14 @@ const ActorDetails = ({ form, onSubmit, loading }) => {
                         </Form.Item>
                     </Col>
 
-                    <Col xs={24}>
+                    {/* <Col xs={24}>
                         <Form.Item
                             name="funFacts"
                             label="Fun Facts"
                         >
                             <TextEditor />
                         </Form.Item>
-                    </Col>
+                    </Col> */}
 
                     {/* Profile Image */}
                     <Col xs={24}>

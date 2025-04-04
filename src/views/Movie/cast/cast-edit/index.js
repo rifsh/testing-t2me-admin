@@ -1,8 +1,11 @@
 import React from 'react'
+import CelebrityManager from '../components/AddPage'
 
 const Index = () => {
     return (
-        <div>Index</div>
+        <div>
+            <CelebrityManager mode='EDIT' />
+        </div>
     )
 }
 

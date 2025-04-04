@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .screen-detail-card .ant-card-head {
     border-bottom: none;
     padding-bottom: 0;
@@ -48,4 +52,3 @@
         flex-direction: column;
     }
 }
-

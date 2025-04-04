@@ -5,8 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import SearchBarWithStatus from 'components/util-components/Search/SearchBarWithStatus';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchPersonalitiesData } from 'store/slices/castSlice';
+import { fetchPersonalitiesData, setPersonalityEditId } from 'store/slices/castSlice';
 import { DEFAULT_PAGE_SIZE } from 'constants/PageConstants';
+import { setEditItemId } from 'store/slices/categorySlice';
+import { setLocationDialogVisible, setLocationModalLoading } from 'store/slices/locationSlice';
+import WarningModal from 'components/util-components/ModalItems/WarningModal';
+import { TextConstants } from 'constants/TextConstant';
 
 const { Text } = Typography;
 
@@ -14,8 +18,13 @@ const Index = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [filteredData, setFilteredData] = useState([]);
-    const { response, loading, pagination } = useSelector((state => state.cast));
-
+    const { response, loading, pagination, editId } = useSelector((state => state.cast));
+    const {
+        pagination: locationPagination,
+        loading: locationLoading,
+        dialogVisible,
+        modalLoading,
+    } = useSelector((state) => state.locations);
     useEffect(() => {
         dispatch(fetchPersonalitiesData(DEFAULT_PAGE_SIZE));
     }, [dispatch]);
@@ -40,11 +49,22 @@ const Index = () => {
     };
 
     const handleViewDetails = (actor) => {
-        navigate(`${APP_PREFIX_PATH}/cast/details/${actor.id}`);
+        navigate(`${APP_PREFIX_PATH}/personality/details/${actor.id}`);
     };
 
     const handleEditActor = (actor) => {
-        navigate(`${APP_PREFIX_PATH}/cast/edit/${actor.id}`);
+        dispatch(setPersonalityEditId(actor.id));
+        dispatch(setLocationDialogVisible(true));
+    };
+    const handleModalSubmit = async () => {
+        dispatch(setLocationModalLoading(true));
+        navigate(`${APP_PREFIX_PATH}/personality/edit/${editId}`);
+        dispatch(setLocationDialogVisible(false));
+        dispatch(setLocationModalLoading(false));
+    };
+
+    const handleModalCancel = () => {
+        dispatch(setLocationDialogVisible(false));
     };
 
     const getDropdownMenu = (actor) => [
@@ -72,12 +92,7 @@ const Index = () => {
 
     const handleSearch = (value) => {
         if (response && response.items) {
-            const filtered = response.items.filter(actor =>
-                actor.name.toLowerCase().includes(value.toLowerCase()) ||
-                (actor.nationality && actor.nationality.toLowerCase().includes(value.toLowerCase())) ||
-                (actor.also_known_as && actor.also_known_as.toLowerCase().includes(value.toLowerCase()))
-            );
-            setFilteredData(filtered);
+            dispatch(fetchPersonalitiesData())
         }
     };
 
@@ -161,35 +176,50 @@ const Index = () => {
     ];
 
     return (
-        <Card>
-            <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: "10px" }}>
-                <SearchBarWithStatus
-                    placeholder="Search by name or nationality"
-                    onSearch={handleSearch}
-                />
-                <Button
-                    type="primary"
-                    icon={<UserAddOutlined />}
-                    onClick={() => navigate(`${APP_PREFIX_PATH}/cast/add`)}
-                >
-                    Add
-                </Button>
-            </Space>
+        <>
 
-            <Table
-                columns={tableColumns}
-                dataSource={filteredData}
-                rowKey="id"
-                loading={loading}
-                pagination={{
-                    current: pagination.current,
-                    pageSize: pagination.pageSize,
-                    total: pagination.total,
-                    onChange: (page, pageSize) => handlePagination(page, pageSize),
-                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} screens`
-                }}
+            <Card>
+                <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: "10px" }}>
+                    <SearchBarWithStatus
+                        placeholder="Search by name or nationality"
+                        fetchFunction={fetchPersonalitiesData}
+                    />
+                    <Button
+                        type="primary"
+                        icon={<UserAddOutlined />}
+                        onClick={() => navigate(`${APP_PREFIX_PATH}/personality/add`)}
+                    >
+                        Add
+                    </Button>
+                </Space>
+
+                <Table
+                    columns={tableColumns}
+                    dataSource={filteredData}
+                    rowKey="id"
+                    loading={loading}
+                    pagination={{
+                        current: pagination.current,
+                        pageSize: pagination.pageSize,
+                        total: pagination.total,
+                        onChange: (page, pageSize) => handlePagination(page, pageSize),
+                        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} Profiles`
+                    }}
+                />
+            </Card>
+            <WarningModal
+                mode={"itemmodal"}
+                visible={dialogVisible}
+                title="Edit Venue"
+                details={TextConstants.DefaultEditContent1}
+                warningMessage="Do you want to proceed to the edit page?"
+                onSubmit={handleModalSubmit}
+                onCancel={handleModalCancel}
+                confirmText="Proceed to Edit"
+                cancelText="Cancel"
+                loading={modalLoading}
             />
-        </Card>
+        </>
     );
 }
 
