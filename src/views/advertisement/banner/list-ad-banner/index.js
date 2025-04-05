@@ -145,15 +145,21 @@ const AdBannerlist = () => {
         ),
     },
     {
+      title: "Event Type",
+      dataIndex: "event_type.name",
+      render: (_, record) => <span>{record.event_type?.name||"Not Available"}</span>,
+      sorter: (a, b) => a.event_type.name.localeCompare(b.event_type.name),
+    },
+    {
       title: "Place",
       dataIndex: "place.name",
-      render: (_, record) => <span>{record.place.name}</span>,
+      render: (_, record) => <span>{record.place?.name||"Not Available"}</span>,
       sorter: (a, b) => a.place.name.localeCompare(b.place.name),
     },
     {
       title: "Event",
       dataIndex: "event.event_name",
-      render: (_, record) => (
+      render: (_, record) => (  
         <span>{record.event?.event_name || "Not Available"}</span>
       ),
       sorter: (a, b) =>
