@@ -498,6 +498,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           ...venue_id,
           ...ticket_structure,
           ...offers,
+          lead_id:eventId,
           event_add_on_services: !submitData.event_add_on_services
             ? []
             : submitData.event_add_on_services,
