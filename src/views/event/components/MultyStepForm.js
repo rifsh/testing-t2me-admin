@@ -503,6 +503,8 @@ const MultyStepEventForm = ({ eventId, mode }) => {
             : submitData.event_add_on_services,
           event_qna: !submitData.event_qna ? [] : submitData.event_qna,
           max_tickets: parseInt(submitData.max_tickets || "0", 10),
+          event_type_id:
+            eventType.find((item) => item.type === "General")?.id || 1,
         };
 
         console.log("HELOOOOOOOOOOOOOOOO");
