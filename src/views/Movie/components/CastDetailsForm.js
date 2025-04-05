@@ -7,295 +7,558 @@ import {
     Row,
     Col,
     Avatar,
-    Upload,
-    message,
     Modal,
     Tooltip,
-    Tag
+    Tag,
+    Segmented,
+    Empty,
+    Typography,
+    Form,
+    Table,
+    Space
 } from "antd";
 import {
     DeleteOutlined,
-    PlusOutlined,
     UserOutlined,
-    UploadOutlined,
-    EditOutlined,
-    EyeOutlined,
-    InfoCircleOutlined
+    InfoCircleOutlined,
+    TeamOutlined,
+    UserAddOutlined,
+    EditOutlined
 } from "@ant-design/icons";
+import CelebritiesListDropDown from "components/util-components/FormItems/CelebritiesListDropDown";
 
-const { TextArea } = Input;
 const { Option } = Select;
+const { Title } = Typography;
 
-const CastDetailsForm = () => {
-    const [castMembers, setCastMembers] = useState([]);
-    const [previewVisible, setPreviewVisible] = useState(false);
-    const [previewMember, setPreviewMember] = useState(null);
+const CastDetailsForm = ({ form: parentForm, initialValues }) => {
+    const [activeTab, setActiveTab] = useState("cast");
+    const [castMembers, setCastMembers] = useState(initialValues?.cast || []);
+    const [crewMembers, setCrewMembers] = useState(initialValues?.crew || []);
+    const [editingMember, setEditingMember] = useState(null);
+    const [memberForm] = Form.useForm(); // Create a separate form instance for the edit modal
 
-    const roles = [
+    // Roles categorized for Cast and Crew
+    const castRoles = [
         { value: "Lead Actor", color: "blue" },
         { value: "Lead Actress", color: "purple" },
         { value: "Supporting Actor", color: "green" },
         { value: "Supporting Actress", color: "magenta" },
+        { value: "Child Artist", color: "gold" },
+        { value: "Guest Appearance", color: "lime" }
+    ];
+
+    const crewRoles = [
         { value: "Director", color: "red" },
         { value: "Producer", color: "orange" },
         { value: "Music Director", color: "volcano" },
         { value: "Cinematographer", color: "geekblue" },
-        { value: "Screenwriter", color: "cyan" }
+        { value: "Screenwriter", color: "cyan" },
+        { value: "Art Director", color: "pink" },
+        { value: "Costume Designer", color: "teal" },
+        { value: "Editor", color: "brown" },
+        { value: "Choreographer", color: "purple" }
     ];
 
-    const addCastMember = () => {
+    // Sync with parent form
+    useEffect(() => {
+        if (parentForm) {
+            // Set values and notify parent form of changes
+            parentForm.setFieldsValue({
+                cast: castMembers,
+                crew: crewMembers
+            });
+
+            // Force form to register these changes
+            parentForm.validateFields(['cast', 'crew']).catch(() => {
+                // Ignore validation errors
+            });
+        }
+    }, [castMembers, crewMembers, parentForm]);
+
+    // Initialize with parent form values
+    useEffect(() => {
+        if (initialValues) {
+            setCastMembers(initialValues.cast || []);
+            setCrewMembers(initialValues.crew || []);
+        }
+    }, [initialValues]);
+
+    // Update form values when editing member changes
+    useEffect(() => {
+        if (editingMember) {
+            memberForm.setFieldsValue({
+                actorName: editingMember.actorId, // This needs to match the dropdown's expected value
+                actorDisplayName: editingMember.actorName,
+                actorImage: editingMember.actorImage,
+                characterName: editingMember.characterName,
+                role: editingMember.role
+            });
+        }
+    }, [editingMember, memberForm]);
+
+    const addMember = (type) => {
         const newMember = {
             id: Date.now(),
             actorName: '',
-            characterName: '',
-            role: '',
-            image: null,
-            imageUrl: '',
-            bio: '',
-            socialLinks: {
-                instagram: '',
-                twitter: '',
-                imdb: ''
-            }
+            actorId: '',
+            actorImage: '',
+            characterName: type === "cast" ? '' : undefined,
+            role: ''
         };
-        setCastMembers([...castMembers, newMember]);
+
+        if (type === "cast") {
+            const updatedCastMembers = [...castMembers];
+            updatedCastMembers.push(newMember);
+            setCastMembers(updatedCastMembers);
+        } else {
+            const updatedCrewMembers = [...crewMembers];
+            updatedCrewMembers.push(newMember);
+            setCrewMembers(updatedCrewMembers);
+        }
+
+        // Set editing state
+        setEditingMember({ ...newMember, type });
     };
 
-    const removeCastMember = (id) => {
+    const removeMember = (type, id) => {
         Modal.confirm({
-            title: 'Remove Cast Member',
-            content: 'Are you sure you want to remove this cast member?',
+            title: `Remove ${type === "cast" ? "Cast" : "Crew"} Member`,
+            content: `Are you sure you want to remove this ${type === "cast" ? "cast" : "crew"} member?`,
             okText: 'Yes',
             cancelText: 'No',
             onOk() {
-                setCastMembers(castMembers.filter((member) => member.id !== id));
+                if (type === "cast") {
+                    const updated = castMembers.filter((member) => member.id !== id);
+                    setCastMembers(updated);
+                    if (editingMember && editingMember.id === id) {
+                        setEditingMember(null);
+                    }
+                } else {
+                    const updated = crewMembers.filter((member) => member.id !== id);
+                    setCrewMembers(updated);
+                    if (editingMember && editingMember.id === id) {
+                        setEditingMember(null);
+                    }
+                }
             }
         });
     };
 
-    const handleCastMemberChange = (id, field, value) => {
-        const updatedCastMembers = castMembers.map((member) =>
-            member.id === id ? { ...member, [field]: value } : member
-        );
-        setCastMembers(updatedCastMembers);
-    };
+    const handleFormSubmit = (values) => {
+        if (!editingMember) return;
 
-    const beforeUpload = (file) => {
-        const isImage = file.type.startsWith('image/');
-        const isLt2M = file.size / 1024 / 1024 < 2;
-
-        if (!isImage) {
-            message.error('You can only upload image files!');
-            return false;
-        }
-        if (!isLt2M) {
-            message.error('Image must smaller than 2MB!');
-            return false;
-        }
-        return true;
-    };
-
-    const handleImageUpload = (id, info) => {
-        if (info.file.status === 'done' || info.file.status === 'error') {
-            const file = info.file.originFileObj;
-            const imageUrl = URL.createObjectURL(file);
-
-            const updatedCastMembers = castMembers.map((member) =>
-                member.id === id
-                    ? { ...member, image: file, imageUrl: imageUrl }
-                    : member
-            );
-
-            setCastMembers(updatedCastMembers);
-            message.success(`${info.file.name} uploaded successfully`);
-        }
-    };
-
-    const handlePreview = (member) => {
-        setPreviewMember(member);
-        setPreviewVisible(true);
-    };
-
-    useEffect(() => {
-        return () => {
-            castMembers.forEach(member => {
-                if (member.imageUrl) {
-                    URL.revokeObjectURL(member.imageUrl);
-                }
-            });
+        const type = editingMember.type;
+        const updatedMember = {
+            ...editingMember,
+            actorId: values.actorName, // This is the ID from the dropdown
+            actorName: values.actorDisplayName, // Store the display name separately
+            actorImage: values.actorImage, // Store the image URL
+            characterName: values.characterName,
+            role: values.role
         };
-    }, [castMembers]);
 
-    const CastMemberPreview = ({ member }) => (
-        <Row gutter={16}>
-            <Col span={8}>
-                <Avatar
-                    size={200}
-                    src={member.imageUrl}
-                    icon={<UserOutlined />}
-                    style={{ objectFit: 'cover' }}
-                />
-            </Col>
-            <Col span={16}>
-                <h2>{member.actorName}</h2>
-                <p><strong>Character:</strong> {member.characterName}</p>
-                <Tag color={roles.find(r => r.value === member.role)?.color}>
-                    {member.role}
-                </Tag>
-                <div style={{ marginTop: 16 }}>
-                    <h3>Bio</h3>
-                    <p>{member.bio || 'No bio available'}</p>
-                </div>
-            </Col>
-        </Row>
+        if (type === "cast") {
+            // Update the cast members list
+            const updatedCastMembers = castMembers.map(member =>
+                member.id === editingMember.id ? updatedMember : member
+            );
+            setCastMembers(updatedCastMembers);
+        } else {
+            // Update the crew members list
+            const updatedCrewMembers = crewMembers.map(member =>
+                member.id === editingMember.id ? updatedMember : member
+            );
+            setCrewMembers(updatedCrewMembers);
+        }
+
+        // Close the edit form
+        setEditingMember(null);
+    };
+
+    const handleEditMember = (type, member) => {
+        setEditingMember({ ...member, type });
+    };
+
+    // Handle the selection from the CelebritiesListDropDown
+    const handleCelebritySelect = (value, option) => {
+        if (!editingMember) return;
+
+        memberForm.setFieldsValue({
+            actorName: value,  // This is the ID
+            actorDisplayName: option.label,  // This is the display name
+            actorImage: option.image  // This is the image URL
+        });
+    };
+
+    const castColumns = [
+        {
+            title: 'Actor',
+            dataIndex: 'actorName',
+            key: 'actorName',
+            render: (text, record) => (
+                <Space>
+                    <Avatar
+                        size="large"
+                        src={record.actorImage}
+                        style={{
+                            background: 'linear-gradient(135deg, #1890ff, #722ed1)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            fontSize: '18px'
+                        }}
+                    >
+                        {text ? text.charAt(0).toUpperCase() : 'A'}
+                    </Avatar>
+                    <span>{text || 'Unnamed'}</span>
+                </Space>
+            )
+        },
+        {
+            title: 'Character',
+            dataIndex: 'characterName',
+            key: 'characterName',
+            render: (text) => text || '-'
+        },
+        {
+            title: 'Role',
+            dataIndex: 'role',
+            key: 'role',
+            render: (role) => (
+                role ? (
+                    <Tag color={castRoles.find(r => r.value === role)?.color}>
+                        {role}
+                    </Tag>
+                ) : '-'
+            )
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: (_, record) => (
+                <Space size="middle">
+                    <Tooltip title="Edit">
+                        <Button
+                            type="text"
+                            icon={<EditOutlined />}
+                            onClick={() => handleEditMember("cast", record)}
+                        />
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                        <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={() => removeMember("cast", record.id)}
+                        />
+                    </Tooltip>
+                </Space>
+            )
+        }
+    ];
+
+    const crewColumns = [
+        {
+            title: 'Member',
+            dataIndex: 'actorName',
+            key: 'actorName',
+            render: (text, record) => (
+                <Space>
+                    <Avatar
+                        size="large"
+                        src={record.actorImage}
+                        style={{
+                            background: 'linear-gradient(135deg, #1890ff, #722ed1)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            fontSize: '18px'
+                        }}
+                    >
+                        {text ? text.charAt(0).toUpperCase() : 'A'}
+                    </Avatar>
+                    <span>{text || 'Unnamed'}</span>
+                </Space>
+            )
+        },
+        {
+            title: 'Role',
+            dataIndex: 'role',
+            key: 'role',
+            render: (role) => (
+                role ? (
+                    <Tag color={crewRoles.find(r => r.value === role)?.color}>
+                        {role}
+                    </Tag>
+                ) : '-'
+            )
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: (_, record) => (
+                <Space size="middle">
+                    <Tooltip title="Edit">
+                        <Button
+                            type="text"
+                            icon={<EditOutlined />}
+                            onClick={() => handleEditMember("crew", record)}
+                        />
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                        <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={() => removeMember("crew", record.id)}
+                        />
+                    </Tooltip>
+                </Space>
+            )
+        }
+    ];
+
+    const renderEmptyState = (type) => (
+        <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+                <span>
+                    No {type === "cast" ? "cast" : "crew"} members added yet.
+                    Click "Add {type === "cast" ? "Cast" : "Crew"} Member" to get started!
+                </span>
+            }
+            style={{
+                padding: '60px 0',
+                background: '#f9f9f9',
+                borderRadius: '12px'
+            }}
+        >
+            <Button
+                type="primary"
+                icon={<UserAddOutlined />}
+                onClick={() => addMember(type)}
+            >
+                Add {type === "cast" ? "Cast" : "Crew"} Member
+            </Button>
+        </Empty>
+    );
+
+    const renderMemberForm = () => {
+        if (!editingMember) return null;
+
+        const type = editingMember.type;
+        return (
+            <Card
+                title={
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Edit {type === "cast" ? "Cast" : "Crew"} Member</span>
+                        <Button type="text" onClick={() => {
+                            // Remove unsaved members when closing form
+                            if (!editingMember.actorName) {
+                                if (type === "cast") {
+                                    setCastMembers(castMembers.filter(m => m.id !== editingMember.id));
+                                } else {
+                                    setCrewMembers(crewMembers.filter(m => m.id !== editingMember.id));
+                                }
+                            }
+                            setEditingMember(null);
+                        }}>✕</Button>
+                    </div>
+                }
+                style={{ marginBottom: '20px' }}
+            >
+                <Form
+                    form={memberForm}
+                    layout="vertical"
+                    onFinish={handleFormSubmit}
+                    initialValues={{
+                        actorName: editingMember.actorId,
+                        actorDisplayName: editingMember.actorName,
+                        actorImage: editingMember.actorImage,
+                        characterName: editingMember.characterName,
+                        role: editingMember.role
+                    }}
+                >
+                    <Row gutter={16}>
+                        <Col xs={24} sm={12}>
+                            <Form.Item
+                                name="actorName"
+                                label="Actor"
+                                rules={[{ required: true, message: 'Please select an actor' }]}
+                            >
+                                <CelebritiesListDropDown
+                                    value={editingMember.actorId}
+                                    onChange={handleCelebritySelect}
+                                />
+                            </Form.Item>
+                            {/* Hidden fields to store display name and image */}
+                            <Form.Item name="actorDisplayName" hidden>
+                                <Input />
+                            </Form.Item>
+                            <Form.Item name="actorImage" hidden>
+                                <Input />
+                            </Form.Item>
+                        </Col>
+
+                        {type === "cast" && (
+                            <Col xs={24} sm={12}>
+                                <Form.Item
+                                    name="characterName"
+                                    label="Character Name"
+                                    rules={[{ required: true, message: 'Please enter character name' }]}
+                                >
+                                    <Input placeholder="Enter character name" />
+                                </Form.Item>
+                            </Col>
+                        )}
+
+                        <Col xs={24}>
+                            <Form.Item
+                                name="role"
+                                label="Role"
+                                rules={[{ required: true, message: 'Please select a role' }]}
+                            >
+                                <Select placeholder="Select role"
+                                    mode="tags"
+                                    tokenSeparators={[',']}
+                                >
+                                    {(type === "cast" ? castRoles : crewRoles).map((role) => (
+                                        <Option key={role.value} value={role.value}>
+                                            <Tag color={role.color}>{role.value}</Tag>
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+
+                        <Col xs={24} style={{ textAlign: 'right' }}>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    memberForm.submit();
+                                }}
+                            >
+                                Save
+                            </Button>
+                        </Col>
+                    </Row>
+                </Form>
+            </Card>
+        );
+    };
+
+    // Create hidden fields in the parent form to store cast and crew data
+    const renderHiddenParentFormFields = () => (
+        <>
+            <Form.Item name="cast" hidden>
+                <Input />
+            </Form.Item>
+            <Form.Item name="crew" hidden>
+                <Input />
+            </Form.Item>
+        </>
     );
 
     return (
         <Card
-            title={
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                        Cast Details
-                        <Tooltip title="Add details of actors in the movie">
-                            <InfoCircleOutlined style={{ marginLeft: 8, color: '#1890ff' }} />
-                        </Tooltip>
-                    </span>
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={addCastMember}
-                    >
-                        Add Cast Member
-                    </Button>
-                </div>
-            }
             bordered={false}
             style={{
                 borderRadius: '12px',
+                background: '#fff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
             }}
+            bodyStyle={{ padding: '24px' }}
         >
-            {castMembers.length === 0 && (
-                <div
-                    style={{
-                        textAlign: 'center',
-                        color: '#bfbfbf',
-                        padding: '40px'
-                    }}
-                >
-                    <UserOutlined style={{ fontSize: '48px', marginBottom: 16 }} />
-                    <p>No cast members added yet. Click "Add Cast Member" to get started!</p>
-                </div>
-            )}
+            {renderHiddenParentFormFields()}
 
-            {castMembers.map((member) => (
-                <Card
-                    key={member.id}
-                    style={{
-                        marginBottom: '20px',
-                        borderRadius: '12px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                    }}
-                    actions={[
-                        <Tooltip title="View Details">
-                            <EyeOutlined key="view" onClick={() => handlePreview(member)} />
-                        </Tooltip>,
-                        <Tooltip title="Remove Cast Member">
-                            <DeleteOutlined key="delete" onClick={() => removeCastMember(member.id)} />
+            <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <Title level={4} style={{ margin: 0 }}>
+                        Film Team Management
+                        <Tooltip title="Manage cast and crew details for your production">
+                            <InfoCircleOutlined style={{ marginLeft: 8, fontSize: '16px', color: '#1890ff' }} />
                         </Tooltip>
+                    </Title>
+                </div>
+
+                <Segmented
+                    options={[
+                        {
+                            label: (
+                                <div style={{ padding: '4px 0' }}>
+                                    <UserOutlined />
+                                    <div>Cast ({castMembers.filter(m => m.actorName && m.characterName && m.role).length})</div>
+                                </div>
+                            ),
+                            value: 'cast',
+                        },
+                        {
+                            label: (
+                                <div style={{ padding: '4px 0' }}>
+                                    <TeamOutlined />
+                                    <div>Crew ({crewMembers.filter(m => m.actorName && m.role).length})</div>
+                                </div>
+                            ),
+                            value: 'crew',
+                        },
                     ]}
-                >
-                    <Row gutter={16} align="middle">
-                        <Col xs={24} sm={4}>
-                            <Upload
-                                name="avatar"
-                                listType="picture-card"
-                                showUploadList={false}
-                                beforeUpload={beforeUpload}
-                                onChange={(info) => handleImageUpload(member.id, info)}
-                                accept="image/*"
-                            >
-                                {member.imageUrl ? (
-                                    <Avatar
-                                        size={100}
-                                        src={member.imageUrl}
-                                        style={{
-                                            borderRadius: '8px',
-                                            objectFit: 'cover'
-                                        }}
-                                    />
-                                ) : (
-                                    <div>
-                                        <PlusOutlined style={{ fontSize: '24px' }} />
-                                        <div style={{ marginTop: '8px' }}>Upload Photo</div>
-                                    </div>
-                                )}
-                            </Upload>
-                        </Col>
+                    block
+                    value={activeTab}
+                    onChange={(value) => {
+                        setActiveTab(value);
+                        setEditingMember(null);
+                    }}
+                    style={{ marginBottom: '24px' }}
+                />
 
-                        <Col xs={24} sm={20}>
-                            <Row gutter={16}>
-                                <Col xs={24} sm={8}>
-                                    <div style={{ marginBottom: '8px' }}>Actor Name</div>
-                                    <Input
-                                        placeholder="Enter actor's real name"
-                                        value={member.actorName}
-                                        onChange={(e) => handleCastMemberChange(member.id, 'actorName', e.target.value)}
-                                        prefix={<UserOutlined style={{ color: '#1890ff' }} />}
-                                    />
-                                </Col>
+                <div style={{ marginBottom: '20px' }}>
+                    <Button
+                        type="primary"
+                        icon={<UserAddOutlined />}
+                        onClick={() => addMember(activeTab)}
+                    >
+                        Add {activeTab === "cast" ? "Cast" : "Crew"} Member
+                    </Button>
+                </div>
 
-                                <Col xs={24} sm={8}>
-                                    <div style={{ marginBottom: '8px' }}>Character Name</div>
-                                    <Input
-                                        placeholder="Enter character name"
-                                        value={member.characterName}
-                                        onChange={(e) => handleCastMemberChange(member.id, 'characterName', e.target.value)}
-                                        prefix={<EditOutlined style={{ color: '#1890ff' }} />}
-                                    />
-                                </Col>
+                {renderMemberForm()}
+            </div>
 
-                                <Col xs={24} sm={8}>
-                                    <div style={{ marginBottom: '8px' }}>Role</div>
-                                    <Select
-                                        placeholder="Select role"
-                                        value={member.role}
-                                        onChange={(value) => handleCastMemberChange(member.id, 'role', value)}
-                                        style={{ width: '100%' }}
-                                    >
-                                        {roles.map((role) => (
-                                            <Option key={role.value} value={role.value}>
-                                                <Tag color={role.color}>{role.value}</Tag>
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Col>
+            <div style={{ minHeight: '200px' }}>
+                {activeTab === "cast" && (
+                    <>
+                        {castMembers.filter(m => m.actorName && m.characterName && m.role).length === 0 ?
+                            renderEmptyState("cast") : (
+                                <Table
+                                    columns={castColumns}
+                                    dataSource={castMembers.filter(m => m.actorName && m.characterName && m.role)}
+                                    rowKey="id"
+                                    pagination={false}
+                                    bordered
+                                    style={{ borderRadius: '8px', overflow: 'hidden' }}
+                                />
+                            )}
+                    </>
+                )}
 
-                                <Col xs={24} style={{ marginTop: '16px' }}>
-                                    <div style={{ marginBottom: '8px' }}>Bio (Optional)</div>
-                                    <TextArea
-                                        rows={2}
-                                        placeholder="Brief description about the actor/character"
-                                        value={member.bio}
-                                        onChange={(e) => handleCastMemberChange(member.id, 'bio', e.target.value)}
-                                    />
-                                </Col>
-                            </Row>
-                        </Col>
-                    </Row>
-                </Card>
-            ))}
-
-            {previewMember && (
-                <Modal
-                    visible={previewVisible}
-                    title="Cast Member Details"
-                    onCancel={() => setPreviewVisible(false)}
-                    footer={null}
-                    width={800}
-                >
-                    <CastMemberPreview member={previewMember} />
-                </Modal>
-            )}
+                {activeTab === "crew" && (
+                    <>
+                        {crewMembers.filter(m => m.actorName && m.role).length === 0 ?
+                            renderEmptyState("crew") : (
+                                <Table
+                                    columns={crewColumns}
+                                    dataSource={crewMembers.filter(m => m.actorName && m.role)}
+                                    rowKey="id"
+                                    pagination={false}
+                                    bordered
+                                    style={{ borderRadius: '8px', overflow: 'hidden' }}
+                                />
+                            )}
+                    </>
+                )}
+            </div>
         </Card>
     );
 }

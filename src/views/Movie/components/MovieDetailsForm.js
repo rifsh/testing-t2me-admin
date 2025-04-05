@@ -1,26 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import {
     Form,
     Input,
     Select,
-    Button,
     Card,
     Row,
     Col,
-    Upload,
     DatePicker,
     InputNumber,
-    message,
     Space,
     Avatar,
 } from "antd";
 import {
-    UploadOutlined,
-    PlusOutlined,
     UserOutlined,
-    DollarOutlined,
-    CalendarOutlined,
-    BankOutlined
 } from "@ant-design/icons";
 import TextEditor from "components/util-components/FormItems/TextEditor";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
