@@ -556,7 +556,7 @@ const eventSlice = createSlice({
         state.loading = false;
         const eventData = { ...action.payload[0] };
 
-        const uniqueOffers = eventData.event_offers.reduce((acc, current) => {
+        const uniqueOffers = eventData?.event_offers?.reduce((acc, current) => {
           const isDuplicate = acc.find(
             (item) => item.offer.id === current.offer.id
           );
@@ -566,7 +566,7 @@ const eventSlice = createSlice({
           return acc;
         }, []);
 
-        const uniqueCoupons = eventData.event_coupons.reduce((acc, current) => {
+        const uniqueCoupons = eventData?.event_coupons?.reduce((acc, current) => {
           const isDuplicate = acc.find(
             (item) => item.coupons.id === current.coupons.id
           );
