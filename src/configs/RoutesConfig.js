@@ -573,8 +573,9 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/leadevent/lead-details")),
   },
   {
+    // /leadevent/add/:eventId`,
     key: "lead.event.add",
-    path: `${APP_PREFIX_PATH}/leadevent/add/:eventId`,
+    path: `${APP_PREFIX_PATH}/event/add/:eventId`,
     component: React.lazy(() => import("views/leadevent/add-leadevent")),
   },
   {
