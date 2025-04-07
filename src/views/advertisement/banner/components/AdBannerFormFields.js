@@ -68,8 +68,10 @@ const AdBannerFormFields = ({ mode, banner }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const { eventType } = useSelector((state) => state.event);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState(null);
 
+  const { eventType } = useSelector((state) => state.event);
   const { places } = useSelector((state) => state.locations);
   const { eventOnPlaces } = useSelector((state) => state.event);
   const {
@@ -96,34 +98,44 @@ const AdBannerFormFields = ({ mode, banner }) => {
   useEffect(() => {
     if (filteredAdCategories.length === 0) {
       dispatch(fetchAdCategories({}));
-      console.log(filteredAdCategories.length);
     }
     if (!eventType.length) {
       dispatch(fetchEventType({ active: true }));
     }
     if (places.length === 0) {
       dispatch(getPlaces({}));
-      console.log(
-        "fetching places ---------------------------------------------->"
-      );
     }
-  }, [dispatch, eventType, filteredAdCategories, places]);
+  }, [dispatch, eventType.length, filteredAdCategories.length, places.length]);
 
-  useEffect(() => {
+ useEffect(() => {
     if (error) {
       message.error(error);
     }
   }, [error]);
 
-  useEffect(() => {
+ useEffect(() => {
     if (mode === EDIT && banner) {
+      const category = filteredAdCategories.find(
+        (cat) => cat.id === banner.banner_category.id
+      );
+      setSelectedCategory(category || null);
+
+      if (banner.place?.id) {
+        setSelectedPlace(banner.place.id);
+        dispatch(fetchEventOnPlaces(banner.place.id)).then(() => {
+         if (banner.event?.id) {
+            form.setFieldValue("event_id", banner.event.id);
+          }
+        });
+      }
+
       form.setFieldsValue({
         name: banner.name,
         description: banner.description,
         ads_url: banner.ads_url,
         banner_category_id: banner.banner_category.id,
         place_id: banner.place?.id,
-        // event_id: banner.event?.id,
+        event_type_id: banner.event_type?.id,
         media_path: banner.media_path
           ? [
               {
@@ -136,7 +148,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
           : [],
       });
     }
-  }, [mode, banner, form]);
+  }, [mode, banner, form, filteredAdCategories, dispatch]);
 
   const normFile = (e) => {
     if (Array.isArray(e)) {
@@ -144,17 +156,22 @@ const AdBannerFormFields = ({ mode, banner }) => {
     }
     return e?.fileList;
   };
-  const handleBannerBeforeUpload = Utils.handleBannerBeforeUpload;
 
-  const handleOnSelect = (placeId) => {
-    console.log("Selected Place ID:", placeId);
-    dispatch(fetchEventOnPlaces(placeId));
+  const handlePlaceChange = (placeId) => {
+    setSelectedPlace(placeId);
+    form.setFieldValue("event_id", undefined); // Clear the event when place changes
+
+    if (placeId) {
+      setEventsLoading(true);
+      dispatch(fetchEventOnPlaces(placeId)).finally(() => {
+        setEventsLoading(false);
+      });
+    }
   };
 
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      console.log({ values });
       if (mode === ADD) {
         const resultAction = await dispatch(
           validateAdCategory(values.banner_category_id)
@@ -173,7 +190,6 @@ const AdBannerFormFields = ({ mode, banner }) => {
           ...values,
           id: banner.id,
         };
-        console.log("Edit Data:", data);
 
         const resultAction = await dispatch(
           validateAdCategory(values.banner_category_id)
@@ -184,11 +200,11 @@ const AdBannerFormFields = ({ mode, banner }) => {
           if (response.message === "warning") {
             dispatch(setAdCategoryValidationDialogVisible(true));
           } else if (response.data && response.data[0]?.validation_status) {
-            const resultAction = await dispatch(
+            const updateAction = await dispatch(
               updateAdBanner({ data, action: ActionType.WARNING })
             );
 
-            if (updateAdBanner.fulfilled.match(resultAction)) {
+            if (updateAdBanner.fulfilled.match(updateAction)) {
               dispatch(setSelectedAdBanner(data));
               dispatch(setAdBannerDialogVisible(true));
             }
@@ -199,11 +215,8 @@ const AdBannerFormFields = ({ mode, banner }) => {
       console.log("Validation Failed:", errorInfo);
     }
   };
+
   const handleWarningPagination = (page, size) => {
-    console.log("------------------------");
-
-    console.log("CHANIGN...........");
-
     dispatch(
       updateAdBanner({
         data: selectedAdBanner,
@@ -212,6 +225,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
       })
     );
   };
+
   const handleValidationModalCancel = () => {
     dispatch(setAdCategoryValidationDialogVisible(false));
   };
@@ -247,11 +261,9 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 placeholder="Choose a Category"
                 loading={loading}
                 onChange={(value) => {
-                  console.log("Selected Category ID:", value);
                   const selected = filteredAdCategories.find(
                     (category) => category.id === value
                   );
-                  console.log("Selected Category:", selected);
                   setSelectedCategory(selected || null);
                 }}
               >
@@ -267,9 +279,10 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 )}
               </Select>
             </Form.Item>
+
             <Form.Item name="event_type_id" label="Event Type (Optional)">
               <Select
-                removeIcon={true}
+                allowClear
                 loading={loading}
                 style={{ width: "100%" }}
                 placeholder="Select event type"
@@ -281,9 +294,11 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 ))}
               </Select>
             </Form.Item>
+
             <Form.Item name="name" label="Name" rules={rules.name}>
               <Input placeholder="Name" />
             </Form.Item>
+
             <Form.Item
               name="description"
               label="Description"
@@ -291,6 +306,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
             >
               <Input placeholder="Description" />
             </Form.Item>
+
             <Form.Item
               name="media_path"
               label="Banner Media"
@@ -303,7 +319,6 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 name="thumbnail_image"
                 listType="picture"
                 maxCount={1}
-                // beforeUpload={handleBeforeUpload}
                 beforeUpload={(file) =>
                   Utils.handleBannerBeforeUpload(
                     file,
@@ -320,12 +335,8 @@ const AdBannerFormFields = ({ mode, banner }) => {
 
             <Text
               type="warning"
-              style={{ padding: "00px 00px", fontSize: "11px" }}
+              style={{ padding: "0px 0px", fontSize: "11px" }}
             >
-              {/* {selectedCategory?.file_types
-                ? `${SupportFormatContent.join(",")}: ${selectedCategory.file_types.join(", ")}`
-                : `Supported file types: ${SupportImageFormat.join(", ")}`} */}
-
               {selectedCategory
                 ? `${SupportFormatContent.join(",")}: ${
                     selectedCategory.file_types?.join(", ") ||
@@ -338,11 +349,8 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 : `${SupportFormatContent.join(",")}: ${SupportImageFormat.join(
                     ", "
                   )}`}
-
-              {/* {SupportFormatContent.join(",")}:{" "}
-              {SupportImageFormat.join(", ")}.
-              {" "} */}
             </Text>
+
             <Form.Item
               name="ads_url"
               label="Banner Redirect Url"
@@ -361,39 +369,42 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 placeholder="Choose a Place"
                 loading={loading}
                 showSearch
+                allowClear
                 filterOption={filterOption}
-                onSelect={(value) => handleOnSelect(value)}
+                onChange={handlePlaceChange}
+                value={selectedPlace}
               >
-                {places && places.length > 0 ? (
-                  places.map((place) => (
-                    <Option key={place.id} value={place.id}>
-                      {place.name}
-                    </Option>
-                  ))
-                ) : (
-                  <Option disabled>No Place available</Option>
-                )}
+                {places.map((place) => (
+                  <Option key={place.id} value={place.id}>
+                    {place.name}
+                  </Option>
+                ))}
               </Select>
             </Form.Item>
-            <Form.Item name="event_id" label="Event" rules={rules.event}>
-              <Select
-                className="w-100"
-                placeholder="Choose a Event"
-                loading={loading}
-                showSearch
-                filterOption={filterOption}
-              >
-                {eventOnPlaces && eventOnPlaces.length > 0 ? (
-                  eventOnPlaces.map((event) => (
+
+            {selectedPlace && (
+              <Form.Item name="event_id" label="Event" rules={rules.event}>
+                <Select
+                  className="w-100"
+                  placeholder="Choose an Event"
+                  loading={eventsLoading}
+                  showSearch
+                  allowClear
+                  filterOption={filterOption}
+                >
+                  {eventOnPlaces.map((event) => (
                     <Option key={event.id} value={event.id}>
-                      {event.event_name}
+                      {`${event.event_name} - ${
+                        event.schedules && event.schedules.length > 0
+                          ? event.schedules[0]?.name ?? ""
+                          : "No Schedule"
+                      }`}
                     </Option>
-                  ))
-                ) : (
-                  <Option disabled>No Event available</Option>
-                )}
-              </Select>
-            </Form.Item>
+                  ))}
+                </Select>
+              </Form.Item>
+            )}
+
             <div
               style={{
                 display: "flex",
@@ -440,6 +451,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
         pagination={warningPagination}
         onPaginationChange={handleWarningPagination}
       />
+
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === ADD ? createAdBanner : updateAdBanner}

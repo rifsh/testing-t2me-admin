@@ -8,12 +8,8 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 
 import { useSelector } from "react-redux";
 import TheaterLayout from "../components/TheaterLayout";
-
-const getBase64 = (img, callback) => {
-  const reader = new FileReader();
-  reader.addEventListener("load", () => callback(reader.result));
-  reader.readAsDataURL(img);
-};
+import SeatFormFields from "views/seat/stadium/components/SeatFormFields";
+import MovieSeatDetailForm from "../components/MovieSeatDetailForm";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -25,71 +21,21 @@ const SeatForm = (props) => {
   const [uploadedImg, setImage] = useState("");
   const [uploadLoading, setUploadLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [activeTabKey, setActiveTabKey] = useState("1");
 
-  useEffect(() => {
-    if (mode === EDIT) {
-      console.log("is edit");
-      console.log("props", props);
-      const { id } = param;
-      const produtId = parseInt(id);
-      const productData = ProductListData.filter(
-        (product) => product.id === produtId
-      );
-      const product = productData[0];
-      form.setFieldsValue({
-        comparePrice: 0.0,
-        cost: 0.0,
-        taxRate: 6,
-        description:
-          "There are many variations of passages of Lorem Ipsum available.",
-        category: product.category,
-        name: product.name,
-        price: product.price,
-      });
-      setImage(product.image);
-    }
-  }, [form, mode, param, props]);
-
-  const handleUploadChange = (info) => {
-    if (info.file.status === "uploading") {
-      setUploadLoading(true);
-      return;
-    }
-    if (info.file.status === "done") {
-      getBase64(info.file.originFileObj, (imageUrl) => {
-        setImage(imageUrl);
-        setUploadLoading(true);
-      });
-    }
-  };
-
-  const seats = useSelector((state) => state.seat.seats);
-  const exportSeatData = () => {
-    const jsonData = JSON.stringify(seats, null, 2);
-    console.log("Seat Data JSON:", jsonData);
-    return jsonData;
-  };
+ const { selectedSeats, seats, selectedSeatType, seatTypes, zoomLevel } =
+    useSelector((state) => state.movieSeatSlice);
   const onFinish = () => {
-    exportSeatData();
-    // setSubmitLoading(true);
-    // form
-    //   .validateFields()
-    //   .then((values) => {
-    //     setTimeout(() => {
-    //       setSubmitLoading(false);
-    //       if (mode === ADD) {
-    //         message.success(`Created ${values.name} to product list`);
-    //       }
-    //       if (mode === EDIT) {
-    //         message.success(`Product saved`);
-    //       }
-    //     }, 1500);
-    //   })
-    //   .catch((info) => {
-    //     setSubmitLoading(false);
-    //     console.log("info", info);
-    //     message.error("Please enter all required field ");
-    //   });
+    if (activeTabKey === "1") {
+      setActiveTabKey("2");
+    } else {
+      // submit function
+      console.log("seats", seats)
+    }
+  };
+
+  const handleTabChange = (key) => {
+    setActiveTabKey(key);
   };
 
   return (
@@ -124,7 +70,7 @@ const SeatForm = (props) => {
                   htmlType="submit"
                   loading={submitLoading}
                 >
-                  {mode === "ADD" ? "Add" : `Save`}
+                  {activeTabKey === "1" ? "Next" : "Submit"}
                 </Button>
               </div>
             </Flex>
@@ -132,23 +78,19 @@ const SeatForm = (props) => {
         </PageHeaderAlt>
         <div className="container">
           <Tabs
-            defaultActiveKey="1"
+            activeKey={activeTabKey}
+            onChange={handleTabChange}
             style={{ marginTop: 30 }}
             items={[
               {
-                label: "General",
+                label: "Screen Selection",
                 key: "1",
-                children: (
-                  //   <SeatFormFields
-                  // 	uploadedImg={uploadedImg}
-                  // 	uploadLoading={uploadLoading}
-                  // 	handleUploadChange={handleUploadChange}
-                  // /> ,
-                  // <SeatEditor/>
-                  // <SeatingCanvas/>
-                  <TheaterLayout />
-                  //   <SeatingChart />
-                ),
+                children: <MovieSeatDetailForm form={form} />,
+              },
+              {
+                label: "Seat Layout",
+                key: "2",
+                children: <TheaterLayout />,
               },
             ]}
           />

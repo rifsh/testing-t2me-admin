@@ -506,9 +506,6 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           event_type_id:
             eventType.find((item) => item.type === "General")?.id || 1,
         };
-
-        console.log("HELOOOOOOOOOOOOOOOO");
-
         const resultAction = await dispatch(
           validateOfferCoupon({
             offers: selectedOffers,
