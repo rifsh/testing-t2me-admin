@@ -1,6 +1,6 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
-import { Form, Card, Row, Col, Select, Space, Avatar, DatePicker, message } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
+import React, { useEffect, useCallback, useMemo, useState } from 'react';
+import { Form, Card, Row, Col, Select, Space, Avatar, DatePicker, message, Alert } from 'antd';
+import { UserOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMovie, fetchMovieData, setFilterData, setimdbId } from 'store/slices/movieSlice';
 import debounce from 'lodash/debounce';
@@ -9,6 +9,7 @@ const MovieFilter = ({ form, onMovieSelect }) => {
     const dispatch = useDispatch();
     const { response, filterData, loading } = useSelector((state) => state.movie);
     const movies = response?.Search || [];
+    const [showHelper, setShowHelper] = useState(true);
 
     const debouncedSearch = useCallback(
         debounce((value) => {
@@ -26,10 +27,14 @@ const MovieFilter = ({ form, onMovieSelect }) => {
                 search: filterData.s,
                 year: filterData.y
             }));
+            setShowHelper(false);
         }
     }, [dispatch, filterData.s, filterData.y]);
 
     const handleSearchChange = (value) => {
+        if (!filterData.y && value) {
+            setShowHelper(true);
+        }
         debouncedSearch(value);
     };
 
@@ -41,7 +46,6 @@ const MovieFilter = ({ form, onMovieSelect }) => {
         if (onMovieSelect) {
             onMovieSelect(imdbID);
         }
-
     };
 
     const handleYearChange = (date, dateString) => {
@@ -49,6 +53,7 @@ const MovieFilter = ({ form, onMovieSelect }) => {
             searchValue: filterData.s || '',
             year: dateString
         }));
+        setShowHelper(false);
     };
 
     const movieOptions = useMemo(() =>
@@ -81,16 +86,32 @@ const MovieFilter = ({ form, onMovieSelect }) => {
             };
 
             message.success(`Added "${newOption.Title}" to options`);
-
         }
     };
 
     return (
         <Card className="movie-filter-card">
+            {showHelper && filterData.s && !filterData.y && (
+                <Alert
+                    message="Select a release year for better results"
+                    description="For more accurate search results, please select a release year before searching for movies."
+                    type="info"
+                    showIcon
+                    icon={<InfoCircleOutlined />}
+                    closable
+                    onClose={() => setShowHelper(false)}
+                    style={{ marginBottom: 16 }}
+                />
+            )}
+
             <Form form={form} layout="vertical">
                 <Row gutter={16}>
                     <Col xs={24} md={12} lg={8}>
-                        <Form.Item name="search" label="Movie Title">
+                        <Form.Item
+                            name="search"
+                            label="Movie Title"
+                            tooltip={!filterData.y ? "For best results, select a release year first" : ""}
+                        >
                             <Select
                                 value={filterData.s}
                                 onSearch={handleSearchChange}
@@ -102,7 +123,7 @@ const MovieFilter = ({ form, onMovieSelect }) => {
                                 showSearch
                                 loading={loading}
                                 filterOption={false}
-                                notFoundContent={loading ? 'Searching...' : 'No movies found'}
+                                notFoundContent={loading ? 'Searching...' : (!filterData.y && filterData.s ? 'Please select a release year first' : 'No movies found')}
                                 allowClear
                             >
                                 {movieOptions}
@@ -111,11 +132,17 @@ const MovieFilter = ({ form, onMovieSelect }) => {
                     </Col>
 
                     <Col xs={24} md={12} lg={8}>
-                        <Form.Item name="year" label="Release Year">
+                        <Form.Item
+                            name="year"
+                            label="Release Year"
+                            tooltip="Selecting a year first will help narrow down your search"
+                        >
                             <DatePicker
                                 onChange={handleYearChange}
                                 picker="year"
                                 allowClear
+                                placeholder="Select year first"
+                                style={{ width: '100%' }}
                             />
                         </Form.Item>
                     </Col>
