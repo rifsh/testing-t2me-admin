@@ -107,7 +107,16 @@ const MovieDetailsForm = ({ form }) => {
                 actors: getActorsArray(omdbMovie.Actors),
                 awards: omdbMovie.Awards !== "N/A" ? omdbMovie.Awards : '',
                 country: omdbMovie.Country !== "N/A" ? omdbMovie.Country : '',
-                Poster: omdbMovie.Poster !== "N/A" ? omdbMovie.Poster : '',
+                Poster: omdbMovie.Poster && response.Poster !== "images"
+                ? [
+                    {
+                        uid: "-1",
+                        name: omdbMovie.Poster.split("/").pop(),
+                        status: "done",
+                        url: omdbMovie.Poster,
+                    },
+                ]
+                : [],
             });
         }
     }, [form, omdbMovie]);
@@ -263,7 +272,7 @@ const MovieDetailsForm = ({ form }) => {
                         </Form.Item>
                     </Col>
 
-                    <Col xs={24} sm={12}>
+                    {/* <Col xs={24} sm={12}>
                         <Form.Item
                             name="actors"
                             label={<span><TeamOutlined /> Actors</span>}
@@ -274,7 +283,7 @@ const MovieDetailsForm = ({ form }) => {
                                 ))}
                             </Select>
                         </Form.Item>
-                    </Col>
+                    </Col> */}
 
                     <Col xs={24} sm={12}>
                         <Form.Item
