@@ -50,7 +50,7 @@ const PaymentFormFields = ({ mode, id }) => {
   };
 
   const validatePaymentMethods = (paymentMethods) => {
-    if (!paymentMethods || paymentMethods.length === 0) {
+    if (!paymentMethods || paymentMethods?.length === 0) {
       message.error("At least one payment method is required");
       return false;
     }
