@@ -93,7 +93,61 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/screen/list`,
     component: React.lazy(() => import("views/screen/screen-list")),
   },
-
+  {
+    key: "movie.movie.list",
+    path: `${APP_PREFIX_PATH}/movie/list`,
+    component: React.lazy(() => import("views/Movie/movie-list")),
+  },
+  {
+    key: "movie.movie.add",
+    path: `${APP_PREFIX_PATH}/movie/add`,
+    component: React.lazy(() => import("views/Movie/movie-add")),
+  },
+  {
+    key: "movie.movie.details",
+    path: `${APP_PREFIX_PATH}/movie/details`,
+    component: React.lazy(() => import("views/Movie/movie-detail")),
+  },
+  {
+    key: "movie.cast",
+    path: `${APP_PREFIX_PATH}/cast/list`,
+    component: React.lazy(() => import("views/Movie/cast/cast-list"))
+  },
+  {
+    key: "movie.cast.add",
+    path: `${APP_PREFIX_PATH}/cast/add`,
+    component: React.lazy(() => import("views/Movie/cast/cast-add"))
+  },
+  {
+    key: "movie.cast.details",
+    path: `${APP_PREFIX_PATH}/cast/details`,
+    component: React.lazy(() => import("views/Movie/cast/cast-details"))
+  },
+  {
+    key: "movie.schedule",
+    path: `${APP_PREFIX_PATH}/movie-schedule/list`,
+    component: React.lazy(() => import("views/Movie/Schedule/schedule-list"))
+  },
+  {
+    key: "dine.list",
+    path: `${APP_PREFIX_PATH}/dine/list`,
+    component: React.lazy(() => import("views/dine/list-dine"))
+  },
+  {
+    key: "dine.add",
+    path: `${APP_PREFIX_PATH}/dine/add`,
+    component: React.lazy(() => import("views/dine/add-dine"))
+  },
+  {
+    key: "dine.edit",
+    path: `${APP_PREFIX_PATH}/movie-schedule/list`,
+    component: React.lazy(() => import("views/Movie/Schedule/schedule-list"))
+  },
+  {
+    key: "dine.details",
+    path: `${APP_PREFIX_PATH}/movie-schedule/list`,
+    component: React.lazy(() => import("views/Movie/Schedule/schedule-list"))
+  },
   {
     key: "event.details",
     path: `${APP_PREFIX_PATH}/event/details/:eventId`,
@@ -227,12 +281,22 @@ export const protectedRoutes = [
   {
     key: "seat.list",
     path: `${APP_PREFIX_PATH}/seat/list`,
-    component: React.lazy(() => import("views/seat/list-seat")),
+    component: React.lazy(() => import("views/seat/stadium/list-seat")),
   },
   {
     key: "seat.add",
     path: `${APP_PREFIX_PATH}/seat/add`,
-    component: React.lazy(() => import("views/seat/add-seat")),
+    component: React.lazy(() => import("views/seat/stadium/add-seat")),
+  },
+  {
+    key: "seat.movie.list",
+    path: `${APP_PREFIX_PATH}/seat/movie/list`,
+    component: React.lazy(() => import("views/seat/movie/list-seat")),
+  },
+  {
+    key: "seat.add",
+    path: `${APP_PREFIX_PATH}/seat/movie/add`,
+    component: React.lazy(() => import("views/seat/movie/add-seat")),
   },
   {
     key: "schedule.list",
@@ -421,11 +485,19 @@ export const protectedRoutes = [
     ),
   },
   {
-    key: "organiser.update",
-    path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
-    component: React.lazy(() =>
-      import("views/track-team/event-organizer/update-list/index.js")
-    ),
+    key: "event.type.list",
+    path: `${APP_PREFIX_PATH}/event/type/list`,
+    component: React.lazy(() => import("views/event-type/list-type")),
+  },
+  {
+    key: "event.type.add",
+    path: `${APP_PREFIX_PATH}/event/type/add`,
+    component: React.lazy(() => import("views/event-type/add-type")),
+  },
+  {
+    key: "event.type.edit",
+    path: `${APP_PREFIX_PATH}/event/type/edit/:typeId`,
+    component: React.lazy(() => import("views/event-type/edit-type")),
   },
   {
     key: "advertisement.category.edit",

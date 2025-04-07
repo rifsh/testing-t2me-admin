@@ -25,7 +25,7 @@ import LoadingOverlay from "components/util-components/Loader/index";
 
 import ConfirmationPage from "../components/ConfirmationPage";
 
-const MultyStepScheduleForm = ({ mode, id }) => {
+const MultyStepScheduleForm = ({ mode, id, type = 'event' }) => {
   const steps = [
     "Schedule Details",
     "Time Slots",
@@ -240,7 +240,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
             }),
           };
         })
-        .filter(Boolean); 
+        .filter(Boolean);
 
       const submitData = {
         start_date: startDate,
@@ -356,7 +356,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <ScheduleDetails form={form} />;
+        return <ScheduleDetails form={form} type={type}/>;
       case 2:
         return <ScheduleTimeSlots form={form} mode={mode} />;
       case 3:

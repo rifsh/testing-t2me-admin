@@ -5,7 +5,7 @@ import DiscardButton from 'components/shared-components/Buttons/DiscardButton';
 import PlaceWithCountryForm from 'components/util-components/FormItems/PlaceWithCountryForm';
 import VenueListForm from 'components/util-components/FormItems/VenueList';
 import { useDispatch, useSelector } from 'react-redux';
-import { getVenues, setLocationDialogVisible, setLocationModalLoading, setPlaceValidationDialogVisible, setSelectedPlace, setSelectedVenue, setSelectedVenueList, validatePlace, validateVenue } from 'store/slices/locationSlice';
+import { getSingleVenues, getVenues, setLocationDialogVisible, setLocationModalLoading, setPlaceValidationDialogVisible, setSelectedPlace, setSelectedVenue, setSelectedVenueList, validatePlace, validateVenue } from 'store/slices/locationSlice';
 import { resetTicketSelection } from 'store/slices/ticketSlice';
 import { Collapse } from '@mui/material';
 import ScreenForm from './ScreenForm';
@@ -28,9 +28,10 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     const [venueSelected, setVenueSelected] = useState(false);
     const [placeSelected, setPlaceSelected] = useState(false);
     const [venueId, setVenueId] = useState(null);
+    const [capacity, setCapacity] = useState(null);
 
     const { response, singleResponse, message: screenMessage, loading, editResponse, editBodyData } = useSelector((state) => state.screen);
-    const { dialogVisible } = useSelector((state) => state.locations);
+    const { dialogVisible, singleVenues } = useSelector((state) => state.locations);
     // const { filteredTickets, loading: ticketsLoading } = useSelector((state) => state.tickets);
 
     const rules = {
@@ -79,7 +80,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                     }]
                 };
 
-                console.log('Setting form values:', formValues);
+                console.log('Setting form values:', singleVenues);
                 form.setFieldsValue(formValues);
 
                 setTimeout(() => {
@@ -88,6 +89,10 @@ const AddScreenFormFields = ({ mode, screenId }) => {
             }
         }
     }, [singleResponse, form, placeSelected === false]);
+
+    useEffect(() => {
+        setCapacity(singleVenues?.capacity)
+    }, [singleVenues])
 
     const addScreen = () => {
         const newScreens = [...screens, { key: screens.length }];
@@ -136,6 +141,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
         setVenueSelected(!!venue);
         setVenueId(venue);
         dispatch(setSelectedVenue(venue))
+        dispatch(getSingleVenues(venue))
         setIsLoading(false);
     }
 
@@ -328,6 +334,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                                 children: (
                                                     <ScreenForm
                                                         form={form}
+                                                        capacity={capacity ? capacity : 30}
                                                         index={index}
                                                         onRemove={removeScreen}
                                                         isOnlyScreen={screens.length === 1}

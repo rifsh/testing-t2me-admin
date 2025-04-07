@@ -19,6 +19,19 @@ EventsService.addEvent = function (data, action) {
     data: formData,
   });
 };
+EventsService.addEventType = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
+
+  return fetch({
+    url: `${ApiConstant.EVENT_TYPE_URL}?action=${encodedAction}`,
+    method: "POST",
+    data: data,
+  });
+};
 
 EventsService.getAllEvent = function (pageData) {
   // const params = {};
@@ -28,6 +41,18 @@ EventsService.getAllEvent = function (pageData) {
 
   return fetch({
     url: ApiConstant.EVENT_URL,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
+EventsService.fetchEventType = function (pageData) {
+  // const params = {};
+  // if (pageData.page !== null) params.page = pageData.page;
+  // if (pageData.size !== null) params.size = pageData.size;
+  // if (pageData.search !== null) params.search = pageData.search;
+
+  return fetch({
+    url: ApiConstant.EVENT_TYPE_URL,
     method: "get",
     params: Utils.filterParams(pageData),
   });
@@ -42,6 +67,18 @@ EventsService.checkValidation = function () {
 EventsService.fetchEventDetails = function (eventId) {
   return fetch({
     url: `${ApiConstant.EVENT_DETAILS_URL}?event_id=${eventId}`,
+    method: "get",
+  });
+};
+EventsService.fetchEventTypeDetails = function (typeId) {
+  return fetch({
+    url: `${ApiConstant.EVENT_TYPE_DETAILS_URL}?event_type_id=${typeId}`,
+    method: "get",
+  });
+};
+EventsService.fetchEventTypeOption = function () {
+  return fetch({
+    url: `${ApiConstant.EVENT_TYPE_OPTION_URL}`,
     method: "get",
   });
 };
@@ -84,6 +121,20 @@ EventsService.updateEvent = function (
     },
   });
 };
+EventsService.updateEventType = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  
+  return fetch({
+    url: `${ApiConstant.EVENT_TYPE_DETAILS_URL}?event_type_id=${data.id}&action=${encodedAction}`,
+    params: Utils.filterParams(pageData),
+    method: "put",
+    data: data,
+  });
+};
 EventsService.editEventStatus = function (
   data,
   action,
@@ -92,6 +143,19 @@ EventsService.editEventStatus = function (
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
     url: `${ApiConstant.EDIT_EVENT_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+    params: Utils.filterParams(pageData),
+  });
+};
+EventsService.editEventTypeStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.EVENT_TYPE_DETAILS_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
     params: Utils.filterParams(pageData),

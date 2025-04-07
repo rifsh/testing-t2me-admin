@@ -111,11 +111,11 @@ const OfferList = () => {
       dataIndex: "name",
       sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
     },
-    {
-      title: "Discount Percentage",
-      dataIndex: "discount_percentage",
-      sorter: (a, b) => a.discount_percentage - b.discount_percentage,
-    },
+    // {
+    //   title: "Discount Percentage",
+    //   dataIndex: "discount_percentage",
+    //   sorter: (a, b) => a.discount_percentage - b.discount_percentage,
+    // },
     {
       title: "Start Date",
       dataIndex: "start_date",

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
-import MultyStepEventForm from '../components/MultyStepForm';
+// import MultyStepEventForm from '../components/MultyStepForm';
+import MultyStepEventForm from "../../event/components/MultyStepForm"
 import MultyStepEventFormOrganizer from 'views/track-team/event-organizer/components/MultyStepForm';
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { getCurrentUser } from "configs/UserAccessConfig";
@@ -13,7 +14,7 @@ const LeadAddEvent = () => {
 	return (
 		
 
-		<MultyStepEventForm eventId={id} mode="LEAD"/>
+		<MultyStepEventForm eventId={id} mode="LEAD" />
 	)
 }
 
