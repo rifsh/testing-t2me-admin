@@ -1,13 +1,10 @@
-export const SEAT_TYPES = [
-  { id: "standard", label: "Standard", color: "lightblue" },
-  { id: "premium", label: "Premium", color: "lightyellow" },
-  { id: "vip", label: "VIP", color: "lightpink" },
-  { id: "wheelchair", label: "Wheelchair", color: "lightgreen" },
-  { id: "hidden", label: "Hidden", color: "lightgray" },
-];
+export const SEAT_STRUCTURE_TYPES = {
+  MOVIE: "MOVIE",
+};
 
-export const SEAT_CATEGORIES = [
-  { id: "front", label: "Front", price: 15, borderColor: "red" },
-  { id: "middle", label: "Middle", price: 12, borderColor: "green" },
-  { id: "back", label: "Back", price: 10, borderColor: "blue" },
+export const DEFAULT_SEAT_TYPES = [
+  { id: "desabled", label: "Desabled", basePrice: 0, color: "#e5e7eb" },
+  { id: "standard", label: "Standard", basePrice: 10.0, color: "#52c41a" },
+  { id: "premium", label: "Premium", basePrice: 15.0, color: "#1890ff" },
+  { id: "vip", label: "VIP", basePrice: 20.0, color: "#722ed1" },
 ];

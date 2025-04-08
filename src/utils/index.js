@@ -902,6 +902,45 @@ class Utils {
 
     return false; // Allow upload if all validations pass
   }
+
+  static generateInitialSeats = (rows, columns, seatTypes) => {
+    const seats = [];
+    let globalId = 1;
+  
+    for (let i = 0; i < rows; i++) {
+      const row = [];
+      for (let j = 0; j < columns; j++) {
+        row.push({
+          id: globalId++,
+          rowLabel: String.fromCharCode(65 + i),
+          colIndex: j,
+          type: "standard",
+          price: seatTypes.find((type) => type.id === "standard").basePrice,
+          isVisible: true,
+          number: j + 1, 
+        });
+      }
+      seats.push(row);
+    }
+  
+    return Utils.updateSeatNumbers(seats);
+  };
+  
+  static updateSeatNumbers = (seats) => {
+    for (let i = 0; i < seats.length; i++) {
+      let visibleSeatCount = 0;
+      for (let j = 0; j < seats[i].length; j++) {
+        if (seats[i][j].isVisible) {
+          visibleSeatCount++;
+          seats[i][j].number = visibleSeatCount;
+        } else {
+          seats[i][j].number = 0;
+        }
+      }
+    }
+    return seats;
+  };
+  
 }
 
 export default Utils;
