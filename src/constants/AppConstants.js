@@ -4,4 +4,5 @@ export const AdvCategoryCode = [
   "home-middle-banner",
   "home-top-banner",
   "event-sidebar-banner",
+  
 ];
