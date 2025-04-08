@@ -44,15 +44,13 @@ const MovieMediaUploader = ({ form }) => {
     const [mediaItems, setMediaItems] = useState([]);
 
     const mediaTypes = [
-        { label: 'Trailer', value: 'trailer' },
-        { label: 'Teaser', value: 'teaser' },
-        { label: 'Behind the Scenes', value: 'bts' },
-        { label: 'Poster', value: 'poster' },
-        { label: 'Screenshot', value: 'screenshot' },
-        { label: 'Cover Art', value: 'cover' }
+        { label: 'English', value: 'English' },
+        { label: 'Malayalam', value: 'Malayalam' },
+        { label: 'Tamil', value: 'Tamil' },
+        { label: 'Hindi', value: 'Hindi' },
+        { label: 'Kannada', value: 'Kannada' },
+        { label: 'Telungu', value: 'Telungu' }
     ];
-
-
 
     const validateYoutubeUrl = (url) => {
         const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})$/;
@@ -68,19 +66,29 @@ const MovieMediaUploader = ({ form }) => {
         return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     };
 
+    // Sync mediaItems with the parent form whenever they change
     useEffect(() => {
+        // Format media items for form submission
+        const formattedMediaItems = mediaItems.map(item => ({
+            type: item.type,
+            url: item.url,
+            title: item.title,
+            mediaLanguage: item.mediaType,
+            ...(item.type === 'youtube' && { videoId: item.videoId }),
+            ...(item.type === 'file' && { file: item.file })
+        }));
+
+        // Set the media items in the form
         form.setFieldsValue({
-            mediaItems: mediaItems.map(item => ({
-                type: item.type,
-                url: item.url,
-                title: item.title,
-                mediaType: item.mediaType,
-                ...(item.type === 'youtube' && { videoId: item.videoId }),
-                ...(item.type === 'file' && { file: item.file })
-            }))
+            mediaItems: formattedMediaItems
         });
-        console.log(mediaItems);
-        
+
+        // Add a hidden form item if it doesn't exist in the form already
+        if (!form.getFieldInstance('mediaItems')) {
+            // This is just for debugging - you might need to adjust your parent form
+            console.log('Warning: mediaItems field not found in parent form');
+        }
+
     }, [mediaItems, form]);
 
     const addYoutubeLink = () => {
@@ -102,7 +110,7 @@ const MovieMediaUploader = ({ form }) => {
             videoId,
             thumbnail: getYoutubeThumbnail(videoId),
             title: `YouTube Video ${youtubeLinks.length + 1}`,
-            mediaType: 'trailer'
+            mediaType: 'English'
         };
 
         setYoutubeLinks([...youtubeLinks, newLink]);
@@ -112,7 +120,7 @@ const MovieMediaUploader = ({ form }) => {
             type: 'youtube',
             videoId,
             title: `YouTube Video ${youtubeLinks.length + 1}`,
-            mediaType: 'trailer',
+            mediaType: 'English',
             url: currentYoutubeLink,
             thumbnail: getYoutubeThumbnail(videoId)
         };
@@ -139,32 +147,6 @@ const MovieMediaUploader = ({ form }) => {
         setPreviewIndex(index);
         setPreviewType(type);
         setPreviewVisible(true);
-    };
-
-    const handleSubmit = (values) => {
-        const mediaData = mediaItems.map(item => {
-            const formData = {
-                mediaTitle: item.title,
-                mediaType: item.mediaType,
-                mediaUrl: item.url
-            };
-
-            if (item.type === 'file' && item.thumbnailUrl) {
-                formData.thumbnail = item.thumbnailUrl;
-            }
-
-            return formData;
-        });
-
-        console.log('Submitted values:', values);
-        console.log('Media items to submit:', mediaData);
-        message.success('Media added to movie successfully');
-
-        form.resetFields();
-        setFileList([]);
-        setThumbnailUrls({});
-        setYoutubeLinks([]);
-        setMediaItems([]);
     };
 
     const getMediaType = (file) => {
@@ -247,6 +229,11 @@ const MovieMediaUploader = ({ form }) => {
 
     return (
         <Card title={<Title level={4}>Add Movie Media</Title>}>
+            {/* Add hidden Form.Item to ensure the field is registered with the form */}
+            <Form.Item name="mediaItems" hidden={true}>
+                <Input />
+            </Form.Item>
+
             <Tabs defaultActiveKey="youtube" onChange={setActiveTab}>
                 <div className="youtube-link-input" style={{ marginBottom: 24 }}>
                     <Row gutter={[16, 16]} align="middle">
@@ -321,11 +308,44 @@ const MovieMediaUploader = ({ form }) => {
                                                     >
                                                         {mediaTypes.find(type => type.value === item.mediaType)?.label || item.mediaType}
                                                     </div>
+                                                    <Space
+                                                        style={{
+                                                            position: 'absolute',
+                                                            bottom: 0,
+                                                            left: 0,
+                                                            right: 0,
+                                                            padding: '8px',
+                                                            background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between'
+                                                        }}
+                                                    >
+                                                        <Select
+                                                            showSearch
+                                                            size="small"
+                                                            value={item.mediaType}
+                                                            style={{ width: 100 }}
+                                                            onChange={(value) => updateMediaItemType(item.id, item.type, value)}
+                                                        >
+                                                            {mediaTypes.map(type => (
+                                                                <Option key={type.value} value={type.value}>
+                                                                    {type.label}
+                                                                </Option>
+                                                            ))}
+                                                        </Select>
+                                                    </Space>
                                                 </div>
                                             }
                                         >
                                             <Card.Meta
-                                                title={item.title}
+                                                title={
+                                                    <Input
+                                                        size="small"
+                                                        value={item.title}
+                                                        onChange={(e) => updateMediaItemTitle(item.id, item.type, e.target.value)}
+                                                        style={{ marginBottom: 8 }}
+                                                    />
+                                                }
                                                 description={
                                                     <Row gutter={8} align="middle">
                                                         <Col>{isYoutube ? 'YouTube' : 'File Upload'}</Col>
@@ -343,7 +363,10 @@ const MovieMediaUploader = ({ form }) => {
                                                                 type="text"
                                                                 size="small"
                                                                 icon={<DeleteOutlined style={{ color: 'red' }} />}
-                                                                onClick={() => removeYoutubeLink(item.id)}
+                                                                onClick={() => isYoutube ?
+                                                                    removeYoutubeLink(item.id) :
+                                                                    removeFile({ uid: item.id })
+                                                                }
                                                             />
                                                         </Col>
                                                     </Row>
