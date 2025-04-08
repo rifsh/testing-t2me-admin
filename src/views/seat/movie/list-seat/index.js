@@ -93,7 +93,8 @@ const MovieSeatList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       ),
-      onClick: () => showModal(row),
+
+      onClick: () => navigate(`${APP_PREFIX_PATH}/seat/movie/${row.id}`),
     },
     {
       key: "remark",
@@ -204,7 +205,7 @@ const MovieSeatList = () => {
         <Button
           type="primary"
           icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add`)}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/seat/movie/add`)}
         >
           Add Seat Structure
         </Button>
