@@ -355,7 +355,7 @@ const MovieDetailsForm = ({ form }) => {
                     <Col xs={24}>
                         <Form.Item
                             name="Plot"
-                            label="Description"
+                            label="Synopsis"
                         >
                             <TextEditor />
                         </Form.Item>
