@@ -62,6 +62,13 @@ const AddMovie = ({ mode = "ADD" }) => {
 
     }
 
+    useEffect(() => {
+        form.setFieldsValue({
+            cast: [],
+            crew: []
+        });
+    }, [form]);
+
     const handleSubmit = () => {
         form.validateFields()
             .then(values => {
@@ -73,11 +80,6 @@ const AddMovie = ({ mode = "ADD" }) => {
                 message.error("Please fill in all required fields");
             });
     };
-
-    useEffect(() => {
-        console.log("mainForm", form.getFieldValue());
-
-    }, [form])
 
     return (
         <Form form={form} layout="vertical">

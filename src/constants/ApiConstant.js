@@ -121,8 +121,11 @@ export const ApiConstant = {
   EDIT_PERSONALITY_URL: "/api/v1/moies/secured/personality/edit",
 
 
-  // VALIDATION API ENDPOINTS
+  // OMDB API ENDPOINTS
+  OMDB_API_URL: '/api/v1/app_management/public/omdb_data_search',
+  OMDB_DETAIL_API_URL: '/api/v1/app_management/public/omdb_movie_details',
 
+  // VALIDATION API ENDPOINTS
   PLACE_VALIDATE_URL: "/api/v1/validation/secured/validate_place",
   COUNTRY_VALIDATE_URL: "/api/v1/validation/secured/validate_country",
   CATEGORY_VALIDATE_URL: "/api/v1/validation/secured/validate_category",

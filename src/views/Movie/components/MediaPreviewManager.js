@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Upload,
     Button,
@@ -12,27 +12,36 @@ import {
     Row,
     Col,
     Divider,
-    message
+    message,
+    Tabs,
+    Empty
 } from 'antd';
 import {
-    UploadOutlined,
-    VideoCameraOutlined,
+    DeleteOutlined,
     FileImageOutlined,
-    CheckCircleOutlined,
+    YoutubeOutlined,
     PlusOutlined,
-    CloseOutlined
+    CloseOutlined,
+    PlayCircleOutlined
 } from '@ant-design/icons';
 import TextEditor from 'components/util-components/FormItems/TextEditor';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { Dragger } = Upload;
+const { TabPane } = Tabs;
 
 const MovieMediaUploader = ({ form }) => {
     const [previewVisible, setPreviewVisible] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
+    const [previewType, setPreviewType] = useState('youtube');
     const [fileList, setFileList] = useState([]);
-    const [thumbnailUrl, setThumbnailUrl] = useState('');
+    const [thumbnailUrls, setThumbnailUrls] = useState({});
+    const [youtubeLinks, setYoutubeLinks] = useState([]);
+    const [currentYoutubeLink, setCurrentYoutubeLink] = useState('');
+    const [youtubeLinkError, setYoutubeLinkError] = useState('');
+    const [activeTab, setActiveTab] = useState('youtube');
+    const [mediaItems, setMediaItems] = useState([]);
 
     const mediaTypes = [
         { label: 'Trailer', value: 'trailer' },
@@ -43,47 +52,119 @@ const MovieMediaUploader = ({ form }) => {
         { label: 'Cover Art', value: 'cover' }
     ];
 
-    const handleUpload = ({ file, fileList }) => {
-        setFileList(fileList);
 
-        if (file.status === 'done') {
-            message.success(`${file.name} uploaded successfully`);
-            form.setFieldsValue({
-                mediaUrl: 'https://example.com/media/1234',
-                mediaType: file.type.startsWith('video/') ? 'trailer' : 'poster'
-            });
-        }
+
+    const validateYoutubeUrl = (url) => {
+        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})$/;
+        return youtubeRegex.test(url);
     };
 
-    const handleThumbnailUpload = (info) => {
-        if (info.file.status === 'done') {
-            message.success(`Thumbnail uploaded successfully`);
-            setThumbnailUrl(URL.createObjectURL(info.file.originFileObj));
-        }
+    const getYoutubeVideoId = (url) => {
+        const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        return match ? match[1] : null;
     };
 
-    const showPreview = (index = 0) => {
-        if (fileList.length > 0) {
-            setPreviewIndex(index);
-            setPreviewVisible(true);
-        } else {
-            message.info('Please upload media first');
+    const getYoutubeThumbnail = (videoId) => {
+        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    };
+
+    useEffect(() => {
+        form.setFieldsValue({
+            mediaItems: mediaItems.map(item => ({
+                type: item.type,
+                url: item.url,
+                title: item.title,
+                mediaType: item.mediaType,
+                ...(item.type === 'youtube' && { videoId: item.videoId }),
+                ...(item.type === 'file' && { file: item.file })
+            }))
+        });
+        console.log(mediaItems);
+        
+    }, [mediaItems, form]);
+
+    const addYoutubeLink = () => {
+        if (!currentYoutubeLink) {
+            setYoutubeLinkError('Please enter a YouTube URL');
+            return;
         }
+
+        if (!validateYoutubeUrl(currentYoutubeLink)) {
+            setYoutubeLinkError('Please enter a valid YouTube URL');
+            return;
+        }
+
+        const videoId = getYoutubeVideoId(currentYoutubeLink);
+        const newLinkId = Date.now().toString();
+        const newLink = {
+            id: newLinkId,
+            url: currentYoutubeLink,
+            videoId,
+            thumbnail: getYoutubeThumbnail(videoId),
+            title: `YouTube Video ${youtubeLinks.length + 1}`,
+            mediaType: 'trailer'
+        };
+
+        setYoutubeLinks([...youtubeLinks, newLink]);
+
+        const newMediaItem = {
+            id: newLinkId,
+            type: 'youtube',
+            videoId,
+            title: `YouTube Video ${youtubeLinks.length + 1}`,
+            mediaType: 'trailer',
+            url: currentYoutubeLink,
+            thumbnail: getYoutubeThumbnail(videoId)
+        };
+        setMediaItems(prev => [...prev, newMediaItem]);
+
+        setCurrentYoutubeLink('');
+        setYoutubeLinkError('');
+        message.success('YouTube video added successfully');
+    };
+
+    const removeYoutubeLink = (id) => {
+        setYoutubeLinks(youtubeLinks.filter(link => link.id !== id));
+        setMediaItems(prev => prev.filter(item => !(item.id === id && item.type === 'youtube')));
+    };
+
+    const removeFile = (file) => {
+        const newFileList = fileList.filter(f => f.uid !== file.uid);
+        setFileList(newFileList);
+        setMediaItems(prev => prev.filter(item => !(item.id === file.uid && item.type === 'file')));
+        return true;
+    };
+
+    const showPreview = (index, type) => {
+        setPreviewIndex(index);
+        setPreviewType(type);
+        setPreviewVisible(true);
     };
 
     const handleSubmit = (values) => {
+        const mediaData = mediaItems.map(item => {
+            const formData = {
+                mediaTitle: item.title,
+                mediaType: item.mediaType,
+                mediaUrl: item.url
+            };
+
+            if (item.type === 'file' && item.thumbnailUrl) {
+                formData.thumbnail = item.thumbnailUrl;
+            }
+
+            return formData;
+        });
+
         console.log('Submitted values:', values);
+        console.log('Media items to submit:', mediaData);
         message.success('Media added to movie successfully');
 
         form.resetFields();
         setFileList([]);
-        setThumbnailUrl('');
-    };
-
-    const handleRemove = (file) => {
-        const newFileList = fileList.filter(f => f.uid !== file.uid);
-        setFileList(newFileList);
-        return true;
+        setThumbnailUrls({});
+        setYoutubeLinks([]);
+        setMediaItems([]);
     };
 
     const getMediaType = (file) => {
@@ -94,278 +175,230 @@ const MovieMediaUploader = ({ form }) => {
         return file.originFileObj ? URL.createObjectURL(file.originFileObj) : file.url;
     };
 
+    const updateMediaItemTitle = (id, type, newTitle) => {
+        setMediaItems(prev => prev.map(item => {
+            if (item.id === id && item.type === type) {
+                return { ...item, title: newTitle };
+            }
+            return item;
+        }));
+
+        if (type === 'youtube') {
+            setYoutubeLinks(prev => prev.map(link => {
+                if (link.id === id) {
+                    return { ...link, title: newTitle };
+                }
+                return link;
+            }));
+        }
+    };
+
+    const updateMediaItemType = (id, type, newMediaType) => {
+        setMediaItems(prev => prev.map(item => {
+            if (item.id === id && item.type === type) {
+                return { ...item, mediaType: newMediaType };
+            }
+            return item;
+        }));
+    };
+
+    const renderPreviewContent = () => {
+        if (previewType === 'file') {
+            const file = fileList.find(f => f.uid === mediaItems[previewIndex]?.id);
+            if (!file) return null;
+
+            if (getMediaType(file) === 'video') {
+                return (
+                    <video
+                        controls
+                        autoPlay
+                        style={{ width: '100%', maxHeight: '70vh' }}
+                        src={getPreviewUrl(file)}
+                        poster={thumbnailUrls[file.uid] || 'https://placehold.co/600x400/000000/FFFFFF?text=Video+Preview'}
+                    />
+                );
+            } else {
+                return (
+                    <img
+                        alt="Preview"
+                        style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }}
+                        src={getPreviewUrl(file)}
+                    />
+                );
+            }
+        } else if (previewType === 'youtube') {
+            const mediaItem = mediaItems[previewIndex];
+            if (!mediaItem || mediaItem.type !== 'youtube') return null;
+
+            return (
+                <iframe
+                    width="100%"
+                    height="450"
+                    src={`https://www.youtube.com/embed/${mediaItem.videoId}?autoplay=1`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                ></iframe>
+            );
+        }
+        return null;
+    };
+
     return (
         <Card title={<Title level={4}>Add Movie Media</Title>}>
-            <Form
-                form={form}
-                layout="vertical"
-                onFinish={handleSubmit}
-            >
-                <Row gutter={[16, 16]}>
-                    <Col xs={24} md={24}>
-                        <Dragger
-                            name="media"
-                            multiple={true}
-                            onChange={handleUpload}
-                            fileList={fileList}
-                            onRemove={handleRemove}
-                            accept="video/*,image/*"
-                            showUploadList={{
-                                showPreviewIcon: true,
-                                showRemoveIcon: true,
-                                previewIcon: (file) => (
-                                    <Button
-                                        type="text"
-                                        icon={<FileImageOutlined />}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            const index = fileList.findIndex(f => f.uid === file.uid);
-                                            showPreview(index);
-                                        }}
-                                    />
-                                )
-                            }}
-                            customRequest={({ onSuccess }) => setTimeout(() => onSuccess("ok"), 0)}
-                        >
-                            <p className="ant-upload-drag-icon">
-                                <UploadOutlined />
-                            </p>
-                            <p className="ant-upload-text">Click or drag files to upload</p>
-                            <p className="ant-upload-hint">
-                                Support for multiple video files (trailers, teasers) or images (posters, screenshots)
-                            </p>
-                        </Dragger>
-                    </Col>
-                </Row>
-
-                <Divider />
-
-                <Row gutter={[16, 16]}>
-                    <Col xs={24} md={12}>
-                        <Form.Item
-                            name="mediaTitle"
-                            label="Media Title"
-                            rules={[{ required: true, message: 'Please enter a title' }]}
-                        >
-                            <Input placeholder="e.g. Official Trailer, Main Poster" />
-                        </Form.Item>
-                    </Col>
-
-                    <Col xs={24} md={12}>
-                        <Form.Item
-                            name="mediaType"
-                            label="Media Type"
-                            rules={[{ required: true, message: 'Please select media type' }]}
-                        >
-                            <Select placeholder="Select media type">
-                                {mediaTypes.map(type => (
-                                    <Option key={type.value} value={type.value}>{type.label}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                    </Col>
-                </Row>
-
-                <Row gutter={[16, 16]}>
-                    <Col span={24}>
-                        <Form.Item
-                            name="mediaDescription"
-                            label="Description"
-                        >
-                            <TextEditor />
-                        </Form.Item>
-                    </Col>
-                </Row>
-
-                {fileList.some(file => getMediaType(file) === 'video') && (
-                    <Row gutter={[16, 16]}>
-                        <Col span={24}>
-                            <Title level={5}>Custom Thumbnail (Optional)</Title>
-                            <Text type="secondary">
-                                For videos, you can upload a custom thumbnail. If not provided, a default one will be generated.
-                            </Text>
-                            <Form.Item
-                                name="thumbnail"
-                                style={{ marginTop: 16 }}
+            <Tabs defaultActiveKey="youtube" onChange={setActiveTab}>
+                <div className="youtube-link-input" style={{ marginBottom: 24 }}>
+                    <Row gutter={[16, 16]} align="middle">
+                        <Col xs={24} md={16}>
+                            <Input
+                                placeholder="Enter YouTube video URL (e.g., https://www.youtube.com/watch?v=abcdef123456)"
+                                value={currentYoutubeLink}
+                                onChange={e => {
+                                    setCurrentYoutubeLink(e.target.value);
+                                    setYoutubeLinkError('');
+                                }}
+                                prefix={<YoutubeOutlined style={{ color: '#ff0000' }} />}
+                                status={youtubeLinkError ? 'error' : ''}
+                            />
+                            {youtubeLinkError && <Text type="danger">{youtubeLinkError}</Text>}
+                        </Col>
+                        <Col xs={24} md={8}>
+                            <Button
+                                type="primary"
+                                onClick={addYoutubeLink}
+                                icon={<PlusOutlined />}
+                                block
                             >
-                                <Upload
-                                    listType="picture-card"
-                                    showUploadList={false}
-                                    onChange={handleThumbnailUpload}
-                                    customRequest={({ onSuccess }) => setTimeout(() => onSuccess("ok"), 0)}
-                                    accept="image/*"
-                                >
-                                    {thumbnailUrl ? (
-                                        <img
-                                            src={thumbnailUrl}
-                                            alt="thumbnail"
-                                            style={{ width: '100%' }}
-                                        />
-                                    ) : (
-                                        <div>
-                                            <PlusOutlined />
-                                            <div style={{ marginTop: 8 }}>Upload</div>
-                                        </div>
-                                    )}
-                                </Upload>
-                            </Form.Item>
+                                Add YouTube Video
+                            </Button>
                         </Col>
                     </Row>
-                )}
+                </div>
+            </Tabs>
 
-                <Form.Item
-                    name="mediaUrl"
-                    hidden
-                >
-                    <Input />
-                </Form.Item>
-                <Divider />
+            <Divider />
 
-                {fileList.length > 0 && (
-                    <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-                        <Col span={24}>
-                            <Card
-                                size="small"
-                                title="Uploaded Media"
-                                extra={
-                                    <Button
-                                        type="link"
-                                        onClick={() => showPreview(0)}
-                                    >
-                                        View All
-                                    </Button>
-                                }
-                                style={{ backgroundColor: '#f9f9f9' }}
-                            >
-                                <Row gutter={[16, 16]}>
-                                    {fileList.map((file, index) => {
-                                        const type = getMediaType(file);
-                                        const url = getPreviewUrl(file);
+            <div style={{ marginBottom: 24 }}>
+                <Title level={5}>All Media Items ({mediaItems.length})</Title>
+                {mediaItems.length > 0 ? (
+                    <Card>
+                        <Row gutter={[16, 16]}>
+                            {mediaItems.map((item, index) => {
+                                const isYoutube = item.type === 'youtube';
+                                const thumbnail = isYoutube
+                                    ? item.thumbnail
+                                    : (thumbnailUrls[item.id] || (item.file?.originFileObj && URL.createObjectURL(item.file.originFileObj)));
 
-                                        return (
-                                            <Col key={file.uid} xs={12} sm={8} md={6} lg={4}>
-                                                <div
-                                                    style={{
-                                                        cursor: 'pointer',
-                                                        position: 'relative',
-                                                        paddingBottom: type === 'video' ? '56.25%' : '100%',
-                                                        height: 0,
-                                                        overflow: 'hidden',
-                                                        backgroundColor: '#f0f0f0'
-                                                    }}
-                                                    onClick={() => showPreview(index)}
-                                                >
-                                                    {type === 'video' ? (
-                                                        <>
-                                                            <img
-                                                                src={thumbnailUrl || 'https://placehold.co/600x400/000000/FFFFFF?text=Video'}
-                                                                alt="Video thumbnail"
-                                                                style={{
-                                                                    position: 'absolute',
-                                                                    top: 0,
-                                                                    left: 0,
-                                                                    width: '100%',
-                                                                    height: '100%',
-                                                                    objectFit: 'cover'
-                                                                }}
-                                                            />
-                                                            <div
-                                                                style={{
-                                                                    position: 'absolute',
-                                                                    top: '50%',
-                                                                    left: '50%',
-                                                                    transform: 'translate(-50%, -50%)',
-                                                                    backgroundColor: 'rgba(0,0,0,0.6)',
-                                                                    borderRadius: '50%',
-                                                                    width: 30,
-                                                                    height: 30,
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center'
-                                                                }}
-                                                            >
-                                                                <VideoCameraOutlined style={{ fontSize: 14, color: 'white' }} />
-                                                            </div>
-                                                        </>
-                                                    ) : (
+                                return (
+                                    <Col key={`${item.type}-${item.id}`} xs={24} sm={12} md={8} lg={6}>
+                                        <Card
+                                            size="small"
+                                            cover={
+                                                <div style={{ position: 'relative', height: 120, overflow: 'hidden' }}>
+                                                    {thumbnail ? (
                                                         <img
-                                                            src={url}
-                                                            alt="Preview"
-                                                            style={{
-                                                                position: 'absolute',
-                                                                top: 0,
-                                                                left: 0,
-                                                                width: '100%',
-                                                                height: '100%',
-                                                                objectFit: 'cover'
-                                                            }}
+                                                            src={thumbnail}
+                                                            alt={item.title}
+                                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                         />
+                                                    ) : (
+                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: '#e6e6e6' }}>
+                                                            {isYoutube ? <YoutubeOutlined style={{ fontSize: 32, color: '#ff0000' }} /> : <FileImageOutlined style={{ fontSize: 32, color: '#999' }} />}
+                                                        </div>
                                                     )}
+                                                    <div
+                                                        style={{
+                                                            position: 'absolute',
+                                                            top: 8,
+                                                            right: 8,
+                                                            background: 'rgba(0,0,0,0.6)',
+                                                            color: 'white',
+                                                            padding: '2px 8px',
+                                                            borderRadius: 4,
+                                                            fontSize: 12
+                                                        }}
+                                                    >
+                                                        {mediaTypes.find(type => type.value === item.mediaType)?.label || item.mediaType}
+                                                    </div>
                                                 </div>
-                                                <Text ellipsis style={{ display: 'block', marginTop: 8 }}>
-                                                    {file.name}
-                                                </Text>
-                                            </Col>
-                                        );
-                                    })}
-                                </Row>
-                            </Card>
-                        </Col>
-                    </Row>
+                                            }
+                                        >
+                                            <Card.Meta
+                                                title={item.title}
+                                                description={
+                                                    <Row gutter={8} align="middle">
+                                                        <Col>{isYoutube ? 'YouTube' : 'File Upload'}</Col>
+                                                        <Col flex="auto"></Col>
+                                                        <Col>
+                                                            <Button
+                                                                type="text"
+                                                                size="small"
+                                                                icon={<PlayCircleOutlined />}
+                                                                onClick={() => showPreview(index, item.type)}
+                                                            />
+                                                        </Col>
+                                                        <Col>
+                                                            <Button
+                                                                type="text"
+                                                                size="small"
+                                                                icon={<DeleteOutlined style={{ color: 'red' }} />}
+                                                                onClick={() => removeYoutubeLink(item.id)}
+                                                            />
+                                                        </Col>
+                                                    </Row>
+                                                }
+                                            />
+                                        </Card>
+                                    </Col>
+                                );
+                            })}
+                        </Row>
+                    </Card>
+                ) : (
+                    <Empty description="No media items added yet" />
                 )}
-            </Form>
+            </div>
 
             <Modal
-                title={`Media Preview (${previewIndex + 1} of ${fileList.length})`}
+                title={
+                    previewType === 'youtube'
+                        ? 'YouTube Video Preview'
+                        : `Media Preview (${previewIndex + 1} of ${mediaItems.length})`
+                }
                 visible={previewVisible}
                 onCancel={() => setPreviewVisible(false)}
-                footer={null}
+                footer={
+                    <Space>
+                        <Button
+                            disabled={previewIndex === 0}
+                            onClick={() => setPreviewIndex(prev => prev - 1)}
+                        >
+                            Previous
+                        </Button>
+                        <Button
+                            disabled={previewIndex === mediaItems.length - 1}
+                            onClick={() => setPreviewIndex(prev => prev + 1)}
+                        >
+                            Next
+                        </Button>
+                        <Button type="primary" onClick={() => setPreviewVisible(false)}>
+                            Close
+                        </Button>
+                    </Space>
+                }
                 width="90%"
-                style={{ maxWidth: 800 }}
+                style={{ maxWidth: 900 }}
                 closeIcon={<CloseOutlined />}
-                bodyStyle={{ padding: 0 }}
             >
                 <div style={{ textAlign: 'center', padding: 16 }}>
-                    {fileList.length > 0 && (
-                        <>
-                            <div style={{ marginBottom: 16 }}>
-                                {getMediaType(fileList[previewIndex]) === 'video' ? (
-                                    <video
-                                        controls
-                                        autoPlay
-                                        style={{ width: '100%', maxHeight: '70vh' }}
-                                        src={getPreviewUrl(fileList[previewIndex])}
-                                        poster={thumbnailUrl || 'https://placehold.co/600x400/000000/FFFFFF?text=Video+Preview'}
-                                    />
-                                ) : (
-                                    <img
-                                        alt="Preview"
-                                        style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }}
-                                        src={getPreviewUrl(fileList[previewIndex])}
-                                    />
-                                )}
-                            </div>
+                    {renderPreviewContent()}
 
-                            <div style={{ marginBottom: 8 }}>
-                                <Text strong>{fileList[previewIndex].name}</Text>
-                            </div>
-
-                            <Space>
-                                <Button
-                                    disabled={previewIndex === 0}
-                                    onClick={() => setPreviewIndex(prev => prev - 1)}
-                                >
-                                    Previous
-                                </Button>
-                                <Button
-                                    disabled={previewIndex === fileList.length - 1}
-                                    onClick={() => setPreviewIndex(prev => prev + 1)}
-                                >
-                                    Next
-                                </Button>
-                            </Space>
-                        </>
-                    )}
+                    <div style={{ marginTop: 16 }}>
+                        <Text strong>
+                            {mediaItems[previewIndex]?.title || 'Media Preview'}
+                        </Text>
+                    </div>
                 </div>
             </Modal>
         </Card>

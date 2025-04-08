@@ -1,41 +1,46 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import {
     Form,
     Input,
     Select,
-    Button,
     Card,
     Row,
     Col,
-    Upload,
     DatePicker,
     InputNumber,
-    message,
     Space,
-    Avatar,
+    Divider,
+    Rate,
+    Typography,
+    Tag,
+    Image
 } from "antd";
 import {
-    UploadOutlined,
-    PlusOutlined,
-    UserOutlined,
     DollarOutlined,
     CalendarOutlined,
-    BankOutlined
+    TeamOutlined,
+    TrophyOutlined,
+    GlobalOutlined
 } from "@ant-design/icons";
 import TextEditor from "components/util-components/FormItems/TextEditor";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 import { ThumbnailImageResolutions } from "constants/SupportFileConstants";
 import { useDispatch, useSelector } from "react-redux";
-import { actorsData } from "../movie-list/MockData";
 import { fetchPersonalitiesData } from "store/slices/castSlice";
+import MovieFilter from "./MovieFilter";
+import LoadingOverlay from "components/util-components/Loader";
+import dayjs from 'dayjs';
 
 const { TextArea } = Input;
 const { Option } = Select;
+const { Title, Text } = Typography;
 
-const MovieDetailsForm = () => {
+const MovieDetailsForm = ({ form }) => {
     const dispatch = useDispatch();
-    const { response } = useSelector((state => state.cast))
-    const genres = ["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Thriller", "Animation"];
+    const { response } = useSelector((state => state.cast));
+    const { omdbMovie, loading } = useSelector((state) => state.movie);
+
+    const genres = ["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Thriller", "Animation", "Crime"];
     const languages = ["English", "Hindi", "French", "Spanish", "Chinese", "Tamil", "Malayalam"];
     const currencies = ["USD", "EUR", "GBP", "INR", "JPY", "AUD"];
 
@@ -46,7 +51,6 @@ const MovieDetailsForm = () => {
         return e?.fileList || [];
     };
 
-    // Format currency input
     const currencyFormatter = (value) => {
         if (!value) return '';
         return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -57,246 +61,325 @@ const MovieDetailsForm = () => {
         return value.replace(/\$\s?|(,*)/g, '');
     };
 
-    useEffect(() => {
-        dispatch(fetchPersonalitiesData(10))
-    }, [dispatch])
+    const getImdbRating = (movie) => {
+        if (!movie?.imdbRating || movie.imdbRating === "N/A") return null;
+        return parseFloat(movie.imdbRating);
+    };
+
+    const getRuntimeMinutes = (runtimeStr) => {
+        if (!runtimeStr || runtimeStr === "N/A") return null;
+        const match = runtimeStr.match(/(\d+)/);
+        return match ? parseInt(match[1], 10) : null;
+    };
+
+    const getActorsArray = (actorsStr) => {
+        if (!actorsStr || actorsStr === "N/A") return [];
+        return actorsStr.split(',').map(actor => actor.trim());
+    };
 
     useEffect(() => {
-        if (response) {
-            console.log("responsemovie", response)
+        dispatch(fetchPersonalitiesData(10));
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (omdbMovie) {
+            console.log("Response movie:", omdbMovie);
+
+            const genreArray = omdbMovie.Genre ?
+                omdbMovie.Genre.split(',').map(g => g.trim()) : [];
+
+            const languageArray = omdbMovie.Language ?
+                omdbMovie.Language.split(',').map(l => l.trim()) : [];
+
+            const releaseDate = omdbMovie.Released && omdbMovie.Released !== "N/A" ?
+                dayjs(omdbMovie.Released) : null;
+
+            form.setFieldsValue({
+                Title: omdbMovie.Title || '',
+                Runtime: getRuntimeMinutes(omdbMovie.Runtime),
+                Released: releaseDate,
+                production_company: omdbMovie.Production !== "N/A" ? omdbMovie.Production : '',
+                Genre: genreArray,
+                Language: languageArray[0] || '',
+                rating: getImdbRating(omdbMovie),
+                Plot: omdbMovie.Plot || '',
+                director: omdbMovie.Director || '',
+                actors: getActorsArray(omdbMovie.Actors),
+                awards: omdbMovie.Awards !== "N/A" ? omdbMovie.Awards : '',
+                country: omdbMovie.Country !== "N/A" ? omdbMovie.Country : '',
+                Poster: omdbMovie.Poster && response.Poster !== "images"
+                ? [
+                    {
+                        uid: "-1",
+                        name: omdbMovie.Poster.split("/").pop(),
+                        status: "done",
+                        url: omdbMovie.Poster,
+                    },
+                ]
+                : [],
+            });
         }
-    }, [response])
+    }, [form, omdbMovie]);
+
+    const handleMovieSelect = (imdbId) => {
+        console.log("Selected movie ID:", imdbId);
+    };
 
     return (
-        <Card title="Movie Details" bordered>
-            <Row gutter={16}>
-                {/* Basic Information */}
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="movie_name"
-                        label="Movie Name"
-                        rules={[{ required: true, message: "Please enter movie name" }]}
-                    >
-                        <Input placeholder="Enter movie name" />
-                    </Form.Item>
-                </Col>
+        <>
+            <Card title={<Title level={4}>Movie Details</Title>} bordered>
+                <MovieFilter form={form} onMovieSelect={handleMovieSelect} />
 
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="duration"
-                        label="Duration (Minutes)"
-                        rules={[{ required: true, message: "Enter duration" }]}
-                    >
-                        <InputNumber min={60} max={300} style={{ width: "100%" }} />
-                    </Form.Item>
-                </Col>
+                <Divider />
 
-                {/* Financial Information */}
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="budget"
-                        label="Budget"
-                    >
-                        <InputNumber
-                            style={{ width: '100%' }}
-                            min={0}
-                            formatter={currencyFormatter}
-                            parser={currencyParser}
-                            addonBefore={
-                                <Form.Item name="budget_currency" noStyle initialValue="USD">
-                                    <Select style={{ width: 80 }}>
-                                        {currencies.map(currency => (
-                                            <Option key={currency} value={currency}>{currency}</Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            }
-                        />
-                    </Form.Item>
-                </Col>
+                {/* {omdbMovie && omdbMovie.Poster && omdbMovie.Poster !== "N/A" && (
+                    <Row gutter={16} style={{ marginBottom: 24 }}>
+                        <Col xs={24} sm={6} md={4}>
+                            <Image
+                                src={omdbMovie.Poster}
+                                alt={omdbMovie.Title}
+                                style={{ maxWidth: '100%', borderRadius: 8 }}
+                                preview={true}
+                            />
+                        </Col>
+                        <Col xs={24} sm={18} md={20}>
+                            <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                                <Title level={3}>{omdbMovie.Title} ({omdbMovie.Year})</Title>
 
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="box_office"
-                        label="Box Office Revenue"
-                    >
-                        <InputNumber
-                            style={{ width: '100%' }}
-                            min={0}
-                            formatter={currencyFormatter}
-                            parser={currencyParser}
-                            addonBefore={
-                                <Form.Item name="box_office_currency" noStyle initialValue="USD">
-                                    <Select style={{ width: 80 }}>
-                                        {currencies.map(currency => (
-                                            <Option key={currency} value={currency}>{currency}</Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            }
-                        />
-                    </Form.Item>
-                </Col>
-
-                {/* Dates */}
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="release_date"
-                        label="Release Date"
-                    >
-                        <DatePicker style={{ width: '100%' }} />
-                    </Form.Item>
-                </Col>
-
-                {/* <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="production_status"
-                        label="Production Status"
-                    >
-                        <Select placeholder="Select status">
-                            {productionStatuses.map(status => (
-                                <Option key={status} value={status}>{status}</Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                </Col> */}
-
-                {/* Production Details */}
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="production_company"
-                        label="Production Company"
-                    >
-                        <Input placeholder="Enter production company" />
-                    </Form.Item>
-                </Col>
-
-                {/* <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="distributor"
-                        label="Distributor"
-                    >
-                        <Input placeholder="Enter distributor" />
-                    </Form.Item>
-                </Col> */}
-
-                {/* Existing Fields */}
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="genres"
-                        label="Genres"
-                        rules={[{ required: true, message: "Select genres" }]}
-                    >
-                        <Select mode="multiple" placeholder="Select genres">
-                            {genres.map((genre) => (
-                                <Option key={genre} value={genre}>{genre}</Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                </Col>
-
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="language"
-                        label="Language"
-                        rules={[{ required: true, message: "Select language" }]}
-                    >
-                        <Select placeholder="Select language">
-                            {languages.map((lang) => (
-                                <Option key={lang} value={lang}>{lang}</Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-                </Col>
-
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="rating"
-                        label="Rating (out of 10)"
-                        rules={[
-                            { required: true, message: "Please enter movie rating" },
-                            { type: 'number', min: 0, max: 10, message: "Rating must be between 0 and 10" }
-                        ]}
-                    >
-                        <InputNumber
-                            min={0}
-                            max={10}
-                            step={0.1}
-                            precision={1}
-                            style={{ width: "100%" }}
-                            placeholder="Enter movie rating"
-                        />
-                    </Form.Item>
-                </Col>
-
-                <Col xs={24} sm={12}>
-                    <Form.Item
-                        name="selectedActors"
-                        label="Cast"
-                        rules={[
-                            {
-                                required: true,
-                                message: 'Please select at least one actor'
-                            },
-                            {
-                                validator: (_, value) =>
-                                    value && value.length <= 5
-                                        ? Promise.resolve()
-                                        : Promise.reject(new Error('Maximum 5 actors allowed'))
-                            }
-                        ]}
-                    >
-                        <Select
-                            mode="multiple"
-                            placeholder="Select actors"
-                            optionLabelProp="label"
-                            style={{ width: '100%' }}
-                            options={actorsData.map(actor => ({
-                                value: actor.id,
-                                label: actor.name,
-                                image: actor.imageUrl,
-                            }))}
-                            optionRender={(option) => (
-                                <Space>
-                                    <Avatar
-                                        src={option.data.image}
-                                        icon={<UserOutlined />}
-                                        size={40}
-                                    />
-                                    <span>{option.data.label}</span>
+                                <Space wrap>
+                                    {omdbMovie.Genre && omdbMovie.Genre.split(',').map(genre => (
+                                        <Tag color="blue" key={genre.trim()}>{genre.trim()}</Tag>
+                                    ))}
                                 </Space>
-                            )}
-                        />
-                    </Form.Item>
-                </Col>
 
-                <Col xs={24}>
-                    <Form.Item
-                        name="description"
-                        label="Description"
-                    >
-                        <TextEditor />
-                    </Form.Item>
-                </Col>
+                                <Space>
+                                    {omdbMovie.Runtime !== "N/A" && (
+                                        <Text><CalendarOutlined /> {omdbMovie.Runtime}</Text>
+                                    )}
+                                    {omdbMovie.imdbRating !== "N/A" && (
+                                        <Text><Rate disabled defaultValue={parseFloat(omdbMovie.imdbRating) / 2} count={5} /> ({omdbMovie.imdbRating}/10)</Text>
+                                    )}
+                                </Space>
 
-                <Col xs={24}>
-                    <Form.Item name="poster">
+                                {omdbMovie.Director !== "N/A" && (
+                                    <Text><strong>Director:</strong> {omdbMovie.Director}</Text>
+                                )}
+
+                                {omdbMovie.Plot !== "N/A" && (
+                                    <Text>{omdbMovie.Plot}</Text>
+                                )}
+                            </Space>
+                        </Col>
+                    </Row>
+                )} */}
+
+                <Row gutter={16}>
+                    {/* Basic Information */}
+                    <Col xs={24} sm={12}>
                         <Form.Item
-                            name="poster_image"
-                            label="Poster Image"
-                            valuePropName="value"
-                            getValueFromEvent={normFile}
-                            style={{ marginBottom: "0px", padding: "0px" }}
+                            name="Title"
+                            label="Movie Name"
+                            rules={[{ required: true, message: "Please enter movie name" }]}
                         >
-                            <ResizedImgePicker
-                                maxCount={1}
-                                targetResolution={ThumbnailImageResolutions.EVENT}
+                            <Input placeholder="Enter movie name" />
+                        </Form.Item>
+                    </Col>
+
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="Runtime"
+                            label="Duration (Minutes)"
+                            rules={[{ required: true, message: "Enter duration" }]}
+                        >
+                            <InputNumber min={60} max={300} style={{ width: "100%" }} />
+                        </Form.Item>
+                    </Col>
+
+                    {/* Financial Information */}
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="budget"
+                            label={<span><DollarOutlined /> Budget</span>}
+                        >
+                            <InputNumber
+                                style={{ width: '100%' }}
+                                min={0}
+                                formatter={currencyFormatter}
+                                parser={currencyParser}
+                                addonBefore={
+                                    <Form.Item name="budget_currency" noStyle initialValue="USD">
+                                        <Select style={{ width: 80 }}>
+                                            {currencies.map(currency => (
+                                                <Option key={currency} value={currency}>{currency}</Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                }
                             />
                         </Form.Item>
-                    </Form.Item>
-                </Col>
-            </Row>
-        </Card>
+                    </Col>
+
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="box_office"
+                            label={<span><DollarOutlined /> Box Office Revenue</span>}
+                        >
+                            <InputNumber
+                                style={{ width: '100%' }}
+                                min={0}
+                                formatter={currencyFormatter}
+                                parser={currencyParser}
+                                addonBefore={
+                                    <Form.Item name="box_office_currency" noStyle initialValue="USD">
+                                        <Select style={{ width: 80 }}>
+                                            {currencies.map(currency => (
+                                                <Option key={currency} value={currency}>{currency}</Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                }
+                            />
+                        </Form.Item>
+                    </Col>
+
+                    {/* Dates */}
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="Released"
+                            label={<span><CalendarOutlined /> Release Date</span>}
+                        >
+                            <DatePicker style={{ width: '100%' }} />
+                        </Form.Item>
+                    </Col>
+
+                    {/* Production Details */}
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="production_company"
+                            label="Production Company"
+                        >
+                            <Input placeholder="Enter production company" />
+                        </Form.Item>
+                    </Col>
+
+                    {/* Cast & Crew */}
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="director"
+                            label="Director"
+                        >
+                            <Input placeholder="Enter director name" />
+                        </Form.Item>
+                    </Col>
+
+                    {/* <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="actors"
+                            label={<span><TeamOutlined /> Actors</span>}
+                        >
+                            <Select mode="tags" placeholder="Enter actors" style={{ width: '100%' }}>
+                                {response?.data?.map(person => (
+                                    <Option key={person.id} value={person.name}>{person.name}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </Col> */}
+
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="awards"
+                            label={<span><TrophyOutlined /> Awards</span>}
+                        >
+                            <Input placeholder="Enter awards" />
+                        </Form.Item>
+                    </Col>
+
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="country"
+                            label={<span><GlobalOutlined /> Country</span>}
+                        >
+                            <Input placeholder="Enter country" />
+                        </Form.Item>
+                    </Col>
+
+                    {/* Genres and Language */}
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="Genre"
+                            label="Genres"
+                            rules={[{ required: true, message: "Select genres" }]}
+                        >
+                            <Select mode="multiple" placeholder="Select genres">
+                                {genres.map((genre) => (
+                                    <Option key={genre} value={genre}>{genre}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </Col>
+
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="Language"
+                            label="Language"
+                            rules={[{ required: true, message: "Select language" }]}
+                        >
+                            <Select placeholder="Select language">
+                                {languages.map((lang) => (
+                                    <Option key={lang} value={lang}>{lang}</Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </Col>
+
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            name="rating"
+                            label="Rating (out of 10)"
+                            rules={[
+                                { required: true, message: "Please enter movie rating" },
+                                { type: 'number', min: 0, max: 10, message: "Rating must be between 0 and 10" }
+                            ]}
+                        >
+                            <InputNumber
+                                min={0}
+                                max={10}
+                                step={0.1}
+                                precision={1}
+                                style={{ width: "100%" }}
+                                placeholder="Enter movie rating"
+                            />
+                        </Form.Item>
+                    </Col>
+
+                    <Col xs={24}>
+                        <Form.Item
+                            name="Plot"
+                            label="Description"
+                        >
+                            <TextEditor />
+                        </Form.Item>
+                    </Col>
+
+                    <Col xs={24}>
+                            <Form.Item
+                                name="Poster"
+                                label="Poster Image"
+                                valuePropName="value"
+                                getValueFromEvent={normFile}
+                                style={{ marginBottom: "0px", padding: "0px" }}
+                                extra={omdbMovie?.Poster && omdbMovie.Poster !== "N/A" ? "You can upload a custom poster or use the one provided by OMDB." : null}
+                            >
+                                <ResizedImgePicker
+                                    maxCount={1}
+                                    targetResolution={ThumbnailImageResolutions.EVENT}
+                                />
+                            </Form.Item>
+                    </Col>
+                </Row>
+            </Card>
+            <LoadingOverlay loading={loading} />
+        </>
     );
 }
 
