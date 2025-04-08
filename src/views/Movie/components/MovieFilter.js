@@ -69,7 +69,7 @@ const MovieFilter = ({ form, onMovieSelect }) => {
                         icon={<UserOutlined />}
                         size={40}
                     />
-                    <span>{movie.Title} ({movie.Year})</span>
+                    <span>{movie.Title} ({movie.Year}) ({movie.Type})</span>
                 </Space>
             </Select.Option>
         )),
