@@ -34,6 +34,7 @@ export const ApiConstant = {
   EVENT_TYPE_OPTION_URL: "/api/v1/events/secured/event_type/options",
   EVENT_TYPE_URL: "/api/v1/events/secured/event_type",
   EVENT_TYPE_DETAILS_URL: "/api/v1/events/secured/event_type/detail",
+  EVENT_TYPE_STATUS_URL: "/api/v1/events/secured/event_type/status",
   LEAD_EVENT_DETAILS_URL: "/api/v1/events/secured/lead_event/single",
   LEAD_EVENT_MESSAGE_URL: "/api/v1/events/secured/lead_event/comment",
   PLACE_EVENTS_URL: "/api/v1/events/public/event",
@@ -112,8 +113,18 @@ export const ApiConstant = {
   FETCH_SCREEN_AUDIO_URL: "/api/v1/moies/secured/screens/audio",
   FETCH_SCREEN_FEATURE_URL: "/api/v1/moies/secured/screens/feature",
 
-  // VALIDATION API ENDPOINTS
+  //PERSONALITY_API_ENDPOINTS
+  ADD_PERSONALITY_URL: "/api/v1/moies/secured/personality",
+  GET_PERSONALITY_URL: "/api/v1/moies/secured/personality",
+  GET_PERSONALITYBYID_URL: "/api/v1/moies/secured/personality/single",
+  EDIT_PERSONALITY_STATUS_URL: "/api/v1/moies/secured/personality/edit_status",
+  EDIT_PERSONALITY_URL: "/api/v1/moies/secured/personality/edit",
 
+  // OMDB API ENDPOINTS
+  OMDB_API_URL: '/api/v1/app_management/public/omdb_data_search',
+  OMDB_DETAIL_API_URL: '/api/v1/app_management/public/omdb_movie_details',
+
+  // VALIDATION API ENDPOINTS
   PLACE_VALIDATE_URL: "/api/v1/validation/secured/validate_place",
   COUNTRY_VALIDATE_URL: "/api/v1/validation/secured/validate_country",
   CATEGORY_VALIDATE_URL: "/api/v1/validation/secured/validate_category",
@@ -146,5 +157,8 @@ export const ApiConstant = {
 
   // lead event list
   LEAD_EVENT_LIST: "/api/v1/events/secured/customer_event",
-  SINGLE_CUSTOMER_LEAD_EVENT: '/api/v1/events/secured/single_customer_event'
+  SINGLE_CUSTOMER_LEAD_EVENT: "/api/v1/events/secured/single_customer_event",
+
+  //seat api
+  MOVIE_SEAT_URL: "/api/v1/tickets/secured/seatstructure",
 };

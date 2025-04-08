@@ -8,19 +8,22 @@ import LoadingOverlay from "components/util-components/Loader/index";
 const EditEventType = () => {
   const dispatch = useDispatch();
   const { typeId } = useParams();
-  const { eventTypeDetails, loading } = useSelector((state) => state.event);
+ 
+  // useEffect(() => {
+  //   if(!eventTypeDetails){
+  //     console.log('eventdaksdfjfsjlajdfljljsflalfjaslfj',eventTypeDetails);
+      
+  //   }
+  //   if (!eventTypeDetails && typeId) {
+  //     dispatch(fetchEventTypeDetails(typeId));
+  //   }
+  // }, [dispatch, typeId]);
 
-  useEffect(() => {
-    if (typeId) {
-      dispatch(fetchEventTypeDetails(typeId));
-    }
-  }, [dispatch, typeId]);
+  // if (loading || !eventTypeDetails) {
+  //   return <LoadingOverlay loading={true} />;
+  // }
 
-  if (loading || !eventTypeDetails) {
-    return <LoadingOverlay loading={true} />;
-  }
-
-  return <EventTypeForm mode={"EDIT"} type={eventTypeDetails} />;
+  return <EventTypeForm mode={"EDIT"} typeId={typeId} />;
 };
 
 export default EditEventType;

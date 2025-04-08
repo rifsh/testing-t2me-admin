@@ -137,11 +137,16 @@ const EventTypeList = () => {
       sorter: (a, b) => Utils.antdTableSorter(a, b, "display_name"),
     },
     {
+      title: "Redirect URL",
+      dataIndex: "redirect_url",
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "display_name"),
+    },
+    {
       title: "Description",
       dataIndex: "description",
       sorter: (a, b) => Utils.antdTableSorter(a, b, "description"),
     },
-    // Utils.statusColumnUtil(handleUpdateStatus),
+    Utils.statusColumnUtil(handleUpdateStatus),
     {
       title: "",
       dataIndex: "actions",

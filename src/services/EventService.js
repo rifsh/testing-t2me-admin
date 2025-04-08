@@ -127,7 +127,7 @@ EventsService.updateEventType = function (
   pageData = { page: 1, size: 10 }
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  
+
   return fetch({
     url: `${ApiConstant.EVENT_TYPE_DETAILS_URL}?event_type_id=${data.id}&action=${encodedAction}`,
     params: Utils.filterParams(pageData),
@@ -155,7 +155,7 @@ EventsService.editEventTypeStatus = function (
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.EVENT_TYPE_DETAILS_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.EVENT_TYPE_STATUS_URL}?event_type_id=${data.id}&action=${encodedAction}`,
     method: "put",
     data: data,
     params: Utils.filterParams(pageData),

@@ -1,10 +1,11 @@
 import React from 'react'
 import CelebrityManager from '../components/AddPage'
+import { MODE } from 'constants/TextConstant'
 
 const Index = () => {
     return (
         <div>
-            <CelebrityManager />
+            <CelebrityManager mode={MODE.ADD} />
         </div>
     )
 }

@@ -1,110 +1,120 @@
 import React, { useState, useEffect } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
-import { Tabs, Form, Button } from "antd";
+import { Tabs, Form, Button, message } from "antd";
 import Flex from "components/shared-components/Flex";
 
-import ProductListData from "assets/data/product-list.data.json";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import TheaterLayout from "../components/TheaterLayout";
-
-const getBase64 = (img, callback) => {
-  const reader = new FileReader();
-  reader.addEventListener("load", () => callback(reader.result));
-  reader.readAsDataURL(img);
-};
+import MovieSeatDetailForm from "../components/MovieSeatDetailForm";
+import { SEAT_STRUCTURE_TYPES } from "constants/SeatTypes";
+import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
+import {
+  addSeatStructure,
+  editSeatStructure,
+} from "store/slices/movieSeatSlice";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { ActionType } from "utils/api/warning-submit-util";
+import { setSelectedSubmitItem } from "store/slices/modalSlice";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
 
 const SeatForm = (props) => {
   const { mode = ADD, param } = props;
+  const dispatch = useDispatch();
 
   const [form] = Form.useForm();
-  const [uploadedImg, setImage] = useState("");
-  const [uploadLoading, setUploadLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [activeTabKey, setActiveTabKey] = useState("1");
+
+  const {
+    responseData,
+    responseMessage,
+    submitPagination,
+    seats,
+    seatTypes,
+    selectedSeatStructure,
+  } = useSelector((state) => state.movieSeatSlice);
 
   useEffect(() => {
-    if (mode === EDIT) {
-      console.log("is edit");
-      console.log("props", props);
-      const { id } = param;
-      const produtId = parseInt(id);
-      const productData = ProductListData.filter(
-        (product) => product.id === produtId
-      );
-      const product = productData[0];
-      form.setFieldsValue({
-        comparePrice: 0.0,
-        cost: 0.0,
-        taxRate: 6,
-        description:
-          "There are many variations of passages of Lorem Ipsum available.",
-        category: product.category,
-        name: product.name,
-        price: product.price,
-      });
-      setImage(product.image);
-    }
-  }, [form, mode, param, props]);
+    if (selectedSeatStructure && mode === EDIT) {
+      const formData = {
+        name: selectedSeatStructure.name,
+        venue_id: selectedSeatStructure.venue_id,
+      };
 
-  const handleUploadChange = (info) => {
-    if (info.file.status === "uploading") {
-      setUploadLoading(true);
-      return;
+      form.setFieldsValue(formData);
     }
-    if (info.file.status === "done") {
-      getBase64(info.file.originFileObj, (imageUrl) => {
-        setImage(imageUrl);
-        setUploadLoading(true);
-      });
+  }, [form, selectedSeatStructure, mode]);
+
+  const onFinish = async () => {
+    if (activeTabKey === "1") {
+      setActiveTabKey("2");
+    } else {
+      try {
+        const formValues = await form.validateFields();
+        setSubmitLoading(true);
+
+        if (mode === EDIT) {
+          const editData = {
+            ...formValues,
+            id: selectedSeatStructure.id,
+            seat_data: {
+              seats,
+              seatTypes,
+            },
+          };
+
+          const resultAction = await dispatch(
+            editSeatStructure({ data: editData, action: ActionType.WARNING })
+          );
+
+          if (editSeatStructure.fulfilled.match(resultAction)) {
+            dispatch(setSelectedSubmitItem(editData));
+          }
+        } else {
+          let totalVisibleSeats = 0;
+          seats.forEach((row) => {
+            row.forEach((seat) => {
+              if (seat.isVisible) {
+                totalVisibleSeats++;
+              }
+            });
+          });
+
+          const combinedData = {
+            ...formValues,
+            total_row: seats.length,
+            total_column: seats[0]?.length || 0,
+            total_seats: totalVisibleSeats,
+            type: SEAT_STRUCTURE_TYPES.MOVIE,
+            seat_data: {
+              seats,
+              seatTypes,
+            },
+          };
+
+          console.log("Combined form and state data:", combinedData);
+          dispatch(setSelectedSubmitItem(combinedData));
+        }
+      } catch (info) {
+        console.error("Validation Failed:", info);
+        message.error("Please enter all required fields.");
+      } finally {
+        setSubmitLoading(false);
+      }
     }
   };
 
-  const seats = useSelector((state) => state.seat.seats);
-  const exportSeatData = () => {
-    const jsonData = JSON.stringify(seats, null, 2);
-    console.log("Seat Data JSON:", jsonData);
-    return jsonData;
-  };
-  const onFinish = () => {
-    exportSeatData();
-    // setSubmitLoading(true);
-    // form
-    //   .validateFields()
-    //   .then((values) => {
-    //     setTimeout(() => {
-    //       setSubmitLoading(false);
-    //       if (mode === ADD) {
-    //         message.success(`Created ${values.name} to product list`);
-    //       }
-    //       if (mode === EDIT) {
-    //         message.success(`Product saved`);
-    //       }
-    //     }, 1500);
-    //   })
-    //   .catch((info) => {
-    //     setSubmitLoading(false);
-    //     console.log("info", info);
-    //     message.error("Please enter all required field ");
-    //   });
+  const handleTabChange = (key) => {
+    setActiveTabKey(key);
   };
 
   return (
     <>
-      <Form
-        layout="vertical"
-        form={form}
-        name="advanced_search"
-        className="ant-advanced-search-form"
-        initialValues={{
-          heightUnit: "cm",
-          widthUnit: "cm",
-          weightUnit: "kg",
-        }}
-      >
+      <Form layout="vertical" form={form}>
         <PageHeaderAlt className="border-bottom" overlap>
           <div className="container">
             <Flex
@@ -113,8 +123,11 @@ const SeatForm = (props) => {
               justifyContent="space-between"
               alignItems="center"
             >
-              <h2 className="mb-3">
-                {mode === "ADD" ? "Add New Offer" : `Edit Offer`}{" "}
+              <h2
+                className="mb-3"
+                style={{ fontSize: "20px", fontWeight: "bold" }}
+              >
+                {mode === ADD ? "Add Seat Structure" : `Edit Seat Structure`}{" "}
               </h2>
               <div className="mb-3">
                 <DiscardButton form={form} />
@@ -124,7 +137,7 @@ const SeatForm = (props) => {
                   htmlType="submit"
                   loading={submitLoading}
                 >
-                  {mode === "ADD" ? "Add" : `Save`}
+                  {activeTabKey === "1" ? "Next" : "Submit"}
                 </Button>
               </div>
             </Flex>
@@ -132,28 +145,31 @@ const SeatForm = (props) => {
         </PageHeaderAlt>
         <div className="container">
           <Tabs
-            defaultActiveKey="1"
+            activeKey={activeTabKey}
+            onChange={handleTabChange}
             style={{ marginTop: 30 }}
             items={[
               {
-                label: "General",
+                label: "Screen Selection",
                 key: "1",
-                children: (
-                  //   <SeatFormFields
-                  // 	uploadedImg={uploadedImg}
-                  // 	uploadLoading={uploadLoading}
-                  // 	handleUploadChange={handleUploadChange}
-                  // /> ,
-                  // <SeatEditor/>
-                  // <SeatingCanvas/>
-                  <TheaterLayout />
-                  //   <SeatingChart />
-                ),
+                children: <MovieSeatDetailForm form={form} />,
+              },
+              {
+                label: "Seat Layout",
+                key: "2",
+                children: <TheaterLayout />,
               },
             ]}
           />
         </div>
       </Form>
+      <SubmitAndConfirmModal
+        responseData={responseData}
+        addFunction={mode === EDIT ? editSeatStructure : addSeatStructure}
+        navigationPath={`${APP_PREFIX_PATH}/seat/movie/list`}
+        responseMessage={responseMessage}
+        pagination={submitPagination}
+      />
     </>
   );
 };

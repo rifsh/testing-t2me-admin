@@ -8,10 +8,10 @@ function EventTypeFormFields({ form, mode }) {
   const { type_option, loading } = useSelector((state) => state.event);
 
   useEffect(() => {
-    dispatch(fetchEventTypeOption());
-   
+    if (mode !== "EDIT") {
+      dispatch(fetchEventTypeOption());
+    }
   }, [dispatch]);
-
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
@@ -40,6 +40,13 @@ function EventTypeFormFields({ form, mode }) {
             rules={[{ required: true, message: "Please enter a display name" }]}
           >
             <Input placeholder="Enter Display Name" />
+          </Form.Item>
+          <Form.Item
+            name="redirect_url"
+            label="Redirect URL"
+            rules={[{ required: true, message: "Please enter Redirect URL" }]}
+          >
+            <Input type="text" placeholder="e.g., movie/add" />
           </Form.Item>
           <Form.Item
             name="description"

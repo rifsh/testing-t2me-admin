@@ -229,6 +229,7 @@ export const RegisterForm = (props) => {
           otp: values.otp,
           phone: registeredUser.phone,
           terms_accepted: termsAccepted,
+          event_uuid: id
         })
       )
         .unwrap()

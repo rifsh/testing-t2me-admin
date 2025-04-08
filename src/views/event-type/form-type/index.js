@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import { Tabs, Form, Button, message } from "antd";
 import Flex from "components/shared-components/Flex";
@@ -10,24 +10,38 @@ import {
   addEventType,
   setDialogVisible,
   setModalLoading,
+  fetchEventTypeDetails,
 } from "store/slices/eventSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
-import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import {
+  setSelectedSubmitItem,
+  resetStatusModalState,
+} from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import LoadingOverlay from "components/util-components/Loader/index";
 import { ActionType } from "utils/api/warning-submit-util";
 
-const EventTypeForm = ({ mode, type }) => {
+const EventTypeForm = ({ mode, typeId }) => {
   const {
     loading,
     error,
     responseData,
     responseMessage,
     selectedEvent,
+    eventTypeDetails,
     submitPagination,
   } = useSelector((state) => state.event);
+  const { selectedSubmitItem } = useSelector((state) => state.modalSlice);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const fetchedDetails = useRef(false);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      dispatch(resetStatusModalState());
+    };
+  }, [dispatch]);
 
   useEffect(() => {
     if (error) {
@@ -36,28 +50,39 @@ const EventTypeForm = ({ mode, type }) => {
   }, [error]);
 
   useEffect(() => {
-    if (type && mode === "EDIT") {
-      const formData = {
-        name: type.name,
-        display_name: type.display_name,
-        description: type.description,
-      };
-      form.setFieldsValue(formData);
+    if (typeId && mode === "EDIT" && !fetchedDetails.current) {
+      fetchedDetails.current = true;
+      dispatch(fetchEventTypeDetails(typeId));
     }
-  }, [form, type, mode]);
+  }, [dispatch, typeId, mode]);
+
+  useEffect(() => {
+    if (eventTypeDetails && mode === "EDIT") {
+      // const formData = {
+      //   name: eventTypeDetails.name,
+
+      //   display_name: eventTypeDetails.display_name,
+      //   description: eventTypeDetails.description,
+      // };
+      form.setFieldsValue(eventTypeDetails);
+    }
+  }, [form, eventTypeDetails, mode]);
 
   const onFinish = async () => {
     try {
+      if (selectedSubmitItem) {
+        return;
+      }
+
       const values = await form.validateFields();
 
       if (mode === "EDIT") {
         const editData = {
           ...values,
-          id: type?.id || 0,
+          id: eventTypeDetails?.id || 0,
         };
 
         dispatch(setSelectedSubmitItem(editData));
-      
       } else {
         const formData = {
           ...values,
@@ -95,8 +120,8 @@ const EventTypeForm = ({ mode, type }) => {
                 <Button
                   type="primary"
                   onClick={onFinish}
-                  // htmlType="submit"
                   loading={loading}
+                  disabled={!!selectedSubmitItem}
                 >
                   {mode === "ADD" ? "Add" : "Save"}
                 </Button>
@@ -117,16 +142,14 @@ const EventTypeForm = ({ mode, type }) => {
             ]}
           />
         </div>
+        <SubmitAndConfirmModal
+          responseData={responseData}
+          addFunction={mode === "EDIT" ? updateEventType : addEventType}
+          navigationPath={`${APP_PREFIX_PATH}/event/type/list`}
+          responseMessage={responseMessage}
+          pagination={submitPagination}
+        />
       </Form>
-      <LoadingOverlay loading={loading} />
-
-      <SubmitAndConfirmModal
-        responseData={responseData}
-        addFunction={mode === "EDIT" ? updateEventType : addEventType}
-        navigationPath={`${APP_PREFIX_PATH}/event/type/list`}
-        responseMessage={responseMessage}
-        pagination={submitPagination}
-      />
     </>
   );
 };
