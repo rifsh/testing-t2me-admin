@@ -1,185 +1,325 @@
-/* eslint-disable no-unused-vars */
-import React, { useState, useCallback } from 'react';
-import { Card, Table, Select, Input, Button, Tag, Menu, } from 'antd';
-import { EyeOutlined, PlusCircleOutlined, SearchOutlined, FormOutlined } from '@ant-design/icons';
-import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
-import Flex from 'components/shared-components/Flex';
-  import utils from 'utils';
-import { debounce } from 'lodash';
+import React, { useEffect, useState } from "react";
+import { Card, Table, Button, Modal, Descriptions, Dropdown } from "antd";
+import {
+  EyeOutlined,
+  FormOutlined,
+  MoreOutlined,
+  EditOutlined,
+  DownOutlined,
+} from "@ant-design/icons";
+import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  editOffer,
+  editOfferStatus,
+  fetchAllOffers,
+  setEditItemId,
+  setOfferDialogVisible,
+  setOfferModalLoading,
+} from "store/slices/offerSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import seatData from 'assets/data/seat-list.json';
-const { Option } = Select;
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
+import Utils from "utils";
+import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
+import { TextConstants } from "constants/TextConstant";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import { getAllSeatStructures } from "store/slices/movieSeatSlice";
 
-const SeatList = () => {
+const MovieSeatList = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const {
+    allSeats,
+    pagination,
+    loading,
+    editable_status,
+    message,
+    editItemId,
+    dialogVisible,
+    warningPagination,
+    modalLoading,
+    responseImpactData,
+  } = useSelector((state) => state.movieSeatSlice);
+  const { responseData } = useSelector((state) => state.modalSlice);
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState(null);
 
-  const [list, setList] = useState(seatData);
-  const [ setSelectedRows] = useState([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  useEffect(() => {
+    dispatch(getAllSeatStructures(DEFAULT_PAGE_SIZE));
+  }, [dispatch]);
 
-  const handleSearch = useCallback(
-    debounce((value) => {
-      const searchArray = value ? seatData : list;
-      const filteredData = utils.wildCardSearch(searchArray, value);
-      setList(filteredData);
-      setSelectedRowKeys([]);
-    }, 500),
-    [list]
-  );
-
-  const handleShowStatus = (value) => {
-    const filteredData = value !== 'All'
-      ? utils.filterArray(seatData, 'status', value)
-      : seatData;
-    setList(filteredData);
+  const showModal = (offer) => {
+    setSelectedOffer(offer);
+    setIsModalVisible(true);
   };
 
-  const getStatusColor = (status) => {
-    if (status.toLowerCase() === 'occupied') return 'red';
-    if (status.toLowerCase() === 'vacant') return 'green';
-    return 'blue';
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+    setSelectedOffer(null);
+  };
+  const handleUpdateStatus = (item) => {
+    const newStatus = !item.status;
+    const data = { status: newStatus, id: item.id };
+
+    dispatch(setSelectedItem(data));
+    dispatch(setDialogVisible(true));
+  };
+  const handleEditTax = (id) => {
+    dispatch(setEditItemId(id));
+    dispatch(setOfferDialogVisible(true));
+  };
+  const handleModalSubmit = async () => {
+    dispatch(setOfferModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/offer/edit/${editItemId}`);
+    console.log(editItemId, "9234239423490823498234098234908");
+    dispatch(setOfferDialogVisible(false));
+    dispatch(setOfferModalLoading(false));
   };
 
-  const dropdownMenu = (row) => (
-    <Menu>
-      <Menu.Item>
+  const handleModalCancel = () => {
+    dispatch(setOfferDialogVisible(false));
+  };
+  const getDropdownMenu = (row) => [
+    {
+      key: "view",
+      label: (
         <Flex alignItems="center">
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
-      <Menu.Item>
-        <Flex alignItems="center">
-          <PlusCircleOutlined />
-          <span className="ml-2">Add to remark</span>
-        </Flex>
-      </Menu.Item>
-    </Menu>
-  );
+      ),
 
-  const tableColumns = [
-    {
-      title: 'Venue',
-      dataIndex: 'venue',
-      sorter: (a, b) => a.venue.localeCompare(b.venue),
+      onClick: () => navigate(`${APP_PREFIX_PATH}/seat/movie/${row.id}`),
     },
     {
-      title: 'Section',
-      dataIndex: 'section',
-      sorter: (a, b) => a.section.localeCompare(b.section),
-    },
-    {
-      title: 'Row',
-      dataIndex: 'row',
-      sorter: (a, b) => a.row - b.row,
-    },
-    {
-      title: 'Seat Number',
-      dataIndex: 'seat_number',
-      sorter: (a, b) => a.seat_number - b.seat_number,
-    },
-    {
-      title: 'Price Modifier',
-      dataIndex: 'price_modifier',
-      render: (_, record) => `$${record.price_modifier.toFixed(2)}`,
-    },
-    {
-      title: 'Is Accessible',
-      dataIndex: 'is_accessible',
-      render: (_, record) => (record.is_accessible ? 'Yes' : 'No'),
-    },
-    {
-      title: 'Is Available',
-      dataIndex: 'is_available',
-      render: (_, record) => (record.is_available ? 'Yes' : 'No'),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      render: (_, record) => (
-        <Tag color={getStatusColor(record.status)}>{record.status}</Tag>
+      key: "remark",
+      label: (
+        <Flex alignItems="center">
+          <EditOutlined />
+          <span className="ml-2">Edit Seat Structure</span>
+        </Flex>
       ),
-    },
-    {
-      title: 'Last Cleaned',
-      dataIndex: 'last_cleaned',
-      render: (_, record) => new Date(record.last_cleaned).toLocaleString(),
-    },
-    {
-      title: '',
-      dataIndex: 'actions',
-      render: (_, elm) => (
-        <EllipsisDropdown menu={dropdownMenu(elm)} />
-      ),
+      onClick: () => handleEditTax(row.id),
     },
   ];
 
-  const rowSelection = {
-    onChange: (key, rows) => {
-      setSelectedRows(rows);
-      setSelectedRowKeys(key);
+  const tableColumns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
     },
-  };
+    {
+      title: "Screen",
+      dataIndex: ["screen", "screen_name"],
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "screen.screen_name"),
+    },
+    {
+      title: "Venue",
+      dataIndex: ["venue", "name"],
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "venue.name"),
+    },
+    {
+      title: "Total Rows",
+      dataIndex: "total_row",
+      sorter: (a, b) => a.total_row - b.total_row,
+    },
+    {
+      title: "Total Columns",
+      dataIndex: "total_column",
+      sorter: (a, b) => a.total_column - b.total_column,
+    },
+    {
+      title: "Total Seats",
+      dataIndex: "total_seats",
+      sorter: (a, b) => a.total_seats - b.total_seats,
+    },
+    {
+      title: "Type",
+      dataIndex: "type",
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "type"),
+    },
+    {
+      title: "Seat Types",
+      dataIndex: ["seat_data", "seatTypes"],
+      render: (seatTypes) => {
+        if (!seatTypes || !seatTypes.length) return "No seat types";
 
-  const navigate = useNavigate();
+        return (
+          <Dropdown
+            menu={{
+              items: seatTypes.map((type) => ({
+                key: type.id,
+                label: (
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <div
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          backgroundColor: type.color,
+                          marginRight: "8px",
+                          borderRadius: "2px",
+                        }}
+                      />
+                      {type.label}
+                    </div>
+                    <div>Base Price: ${type.basePrice}</div>
+                  </div>
+                ),
+              })),
+            }}
+            trigger={["click"]}
+          >
+            <Button>
+              {seatTypes.length} Seat Types <DownOutlined />
+            </Button>
+          </Dropdown>
+        );
+      },
+    },
+    Utils.statusColumnUtil(handleUpdateStatus),
+    {
+      title: "",
+      dataIndex: "actions",
+      render: (_, row) => (
+        <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
+          <Button type="text" icon={<MoreOutlined />} />
+        </Dropdown>
+      ),
+    },
+  ];
+  const handlePagination = (page, size) => {
+    dispatch(fetchAllOffers({ page: page, size: size }));
+  };
 
   return (
     <Card>
-      <Flex alignItems="center" justifyContent="space-between" mobileFlex={false}>
-        <Flex className="mb-1" mobileFlex={false}>
-          <div className="mr-md-3 mb-3">
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                handleSearch(e.target.value);
-              }}
-              value={searchTerm}
-            />
-          </div>
-          <div className="mb-3">
-            <Select
-              defaultValue="All"
-              className="w-100"
-              style={{ minWidth: 180 }}
-              onChange={handleShowStatus}
-              placeholder="Status"
-            >
-              <Option value="All">All</Option>
-              <Option value="Occupied">Occupied</Option>
-              <Option value="Vacant">Vacant</Option>
-            </Select>
-          </div>
-        </Flex>
-        <div>
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/seat/movie/add`)}
-          >
-            Add Seat
-          </Button>
-        </div>
+      <Flex alignItems="center" className="mb-3" justifyContent="space-between">
+        <SearchBarWithStatus fetchFunction={fetchAllOffers} />
+        <Button
+          type="primary"
+          icon={<FormOutlined />}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/seat/movie/add`)}
+        >
+          Add Seat Structure
+        </Button>
       </Flex>
-      <div className="table-responsive">
-        <Table
-          columns={tableColumns}
-          dataSource={list}
-          rowKey="seat_number"
-          rowSelection={{
-            selectedRowKeys: selectedRowKeys,
-            type: 'checkbox',
-            preserveSelectedRowKeys: false,
-            ...rowSelection,
-          }}
-        />
-      </div>
+      <Table
+        columns={tableColumns}
+        dataSource={allSeats}
+        rowKey="id"
+        loading={loading}
+        pagination={{
+          current: pagination.page,
+          pageSize: pagination.size,
+          total: pagination.total,
+          onChange: (page, pageSize) => handlePagination(page, pageSize),
+        }}
+      />
+
+      <Modal
+        title="Offer Details"
+        open={isModalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        width={800}
+      >
+        {selectedOffer && (
+          <Descriptions column={1} bordered>
+            <Descriptions.Item label="Offer Name">
+              {selectedOffer.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="Discount Percentage">
+              {selectedOffer.discount_percentage}%
+            </Descriptions.Item>
+            <Descriptions.Item label="Start Date">
+              {selectedOffer.start_date
+                ? new Date(selectedOffer.start_date).toLocaleDateString()
+                : "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="End Date">
+              {selectedOffer.end_date
+                ? new Date(selectedOffer.end_date).toLocaleDateString()
+                : "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Max Users">
+              {selectedOffer.max_uses}
+            </Descriptions.Item>
+            <Descriptions.Item label="Status">
+              {selectedOffer.status ? "Active" : "Inactive"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Keywords">
+              {selectedOffer.key_words && selectedOffer.key_words.length
+                ? selectedOffer.key_words.join(", ")
+                : "None"}
+            </Descriptions.Item>
+            {/* <Descriptions.Item label="Offer Description">
+            {selectedOffer.description || "No description available"}
+            </Descriptions.Item> */}
+            {selectedOffer.thumbnail_image &&
+            selectedOffer.thumbnail_image !== "images" ? (
+              <Descriptions.Item label="Thumbnail Image">
+                <img
+                  src={selectedOffer.thumbnail_image}
+                  alt="Offer Thumbnail"
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "200px",
+                    objectFit: "contain",
+                  }}
+                />
+              </Descriptions.Item>
+            ) : (
+              <Descriptions.Item label="Thumbnail Image">
+                No image available
+              </Descriptions.Item>
+            )}
+          </Descriptions>
+        )}
+      </Modal>
+      <WarningModal
+        mode={"itemmodal"}
+        visible={dialogVisible}
+        title="Edit Offer"
+        details={TextConstants.DefaultEditContent1}
+        warningMessage="Do you want to proceed to the edit page?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed to Edit"
+        cancelText="Cancel"
+        loading={modalLoading}
+      />
+      <UpdateStatusModal
+        responseMessage={message}
+        editFunction={editOfferStatus}
+        getAllFunction={(pageData) => fetchAllOffers(pageData)}
+        pageData={{ page: 1, size: 10 }}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "items",
+        }}
+        editable_status={editable_status}
+        responseData={responseImpactData}
+        pagination={warningPagination}
+        loading={loading}
+      />
+      <StatusSubmitAndConfirmModal
+        editFunction={editOfferStatus}
+        getAllFunction={fetchAllOffers}
+        responseData={responseData}
+        responseMessage={message}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
+      />
     </Card>
-      );
+  );
 };
 
-export default SeatList;
+export default MovieSeatList;

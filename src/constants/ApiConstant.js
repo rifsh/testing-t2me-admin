@@ -120,10 +120,9 @@ export const ApiConstant = {
   EDIT_PERSONALITY_STATUS_URL: "/api/v1/moies/secured/personality/edit_status",
   EDIT_PERSONALITY_URL: "/api/v1/moies/secured/personality/edit",
 
-
   // OMDB API ENDPOINTS
-  OMDB_API_URL: '/api/v1/app_management/public/omdb_data_search',
-  OMDB_DETAIL_API_URL: '/api/v1/app_management/public/omdb_movie_details',
+  OMDB_API_URL: "/api/v1/app_management/public/omdb_data_search",
+  OMDB_DETAIL_API_URL: "/api/v1/app_management/public/omdb_movie_details",
 
   // VALIDATION API ENDPOINTS
   PLACE_VALIDATE_URL: "/api/v1/validation/secured/validate_place",
@@ -158,5 +157,9 @@ export const ApiConstant = {
 
   // lead event list
   LEAD_EVENT_LIST: "/api/v1/events/secured/customer_event",
-  SINGLE_CUSTOMER_LEAD_EVENT: '/api/v1/events/secured/single_customer_event'
+  SINGLE_CUSTOMER_LEAD_EVENT: "/api/v1/events/secured/single_customer_event",
+
+  //seat api
+  MOVIE_SEAT_URL: "/api/v1/tickets/secured/seatstructure",
+  MOVIE_SEAT_DETAILS_URL: "/api/v1/tickets/secured/seatstructure/single",
 };

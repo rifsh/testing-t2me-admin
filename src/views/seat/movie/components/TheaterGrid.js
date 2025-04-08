@@ -1,186 +1,269 @@
-import React from "react";
+// TheaterGrid.jsx
+import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   startSelection,
   updateSelection,
   endSelection,
+  zoomIn,
+  zoomOut,
 } from "store/slices/movieSeatSlice";
-import { SEAT_CATEGORIES, SEAT_TYPES } from "constants/SeatTypes";
-import Legend from "./Legend";
-import { Card, Typography } from "antd";
+import { Tooltip, Typography, Card } from "antd";
+import { BorderOuterOutlined } from "@ant-design/icons";
 
-const TheaterGrid = () => {
+const { Text } = Typography;
+
+const TheaterGrid = ({ isPreviewMode, showHiddenSeats }) => {
   const dispatch = useDispatch();
-  const { seats } = useSelector((state) => state.movieSeatSlice);
-  const { selectedSeats } = useSelector((state) => state.movieSeatSlice);
+  const { seats, selectedSeats, seatTypes, zoomLevel } = useSelector(
+    (state) => state.movieSeatSlice
+  );
+  const gridRef = useRef(null);
 
-  // Helper function to get border color for category
-  const getCategoryBorder = (category) => {
-    const cat = SEAT_CATEGORIES.find((cat) => cat.id === category);
-    return cat ? cat.borderColor : "gray";
+  // Helper function to get border color for seat type
+  const getSeatBorder = (typeId) => {
+    const type = seatTypes.find((t) => t.id === typeId);
+    return type ? type.color : "#cccccc";
+  };
+
+  // Helper function to get fill color for seat type
+  const getSeatFill = (typeId) => {
+    const type = seatTypes.find((t) => t.id === typeId);
+    return type ? type.color : "#ffffff";
   };
 
   // Event handlers for mouse interactions
   const handleMouseDown = (rowIndex, colIndex) => {
-    dispatch(startSelection({ rowIndex, colIndex }));
+    if (!isPreviewMode) {
+      dispatch(startSelection({ rowIndex, colIndex }));
+    }
   };
 
   const handleMouseMove = (rowIndex, colIndex) => {
-    dispatch(updateSelection({ rowIndex, colIndex, seats }));
+    if (!isPreviewMode) {
+      dispatch(updateSelection({ rowIndex, colIndex, seats }));
+    }
   };
 
   const handleMouseUp = () => {
-    dispatch(endSelection());
+    if (!isPreviewMode) {
+      dispatch(endSelection());
+    }
   };
 
-  // Group seats by category to add spacing between sections
-  const groupSeatsByCategory = () => {
-    // Create a map of categories for each column in each row
-    const categoryMap = [];
-
-    for (let rowIndex = 0; rowIndex < seats.length; rowIndex++) {
-      categoryMap[rowIndex] = [];
-      let currentCategory = null;
-      let currentGroup = [];
-
-      for (let colIndex = 0; colIndex < seats[rowIndex].length; colIndex++) {
-        const seat = seats[rowIndex][colIndex];
-
-        if (seat.category !== currentCategory) {
-          if (currentGroup.length > 0) {
-            categoryMap[rowIndex].push({
-              category: currentCategory,
-              seats: currentGroup,
-            });
-          }
-          currentCategory = seat.category;
-          currentGroup = [{ seat, colIndex }];
+  // Handle wheel zoom
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+          dispatch(zoomIn());
         } else {
-          currentGroup.push({ seat, colIndex });
+          dispatch(zoomOut());
         }
       }
+    };
 
-      if (currentGroup.length > 0) {
-        categoryMap[rowIndex].push({
-          category: currentCategory,
-          seats: currentGroup,
-        });
-      }
+    const grid = gridRef.current;
+    if (grid) {
+      grid.addEventListener("wheel", handleWheel, { passive: false });
     }
 
-    return categoryMap;
+    return () => {
+      if (grid) {
+        grid.removeEventListener("wheel", handleWheel);
+      }
+    };
+  }, [dispatch]);
+
+  // Calculate appropriate seat size based on zoom level
+  const getSeatSizeClass = () => {
+    const baseSize = Math.max(
+      Math.min(24, Math.floor(500 / Math.max(1, seats[0]?.length || 10))),
+      16
+    );
+    return `${baseSize * (zoomLevel / 100)}px`;
   };
 
   if (seats.length === 0) {
-    return null;
+    return (
+      <Card>
+        <div className="text-center p-8">
+          <BorderOuterOutlined style={{ fontSize: "48px", color: "#d9d9d9" }} />
+          <Text type="secondary" className="block mt-4 text-lg">
+            No seat layout yet
+          </Text>
+          <Text type="secondary" className="block">
+            Please use the Layout tool to generate a layout
+          </Text>
+        </div>
+      </Card>
+    );
   }
 
-  const categoryGroups = groupSeatsByCategory();
+  const seatSize = getSeatSizeClass();
 
   return (
-    <Card
-      style={{ marginBottom: "16px" }}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-    >
-      <div
-        style={{
-          marginBottom: "32px",
-          textAlign: "center",
-          position: "relative",
-        }}
-      >
-        <div
-          style={{
-            width: "50%",
-            height: "16px",
-            backgroundColor: "#d9d9d9",
-            margin: "0 auto 32px",
-            borderRadius: "4px",
-          }}
-        >
-          <Typography.Text style={{ fontSize: "12px" }}>SCREEN</Typography.Text>
-        </div>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="relative overflow-auto p-4" style={{ height: "70vh" }}>
+        {/* Screen */}
+        <ScreenComponent />
 
+        {/* Seats Grid */}
         <div
+          className="flex flex-col items-center space-y-2 min-w-max"
+          ref={gridRef}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
           style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "4px",
+            transform: `scale(${zoomLevel / 100})`,
+            transformOrigin: "top center",
           }}
         >
-          {categoryGroups.map((row, rowIndex) => (
-            <div
-              key={rowIndex}
-              style={{ display: "flex", gap: "4px", alignItems: "center" }}
-            >
-              <div style={{ width: "24px", fontWeight: "bold" }}>
+          {seats.map((row, rowIndex) => (
+            <div key={rowIndex} className="flex items-center">
+              {/* Row label */}
+              <div
+                className="flex items-center justify-center font-medium text-gray-600 mr-2"
+                style={{ width: "24px" }}
+              >
                 {String.fromCharCode(65 + rowIndex)}
               </div>
 
-              {row.map((group, groupIndex) => (
-                <React.Fragment key={`${rowIndex}-${groupIndex}`}>
-                  {/* Add spacing between different category groups */}
-                  {groupIndex > 0 && <div style={{ width: "12px" }} />}
+              {/* Seats */}
+              <div className="flex">
+                {row.map((seat, colIndex) => {
+                  // Skip rendering invisible seats if option is turned off
+                  if (!seat.isVisible && !showHiddenSeats && !isPreviewMode) {
+                    return null;
+                  }
 
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "4px",
-                      padding: "4px",
-                      borderRadius: "4px",
-                      border: `1px dashed ${getCategoryBorder(group.category)}`,
-                    }}
-                  >
-                    {group.seats.map(({ seat, colIndex }) => {
-                      const isSelected = selectedSeats.includes(
+                  return (
+                    <SeatComponent
+                      key={colIndex}
+                      seat={seat}
+                      rowIndex={rowIndex}
+                      colIndex={colIndex}
+                      isSelected={selectedSeats.includes(
                         `${rowIndex}-${colIndex}`
-                      );
-                      const isHidden = seat.type === "hidden";
-
-                      return (
-                        <div
-                          key={colIndex}
-                          onMouseDown={() =>
-                            handleMouseDown(rowIndex, colIndex)
-                          }
-                          onMouseOver={() =>
-                            handleMouseMove(rowIndex, colIndex)
-                          }
-                          style={{
-                            width: "32px",
-                            height: "32px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: "4px",
-                            backgroundColor: "transparent",
-                            border: `2px solid ${getCategoryBorder(
-                              seat.category
-                            )}`,
-                            opacity: isHidden ? 0.3 : 1,
-                            cursor: isHidden ? "default" : "pointer",
-                            userSelect: "none",
-                            boxShadow: isSelected ? "0 0 0 2px black" : "none",
-                          }}
-                          title={`${seat.id} - Type: ${seat.type}, Category: ${seat.category}`}
-                        >
-                          {!isHidden && seat.visualNumber}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </React.Fragment>
-              ))}
+                      )}
+                      isPreviewMode={isPreviewMode}
+                      seatSize={seatSize}
+                      getSeatBorder={getSeatBorder}
+                      getSeatFill={getSeatFill}
+                      handleMouseDown={handleMouseDown}
+                      handleMouseMove={handleMouseMove}
+                    />
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>
-      </div>
 
-      <Legend />
-    </Card>
+        {/* Legend */}
+        {isPreviewMode && <SeatTypeLegend seatTypes={seatTypes} />}
+      </div>
+    </div>
   );
 };
+
+// Screen Component
+const ScreenComponent = () => (
+  <div className="mb-10 sticky top-0 z-10 bg-gradient-to-b from-white pb-4">
+    <div
+      className="mx-auto relative overflow-hidden bg-gradient-to-b from-gray-300 to-gray-400"
+      style={{
+        width: "80%",
+        height: "10px",
+        borderRadius: "100px / 50px",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.1)",
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-white/50"></div>
+    </div>
+    <Text className="block text-center text-sm mt-2 font-medium text-gray-500">
+      SCREEN
+    </Text>
+  </div>
+);
+
+// Seat Component
+const SeatComponent = ({
+  seat,
+  rowIndex,
+  colIndex,
+  isSelected,
+  isPreviewMode,
+  seatSize,
+  getSeatBorder,
+  getSeatFill,
+  handleMouseDown,
+  handleMouseMove,
+}) => {
+  const showPreview = isPreviewMode && seat.isVisible;
+  const seatLabel = seat.number > 0 ? seat.number : "";
+  const seatId = `${seat.rowLabel}${seat.number || "0"}`;
+
+  return (
+    <div
+      className={`
+        relative flex items-center justify-center
+        ${!isPreviewMode ? "cursor-pointer" : ""}
+        transition-all duration-150
+        ${isSelected ? "ring-2 ring-blue-600 scale-110 z-10" : ""}
+      `}
+      style={{
+        width: seatSize,
+        height: seatSize,
+        margin: "2px",
+        opacity: !seat.isVisible ? 0.3 : 1,
+        backgroundColor: isSelected
+          ? "#e6f7ff"
+          : showPreview
+          ? getSeatFill(seat.type)
+          : "white",
+        border: `2px solid ${
+          isSelected ? "#1890ff" : getSeatBorder(seat.type)
+        }`,
+        borderRadius: "4px",
+      }}
+      onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+      onMouseMove={() => handleMouseMove(rowIndex, colIndex)}
+    >
+      <Tooltip title={`ID: ${seatId}, Type: ${seat.type}`}>
+        <Text
+          className="select-none text-xs font-medium"
+          style={{
+            color:
+              showPreview && getSeatFill(seat.type) !== "transparent"
+                ? "white"
+                : "inherit",
+          }}
+        >
+          {seatLabel}
+        </Text>
+      </Tooltip>
+    </div>
+  );
+};
+
+// Seat Type Legend Component
+const SeatTypeLegend = ({ seatTypes }) => (
+  <div className="mt-8 pt-4 border-t border-gray-200 flex flex-wrap gap-3 justify-center">
+    {seatTypes.map((type) => (
+      <div key={type.id} className="flex items-center">
+        <div
+          className="w-4 h-4 mr-1 rounded"
+          style={{ backgroundColor: type.color }}
+        />
+
+        <Text>
+          {type.label} - ${type.basePrice.toFixed(2)}
+        </Text>
+      </div>
+    ))}
+  </div>
+);
 
 export default TheaterGrid;

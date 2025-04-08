@@ -42,6 +42,13 @@ function EventTypeFormFields({ form, mode }) {
             <Input placeholder="Enter Display Name" />
           </Form.Item>
           <Form.Item
+            name="redirect_url"
+            label="Redirect URL"
+            rules={[{ required: true, message: "Please enter Redirect URL" }]}
+          >
+            <Input type="text" placeholder="e.g., movie/add" />
+          </Form.Item>
+          <Form.Item
             name="description"
             label="Description"
             rules={[{ required: true, message: "Please enter description" }]}

@@ -1,47 +1,78 @@
-import React from "react";
-import { Typography, Row, Col, Card, Divider } from "antd";
-import ConfigPanel from "./ConfigPanel";
-import SeatTypeSelector from "./ToolsPanel/SeatTypeSelector";
-import CategorySelector from "./ToolsPanel/CategorySelector";
-import SelectionControls from "./ToolsPanel/SelectionControls";
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { clearSelection, applySeatType, toggleSeatVisibility } from "store/slices/movieSeatSlice";
+import { Modal, Card } from "antd";
+import LayoutToolbar from "./LayoutToolbar";
 import TheaterGrid from "./TheaterGrid";
 
-const { Title } = Typography;
-
 const TheaterLayout = () => {
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [showHiddenSeats, setShowHiddenSeats] = useState(true);
+
+  const dispatch = useDispatch();
+  const { selectedSeats, selectedSeatType, seatTypes } = useSelector((state) => state.movieSeatSlice);
+
+  const handleApplyChanges = () => {
+    if (selectedSeats.length === 0) return;
+
+    dispatch(
+      applySeatType({
+        selectedSeats,
+        selectedSeatType,
+        seatTypes,
+      })
+    );
+
+    dispatch(clearSelection());
+
+    Modal.success({
+      title: "Changes Applied",
+      content: "Your seat changes have been applied successfully.",
+    });
+  };
+
+  const handleSaveLayout = () => {
+    Modal.success({
+      title: "Layout Saved",
+      content: "Your theater layout has been saved successfully.",
+    });
+  };
+
+  const handleToggleVisibility = () => {
+    if (selectedSeats.length === 0) return;
+
+    dispatch(
+      toggleSeatVisibility({
+        selectedSeats,
+      })
+    );
+
+    dispatch(clearSelection());
+  };
+
   return (
-    <div style={{ padding: "16px", maxWidth: "1400px", margin: "0 auto" }}>
-      <Title level={2}>Theater Layout Tool</Title>
+    <div className="bg-gray-50 flex flex-col">
+      <Card>
+        <LayoutToolbar 
+          isPreviewMode={isPreviewMode}
+          setIsPreviewMode={setIsPreviewMode}
+          showHiddenSeats={showHiddenSeats}
+          setShowHiddenSeats={setShowHiddenSeats}
+          selectedSeats={selectedSeats}
+          handleToggleVisibility={handleToggleVisibility}
+          handleApplyChanges={handleApplyChanges}
+          handleSaveLayout={handleSaveLayout}
+        />
+      </Card>
 
-      <Row gutter={[16, 16]}>
-        {/* Left Side - Tools Panel */}
-        <Col xs={24} lg={6}>
-          <Card style={{ marginBottom: "16px" }}>
-            <Title level={4}>Configuration</Title>
-            <ConfigPanel />
-
-            <Divider />
-
-            <Title level={4}>Tools</Title>
-            <div style={{ marginBottom: "16px" }}>
-              <SeatTypeSelector />
-            </div>
-
-            <div style={{ marginBottom: "16px" }}>
-              <CategorySelector />
-            </div>
-
-            <Divider />
-
-            <SelectionControls />
-          </Card>
-        </Col>
-
-        {/* Right Side - Theater Grid */}
-        <Col xs={24} lg={18}>
-          <TheaterGrid />
-        </Col>
-      </Row>
+      <div className="flex-1">
+        <div className="max-w-7xl mx-auto">
+          <TheaterGrid
+            isPreviewMode={isPreviewMode}
+            showHiddenSeats={showHiddenSeats}
+          />
+        </div>
+      </div>
     </div>
   );
 };

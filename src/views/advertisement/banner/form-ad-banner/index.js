@@ -3,22 +3,32 @@ import React, { useEffect } from "react";
 import { Tabs, Form } from "antd";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import AdBannerFormFields from "../components/AdBannerFormFields";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAdBanners } from "store/slices/advertisementSlice";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
 
-const AdBannerForm = ({ mode , id }) => {
+const AdBannerForm = ({ mode, id }) => {
   const { filteredAdBanner } = useSelector((state) => state.advertisement);
   console.log(id);
   let bannerData;
-  if (filteredAdBanner&&filteredAdBanner.length>0) {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    if (filteredAdBanner.length === 0) {
+      dispatch(fetchAdBanners({}));
+    }
+  }, [dispatch, filteredAdBanner.length]);
+
+  if (filteredAdBanner && filteredAdBanner.length > 0) {
     const numericBannerId = parseInt(id, 10);
-    const foundData = filteredAdBanner.find(banner => banner.id === numericBannerId);
-    bannerData=foundData;
-    console.log(bannerData,"FOUND DATA------------");
-  }else{
-    console.log('filteredAdBanner is empty or undefined.');
+    const foundData = filteredAdBanner.find(
+      (banner) => banner.id === numericBannerId
+    );
+    bannerData = foundData;
+    console.log(bannerData, "FOUND DATA------------");
+  } else {
+    console.log("filteredAdBanner is empty or undefined.");
   }
 
   return (
@@ -50,7 +60,6 @@ const AdBannerForm = ({ mode , id }) => {
               key: "banner",
               children: <AdBannerFormFields mode={mode} banner={bannerData} />,
             },
-            
           ]}
         />
       </div>

@@ -49,7 +49,6 @@ const EventTypeForm = ({ mode, typeId }) => {
     }
   }, [error]);
 
-  // Fetch event type details only once
   useEffect(() => {
     if (typeId && mode === "EDIT" && !fetchedDetails.current) {
       fetchedDetails.current = true;
@@ -57,21 +56,20 @@ const EventTypeForm = ({ mode, typeId }) => {
     }
   }, [dispatch, typeId, mode]);
 
-  // Set form values when details are available
   useEffect(() => {
     if (eventTypeDetails && mode === "EDIT") {
-      const formData = {
-        name: eventTypeDetails.name,
-        display_name: eventTypeDetails.display_name,
-        description: eventTypeDetails.description,
-      };
-      form.setFieldsValue(formData);
+      // const formData = {
+      //   name: eventTypeDetails.name,
+
+      //   display_name: eventTypeDetails.display_name,
+      //   description: eventTypeDetails.description,
+      // };
+      form.setFieldsValue(eventTypeDetails);
     }
   }, [form, eventTypeDetails, mode]);
 
   const onFinish = async () => {
     try {
-      // Prevent duplicate submissions
       if (selectedSubmitItem) {
         return;
       }
