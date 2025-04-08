@@ -280,9 +280,14 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/seat/movie/list-seat")),
   },
   {
-    key: "seat.add",
+    key: "seat.movie.add",
     path: `${APP_PREFIX_PATH}/seat/movie/add`,
     component: React.lazy(() => import("views/seat/movie/add-seat")),
+  },
+  {
+    key: "seat.movie.details",
+    path: `${APP_PREFIX_PATH}/seat/movie/:seatId`,
+    component: React.lazy(() => import("views/seat/movie/details-seat")),
   },
   {
     key: "schedule.list",

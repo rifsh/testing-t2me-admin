@@ -29,10 +29,11 @@ MovieSeatService.editSeatStructure = function (
   });
 };
 
-MovieSeatService.getSeatStructureDetails = function (id) {
+MovieSeatService.getSeatStructureDetails = function (pageData) {
   return fetch({
-    url: `${ApiConstant.MOVIE_SEAT_URL}/${id}`,
+    url: `${ApiConstant.MOVIE_SEAT_DETAILS_URL}`,
     method: "get",
+    params: Utils.filterParams(pageData),
   });
 };
 

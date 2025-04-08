@@ -33,10 +33,10 @@ export const editSeatStructure = createAsyncThunk(
 
 export const getSeatStructureDetails = createAsyncThunk(
   "movieSeat/getDetails",
-  async (id, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
-      const response = await MovieSeatService.getSeatStructureDetails(id);
-      return response;
+      const response = await MovieSeatService.getSeatStructureDetails(pageData);
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Error fetching seat structure details"
@@ -74,6 +74,7 @@ const movieSeatSlice = createSlice({
     selectedSubmitItem: null,
     selectedSeatStructure: null,
     allSeats: [],
+    singleSeatStructure: null,
     validationStatus: false,
     pagination: { size: 10, page: 1 },
 
@@ -281,18 +282,7 @@ const movieSeatSlice = createSlice({
       .addCase(getSeatStructureDetails.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-
-        const seatStructure = action.payload.data;
-        state.selectedSeatStructure = seatStructure;
-
-        // Load seat data if available
-        if (seatStructure?.seat_data) {
-          state.seats = seatStructure.seat_data.seats || state.seats;
-          state.seatTypes =
-            seatStructure.seat_data.seatTypes || state.seatTypes;
-          state.rows = seatStructure.total_row || state.rows;
-          state.columns = seatStructure.total_column || state.columns;
-        }
+        state.singleSeatStructure = action.payload[0];
       })
       .addCase(getSeatStructureDetails.rejected, (state, action) => {
         state.loading = false;
