@@ -35,6 +35,9 @@ import {
   RightOutlined
 } from "@ant-design/icons";
 import { LeadStatus } from "store/slices/leadEventSlice";
+import {
+  fetchEventType,
+} from "store/slices/eventSlice";
 
 const { Title, Text } = Typography;
 
@@ -63,17 +66,29 @@ const SingleEventDetails = () => {
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [reactivateModalVisible, setReactivateModalVisible] = useState(false);
   const [moduleSelectionModalVisible, setModuleSelectionModalVisible] = useState(false);
-  const [selectedModuleType, setSelectedModuleType] = useState('events');
+  const [selectedModuleType, setSelectedModuleType] = useState(null);
 
   const { singleLeadEvent, loading, error } = useSelector(
     (state) => state.leadEvents
   );
   
-  const handleViewDetails = async (id) => {
+  const { eventType } = useSelector((state) => state.event);
+
+
+  useEffect(() => {
+    dispatch(fetchEventType({}));
+  }, [dispatch]);
+
+
+  useEffect(() => {
+    console.log(eventType);
+  }, [eventType]);
+
+  const handleViewDetails = async (id, redirectUrl) => {
     await dispatch(getSingleLeadEvents(id));
-    navigate(`${APP_PREFIX_PATH}/event/add/${id}`);
+    navigate(`${APP_PREFIX_PATH}/${redirectUrl}/${id}`);
   };
-  
+
   const handleRejectRequest = () => {
     setRejectModalVisible(true);
   };
@@ -124,6 +139,13 @@ const SingleEventDetails = () => {
   
   const handleOpenModuleSelectionModal = () => {
     setModuleSelectionModalVisible(true);
+
+    if (eventType && eventType.length > 0) {
+      const activeTypes = eventType.filter(type => type.status);
+      if (activeTypes.length > 0) {
+        setSelectedModuleType(activeTypes[0].id);
+      }
+    }
   };
 
   const handleModuleSelectionChange = (e) => {
@@ -133,18 +155,24 @@ const SingleEventDetails = () => {
   const handleModuleSelectionSubmit = () => {
     setModuleSelectionModalVisible(false);
     
+    if (!selectedModuleType) {
+      message.error("Please select a module type");
+      return;
+    }
 
-    if (selectedModuleType === 'events') {
-
-      handleViewDetails(singleLeadEvent.id);
-    } else if (selectedModuleType === 'movies') {
- 
-      message.info("The Movies module is under development and will be available soon.");
-      
-    } else if (selectedModuleType === 'dineIn') {
-
-      message.info("The Dine-In module is currently in progress and will be launched soon.");
-
+    const selectedType = eventType.find(type => type.id === selectedModuleType);
+    
+    if (selectedType) {
+      if (selectedType.status) {
+        if (selectedType.redirect_url) {
+          // Only proceed if the event type has a redirect URL
+          handleViewDetails(singleLeadEvent.id, selectedType.redirect_url);
+        } else {
+          message.info(`The ${selectedType.name} module is currently in progress and will be launched soon.`);
+        }
+      } else {
+        message.info(`The ${selectedType.name} module is currently inactive.`);
+      }
     }
   };
   
@@ -169,12 +197,6 @@ const SingleEventDetails = () => {
         <Title level={4}>No Event Details Found</Title>
       </div>
     );
-
-  const moduleTypeOptions = [
-    { label: 'Events', value: 'events' },
-    { label: 'Movies', value: 'movies' },
-    { label: 'Dine In', value: 'dineIn' }
-  ];
 
   return (
     <>
@@ -560,7 +582,7 @@ const SingleEventDetails = () => {
           title={
             <div style={{ display: "flex", alignItems: "center" }}>
               <span style={{ fontSize: "18px", fontWeight: "bold" }}>
-                Select  Type
+                Select Type
               </span>
             </div>
           }
@@ -575,40 +597,55 @@ const SingleEventDetails = () => {
               type="primary" 
               onClick={handleModuleSelectionSubmit}
               icon={<RightOutlined />}
+              disabled={!selectedModuleType}
             >
               Next
             </Button>,
           ]}
         >
           <div style={{ padding: "16px 0" }}>
-            <Radio.Group 
-              value={selectedModuleType}
-              onChange={handleModuleSelectionChange}
-              style={{ width: "100%" }}
-            >
-              <Space direction="vertical" style={{ width: "100%" }}>
-                {moduleTypeOptions.map(option => (
-                  <Radio.Button 
-                    key={option.value} 
-                    value={option.value}
-                    style={{
-                      width: "100%",
-                      height: "60px",
-                      display: "flex",
-                      alignItems: "center",
-                      paddingLeft: "20px",
-                      marginBottom: "12px",
-                      borderRadius: "8px",
-                      fontSize: "16px",
-                      boxShadow: selectedModuleType === option.value ? "0 2px 8px rgba(24, 144, 255, 0.2)" : "none",
-                      border: selectedModuleType === option.value ? "2px solid #1890ff" : "1px solid #d9d9d9"
-                    }}
-                  >
-                    {option.label}
-                  </Radio.Button>
-                ))}
-              </Space>
-            </Radio.Group>
+            {eventType && eventType.length > 0 ? (
+              <Radio.Group 
+                value={selectedModuleType}
+                onChange={handleModuleSelectionChange}
+                style={{ width: "100%" }}
+              >
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  {eventType.map(type => (
+                    <Radio.Button 
+                      key={type.id} 
+                      value={type.id}
+                      disabled={!type.status}
+                      style={{
+                        width: "100%",
+                        height: "60px",
+                        display: "flex",
+                        alignItems: "center",
+                        paddingLeft: "20px",
+                        marginBottom: "12px",
+                        borderRadius: "8px",
+                        fontSize: "16px",
+                        boxShadow: selectedModuleType === type.id ? "0 2px 8px rgba(24, 144, 255, 0.2)" : "none",
+                        border: selectedModuleType === type.id ? "2px solid #1890ff" : "1px solid #d9d9d9",
+                        opacity: type.status ? 1 : 0.6,
+                      }}
+                    >
+                      <div>
+                        <div>
+                          <strong>{type.display_name}</strong> 
+                        </div>
+                        {/* <div style={{ fontSize: "12px", color: "#888" }}>{type.description}</div> */}
+                      </div>
+                    </Radio.Button>
+                  ))}
+                </Space>
+              </Radio.Group>
+            ) : (
+              <div style={{ textAlign: "center", padding: "20px 0" }}>
+                <Loading />
+                <Text type="secondary" style={{ display: "block", marginTop: 10 }}>Loading event types...</Text>
+              </div>
+            )}
           </div>
         </Modal>
       </Row>

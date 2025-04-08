@@ -222,20 +222,37 @@ export const RegisterForm = (props) => {
   const verifyotp = () => {
     form.validateFields(["otp"]).then((values) => {
       showLoading();
-
+  
       dispatch(
         verifyOtp({
           email: registeredUser.email,
           otp: values.otp,
           phone: registeredUser.phone,
           terms_accepted: termsAccepted,
-          event_uuid: id
+          event_uuid: id,
         })
       )
         .unwrap()
         .then((response) => {
           console.log("OTP verified successfully:", response);
-          navigate(`${APP_PREFIX_PATH}/login`);
+  
+  
+          const modal = Modal.success({
+            title: "Registration Successful!",
+            content: (
+              <div>
+                <p>Your account has been successfully verified.</p>
+                <p>Redirecting to login page in 3 seconds...</p>
+              </div>
+            ),
+            okText: "Great!",
+          });
+  
+          
+          setTimeout(() => {
+            modal.destroy(); 
+            navigate(`${APP_PREFIX_PATH}/login`);
+          }, 2000);
         })
         .catch((error) => {
           console.error("OTP verification failed:", error);
@@ -243,6 +260,7 @@ export const RegisterForm = (props) => {
         });
     });
   };
+  
 
   const startResendTimer = () => {
     setOtpResendTimer(60); // 60 seconds countdown
