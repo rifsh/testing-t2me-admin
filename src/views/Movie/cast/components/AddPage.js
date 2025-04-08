@@ -30,7 +30,7 @@ const { Title } = Typography;
 const AddPage = ({ mode = 'ADD', id }) => {
     const dispatch = useDispatch();
     const [form] = Form.useForm();
-    const { response, loading, submitMessage, message, editData } = useSelector((state => state.cast));
+    const { response, loading, submitMessage, message: errorMessage, editData } = useSelector((state => state.cast));
     const { dialogVisible } = useSelector((state) => state.locations);
 
     useEffect(() => {
@@ -165,7 +165,7 @@ const AddPage = ({ mode = 'ADD', id }) => {
             <WarningModal
                 visible={dialogVisible}
                 title="Confirm Action"
-                details={message}
+                details={errorMessage}
                 responseData={response}
                 warningMessage="Do you want to continue?"
                 onSubmit={handleModalSubmit}

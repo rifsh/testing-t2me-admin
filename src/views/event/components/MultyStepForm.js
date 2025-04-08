@@ -115,7 +115,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
       const formValues = {
         event_name: singleLeadEvent.event_name,
         description: singleLeadEvent.description,
-        place: singleLeadEvent.place?.name,
+        // place: singleLeadEvent.place?.name,
         // venue_id: singleLeadEvent.venues?.map((venue) => venue.id) || [],
       };
 
@@ -484,7 +484,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           venue_ids: selectedVenueList?.map((venue) => venue.id) || [],
         };
         const ticket_structure = {
-          ticket_structure: ticketTypes.reduce((acc, ticketType) => {
+          ticket_structure: ticketTypes?.reduce((acc, ticketType) => {
             const structureItems = ticketType.ticket_types.map((ticket) => ({
               id: ticket.ticketStructureId,
               ticket_set: ticket.ticket_set,
@@ -498,6 +498,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           ...venue_id,
           ...ticket_structure,
           ...offers,
+          lead_id:eventId,
           event_add_on_services: !submitData.event_add_on_services
             ? []
             : submitData.event_add_on_services,

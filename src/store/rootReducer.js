@@ -3,6 +3,7 @@ import { combineReducers } from "redux";
 import theme from "./slices/themeSlice";
 import screen from "./slices/screenSlice";
 import cast from './slices/castSlice'
+import movie from './slices/movieSlice'
 import auth from "./slices/authSlice";
 import category from "./slices/categorySlice";
 import adCategory from "./slices/adCategorySlice";
@@ -34,6 +35,7 @@ const rootReducer = (asyncReducers = {}) => {
       theme,
       screen,
       cast,
+      movie,
       auth,
       category,
       users,

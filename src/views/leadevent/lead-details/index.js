@@ -71,7 +71,7 @@ const SingleEventDetails = () => {
   
   const handleViewDetails = async (id) => {
     await dispatch(getSingleLeadEvents(id));
-    navigate(`${APP_PREFIX_PATH}/leadevent/add/${id}`);
+    navigate(`${APP_PREFIX_PATH}/event/add/${id}`);
   };
   
   const handleRejectRequest = () => {

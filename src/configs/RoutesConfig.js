@@ -500,6 +500,13 @@ export const protectedRoutes = [
     ),
   },
   {
+    key: "org.list",
+    path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+    component: React.lazy(() =>
+      import("views/track-team/event-organizer/update-list")
+    ),
+  },
+  {
     key: "org.details",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/details/:eventUpId`,
     component: React.lazy(() =>
@@ -573,8 +580,9 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/leadevent/lead-details")),
   },
   {
+    // /leadevent/add/:eventId`,
     key: "lead.event.add",
-    path: `${APP_PREFIX_PATH}/leadevent/add/:eventId`,
+    path: `${APP_PREFIX_PATH}/event/add/:eventId`,
     component: React.lazy(() => import("views/leadevent/add-leadevent")),
   },
   {
