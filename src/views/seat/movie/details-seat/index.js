@@ -58,7 +58,6 @@ export default function SeatDetailsPage() {
         <div className="mt-2 text-gray-500 max-w-md text-center">
           Please wait while we retrieve the seating layout information
         </div>
-        
       </div>
     );
   }

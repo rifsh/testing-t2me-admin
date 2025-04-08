@@ -1,4 +1,3 @@
-// TheaterGrid.jsx
 import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -120,45 +119,52 @@ const TheaterGrid = ({ isPreviewMode, showHiddenSeats }) => {
             transformOrigin: "top center",
           }}
         >
-          {seats.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex items-center">
-              {/* Row label */}
-              <div
-                className="flex items-center justify-center font-medium text-gray-600 mr-2"
-                style={{ width: "24px" }}
-              >
-                {String.fromCharCode(65 + rowIndex)}
-              </div>
+          {seats.map((row, rowIndex) => {
+            // Check if all seats in this row are invisible
+            const allInvisible = row.every((seat) => !seat.isVisible);
 
-              {/* Seats */}
-              <div className="flex">
-                {row.map((seat, colIndex) => {
-                  // Skip rendering invisible seats if option is turned off
-                  if (!seat.isVisible && !showHiddenSeats && !isPreviewMode) {
-                    return null;
-                  }
+            return (
+              <div key={rowIndex} className="flex items-center">
+                {/* Row label */}
+                <div
+                  className="flex items-center justify-center font-medium text-gray-600 mr-2"
+                  style={{ width: "24px" }}
+                >
+                  {allInvisible
+                    ? ""
+                    : row.find((seat) => seat.isVisible)?.rowLabel}
+                </div>
 
-                  return (
-                    <SeatComponent
-                      key={colIndex}
-                      seat={seat}
-                      rowIndex={rowIndex}
-                      colIndex={colIndex}
-                      isSelected={selectedSeats.includes(
-                        `${rowIndex}-${colIndex}`
-                      )}
-                      isPreviewMode={isPreviewMode}
-                      seatSize={seatSize}
-                      getSeatBorder={getSeatBorder}
-                      getSeatFill={getSeatFill}
-                      handleMouseDown={handleMouseDown}
-                      handleMouseMove={handleMouseMove}
-                    />
-                  );
-                })}
+                {/* Seats */}
+                <div className="flex">
+                  {row.map((seat, colIndex) => {
+                    // Skip rendering invisible seats if option is turned off
+                    if (!seat.isVisible && !showHiddenSeats && !isPreviewMode) {
+                      return null;
+                    }
+
+                    return (
+                      <SeatComponent
+                        key={colIndex}
+                        seat={seat}
+                        rowIndex={rowIndex}
+                        colIndex={colIndex}
+                        isSelected={selectedSeats.includes(
+                          `${rowIndex}-${colIndex}`
+                        )}
+                        isPreviewMode={isPreviewMode}
+                        seatSize={seatSize}
+                        getSeatBorder={getSeatBorder}
+                        getSeatFill={getSeatFill}
+                        handleMouseDown={handleMouseDown}
+                        handleMouseMove={handleMouseMove}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Legend */}
@@ -203,7 +209,7 @@ const SeatComponent = ({
 }) => {
   const showPreview = isPreviewMode && seat.isVisible;
   const seatLabel = seat.number > 0 ? seat.number : "";
-  const seatId = `${seat.rowLabel}${seat.number || "0"}`;
+  const seatId = `${seat.rowLabel || ""}${seat.number || "0"}`;
 
   return (
     <div

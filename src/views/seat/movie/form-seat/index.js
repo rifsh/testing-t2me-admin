@@ -34,8 +34,8 @@ const SeatForm = (props) => {
     responseMessage,
     submitPagination,
     seats,
-    seatTypes,
     selectedSeatStructure,
+    usedSeatTypes,
   } = useSelector((state) => state.movieSeatSlice);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ const SeatForm = (props) => {
             id: selectedSeatStructure.id,
             seat_data: {
               seats,
-              seatTypes,
+              seatTypes: usedSeatTypes,
             },
           };
 
@@ -92,7 +92,7 @@ const SeatForm = (props) => {
             type: SEAT_STRUCTURE_TYPES.MOVIE,
             seat_data: {
               seats,
-              seatTypes,
+              seatTypes: usedSeatTypes,
             },
           };
 
