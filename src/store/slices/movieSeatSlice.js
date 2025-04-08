@@ -88,6 +88,7 @@ const movieSeatSlice = createSlice({
     startSeat: null,
     currentSeat: null,
     seats: [],
+    usedSeatTypes: [],
     seatTypes: DEFAULT_SEAT_TYPES,
     zoomLevel: 100,
   },
@@ -220,6 +221,15 @@ const movieSeatSlice = createSlice({
       });
 
       state.seats = newSeats;
+
+      // Update used seat types
+      state.usedSeatTypes = Utils.updateUsedSeatTypes(newSeats, seatTypes);
+    },
+    updateUsedSeatTypesState: (state) => {
+      state.usedSeatTypes = Utils.updateUsedSeatTypes(
+        state.seats,
+        state.seatTypes
+      );
     },
     // Zoom controls
     setZoomLevel: (state, action) => {
@@ -331,6 +341,7 @@ export const {
   zoomOut,
   resetZoom,
   resetState,
+  updateUsedSeatTypesState,
 } = movieSeatSlice.actions;
 
 export default movieSeatSlice.reducer;

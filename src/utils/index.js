@@ -495,7 +495,7 @@ class Utils {
           key === "offer_ids" ||
           key === "event_ids" ||
           key === "venue_ids" ||
-          (key == "occupation")
+          key == "occupation"
         ) {
           value.forEach((id) => formData.append(key, id));
           return;
@@ -567,15 +567,15 @@ class Utils {
           } else {
             value.forEach((image) => {
               if (!image) return;
-              
+
               // Case 1: New file upload (append the File object)
               if (image.originFileObj) {
                 formData.append(key, image.originFileObj);
-              } 
+              }
               // Case 2: Existing URL (append as string)
               else {
                 // Handle both string URLs and objects with URL property
-                const url = typeof image === 'string' ? image : image.url;
+                const url = typeof image === "string" ? image : image.url;
                 if (url) {
                   formData.append(key, url);
                 }
@@ -640,7 +640,6 @@ class Utils {
           formData.append(key, JSON.stringify(serializedServices));
           return;
         }
-
 
         if (key === "event_qna") {
           // If value is null, undefined, or not an array, pass an empty array
@@ -906,41 +905,83 @@ class Utils {
   static generateInitialSeats = (rows, columns, seatTypes) => {
     const seats = [];
     let globalId = 1;
-  
+
     for (let i = 0; i < rows; i++) {
       const row = [];
       for (let j = 0; j < columns; j++) {
         row.push({
           id: globalId++,
+          rowIndex: i, // Add rowIndex property here
           rowLabel: String.fromCharCode(65 + i),
           colIndex: j,
           type: "standard",
           price: seatTypes.find((type) => type.id === "standard").basePrice,
           isVisible: true,
-          number: j + 1, 
+          number: j + 1,
         });
       }
       seats.push(row);
     }
-  
+
     return Utils.updateSeatNumbers(seats);
   };
-  
+
   static updateSeatNumbers = (seats) => {
+    const rowVisibility = seats.map((row) =>
+      row.some((seat) => seat.isVisible)
+    );
+
+    // Second pass: assign row labels and seat numbers
+    let visibleRowCount = 0;
+
     for (let i = 0; i < seats.length; i++) {
-      let visibleSeatCount = 0;
-      for (let j = 0; j < seats[i].length; j++) {
-        if (seats[i][j].isVisible) {
-          visibleSeatCount++;
-          seats[i][j].number = visibleSeatCount;
-        } else {
+      const rowIsVisible = rowVisibility[i];
+
+      if (rowIsVisible) {
+        // This is a visible row, use the next available row label
+        const rowLabel = String.fromCharCode(65 + visibleRowCount);
+        visibleRowCount++;
+
+        let visibleSeatCount = 0;
+        for (let j = 0; j < seats[i].length; j++) {
+          if (seats[i][j].isVisible) {
+            visibleSeatCount++;
+            seats[i][j].number = visibleSeatCount;
+            seats[i][j].rowLabel = rowLabel;
+            // Keep rowIndex unchanged as it represents the physical position
+          } else {
+            seats[i][j].number = 0;
+            seats[i][j].rowLabel = null;
+            // Keep rowIndex unchanged even for invisible seats
+          }
+        }
+      } else {
+        // This is an invisible row, set all rowLabels to null
+        for (let j = 0; j < seats[i].length; j++) {
           seats[i][j].number = 0;
+          seats[i][j].rowLabel = null;
+          // Keep rowIndex unchanged for invisible rows
         }
       }
     }
+
     return seats;
   };
-  
+  static updateUsedSeatTypes = (seats, allSeatTypes) => {
+    // Collect all unique seat type IDs being used
+    const usedTypeIds = new Set();
+    
+    seats.forEach(row => {
+      row.forEach(seat => {
+        if (seat.isVisible) {
+          usedTypeIds.add(seat.type);
+        }
+      });
+    });
+    
+    // Filter all seat types to only include those being used
+    return allSeatTypes.filter(type => usedTypeIds.has(type.id));
+  };
 }
 
 export default Utils;
