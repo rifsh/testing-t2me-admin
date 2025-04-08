@@ -104,11 +104,11 @@ const Index = () => {
             title: 'ID',
             dataIndex: 'id',
             key: 'id',
-            width: 100,
+            // width: 100,
             sorter: (a, b) => a.id.localeCompare(b.id),
         },
         {
-            title: 'Venue Name',
+            title: 'Table Name',
             dataIndex: 'name',
             key: 'name',
             sorter: (a, b) => a.name.localeCompare(b.name),
@@ -116,85 +116,86 @@ const Index = () => {
                 <a onClick={() => showDetailsModal(record)}>{text}</a>
             ),
         },
+        // {
+        //     title: 'Location',
+        //     dataIndex: 'location',
+        //     key: 'location',
+        //     ellipsis: true,
+        // },
+        // {
+        //     title: 'Cuisine',
+        //     dataIndex: 'cuisine',
+        //     key: 'cuisine',
+        //     filters: [
+        //         { text: 'Seafood', value: 'Seafood' },
+        //         { text: 'International', value: 'International' },
+        //         { text: 'Vegetarian', value: 'Vegetarian' },
+        //         { text: 'Japanese', value: 'Japanese' },
+        //         { text: 'Italian', value: 'Italian' },
+        //         { text: 'Steakhouse', value: 'Steakhouse' },
+        //         { text: 'Indian', value: 'Indian' },
+        //         { text: 'American', value: 'American' },
+        //     ],
+        //     onFilter: (value, record) => record.cuisine.includes(value),
+        // },
+        // {
+        //     title: 'Price',
+        //     dataIndex: 'priceRange',
+        //     key: 'priceRange',
+        //     width: 80,
+        //     filters: [
+        //         { text: '$', value: '$' },
+        //         { text: '$$', value: '$$' },
+        //         { text: '$$$', value: '$$$' },
+        //         { text: '$$$$', value: '$$$$' },
+        //     ],
+        //     onFilter: (value, record) => record.priceRange.includes(value),
+        //     sorter: (a, b) => a.priceRange.length - b.priceRange.length,
+        // },
         {
-            title: 'Location',
-            dataIndex: 'location',
-            key: 'location',
-            ellipsis: true,
-        },
-        {
-            title: 'Cuisine',
-            dataIndex: 'cuisine',
-            key: 'cuisine',
-            filters: [
-                { text: 'Seafood', value: 'Seafood' },
-                { text: 'International', value: 'International' },
-                { text: 'Vegetarian', value: 'Vegetarian' },
-                { text: 'Japanese', value: 'Japanese' },
-                { text: 'Italian', value: 'Italian' },
-                { text: 'Steakhouse', value: 'Steakhouse' },
-                { text: 'Indian', value: 'Indian' },
-                { text: 'American', value: 'American' },
-            ],
-            onFilter: (value, record) => record.cuisine.includes(value),
-        },
-        {
-            title: 'Price',
-            dataIndex: 'priceRange',
-            key: 'priceRange',
-            width: 80,
-            filters: [
-                { text: '$', value: '$' },
-                { text: '$$', value: '$$' },
-                { text: '$$$', value: '$$$' },
-                { text: '$$$$', value: '$$$$' },
-            ],
-            onFilter: (value, record) => record.priceRange.includes(value),
-            sorter: (a, b) => a.priceRange.length - b.priceRange.length,
-        },
-        {
-            title: 'Tables',
-            key: 'tables',
-            width: 120,
+            title: 'Seats',
+            key: 'seats',
+            // width: 120,
+            // sorter: (a, b) => a.seats.localeCompare(b.seats),
             render: (_, record) => (
                 <span>
-                    {record.availableTables}/{record.totalTables}
+                    {record.seats}
                 </span>
             ),
-            sorter: (a, b) => a.availableTables - b.availableTables,
+            // sorter: (a, b) => a.availableTables - b.availableTables,
         },
-        {
-            title: 'Reservations',
-            dataIndex: 'reservationsToday',
-            key: 'reservationsToday',
-            width: 130,
-            sorter: (a, b) => a.reservationsToday - b.reservationsToday,
-        },
-        {
-            title: 'Status',
-            dataIndex: 'status',
-            key: 'status',
-            width: 120,
-            render: (status) => {
-                let color = 'green';
-                if (status === 'full') {
-                    color = 'orange';
-                } else if (status === 'maintenance') {
-                    color = 'red';
-                }
-                return (
-                    <Tag color={color}>
-                        {status.toUpperCase()}
-                    </Tag>
-                );
-            },
-            filters: [
-                { text: 'Active', value: 'active' },
-                { text: 'Full', value: 'full' },
-                { text: 'Maintenance', value: 'maintenance' },
-            ],
-            onFilter: (value, record) => record.status === value,
-        },
+        // {
+        //     title: 'Reservations',
+        //     dataIndex: 'reservationsToday',
+        //     key: 'reservationsToday',
+        //     // width: 130,
+        //     sorter: (a, b) => a.reservationsToday - b.reservationsToday,
+        // },
+        // {
+        //     title: 'Status',
+        //     dataIndex: 'status',
+        //     key: 'status',
+        //     // width: 120,
+        //     render: (status) => {
+        //         let color = 'green';
+        //         if (status === 'full') {
+        //             color = 'orange';
+        //         } else if (status === 'maintenance') {
+        //             color = 'red';
+        //         }
+        //         return (
+        //             <Tag color={color}>
+        //                 {status.toUpperCase()}
+        //             </Tag>
+        //         );
+        //     },
+        //     filters: [
+        //         { text: 'Active', value: 'active' },
+        //         { text: 'Full', value: 'full' },
+        //         { text: 'Maintenance', value: 'maintenance' },
+        //     ],
+        //     onFilter: (value, record) => record.status === value,
+        // },
         {
             title: 'Actions',
             key: 'actions',
