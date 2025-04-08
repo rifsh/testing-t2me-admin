@@ -1,4 +1,3 @@
-// Main Layout Component - TheaterLayout.jsx
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { clearSelection, applySeatType, toggleSeatVisibility } from "store/slices/movieSeatSlice";

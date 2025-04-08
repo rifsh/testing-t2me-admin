@@ -1,55 +1,83 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { DEFAULT_SEAT_TYPES } from "constants/SeatTypes";
+import MovieSeatService from "services/MovieSeatService";
+import Utils from "utils";
 
-// Function to generate initial seats with unique IDs and visibility
-const generateInitialSeats = (rows, columns, seatTypes) => {
-  const seats = [];
-  let globalId = 1;
-
-  for (let i = 0; i < rows; i++) {
-    const row = [];
-    for (let j = 0; j < columns; j++) {
-      row.push({
-        id: globalId++,
-        rowLabel: String.fromCharCode(65 + i),
-        colIndex: j,
-        type: "standard",
-        price: seatTypes.find((type) => type.id === "standard").basePrice,
-        isVisible: true,
-        number: j + 1, // Initial number, will be recalculated when visibility changes
-      });
-    }
-    seats.push(row);
-  }
-
-  return updateSeatNumbers(seats);
-};
-
-// Function to update seat numbers based on visibility
-const updateSeatNumbers = (seats) => {
-  for (let i = 0; i < seats.length; i++) {
-    let visibleSeatCount = 0;
-    for (let j = 0; j < seats[i].length; j++) {
-      if (seats[i][j].isVisible) {
-        visibleSeatCount++;
-        seats[i][j].number = visibleSeatCount;
-      } else {
-        seats[i][j].number = 0;
-      }
+export const addSeatStructure = createAsyncThunk(
+  "movieSeat/add",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.addSeatStructure(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error creating seat structure"
+      );
     }
   }
-  return seats;
-};
+);
 
-const DEFAULT_SEAT_TYPES = [
-  { id: "desabled", label: "Desabled", basePrice: 0, color: "#e5e7eb" },
-  { id: "standard", label: "Standard", basePrice: 10.0, color: "#52c41a" },
-  { id: "premium", label: "Premium", basePrice: 15.0, color: "#1890ff" },
-  { id: "vip", label: "VIP", basePrice: 20.0, color: "#722ed1" },
-];
+export const editSeatStructure = createAsyncThunk(
+  "movieSeat/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.editSeatStructure(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error updating seat structure"
+      );
+    }
+  }
+);
+
+export const getSeatStructureDetails = createAsyncThunk(
+  "movieSeat/getDetails",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.getSeatStructureDetails(id);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching seat structure details"
+      );
+    }
+  }
+);
+export const getAllSeatStructures = createAsyncThunk(
+  "movieSeat/getAllSeats",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.getAllSeatStructures(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching seat structure details"
+      );
+    }
+  }
+);
 
 const movieSeatSlice = createSlice({
   name: "movieSeatSlice",
   initialState: {
+    loading: false,
+    error: null,
+    message: null,
+    responseData: null,
+    responseMessage: null,
+    editable_status: null,
+    editItemId: null,
+    responseImpactData: null,
+    warningPagination: { size: 10, page: 1 },
+    submitPagination: { size: 10, page: 1 },
+    selectedSubmitItem: null,
+    selectedSeatStructure: null,
+    allSeats: [],
+    validationStatus: false,
+    pagination: { size: 10, page: 1 },
+
+    //seat state
     rows: 8,
     columns: 12,
     mode: "seatType",
@@ -62,16 +90,29 @@ const movieSeatSlice = createSlice({
     seatTypes: DEFAULT_SEAT_TYPES,
     zoomLevel: 100,
   },
+
   reducers: {
+    setSelectedSeatStructure: (state, action) => {
+      state.selectedSeatStructure = action.payload;
+    },
     initializeSeats: (state, action) => {
       const { rows, columns } = action.payload;
-      state.seats = generateInitialSeats(rows, columns, state.seatTypes);
+      state.seats = Utils.generateInitialSeats(rows, columns, state.seatTypes);
+    },
+    loadSeatData: (state, action) => {
+      const { seats, seatTypes } = action.payload;
+      state.seats = seats || state.seats;
+      state.seatTypes = seatTypes || state.seatTypes;
+      if (seats) {
+        state.rows = seats.length;
+        state.columns = seats[0]?.length || 0;
+      }
     },
     updateSeats: (state, action) => {
       state.seats = action.payload;
     },
     updateSeatsRenumber: (state, action) => {
-      state.seats = updateSeatNumbers(action.payload);
+      state.seats = Utils.updateSeatNumbers(action.payload);
     },
     setRows: (state, action) => {
       state.rows = Math.min(Math.max(action.payload, 1), 40);
@@ -93,7 +134,7 @@ const movieSeatSlice = createSlice({
       state.selectedSeats = [`${rowIndex}-${colIndex}`];
     },
     updateSelection: (state, action) => {
-      const { rowIndex, colIndex, seats } = action.payload;
+      const { rowIndex, colIndex } = action.payload;
 
       if (!state.isDragging) return;
 
@@ -160,7 +201,7 @@ const movieSeatSlice = createSlice({
           !newSeats[rowIndex][colIndex].isVisible;
       });
 
-      state.seats = updateSeatNumbers(newSeats);
+      state.seats = Utils.updateSeatNumbers(newSeats);
     },
     applySeatType: (state, action) => {
       const { selectedSeats, selectedSeatType, seatTypes } = action.payload;
@@ -192,14 +233,97 @@ const movieSeatSlice = createSlice({
     resetZoom: (state) => {
       state.zoomLevel = 100;
     },
+    resetState: (state) => {
+      state.responseData = null;
+      state.responseMessage = null;
+      state.selectedSubmitItem = null;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Add seat structure cases
+      .addCase(addSeatStructure.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addSeatStructure.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(addSeatStructure.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.data || "Error creating seat structure";
+      })
+
+      // Edit seat structure cases
+      .addCase(editSeatStructure.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editSeatStructure.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(editSeatStructure.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.data || "Error updating seat structure";
+      })
+
+      // Get seat structure details cases
+      .addCase(getSeatStructureDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getSeatStructureDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+
+        const seatStructure = action.payload.data;
+        state.selectedSeatStructure = seatStructure;
+
+        // Load seat data if available
+        if (seatStructure?.seat_data) {
+          state.seats = seatStructure.seat_data.seats || state.seats;
+          state.seatTypes =
+            seatStructure.seat_data.seatTypes || state.seatTypes;
+          state.rows = seatStructure.total_row || state.rows;
+          state.columns = seatStructure.total_column || state.columns;
+        }
+      })
+      .addCase(getSeatStructureDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error fetching seat structure details";
+      })
+      .addCase(getAllSeatStructures.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getAllSeatStructures.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.allSeats = action.payload.items;
+        state.pagination = action.payload;
+      })
+      .addCase(getAllSeatStructures.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error fetching seat structure details";
+      });
   },
 });
 
 export const {
-  setRows,
+  setSelectedSeatStructure,
   initializeSeats,
+  loadSeatData,
   updateSeats,
   updateSeatsRenumber,
+  setRows,
   setColumns,
   setMode,
   setSelectedSeatType,
@@ -216,6 +340,7 @@ export const {
   zoomIn,
   zoomOut,
   resetZoom,
+  resetState,
 } = movieSeatSlice.actions;
 
 export default movieSeatSlice.reducer;
