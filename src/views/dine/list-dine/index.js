@@ -1,86 +1,18 @@
 import React, { useState } from "react";
-import {
-  Table,
-  Tag,
-  Space,
-  Button,
-  Input,
-  Select,
-  DatePicker,
-  Dropdown,
-  Menu,
-  Modal,
-  message,
-  Typography,
-} from "antd";
-import {
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  PlusOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DownOutlined,
-  CalendarOutlined,
-  TeamOutlined,
-} from "@ant-design/icons";
+import { Table, Space, Button, Dropdown, Menu, Modal, message } from "antd";
+import { PlusOutlined, MoreOutlined } from "@ant-design/icons";
 import { data } from "../../../mock/data/DinesList";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 
-const { Title } = Typography;
-const { Option } = Select;
-const { RangePicker } = DatePicker;
-
 const Index = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     status: "all",
     dateRange: null,
   });
-
-  const handleStatusChange = (value) => {
-    setFilterOptions({
-      ...filterOptions,
-      status: value,
-    });
-  };
-
-  const handleDateChange = (dates) => {
-    setFilterOptions({
-      ...filterOptions,
-      dateRange: dates,
-    });
-  };
-
-  const handleSearch = (e) => {
-    setSearchText(e.target.value);
-  };
-
-  const onSelectChange = (selectedRowKeys) => {
-    setSelectedRowKeys(selectedRowKeys);
-  };
-
-  const handleBulkAction = (action) => {
-    if (selectedRowKeys.length === 0) {
-      message.warning("Please select at least one venue");
-      return;
-    }
-
-    setLoading(false);
-
-    setTimeout(() => {
-      message.success(
-        `${action} performed on ${selectedRowKeys.length} selected venues`
-      );
-      setLoading(false);
-      setSelectedRowKeys([]);
-    }, 1000);
-  };
 
   const showDetailsModal = (record) => {
     Modal.info({
@@ -119,13 +51,6 @@ const Index = () => {
   };
 
   const columns = [
-    // {
-    //     title: 'ID',
-    //     dataIndex: 'id',
-    //     key: 'id',
-    //     // width: 100,
-    //     sorter: (a, b) => a.id.localeCompare(b.id),
-    // },
     {
       title: "Table Name",
       dataIndex: "name",
@@ -145,82 +70,14 @@ const Index = () => {
         <a onClick={() => showDetailsModal(record)}>{text}</a>
       ),
     },
-    // {
-    //     title: 'Location',
-    //     dataIndex: 'location',
-    //     key: 'location',
-    //     ellipsis: true,
-    // },
-    // {
-    //     title: 'Cuisine',
-    //     dataIndex: 'cuisine',
-    //     key: 'cuisine',
-    //     filters: [
-    //         { text: 'Seafood', value: 'Seafood' },
-    //         { text: 'International', value: 'International' },
-    //         { text: 'Vegetarian', value: 'Vegetarian' },
-    //         { text: 'Japanese', value: 'Japanese' },
-    //         { text: 'Italian', value: 'Italian' },
-    //         { text: 'Steakhouse', value: 'Steakhouse' },
-    //         { text: 'Indian', value: 'Indian' },
-    //         { text: 'American', value: 'American' },
-    //     ],
-    //     onFilter: (value, record) => record.cuisine.includes(value),
-    // },
-    // {
-    //     title: 'Price',
-    //     dataIndex: 'priceRange',
-    //     key: 'priceRange',
-    //     width: 80,
-    //     filters: [
-    //         { text: '$', value: '$' },
-    //         { text: '$$', value: '$$' },
-    //         { text: '$$$', value: '$$$' },
-    //         { text: '$$$$', value: '$$$$' },
-    //     ],
-    //     onFilter: (value, record) => record.priceRange.includes(value),
-    //     sorter: (a, b) => a.priceRange.length - b.priceRange.length,
-    // },
+
     {
       title: "Seats",
       key: "seats",
-      // width: 120,
-      // sorter: (a, b) => a.seats.localeCompare(b.seats),
+
       render: (_, record) => <span>{record.seats}</span>,
-      // sorter: (a, b) => a.availableTables - b.availableTables,
     },
-    // {
-    //     title: 'Reservations',
-    //     dataIndex: 'reservationsToday',
-    //     key: 'reservationsToday',
-    //     // width: 130,
-    //     sorter: (a, b) => a.reservationsToday - b.reservationsToday,
-    // },
-    // {
-    //     title: 'Status',
-    //     dataIndex: 'status',
-    //     key: 'status',
-    //     // width: 120,
-    //     render: (status) => {
-    //         let color = 'green';
-    //         if (status === 'full') {
-    //             color = 'orange';
-    //         } else if (status === 'maintenance') {
-    //             color = 'red';
-    //         }
-    //         return (
-    //             <Tag color={color}>
-    //                 {status.toUpperCase()}
-    //             </Tag>
-    //         );
-    //     },
-    //     filters: [
-    //         { text: 'Active', value: 'active' },
-    //         { text: 'Full', value: 'full' },
-    //         { text: 'Maintenance', value: 'maintenance' },
-    //     ],
-    //     onFilter: (value, record) => record.status === value,
-    // },
+
     {
       title: "Actions",
       key: "actions",
@@ -277,51 +134,6 @@ const Index = () => {
           flexWrap: "wrap",
         }}
       >
-        {/* <div>
-          <Input
-            placeholder="Search venues..."
-            prefix={<SearchOutlined />}
-            style={{ width: 250 }}
-            value={searchText}
-            onChange={handleSearch}
-            allowClear
-          />
-          <Select
-            defaultValue="all"
-            style={{ width: 140 }}
-            onChange={handleStatusChange}
-          >
-            <Option value="all">All</Option>
-            <Option value="active">Active</Option>
-            <Option value="full">Full</Option>
-            <Option value="maintenance">Maintenance</Option>
-          </Select>
-          <RangePicker
-            onChange={handleDateChange}
-            placeholder={["Start Date", "End Date"]}
-          />
-          {selectedRowKeys.length > 0 && (
-            <Space>
-              <span>{selectedRowKeys.length} selected</span>
-              <Button
-                onClick={() => handleBulkAction("Activate")}
-                icon={<CheckCircleOutlined />}
-                type="default"
-                size="middle"
-              >
-                Activate
-              </Button>
-              <Button
-                onClick={() => handleBulkAction("Deactivate")}
-                icon={<CloseCircleOutlined />}
-                type="default"
-                size="middle"
-              >
-                Deactivate
-              </Button>
-            </Space>
-          )}
-        </div> */}
         <div>
           <Button
             type="primary"

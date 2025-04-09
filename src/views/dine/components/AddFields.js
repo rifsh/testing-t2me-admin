@@ -7,7 +7,6 @@ import {
   TimePicker,
   InputNumber,
   Upload,
-  Switch,
   Card,
   Row,
   Col,
@@ -19,16 +18,11 @@ import {
 } from "antd";
 import {
   PlusOutlined,
-  SaveOutlined,
-  RollbackOutlined,
   UploadOutlined,
   EnvironmentOutlined,
   PhoneOutlined,
   MailOutlined,
-  TableOutlined,
-  DollarOutlined,
   ShopOutlined,
-  TeamOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import TextEditor from "components/util-components/FormItems/TextEditor";
@@ -45,48 +39,6 @@ const AddFields = () => {
   const [loading, setLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [previewVisible, setPreviewVisible] = useState(false);
-
-  // Price range options
-  const priceRangeOptions = [
-    { label: "Budget ($)", value: "$" },
-    { label: "Moderate ($$)", value: "$$" },
-    { label: "Expensive ($$$)", value: "$$$" },
-    { label: "Premium ($$$$)", value: "$$$$" },
-  ];
-
-  // Cuisine options
-  const cuisineOptions = [
-    "American",
-    "Italian",
-    "Chinese",
-    "Japanese",
-    "Indian",
-    "Mexican",
-    "French",
-    "Thai",
-    "Mediterranean",
-    "Seafood",
-    "Steakhouse",
-    "Vegetarian",
-    "Vegan",
-    "Fusion",
-    "International",
-    "Dessert",
-    "Coffee & Tea",
-    "Fast Food",
-    "BBQ",
-    "Other",
-  ];
-
-  // Table types
-  //   const tableTypes = [
-  //     { label: "Regular", value: "regular" },
-  //     { label: "Booth", value: "booth" },
-  //     { label: "High Top", value: "highTop" },
-  //     { label: "Bar Seating", value: "barSeating" },
-  //     { label: "Outdoor", value: "outdoor" },
-  //     { label: "Private Room", value: "privateRoom" },
-  //   ];
 
   const tableOptions = [
     { value: "2-seater", label: "2-Seater Table" },
@@ -136,8 +88,6 @@ const AddFields = () => {
         )} - ${values.openingHours[1].format("HH:mm")}`,
       };
 
-      console.log("Form values:", formattedValues);
-
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -151,9 +101,7 @@ const AddFields = () => {
     }
   };
 
-  // Handle image upload
   const handleImageUpload = ({ fileList }) => {
-    // Handle file list here
     console.log(fileList);
   };
 
@@ -245,51 +193,10 @@ const AddFields = () => {
                     />
                   </Form.Item>
                 </Col>
-
-                {/* <Col xs={24} sm={12} md={8}>
-                  <Form.Item
-                    name="restaurantId"
-                    label="Restaurant ID"
-                    rules={[
-                      { required: true, message: "Please enter restaurant ID" },
-                    ]}
-                  >
-                    <Input placeholder="e.g. TBL-001" />
-                  </Form.Item>
-                </Col> */}
               </Row>
 
               <Row gutter={24}>
                 <Col xs={24} sm={12} md={8}>
-                  {/* <Form.Item
-                    name="tableSelection"
-                    label="Table Selection"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please select table type and quantity",
-                      },
-                    ]}
-                  >
-                    <Input.Group compact>
-                      <Select
-                        style={{ width: "60%" }}
-                        placeholder="Select Table Type"
-                      >
-                        {tableOptions.map((option) => (
-                          <Option key={option.value} value={option.value}>
-                            {option.label}
-                          </Option>
-                        ))}
-                      </Select>
-                      <InputNumber
-                        style={{ width: "40%" }}
-                        min={1}
-                        placeholder="Qty"
-                      />
-                    </Input.Group>
-                  </Form.Item> */}
-
                   <Form.Item
                     name="tables"
                     label="Table Selection"
@@ -444,39 +351,6 @@ const AddFields = () => {
             </TabPane>
 
             <TabPane tab="Reservations & Settings" key="settings">
-              {/* <Row gutter={24}>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item
-                    name="reservationRequired"
-                    label="Reservation Required"
-                    valuePropName="checked"
-                  >
-                    <Switch />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item
-                    name="allowsWalkin"
-                    label="Allows Walk-ins"
-                    valuePropName="checked"
-                  >
-                    <Switch />
-                  </Form.Item>
-                </Col>
-
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item
-                    name="autoConfirm"
-                    label="Auto-confirm Reservations"
-                    valuePropName="checked"
-                    initialValue={false}
-                  >
-                    <Switch />
-                  </Form.Item>
-                </Col>
-              </Row> */}
-
               <Row gutter={24}>
                 <Col xs={24} sm={8}>
                   <Form.Item

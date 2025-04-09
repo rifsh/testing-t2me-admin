@@ -1,86 +1,18 @@
 import React, { useState } from "react";
-import {
-  Table,
-  Tag,
-  Space,
-  Button,
-  Input,
-  Select,
-  DatePicker,
-  Dropdown,
-  Menu,
-  Modal,
-  message,
-  Typography,
-} from "antd";
-import {
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  PlusOutlined,
-  MoreOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DownOutlined,
-  CalendarOutlined,
-  TeamOutlined,
-} from "@ant-design/icons";
+import { Table, Space, Button, Dropdown, Menu, Modal, message } from "antd";
+import { PlusOutlined, MoreOutlined } from "@ant-design/icons";
 import { data } from "../../../mock/data/restaurantList";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 
-const { Title } = Typography;
-const { Option } = Select;
-const { RangePicker } = DatePicker;
-
 const Index = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     status: "all",
     dateRange: null,
   });
-
-  const handleStatusChange = (value) => {
-    setFilterOptions({
-      ...filterOptions,
-      status: value,
-    });
-  };
-
-  const handleDateChange = (dates) => {
-    setFilterOptions({
-      ...filterOptions,
-      dateRange: dates,
-    });
-  };
-
-  const handleSearch = (e) => {
-    setSearchText(e.target.value);
-  };
-
-  const onSelectChange = (selectedRowKeys) => {
-    setSelectedRowKeys(selectedRowKeys);
-  };
-
-  const handleBulkAction = (action) => {
-    if (selectedRowKeys.length === 0) {
-      message.warning("Please select at least one venue");
-      return;
-    }
-
-    setLoading(false);
-
-    setTimeout(() => {
-      message.success(
-        `${action} performed on ${selectedRowKeys.length} selected venues`
-      );
-      setLoading(false);
-      setSelectedRowKeys([]);
-    }, 1000);
-  };
 
   const showDetailsModal = (record) => {
     Modal.info({
@@ -211,8 +143,6 @@ const Index = () => {
     const matchSearch =
       item.restaurantName.toLowerCase().includes(searchText.toLowerCase()) ||
       item.place.toLowerCase().includes(searchText.toLowerCase());
-    // ||
-    // item.id.toLowerCase().includes(searchText.toLowerCase());
 
     const matchStatus =
       filterOptions.status === "all" || item.status === filterOptions.status;
@@ -231,51 +161,6 @@ const Index = () => {
           flexWrap: "wrap",
         }}
       >
-        {/* <div>
-          <Input
-            placeholder="Search venues..."
-            prefix={<SearchOutlined />}
-            style={{ width: 250 }}
-            value={searchText}
-            onChange={handleSearch}
-            allowClear
-          />
-          <Select
-            defaultValue="all"
-            style={{ width: 140 }}
-            onChange={handleStatusChange}
-          >
-            <Option value="all">All</Option>
-            <Option value="active">Active</Option>
-            <Option value="full">Full</Option>
-            <Option value="maintenance">Maintenance</Option>
-          </Select>
-          <RangePicker
-            onChange={handleDateChange}
-            placeholder={["Start Date", "End Date"]}
-          />
-          {selectedRowKeys.length > 0 && (
-            <Space>
-              <span>{selectedRowKeys.length} selected</span>
-              <Button
-                onClick={() => handleBulkAction("Activate")}
-                icon={<CheckCircleOutlined />}
-                type="default"
-                size="middle"
-              >
-                Activate
-              </Button>
-              <Button
-                onClick={() => handleBulkAction("Deactivate")}
-                icon={<CloseCircleOutlined />}
-                type="default"
-                size="middle"
-              >
-                Deactivate
-              </Button>
-            </Space>
-          )}
-        </div> */}
         <div>
           <Button
             type="primary"
