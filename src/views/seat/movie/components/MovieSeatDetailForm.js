@@ -62,6 +62,7 @@ function MovieSeatDetailForm({ form }) {
                 form={form}
                 mode="single"
                 label="Venue"
+                rules={[{ required: true }]}
                 onSelect={handleVenueSelect}
               />
             </Col>

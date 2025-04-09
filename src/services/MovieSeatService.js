@@ -22,17 +22,31 @@ MovieSeatService.editSeatStructure = function (
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.MOVIE_SEAT_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.MOVIE_SEAT_EDIT_URL}?action=${encodedAction}&seat_id=${data.id}`,
+    method: "put",
+    data: data,
+    params: Utils.filterParams(pageData),
+  });
+};
+MovieSeatService.editSeatStructureStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.MOVIE_SEAT_STATUS_URL}?action=${encodedAction}&seat_id=${data.id}`,
     method: "put",
     data: data,
     params: Utils.filterParams(pageData),
   });
 };
 
-MovieSeatService.getSeatStructureDetails = function (id) {
+MovieSeatService.getSeatStructureDetails = function (pageData) {
   return fetch({
-    url: `${ApiConstant.MOVIE_SEAT_URL}/${id}`,
+    url: `${ApiConstant.MOVIE_SEAT_DETAILS_URL}`,
     method: "get",
+    params: Utils.filterParams(pageData),
   });
 };
 

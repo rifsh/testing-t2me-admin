@@ -153,7 +153,7 @@ const ScreenDetailView = () => {
                         key="details"
                     >
                         <Row gutter={[24, 24]}>
-                            <Col xs={24} lg={16} style={{maxHeight:"200px"}}>
+                            <Col xs={24} lg={16}>
                                 <Card
                                     title={
                                         <Space>
@@ -201,6 +201,22 @@ const ScreenDetailView = () => {
                                             {getAccessibilityTags(singleResponse?.accessibilty)}
                                         </Descriptions.Item>
                                     </Descriptions>
+                                    <Divider />
+                                    <Card
+                                        title={
+                                            <Space>
+                                                <InfoCircleOutlined />
+                                                Description
+                                            </Space>
+                                        }
+                                        bordered
+                                        style={{ marginBottom: 24 }}
+                                    >
+                                        <div
+                                            className="screen-description"
+                                            dangerouslySetInnerHTML={{ __html: singleResponse?.description || 'No description available' }}
+                                        />
+                                    </Card>
                                 </Card>
                             </Col>
 
@@ -270,22 +286,6 @@ const ScreenDetailView = () => {
                             </Col>
                         </Row>
 
-                        <Divider />
-                        <Card
-                            title={
-                                <Space>
-                                    <InfoCircleOutlined />
-                                    Description
-                                </Space>
-                            }
-                            bordered
-                            style={{ marginBottom: 24 }}
-                        >
-                            <div
-                                className="screen-description"
-                                dangerouslySetInnerHTML={{ __html: singleResponse?.description || 'No description available' }}
-                            />
-                        </Card>
                         <Divider />
 
                         <Card

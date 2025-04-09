@@ -421,6 +421,7 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
                                 <Select placeholder="Select role"
                                     mode="tags"
                                     tokenSeparators={[',']}
+                                    allowClear={false}
                                 >
                                     {(type === "cast" ? castRoles : crewRoles).map((role) => (
                                         <Option key={role.value} value={role.value}>
