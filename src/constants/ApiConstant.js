@@ -162,5 +162,6 @@ export const ApiConstant = {
   //seat api
   MOVIE_SEAT_URL: "/api/v1/tickets/secured/seatstructure",
   MOVIE_SEAT_EDIT_URL: "/api/v1/tickets/secured/seatstructure/edit",
+  MOVIE_SEAT_STATUS_URL: "/api/v1/tickets/secured/seatstructure/edit/status",
   MOVIE_SEAT_DETAILS_URL: "/api/v1/tickets/secured/seatstructure/single",
 };

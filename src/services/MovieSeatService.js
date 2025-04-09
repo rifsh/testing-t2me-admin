@@ -28,6 +28,19 @@ MovieSeatService.editSeatStructure = function (
     params: Utils.filterParams(pageData),
   });
 };
+MovieSeatService.editSeatStructureStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.MOVIE_SEAT_STATUS_URL}?action=${encodedAction}&seat_id=${data.id}`,
+    method: "put",
+    data: data,
+    params: Utils.filterParams(pageData),
+  });
+};
 
 MovieSeatService.getSeatStructureDetails = function (pageData) {
   return fetch({
