@@ -10,14 +10,7 @@ import {
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  editOffer,
-  editOfferStatus,
-  fetchAllOffers,
-  setEditItemId,
-  setOfferDialogVisible,
-  setOfferModalLoading,
-} from "store/slices/offerSlice";
+
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
@@ -27,7 +20,13 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
-import { getAllSeatStructures } from "store/slices/movieSeatSlice";
+import {
+  getAllSeatStructures,
+  editSeatStructureStatus,
+  setEditSeatItemId,
+  setSeatDialogVisible,
+  setSeatModalLoading,
+} from "store/slices/movieSeatSlice";
 
 const MovieSeatList = () => {
   const navigate = useNavigate();
@@ -38,30 +37,18 @@ const MovieSeatList = () => {
     loading,
     editable_status,
     message,
-    editItemId,
-    dialogVisible,
+    editSeatItemId,
+    seatDialogVisible,
     warningPagination,
-    modalLoading,
+    seatModalLoading,
     responseImpactData,
   } = useSelector((state) => state.movieSeatSlice);
   const { responseData } = useSelector((state) => state.modalSlice);
-
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedOffer, setSelectedOffer] = useState(null);
 
   useEffect(() => {
     dispatch(getAllSeatStructures(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
-  const showModal = (offer) => {
-    setSelectedOffer(offer);
-    setIsModalVisible(true);
-  };
-
-  const handleModalClose = () => {
-    setIsModalVisible(false);
-    setSelectedOffer(null);
-  };
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
@@ -69,21 +56,23 @@ const MovieSeatList = () => {
     dispatch(setSelectedItem(data));
     dispatch(setDialogVisible(true));
   };
-  const handleEditTax = (id) => {
-    dispatch(setEditItemId(id));
-    dispatch(setOfferDialogVisible(true));
-  };
-  const handleModalSubmit = async () => {
-    dispatch(setOfferModalLoading(true));
-    navigate(`${APP_PREFIX_PATH}/offer/edit/${editItemId}`);
-    console.log(editItemId, "9234239423490823498234098234908");
-    dispatch(setOfferDialogVisible(false));
-    dispatch(setOfferModalLoading(false));
+
+  const handleEditSeat = (id) => {
+    dispatch(setEditSeatItemId(id));
+    dispatch(setSeatDialogVisible(true));
   };
 
-  const handleModalCancel = () => {
-    dispatch(setOfferDialogVisible(false));
+  const handleEditModalSubmit = async () => {
+    dispatch(setSeatModalLoading(true));
+    navigate(`${APP_PREFIX_PATH}/seat/movie/edit/${editSeatItemId}`);
+    dispatch(setSeatDialogVisible(false));
+    dispatch(setSeatModalLoading(false));
   };
+
+  const handleEditModalCancel = () => {
+    dispatch(setSeatDialogVisible(false));
+  };
+
   const getDropdownMenu = (row) => [
     {
       key: "view",
@@ -93,18 +82,17 @@ const MovieSeatList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       ),
-
       onClick: () => navigate(`${APP_PREFIX_PATH}/seat/movie/${row.id}`),
     },
     {
-      key: "remark",
+      key: "edit",
       label: (
         <Flex alignItems="center">
           <EditOutlined />
           <span className="ml-2">Edit Seat Structure</span>
         </Flex>
       ),
-      onClick: () => handleEditTax(row.id),
+      onClick: () => handleEditSeat(row.id),
     },
   ];
 
@@ -194,14 +182,15 @@ const MovieSeatList = () => {
       ),
     },
   ];
+
   const handlePagination = (page, size) => {
-    dispatch(fetchAllOffers({ page: page, size: size }));
+    dispatch(getAllSeatStructures({ page: page, size: size }));
   };
 
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={fetchAllOffers} />
+        <SearchBarWithStatus fetchFunction={getAllSeatStructures} />
         <Button
           type="primary"
           icon={<FormOutlined />}
@@ -223,82 +212,23 @@ const MovieSeatList = () => {
         }}
       />
 
-      <Modal
-        title="Offer Details"
-        open={isModalVisible}
-        onCancel={handleModalClose}
-        footer={null}
-        width={800}
-      >
-        {selectedOffer && (
-          <Descriptions column={1} bordered>
-            <Descriptions.Item label="Offer Name">
-              {selectedOffer.name}
-            </Descriptions.Item>
-            <Descriptions.Item label="Discount Percentage">
-              {selectedOffer.discount_percentage}%
-            </Descriptions.Item>
-            <Descriptions.Item label="Start Date">
-              {selectedOffer.start_date
-                ? new Date(selectedOffer.start_date).toLocaleDateString()
-                : "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="End Date">
-              {selectedOffer.end_date
-                ? new Date(selectedOffer.end_date).toLocaleDateString()
-                : "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Max Users">
-              {selectedOffer.max_uses}
-            </Descriptions.Item>
-            <Descriptions.Item label="Status">
-              {selectedOffer.status ? "Active" : "Inactive"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Keywords">
-              {selectedOffer.key_words && selectedOffer.key_words.length
-                ? selectedOffer.key_words.join(", ")
-                : "None"}
-            </Descriptions.Item>
-            {/* <Descriptions.Item label="Offer Description">
-            {selectedOffer.description || "No description available"}
-            </Descriptions.Item> */}
-            {selectedOffer.thumbnail_image &&
-            selectedOffer.thumbnail_image !== "images" ? (
-              <Descriptions.Item label="Thumbnail Image">
-                <img
-                  src={selectedOffer.thumbnail_image}
-                  alt="Offer Thumbnail"
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "200px",
-                    objectFit: "contain",
-                  }}
-                />
-              </Descriptions.Item>
-            ) : (
-              <Descriptions.Item label="Thumbnail Image">
-                No image available
-              </Descriptions.Item>
-            )}
-          </Descriptions>
-        )}
-      </Modal>
       <WarningModal
         mode={"itemmodal"}
-        visible={dialogVisible}
-        title="Edit Offer"
+        visible={seatDialogVisible}
+        title="Edit Seat Structure"
         details={TextConstants.DefaultEditContent1}
         warningMessage="Do you want to proceed to the edit page?"
-        onSubmit={handleModalSubmit}
-        onCancel={handleModalCancel}
+        onSubmit={handleEditModalSubmit}
+        onCancel={handleEditModalCancel}
         confirmText="Proceed to Edit"
         cancelText="Cancel"
-        loading={modalLoading}
+        loading={seatModalLoading}
       />
+
       <UpdateStatusModal
         responseMessage={message}
-        editFunction={editOfferStatus}
-        getAllFunction={(pageData) => fetchAllOffers(pageData)}
+        editFunction={editSeatStructureStatus}
+        getAllFunction={(pageData) => getAllSeatStructures(pageData)}
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
@@ -309,9 +239,10 @@ const MovieSeatList = () => {
         pagination={warningPagination}
         loading={loading}
       />
+
       <StatusSubmitAndConfirmModal
-        editFunction={editOfferStatus}
-        getAllFunction={fetchAllOffers}
+        editFunction={editSeatStructureStatus}
+        getAllFunction={getAllSeatStructures}
         responseData={responseData}
         responseMessage={message}
         pageData={DEFAULT_PAGE_SIZE}
