@@ -133,9 +133,8 @@ const movieSeatSlice = createSlice({
     },
     loadSeatData: (state, action) => {
       const { seats, seatTypes } = action.payload;
-      console.log(seatTypes, "seatType");
       state.seats = seats || state.seats;
-      state.seatTypes =  state.seatTypes;
+      state.seatTypes = state.seatTypes;
       state.usedSeatTypes = seatTypes || state.seatTypes;
       if (seats) {
         state.rows = seats.length;
@@ -327,8 +326,8 @@ const movieSeatSlice = createSlice({
       })
       .addCase(editSeatStructureStatus.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.error = null;
         state.responseData = payload.data;
+
         if (payload.status) {
           state.message = payload.status.message;
           state.responseMessage = payload.status.message;
@@ -336,7 +335,6 @@ const movieSeatSlice = createSlice({
           state.editable_status = payload.status?.editable_status;
           state.warningPagination = payload.status?.data?.active_schedules;
         }
-        console.log(payload.status, "payloda status");
       })
       .addCase(editSeatStructureStatus.rejected, (state, action) => {
         state.loading = false;
