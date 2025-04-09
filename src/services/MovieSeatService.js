@@ -22,7 +22,7 @@ MovieSeatService.editSeatStructure = function (
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.MOVIE_SEAT_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.MOVIE_SEAT_EDIT_URL}?action=${encodedAction}&seat_id=${data.id}`,
     method: "put",
     data: data,
     params: Utils.filterParams(pageData),

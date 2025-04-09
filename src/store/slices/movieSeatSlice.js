@@ -2,7 +2,40 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { DEFAULT_SEAT_TYPES } from "constants/SeatTypes";
 import MovieSeatService from "services/MovieSeatService";
 import Utils from "utils";
+export const initialState = {
+  loading: false,
+  error: null,
+  message: null,
+  responseData: null,
+  responseMessage: null,
+  editable_status: null,
+  editSeatItemId: null,
+  responseImpactData: null,
+  warningPagination: { size: 10, page: 1 },
+  submitPagination: { size: 10, page: 1 },
+  selectedSubmitItem: null,
+  selectedSeatStructure: null,
+  allSeats: [],
+  singleSeatStructure: null,
+  validationStatus: false,
+  pagination: { size: 10, page: 1 },
+  seatDialogVisible: false,
+  seatModalLoading: false,
 
+  //seat state
+  rows: 8,
+  columns: 12,
+  mode: "seatType",
+  selectedSeatType: "standard",
+  selectedSeats: [],
+  isDragging: false,
+  startSeat: null,
+  currentSeat: null,
+  seats: [],
+  usedSeatTypes: [],
+  seatTypes: DEFAULT_SEAT_TYPES,
+  zoomLevel: 100,
+};
 export const addSeatStructure = createAsyncThunk(
   "movieSeat/add",
   async ({ data, action }, { rejectWithValue }) => {
@@ -31,7 +64,25 @@ export const editSeatStructure = createAsyncThunk(
   }
 );
 
-export const getSeatStructureDetails = createAsyncThunk(
+export const editSeatStructureStatus = createAsyncThunk(
+  "movieSeat/editStatus",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.editSeatStructureStatus(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error updating seat structure status"
+      );
+    }
+  }
+);
+
+export const getMovieSeatStructureDetails = createAsyncThunk(
   "movieSeat/getDetails",
   async (pageData, { rejectWithValue }) => {
     try {
@@ -44,6 +95,7 @@ export const getSeatStructureDetails = createAsyncThunk(
     }
   }
 );
+
 export const getAllSeatStructures = createAsyncThunk(
   "movieSeat/getAllSeats",
   async (pageData, { rejectWithValue }) => {
@@ -60,42 +112,20 @@ export const getAllSeatStructures = createAsyncThunk(
 
 const movieSeatSlice = createSlice({
   name: "movieSeatSlice",
-  initialState: {
-    loading: false,
-    error: null,
-    message: null,
-    responseData: null,
-    responseMessage: null,
-    editable_status: null,
-    editItemId: null,
-    responseImpactData: null,
-    warningPagination: { size: 10, page: 1 },
-    submitPagination: { size: 10, page: 1 },
-    selectedSubmitItem: null,
-    selectedSeatStructure: null,
-    allSeats: [],
-    singleSeatStructure: null,
-    validationStatus: false,
-    pagination: { size: 10, page: 1 },
-
-    //seat state
-    rows: 8,
-    columns: 12,
-    mode: "seatType",
-    selectedSeatType: "standard",
-    selectedSeats: [],
-    isDragging: false,
-    startSeat: null,
-    currentSeat: null,
-    seats: [],
-    usedSeatTypes: [],
-    seatTypes: DEFAULT_SEAT_TYPES,
-    zoomLevel: 100,
-  },
+  initialState,
 
   reducers: {
     setSelectedSeatStructure: (state, action) => {
       state.selectedSeatStructure = action.payload;
+    },
+    setEditSeatItemId: (state, action) => {
+      state.editSeatItemId = action.payload;
+    },
+    setSeatDialogVisible: (state, action) => {
+      state.seatDialogVisible = action.payload;
+    },
+    setSeatModalLoading: (state, action) => {
+      state.seatModalLoading = action.payload;
     },
     initializeSeats: (state, action) => {
       const { rows, columns } = action.payload;
@@ -103,8 +133,10 @@ const movieSeatSlice = createSlice({
     },
     loadSeatData: (state, action) => {
       const { seats, seatTypes } = action.payload;
+      console.log(seatTypes, "seatType");
       state.seats = seats || state.seats;
-      state.seatTypes = seatTypes || state.seatTypes;
+      state.seatTypes =  state.seatTypes;
+      state.usedSeatTypes = seatTypes || state.seatTypes;
       if (seats) {
         state.rows = seats.length;
         state.columns = seats[0]?.length || 0;
@@ -244,10 +276,8 @@ const movieSeatSlice = createSlice({
     resetZoom: (state) => {
       state.zoomLevel = 100;
     },
-    resetState: (state) => {
-      state.responseData = null;
-      state.responseMessage = null;
-      state.selectedSubmitItem = null;
+    resetState: () => {
+      return initialState;
     },
   },
   extraReducers: (builder) => {
@@ -273,28 +303,58 @@ const movieSeatSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(editSeatStructure.fulfilled, (state, action) => {
+      .addCase(editSeatStructure.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.error = null;
-        state.responseData = action.payload.data;
-        state.responseMessage = action.payload.status.message;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseMessage = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
       })
       .addCase(editSeatStructure.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.data || "Error updating seat structure";
       })
 
-      // Get seat structure details cases
-      .addCase(getSeatStructureDetails.pending, (state) => {
+      // Edit seat structure status cases
+      .addCase(editSeatStructureStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getSeatStructureDetails.fulfilled, (state, action) => {
+      .addCase(editSeatStructureStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseMessage = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+        console.log(payload.status, "payloda status");
+      })
+      .addCase(editSeatStructureStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error updating seat structure status";
+      })
+
+      // Get seat structure details cases
+      .addCase(getMovieSeatStructureDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getMovieSeatStructureDetails.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
         state.singleSeatStructure = action.payload[0];
       })
-      .addCase(getSeatStructureDetails.rejected, (state, action) => {
+      .addCase(getMovieSeatStructureDetails.rejected, (state, action) => {
         state.loading = false;
         state.error =
           action.payload?.data || "Error fetching seat structure details";
@@ -319,6 +379,9 @@ const movieSeatSlice = createSlice({
 
 export const {
   setSelectedSeatStructure,
+  setEditSeatItemId,
+  setSeatDialogVisible,
+  setSeatModalLoading,
   initializeSeats,
   loadSeatData,
   updateSeats,

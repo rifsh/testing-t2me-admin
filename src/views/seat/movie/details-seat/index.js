@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
-import { getSeatStructureDetails } from "store/slices/movieSeatSlice";
+import { useNavigate, useParams } from "react-router-dom";
+import { getMovieSeatStructureDetails } from "store/slices/movieSeatSlice";
 import Loading from "components/shared-components/Loading";
 import {
   LoadingOutlined,
@@ -11,6 +11,7 @@ import {
   ReloadOutlined,
 } from "@ant-design/icons";
 import { Spin, Button, Result } from "antd";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 
 export default function SeatDetailsPage() {
   const [error, setError] = useState(null);
@@ -20,10 +21,10 @@ export default function SeatDetailsPage() {
   const { singleSeatStructure, loading } = useSelector(
     (state) => state.movieSeatSlice
   );
-
+  const navigate = useNavigate();
   useEffect(() => {
     if (seatId) {
-      dispatch(getSeatStructureDetails({ seat_id: seatId }));
+      dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
     }
   }, [seatId, dispatch]);
 
@@ -44,8 +45,7 @@ export default function SeatDetailsPage() {
   };
 
   const handleEdit = () => {
-    // Implement edit functionality here
-    console.log("Edit seat structure:", seatId);
+    navigate(`${APP_PREFIX_PATH}/seat/movie/edit/${seatId}`);
   };
 
   if (loading) {
@@ -78,7 +78,7 @@ export default function SeatDetailsPage() {
             icon={<ReloadOutlined />}
             onClick={() => {
               // Retry loading the data
-              dispatch(getSeatStructureDetails({ seat_id: seatId }));
+              dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
             }}
             key="retry"
           >
@@ -112,7 +112,7 @@ export default function SeatDetailsPage() {
           <Button
             onClick={() => {
               // Retry loading the data
-              dispatch(getSeatStructureDetails({ seat_id: seatId }));
+              dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
             }}
             key="retry"
           >
@@ -145,7 +145,7 @@ export default function SeatDetailsPage() {
           </Button>,
           <Button
             onClick={() => {
-              dispatch(getSeatStructureDetails({ seat_id: seatId }));
+              dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
             }}
             key="retry"
           >

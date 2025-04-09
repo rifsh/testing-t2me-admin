@@ -1,12 +1,12 @@
 import React from 'react'
-import EventForm from '../components';
 import { useParams } from 'react-router-dom';
+import SeatForm from '../form-seat';
 
 const EditSeat = () => {
-	const params = useParams();
+	const {seatId} = useParams();
 
 	return (
-		<EventForm mode="EDIT" param={params}/>
+		<SeatForm mode="EDIT" seatId={seatId}/>
 	)
 }
 

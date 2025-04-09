@@ -107,13 +107,13 @@ const AdBannerFormFields = ({ mode, banner }) => {
     }
   }, [dispatch, eventType.length, filteredAdCategories.length, places.length]);
 
- useEffect(() => {
+  useEffect(() => {
     if (error) {
       message.error(error);
     }
   }, [error]);
 
- useEffect(() => {
+  useEffect(() => {
     if (mode === EDIT && banner) {
       const category = filteredAdCategories.find(
         (cat) => cat.id === banner.banner_category.id
@@ -123,7 +123,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
       if (banner.place?.id) {
         setSelectedPlace(banner.place.id);
         dispatch(fetchEventOnPlaces(banner.place.id)).then(() => {
-         if (banner.event?.id) {
+          if (banner.event?.id) {
             form.setFieldValue("event_id", banner.event.id);
           }
         });
