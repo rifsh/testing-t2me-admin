@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Button, Card, Col, Flex, Menu, Row, Table } from 'antd';
 import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
 import {
@@ -7,17 +7,26 @@ import {
     FormOutlined,
 } from "@ant-design/icons";
 import utils from 'utils';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedItem } from 'store/slices/modalSlice';
 import { setDialogVisible } from 'store/slices/eventSlice';
 import { theaterMockData } from 'mock/data/thaeterMockData';
 import SearchBarWithStatus from 'components/util-components/Search/SearchBarWithStatus';
 import { useNavigate } from 'react-router-dom';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import { fetchTheaters } from 'store/slices/theaterSlice';
+import { DEFAULT_PAGE_SIZE } from 'constants/PageConstants';
 
 const Index = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { response, loading } = useSelector((state) => state.theater);
+
+    useEffect(() => {
+        dispatch(fetchTheaters(DEFAULT_PAGE_SIZE))
+    }, [dispatch])
+
+
     const handleUpdateStatus = (item) => {
         const newStatus = !item.status;
         const data = { status: newStatus, id: item.id };
@@ -26,17 +35,25 @@ const Index = () => {
         dispatch(setDialogVisible(true));
     };
 
+    const handleViewDetails = async (id) => {
+        navigate(`${APP_PREFIX_PATH}/movie-theater/detail/${id}`);
+    };
+
+    const handleViewEdit = async (id) => {
+        navigate(`${APP_PREFIX_PATH}/movie-theater/edit/${id}`);
+    };
+
     const dropdownMenu = (row) => (
         <Menu>
             <Menu.Item>
-                <Flex alignItems="center" >
-                    <EyeOutlined />
+                <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+                    <EyeOutlined role='button' />
                     <span className="ml-2">View Details</span>
                 </Flex>
             </Menu.Item>
             <Menu.Item>
-                <Flex alignItems="center" >
-                    <EditOutlined />
+                <Flex alignItems="center" onClick={() => handleViewEdit(row.id)}>
+                    <EditOutlined role='button' />
                     <span className="ml-2">Edit Venue</span>
                 </Flex>
             </Menu.Item>
@@ -52,7 +69,7 @@ const Index = () => {
         },
         {
             title: "Screen capacity",
-            dataIndex: 'screens',
+            dataIndex: 'number_of_screens',
             render: (name) => <span>{name || "N/A"}</span>,
             sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["place", "name"]),
         },
@@ -64,7 +81,7 @@ const Index = () => {
         },
         {
             title: "Phone",
-            dataIndex: "phone",
+            dataIndex: "phone_number",
             render: (phone) => <span>{phone}</span>,
             sorter: (a, b) => utils.antdTableSorter(a, b, "indoor"),
         },
@@ -111,9 +128,9 @@ const Index = () => {
             <div className="table-responsive">
                 <Table
                     columns={tableColumns}
-                    dataSource={theaterMockData}
+                    dataSource={response?.items}
                     rowKey="id"
-                // loading={loading}
+                    loading={loading}
                 // pagination={{
                 //     current: pagination.page,
                 //     pageSize: pagination.size,

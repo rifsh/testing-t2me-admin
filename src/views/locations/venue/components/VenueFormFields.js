@@ -372,22 +372,6 @@ const VenueFormFields = ({ mode, venue }) => {
             </Row>
 
             <Form.Item
-              noStyle
-              shouldUpdate={(prevValues, currentValues) => prevValues.indoor !== currentValues.indoor}
-            >
-              {({ getFieldValue }) => {
-                return getFieldValue('indoor') === true ? (
-                  <div className="venue-features-container">
-                    <h4>Venue Technology & Features</h4>
-                    <VenueTechnology
-                      form={form}
-                    />
-                  </div>
-                ) : null;
-              }}
-            </Form.Item>
-
-            <Form.Item
               name="description"
               label="Description"
               rules={[
