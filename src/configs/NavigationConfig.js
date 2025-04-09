@@ -247,6 +247,8 @@ const superAdminDashBoardNavTree = [
             breadcrumb: false,
             isGroupTitle: false,
             submenu: [
+
+
               {
                 key: "dine.dine",
                 path: `${APP_PREFIX_PATH}/dine/list`,
@@ -255,17 +257,21 @@ const superAdminDashBoardNavTree = [
                 breadcrumb: false,
                 isGroupTitle: false,
               },
+
               {
                 key: "dine.restaurant",
-                path: `${APP_PREFIX_PATH}/dine/add`,
+                path: `${APP_PREFIX_PATH}/restaurant/list`,
                 title: "sidenav.dine.restaurant",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 isGroupTitle: false,
               },
+
+              
+             
               {
                 key: "dine.schedule",
-                path: `${APP_PREFIX_PATH}/dine/schedule-list`,
+                path: `${APP_PREFIX_PATH}/schedule/list`,
                 title: "sidenav.dine.schedule",
                 icon: OrderedListOutlined,
                 breadcrumb: false,

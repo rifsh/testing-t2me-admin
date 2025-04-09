@@ -25,7 +25,7 @@ import {
   CalendarOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
-import { data } from "../../../mock/data/DinesList";
+import { data } from "../../../mock/data/restaurantList";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 
@@ -84,7 +84,7 @@ const Index = () => {
 
   const showDetailsModal = (record) => {
     Modal.info({
-      title: `${record.name} Details`,
+      title: `${record.restaurantName} Details`,
       content: (
         <div>
           <p>
@@ -119,108 +119,61 @@ const Index = () => {
   };
 
   const columns = [
-    // {
-    //     title: 'ID',
-    //     dataIndex: 'id',
-    //     key: 'id',
-    //     // width: 100,
-    //     sorter: (a, b) => a.id.localeCompare(b.id),
-    // },
     {
-      title: "Table Name",
-      dataIndex: "name",
-      key: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      title: "Restaurant Name",
+      dataIndex: "restaurantName",
+      key: "restaurantName",
+      sorter: (a, b) => a.restaurantName.localeCompare(b.restaurantName),
       render: (text, record) => (
         <a onClick={() => showDetailsModal(record)}>{text}</a>
+      ),
+    },
+    {
+      title: "Place",
+      dataIndex: "place",
+      key: "place",
+      sorter: (a, b) => a.restaurantName.localeCompare(b.restaurantName),
+      render: (text, record) => (
+        <a onClick={() => showDetailsModal(record)}>{text}</a>
+      ),
+    },
+    {
+      title: "venue",
+      dataIndex: "venue",
+      key: "venue",
+      sorter: (a, b) => a.restaurantName.localeCompare(b.restaurantName),
+      render: (text, record) => (
+        <a onClick={() => showDetailsModal(record)}>{text}</a>
+      ),
+    },
+    {
+      title: "Tables",
+      dataIndex: "tables",
+      key: "tables",
+      sorter: (a, b) => a.restaurantName.localeCompare(b.restaurantName),
+      render: (text, record) => (
+        <div
+          onClick={() => showDetailsModal(record)}
+          style={{ cursor: "pointer", color: "#1677ff" }}
+        >
+          {record.tables.map((table, index) => (
+            <div key={index}>{table}</div>
+          ))}
+        </div>
       ),
     },
 
     {
-      title: "Table type",
-      dataIndex: "tableType",
-      key: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (text, record) => (
-        <a onClick={() => showDetailsModal(record)}>{text}</a>
-      ),
+      title: "Operating Hours",
+      dataIndex: "operatingHours",
+      key: "operatingHours",
+      sorter: (a, b) => a.restaurantName.localeCompare(b.restaurantName),
+      render: (text, record) => {
+        const { open, close } = record.operatingHours;
+        return `${open} - ${close}`;
+      },
     },
-    // {
-    //     title: 'Location',
-    //     dataIndex: 'location',
-    //     key: 'location',
-    //     ellipsis: true,
-    // },
-    // {
-    //     title: 'Cuisine',
-    //     dataIndex: 'cuisine',
-    //     key: 'cuisine',
-    //     filters: [
-    //         { text: 'Seafood', value: 'Seafood' },
-    //         { text: 'International', value: 'International' },
-    //         { text: 'Vegetarian', value: 'Vegetarian' },
-    //         { text: 'Japanese', value: 'Japanese' },
-    //         { text: 'Italian', value: 'Italian' },
-    //         { text: 'Steakhouse', value: 'Steakhouse' },
-    //         { text: 'Indian', value: 'Indian' },
-    //         { text: 'American', value: 'American' },
-    //     ],
-    //     onFilter: (value, record) => record.cuisine.includes(value),
-    // },
-    // {
-    //     title: 'Price',
-    //     dataIndex: 'priceRange',
-    //     key: 'priceRange',
-    //     width: 80,
-    //     filters: [
-    //         { text: '$', value: '$' },
-    //         { text: '$$', value: '$$' },
-    //         { text: '$$$', value: '$$$' },
-    //         { text: '$$$$', value: '$$$$' },
-    //     ],
-    //     onFilter: (value, record) => record.priceRange.includes(value),
-    //     sorter: (a, b) => a.priceRange.length - b.priceRange.length,
-    // },
-    {
-      title: "Seats",
-      key: "seats",
-      // width: 120,
-      // sorter: (a, b) => a.seats.localeCompare(b.seats),
-      render: (_, record) => <span>{record.seats}</span>,
-      // sorter: (a, b) => a.availableTables - b.availableTables,
-    },
-    // {
-    //     title: 'Reservations',
-    //     dataIndex: 'reservationsToday',
-    //     key: 'reservationsToday',
-    //     // width: 130,
-    //     sorter: (a, b) => a.reservationsToday - b.reservationsToday,
-    // },
-    // {
-    //     title: 'Status',
-    //     dataIndex: 'status',
-    //     key: 'status',
-    //     // width: 120,
-    //     render: (status) => {
-    //         let color = 'green';
-    //         if (status === 'full') {
-    //             color = 'orange';
-    //         } else if (status === 'maintenance') {
-    //             color = 'red';
-    //         }
-    //         return (
-    //             <Tag color={color}>
-    //                 {status.toUpperCase()}
-    //             </Tag>
-    //         );
-    //     },
-    //     filters: [
-    //         { text: 'Active', value: 'active' },
-    //         { text: 'Full', value: 'full' },
-    //         { text: 'Maintenance', value: 'maintenance' },
-    //     ],
-    //     onFilter: (value, record) => record.status === value,
-    // },
+
     {
       title: "Actions",
       key: "actions",
@@ -256,9 +209,10 @@ const Index = () => {
 
   const filteredData = data.filter((item) => {
     const matchSearch =
-      item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.location.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchText.toLowerCase());
+      item.restaurantName.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.place.toLowerCase().includes(searchText.toLowerCase());
+    // ||
+    // item.id.toLowerCase().includes(searchText.toLowerCase());
 
     const matchStatus =
       filterOptions.status === "all" || item.status === filterOptions.status;
@@ -326,9 +280,9 @@ const Index = () => {
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => navigate(`${APP_PREFIX_PATH}/dine/add`)}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/restaurant/add`)}
           >
-            Add Table
+            Add Restaurant
           </Button>
         </div>
       </div>

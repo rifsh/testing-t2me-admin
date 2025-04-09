@@ -33,6 +33,7 @@ import {
 import moment from "moment";
 import TextEditor from "components/util-components/FormItems/TextEditor";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import { Tag } from "antd";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -78,20 +79,49 @@ const AddFields = () => {
   ];
 
   // Table types
-//   const tableTypes = [
-//     { label: "Regular", value: "regular" },
-//     { label: "Booth", value: "booth" },
-//     { label: "High Top", value: "highTop" },
-//     { label: "Bar Seating", value: "barSeating" },
-//     { label: "Outdoor", value: "outdoor" },
-//     { label: "Private Room", value: "privateRoom" },
-//   ];
+  //   const tableTypes = [
+  //     { label: "Regular", value: "regular" },
+  //     { label: "Booth", value: "booth" },
+  //     { label: "High Top", value: "highTop" },
+  //     { label: "Bar Seating", value: "barSeating" },
+  //     { label: "Outdoor", value: "outdoor" },
+  //     { label: "Private Room", value: "privateRoom" },
+  //   ];
 
   const tableOptions = [
-    { value: '2-seater', label: '2-Seater Table' },
-    { value: '4-seater', label: '4-Seater Table' },
-    { value: '6-seater', label: '6-Seater Table' },
+    { value: "2-seater", label: "2-Seater Table" },
+    { value: "4-seater", label: "4-Seater Table" },
+    { value: "6-seater", label: "6-Seater Table" },
   ];
+
+  const [newTableType, setNewTableType] = useState(null);
+  const [newTableQuantity, setNewTableQuantity] = useState(1);
+  // Get current tables from form
+  const tables = Form.useWatch("tables", form);
+
+  // Add and remove table functions
+  const handleAddTable = () => {
+    if (!newTableType || !newTableQuantity) {
+      message.error("Please select a table type and quantity");
+      return;
+    }
+
+    const currentTables = form.getFieldValue("tables") || [];
+    const newTables = [
+      ...currentTables,
+      { type: newTableType, quantity: newTableQuantity },
+    ];
+
+    form.setFieldsValue({ tables: newTables });
+    setNewTableType(null);
+    setNewTableQuantity(1);
+  };
+
+  const handleRemoveTable = (index) => {
+    const currentTables = form.getFieldValue("tables") || [];
+    const newTables = currentTables.filter((_, i) => i !== index);
+    form.setFieldsValue({ tables: newTables });
+  };
 
   // Handle form submission
   const handleSubmit = async (values) => {
@@ -216,7 +246,7 @@ const AddFields = () => {
                   </Form.Item>
                 </Col>
 
-                <Col xs={24} sm={12} md={8}>
+                {/* <Col xs={24} sm={12} md={8}>
                   <Form.Item
                     name="restaurantId"
                     label="Restaurant ID"
@@ -226,44 +256,12 @@ const AddFields = () => {
                   >
                     <Input placeholder="e.g. TBL-001" />
                   </Form.Item>
-                </Col>
+                </Col> */}
               </Row>
 
               <Row gutter={24}>
                 <Col xs={24} sm={12} md={8}>
-                  <Form.Item
-                    name="cuisine"
-                    label="Cuisine Type"
-                    rules={[
-                      { required: true, message: "Please select cuisine type" },
-                    ]}
-                  >
-                    <Select placeholder="Select cuisine type">
-                      {cuisineOptions.map((cuisine) => (
-                        <Option key={cuisine} value={cuisine}>
-                          {cuisine}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-
-                {/* <Col xs={24} sm={12} md={8}>
-                                    <Form.Item
-                                        name="priceRange"
-                                        label="Price Range"
-                                        rules={[{ required: true, message: 'Please select price range' }]}
-                                    >
-                                        <Select placeholder="Select price range">
-                                            {priceRangeOptions.map(option => (
-                                                <Option key={option.value} value={option.value}>{option.label}</Option>
-                                            ))}
-                                        </Select>
-                                    </Form.Item>
-                                </Col> */}
-
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item
+                  {/* <Form.Item
                     name="tableSelection"
                     label="Table Selection"
                     rules={[
@@ -290,6 +288,62 @@ const AddFields = () => {
                         placeholder="Qty"
                       />
                     </Input.Group>
+                  </Form.Item> */}
+
+                  <Form.Item
+                    name="tables"
+                    label="Table Selection"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please add at least one table",
+                      },
+                    ]}
+                  >
+                    <div style={{ marginBottom: 8 }}>
+                      {tables?.map((table, index) => {
+                        const tableLabel = tableOptions.find(
+                          (opt) => opt.value === table.type
+                        )?.label;
+                        return (
+                          <Tag
+                            key={index}
+                            closable
+                            onClose={() => handleRemoveTable(index)}
+                            style={{ marginBottom: 4 }}
+                          >
+                            {tableLabel} x {table.quantity}
+                          </Tag>
+                        );
+                      })}
+                    </div>
+                    <Space>
+                      <Select
+                        style={{ width: 200 }}
+                        placeholder="Select Table Type"
+                        value={newTableType}
+                        onChange={setNewTableType}
+                      >
+                        {tableOptions.map((option) => (
+                          <Option key={option.value} value={option.value}>
+                            {option.label}
+                          </Option>
+                        ))}
+                      </Select>
+                      <InputNumber
+                        min={1}
+                        value={newTableQuantity}
+                        onChange={setNewTableQuantity}
+                        placeholder="Quantity"
+                      />
+                      <Button
+                        type="dashed"
+                        onClick={handleAddTable}
+                        icon={<PlusOutlined />}
+                      >
+                        Add Table
+                      </Button>
+                    </Space>
                   </Form.Item>
                 </Col>
 
@@ -389,92 +443,8 @@ const AddFields = () => {
               </Row>
             </TabPane>
 
-            {/* <TabPane tab="Capacity & Tables" key="capacity">
-                            <Row gutter={24}>
-                                <Col xs={24} sm={8}>
-                                    <Form.Item
-                                        name="capacity"
-                                        label="Total Capacity (seats)"
-                                        rules={[{ required: true, message: 'Please enter capacity' }]}
-                                    >
-                                        <InputNumber
-                                            min={1}
-                                            max={1000}
-                                            style={{ width: '100%' }}
-                                            prefix={<TeamOutlined />}
-                                        />
-                                    </Form.Item>
-                                </Col>
-
-                                <Col xs={24} sm={8}>
-                                    <Form.Item
-                                        name="maximumPartySize"
-                                        label="Maximum Party Size"
-                                        rules={[{ required: true, message: 'Please enter maximum party size' }]}
-                                    >
-                                        <InputNumber
-                                            min={1}
-                                            max={100}
-                                            style={{ width: '100%' }}
-                                        />
-                                    </Form.Item>
-                                </Col>
-
-                                <Col xs={24} sm={8}>
-                                    <Form.Item
-                                        name="minimumPartySize"
-                                        label="Minimum Party Size"
-                                        initialValue={1}
-                                    >
-                                        <InputNumber
-                                            min={1}
-                                            max={10}
-                                            style={{ width: '100%' }}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            <Divider orientation="left">Table Configuration</Divider>
-
-                            <Row gutter={24}>
-                                {tableTypes.map((tableType, index) => (
-                                    <Col xs={24} sm={12} md={8} key={tableType.value}>
-                                        <Card
-                                            size="small"
-                                            title={`${tableType.label} Tables`}
-                                            style={{ marginBottom: 16 }}
-                                        >
-                                            <Form.Item
-                                                name={['tableSetup', index, 'count']}
-                                                label="Count"
-                                                style={{ marginBottom: 8 }}
-                                            >
-                                                <InputNumber
-                                                    min={0}
-                                                    style={{ width: '100%' }}
-                                                    addonAfter={<TableOutlined />}
-                                                />
-                                            </Form.Item>
-
-                                            <Form.Item
-                                                name={['tableSetup', index, 'capacity']}
-                                                label="Seats per table"
-                                            >
-                                                <InputNumber
-                                                    min={1}
-                                                    style={{ width: '100%' }}
-                                                    addonAfter={<TeamOutlined />}
-                                                />
-                                            </Form.Item>
-                                        </Card>
-                                    </Col>
-                                ))}
-                            </Row>
-                        </TabPane> */}
-
             <TabPane tab="Reservations & Settings" key="settings">
-              <Row gutter={24}>
+              {/* <Row gutter={24}>
                 <Col xs={24} sm={12} md={8}>
                   <Form.Item
                     name="reservationRequired"
@@ -505,7 +475,7 @@ const AddFields = () => {
                     <Switch />
                   </Form.Item>
                 </Col>
-              </Row>
+              </Row> */}
 
               <Row gutter={24}>
                 <Col xs={24} sm={8}>

@@ -6,7 +6,6 @@ import VenueListForm from 'components/util-components/FormItems/VenueList';
 import { useDispatch } from 'react-redux';
 import { getSingleVenues, getVenues, setSelectedPlace, setSelectedVenue, setSelectedVenueList } from 'store/slices/locationSlice';
 import AddFields from '../components/AddFields';
-import AddTableField from '../components/AddTableField';
 
 const Index = () => {
     const dispatch = useDispatch();
@@ -31,7 +30,7 @@ const Index = () => {
 
     return (
         <Form form={form} layout="vertical">
-            {/* <Row gutter={16} align="top">
+            <Row gutter={16} align="top">
                 <Col xs={24} sm={24} md={24}>
                     <Card
                         title={
@@ -68,9 +67,9 @@ const Index = () => {
                         </Row>
                     </Card>
                 </Col>
-            </Row> */}
+            </Row>
             <div>
-                <AddTableField />
+                <AddFields />
             </div>
         </Form>
 
