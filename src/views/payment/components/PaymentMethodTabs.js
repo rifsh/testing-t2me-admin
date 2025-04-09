@@ -59,13 +59,13 @@ const PaymentMethodTabs = ({ form }) => {
     const newPaymentMethod = {};
     const newPaymentMethods = [...payment_methods, newPaymentMethod];
     form.setFieldsValue({ payment_methods: newPaymentMethods });
-    setActiveKey(String(payment_methods.length));
+    setActiveKey(String(payment_methods?.length));
   };
 
   const removeTab = (targetKey) => {
     const payment_methods = form.getFieldValue("payment_methods") || [];
 
-    if (payment_methods.length <= 1) {
+    if (payment_methods?.length <= 1) {
       message.warning("At least one payment method is required");
       return;
     }
@@ -170,7 +170,7 @@ const PaymentMethodTabs = ({ form }) => {
               <Option disabled value="error">
                 Failed to load payment methods
               </Option>
-            ) : paymentMethods.length > 0 ? (
+            ) : paymentMethods?.length > 0 ? (
               paymentMethods.map((method) => (
                 <Option key={method.id} value={method.id}>
                   {method.name}
@@ -316,7 +316,7 @@ const PaymentMethodTabs = ({ form }) => {
       key: String(index),
       label: `Payment Method ${index + 1}`,
       children: renderPaymentMethodForm(index),
-      closeIcon: payment_methods.length > 1 && (
+      closeIcon: payment_methods?.length > 1 && (
         <MinusCircleOutlined
           onClick={(e) => {
             e.stopPropagation();
