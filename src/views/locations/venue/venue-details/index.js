@@ -25,6 +25,7 @@ const VenueDetails = () => {
   const { singleVenues, loading, error } = useSelector(
     (state) => state.locations
   );
+console.log(singleVenues,'addonser');
 
 
 

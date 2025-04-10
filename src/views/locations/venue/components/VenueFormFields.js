@@ -89,7 +89,7 @@ const VenueFormFields = ({ mode, venue }) => {
     ValidateData,
     validationStatus,
     placeValidationDialogVisible,
-    message:  warningMessage,
+    message: warningMessage,
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
@@ -111,26 +111,25 @@ const VenueFormFields = ({ mode, venue }) => {
           : venue.venue_add_on_services,
         banner_images: venue?.media
           ? venue?.media?.map((banner, index) => ({
-            uid: `-banner-${index}`,
-            name: banner?.media_url.split("/").pop(),
-            status: "done",
-            url: banner?.media_url,
-          }))
+              uid: `-banner-${index}`,
+              name: banner?.media_url.split("/").pop(),
+              status: "done",
+              url: banner?.media_url,
+            }))
           : [],
 
         thumbnail_image:
           venue.thumbnail_image && venue.thumbnail_image !== "images"
             ? [
-              {
-                uid: "-1",
-                name: venue.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: venue.thumbnail_image,
-              },
-            ]
+                {
+                  uid: "-1",
+                  name: venue.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: venue.thumbnail_image,
+                },
+              ]
             : [],
       });
-
     }
   }, [form, venue, mode]);
 
@@ -153,39 +152,164 @@ const VenueFormFields = ({ mode, venue }) => {
 
   const handleBeforeUpload = Utils.handleBeforeUpload;
 
+  // const onFinish = async () => {
+  //   try {
+  //     // Validate form fields
+  //     const values = await form.validateFields();
+
+  //     if (mode === "EDIT") {
+  //       console.log("ITS AN EDITTTTTTTTTTTTT");
+
+  //       // Prepare data for edit mode
+  //       const data = {
+  //         ...values,
+  //         place_id: selectedPlace ?? venue.place?.id,
+  //         latitude: coordinates.lat || 0,
+  //         longitude: coordinates.lng || 0,
+  //         capacity: values.capacity || 0,
+  //         indoor: values.indoor !== undefined ? values.indoor : false,
+  //         address: values.address,
+  //         description: values.description,
+  //         audios: !values.audios ? [] : values.audios,
+  //         screen_tech: !values.screen_tech ? [] : values.screen_tech,
+  //         accessbility_feature: !values.accessbility_feature
+  //           ? []
+  //           : values.accessbility_feature,
+  //         venue_add_on_services: !values.venue_add_on_services
+  //           ? []
+  //           : values.venue_add_on_services,
+  //         id: venue.id,
+  //       };
+
+  //       // Validate place
+  //       const resultAction = await dispatch(
+  //         validatePlace(selectedPlace ?? venue.place?.id)
+  //       );
+
+  //       if (validatePlace.fulfilled.match(resultAction)) {
+  //         const response = resultAction.payload;
+  //         if (response.message === "warning") {
+  //           dispatch(setPlaceValidationDialogVisible(true));
+  //         } else if (response.data && response.data[0]?.validation_status) {
+  //           const editResultAction = await dispatch(
+  //             editVenue({ data, action: ActionType.WARNING })
+  //           );
+
+  //           if (editVenue.fulfilled.match(editResultAction)) {
+  //             dispatch(setSelectedVenue(data));
+  //             dispatch(setLocationDialogVisible(true));
+  //           } else if (editVenue.rejected.match(editResultAction)) {
+  //             // Handle API validation errors
+  //             const error = editResultAction.error;
+  //             if (error.message) {
+  //               message.error(error.message); // Show error message to the user
+  //             }
+  //           }
+  //         }
+  //       }
+  //     } else {
+  //       console.log("Form values:", values);
+
+  //       if (!selectedPlace) {
+  //         message.error("Place ID is missing. Please select a place.");
+  //         return;
+  //       }
+
+  //       // Prepare data for add mode
+  //       const formData = {
+  //         ...values,
+  //         place_id: selectedPlace,
+  //         latitude: coordinates.lat || 0,
+  //         longitude: coordinates.lng || 0,
+  //         capacity: values.capacity || 0,
+  //         indoor: values.indoor !== undefined ? values.indoor : false,
+  //         address: values.address,
+  //         description: values.description,
+  //         audios: !values.audios ? [] : values.audios,
+  //         screen_tech: !values.screen_tech ? [] : values.screen_tech,
+  //         accessbility_feature: !values.accessbility_feature
+  //           ? []
+  //           : values.accessbility_feature,
+  //         venue_add_on_services: !values.venue_add_on_services
+  //           ? []
+  //           : values.venue_add_on_services,
+  //       };
+
+  //       // Validate place
+  //       const resultAction = await dispatch(validatePlace(selectedPlace));
+
+  //       if (validatePlace.fulfilled.match(resultAction)) {
+  //         const response = resultAction.payload;
+  //         if (response.message === "warning") {
+  //           dispatch(setPlaceValidationDialogVisible(true));
+  //         } else if (response.data && response.data[0]?.validation_status) {
+  //           dispatch(setSelectedSubmitItem(formData));
+  //         }
+  //       } else if (validatePlace.rejected.match(resultAction)) {
+  //         // Handle API validation errors
+  //         const error = resultAction.error;
+  //         if (error.message) {
+  //           message.error(error.message); // Show error message to the user
+  //         }
+  //       }
+  //     }
+  //   } catch (errorInfo) {
+  //     console.error("Validation Failed:", errorInfo);
+
+  //     // Handle form validation errors
+  //     if (errorInfo.errorFields) {
+  //       message.error(`Please fill all the required fields`);
+  //       errorInfo.errorFields.forEach((field) => {
+  //         // message.error(`${field.name.join(".")}: ${field.errors.join(", ")}`);
+  //         // message.error(`Fill all the required fields`);
+  //       });
+  //     } else {
+  //       message.error("An unexpected error occurred. Please try again.");
+  //     }
+  //   }
+  // };
+
+  //test
 
   const onFinish = async () => {
     try {
-      // Validate form fields
       const values = await form.validateFields();
 
-      if (mode === "EDIT") {
-        console.log("ITS AN EDITTTTTTTTTTTTT");
+      // Clean and sanitize add-on services
+      const cleanedAddOnServices = Array.isArray(values.venue_add_on_services)
+        ? values.venue_add_on_services.map((item) => ({
+            title: item.title?.trim(),
+            services: Array.isArray(item.services) ? item.services : [],
+          }))
+        : [];
 
-        // Prepare data for edit mode
+      // Shared base data
+      const baseData = {
+        ...values,
+        latitude: coordinates.lat || 0,
+        longitude: coordinates.lng || 0,
+        capacity: values.capacity || 0,
+        indoor: values.indoor !== undefined ? values.indoor : false,
+        address: values.address,
+        description: values.description,
+        audios: Array.isArray(values.audios) ? values.audios : [],
+        screen_tech: Array.isArray(values.screen_tech)
+          ? values.screen_tech
+          : [],
+        accessbility_feature: Array.isArray(values.accessbility_feature)
+          ? values.accessbility_feature
+          : [],
+        venue_add_on_services: cleanedAddOnServices,
+      };
+
+      if (mode === "EDIT") {
         const data = {
-          ...values,
+          ...baseData,
           place_id: selectedPlace ?? venue.place?.id,
-          latitude: coordinates.lat || 0,
-          longitude: coordinates.lng || 0,
-          capacity: values.capacity || 0,
-          indoor: values.indoor !== undefined ? values.indoor : false,
-          address: values.address,
-          description: values.description,
-          audios: !values.audios ? [] : values.audios,
-          screen_tech: !values.screen_tech ? [] : values.screen_tech,
-          accessbility_feature: !values.accessbility_feature ? [] : values.accessbility_feature,
-          venue_add_on_services: !values.venue_add_on_services
-            ? []
-            : values.venue_add_on_services,
-          id: venue.id,
+          id: venue?.id,
         };
 
-        // Validate place
-        const resultAction = await dispatch(
-          validatePlace(selectedPlace ?? venue.place?.id)
-        );
-
+        const resultAction = await dispatch(validatePlace(data.place_id));
         if (validatePlace.fulfilled.match(resultAction)) {
           const response = resultAction.payload;
           if (response.message === "warning") {
@@ -198,42 +322,23 @@ const VenueFormFields = ({ mode, venue }) => {
             if (editVenue.fulfilled.match(editResultAction)) {
               dispatch(setSelectedVenue(data));
               dispatch(setLocationDialogVisible(true));
-            } else if (editVenue.rejected.match(editResultAction)) {
-              // Handle API validation errors
-              const error = editResultAction.error;
-              if (error.message) {
-                message.error(error.message); // Show error message to the user
-              }
+            } else {
+              message.error(editResultAction.error?.message || "Edit failed.");
             }
           }
         }
       } else {
-        console.log("Form values:", values);
-
+        // ADD MODE
         if (!selectedPlace) {
           message.error("Place ID is missing. Please select a place.");
           return;
         }
 
-        // Prepare data for add mode
         const formData = {
-          ...values,
+          ...baseData,
           place_id: selectedPlace,
-          latitude: coordinates.lat || 0,
-          longitude: coordinates.lng || 0,
-          capacity: values.capacity || 0,
-          indoor: values.indoor !== undefined ? values.indoor : false,
-          address: values.address,
-          description: values.description,
-          audios: !values.audios ? [] : values.audios,
-          screen_tech: !values.screen_tech ? [] : values.screen_tech,
-          accessbility_feature: !values.accessbility_feature ? [] : values.accessbility_feature,
-          venue_add_on_services: !values.venue_add_on_services
-            ? []
-            : values.venue_add_on_services,
         };
 
-        // Validate place
         const resultAction = await dispatch(validatePlace(selectedPlace));
 
         if (validatePlace.fulfilled.match(resultAction)) {
@@ -244,28 +349,23 @@ const VenueFormFields = ({ mode, venue }) => {
             dispatch(setSelectedSubmitItem(formData));
           }
         } else if (validatePlace.rejected.match(resultAction)) {
-          // Handle API validation errors
           const error = resultAction.error;
           if (error.message) {
-            message.error(error.message); // Show error message to the user
+            message.error(error.message);
           }
         }
       }
     } catch (errorInfo) {
       console.error("Validation Failed:", errorInfo);
 
-      // Handle form validation errors
       if (errorInfo.errorFields) {
-        message.error(`Please fill all the required fields`);
-        errorInfo.errorFields.forEach((field) => {
-          // message.error(`${field.name.join(".")}: ${field.errors.join(", ")}`);
-          // message.error(`Fill all the required fields`);
-        });
+        console.log(`Please fill all the required fields`);
       } else {
-        message.error("An unexpected error occurred. Please try again.");
+        console.log("An unexpected error occurred. Please try again.");
       }
     }
   };
+
   const handleWarningPagination = (page, size) => {
     console.log("------------------------");
 
