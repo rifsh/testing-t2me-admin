@@ -13,6 +13,10 @@ let isLoggingOut = false; // Flag to prevent logout loop
 const service = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000,
+  // headers: {
+  //   'Access-Control-Allow-Origin': '*',
+  //   'Content-Type': 'application/json',
+  // }
 });
 
 // Config
@@ -43,7 +47,7 @@ service.interceptors.request.use(
     if (config.params) {
       console.log("[REQUEST] Query Params:", config.params);
     }
-    config.withCredentials = true;
+    config.withCredentials = false;
     return config;
   },
   (error) => {

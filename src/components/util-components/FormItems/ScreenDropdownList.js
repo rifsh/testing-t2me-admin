@@ -13,6 +13,7 @@ const ScreenListForm = ({
   onSelect,
   mode,
   venueId,
+  disabled,
 }) => {
   const dispatch = useDispatch();
   const [filteredScreens, setFilteredScreens] = useState([]);
@@ -61,7 +62,7 @@ const ScreenListForm = ({
     <Form.Item name="screen_id" label={label} rules={rules}>
       <Select
         mode={mode}
-        disabled={!selectedVenue?.id}
+        disabled={disabled || !selectedVenue?.id}
         notFoundContent={
           loading ? (
             <span>Loading screens...</span>
