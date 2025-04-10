@@ -26,7 +26,7 @@ import WarningModal from 'components/util-components/ModalItems/WarningModal';
 
 const { Title } = Typography;
 
-const TheaterForm = ({ mode = MODE.ADD }) => {
+const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
     const dispatch = useDispatch();
     const [form] = Form.useForm();
     const { response, loading, submitMessage, singleResponse, message: theaterMessages, editData } = useSelector((state) => state.theater);
@@ -38,12 +38,12 @@ const TheaterForm = ({ mode = MODE.ADD }) => {
 
     useEffect(() => {
         if (mode === MODE.EDIT) {
-            dispatch(fetchTheaterByid({ theatre_id: 1 }))
+            dispatch(fetchTheaterByid({ theatre_id: theaterEditId }))
         }
         return () => {
 
         };
-    }, [dispatch, mode]);
+    }, [dispatch, mode, theaterEditId]);
 
     useEffect(() => {
         if (mode === MODE.EDIT && singleResponse) {
@@ -86,7 +86,6 @@ const TheaterForm = ({ mode = MODE.ADD }) => {
             const values = await form.validateFields();
             const formattedData = {
                 ...values,
-                id: 1,
                 place_id: selectedPlace,
                 venue_id: selectedVenue,
             }
@@ -106,16 +105,22 @@ const TheaterForm = ({ mode = MODE.ADD }) => {
                     }
                 }
             } else if (mode === MODE.EDIT) {
-                dispatch(setTheaterEditData(formattedData));
+                const editFormattedData = {
+                    ...values,
+                    id: theaterEditId,
+                    place_id: selectedPlace,
+                    venue_id: selectedVenue,
+                }
+                dispatch(setTheaterEditData(editFormattedData));
                 const resultAction = await dispatch(validateVenue(selectedVenue));
                 if (validateVenue.fulfilled.match(resultAction)) {
                     const response = resultAction.payload;
                     if (response.message === "warning") {
                         dispatch(setPlaceValidationDialogVisible(true));
                     } else if (response.data && response.data[0]?.validation_status) {
-                        const editResult = await dispatch(editTheater({ data: formattedData, action: ActionType.WARNING }))
+                        const editResult = await dispatch(editTheater({ data: editFormattedData, action: ActionType.WARNING }))
                         if (editTheater.fulfilled.match(editResult)) {
-                            dispatch(setScreenEditData(formattedData));
+                            dispatch(setScreenEditData(editFormattedData));
                             dispatch(setLocationDialogVisible(true));
                         } else if (editTheater.rejected.match(editResult)) {
                             const error = editResult.error;
@@ -364,7 +369,7 @@ const TheaterForm = ({ mode = MODE.ADD }) => {
             />
             <SubmitAndConfirmModal
                 responseData={response}
-                addFunction={mode === MODE.ADD ? createTheater : createTheater}
+                addFunction={mode === MODE.ADD ? createTheater : editTheater}
                 navigationPath={`${APP_PREFIX_PATH}/movie-theater/list`}
                 responseMessage={submitMessage}
             />

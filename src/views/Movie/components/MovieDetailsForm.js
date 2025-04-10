@@ -108,15 +108,15 @@ const MovieDetailsForm = ({ form }) => {
                 awards: omdbMovie.Awards !== "N/A" ? omdbMovie.Awards : '',
                 country: omdbMovie.Country !== "N/A" ? omdbMovie.Country : '',
                 Poster: omdbMovie.Poster && response.Poster !== "images"
-                ? [
-                    {
-                        uid: "-1",
-                        name: omdbMovie.Poster.split("/").pop(),
-                        status: "done",
-                        url: omdbMovie.Poster,
-                    },
-                ]
-                : [],
+                    ? [
+                        {
+                            uid: "-1",
+                            name: omdbMovie.Poster.split("/").pop(),
+                            status: "done",
+                            url: omdbMovie.Poster,
+                        },
+                    ]
+                    : [],
             });
         }
     }, [form, omdbMovie]);
@@ -351,6 +351,21 @@ const MovieDetailsForm = ({ form }) => {
                             />
                         </Form.Item>
                     </Col>
+                    <Col xs={24} sm={12}>
+                        <Form.Item
+                            label="Age Restriction"
+                            name="ageRestriction"
+                            rules={[{ required: true, message: 'Please select an age restriction' }]}
+                        >
+                            <Select placeholder="Select age restriction">
+                                <Option value="G">G - General Audience</Option>
+                                <Option value="PG">PG - Parental Guidance</Option>
+                                <Option value="PG-13">PG-13 - Parents Strongly Cautioned</Option>
+                                <Option value="R">R - Restricted</Option>
+                                <Option value="NC-17">NC-17 - Adults Only</Option>
+                            </Select>
+                        </Form.Item>
+                    </Col>
 
                     <Col xs={24}>
                         <Form.Item
@@ -362,19 +377,19 @@ const MovieDetailsForm = ({ form }) => {
                     </Col>
 
                     <Col xs={24}>
-                            <Form.Item
-                                name="Poster"
-                                label="Poster Image"
-                                valuePropName="value"
-                                getValueFromEvent={normFile}
-                                style={{ marginBottom: "0px", padding: "0px" }}
-                                extra={omdbMovie?.Poster && omdbMovie.Poster !== "N/A" ? "You can upload a custom poster or use the one provided by OMDB." : null}
-                            >
-                                <ResizedImgePicker
-                                    maxCount={1}
-                                    targetResolution={ThumbnailImageResolutions.EVENT}
-                                />
-                            </Form.Item>
+                        <Form.Item
+                            name="Poster"
+                            label="Poster Image"
+                            valuePropName="value"
+                            getValueFromEvent={normFile}
+                            style={{ marginBottom: "0px", padding: "0px" }}
+                            extra={omdbMovie?.Poster && omdbMovie.Poster !== "N/A" ? "You can upload a custom poster or use the one provided by OMDB." : null}
+                        >
+                            <ResizedImgePicker
+                                maxCount={1}
+                                targetResolution={ThumbnailImageResolutions.EVENT}
+                            />
+                        </Form.Item>
                     </Col>
                 </Row>
             </Card>

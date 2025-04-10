@@ -76,3 +76,25 @@ export const theaterMockData = [
         }
     }
 ];
+
+export const theaterCompanyDataSource = [
+    {
+        key: "1",
+        companyName: "CineWorld Group",
+        phone: "9876543210",
+        email: "info@cineworld.com",
+        website: "https://cineworld.com",
+        theaters: [
+            { id: 1, name: "CineWorld Abu Dhabi" },
+            { id: 2, name: "CineWorld Dubai Mall" },
+        ],
+    },
+    {
+        key: "2",
+        companyName: "MovieMax Corporation",
+        phone: "9988776655",
+        email: "support@moviemax.com",
+        website: "https://moviemax.com",
+        theaters: [{ id: 3, name: "MovieMax Marina" }],
+    },
+];
