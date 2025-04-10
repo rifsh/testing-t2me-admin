@@ -197,7 +197,15 @@ const superAdminDashBoardNavTree = [
             isGroupTitle: false,
             submenu: [
               {
-                key: "seat.list",
+                key: "movie.theater",
+                path: `${APP_PREFIX_PATH}/movie-theater/list`,
+                title: "sidenav.theater",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
+              },
+              {
+                key: "movie.seat",
                 path: `${APP_PREFIX_PATH}/seat/movie/list`,
                 title: "sidenav.seat",
                 icon: OrderedListOutlined,
