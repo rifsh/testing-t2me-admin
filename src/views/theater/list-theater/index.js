@@ -10,7 +10,7 @@ const Index = () => {
         <>
             <Card>
                 <Tabs defaultActiveKey="1">
-                    <Tabs.TabPane tab="Copanies" key="1">
+                    <Tabs.TabPane tab="Companies" key="1">
                         <>
                             <TheaterCompaniesList />
                         </>
