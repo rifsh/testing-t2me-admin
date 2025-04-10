@@ -89,7 +89,7 @@ const VenueFormFields = ({ mode, venue }) => {
     ValidateData,
     validationStatus,
     placeValidationDialogVisible,
-    message:  warningMessage,
+    message: warningMessage,
   } = useSelector((state) => state.locations);
 
   useEffect(() => {
@@ -111,26 +111,25 @@ const VenueFormFields = ({ mode, venue }) => {
           : venue.venue_add_on_services,
         banner_images: venue?.media
           ? venue?.media?.map((banner, index) => ({
-            uid: `-banner-${index}`,
-            name: banner?.media_url.split("/").pop(),
-            status: "done",
-            url: banner?.media_url,
-          }))
+              uid: `-banner-${index}`,
+              name: banner?.media_url.split("/").pop(),
+              status: "done",
+              url: banner?.media_url,
+            }))
           : [],
 
         thumbnail_image:
           venue.thumbnail_image && venue.thumbnail_image !== "images"
             ? [
-              {
-                uid: "-1",
-                name: venue.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: venue.thumbnail_image,
-              },
-            ]
+                {
+                  uid: "-1",
+                  name: venue.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: venue.thumbnail_image,
+                },
+              ]
             : [],
       });
-
     }
   }, [form, venue, mode]);
 
@@ -153,7 +152,6 @@ const VenueFormFields = ({ mode, venue }) => {
 
   const handleBeforeUpload = Utils.handleBeforeUpload;
 
-
   const onFinish = async () => {
     try {
       // Validate form fields
@@ -174,12 +172,13 @@ const VenueFormFields = ({ mode, venue }) => {
           description: values.description,
           audios: !values.audios ? [] : values.audios,
           screen_tech: !values.screen_tech ? [] : values.screen_tech,
-          accessbility_feature: !values.accessbility_feature ? [] : values.accessbility_feature,
-          venue_add_on_services: !values.venue_add_on_services
+          accessbility_feature: !values.accessbility_feature
             ? []
-            : values.venue_add_on_services,
+            : values.accessbility_feature,
+          venue_add_on_services: values.venue_add_on_services || [],
           id: venue.id,
         };
+console.log(data,'data');
 
         // Validate place
         const resultAction = await dispatch(
@@ -208,8 +207,6 @@ const VenueFormFields = ({ mode, venue }) => {
           }
         }
       } else {
-        console.log("Form values:", values);
-
         if (!selectedPlace) {
           message.error("Place ID is missing. Please select a place.");
           return;
@@ -227,11 +224,12 @@ const VenueFormFields = ({ mode, venue }) => {
           description: values.description,
           audios: !values.audios ? [] : values.audios,
           screen_tech: !values.screen_tech ? [] : values.screen_tech,
-          accessbility_feature: !values.accessbility_feature ? [] : values.accessbility_feature,
-          venue_add_on_services: !values.venue_add_on_services
+          accessbility_feature: !values.accessbility_feature
             ? []
-            : values.venue_add_on_services,
+            : values.accessbility_feature,
+          venue_add_on_services: values.venue_add_on_services || [],
         };
+        console.log("Form values:", formData);
 
         // Validate place
         const resultAction = await dispatch(validatePlace(selectedPlace));
@@ -266,6 +264,139 @@ const VenueFormFields = ({ mode, venue }) => {
       }
     }
   };
+
+
+
+// const onFinish = async () => {
+//   try {
+//     const values = await form.validateFields();
+
+//     if (mode === "EDIT") {
+//       console.log("ITS AN EDITTTTTTTTTTTTT");
+
+//       const data = {
+//         ...values,
+//         place_id: selectedPlace ?? venue.place?.id,
+//         latitude: coordinates.lat || 0,
+//         longitude: coordinates.lng || 0,
+//         capacity: values.capacity || 0,
+//         indoor: values.indoor !== undefined ? values.indoor : false,
+//         address: values.address,
+//         description: values.description,
+//         audios: values.audios || [],
+//         screen_tech: values.screen_tech || [],
+//         accessbility_feature: values.accessbility_feature || [],
+//         venue_add_on_services: values.venue_add_on_services || [],
+//         id: venue.id,
+//       };
+
+//       console.log(data, "data");
+
+//       const resultAction = await dispatch(
+//         validatePlace(selectedPlace ?? venue.place?.id)
+//       );
+
+//       if (validatePlace.fulfilled.match(resultAction)) {
+//         const response = resultAction.payload;
+
+//         if (response.message === "warning") {
+//           dispatch(setPlaceValidationDialogVisible(true));
+//         } else if (response.data && response.data[0]?.validation_status) {
+//           const editResultAction = await dispatch(
+//             editVenue({ data, action: ActionType.WARNING })
+//           );
+
+//           if (editVenue.fulfilled.match(editResultAction)) {
+//             dispatch(setSelectedVenue(data));
+//             dispatch(setLocationDialogVisible(true));
+//           } else if (editVenue.rejected.match(editResultAction)) {
+//             const error = editResultAction.error;
+//             if (error.message) {
+//               message.error(error.message);
+//             }
+//           }
+//         }
+//       }
+//     } else {
+//       // ADD MODE
+//       if (!selectedPlace) {
+//         message.error("Place ID is missing. Please select a place.");
+//         return;
+//       }
+
+//       const formDataRaw = {
+//         ...values,
+//         place_id: selectedPlace,
+//         latitude: coordinates.lat || 0,
+//         longitude: coordinates.lng || 0,
+//         capacity: values.capacity || 0,
+//         indoor: values.indoor !== undefined ? values.indoor : false,
+//         address: values.address,
+//         description: values.description,
+//         audios: values.audios || [],
+//         screen_tech: values.screen_tech || [],
+//         accessbility_feature: values.accessbility_feature || [],
+//         venue_add_on_services: values.venue_add_on_services || [],
+//       };
+
+//       console.log("Form values:", formDataRaw);
+
+//       // Prepare FormData
+//       const formData = new FormData();
+
+//       Object.entries(formDataRaw).forEach(([key, value]) => {
+//         if (
+//           ["audios", "screen_tech", "accessbility_feature", "venue_add_on_services"].includes(key)
+//         ) {
+//           formData.append(key, JSON.stringify(value));
+//         } else if (key === "banner_images" || key === "thumbnail_image") {
+//           if (Array.isArray(value)) {
+//             value.forEach((file) => {
+//               formData.append(key, file.originFileObj || file);
+//             });
+//           }
+//         } else if (value !== undefined && value !== null) {
+//           formData.append(key, value);
+//         }
+//       });
+
+//       // Debug payload
+//       for (let pair of formData.entries()) {
+//         console.log(pair[0] + ':', pair[1]);
+//       }
+
+//       const resultAction = await dispatch(validatePlace(selectedPlace));
+
+//       if (validatePlace.fulfilled.match(resultAction)) {
+//         const response = resultAction.payload;
+        
+//         if (response.message === "warning") {
+//           dispatch(setPlaceValidationDialogVisible(true));
+//         } else if (response.data && response.data[0]?.validation_status) {
+//           dispatch(setSelectedSubmitItem(formData));
+//         }
+//       } else if (validatePlace.rejected.match(resultAction)) {
+//         const error = resultAction.error;
+//         if (error.message) {
+//           message.error(error.message);
+//         }
+//       }
+//     }
+//   } catch (errorInfo) {
+//     console.error("Validation Failed:", errorInfo);
+
+//     if (errorInfo.errorFields) {
+//       message.error(`Please fill all the required fields`);
+//     } else {
+//       message.error("An unexpected error occurred. Please try again.");
+//     }
+//   }
+// };
+
+
+
+
+
   const handleWarningPagination = (page, size) => {
     console.log("------------------------");
 
@@ -316,22 +447,20 @@ const VenueFormFields = ({ mode, venue }) => {
             <h2 className="mb-3">
               {mode === "ADD" ? "Add Venue" : "Edit Venue"}
             </h2>
-
             <PlaceWithCountryForm
               form={form}
               label={"Place"}
               onSelect={handlePlaceSelect}
               rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
             />
-
+            place
             <Form.Item
               name="name"
               label="Venue"
               rules={[{ required: true, message: RulesMessageConstants.VENUE }]}
             >
-              <Input placeholder="Enter the venue name" />
+              <Input placeholder="Enter the venue name." />
             </Form.Item>
-
             <Form.Item
               name="address"
               label="Address"
@@ -370,7 +499,21 @@ const VenueFormFields = ({ mode, venue }) => {
                 </Form.Item>
               </Col>
             </Row>
-
+            <Form.Item
+              noStyle
+              shouldUpdate={(prevValues, currentValues) =>
+                prevValues.indoor !== currentValues.indoor
+              }
+            >
+              {({ getFieldValue }) => {
+                return getFieldValue("indoor") === true ? (
+                  <div className="venue-features-container">
+                    <h4>Venue Technology & Features</h4>
+                    <VenueTechnology form={form} />
+                  </div>
+                ) : null;
+              }}
+            </Form.Item>
             <Form.Item
               name="description"
               label="Description"
@@ -394,7 +537,6 @@ const VenueFormFields = ({ mode, venue }) => {
                 form={form}
               />
             </Form.Item>
-
             <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
@@ -523,6 +665,7 @@ const VenueFormFields = ({ mode, venue }) => {
               </Form.List>
             </Form.Item>
           </Card>
+
           <Form.Item
             name="latitude"
             label="Latitude"

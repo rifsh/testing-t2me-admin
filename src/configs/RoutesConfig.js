@@ -138,6 +138,34 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/Movie/Schedule/schedule-list"))
   },
   {
+    key: "dine.list",
+    path: `${APP_PREFIX_PATH}/dine/list`,
+    component: React.lazy(() => import("views/dine/list-dine"))
+  },
+  {
+    key: "dine.restaurant",
+    path: `${APP_PREFIX_PATH}/restaurant/list`,
+    component: React.lazy(() => import("views/dine/list-restaurant"))
+  },
+  {
+    key: "dine.add",
+    path: `${APP_PREFIX_PATH}/dine/add`,
+    component: React.lazy(() => import("views/dine/add-dine"))
+  },
+  {
+    key: "restaurant.add",
+    path: `${APP_PREFIX_PATH}/restaurant/add`,
+    component: React.lazy(() => import("views/dine/add-restaurant"))
+  },
+  {
+    key: "dine.schedule",
+    path: `${APP_PREFIX_PATH}/schedule/list`,
+    component: React.lazy(() => import("views/dine/Schedule/schedule-list"))
+  },
+  {
+    key: "dine.details",
+    path: `${APP_PREFIX_PATH}/movie-schedule/list`,
+    component: React.lazy(() => import("views/Movie/Schedule/schedule-list")),
     key: "movie.theater",
     path: `${APP_PREFIX_PATH}/movie-theater/list`,
     component: React.lazy(() => import("views/theater/list-theater"))
