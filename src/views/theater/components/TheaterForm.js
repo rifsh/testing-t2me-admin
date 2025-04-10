@@ -87,7 +87,6 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
             const formattedData = {
                 ...values,
                 place_id: selectedPlace,
-                venue_id: selectedVenue,
             }
             if (mode === MODE.ADD) {
                 const resultAction = await dispatch(validateVenue(values.venue_id));
