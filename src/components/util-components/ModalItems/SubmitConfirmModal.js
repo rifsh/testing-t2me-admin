@@ -28,6 +28,7 @@ export const SubmitAndConfirmModal = ({
 
   useEffect(() => {
     if (selectedSubmitItem) {
+      console.log(selectedSubmitItem);
       dispatch(
         addFunction({ data: selectedSubmitItem, action: ActionType.SUBMIT })
       ).then((result) => {

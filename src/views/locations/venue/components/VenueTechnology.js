@@ -18,14 +18,14 @@ const VenueTechnology = ({ form }) => {
 
     return (
         <>
-            <Tabs defaultActiveKey="screen" style={{ marginBottom: '24px' }}>
+            <Tabs defaultActiveKey="screen" className='w-full'>
                 <Tabs.TabPane tab={<span><DesktopOutlined /> Screen Technology</span>} key="screen" forceRender>
                     <Form.List name="screen_tech">
                         {(fields, { add, remove }) => (
                             <>
                                 {fields.map(({ key, name, ...restField }) => (
                                     <Row gutter={[16, 8]} key={key} style={{ marginBottom: '8px' }}>
-                                        <Col span={10}>
+                                        <Col xs={24} md={10}>
                                             <Form.Item
                                                 {...restField}
                                                 name={[name, 'name']}
@@ -34,7 +34,7 @@ const VenueTechnology = ({ form }) => {
                                                 <Input placeholder="Enter screen technology (e.g., 4K Projection)" />
                                             </Form.Item>
                                         </Col>
-                                        <Col span={10}>
+                                        <Col xs={24} md={10}>
                                             <Form.Item
                                                 {...restField}
                                                 name={[name, 'description']}
@@ -69,7 +69,7 @@ const VenueTechnology = ({ form }) => {
                             <>
                                 {fields.map(({ key, name, ...restField }) => (
                                     <Row gutter={[16, 8]} key={key} style={{ marginBottom: '8px' }}>
-                                        <Col span={10}>
+                                        <Col xs={24} md={10}>
                                             <Form.Item
                                                 {...restField}
                                                 name={[name, 'name']}
@@ -78,7 +78,7 @@ const VenueTechnology = ({ form }) => {
                                                 <Input placeholder="Enter audio technology (e.g., Dolby Atmos)" />
                                             </Form.Item>
                                         </Col>
-                                        <Col span={10}>
+                                        <Col xs={24} md={10}>
                                             <Form.Item
                                                 {...restField}
                                                 name={[name, 'description']}
@@ -113,7 +113,7 @@ const VenueTechnology = ({ form }) => {
                             <>
                                 {fields.map(({ key, name, ...restField }) => (
                                     <Row gutter={[16, 8]} key={key} style={{ marginBottom: '8px' }}>
-                                        <Col span={10}>
+                                        <Col xs={24} md={10}>
                                             <Form.Item
                                                 {...restField}
                                                 name={[name, 'name']}
@@ -122,7 +122,7 @@ const VenueTechnology = ({ form }) => {
                                                 <Input placeholder="Enter accessibility feature (e.g., Wheelchair Access)" />
                                             </Form.Item>
                                         </Col>
-                                        <Col span={10}>
+                                        <Col xs={24} md={10}>
                                             <Form.Item
                                                 {...restField}
                                                 name={[name, 'description']}

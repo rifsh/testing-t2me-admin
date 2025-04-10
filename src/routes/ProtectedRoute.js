@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux';
 import { 
@@ -8,15 +8,23 @@ import {
 } from 'configs/AppConfig'
 
 const ProtectedRoute = () => {
-	
-	const { token } = useSelector(state => state.auth)
-	const location = useLocation()
-
+	const { token } = useSelector(state => state.auth);
+	const location = useLocation();
+  
+	useEffect(() => {
+	  // Add logging to debug the flow
+	  console.log("ProtectedRoute check - Token exists:", !!token);
+	}, [token]);
+  
 	if (!token) {
-		return <Navigate to={`${AUTH_PREFIX_PATH}${UNAUTHENTICATED_ENTRY}`} replace />;
+	  // Save the current location for later redirect if needed
+	  const redirectUrl = location.pathname + location.search;
+	  localStorage.setItem(REDIRECT_URL_KEY, redirectUrl);
+	  
+	  return <Navigate to={`${AUTH_PREFIX_PATH}${UNAUTHENTICATED_ENTRY}`} replace />;
 	}
-
-	return <Outlet />
-}
+  
+	return <Outlet />;
+  };
 
 export default ProtectedRoute

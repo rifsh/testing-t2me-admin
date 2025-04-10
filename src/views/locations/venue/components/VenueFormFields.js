@@ -156,7 +156,7 @@ const VenueFormFields = ({ mode, venue }) => {
     try {
       // Validate form fields
       const values = await form.validateFields();
-
+      
       if (mode === "EDIT") {
         console.log("ITS AN EDITTTTTTTTTTTTT");
 

@@ -103,7 +103,14 @@ export const ApiConstant = {
   EVENT_ORGANIZER_EVENT_UPDATE_RECHANGES:
     "/api/v1/events/secured/organizer_event_secondary_update",
 
-  //  SCREEN API ENDPOINTS
+  // THEATER API ENDPOINTS
+  ADD_THEATER_URL: "/api/v1/moies/secured/theatre/create",
+  EDIT_THEATER_URL: "/api/v1/moies/secured/theatre/edit",
+  EDIT_THEATER_STATUS_URL: "/api/v1/moies/secured/theatre/edit_status",
+  GET_THEATER_URL: "/api/v1/moies/secured/theatre/all",
+  GET_THEATERBYID_URL: "/api/v1/moies/secured/theatre/single",
+
+  //SCREEN API ENDPOINTS
   ADD_SCREEN_URL: "/api/v1/moies/secured/screens/creation",
   EDIT_SCREEN_URL: "/api/v1/moies/secured/screens/edit",
   EDIT_SCREEN_STATUS_URL: "/api/v1/moies/secured/screens/edit_status",

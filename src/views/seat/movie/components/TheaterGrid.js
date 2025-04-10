@@ -103,12 +103,10 @@ const TheaterGrid = ({ isPreviewMode, showHiddenSeats }) => {
   const seatSize = getSeatSizeClass();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+    <Card>
       <div className="relative overflow-auto p-4" style={{ height: "70vh" }}>
-        {/* Screen */}
         <ScreenComponent />
 
-        {/* Seats Grid */}
         <div
           className="flex flex-col items-center space-y-2 min-w-max"
           ref={gridRef}
@@ -120,12 +118,10 @@ const TheaterGrid = ({ isPreviewMode, showHiddenSeats }) => {
           }}
         >
           {seats.map((row, rowIndex) => {
-            // Check if all seats in this row are invisible
             const allInvisible = row.every((seat) => !seat.isVisible);
 
             return (
               <div key={rowIndex} className="flex items-center">
-                {/* Row label */}
                 <div
                   className="flex items-center justify-center font-medium text-gray-600 mr-2"
                   style={{ width: "24px" }}
@@ -170,7 +166,7 @@ const TheaterGrid = ({ isPreviewMode, showHiddenSeats }) => {
         {/* Legend */}
         {isPreviewMode && <SeatTypeLegend seatTypes={seatTypes} />}
       </div>
-    </div>
+    </Card>
   );
 };
 
