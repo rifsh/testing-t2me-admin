@@ -149,12 +149,12 @@ export const protectedRoutes = [
   },
   {
     key: "movie.theater",
-    path: `${APP_PREFIX_PATH}/movie-theater/edit/:movieId`,
+    path: `${APP_PREFIX_PATH}/movie-theater/edit/:theaterId`,
     component: React.lazy(() => import("views/theater/edit-theater"))
   },
   {
     key: "movie.theater",
-    path: `${APP_PREFIX_PATH}/movie-theater/detail/:movieId`,
+    path: `${APP_PREFIX_PATH}/movie-theater/detail/:theaterId`,
     component: React.lazy(() => import("views/theater/details-theater"))
   },
   {

@@ -47,5 +47,14 @@ TheaterService.editTheater = (data, action) => {
     });
 }
 
+TheaterService.editTheaterStatus = (data, action) => {
+    const encodedAction = encodeURIComponent(handleAction(action));
+    return fetch({
+        url: `${ApiConstant.EDIT_THEATER_STATUS_URL}?theatre_id=${data.id}&action=${encodedAction}`,
+        method: "put",
+        data: data
+    });
+}
+
 
 export default TheaterService;

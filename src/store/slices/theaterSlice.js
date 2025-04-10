@@ -8,6 +8,7 @@ const initialState = {
     editData: [],
     singleResponse: null,
     submitMessage: null,
+    editable_status: null,
     message: null,
     pagination: { size: 10, page: 1 },
     error: null,
@@ -59,11 +60,12 @@ export const editTheater = createAsyncThunk(
 );
 export const editTheaterStatus = createAsyncThunk(
     "cast/editTheaterStatus",
-    async ({ data, action }, { rejectWithValue }) => {
+    async ({ data, action, pageData }, { rejectWithValue }) => {
         try {
-
+            const response = await TheaterService.editTheaterStatus(data, action, pageData);
+            return response;
         } catch (error) {
-
+            return rejectWithValue(error.response?.data || "Error creating screen");
         }
     }
 );
@@ -74,6 +76,13 @@ const theaterSlice = createSlice({
     reducers: {
         setTheaterEditData(state, action) {
             state.editData = action.payload;
+        },
+        setTheaterEditId(state, action) {
+            state.editId = action.payload;
+        },
+        setCleraAllData(state) {
+            state.response = null;
+            state.singleResponse = null;
         }
     },
     extraReducers: (builder) => {
@@ -126,9 +135,24 @@ const theaterSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
+            .addCase(editTheaterStatus.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(editTheaterStatus.fulfilled, (state, { payload }) => {
+                state.loading = false;
+                state.response = payload.data;
+                if (payload.status) {
+                    state.message = payload.status.message;
+                    state.editable_status = payload.status?.editable_status;
+                }
+            })
+            .addCase(editTheaterStatus.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
     },
 });
 
-export const { setTheaterEditData } = theaterSlice.actions;
+export const { setTheaterEditData, setTheaterEditId, setCleraAllData } = theaterSlice.actions;
 
 export default theaterSlice.reducer;

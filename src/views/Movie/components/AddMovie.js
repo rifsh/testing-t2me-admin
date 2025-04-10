@@ -83,7 +83,7 @@ const AddMovie = ({ mode = "ADD" }) => {
 
     return (
         <Form form={form} layout="vertical">
-            <Row gutter={16}>
+            {/* <Row gutter={16}>
                 <Col xs={24} sm={24} md={24}>
                     <Card
                         title={
@@ -121,45 +121,41 @@ const AddMovie = ({ mode = "ADD" }) => {
                         />
                     </Card>
                 </Col>
-            </Row>
+            </Row> */}
 
-            {(!selectedFields.selectedVenue || !selectedFields.selectedScreen) && (
+            {/* {(!selectedFields.selectedVenue || !selectedFields.selectedScreen) && (
                 <Alert
                     message="Venue and screen Required"
                     description="Please select a venue and screen to configure the movie."
                     type="info"
                     showIcon
                 />
-            )}
+            )} */}
 
 
             <div style={{ marginTop: 16 }}>
-                <Collapse in={!!selectedFields.selectedScreen}>
-                    <Col xs={24} sm={24} md={24}>
-                        <Card
-                            title={<Title level={4}>Movie Information</Title>}
-                            bordered
-                            className="movie-information-card"
+                <Col xs={24} sm={24} md={24}>
+                    <Card
+                        title={<Title level={4}>Movie Information</Title>}
+                        bordered
+                        className="movie-information-card"
+                    >
+                        <MovieForm form={form} theater_id={form.getFieldValue('theater_id')} />
+                    </Card>
+                </Col>
+                <Row justify="end" style={{ marginTop: '20px' }}>
+                    <Space>
+                        <DiscardButton form={form} />
+                        <Button
+                            type="primary"
+                            onClick={handleSubmit}
+                        // disabled={!form.getFieldValue('venue_id') || isLoading}
+                        // loading={isLoading}
                         >
-                            {selectedFields.selectedScreen &&
-                                <MovieForm form={form} theater_id={form.getFieldValue('theater_id')} />
-                            }
-                        </Card>
-                    </Col>
-                    <Row justify="end" style={{ marginTop: '20px' }}>
-                        <Space>
-                            <DiscardButton form={form} />
-                            <Button
-                                type="primary"
-                                onClick={handleSubmit}
-                            // disabled={!form.getFieldValue('venue_id') || isLoading}
-                            // loading={isLoading}
-                            >
-                                Submit
-                            </Button>
-                        </Space>
-                    </Row>
-                </Collapse>
+                            Submit
+                        </Button>
+                    </Space>
+                </Row>
             </div>
         </Form>
     );
