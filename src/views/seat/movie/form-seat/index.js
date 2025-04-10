@@ -255,7 +255,7 @@ const SeatForm = (props) => {
               {
                 label: "Screen Selection",
                 key: "1",
-                children: <MovieSeatDetailForm form={form} />,
+                children: <MovieSeatDetailForm form={form} mode={mode} />,
               },
               {
                 label: "Seat Layout",
