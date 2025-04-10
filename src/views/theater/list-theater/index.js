@@ -1,6 +1,5 @@
-import { AndroidOutlined, AppleOutlined } from '@ant-design/icons';
 import { Card, Tabs } from 'antd'
-import React, { useEffect } from 'react'
+import React from 'react'
 import TheaterList from '../components/TheaterList';
 import TheaterCompaniesList from '../components/TheaterCompaniesList';
 
