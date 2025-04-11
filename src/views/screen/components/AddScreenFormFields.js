@@ -16,6 +16,7 @@ import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import LoadingOverlay from 'components/util-components/Loader';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import { ActionType } from 'utils/api/warning-submit-util';
+import TheaterListForm from 'components/util-components/FormItems/TheaterListForm';
 
 const { Title, Text } = Typography;
 
@@ -32,7 +33,6 @@ const AddScreenFormFields = ({ mode, screenId }) => {
 
     const { response, singleResponse, message: screenMessage, loading, editResponse, editBodyData } = useSelector((state) => state.screen);
     const { dialogVisible, singleVenues } = useSelector((state) => state.locations);
-    // const { filteredTickets, loading: ticketsLoading } = useSelector((state) => state.tickets);
 
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
@@ -266,6 +266,11 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                     label="Venue"
                                     rules={rules.venue}
                                     onSelect={(value) => handleVenueSelect(value)}
+                                />
+                            </Col>
+                            <Col span={24}>
+                                <TheaterListForm
+                                form={form}
                                 />
                             </Col>
                         </Row>

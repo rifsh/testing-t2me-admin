@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Typography, Input, Button, Card, Row, Col, Divider, Space, message } from 'antd';
+import { Form, Typography, Input, Button, Card, Row, Col, Divider, Space, message, Select, Avatar } from 'antd';
 import {
     PhoneOutlined,
     GlobalOutlined,
@@ -17,12 +17,15 @@ import ResizedImgePicker from 'components/util-components/Image/ResizedImgePicke
 import { ThumbnailImageResolutions } from 'constants/SupportFileConstants';
 import { setSelectedSubmitItem } from 'store/slices/modalSlice';
 import { SubmitAndConfirmModal } from 'components/util-components/ModalItems/SubmitConfirmModal';
-import { createTheater, editTheater, fetchTheaterByid, setTheaterEditData } from 'store/slices/theaterSlice';
+import { createTheater, editTheater, fetchTheaterByid, setActiveTab, setTheaterEditData } from 'store/slices/theaterSlice';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import LoadingOverlay from 'components/util-components/Loader';
 import { ActionType } from 'utils/api/warning-submit-util';
 import { setScreenEditData } from 'store/slices/screenSlice';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
+import { fetchTheaterCompanies } from 'store/slices/theaterCompanySlice';
+import { Option } from 'antd/es/mentions';
+import TheaterCompanyList from 'components/util-components/FormItems/TheaterCompanyList';
 
 const { Title } = Typography;
 
@@ -31,17 +34,20 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
     const [form] = Form.useForm();
     const { response, loading, submitMessage, singleResponse, message: theaterMessages, editData } = useSelector((state) => state.theater);
     const { selectedPlace, selectedVenue, dialogVisible } = useSelector((state) => state.locations);
+    const { response: theaterCompany, loading: companyLoading } = useSelector((state) => state.theaterCompany);
+
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
         venue: [{ required: true, message: "Please select a venue" }],
     };
 
     useEffect(() => {
+        dispatch(fetchTheaterCompanies({}))
         if (mode === MODE.EDIT) {
             dispatch(fetchTheaterByid({ theatre_id: theaterEditId }))
         }
         return () => {
-
+            dispatch(setActiveTab('theater'));
         };
     }, [dispatch, mode, theaterEditId]);
 
@@ -84,6 +90,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
         event.preventDefault();
         try {
             const values = await form.validateFields();
+            console.log(values)
             const formattedData = {
                 ...values,
                 place_id: selectedPlace,
@@ -148,6 +155,11 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
             }
         }
     };
+
+    const handleCelebritySelect = (value, option) => {
+        console.log(value)
+    };
+
 
     const normFile = (e) => {
         if (Array.isArray(e)) {
@@ -253,6 +265,18 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                         <Row gutter={24}>
                             <Col xs={24} md={12}>
                                 <Form.Item
+                                    name="company"
+                                    label="Theater Company"
+                                    rules={[{ required: true, message: 'Please select a company' }]}
+                                >
+                                    <TheaterCompanyList
+                                        // value={editingMember.actorId}
+                                        onChange={handleCelebritySelect}
+                                    />
+                                </Form.Item>
+                            </Col>
+                            <Col xs={24} md={12}>
+                                <Form.Item
                                     label="Theater Name"
                                     name="name"
                                     rules={[{ required: true, message: 'Please input theater name!' }]}
@@ -263,6 +287,9 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                                     />
                                 </Form.Item>
                             </Col>
+                        </Row>
+
+                        <Row gutter={24}>
                             <Col xs={24} md={12}>
                                 <Form.Item
                                     label="Phone Number"
@@ -276,10 +303,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                                     />
                                 </Form.Item>
                             </Col>
-                        </Row>
-
-                        <Row gutter={24}>
-                            <Col xs={24} md={24}>
+                            <Col xs={24} md={12}>
                                 <Form.Item
                                     label="Website"
                                     name="website"

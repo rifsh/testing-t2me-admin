@@ -23,11 +23,11 @@ import StatusSubmitAndConfirmModal from 'components/util-components/ModalItems/S
 const TheaterList = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { response, loading, pagination, editId, message: theaterMessage, editable_status } = useSelector((state) => state.theater);
+    const { response, loading, pagination, editId, message: theaterMessage, editable_status, editLoading, statusEditresponse } = useSelector((state) => state.theater);
     const { dialogVisible, modalLoading } = useSelector((state) => state.locations);
 
     useEffect(() => {
-        dispatch(fetchTheaters(DEFAULT_PAGE_SIZE))
+        dispatch(fetchTheaters(DEFAULT_PAGE_SIZE));
     }, [dispatch])
 
 
@@ -143,7 +143,10 @@ const TheaterList = () => {
                     <Button
                         type="primary"
                         icon={<FormOutlined />}
-                        onClick={() => navigate(`${APP_PREFIX_PATH}/movie-theater/add`)}
+                        onClick={() => {
+                            navigate(`${APP_PREFIX_PATH}/movie-theater/add`)
+                        }
+                        }
                     >
                         Add Theater
                     </Button>
@@ -182,20 +185,20 @@ const TheaterList = () => {
                 editFunction={editTheaterStatus}
                 getAllFunction={(pageData) => fetchTheaters(pageData)}
                 pageData={{ page: 1, size: 10 }}
-                tableConfig={{
-                    title: "Active Schedules",
-                    dataKey: "items",
-                }}
+                // tableConfig={{
+                //     title: "Active Schedules",
+                //     dataKey: "items",
+                // }}
                 editable_status={editable_status}
-                responseData={response}
+                responseData={statusEditresponse}
                 // pagination={warningPagination}
-                loading={loading}
+                loading={editLoading}
             />
 
             <StatusSubmitAndConfirmModal
                 editFunction={editTheaterStatus}
                 getAllFunction={fetchTheaters}
-                responseData={response}
+                responseData={statusEditresponse}
                 responseMessage={theaterMessage}
                 pageData={DEFAULT_PAGE_SIZE}
                 onSubmitMessage={TextConstants.StatusUpdatedSuccess}

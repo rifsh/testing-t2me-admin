@@ -22,7 +22,7 @@ const Index = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [filteredData, setFilteredData] = useState([]);
-    const { response, loading, pagination, editId, editable_status, message } = useSelector((state => state.cast));
+    const { response, loading, pagination, editId, editable_status, message, editResponse } = useSelector((state => state.cast));
     const {
         dialogVisible,
         modalLoading,
@@ -235,19 +235,19 @@ const Index = () => {
                 responseMessage={message}
                 editFunction={editPersonalityStatus}
                 getAllFunction={(pageData) => fetchPersonalitiesData(pageData)}
-                tableConfig={{
-                    title: "Active Schedules",
-                    dataKey: "items",
-                }}
+                // tableConfig={{
+                //     title: "Active Schedules",
+                //     dataKey: "items",
+                // }}
                 editable_status={editable_status}
-                responseData={response}
+                responseData={editResponse}
                 loading={loading}
             />
 
             <StatusSubmitAndConfirmModal
                 editFunction={editPersonalityStatus}
                 getAllFunction={fetchPersonalitiesData}
-                responseData={response}
+                responseData={editResponse}
                 responseMessage={message}
                 pageData={DEFAULT_PAGE_SIZE}
                 onSubmitMessage={TextConstants.StatusUpdatedSuccess}

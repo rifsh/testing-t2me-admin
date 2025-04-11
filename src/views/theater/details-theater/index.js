@@ -4,33 +4,20 @@ import {
     Typography,
     Tag,
     Divider,
-    Carousel,
     Button,
     Tabs,
-    Rate,
-    Space,
-    Badge,
-    Avatar,
-    List,
     Collapse,
-    Calendar,
-    Tooltip,
-    Modal
+    Modal,
+    Col
 } from 'antd';
 import {
     EnvironmentOutlined,
     PhoneOutlined,
-    MailOutlined,
     GlobalOutlined,
-    ClockCircleOutlined,
     CarOutlined,
     WifiOutlined,
     CoffeeOutlined,
-    ShareAltOutlined,
-    HeartOutlined,
-    HeartFilled,
     StarOutlined,
-    CalendarOutlined,
     InfoCircleOutlined,
     PictureOutlined,
     LayoutOutlined
@@ -39,6 +26,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchTheaterByid, setCleraAllData } from 'store/slices/theaterSlice';
 import { useParams } from 'react-router-dom';
 import LoadingOverlay from 'components/util-components/Loader';
+import Technology from 'components/shared-components/Theater/Technology';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -135,7 +123,9 @@ const Index = () => {
                             </Title>
                             {singleResponse?.screen_tech?.length > 0 &&
                                 <div className="flex items-center mt-2">
-                                    <Tag color="blue">{theater.type}</Tag>
+                                    {singleResponse?.screen_tech.map((data, index) => (
+                                        <Tag key={index} color="blue">{data.name}</Tag>
+                                    ))}
                                 </div>
                             }
                             <div className="flex items-center mt-3">
@@ -173,7 +163,7 @@ const Index = () => {
                             <Divider />
 
                             <Title level={4}>Theater Information</Title>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="">
                                 <div>
                                     <div className="mb-4">
                                         <Title level={5} className="mb-2 flex items-center">
@@ -185,18 +175,21 @@ const Index = () => {
                                         </ul>
                                     </div>
 
-                                    <div>
-                                        <Title level={5} className="mb-2 flex items-center">
-                                            <StarOutlined className="mr-2 text-blue-500" /> Screen Types
-                                        </Title>
-                                        <div className="flex flex-wrap gap-2">
-                                            {theater.screenTypes.map((type, index) => (
-                                                <Tag key={index} color="blue">{type}</Tag>
-                                            ))}
-                                        </div>
+                                    <div className="w-full rounded-md p-2">
+                                        <Card
+                                            title={
+                                                <span style={{ color: "#1890ff" }}>
+                                                    Theater Technology & Features
+                                                </span>
+                                            }
+                                            bordered={false}
+                                        >
+                                            <Technology teachData={singleResponse} />
+                                        </Card>
                                     </div>
                                 </div>
                             </div>
+
                         </TabPane>
                     </Tabs>
                 </div>

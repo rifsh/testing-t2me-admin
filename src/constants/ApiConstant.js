@@ -106,9 +106,16 @@ export const ApiConstant = {
   // THEATER API ENDPOINTS
   ADD_THEATER_URL: "/api/v1/moies/secured/theatre/create",
   EDIT_THEATER_URL: "/api/v1/moies/secured/theatre/edit",
-  EDIT_THEATER_STATUS_URL: "/api/v1/moies/secured/theatre/edit_status",
+  EDIT_THEATER_STATUS_URL: "/api/v1/moies/secured/theatre/edit/status",
   GET_THEATER_URL: "/api/v1/moies/secured/theatre/all",
   GET_THEATERBYID_URL: "/api/v1/moies/secured/theatre/single",
+
+  // THEATER_COMPANY API ENDPOINTS
+  ADD_THEATER_COMPANY_URL: "/api/v1/moies/secured/theatre_company/create",
+  EDIT_THEATER_COMPANY_URL: "/api/v1/moies/secured/theatre_company/edit",
+  EDIT_THEATER_COMPANY_STATUS_URL: "/api/v1/moies/secured/theatre_company/status",
+  GET_THEATER_COMPANY_URL: "/api/v1/moies/secured/theatre_company/all",
+  GET_THEATER_COMPANY_BYID_URL: "/api/v1/moies/secured/theatre_company/single",
 
   //SCREEN API ENDPOINTS
   ADD_SCREEN_URL: "/api/v1/moies/secured/screens/creation",

@@ -11,29 +11,29 @@ import {
 const { TabPane } = Tabs;
 const { Title, Paragraph } = Typography;
 
-const VenueTechnologyDisplay = ({ venueData }) => {
+const Technology = ({ teachData }) => {
     const data = {
         screenTech:
-            venueData?.screen_tech?.map((tech) => ({
+            teachData?.screen_tech?.map((tech) => ({
                 name: tech.name,
                 description: tech.description,
             })) || [],
         audioTech:
-            venueData?.audio?.map((audio) => ({
+            teachData?.audio?.map((audio) => ({
                 name: audio.name,
                 description: audio.description,
             })) || [],
         accessibilityFeatures:
-            venueData?.accessibility?.map((feature) => ({
+            teachData?.accessibility?.map((feature) => ({
                 name: feature.name,
                 description: feature.description,
             })) || [],
     };
 
     useEffect(() => {
-        console.log("Venue Data:", venueData);
+        console.log("Venue Data:", teachData);
         console.log("Processed Data:", data);
-    }, [venueData]);
+    }, [teachData]);
 
     const getIcon = (tabName) => {
         const icons = {
@@ -130,4 +130,4 @@ const VenueTechnologyDisplay = ({ venueData }) => {
     );
 };
 
-export default VenueTechnologyDisplay;
+export default Technology;
