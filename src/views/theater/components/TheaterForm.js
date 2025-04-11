@@ -17,7 +17,7 @@ import ResizedImgePicker from 'components/util-components/Image/ResizedImgePicke
 import { ThumbnailImageResolutions } from 'constants/SupportFileConstants';
 import { setSelectedSubmitItem } from 'store/slices/modalSlice';
 import { SubmitAndConfirmModal } from 'components/util-components/ModalItems/SubmitConfirmModal';
-import { createTheater, editTheater, fetchTheaterByid, setTheaterEditData } from 'store/slices/theaterSlice';
+import { createTheater, editTheater, fetchTheaterByid, setActiveTab, setTheaterEditData } from 'store/slices/theaterSlice';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import LoadingOverlay from 'components/util-components/Loader';
 import { ActionType } from 'utils/api/warning-submit-util';
@@ -41,7 +41,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
             dispatch(fetchTheaterByid({ theatre_id: theaterEditId }))
         }
         return () => {
-
+            dispatch(setActiveTab('theater'));
         };
     }, [dispatch, mode, theaterEditId]);
 

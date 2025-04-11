@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import TheaterService from "services/theaterService";
 
 const initialState = {
+    activeTab: "Companies",
     loading: false,
     editLoading: false,
     response: null,
@@ -87,9 +88,9 @@ const theaterSlice = createSlice({
             state.response = null;
             state.singleResponse = null;
         },
-        setFormType(state, action) {
-            state.formType = action.payload;
-        }
+        setActiveTab: (state, action) => {
+            state.activeTab = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -159,6 +160,6 @@ const theaterSlice = createSlice({
     },
 });
 
-export const { setTheaterEditData, setTheaterEditId, setCleraAllData, setFormType } = theaterSlice.actions;
+export const { setTheaterEditData, setTheaterEditId, setCleraAllData, setActiveTab } = theaterSlice.actions;
 
 export default theaterSlice.reducer;

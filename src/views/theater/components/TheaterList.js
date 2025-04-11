@@ -27,7 +27,7 @@ const TheaterList = () => {
     const { dialogVisible, modalLoading } = useSelector((state) => state.locations);
 
     useEffect(() => {
-        dispatch(fetchTheaters(DEFAULT_PAGE_SIZE))
+        dispatch(fetchTheaters(DEFAULT_PAGE_SIZE));
     }, [dispatch])
 
 
