@@ -279,7 +279,7 @@ const superAdminDashBoardNavTree = [
              
               {
                 key: "dine.schedule",
-                path: `${APP_PREFIX_PATH}/schedule/list`,
+                path: `${APP_PREFIX_PATH}dine/schedule/list`,
                 title: "sidenav.dine.schedule",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
