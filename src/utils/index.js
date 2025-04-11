@@ -624,6 +624,7 @@ class Utils {
           formData.append(key, JSON.stringify(serializedServices));
           return;
         }
+
         if (key === "venue_add_on_services") {
           if (!value || !Array.isArray(value)) {
             formData.append(key, JSON.stringify([]));
@@ -631,11 +632,16 @@ class Utils {
           }
 
           const serializedServices = value
-            .filter((service) => service.title && Array.isArray(service.add))
+            .filter(
+              (service) => service.title && Array.isArray(service.services)
+            )
             .map((service) => ({
               title: service.title,
-              services: service.add,
+              services: service.services,
             }));
+
+          // Log to verify serialized data
+          console.log("Serialized Add-On Services:", serializedServices);
 
           formData.append(key, JSON.stringify(serializedServices));
           return;
@@ -970,17 +976,17 @@ class Utils {
   static updateUsedSeatTypes = (seats, allSeatTypes) => {
     // Collect all unique seat type IDs being used
     const usedTypeIds = new Set();
-    
-    seats.forEach(row => {
-      row.forEach(seat => {
+
+    seats.forEach((row) => {
+      row.forEach((seat) => {
         if (seat.isVisible) {
           usedTypeIds.add(seat.type);
         }
       });
     });
-    
+
     // Filter all seat types to only include those being used
-    return allSeatTypes.filter(type => usedTypeIds.has(type.id));
+    return allSeatTypes.filter((type) => usedTypeIds.has(type.id));
   };
 }
 
