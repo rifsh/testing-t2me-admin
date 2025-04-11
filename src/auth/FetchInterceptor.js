@@ -47,7 +47,7 @@ service.interceptors.request.use(
     if (config.params) {
       console.log("[REQUEST] Query Params:", config.params);
     }
-    config.withCredentials = false;
+    config.withCredentials = true;
     return config;
   },
   (error) => {
