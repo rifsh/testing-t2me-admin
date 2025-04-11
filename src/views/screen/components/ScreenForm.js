@@ -61,10 +61,10 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
 
     useEffect(() => {
         if (selectedTheaterId) {
-            dispatch(fetchAllTickets({ theater_id: selectedTheaterId }));
-            dispatch(fetchScreenTech({ theater_id: selectedTheaterId }));
-            dispatch(fetchScreenAudio({ theater_id: selectedTheaterId }));
-            dispatch(fetchScreenFeatures({ theater_id: selectedTheaterId }));
+            dispatch(fetchAllTickets({ theatre_id: selectedTheaterId }));
+            dispatch(fetchScreenTech({ theatre_id: selectedTheaterId }));
+            dispatch(fetchScreenAudio({ theatre_id: selectedTheaterId }));
+            dispatch(fetchScreenFeatures({ theatre_id: selectedTheaterId }));
             dispatch(setAvailableSeat(capacity));
         }
     }, [selectedTheaterId, dispatch, capacity]);
