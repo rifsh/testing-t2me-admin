@@ -29,6 +29,7 @@ import {
   setXDomain,
   addScheduledMovie,
   removeScheduledMovie,
+  updateScheduledMovie,
 } from "store/slices/movieScheduleSlice";
 import Header from "./Header";
 
@@ -36,7 +37,7 @@ const { Header: AntHeader, Content, Sider } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-// Enhanced MovieSlot component - now horizontal
+// Enhanced MovieSlot component with drag functionality
 const MovieSlot = ({
   movie,
   formatTime,
@@ -44,26 +45,145 @@ const MovieSlot = ({
   onClick,
   scale,
   isSelected,
+  onDragEnd,
+  timelineRef,
+  xDomain,
 }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [originalPosition, setOriginalPosition] = useState({ x: 0, y: 0 });
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+
   // Calculate position and size based on movie time and duration
-  const left = (movie.startTime - movie.xDomain[0]) * scale.x;
+  const left = (movie.startTime - xDomain[0]) * scale.x;
   const width = Math.max(30, (movie.endTime - movie.startTime) * scale.x); // Ensure minimum width
 
-  // Line color based on selection status
-  const lineColor = isSelected ? "border-green-500" : "border-indigo-400";
-  const lineWidth = isSelected ? "border-2" : "border";
-  const bgColor = isSelected ? "bg-green-50" : "bg-white";
+  // Line color based on selection and drag status
+  const lineColor = isSelected
+    ? "border-green-500"
+    : isDragging
+    ? "border-blue-500"
+    : "border-indigo-400";
+  const lineWidth = isSelected || isDragging ? "border-2" : "border";
+  const bgColor = isSelected
+    ? "bg-green-50"
+    : isDragging
+    ? "bg-blue-50"
+    : "bg-white";
+
+  // Handle mouse down to start dragging
+  const handleMouseDown = (e) => {
+    // Only allow dragging on the movie title box, not the entire area
+    if (!e.target.closest(".drag-handle")) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    setIsDragging(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    setOriginalPosition({
+      x: movie.startTime,
+      y: movie.screen,
+    });
+    setDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+  // Handle mouse move during dragging
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+
+    e.preventDefault();
+
+    const timelineRect = timelineRef.current.getBoundingClientRect();
+    const rowHeight = timelineRect.height / screens.length;
+
+    // Calculate new position
+    const x = e.clientX - timelineRect.left - dragOffset.x;
+    const y = e.clientY - timelineRect.top;
+
+    // Calculate new time and screen based on position
+    const newTime = x / scale.x + xDomain[0];
+    const newScreen = Math.floor(y / rowHeight);
+
+    // Constrain to valid values
+    const duration = movie.endTime - movie.startTime;
+    const constrainedTime = Math.max(0, Math.min(24 - duration, newTime));
+    const constrainedScreen = Math.max(
+      0,
+      Math.min(screens.length - 1, newScreen)
+    );
+
+    setDragPosition({
+      x: constrainedTime,
+      y: constrainedScreen,
+    });
+  };
+
+  // Handle mouse up to end dragging
+  const handleMouseUp = () => {
+    if (!isDragging) return;
+
+    setIsDragging(false);
+
+    // Calculate final position
+    const newStartTime = dragPosition.x;
+    const newEndTime = newStartTime + (movie.endTime - movie.startTime);
+    const newScreen = dragPosition.y;
+
+    // Only update if position actually changed
+    if (
+      newStartTime !== originalPosition.x ||
+      newScreen !== originalPosition.y
+    ) {
+      onDragEnd(movie.id, newStartTime, newEndTime, newScreen);
+    }
+  };
+
+  // Add event listeners for dragging
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, dragOffset, originalPosition]);
+
+  // Calculate displayed position (original or drag position)
+  const displayLeft = isDragging
+    ? (dragPosition.x - xDomain[0]) * scale.x
+    : left;
+
+  const displayTop = isDragging
+    ? dragPosition.y *
+      (timelineRef.current?.getBoundingClientRect().height / screens.length ||
+        0)
+    : movie.screen *
+      (timelineRef.current?.getBoundingClientRect().height / screens.length ||
+        0);
 
   return (
     <div
-      className="absolute"
+      className={`absolute transition-shadow ${
+        isDragging ? "shadow-lg z-50" : "z-10"
+      }`}
       style={{
-        top: 0,
-        bottom: 0,
-        left: `${left}px`,
+        top: displayTop,
+        left: `${displayLeft}px`,
         width: `${width}px`,
-        zIndex: isSelected ? 10 : 1, // Bring selected items to front
+        height:
+          timelineRef.current?.getBoundingClientRect().height /
+            screens.length || 0,
+        opacity: isDragging ? 0.8 : 1,
+        cursor: isDragging ? "grabbing" : "grab",
       }}
+      onMouseDown={handleMouseDown}
     >
       {/* Horizontal line connecting start to end */}
       <div
@@ -90,7 +210,7 @@ const MovieSlot = ({
                       isSelected
                         ? `border-2 ${lineColor}`
                         : `border ${lineColor}`
-                    }`}
+                    } drag-handle`}
         style={{
           left: width / 2,
           top: "25%",
@@ -101,16 +221,24 @@ const MovieSlot = ({
           overflow: "hidden",
           textOverflow: "ellipsis",
         }}
-        onClick={() => onClick(movie)}
+        onClick={(e) => {
+          if (!isDragging) onClick(movie);
+          e.stopPropagation();
+        }}
         title={`${movie.title} (${formatTime(movie.startTime)} - ${formatTime(
           movie.endTime
-        )})`}
+        )}) - Drag to reschedule`}
       >
         <span className="text-xs font-medium truncate block">
           {movie.title}
         </span>
         <span className="text-xs text-gray-500 block">
-          {formatTime(movie.startTime)} - {formatTime(movie.endTime)}
+          {formatTime(isDragging ? dragPosition.x : movie.startTime)} -{" "}
+          {formatTime(
+            isDragging
+              ? dragPosition.x + (movie.endTime - movie.startTime)
+              : movie.endTime
+          )}
         </span>
       </div>
 
@@ -168,6 +296,19 @@ export default function MovieScheduler() {
     return () => window.removeEventListener("resize", updateContainerWidth);
   }, []);
 
+  // Set initial full view on component mount
+  useEffect(() => {
+    // Ensure we start with full day view
+    dispatch(setXDomain([0, 24]));
+
+    // Calculate initial scale based on container width
+    if (containerRef.current) {
+      const width = containerRef.current.clientWidth - 48;
+      const initialZoom = width / (24 * 40); // Base scale is 40px per hour
+      dispatch(setZoomLevel(Math.min(Math.max(initialZoom, 0.5), 3)));
+    }
+  }, []); // Empty dependency array means this runs once on mount
+
   // Update scale when zoom level changes
   useEffect(() => {
     setScale({ x: 40 * zoomLevel });
@@ -195,6 +336,22 @@ export default function MovieScheduler() {
       .padStart(2, "0")}`;
   };
 
+  // Format time for display based on zoom level
+  const formatTimeByZoom = (time, isHour) => {
+    const hours = Math.floor(time);
+    const minutes = Math.round((time - hours) * 60);
+
+    // If zoomed out and not an hour mark, just show the hour
+    if (zoomLevel < 1.5 && !isHour) {
+      return hours.toString().padStart(2, "0");
+    }
+
+    // If it's an hour mark or zoomed in enough, show full time
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
   // Check if a movie is visible in the current domain
   const isMovieVisible = (movie) => {
     // Movie is visible if any part of it is in the current domain
@@ -208,7 +365,10 @@ export default function MovieScheduler() {
   // Handle timeline click to schedule new movie
   const handleTimelineClick = (e) => {
     // Ignore clicks on movie slots or labels
-    if (e.target.closest(".cursor-pointer")) {
+    if (
+      e.target.closest(".cursor-pointer") ||
+      e.target.closest(".drag-handle")
+    ) {
       return;
     }
 
@@ -237,8 +397,56 @@ export default function MovieScheduler() {
   const handleMovieClick = (movie) => {
     const fullMovie = movies.find((m) => m.id === movie.movieId);
     if (fullMovie) {
-      dispatch(setSelectedMovie({ ...movie, ...fullMovie }));
+      // Combine scheduled movie info with full movie details
+      const completeMovieInfo = {
+        ...movie,
+        genre: fullMovie.genre,
+        director: fullMovie.director,
+        image: fullMovie.image,
+        duration: fullMovie.duration,
+      };
+      dispatch(setSelectedMovie(completeMovieInfo));
       setIsDetailsVisible(true);
+    }
+  };
+
+  // Handle drag end for movie rescheduling
+  const handleMovieDragEnd = (movieId, newStartTime, newEndTime, newScreen) => {
+    // Find the movie
+    const movie = scheduledMovies.find((m) => m.id === movieId);
+    if (!movie) return;
+
+    // Check for overlapping movies
+    const isOverlapping = scheduledMovies.some(
+      (m) =>
+        m.id !== movieId && // Don't compare with self
+        m.screen === newScreen && // Same screen
+        ((newStartTime >= m.startTime && newStartTime < m.endTime) || // Start time overlaps
+          (newEndTime > m.startTime && newEndTime <= m.endTime) || // End time overlaps
+          (newStartTime <= m.startTime && newEndTime >= m.endTime)) // Fully contains other movie
+    );
+
+    if (isOverlapping) {
+      message.error("Cannot reschedule: Time slot overlaps with another movie");
+      return;
+    }
+
+    // Create updated movie object keeping all original properties
+    const updatedMovie = {
+      ...movie,
+      startTime: newStartTime,
+      endTime: newEndTime,
+      screen: newScreen,
+    };
+
+    // Update the movie with new scheduling
+    dispatch(updateScheduledMovie(updatedMovie));
+
+    message.success(`"${movie.title}" rescheduled successfully`);
+
+    // Update selected movie if it's the one being dragged
+    if (selectedMovie && selectedMovie.id === movieId) {
+      dispatch(setSelectedMovie(updatedMovie));
     }
   };
 
@@ -259,31 +467,37 @@ export default function MovieScheduler() {
       stepSize = 0.25; // 15 minutes when zoomed in a lot
     } else if (zoomLevel >= 1.5) {
       stepSize = 0.5; // 30 minutes when zoomed in moderately
+    } else if (zoomLevel >= 1) {
+      stepSize = 1; // 1 hour for normal zoom
     } else {
-      stepSize = 1; // 1 hour for default/zoomed out view
+      stepSize = 2; // 2 hours for zoomed out
     }
 
     // Start from the first hour mark in our domain and go to the end
-    const startHour = Math.floor(xDomain[0]);
-    for (let time = startHour; time <= xDomain[1]; time += stepSize) {
+    const startHour = Math.ceil(xDomain[0]);
+    const endHour = Math.floor(xDomain[1]);
+
+    // Add hour markers
+    for (let time = startHour; time <= endHour; time += 1) {
       labels.push({
         time,
         position: (time - xDomain[0]) * scale.x,
-        isHour: Number.isInteger(time),
+        isHour: true,
         isMinor: false,
       });
     }
 
-    // Add intermediate minute markers when zoomed in
-    if (zoomLevel >= 1.5 && stepSize < 1) {
-      for (let time = startHour; time <= xDomain[1]; time += stepSize / 2) {
-        // Only add if it's not already an hour or other major mark
-        if (!labels.some((label) => Math.abs(label.time - time) < 0.001)) {
+    // Add minute markers based on zoom level
+    if (zoomLevel >= 1) {
+      // For normal and zoomed in views
+      for (let time = xDomain[0]; time <= xDomain[1]; time += stepSize) {
+        // Only add if it's not already an hour mark
+        if (!Number.isInteger(time)) {
           labels.push({
             time,
             position: (time - xDomain[0]) * scale.x,
             isHour: false,
-            isMinor: true,
+            isMinor: stepSize < 0.5,
           });
         }
       }
@@ -322,21 +536,16 @@ export default function MovieScheduler() {
 
   // Pan the timeline
   const panTimeline = (direction) => {
-    const panAmount = 1 / zoomLevel;
+    const panAmount = (xDomain[1] - xDomain[0]) * 0.2; // Pan by 20% of visible area
+
     if (direction === "left") {
-      dispatch(
-        setXDomain([
-          Math.max(0, xDomain[0] - panAmount),
-          Math.max(xDomain[1] - panAmount, xDomain[1] - xDomain[0]),
-        ])
-      );
+      const newMin = Math.max(0, xDomain[0] - panAmount);
+      const newMax = Math.min(24, newMin + (xDomain[1] - xDomain[0]));
+      dispatch(setXDomain([newMin, newMax]));
     } else {
-      dispatch(
-        setXDomain([
-          Math.min(xDomain[0] + panAmount, 24 - (xDomain[1] - xDomain[0])),
-          Math.min(24, xDomain[1] + panAmount),
-        ])
-      );
+      const newMax = Math.min(24, xDomain[1] + panAmount);
+      const newMin = Math.max(0, newMax - (xDomain[1] - xDomain[0]));
+      dispatch(setXDomain([newMin, newMax]));
     }
   };
 
@@ -380,7 +589,7 @@ export default function MovieScheduler() {
 
     const newScheduledMovie = {
       id: Date.now(),
-      movieId: selectedMovieId,
+      movieId: movie.id,
       screen: selectedScreen,
       startTime,
       endTime,
@@ -389,7 +598,6 @@ export default function MovieScheduler() {
       director: movie.director,
       genre: movie.genre,
       duration: movie.duration,
-      xDomain,
     };
 
     dispatch(addScheduledMovie(newScheduledMovie));
@@ -423,10 +631,10 @@ export default function MovieScheduler() {
 
   // Calculate the visible width - ensure it fills container
   const calculateVisibleWidth = () => {
-    // Calculate width based on time domain and scale
+    // Calculate width based on domain and scale
     const domainWidth = (xDomain[1] - xDomain[0]) * scale.x;
 
-    // Return the larger of the two to ensure content is visible
+    // Return the larger of container width or calculated width
     return Math.max(domainWidth, containerWidth || window.innerWidth - 48);
   };
 
@@ -449,8 +657,8 @@ export default function MovieScheduler() {
                   Schedule Timeline
                 </Title>
                 <Text type="secondary">
-                  Click on timeline to schedule • Click on movie labels for
-                  details
+                  Click on timeline to schedule • Click and drag movies to
+                  reschedule • Click on movie labels for details
                 </Text>
               </div>
               <Space>
@@ -518,11 +726,7 @@ export default function MovieScheduler() {
                     >
                       {!label.isMinor && (
                         <div className="px-1 py-2">
-                          {label.isHour
-                            ? formatTime(label.time)
-                            : formatTime(label.time).split(":")[1] === "00"
-                            ? formatTime(label.time).split(":")[0]
-                            : formatTime(label.time)}
+                          {formatTimeByZoom(label.time, label.isHour)}
                         </div>
                       )}
                     </div>
@@ -610,26 +814,20 @@ export default function MovieScheduler() {
 
                   {/* Movie time slots */}
                   {scheduledMovies.filter(isMovieVisible).map((movie) => (
-                    <div
+                    <MovieSlot
                       key={movie.id}
-                      style={{
-                        position: "absolute",
-                        top: movie.screen * rowHeight,
-                        height: rowHeight,
-                        zIndex: 10,
-                      }}
-                    >
-                      <MovieSlot
-                        movie={{ ...movie, xDomain }}
-                        formatTime={formatTime}
-                        screens={screens}
-                        onClick={handleMovieClick}
-                        scale={scale}
-                        isSelected={
-                          selectedMovie && selectedMovie.id === movie.id
-                        }
-                      />
-                    </div>
+                      movie={movie}
+                      formatTime={formatTime}
+                      screens={screens}
+                      onClick={handleMovieClick}
+                      scale={scale}
+                      isSelected={
+                        selectedMovie && selectedMovie.id === movie.id
+                      }
+                      onDragEnd={handleMovieDragEnd}
+                      timelineRef={timelineRef}
+                      xDomain={xDomain}
+                    />
                   ))}
                 </div>
               </div>

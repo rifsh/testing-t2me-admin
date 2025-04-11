@@ -160,11 +160,11 @@ export const protectedRoutes = [
   },
   {
     key: "dine.schedule",
-    path: `${APP_PREFIX_PATH}/schedule/list`,
+    path: `${APP_PREFIX_PATH}/dine/schedule/list`,
     component: React.lazy(() => import("views/dine/Schedule/schedule-list")),
   },
   {
-    key: "dine.details",
+    key: "movie.details",
     path: `${APP_PREFIX_PATH}/movie-schedule/list`,
     component: React.lazy(() => import("views/Movie/Schedule/schedule-list")),
   },
