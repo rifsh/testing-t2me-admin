@@ -6,8 +6,10 @@ import { useNavigate } from 'react-router-dom';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { theaterCompanyDataSource } from 'mock/data/thaeterMockData';
 import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
+import { useDispatch } from 'react-redux';
 
 const TheaterCompaniesList = () => {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const handleViewDetails = async (id) => {
@@ -15,7 +17,7 @@ const TheaterCompaniesList = () => {
     };
 
     const handleViewEdit = async (id) => {
-        
+
     };
 
     const dropdownMenu = (row) => (
@@ -96,7 +98,10 @@ const TheaterCompaniesList = () => {
                         <Button
                             type="primary"
                             icon={<FormOutlined />}
-                            onClick={() => navigate(`${APP_PREFIX_PATH}/movie-theater/add`)}
+                            onClick={() => {
+                                navigate(`${APP_PREFIX_PATH}/movie-theater-company/add`);
+                            }
+                            }
                         >
                             Add Company
                         </Button>
@@ -106,7 +111,7 @@ const TheaterCompaniesList = () => {
                     columns={columns}
                     dataSource={theaterCompanyDataSource}
                     pagination={{ pageSize: 5 }}
-                    
+
                 />
             </Card>
         </>

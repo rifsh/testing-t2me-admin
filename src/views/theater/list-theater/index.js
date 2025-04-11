@@ -15,7 +15,9 @@ const Index = () => {
                         </>
                     </Tabs.TabPane>
                     <Tabs.TabPane tab="Theaters" key="2">
-                        <TheaterList />
+                        <>
+                            <TheaterList />
+                        </>
                     </Tabs.TabPane>
                 </Tabs>
             </Card>

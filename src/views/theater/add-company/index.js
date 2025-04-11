@@ -1,12 +1,12 @@
 import React from 'react'
-import TheaterForm from '../components/TheaterForm'
 import { MODE } from 'constants/TextConstant'
+import CompanyForm from '../components/CompanyForm'
 
 const Index = () => {
     return (
-        <div>
-            <TheaterForm mode={MODE.ADD}/>
-        </div>
+        <>
+            <CompanyForm mode={MODE.ADD} />
+        </>
     )
 }
 

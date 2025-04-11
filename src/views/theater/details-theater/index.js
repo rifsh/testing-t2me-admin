@@ -184,17 +184,42 @@ const Index = () => {
                                             <li>{singleResponse?.capacity} Total Capacity</li>
                                         </ul>
                                     </div>
-
-                                    <div>
-                                        <Title level={5} className="mb-2 flex items-center">
-                                            <StarOutlined className="mr-2 text-blue-500" /> Screen Types
-                                        </Title>
-                                        <div className="flex flex-wrap gap-2">
-                                            {theater.screenTypes.map((type, index) => (
-                                                <Tag key={index} color="blue">{type}</Tag>
-                                            ))}
+                                    {singleResponse?.screen_tech &&
+                                        <div>
+                                            <Title level={5} className="mb-2 flex items-center">
+                                                <StarOutlined className="mr-2 text-blue-500" /> Screen Types
+                                            </Title>
+                                            <div className="flex flex-wrap gap-2">
+                                                {singleResponse?.screen_tech.map((type, index) => (
+                                                    <Tag key={index} color="blue">{type.name}</Tag>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
+                                    }
+                                    {singleResponse?.audio &&
+                                        <div>
+                                            <Title level={5} className="mb-2 flex items-center">
+                                                <StarOutlined className="mr-2 text-blue-500" /> Audio technology
+                                            </Title>
+                                            <div className="flex flex-wrap gap-2">
+                                                {singleResponse?.audio.map((type, index) => (
+                                                    <Tag key={index} color="blue">{type.name}</Tag>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    }
+                                    {singleResponse?.accessbility &&
+                                        <div>
+                                            <Title level={5} className="mb-2 flex items-center">
+                                                <StarOutlined className="mr-2 text-blue-500" /> Accessbility Features
+                                            </Title>
+                                            <div className="flex flex-wrap gap-2">
+                                                {singleResponse?.accessbility.map((type, index) => (
+                                                    <Tag key={index} color="blue">{type.name}</Tag>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         </TabPane>

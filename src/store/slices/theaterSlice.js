@@ -3,11 +3,14 @@ import TheaterService from "services/theaterService";
 
 const initialState = {
     loading: false,
+    editLoading: false,
     response: null,
+    statusEditresponse: null,
     editId: null,
     editData: [],
     singleResponse: null,
     submitMessage: null,
+    formType: null,
     editable_status: null,
     message: null,
     pagination: { size: 10, page: 1 },
@@ -83,6 +86,9 @@ const theaterSlice = createSlice({
         setCleraAllData(state) {
             state.response = null;
             state.singleResponse = null;
+        },
+        setFormType(state, action) {
+            state.formType = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -136,23 +142,23 @@ const theaterSlice = createSlice({
                 state.error = action.payload;
             })
             .addCase(editTheaterStatus.pending, (state) => {
-                state.loading = true;
+                state.editLoading = true;
             })
             .addCase(editTheaterStatus.fulfilled, (state, { payload }) => {
-                state.loading = false;
-                state.response = payload.data;
+                state.editLoading = false;
+                state.statusEditresponse = payload.data;
                 if (payload.status) {
                     state.message = payload.status.message;
                     state.editable_status = payload.status?.editable_status;
                 }
             })
             .addCase(editTheaterStatus.rejected, (state, action) => {
-                state.loading = false;
+                state.editLoading = false;
                 state.error = action.payload;
             })
     },
 });
 
-export const { setTheaterEditData, setTheaterEditId, setCleraAllData } = theaterSlice.actions;
+export const { setTheaterEditData, setTheaterEditId, setCleraAllData, setFormType } = theaterSlice.actions;
 
 export default theaterSlice.reducer;

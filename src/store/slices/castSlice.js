@@ -3,7 +3,9 @@ import PersonalityService from "services/PersonalityService";
 
 const initialState = {
     loading: false,
+    editLoading: false,
     response: null,
+    editResponse: null,
     editId: null,
     singleResponse: null,
     personalities: null,
@@ -133,18 +135,18 @@ const castSlice = createSlice({
                 state.loading = false;
             })
             .addCase(editPersonalityStatus.pending, (state) => {
-                state.loading = true;
+                state.editLoading = true;
             })
             .addCase(editPersonalityStatus.fulfilled, (state, { payload }) => {
-                state.loading = false;
-                state.response = payload.data;
+                state.editLoading = false;
+                state.editResponse = payload.data;
                 if (payload.status) {
                     state.message = payload.status.message;
                     state.editable_status = payload.status?.editable_status;
                 }
             })
             .addCase(editPersonalityStatus.rejected, (state) => {
-                state.loading = false;
+                state.editLoading = false;
             })
     },
 });

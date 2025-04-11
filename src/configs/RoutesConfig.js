@@ -97,7 +97,7 @@ export const protectedRoutes = [
     key: "movie.movie.list",
     path: `${APP_PREFIX_PATH}/movie/list`,
     component: React.lazy(() => import("views/Movie/movie-list")),
-  },{
+  }, {
     key: "movie.movie.add",
     path: `${APP_PREFIX_PATH}/movie/add/:id`,
     component: React.lazy(() => import("views/Movie/movie-add")),
@@ -174,6 +174,11 @@ export const protectedRoutes = [
     key: "movie.theater",
     path: `${APP_PREFIX_PATH}/movie-theater/add`,
     component: React.lazy(() => import("views/theater/add-theater"))
+  },
+  {
+    key: "movie.theater",
+    path: `${APP_PREFIX_PATH}/movie-theater-company/add`,
+    component: React.lazy(() => import("views/theater/add-company"))
   },
   {
     key: "movie.theater",

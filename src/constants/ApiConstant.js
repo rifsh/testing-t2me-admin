@@ -106,7 +106,7 @@ export const ApiConstant = {
   // THEATER API ENDPOINTS
   ADD_THEATER_URL: "/api/v1/moies/secured/theatre/create",
   EDIT_THEATER_URL: "/api/v1/moies/secured/theatre/edit",
-  EDIT_THEATER_STATUS_URL: "/api/v1/moies/secured/theatre/edit_status",
+  EDIT_THEATER_STATUS_URL: "/api/v1/moies/secured/theatre/edit/status",
   GET_THEATER_URL: "/api/v1/moies/secured/theatre/all",
   GET_THEATERBYID_URL: "/api/v1/moies/secured/theatre/single",
 
