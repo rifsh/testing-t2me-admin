@@ -4,8 +4,8 @@ import theme from "./slices/themeSlice";
 import theater from "./slices/theaterSlice";
 import theaterCompany from "./slices/theaterCompanySlice";
 import screen from "./slices/screenSlice";
-import cast from './slices/castSlice'
-import movie from './slices/movieSlice'
+import cast from "./slices/castSlice";
+import movie from "./slices/movieSlice";
 import auth from "./slices/authSlice";
 import category from "./slices/categorySlice";
 import adCategory from "./slices/adCategorySlice";
@@ -30,6 +30,7 @@ import leadEvents from "./slices/leadEventSlice";
 import layout from "./slices/layoutSlice";
 import issue from "./slices/IssueSlice";
 import payment from "./slices/paymentSlice";
+import  movieScheduleSlice  from "./slices/movieScheduleSlice";
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -64,6 +65,7 @@ const rootReducer = (asyncReducers = {}) => {
       footer,
       leadEvents,
       movieSeatSlice,
+      movieScheduleSlice,
       ...asyncReducers,
     });
 
