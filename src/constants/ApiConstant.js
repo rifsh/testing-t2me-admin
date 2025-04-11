@@ -110,6 +110,13 @@ export const ApiConstant = {
   GET_THEATER_URL: "/api/v1/moies/secured/theatre/all",
   GET_THEATERBYID_URL: "/api/v1/moies/secured/theatre/single",
 
+  // THEATER_COMPANY API ENDPOINTS
+  ADD_THEATER_COMPANY_URL: "/api/v1/moies/secured/theatre_company/create",
+  EDIT_THEATER_COMPANY_URL: "/api/v1/moies/secured/theatre_company/edit",
+  EDIT_THEATER_COMPANY_STATUS_URL: "/api/v1/moies/secured/theatre_company/status",
+  GET_THEATER_COMPANY_URL: "/api/v1/moies/secured/theatre_company/all",
+  GET_THEATER_COMPANY_BYID_URL: "/api/v1/moies/secured/theatre_company/single",
+
   //SCREEN API ENDPOINTS
   ADD_SCREEN_URL: "/api/v1/moies/secured/screens/creation",
   EDIT_SCREEN_URL: "/api/v1/moies/secured/screens/edit",

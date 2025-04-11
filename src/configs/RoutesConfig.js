@@ -177,11 +177,6 @@ export const protectedRoutes = [
   },
   {
     key: "movie.theater",
-    path: `${APP_PREFIX_PATH}/movie-theater-company/add`,
-    component: React.lazy(() => import("views/theater/add-company"))
-  },
-  {
-    key: "movie.theater",
     path: `${APP_PREFIX_PATH}/movie-theater/edit/:theaterId`,
     component: React.lazy(() => import("views/theater/edit-theater"))
   },
@@ -189,6 +184,16 @@ export const protectedRoutes = [
     key: "movie.theater",
     path: `${APP_PREFIX_PATH}/movie-theater/detail/:theaterId`,
     component: React.lazy(() => import("views/theater/details-theater"))
+  },
+  {
+    key: "movie.theater",
+    path: `${APP_PREFIX_PATH}/movie-theater-company/add`,
+    component: React.lazy(() => import("views/theater/add-company"))
+  },
+  {
+    key: "movie.theater",
+    path: `${APP_PREFIX_PATH}/movie-theater-company/edit/:company_id`,
+    component: React.lazy(() => import("views/theater/edit-company"))
   },
   {
     key: "event.details",

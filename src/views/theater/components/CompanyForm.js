@@ -23,13 +23,15 @@ import LoadingOverlay from 'components/util-components/Loader';
 import { ActionType } from 'utils/api/warning-submit-util';
 import { setScreenEditData } from 'store/slices/screenSlice';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
+import { createTheaterCompany, editTheaterCompany, fetchTheaterCompanyByid, setTheaterCompanyEditData } from 'store/slices/theaterCompanySlice';
+import { setPersonalityEditData } from 'store/slices/castSlice';
 
 const { Title } = Typography;
 
 const CompanyForm = ({ mode, CompanyEditId }) => {
     const dispatch = useDispatch();
     const [form] = Form.useForm();
-    const { response, loading, submitMessage, singleResponse, message: theaterMessages, editData } = useSelector((state) => state.theater);
+    const { response, loading, submitMessage, singleResponse, message: theaterCompanyMessages, editData } = useSelector((state) => state.theaterCompany);
     const { selectedPlace, selectedVenue, dialogVisible } = useSelector((state) => state.locations);
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
@@ -38,7 +40,7 @@ const CompanyForm = ({ mode, CompanyEditId }) => {
 
     useEffect(() => {
         if (mode === MODE.EDIT) {
-            dispatch(fetchTheaterByid({ theatre_id: CompanyEditId }))
+            dispatch(fetchTheaterCompanyByid({ company_id: CompanyEditId }))
         }
         return () => {
 
@@ -47,23 +49,13 @@ const CompanyForm = ({ mode, CompanyEditId }) => {
 
     useEffect(() => {
         if (mode === MODE.EDIT && singleResponse) {
-            console.log("singleResponse", singleResponse);
-            dispatch(setSelectedPlace(singleResponse?.place.id));
-            dispatch(setSelectedVenue(singleResponse?.venue.id))
+
             form.setFieldsValue({
-                place: singleResponse?.place?.name && singleResponse?.place?.country?.name
-                    ? `${singleResponse.place.name}, ${singleResponse.place.country.name}`
-                    : undefined,
-                venue_id: singleResponse?.venue?.name || undefined,
                 name: singleResponse?.name || undefined,
                 phone_number: singleResponse?.phone_number || undefined,
-                website: singleResponse.website || undefined,
-                number_of_screens: singleResponse?.number_of_screens || undefined,
-                capacity: singleResponse?.capacity || undefined,
-                description: singleResponse?.description || undefined,
-                screen_tech: singleResponse.screen_tech || [],
-                audios: singleResponse.audio || [],
-                accessbility_feature: singleResponse.accessibility || [],
+                email: singleResponse?.email || undefined,
+                website_url: singleResponse.website_url || undefined,
+                description: singleResponse.description || undefined,
                 thumbnail_image:
                     singleResponse.thumbnail_image && singleResponse.thumbnail_image !== "images"
                         ? [
@@ -84,57 +76,21 @@ const CompanyForm = ({ mode, CompanyEditId }) => {
         event.preventDefault();
         try {
             const values = await form.validateFields();
-            const formattedData = {
-                ...values,
-                place_id: selectedPlace,
-            }
+            console.log(values)
+            // const formattedData = {
+            //     ...values,
+            //     place_id: selectedPlace,
+            // }
             if (mode === MODE.ADD) {
-                const resultAction = await dispatch(validateVenue(values.venue_id));
-                if (validateVenue.fulfilled.match(resultAction)) {
-                    const response = resultAction.payload;
-                    if (response.message === "warning") {
-                        dispatch(setPlaceValidationDialogVisible(true));
-                    } else if (response.data && response.data[0]?.validation_status) {
-                        dispatch(setSelectedSubmitItem(formattedData));
-                    }
-                } else if (validatePlace.rejected.match(resultAction)) {
-                    const error = resultAction.error;
-                    if (error.message) {
-                        message.error(error.message);
-                    }
-                }
+                dispatch(setSelectedSubmitItem(values));
             } else if (mode === MODE.EDIT) {
                 const editFormattedData = {
                     ...values,
                     id: CompanyEditId,
-                    place_id: selectedPlace,
-                    venue_id: selectedVenue,
                 }
-                dispatch(setTheaterEditData(editFormattedData));
-                const resultAction = await dispatch(validateVenue(selectedVenue));
-                if (validateVenue.fulfilled.match(resultAction)) {
-                    const response = resultAction.payload;
-                    if (response.message === "warning") {
-                        dispatch(setPlaceValidationDialogVisible(true));
-                    } else if (response.data && response.data[0]?.validation_status) {
-                        const editResult = await dispatch(editTheater({ data: editFormattedData, action: ActionType.WARNING }))
-                        if (editTheater.fulfilled.match(editResult)) {
-                            dispatch(setScreenEditData(editFormattedData));
-                            dispatch(setLocationDialogVisible(true));
-                        } else if (editTheater.rejected.match(editResult)) {
-                            const error = editResult.error;
-                            if (error.message) {
-                                message.error(error.message);
-                            }
-                        }
-                    }
-                } else if (validatePlace.rejected.match(resultAction)) {
-                    const error = resultAction.error;
-                    if (error.message) {
-                        message.error(error.message);
-                    }
-                }
-
+                editTheaterCompany({ data: editFormattedData, action: ActionType.WARNING })
+                dispatch(setTheaterCompanyEditData(editFormattedData));
+                dispatch(setLocationDialogVisible(true));
             }
 
         } catch (errorInfo) {
@@ -156,29 +112,14 @@ const CompanyForm = ({ mode, CompanyEditId }) => {
         return e?.fileList;
     };
 
-    const handlePlaceSelect = (id) => {
-        dispatch(getVenues({ place_id: id, is_indoor: true }));
-        form.resetFields([
-            "venue_id",
-            "screens",
-        ]);
-        dispatch(resetTicketSelection());
-        dispatch(setSelectedPlace(id));
-        dispatch(setSelectedVenueList("clear"));
-    }
-    const handleVenueSelect = (venue) => {
-        dispatch(setSelectedVenue(venue))
-        dispatch(getSingleVenues(venue))
-    }
-
     const handleModalSubmit = async () => {
         dispatch(setLocationModalLoading(true));
         const resultAction = await dispatch(
-            editTheater({ data: editData, action: ActionType.SUBMIT })
+            editTheaterCompany({ data: editData, action: ActionType.SUBMIT })
         );
         dispatch(setLocationModalLoading(false));
         dispatch(setLocationDialogVisible(false));
-        if (editTheater.fulfilled?.match(resultAction)) {
+        if (editTheaterCompany.fulfilled?.match(resultAction)) {
             dispatch(setSelectedSubmitItem(editData));
         }
     };
@@ -216,7 +157,7 @@ const CompanyForm = ({ mode, CompanyEditId }) => {
                             <Col xs={24} md={12}>
                                 <Form.Item
                                     label="Website"
-                                    name="website"
+                                    name="website_url"
                                 >
                                     <Input
                                         prefix={<GlobalOutlined />}
@@ -230,7 +171,7 @@ const CompanyForm = ({ mode, CompanyEditId }) => {
                             <Col xs={24} md={12}>
                                 <Form.Item
                                     label="Company mail"
-                                    name="name"
+                                    name="email"
                                     rules={[{ required: true, message: 'Please input company valid mail!' }]}
                                 >
                                     <Input
@@ -296,7 +237,7 @@ const CompanyForm = ({ mode, CompanyEditId }) => {
             <WarningModal
                 visible={dialogVisible}
                 title="Confirm Action"
-                details={theaterMessages}
+                details={theaterCompanyMessages}
                 responseData={response}
                 warningMessage="Do you want to continue?"
                 onSubmit={handleModalSubmit}
@@ -304,17 +245,13 @@ const CompanyForm = ({ mode, CompanyEditId }) => {
                 confirmText="Proceed"
                 cancelText="Back"
                 loading={loading}
-                tableConfig={{
-                    title: "Active Schedules",
-                    dataKey: "items",
-                }}
             // editable_status={editable_status}
             // pagination={warningPagination}
             // onPaginationChange={handleWarningPagination}
             />
             <SubmitAndConfirmModal
                 responseData={response}
-                addFunction={mode === MODE.ADD ? createTheater : editTheater}
+                addFunction={mode === MODE.ADD ? createTheaterCompany : editTheaterCompany}
                 navigationPath={`${APP_PREFIX_PATH}/movie-theater/list`}
                 responseMessage={submitMessage}
             />

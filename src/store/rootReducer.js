@@ -2,6 +2,7 @@
 import { combineReducers } from "redux";
 import theme from "./slices/themeSlice";
 import theater from "./slices/theaterSlice";
+import theaterCompany from "./slices/theaterCompanySlice";
 import screen from "./slices/screenSlice";
 import cast from './slices/castSlice'
 import movie from './slices/movieSlice'
@@ -35,6 +36,7 @@ const rootReducer = (asyncReducers = {}) => {
     const combinedReducer = combineReducers({
       theme,
       theater,
+      theaterCompany,
       screen,
       cast,
       movie,
