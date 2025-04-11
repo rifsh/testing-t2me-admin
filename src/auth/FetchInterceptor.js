@@ -13,6 +13,10 @@ let isLoggingOut = false; // Flag to prevent logout loop
 const service = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000,
+  // headers: {
+  //   'Access-Control-Allow-Origin': '*',
+  //   'Content-Type': 'application/json',
+  // }
 });
 
 // Config

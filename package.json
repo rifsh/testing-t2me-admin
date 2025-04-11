@@ -2,6 +2,7 @@
   "name": "ticket2me",
   "version": "4.0.2",
   "private": true,
+  "proxy": "https://uat-tickets2me.mitetechnology.in",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.758.0",
     "@emotion/react": "^11.14.0",
@@ -81,7 +82,7 @@
   },
   "scripts": {
     "prebuild": "./write-commit.sh",
-    "build": "CI=false REACT_APP_BUILD_TIMESTAMP=$(date '+%Y-%m-%d | %I:%M%p') REACT_APP_COMMIT_HASH=$(cat commit-hash.txt) react-scripts build",
+    "build": "NODE_OPTIONS=--max_old_space_size=4096 CI=false REACT_APP_BUILD_TIMESTAMP=$(date '+%Y-%m-%d | %I:%M%p') REACT_APP_COMMIT_HASH=$(cat commit-hash.txt) react-scripts build",
     "start": "react-scripts start",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

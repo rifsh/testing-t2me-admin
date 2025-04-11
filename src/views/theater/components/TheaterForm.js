@@ -26,7 +26,7 @@ import WarningModal from 'components/util-components/ModalItems/WarningModal';
 
 const { Title } = Typography;
 
-const TheaterForm = ({ mode = MODE.ADD }) => {
+const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
     const dispatch = useDispatch();
     const [form] = Form.useForm();
     const { response, loading, submitMessage, singleResponse, message: theaterMessages, editData } = useSelector((state) => state.theater);
@@ -38,12 +38,12 @@ const TheaterForm = ({ mode = MODE.ADD }) => {
 
     useEffect(() => {
         if (mode === MODE.EDIT) {
-            dispatch(fetchTheaterByid({ theatre_id: 1 }))
+            dispatch(fetchTheaterByid({ theatre_id: theaterEditId }))
         }
         return () => {
 
         };
-    }, [dispatch, mode]);
+    }, [dispatch, mode, theaterEditId]);
 
     useEffect(() => {
         if (mode === MODE.EDIT && singleResponse) {
@@ -86,9 +86,7 @@ const TheaterForm = ({ mode = MODE.ADD }) => {
             const values = await form.validateFields();
             const formattedData = {
                 ...values,
-                id: 1,
                 place_id: selectedPlace,
-                venue_id: selectedVenue,
             }
             if (mode === MODE.ADD) {
                 const resultAction = await dispatch(validateVenue(values.venue_id));
@@ -106,16 +104,22 @@ const TheaterForm = ({ mode = MODE.ADD }) => {
                     }
                 }
             } else if (mode === MODE.EDIT) {
-                dispatch(setTheaterEditData(formattedData));
+                const editFormattedData = {
+                    ...values,
+                    id: theaterEditId,
+                    place_id: selectedPlace,
+                    venue_id: selectedVenue,
+                }
+                dispatch(setTheaterEditData(editFormattedData));
                 const resultAction = await dispatch(validateVenue(selectedVenue));
                 if (validateVenue.fulfilled.match(resultAction)) {
                     const response = resultAction.payload;
                     if (response.message === "warning") {
                         dispatch(setPlaceValidationDialogVisible(true));
                     } else if (response.data && response.data[0]?.validation_status) {
-                        const editResult = await dispatch(editTheater({ data: formattedData, action: ActionType.WARNING }))
+                        const editResult = await dispatch(editTheater({ data: editFormattedData, action: ActionType.WARNING }))
                         if (editTheater.fulfilled.match(editResult)) {
-                            dispatch(setScreenEditData(formattedData));
+                            dispatch(setScreenEditData(editFormattedData));
                             dispatch(setLocationDialogVisible(true));
                         } else if (editTheater.rejected.match(editResult)) {
                             const error = editResult.error;
@@ -193,6 +197,33 @@ const TheaterForm = ({ mode = MODE.ADD }) => {
                 layout="vertical"
                 form={form}
                 name="theaterForm"
+                initialValues={{
+                    place_id: 58,
+                    venue_id: 56,
+                    name: "Test Theater",
+                    phone_number: "9074144485",
+                    website: "https://testtheater.com",
+                    number_of_screens: 4,
+                    capacity: 300,
+                    screen_tech: [
+                        { name: "IMAX", description: "High wide screen" }
+                    ],
+                    audios: [
+                        { name: "Dolby atmos", description: "Surrounded quality" }
+                    ],
+                    accessbility_feature: [
+                        { name: "Slider", description: "For disable people" }
+                    ],
+                    description: "<p>This is a sample description for test theater.</p>",
+                    thumbnail_image: [
+                        {
+                            uid: '-1',
+                            name: 'sample.jpg',
+                            status: 'done',
+                            url: 'https://via.placeholder.com/150', // Simulating a binary image
+                        }
+                    ]
+                }}
             >
 
                 <Card>
@@ -364,7 +395,7 @@ const TheaterForm = ({ mode = MODE.ADD }) => {
             />
             <SubmitAndConfirmModal
                 responseData={response}
-                addFunction={mode === MODE.ADD ? createTheater : createTheater}
+                addFunction={mode === MODE.ADD ? createTheater : editTheater}
                 navigationPath={`${APP_PREFIX_PATH}/movie-theater/list`}
                 responseMessage={submitMessage}
             />

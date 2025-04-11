@@ -36,7 +36,7 @@ import {
     LayoutOutlined
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchTheaterByid } from 'store/slices/theaterSlice';
+import { fetchTheaterByid, setCleraAllData } from 'store/slices/theaterSlice';
 import { useParams } from 'react-router-dom';
 import LoadingOverlay from 'components/util-components/Loader';
 
@@ -94,7 +94,7 @@ const mockTheater = {
 
 const Index = () => {
     const theater = mockTheater;
-    const { movieId } = useParams();
+    const { theaterId } = useParams();
     const dispatch = useDispatch();
     const [favorite, setFavorite] = useState(false);
     const [photoIndex, setPhotoIndex] = useState(0);
@@ -110,12 +110,12 @@ const Index = () => {
     };
 
     useEffect(() => {
-        dispatch(fetchTheaterByid({ theatre_id: 1 }))
-    }, [dispatch, movieId]);
+        dispatch(fetchTheaterByid({ theatre_id: theaterId }));
+        return () => {
+            dispatch(setCleraAllData());
+        };
 
-    useEffect(() => {
-        console.log('singleres', singleResponse)
-    }, [singleResponse])
+    }, [dispatch, theaterId]);
 
     return (
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">

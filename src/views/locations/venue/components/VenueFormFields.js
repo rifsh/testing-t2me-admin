@@ -308,6 +308,7 @@ const VenueFormFields = ({ mode, venue }) => {
           place_id: selectedPlace ?? venue.place?.id,
           id: venue?.id,
         };
+        console.log(data, 'data');
 
         const resultAction = await dispatch(validatePlace(data.place_id));
         if (validatePlace.fulfilled.match(resultAction)) {
@@ -338,6 +339,7 @@ const VenueFormFields = ({ mode, venue }) => {
           ...baseData,
           place_id: selectedPlace,
         };
+        console.log("Form values:", formData);
 
         const resultAction = await dispatch(validatePlace(selectedPlace));
 
@@ -416,22 +418,20 @@ const VenueFormFields = ({ mode, venue }) => {
             <h2 className="mb-3">
               {mode === "ADD" ? "Add Venue" : "Edit Venue"}
             </h2>
-
             <PlaceWithCountryForm
               form={form}
               label={"Place"}
               onSelect={handlePlaceSelect}
               rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
             />
-
+            place
             <Form.Item
               name="name"
               label="Venue"
               rules={[{ required: true, message: RulesMessageConstants.VENUE }]}
             >
-              <Input placeholder="Enter the venue name" />
+              <Input placeholder="Enter the venue name." />
             </Form.Item>
-
             <Form.Item
               name="address"
               label="Address"
@@ -470,7 +470,13 @@ const VenueFormFields = ({ mode, venue }) => {
                 </Form.Item>
               </Col>
             </Row>
-
+            <Form.Item
+              noStyle
+              shouldUpdate={(prevValues, currentValues) =>
+                prevValues.indoor !== currentValues.indoor
+              }
+            >
+            </Form.Item>
             <Form.Item
               name="description"
               label="Description"
@@ -494,7 +500,6 @@ const VenueFormFields = ({ mode, venue }) => {
                 form={form}
               />
             </Form.Item>
-
             <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
@@ -623,6 +628,7 @@ const VenueFormFields = ({ mode, venue }) => {
               </Form.List>
             </Form.Item>
           </Card>
+
           <Form.Item
             name="latitude"
             label="Latitude"

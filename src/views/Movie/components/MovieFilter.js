@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useMemo, useState } from 'react';
-import { Form, Card, Row, Col, Select, Space, Avatar, DatePicker, message, Alert } from 'antd';
-import { UserOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { Form, Card, Row, Col, Select, Space, Avatar, DatePicker, message, Alert, Button, Tag, Badge } from 'antd';
+import { UserOutlined, InfoCircleOutlined, CalendarOutlined, LoadingOutlined, ExclamationCircleOutlined, FrownOutlined, SearchOutlined, DatabaseOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMovie, fetchMovieData, setFilterData, setimdbId } from 'store/slices/movieSlice';
 import debounce from 'lodash/debounce';
@@ -90,17 +90,30 @@ const MovieFilter = ({ form, onMovieSelect }) => {
     };
 
     return (
-        <Card className="movie-filter-card">
+        <Card
+            className="movie-filter-card"
+            title={
+                <div className="flex items-center">
+                    <SearchOutlined className="mr-2 text-blue-500" />
+                    <span>Movie Search</span>
+                </div>
+            }
+        >
             {showHelper && filterData.s && !filterData.y && (
                 <Alert
-                    message="Select a release year for better results"
-                    description="For more accurate search results, please select a release year before searching for movies."
+                    message="Year Selection Recommended"
+                    description="Searching with both title and year provides more accurate results from the OMDB database."
                     type="info"
                     showIcon
                     icon={<InfoCircleOutlined />}
                     closable
                     onClose={() => setShowHelper(false)}
                     style={{ marginBottom: 16 }}
+                    action={
+                        <Button size="small" type="primary" onClick={() => form.getFieldInstance('year').focus()}>
+                            Select Year
+                        </Button>
+                    }
                 />
             )}
 
@@ -108,33 +121,14 @@ const MovieFilter = ({ form, onMovieSelect }) => {
                 <Row gutter={16}>
                     <Col xs={24} md={12} lg={8}>
                         <Form.Item
-                            name="search"
-                            label="Movie Title"
-                            tooltip={!filterData.y ? "For best results, select a release year first" : ""}
-                        >
-                            <Select
-                                value={filterData.s}
-                                onSearch={handleSearchChange}
-                                onChange={handleSelectChange}
-                                onInputKeyDown={handleKeyDown}
-                                placeholder="Search for a movie"
-                                optionLabelProp="label"
-                                style={{ width: '100%' }}
-                                showSearch
-                                loading={loading}
-                                filterOption={false}
-                                notFoundContent={loading ? 'Searching...' : (!filterData.y && filterData.s ? 'Please select a release year first' : 'No movies found')}
-                                allowClear
-                            >
-                                {movieOptions}
-                            </Select>
-                        </Form.Item>
-                    </Col>
-
-                    <Col xs={24} md={12} lg={8}>
-                        <Form.Item
                             name="year"
-                            label="Release Year"
+                            label={
+                                <span className="flex items-center">
+                                    <CalendarOutlined className="mr-1" />
+                                    Release Year
+                                    <Badge dot={!filterData.y} color="blue" className="ml-1" />
+                                </span>
+                            }
                             tooltip="Selecting a year first will help narrow down your search"
                         >
                             <DatePicker
@@ -143,7 +137,64 @@ const MovieFilter = ({ form, onMovieSelect }) => {
                                 allowClear
                                 placeholder="Select year first"
                                 style={{ width: '100%' }}
+                                className={!filterData.y ? "pulse-animation" : ""}
                             />
+                        </Form.Item>
+                    </Col>
+
+                    <Col xs={24} md={12} lg={8}>
+                        <Form.Item
+                            name="search"
+                            label={
+                                <span className="flex items-center">
+                                    <VideoCameraOutlined className="mr-1" />
+                                    Movie Title
+                                </span>
+                            }
+                            tooltip={!filterData.y ? "For best results, select a release year first" : "Search the OMDB database for movies"}
+                        >
+                            <Select
+                                value={filterData.s}
+                                onSearch={handleSearchChange}
+                                onChange={handleSelectChange}
+                                onInputKeyDown={handleKeyDown}
+                                placeholder={filterData.y ? `Search movies from ${filterData.y}` : "Search for a movie"}
+                                optionLabelProp="label"
+                                style={{ width: '100%' }}
+                                showSearch
+                                loading={loading}
+                                filterOption={false}
+                                notFoundContent={
+                                    loading ? (
+                                        <div className="flex items-center justify-center py-2">
+                                            <LoadingOutlined className="mr-2" /> Searching OMDB...
+                                        </div>
+                                    ) : (
+                                        !filterData.y && filterData.s ? (
+                                            <div className="flex items-center justify-center text-orange-500 py-2">
+                                                <ExclamationCircleOutlined className="mr-2" /> Please select a release year first
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-center text-gray-500 py-2">
+                                                <FrownOutlined className="mr-2" /> No movies found
+                                            </div>
+                                        )
+                                    )
+                                }
+                                allowClear
+                                suffixIcon={filterData.s ? <SearchOutlined /> : <DatabaseOutlined />}
+                            >
+                                {movieOptions}
+                            </Select>
+                        </Form.Item>
+                    </Col>
+
+                    <Col xs={24} md={24} lg={8}>
+                        <Form.Item label=" " colon={false}>
+                            <div className="flex items-center text-xs text-gray-500">
+                                <InfoCircleOutlined className="mr-1" />
+                                Data provided by <a href="http://www.omdbapi.com/" target="_blank" rel="noopener noreferrer" className="ml-1 font-medium">Open Movie Database (OMDB)</a>
+                            </div>
                         </Form.Item>
                     </Col>
                 </Row>

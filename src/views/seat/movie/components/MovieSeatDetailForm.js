@@ -16,7 +16,7 @@ import { setSelectedScreenData } from "store/slices/screenSlice";
 
 const { Option } = Select;
 
-function MovieSeatDetailForm({ form }) {
+function MovieSeatDetailForm({ form, mode }) {
   const dispatch = useDispatch();
   const [selectedFields, setSelectedFields] = useState({
     selectedVenue: null,
@@ -53,13 +53,16 @@ function MovieSeatDetailForm({ form }) {
             <Col xs={24} sm={12}>
               <PlaceWithCountryForm
                 form={form}
+                rules={[{ required: true }]}
                 label="Place"
                 onSelect={handlePlaceSelect}
+                disabled={mode === "EDIT"}
               />
             </Col>
             <Col xs={24} sm={12}>
               <VenueListForm
                 form={form}
+                disabled={mode === "EDIT"}
                 mode="single"
                 label="Venue"
                 rules={[{ required: true }]}
@@ -71,6 +74,7 @@ function MovieSeatDetailForm({ form }) {
             <Col xs={24} sm={12}>
               <ScreenListForm
                 form={form}
+                disabled={mode === "EDIT"}
                 label="Screen"
                 onSelect={handleScreenSelect}
                 rules={[{ required: true, message: "Please select a screen" }]}
