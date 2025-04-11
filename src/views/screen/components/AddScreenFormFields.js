@@ -33,7 +33,6 @@ const AddScreenFormFields = ({ mode, screenId }) => {
 
     const { response, singleResponse, message: screenMessage, loading, editResponse, editBodyData } = useSelector((state) => state.screen);
     const { dialogVisible, singleVenues } = useSelector((state) => state.locations);
-    // const { filteredTickets, loading: ticketsLoading } = useSelector((state) => state.tickets);
 
     const rules = {
         place: [{ required: true, message: "Please select a place" }],

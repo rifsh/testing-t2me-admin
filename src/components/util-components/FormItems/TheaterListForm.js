@@ -1,20 +1,26 @@
 import React, { useEffect } from "react";
 import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchTheaters } from "store/slices/theaterSlice";
+import { fetchTheaters, setSeectedTheater } from "store/slices/theaterSlice";
 
 const TheaterListForm = ({ form, label = "Theater", rules, onSelect, mode, disabled }) => {
   const dispatch = useDispatch();
   const { response, selectedTheater, loading } = useSelector(
     (state) => state.theater
   );
+  const { selectedVenue } = useSelector((state) => state.locations);
 
   useEffect(() => {
     const venueId = form.getFieldValue("venue_id");
+    if (venueId) {
       dispatch(fetchTheaters({ venue_id: venueId }));
-  }, [dispatch, form]);
+      console.log("venue_id", venueId);
+    }
+
+  }, [dispatch, form, selectedVenue]);
 
   const handleSetSelectedTheater = (value) => {
+    dispatch(setSeectedTheater(value))
     const theater = response?.items.find((theater) => theater.id === value);
     if (onSelect) onSelect(value);
     // dispatch(setSelectedTheater(theater));

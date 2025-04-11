@@ -8,6 +8,7 @@ const initialState = {
     response: null,
     statusEditresponse: null,
     editId: null,
+    selectedTheaterId: null,
     editData: [],
     singleResponse: null,
     submitMessage: null,
@@ -91,6 +92,9 @@ const theaterSlice = createSlice({
         setActiveTab: (state, action) => {
             state.activeTab = action.payload;
         },
+        setSeectedTheater: (state, action) => {
+            state.selectedTheaterId = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -160,6 +164,6 @@ const theaterSlice = createSlice({
     },
 });
 
-export const { setTheaterEditData, setTheaterEditId, setCleraAllData, setActiveTab } = theaterSlice.actions;
+export const { setTheaterEditData, setTheaterEditId, setCleraAllData, setActiveTab, setSeectedTheater } = theaterSlice.actions;
 
 export default theaterSlice.reducer;
