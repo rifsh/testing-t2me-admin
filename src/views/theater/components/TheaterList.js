@@ -18,6 +18,7 @@ import { setLocationDialogVisible, setLocationModalLoading } from 'store/slices/
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import { TextConstants } from 'constants/TextConstant';
 import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatusModal';
+import StatusSubmitAndConfirmModal from 'components/util-components/ModalItems/StatusSubmitModal';
 
 const TheaterList = () => {
     const dispatch = useDispatch();
@@ -33,7 +34,6 @@ const TheaterList = () => {
     const handleUpdateStatus = (item) => {
         const newStatus = !item.status;
         const data = { status: newStatus, id: item.id };
-
         dispatch(setSelectedItem(data));
         dispatch(setDialogVisible(true));
     };
@@ -190,6 +190,16 @@ const TheaterList = () => {
                 responseData={response}
                 // pagination={warningPagination}
                 loading={loading}
+            />
+
+            <StatusSubmitAndConfirmModal
+                editFunction={editTheaterStatus}
+                getAllFunction={fetchTheaters}
+                responseData={response}
+                responseMessage={theaterMessage}
+                pageData={DEFAULT_PAGE_SIZE}
+                onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+                onCloseMessage={TextConstants.StatusUpdateCanceled}
             />
         </Card>
     )

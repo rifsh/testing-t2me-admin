@@ -2,29 +2,33 @@ import React, { useState, useEffect } from 'react';
 import {
     Card, Row, Col, Typography, Space, Divider, Descriptions,
     Tag, Empty, Image, Badge, Tabs, Statistic, Avatar,
-    List
+    List,
+    Button
 } from 'antd';
 import {
     VideoCameraOutlined, EnvironmentOutlined, TeamOutlined,
     CalendarOutlined, CheckCircleOutlined, RocketOutlined,
     SoundOutlined, SettingOutlined, InfoCircleOutlined,
     CloseCircleOutlined,
-    AppstoreOutlined
+    AppstoreOutlined,
+    FormOutlined
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { fetchScreenById } from 'store/slices/screenSlice';
 import Flex from 'components/shared-components/Flex';
 import LoadingOverlay from 'components/util-components/Loader';
 import BackPageButoon from 'components/Buttons/BackPageButoon';
 import { mockTimeSlots } from 'constants/TimeSlots';
 import Meta from 'antd/es/card/Meta';
+import { APP_PREFIX_PATH } from 'configs/AppConfig';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
 const ScreenDetailView = () => {
     const dispatch = useDispatch();
     const { screenId } = useParams();
+    const navigate = useNavigate();
     const { singleResponse, loading: screenLoading } = useSelector((state) => state.screen);
 
     useEffect(() => {
@@ -322,12 +326,24 @@ const ScreenDetailView = () => {
                             <Col xs={24} lg={16}>
                                 <Card
                                     title={
-                                        <Space>
-                                            <TeamOutlined />
-                                            Seating Layout
-                                        </Space>
+                                        <Row justify="space-between" align="middle" style={{ width: '100%' }}>
+                                            <Col>
+                                                <Space>
+                                                    <TeamOutlined />
+                                                    <span>Seating Layout</span>
+                                                </Space>
+                                            </Col>
+                                            <Col>
+                                                <Button
+                                                    type="primary"
+                                                    icon={<FormOutlined />}
+                                                    onClick={() => navigate(`${APP_PREFIX_PATH}/seat/movie/add`)}
+                                                >
+                                                    Add Seat
+                                                </Button>
+                                            </Col>
+                                        </Row>
                                     }
-                                    bordered
                                 >
                                     {singleResponse?.seat_structure_id ? (
                                         <div className="seating-layout-container" style={{ textAlign: 'center' }}>

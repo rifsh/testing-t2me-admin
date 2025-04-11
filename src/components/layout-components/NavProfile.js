@@ -15,6 +15,7 @@ import {
 import { getUserRole } from "configs/UserAccessConfig";
 import Utils from "utils";
 import { fetchSingleUsers } from "store/slices/userSlice";
+import { useLocation } from "react-router-dom";
 
 const Icon = styled.div(() => ({
   fontSize: FONT_SIZES.LG,
@@ -50,6 +51,7 @@ const Title = styled.span(() => ({
 
 const MenuItemSignOut = (props) => {
   const dispatch = useDispatch();
+  const pathName = useLocation();
 
   const handleSignOut = async () => {
     console.log("_____________LOGGING OUT ");

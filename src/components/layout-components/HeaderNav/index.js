@@ -13,6 +13,9 @@ import NavItem from '../NavItem';
 import { toggleCollapsedNav, onMobileNavToggle } from 'store/slices/themeSlice';
 import { NAV_TYPE_TOP, SIDE_NAV_COLLAPSED_WIDTH, SIDE_NAV_WIDTH } from 'constants/ThemeConstant';
 import utils from 'utils'
+import { useLocation } from 'react-router-dom';
+import { signOut } from 'store/slices/authSlice';
+import Utils from 'utils';
 
 export const HeaderNav = props => {
 
@@ -21,6 +24,7 @@ export const HeaderNav = props => {
 	const [searchActive, setSearchActive] = useState(false);
 
 	const dispatch = useDispatch()
+	const { pathname } = useLocation();
 
 	const navCollapsed = useSelector(state => state.theme.navCollapsed)
 	const mobileNav = useSelector(state => state.theme.mobileNav)
@@ -33,19 +37,19 @@ export const HeaderNav = props => {
 	}
 
 	const onToggle = () => {
-		if(!isMobile) {
+		if (!isMobile) {
 			dispatch(toggleCollapsedNav(!navCollapsed))
 		} else {
 			dispatch(onMobileNavToggle(!mobileNav))
 		}
 	}
 
-	const isNavTop = navType === NAV_TYPE_TOP 
+	const isNavTop = navType === NAV_TYPE_TOP
 	const isDarkTheme = currentTheme === 'dark'
 
-    const navMode = useMemo(() => {
-		if(!headerNavColor) {
-			return utils.getColorContrast(isDarkTheme ? '#000000' : '#ffffff' )
+	const navMode = useMemo(() => {
+		if (!headerNavColor) {
+			return utils.getColorContrast(isDarkTheme ? '#000000' : '#ffffff')
 		}
 		return utils.getColorContrast(headerNavColor);
 	}, [isDarkTheme, headerNavColor])
@@ -53,10 +57,10 @@ export const HeaderNav = props => {
 	const navBgColor = isDarkTheme ? TEMPLATE.HEADER_BG_DEFAULT_COLOR_DARK : TEMPLATE.HEADER_BG_DEFAULT_COLOR_LIGHT;
 
 	const getNavWidth = () => {
-		if(isNavTop || isMobile) {
+		if (isNavTop || isMobile) {
 			return '0px';
 		}
-		if(navCollapsed) {
+		if (navCollapsed) {
 			return `${SIDE_NAV_COLLAPSED_WIDTH}px`;
 		} else {
 			return `${SIDE_NAV_WIDTH}px`;
@@ -64,16 +68,24 @@ export const HeaderNav = props => {
 	}
 
 	useEffect(() => {
-		if(!isMobile) {
+		if (!isMobile) {
 			onSearchClose();
 		}
 	})
 
-	
+	useEffect(() => {
+		if (pathname.includes('register')) {
+			dispatch(signOut());
+			Utils.clearAllBrowserData();
+			console.log("pathnaemche", pathname.includes('register'));
+		}
+	}, [pathname.includes('register')])
+
+
 	return (
 		<Header isDarkTheme={isDarkTheme} headerNavColor={headerNavColor || navBgColor}>
 			<HeaderWrapper isNavTop={isNavTop}>
-				<Logo logoType={navMode}/>
+				<Logo logoType={navMode} />
 				<Nav navWidth={getNavWidth()}>
 					<NavEdge left>
 						{
