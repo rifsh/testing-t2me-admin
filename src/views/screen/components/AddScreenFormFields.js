@@ -34,7 +34,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
 
     const { response, singleResponse, message: screenMessage, loading, editResponse, editBodyData } = useSelector((state) => state.screen);
     const { dialogVisible, singleVenues } = useSelector((state) => state.locations);
-    const { selectedTheaterId } = useSelector((state) => state.theater);
+    const { selectedTheaterId, singleResponse: singleTheaterResponse } = useSelector((state) => state.theater);
 
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
@@ -66,8 +66,8 @@ const AddScreenFormFields = ({ mode, screenId }) => {
             if (mode === 'EDIT' && !placeSelected) {
                 setVenueId(singleResponse?.venue?.id)
                 const formValues = {
-                    place: singleResponse?.venue?.place?.name || undefined,
-                    venue_id: singleResponse?.venue?.name || undefined,
+                    place: 'Delhi, India' || undefined,
+                    venue_id: singleResponse?.theatre?.venue_id || undefined,
                     screens: [{
                         screen_name: singleResponse?.screen_name || '',
                         screen_number: singleResponse?.screen_number || '',
@@ -93,8 +93,10 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     }, [singleResponse, form, placeSelected === false]);
 
     useEffect(() => {
-        setCapacity(singleVenues?.capacity)
-    }, [singleVenues])
+        if (singleTheaterResponse) {
+            setCapacity(singleTheaterResponse?.capacity);
+        }
+    }, [singleTheaterResponse])
 
     const addScreen = () => {
         const newScreens = [...screens, { key: screens.length }];

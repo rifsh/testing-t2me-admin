@@ -5,6 +5,7 @@ import TheaterService from "services/theaterService";
 const initialState = {
     activeTab: "Companies",
     loading: false,
+    singleLoading: false,
     editLoading: false,
     isDetailModal: false,
     response: null,
@@ -129,14 +130,14 @@ const theaterCompanySlice = createSlice({
                 state.error = action.payload;
             })
             .addCase(fetchTheaterCompanyByid.pending, (state) => {
-                state.loading = true;
+                state.singleLoading = true;
             })
             .addCase(fetchTheaterCompanyByid.fulfilled, (state, action) => {
-                state.loading = false;
+                state.singleLoading = false;
                 state.singleResponse = action.payload;
             })
             .addCase(fetchTheaterCompanyByid.rejected, (state, action) => {
-                state.loading = false;
+                state.singleLoading = false;
                 state.error = action.payload;
             })
             .addCase(editTheaterCompany.pending, (state) => {

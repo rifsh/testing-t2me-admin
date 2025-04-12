@@ -23,7 +23,7 @@ import LoadingOverlay from 'components/util-components/Loader';
 const TheaterCompaniesList = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { response, editLoading, loading, editable_status, statusEditresponse, pagination, message: theaterCompanyMessage, editId, isDetailModal, singleResponse } = useSelector((state) => state.theaterCompany);
+    const { response, editLoading, singleLoading, loading, editable_status, statusEditresponse, pagination, message: theaterCompanyMessage, editId, isDetailModal, singleResponse } = useSelector((state) => state.theaterCompany);
     const { dialogVisible, modalLoading, } = useSelector((state) => state.locations);
 
     useEffect(() => {
@@ -124,7 +124,9 @@ const TheaterCompaniesList = () => {
         },
         Utils.statusColumnUtil(handleUpdateStatus),
         {
-            title: "",
+            title: "Actions",
+            fixed: "right",
+            width: 100,
             dataIndex: "actions",
             render: (_, elm) => (
                 <div className="text-right">
@@ -174,7 +176,7 @@ const TheaterCompaniesList = () => {
                 visible={isDetailModal}
                 onClose={handleDetailModalClose}
                 theaterCompany={singleResponse}
-                loading={loading}
+                loading={singleLoading}
             />
 
             <WarningModal
