@@ -102,7 +102,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     const addScreen = () => {
         console.log('singlesss', screens.length + 1);
         if (screens.length + 1 > selectedTheaterScreenCapacity) {
-            return message.info('Maximum screen capacity exeeded');
+            return message.info('Maximum screen capacity exceeded');
         }
         const newScreens = [...screens, { key: screens.length }];
         setScreens(newScreens);
