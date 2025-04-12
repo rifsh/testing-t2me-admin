@@ -209,33 +209,6 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                 layout="vertical"
                 form={form}
                 name="theaterForm"
-                initialValues={{
-                    place_id: 58,
-                    venue_id: 56,
-                    name: "Test Theater",
-                    phone_number: "9074144485",
-                    website: "https://testtheater.com",
-                    number_of_screens: 4,
-                    capacity: 300,
-                    screen_tech: [
-                        { name: "IMAX", description: "High wide screen" }
-                    ],
-                    audios: [
-                        { name: "Dolby atmos", description: "Surrounded quality" }
-                    ],
-                    accessbility_feature: [
-                        { name: "Slider", description: "For disable people" }
-                    ],
-                    description: "<p>This is a sample description for test theater.</p>",
-                    thumbnail_image: [
-                        {
-                            uid: '-1',
-                            name: 'sample.jpg',
-                            status: 'done',
-                            url: 'https://via.placeholder.com/150', // Simulating a binary image
-                        }
-                    ]
-                }}
             >
 
                 <Card>
@@ -265,7 +238,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                         <Row gutter={24}>
                             <Col xs={24} md={12}>
                                 <Form.Item
-                                    name="company"
+                                    name="company_id"
                                     label="Theater Company"
                                     rules={[{ required: true, message: 'Please select a company' }]}
                                 >
