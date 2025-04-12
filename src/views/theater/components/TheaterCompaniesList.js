@@ -163,6 +163,7 @@ const TheaterCompaniesList = () => {
                     dataSource={response?.items}
                     rowKey="id"
                     loading={loading}
+                    scroll={{ x: 'max-content' }}
                     pagination={{
                         current: pagination.page,
                         pageSize: pagination.size,
