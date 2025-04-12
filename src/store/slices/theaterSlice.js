@@ -9,6 +9,7 @@ const initialState = {
     statusEditresponse: null,
     editId: null,
     selectedTheaterId: null,
+    selectedTheaterScreenCapacity: null,
     editData: [],
     singleResponse: null,
     submitMessage: null,
@@ -96,6 +97,9 @@ const theaterSlice = createSlice({
         setSeectedTheater: (state, action) => {
             state.selectedTheaterId = action.payload;
         },
+        setScreenCapacity: (state, action) => {
+            state.selectedTheaterScreenCapacity = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -166,6 +170,6 @@ const theaterSlice = createSlice({
     },
 });
 
-export const { setTheaterEditData, setTheaterEditId, setCleraAllData, setActiveTab, setSeectedTheater } = theaterSlice.actions;
+export const { setTheaterEditData, setTheaterEditId, setCleraAllData, setActiveTab, setSeectedTheater, setScreenCapacity } = theaterSlice.actions;
 
 export default theaterSlice.reducer;

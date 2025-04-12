@@ -17,7 +17,7 @@ import LoadingOverlay from 'components/util-components/Loader';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import { ActionType } from 'utils/api/warning-submit-util';
 import TheaterListForm from 'components/util-components/FormItems/TheaterListForm';
-import { setCleraAllData } from 'store/slices/theaterSlice';
+import { setCleraAllData, setScreenCapacity } from 'store/slices/theaterSlice';
 
 const { Title, Text } = Typography;
 
@@ -34,7 +34,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
 
     const { response, singleResponse, message: screenMessage, loading, editResponse, editBodyData } = useSelector((state) => state.screen);
     const { dialogVisible, singleVenues } = useSelector((state) => state.locations);
-    const { selectedTheaterId } = useSelector((state) => state.theater);
+    const { selectedTheaterId, singleResponse: singleTheaterResponse, selectedTheaterScreenCapacity } = useSelector((state) => state.theater);
 
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
@@ -66,8 +66,8 @@ const AddScreenFormFields = ({ mode, screenId }) => {
             if (mode === 'EDIT' && !placeSelected) {
                 setVenueId(singleResponse?.venue?.id)
                 const formValues = {
-                    place: singleResponse?.venue?.place?.name || undefined,
-                    venue_id: singleResponse?.venue?.name || undefined,
+                    place: 'Delhi, India' || undefined,
+                    venue_id: singleResponse?.theatre?.venue_id || undefined,
                     screens: [{
                         screen_name: singleResponse?.screen_name || '',
                         screen_number: singleResponse?.screen_number || '',
@@ -93,10 +93,17 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     }, [singleResponse, form, placeSelected === false]);
 
     useEffect(() => {
-        setCapacity(singleVenues?.capacity)
-    }, [singleVenues])
+        if (singleTheaterResponse) {
+            setCapacity(singleTheaterResponse?.capacity);
+            dispatch(setScreenCapacity(singleTheaterResponse?.number_of_screens))
+        }
+    }, [singleTheaterResponse])
 
     const addScreen = () => {
+        console.log('singlesss', screens.length + 1);
+        if (screens.length + 1 > selectedTheaterScreenCapacity) {
+            return message.info('Maximum screen capacity exceeded');
+        }
         const newScreens = [...screens, { key: screens.length }];
         setScreens(newScreens);
         setActiveTab(String(screens.length));

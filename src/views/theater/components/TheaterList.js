@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button, Card, Col, Flex, Menu, Row, Table } from 'antd';
 import EllipsisDropdown from 'components/shared-components/EllipsisDropdown';
 import {
@@ -23,12 +23,45 @@ import StatusSubmitAndConfirmModal from 'components/util-components/ModalItems/S
 const TheaterList = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [filteredData, setFilteredData] = useState([]);
     const { response, loading, pagination, editId, message: theaterMessage, editable_status, editLoading, statusEditresponse } = useSelector((state) => state.theater);
     const { dialogVisible, modalLoading } = useSelector((state) => state.locations);
 
     useEffect(() => {
         dispatch(fetchTheaters(DEFAULT_PAGE_SIZE));
     }, [dispatch])
+
+    useEffect(() => {
+        if (response && response.items) {
+            const venueMap = new Map();
+
+            response.items.forEach((theater) => {
+                const venueId = theater.venue.id;
+                if (!venueMap.has(venueId)) {
+                    venueMap.set(venueId, {
+                        venue_id: venueId,
+                        venue_name: theater.venue.name,
+                        theaters: [],
+                    });
+                }
+                venueMap.get(venueId).theaters.push(theater);
+            });
+
+            const formattedData = Array.from(venueMap.values()).flatMap((venue) =>
+                venue.theaters.map((theater, index) => ({
+                    key: `${venue.venue_id}-${theater.id}`,
+                    venue_id: venue.venue_id,
+                    venue_name: venue.venue_name,
+                    rowSpan: index === 0 ? venue.theaters.length : 0,
+                    isFirstRow: index === 0,
+                    ...theater,
+                }))
+            );
+
+            setFilteredData(formattedData);
+        }
+    }, [response]);
+
 
 
     const handleUpdateStatus = (item) => {
@@ -81,6 +114,15 @@ const TheaterList = () => {
 
     const tableColumns = [
         {
+            title: "Venue Name",
+            dataIndex: "venue_name",
+            key: "venue_name",
+            render: (value, row) => ({
+                children: value,
+                props: { rowSpan: row.rowSpan },
+            }),
+        },
+        {
             title: "Thater name",
             dataIndex: "name",
             render: (name) => <span>{name || "N/A"}</span>,
@@ -107,6 +149,7 @@ const TheaterList = () => {
         {
             title: "Website",
             dataIndex: "website",
+            width: 100,
             key: "website",
             render: (text) => (
                 <a href={text} target="_blank" rel="noopener noreferrer">
@@ -114,16 +157,12 @@ const TheaterList = () => {
                 </a>
             ),
         },
-        {
-            title: "Capacity",
-            dataIndex: "capacity",
-            render: (capacity) => <span>{capacity || "0"}</span>,
-            sorter: (a, b) => utils.antdTableSorter(a, b, "capacity"),
-        },
         utils.statusColumnUtil(handleUpdateStatus),
         {
-            title: "",
+            title: "Actions",
             dataIndex: "actions",
+            fixed: "right",
+            width: 100,
             render: (_, elm) => (
                 <div className="text-right">
                     <EllipsisDropdown menu={dropdownMenu(elm)} />
@@ -155,15 +194,17 @@ const TheaterList = () => {
             <div className="table-responsive">
                 <Table
                     columns={tableColumns}
-                    dataSource={response?.items}
+                    dataSource={filteredData}
                     rowKey="id"
                     loading={loading}
+                    scroll={{ x: 'max-content' }}
                     pagination={{
                         current: pagination.page,
                         pageSize: pagination.size,
                         total: pagination.total,
                         onChange: (page, pageSize) => handlePagination(page, pageSize),
                     }}
+                    rowClassName={(record) => (record.isFirstRow ? "theater-header-row" : "")}
                 />
             </div>
 

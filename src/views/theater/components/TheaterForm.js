@@ -23,7 +23,7 @@ import LoadingOverlay from 'components/util-components/Loader';
 import { ActionType } from 'utils/api/warning-submit-util';
 import { setScreenEditData } from 'store/slices/screenSlice';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
-import { fetchTheaterCompanies } from 'store/slices/theaterCompanySlice';
+import { fetchTheaterCompanies, setSelectedCompanyId } from 'store/slices/theaterCompanySlice';
 import { Option } from 'antd/es/mentions';
 import TheaterCompanyList from 'components/util-components/FormItems/TheaterCompanyList';
 
@@ -34,6 +34,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
     const [form] = Form.useForm();
     const { response, loading, submitMessage, singleResponse, message: theaterMessages, editData, error } = useSelector((state) => state.theater);
     const { selectedPlace, selectedVenue, dialogVisible } = useSelector((state) => state.locations);
+    const { selectedCompanyId } = useSelector((state) => state.theaterCompany);
 
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
@@ -60,12 +61,14 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
         if (mode === MODE.EDIT && singleResponse) {
             console.log("singleResponse", singleResponse);
             dispatch(setSelectedPlace(singleResponse?.place.id));
-            dispatch(setSelectedVenue(singleResponse?.venue.id))
+            dispatch(setSelectedVenue(singleResponse?.venue.id));
+            dispatch(setSelectedCompanyId(singleResponse?.company.id));
             form.setFieldsValue({
                 place: singleResponse?.place?.name && singleResponse?.place?.country?.name
                     ? `${singleResponse.place.name}, ${singleResponse.place.country.name}`
                     : undefined,
                 venue_id: singleResponse?.venue?.name || undefined,
+                company_id: singleResponse?.company?.name || undefined,
                 name: singleResponse?.name || undefined,
                 phone_number: singleResponse?.phone_number || undefined,
                 website: singleResponse.website || undefined,
@@ -121,6 +124,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                     id: theaterEditId,
                     place_id: selectedPlace,
                     venue_id: selectedVenue,
+                    company_id: selectedCompanyId
                 }
                 dispatch(setTheaterEditData(editFormattedData));
                 const resultAction = await dispatch(validateVenue(selectedVenue));
@@ -328,7 +332,12 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                                 </Form.Item>
                             </Col>
                         </Row>
-
+                        <Form.Item
+                            label="Description"
+                            name="description"
+                        >
+                            <TextEditor />
+                        </Form.Item>
                         <Row>
                             <Col xs={24} md={24}>
                                 <Card>
@@ -339,13 +348,6 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                                 </Card>
                             </Col>
                         </Row>
-
-                        <Form.Item
-                            label="Description"
-                            name="description"
-                        >
-                            <TextEditor />
-                        </Form.Item>
 
                         <Form.Item
                             name="thumbnail_image"

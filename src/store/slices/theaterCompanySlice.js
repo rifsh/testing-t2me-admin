@@ -5,6 +5,7 @@ import TheaterService from "services/theaterService";
 const initialState = {
     activeTab: "Companies",
     loading: false,
+    singleLoading: false,
     editLoading: false,
     isDetailModal: false,
     response: null,
@@ -13,6 +14,7 @@ const initialState = {
     editData: [],
     singleResponse: null,
     submitMessage: null,
+    selectedCompanyId: null,
     formType: null,
     editable_status: null,
     message: null,
@@ -102,6 +104,9 @@ const theaterCompanySlice = createSlice({
                 state.singleResponse = null;
             }
         },
+        setSelectedCompanyId: (state, action) => {
+            state.selectedCompanyId = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -129,14 +134,14 @@ const theaterCompanySlice = createSlice({
                 state.error = action.payload;
             })
             .addCase(fetchTheaterCompanyByid.pending, (state) => {
-                state.loading = true;
+                state.singleLoading = true;
             })
             .addCase(fetchTheaterCompanyByid.fulfilled, (state, action) => {
-                state.loading = false;
+                state.singleLoading = false;
                 state.singleResponse = action.payload;
             })
             .addCase(fetchTheaterCompanyByid.rejected, (state, action) => {
-                state.loading = false;
+                state.singleLoading = false;
                 state.error = action.payload;
             })
             .addCase(editTheaterCompany.pending, (state) => {
@@ -171,6 +176,6 @@ const theaterCompanySlice = createSlice({
     },
 });
 
-export const { setTheaterCompanyEditData, setTheaterEditId, setCleraAllData, setActiveTab, setDetailModal, setTheaterCompanyEditId } = theaterCompanySlice.actions;
+export const { setTheaterCompanyEditData, setTheaterEditId, setCleraAllData, setActiveTab, setDetailModal, setTheaterCompanyEditId, setSelectedCompanyId } = theaterCompanySlice.actions;
 
 export default theaterCompanySlice.reducer;
