@@ -199,17 +199,6 @@ const Index = () => {
                 <div className="space-y-6">
                     <Card title="Contact Information" className="shadow-md">
                         <div className="space-y-5">
-                            {/* Theater Company Name */}
-                            <div className="flex items-start">
-                                <StarOutlined className="mr-3 mt-1 text-blue-500" />
-                                <div>
-                                    <Text strong className="block">Theater Company</Text>
-                                    <Text className="text-gray-600">
-                                        {singleResponse?.company?.name || 'N/A'}
-                                    </Text>
-                                </div>
-                            </div>
-
                             {/* Address */}
                             <div className="flex items-start">
                                 <EnvironmentOutlined className="mr-3 mt-1 text-blue-500" />
