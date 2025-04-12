@@ -332,7 +332,12 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                                 </Form.Item>
                             </Col>
                         </Row>
-
+                        <Form.Item
+                            label="Description"
+                            name="description"
+                        >
+                            <TextEditor />
+                        </Form.Item>
                         <Row>
                             <Col xs={24} md={24}>
                                 <Card>
@@ -343,13 +348,6 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                                 </Card>
                             </Col>
                         </Row>
-
-                        <Form.Item
-                            label="Description"
-                            name="description"
-                        >
-                            <TextEditor />
-                        </Form.Item>
 
                         <Form.Item
                             name="thumbnail_image"
