@@ -255,8 +255,6 @@ const Index = () => {
                             </div>
                         </div>
                     </Card>
-                </div>
-                <div className="space-y-6">
                     <Card title="Theater Company Information" className="shadow-md">
                         <div className="space-y-5">
                             {/* Theater Company Name */}
