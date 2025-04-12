@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchTheaters, setSeectedTheater } from "store/slices/theaterSlice";
+import { fetchTheaterByid, fetchTheaters, setSeectedTheater } from "store/slices/theaterSlice";
 
 const TheaterListForm = ({ form, label = "Theater", rules, onSelect, mode, disabled }) => {
   const dispatch = useDispatch();
@@ -21,9 +21,9 @@ const TheaterListForm = ({ form, label = "Theater", rules, onSelect, mode, disab
 
   const handleSetSelectedTheater = (value) => {
     dispatch(setSeectedTheater(value))
+    dispatch(fetchTheaterByid({ theatre_id: value }))
     const theater = response?.items.find((theater) => theater.id === value);
     if (onSelect) onSelect(value);
-    // dispatch(setSelectedTheater(theater));
   };
 
   return (

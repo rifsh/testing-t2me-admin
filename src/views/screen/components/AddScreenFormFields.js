@@ -17,6 +17,7 @@ import LoadingOverlay from 'components/util-components/Loader';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import { ActionType } from 'utils/api/warning-submit-util';
 import TheaterListForm from 'components/util-components/FormItems/TheaterListForm';
+import { setCleraAllData } from 'store/slices/theaterSlice';
 
 const { Title, Text } = Typography;
 
@@ -33,6 +34,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
 
     const { response, singleResponse, message: screenMessage, loading, editResponse, editBodyData } = useSelector((state) => state.screen);
     const { dialogVisible, singleVenues } = useSelector((state) => state.locations);
+    const { selectedTheaterId } = useSelector((state) => state.theater);
 
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
@@ -122,9 +124,11 @@ const AddScreenFormFields = ({ mode, screenId }) => {
         dispatch(getVenues({ place_id: id, is_indoor: true }));
         form.resetFields([
             "venue_id",
+            "theatre_id",
             "screens",
         ]);
         setPlaceSelected(true);
+        dispatch(setCleraAllData());
         dispatch(resetTicketSelection());
         dispatch(setSelectedPlace(id));
         dispatch(setSelectedVenueList("clear"));
@@ -135,9 +139,6 @@ const AddScreenFormFields = ({ mode, screenId }) => {
 
     const handleVenueSelect = (venue) => {
         setIsLoading(true);
-        console.log("venue", venue);
-        form.resetFields(["screens"]);
-        setScreens([{ key: 0 }]);
         setVenueSelected(!!venue);
         setVenueId(venue);
         dispatch(setSelectedVenue(venue))
@@ -270,7 +271,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                             </Col>
                             <Col span={24}>
                                 <TheaterListForm
-                                form={form}
+                                    form={form}
                                 />
                             </Col>
                         </Row>
@@ -279,16 +280,17 @@ const AddScreenFormFields = ({ mode, screenId }) => {
             </Row>
 
             <>
-                {!venueSelected && mode === 'ADD' && < Alert
-                    message="Venue Required"
-                    description="Please select a venue to configure screens."
-                    type="info"
-                    showIcon
-                />}
+                {!selectedTheaterId && mode === 'ADD' &&
+                    < Alert
+                        message="Theater Required"
+                        description="Please select a theater to configure screens."
+                        type="info"
+                        showIcon
+                    />}
             </>
 
             <div style={{ marginTop: 16 }}>
-                <Collapse in={!!form.getFieldValue('venue_id')}>
+                <Collapse in={!!form.getFieldValue('theatre_id')}>
                     <div>
                         <div style={{ textAlign: 'center', padding: '20px' }}>
                         </div>
@@ -321,10 +323,10 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                     bordered
                                     className="screen-information-card"
                                 >
-                                    {!venueSelected && mode === 'ADD' ? (
+                                    {!selectedTheaterId && mode === 'ADD' ? (
                                         <Alert
-                                            message="Venue Required"
-                                            description="Please select a venue to configure screens."
+                                            message="Theater Required"
+                                            description="Please select a theater to configure screens."
                                             type="info"
                                             showIcon
                                         />
