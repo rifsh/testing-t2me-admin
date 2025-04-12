@@ -27,7 +27,7 @@ const TheaterListForm = ({ form, label = "Theater", rules, onSelect, mode, disab
   };
 
   return (
-    <Form.Item name="theater_id" label={label} rules={rules}>
+    <Form.Item name="theatre_id" label={label} rules={rules}>
       <Select
         mode={mode}
         notFoundContent={
