@@ -32,9 +32,8 @@ const { Title } = Typography;
 const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
     const dispatch = useDispatch();
     const [form] = Form.useForm();
-    const { response, loading, submitMessage, singleResponse, message: theaterMessages, editData } = useSelector((state) => state.theater);
+    const { response, loading, submitMessage, singleResponse, message: theaterMessages, editData, error } = useSelector((state) => state.theater);
     const { selectedPlace, selectedVenue, dialogVisible } = useSelector((state) => state.locations);
-    const { response: theaterCompany, loading: companyLoading } = useSelector((state) => state.theaterCompany);
 
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
@@ -50,6 +49,12 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
             dispatch(setActiveTab('theater'));
         };
     }, [dispatch, mode, theaterEditId]);
+
+    useEffect(() => {
+        if (error) {
+            message.error(error);
+        }
+    }, [error]);
 
     useEffect(() => {
         if (mode === MODE.EDIT && singleResponse) {
@@ -146,6 +151,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
 
         } catch (errorInfo) {
             if (errorInfo.errorFields) {
+                console.log(`Field info`, errorInfo);
                 message.error("Please fill all the required fields.");
                 errorInfo.errorFields.forEach((field) => {
                     console.log(`Field Error: ${field.name.join(".")} - ${field.errors.join(", ")}`);
@@ -209,33 +215,6 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                 layout="vertical"
                 form={form}
                 name="theaterForm"
-                initialValues={{
-                    place_id: 58,
-                    venue_id: 56,
-                    name: "Test Theater",
-                    phone_number: "9074144485",
-                    website: "https://testtheater.com",
-                    number_of_screens: 4,
-                    capacity: 300,
-                    screen_tech: [
-                        { name: "IMAX", description: "High wide screen" }
-                    ],
-                    audios: [
-                        { name: "Dolby atmos", description: "Surrounded quality" }
-                    ],
-                    accessbility_feature: [
-                        { name: "Slider", description: "For disable people" }
-                    ],
-                    description: "<p>This is a sample description for test theater.</p>",
-                    thumbnail_image: [
-                        {
-                            uid: '-1',
-                            name: 'sample.jpg',
-                            status: 'done',
-                            url: 'https://via.placeholder.com/150', // Simulating a binary image
-                        }
-                    ]
-                }}
             >
 
                 <Card>
@@ -265,7 +244,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                         <Row gutter={24}>
                             <Col xs={24} md={12}>
                                 <Form.Item
-                                    name="company"
+                                    name="company_id"
                                     label="Theater Company"
                                     rules={[{ required: true, message: 'Please select a company' }]}
                                 >
@@ -307,6 +286,8 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                                 <Form.Item
                                     label="Website"
                                     name="website"
+                                    rules={[{ required: true, message: 'Please enter your website URL' }]}
+
                                 >
                                     <Input
                                         prefix={<GlobalOutlined />}

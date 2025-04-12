@@ -218,15 +218,21 @@ const Index = () => {
                                 </div>
                             </div>
 
-                            <div className="flex items-center">
-                                <GlobalOutlined className="mr-3 text-blue-500" />
-                                <div>
+                            <div className="flex items-start">
+                                <GlobalOutlined className="mr-3 text-blue-500 mt-1" />
+                                <div className="min-w-0">
                                     <Text strong className="block">Website</Text>
-                                    <a href={`https://${singleResponse?.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-500">
+                                    <a
+                                        href={`https://${singleResponse?.website}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-500 block break-words whitespace-normal"
+                                    >
                                         {singleResponse?.website}
                                     </a>
                                 </div>
                             </div>
+
                         </div>
                     </Card>
                 </div>
