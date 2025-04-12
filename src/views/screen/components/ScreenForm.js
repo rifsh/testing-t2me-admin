@@ -24,12 +24,12 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
             {
                 validator: (_, value) => {
                     const currentScreens = form.getFieldValue('screens') || [];
-
                     const totalScreenCapacity = currentScreens.reduce((total, screen, screenIndex) => {
                         if (screenIndex === index) return total;
 
                         return total + (screen?.capacity || 0);
                     }, 0);
+                    console.log('capacitylog', totalScreenCapacity)
 
                     const proposedTotalCapacity = totalScreenCapacity + (value || 0);
 

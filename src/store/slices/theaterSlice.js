@@ -88,6 +88,7 @@ const theaterSlice = createSlice({
         setCleraAllData(state) {
             state.response = null;
             state.singleResponse = null;
+            state.selectedTheaterId = null
         },
         setActiveTab: (state, action) => {
             state.activeTab = action.payload;
