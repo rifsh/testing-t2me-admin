@@ -106,8 +106,9 @@ const theaterSlice = createSlice({
                 state.response = action.payload.data;
                 state.submitMessage = action.payload.status.message;
             })
-            .addCase(createTheater.rejected, (state) => {
+            .addCase(createTheater.rejected, (state, action) => {
                 state.loading = false;
+                state.error = action.payload.server_error;
             })
             .addCase(fetchTheaters.pending, (state) => {
                 state.loading = true;

@@ -32,9 +32,8 @@ const { Title } = Typography;
 const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
     const dispatch = useDispatch();
     const [form] = Form.useForm();
-    const { response, loading, submitMessage, singleResponse, message: theaterMessages, editData } = useSelector((state) => state.theater);
+    const { response, loading, submitMessage, singleResponse, message: theaterMessages, editData, error } = useSelector((state) => state.theater);
     const { selectedPlace, selectedVenue, dialogVisible } = useSelector((state) => state.locations);
-    const { response: theaterCompany, loading: companyLoading } = useSelector((state) => state.theaterCompany);
 
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
@@ -50,6 +49,12 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
             dispatch(setActiveTab('theater'));
         };
     }, [dispatch, mode, theaterEditId]);
+
+    useEffect(() => {
+        if (error) {
+            message.error(error);
+        }
+    }, [error]);
 
     useEffect(() => {
         if (mode === MODE.EDIT && singleResponse) {
@@ -146,6 +151,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
 
         } catch (errorInfo) {
             if (errorInfo.errorFields) {
+                console.log(`Field info`, errorInfo);
                 message.error("Please fill all the required fields.");
                 errorInfo.errorFields.forEach((field) => {
                     console.log(`Field Error: ${field.name.join(".")} - ${field.errors.join(", ")}`);
@@ -280,6 +286,8 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                                 <Form.Item
                                     label="Website"
                                     name="website"
+                                    rules={[{ required: true, message: 'Please enter your website URL' }]}
+
                                 >
                                     <Input
                                         prefix={<GlobalOutlined />}
