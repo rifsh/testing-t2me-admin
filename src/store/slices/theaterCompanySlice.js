@@ -14,6 +14,7 @@ const initialState = {
     editData: [],
     singleResponse: null,
     submitMessage: null,
+    selectedCompanyId: null,
     formType: null,
     editable_status: null,
     message: null,
@@ -103,6 +104,9 @@ const theaterCompanySlice = createSlice({
                 state.singleResponse = null;
             }
         },
+        setSelectedCompanyId: (state, action) => {
+            state.selectedCompanyId = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -172,6 +176,6 @@ const theaterCompanySlice = createSlice({
     },
 });
 
-export const { setTheaterCompanyEditData, setTheaterEditId, setCleraAllData, setActiveTab, setDetailModal, setTheaterCompanyEditId } = theaterCompanySlice.actions;
+export const { setTheaterCompanyEditData, setTheaterEditId, setCleraAllData, setActiveTab, setDetailModal, setTheaterCompanyEditId, setSelectedCompanyId } = theaterCompanySlice.actions;
 
 export default theaterCompanySlice.reducer;

@@ -149,19 +149,13 @@ const TheaterList = () => {
         {
             title: "Website",
             dataIndex: "website",
-            width: 40,
+            width: 100,
             key: "website",
             render: (text) => (
                 <a href={text} target="_blank" rel="noopener noreferrer">
                     {text}
                 </a>
             ),
-        },
-        {
-            title: "Capacity",
-            dataIndex: "capacity",
-            render: (capacity) => <span>{capacity || "0"}</span>,
-            sorter: (a, b) => utils.antdTableSorter(a, b, "capacity"),
         },
         utils.statusColumnUtil(handleUpdateStatus),
         {
