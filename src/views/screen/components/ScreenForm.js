@@ -155,10 +155,17 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
-                    <Form.Item name={['screens', index, 'seat_structure_id']} label="Seat Structure">
+                    {/* <Form.Item name={['screens', index, 'seat_structure_id']} label="Seat Structure">
                         <Select placeholder="Select seat structure">
                             {screenOptions.seatStructures.map(({ value, label }) => (
                                 <Option key={value} value={value}>{label}</Option>
+                            ))}
+                        </Select>
+                    </Form.Item> */}
+                    <Form.Item name={['screens', index, 'time_slots']} label="Available Times">
+                        <Select mode="multiple" placeholder="Select available time slots">
+                            {screenOptions.availableTimes.map(({ value, label }) => (
+                                <Option key={value} value={label}>{label}</Option>
                             ))}
                         </Select>
                     </Form.Item>
@@ -191,13 +198,13 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                 index={index}
                 rules={rules} /> */}
 
-            <Form.Item name={['screens', index, 'time_slots']} label="Available Times">
+            {/* <Form.Item name={['screens', index, 'time_slots']} label="Available Times">
                 <Select mode="multiple" placeholder="Select available time slots">
                     {screenOptions.availableTimes.map(({ value, label }) => (
                         <Option key={value} value={label}>{label}</Option>
                     ))}
                 </Select>
-            </Form.Item>
+            </Form.Item> */}
 
             <Card title="Additional Settings" style={{ marginBottom: '20px' }}>
                 <Row gutter={16}>
