@@ -1,18 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  Layout,
-  Button,
-  Typography,
-  Space,
-  message,
-  Modal,
-  Select,
-  TimePicker,
-  Drawer,
-  Card,
-  InputNumber,
-} from "antd";
+import { Layout, Button, Typography, message, Modal, Drawer, Card } from "antd";
 import dayjs from "dayjs";
 import MovieDetails from "./MovieDetails";
 import {
@@ -22,16 +10,25 @@ import {
   updateScheduledMovie,
 } from "store/slices/movieScheduleSlice";
 import Header from "./Header";
-import { MovieSlot } from "./MovieSlot";
+import Timeline from "./Timeline";
+import ScheduleForm from "./ScheduleForm";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import {
+  timeToDate,
+  dateToTime,
+  formatTime,
+  isMovieVisible,
+  checkOverlap,
+  calculateVisibleWidth,
+} from "../utils";
+import { fetchScreenData } from "store/slices/screenSlice";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 // Main App Component
 export default function MovieScheduler() {
   const dispatch = useDispatch();
-  const timelineRef = useRef(null);
   const containerRef = useRef(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDetailsVisible, setIsDetailsVisible] = useState(false);
@@ -56,7 +53,32 @@ export default function MovieScheduler() {
   // Scale (pixels per hour)
   const scale = { x: 80 }; // Increased scale for better readability
 
-  const screens = ["Screen 1", "Screen 2", "Screen 3", "Screen 4", "Screen 5"];
+  // Get screen data from Redux state
+  const { response, loading, error } = useSelector((state) => state.screen);
+
+  // Extract screen names properly
+  const extractScreenNames = () => {
+    if (!response || !response.items || response.items.length === 0) {
+      return [];
+    }
+
+    // Flatten all screens from all theaters
+    const allScreens = [];
+    response.items.forEach((theatre) => {
+      if (theatre.movie_screen && Array.isArray(theatre.movie_screen)) {
+        theatre.movie_screen.forEach((screen) => {
+          if (screen && screen.screen_name) {
+            allScreens.push(screen.screen_name);
+          }
+        });
+      }
+    });
+
+    return allScreens;
+  };
+
+  const screens = extractScreenNames();
+
 
   // Update container width on mount and resize
   useEffect(() => {
@@ -71,79 +93,8 @@ export default function MovieScheduler() {
     return () => window.removeEventListener("resize", updateContainerWidth);
   }, []);
 
-  // Convert 24-hour time to a dayjs object
-  const timeToDate = (time) => {
-    const hours = Math.floor(time);
-    const minutes = Math.round((time - hours) * 60);
-    return dayjs().hour(hours).minute(minutes).second(0);
-  };
-
-  // Convert dayjs to 24-hour decimal time
-  const dateToTime = (date) => {
-    if (!date) return null;
-    return date.hour() + date.minute() / 60;
-  };
-
-  // Format time for display (24-hour format with minutes)
-  const formatTime = (time) => {
-    const hours = Math.floor(time);
-    const minutes = Math.round((time - hours) * 60);
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  // Check if a movie is visible in the current domain
-  const isMovieVisible = (movie) => {
-    return (
-      (movie.startTime >= xDomain[0] && movie.startTime <= xDomain[1]) || // Start time visible
-      (movie.endTime > xDomain[0] && movie.endTime <= xDomain[1]) || // End time visible
-      (movie.startTime <= xDomain[0] && movie.endTime > xDomain[1]) // Movie spans entire visible area
-    );
-  };
-
-  // Improved overlap detection
-  const checkOverlap = (
-    screen,
-    startTime,
-    endTime,
-    movieIdToExclude = null
-  ) => {
-    // Get precise epsilon for floating point comparison
-    const epsilon = 1e-6;
-
-    return scheduledMovies.some((movie) => {
-      // Skip comparison with self when updating
-      if (movieIdToExclude !== null && movie.id === movieIdToExclude) {
-        return false;
-      }
-
-      // Only check overlap if on same screen
-      if (movie.screen !== screen) {
-        return false;
-      }
-
-      // Case 1: New movie starts during existing movie
-      const startsInExisting =
-        startTime + epsilon >= movie.startTime &&
-        startTime - epsilon <= movie.endTime;
-
-      // Case 2: New movie ends during existing movie
-      const endsInExisting =
-        endTime + epsilon >= movie.startTime &&
-        endTime - epsilon <= movie.endTime;
-
-      // Case 3: New movie fully contains existing movie
-      const containsExisting =
-        startTime - epsilon <= movie.startTime &&
-        endTime + epsilon >= movie.endTime;
-
-      return startsInExisting || endsInExisting || containsExisting;
-    });
-  };
-
   // Handle mouse move for tooltips
-  const handleTimelineMouseMove = (e) => {
+  const handleTimelineMouseMove = (e, timelineRef) => {
     if (!timelineRef.current) return;
 
     const rect = timelineRef.current.getBoundingClientRect();
@@ -206,7 +157,7 @@ export default function MovieScheduler() {
       return;
     }
 
-    const rect = timelineRef.current.getBoundingClientRect();
+    const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
@@ -259,6 +210,7 @@ export default function MovieScheduler() {
       newScreen,
       newStartTime,
       newEndTime,
+      scheduledMovies,
       movieId
     );
 
@@ -284,22 +236,6 @@ export default function MovieScheduler() {
     if (selectedMovie && selectedMovie.id === movieId) {
       dispatch(setSelectedMovie(updatedMovie));
     }
-  };
-
-  // Generate time labels - only showing hours
-  const generateTimeLabels = () => {
-    const labels = [];
-
-    // Add hour markers (every hour from 0 to 24)
-    for (let hour = 0; hour <= 24; hour++) {
-      labels.push({
-        time: hour,
-        position: (hour - xDomain[0]) * scale.x,
-        isHour: true,
-      });
-    }
-
-    return labels;
   };
 
   // Handle movie selection from modal
@@ -335,7 +271,8 @@ export default function MovieScheduler() {
     const isOverlapping = checkOverlap(
       selectedScreen,
       roundedStartTime,
-      endTime
+      endTime,
+      scheduledMovies
     );
 
     if (isOverlapping) {
@@ -389,19 +326,39 @@ export default function MovieScheduler() {
     message.success("Movie removed from schedule");
   };
 
-  // Calculate the timeline width - ensure it fills container and provides adequate space
-  const calculateVisibleWidth = () => {
-    // Width for the timeline (12 hours * scale)
-    const timelineWidth = (xDomain[1] - xDomain[0]) * scale.x;
-
-    // Return the larger of the fixed width or container width
-    return Math.max(timelineWidth, containerWidth || window.innerWidth - 48);
-  };
-
-  const visibleWidth = calculateVisibleWidth();
+  const visibleWidth = calculateVisibleWidth(xDomain, scale, containerWidth);
 
   // Row height for each screen
   const rowHeight = 80;
+
+  // Show loading state or error if applicable
+  if (loading) {
+    return (
+      <Layout className="min-h-screen">
+        <Header />
+        <Content className="p-4">
+          <Card>
+            <div className="text-center p-8">Loading screen data...</div>
+          </Card>
+        </Content>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout className="min-h-screen">
+        <Header />
+        <Content className="p-4">
+          <Card>
+            <div className="text-center p-8 text-red-500">
+              Error loading screen data: {error}
+            </div>
+          </Card>
+        </Content>
+      </Layout>
+    );
+  }
 
   return (
     <Layout className="min-h-screen">
@@ -422,130 +379,29 @@ export default function MovieScheduler() {
               </div>
             </div>
 
-            <div
-              className="border rounded overflow-hidden relative"
-              style={{ height: Math.max(500, screens.length * rowHeight + 40) }}
-            >
-              {/* Screen names on the left */}
-              <div className="absolute top-12 left-0 bottom-0 w-24 bg-gray-100 border-r z-10">
-                {screens.map((screen, index) => (
-                  <div
-                    key={index}
-                    className="absolute left-0 w-full border-b border-gray-200 flex items-center justify-center text-xs font-medium"
-                    style={{
-                      top: index * rowHeight,
-                      height: rowHeight,
-                    }}
-                  >
-                    {screen}
-                  </div>
-                ))}
+            {screens.length > 0 ? (
+              <Timeline
+                screens={screens}
+                scheduledMovies={scheduledMovies}
+                selectedMovie={selectedMovie}
+                xDomain={xDomain}
+                scale={scale}
+                visibleWidth={visibleWidth}
+                rowHeight={rowHeight}
+                formatTime={formatTime}
+                handleTimelineClick={handleTimelineClick}
+                handleTimelineMouseMove={handleTimelineMouseMove}
+                handleTimelineMouseLeave={handleTimelineMouseLeave}
+                handleMovieClick={handleMovieClick}
+                handleMovieDragEnd={handleMovieDragEnd}
+                tooltipInfo={tooltipInfo}
+                isMovieVisible={(movie) => isMovieVisible(movie, xDomain)}
+              />
+            ) : (
+              <div className="text-center p-8">
+                No screens available. Please add screens to schedule movies.
               </div>
-
-              {/* Time headers */}
-              <div className="absolute top-0 left-24 right-0 h-12 bg-gray-100 border-b z-10 overflow-hidden">
-                <div
-                  className="absolute left-0 top-0 h-full"
-                  style={{ width: `${visibleWidth}px` }}
-                >
-                  {generateTimeLabels().map((label, index) => (
-                    <div
-                      key={index}
-                      className="absolute h-full border-l border-gray-300 font-medium"
-                      style={{
-                        left: `${label.position}px`,
-                      }}
-                    >
-                      <div className="px-1 py-2">
-                        {label.time.toString().padStart(2, "0")}:00
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Timeline grid with content */}
-              <div
-                className="absolute left-24 top-12 right-0 bottom-0 overflow-auto"
-                style={{ width: "calc(100% - 24px)" }}
-              >
-                <div
-                  ref={timelineRef}
-                  style={{
-                    width: `${visibleWidth}px`,
-                    height: screens.length * rowHeight,
-                    position: "relative",
-                  }}
-                  onClick={handleTimelineClick}
-                  onMouseMove={handleTimelineMouseMove}
-                  onMouseLeave={handleTimelineMouseLeave}
-                >
-                  {/* Time grid lines */}
-                  {generateTimeLabels().map((label, index) => (
-                    <div
-                      key={`grid-${index}`}
-                      className="absolute h-full border-l border-gray-300"
-                      style={{
-                        left: `${label.position}px`,
-                        zIndex: 1,
-                      }}
-                    />
-                  ))}
-
-                  {/* Screen row backgrounds with horizontal grid lines */}
-                  {screens.map((_, index) => (
-                    <div
-                      key={index}
-                      className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                      style={{
-                        position: "absolute",
-                        top: index * rowHeight,
-                        left: 0,
-                        width: "100%",
-                        height: rowHeight,
-                        borderBottom: "1px solid #e0e0e0",
-                        zIndex: 2,
-                      }}
-                    />
-                  ))}
-
-                  {/* Movie time slots */}
-                  {scheduledMovies.filter(isMovieVisible).map((movie) => (
-                    <MovieSlot
-                      key={movie.id}
-                      movie={movie}
-                      formatTime={formatTime}
-                      screens={screens}
-                      onClick={handleMovieClick}
-                      scale={scale}
-                      isSelected={
-                        selectedMovie && selectedMovie.id === movie.id
-                      }
-                      onDragEnd={handleMovieDragEnd}
-                      timelineRef={timelineRef}
-                      xDomain={xDomain}
-                      rowHeight={rowHeight}
-                    />
-                  ))}
-
-                  {/* Timeline tooltip */}
-                  {tooltipInfo && (
-                    <div
-                      className="absolute bg-white shadow-md p-2 rounded-md text-xs z-50 border border-gray-200"
-                      style={{
-                        left: tooltipInfo.x,
-                        top: tooltipInfo.y,
-                        transform: "translate(0, -50%)",
-                        pointerEvents: "none",
-                      }}
-                    >
-                      <div className="font-medium">{tooltipInfo.screen}</div>
-                      <div>{tooltipInfo.time}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            )}
           </Content>
         </Card>
       </Layout>
@@ -581,80 +437,18 @@ export default function MovieScheduler() {
         onOk={handleScheduleMovie}
         destroyOnClose
       >
-        <Space direction="vertical" style={{ width: "100%" }} size="large">
-          <div>
-            <Text strong>Screen:</Text>
-            <Select
-              style={{ width: "100%", marginTop: 8 }}
-              placeholder="Select a screen"
-              value={selectedScreen !== null ? selectedScreen : undefined}
-              onChange={setSelectedScreen}
-            >
-              {screens.map((screen, index) => (
-                <Option key={index} value={index}>
-                  {screen}
-                </Option>
-              ))}
-            </Select>
-          </div>
-
-          <div>
-            <Text strong>Start Time:</Text>
-            <TimePicker
-              style={{ width: "100%", marginTop: 8 }}
-              format="HH:mm"
-              value={selectedTime}
-              onChange={setSelectedTime}
-              minuteStep={5}
-              use12Hours={false}
-            />
-          </div>
-
-          <div>
-            <Text strong>Movie:</Text>
-            <Select
-              style={{ width: "100%", marginTop: 8 }}
-              placeholder="Select a movie"
-              value={selectedMovieId}
-              onChange={setSelectedMovieId}
-            >
-              {movies.map((movie) => (
-                <Option key={movie.id} value={movie.id}>
-                  {movie.title} ({movie.duration} min)
-                </Option>
-              ))}
-            </Select>
-          </div>
-
-          <div>
-            <Text strong>Interval Time (minutes):</Text>
-            <InputNumber
-              style={{ width: "100%", marginTop: 8 }}
-              min={0}
-              max={60}
-              value={intervalTime}
-              onChange={(value) => setIntervalTime(value)}
-            />
-            <Text type="secondary" className="mt-1 block">
-              Time between movies for breaks and setup
-            </Text>
-          </div>
-
-          {selectedMovieId && (
-            <div>
-              <Text type="secondary">
-                Duration:{" "}
-                {movies.find((m) => m.id === selectedMovieId)?.duration} minutes
-              </Text>
-              <Text type="secondary" className="block">
-                Total Time:{" "}
-                {movies.find((m) => m.id === selectedMovieId)?.duration +
-                  intervalTime}{" "}
-                minutes (including {intervalTime} min interval)
-              </Text>
-            </div>
-          )}
-        </Space>
+        <ScheduleForm
+          movies={movies}
+          screens={screens}
+          selectedMovieId={selectedMovieId}
+          selectedTime={selectedTime}
+          selectedScreen={selectedScreen}
+          intervalTime={intervalTime}
+          setSelectedMovieId={setSelectedMovieId}
+          setSelectedTime={setSelectedTime}
+          setSelectedScreen={setSelectedScreen}
+          setIntervalTime={setIntervalTime}
+        />
       </Modal>
     </Layout>
   );

@@ -61,6 +61,18 @@ const ScheduleForm = (props) => {
     editable_status,
   } = useSelector((state) => state.movieSeatSlice);
 
+  // Function to check if required fields are missing
+  const areRequiredFieldsMissing = () => {
+    const values = form.getFieldsValue();
+    return (
+      !values.theatre_id ||
+      !values.place ||
+      !values.venue_id ||
+      !values.start_date ||
+      !values.end_date
+    );
+  };
+
   useEffect(() => {
     if (seatId && mode === EDIT) {
       dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
@@ -238,6 +250,7 @@ const ScheduleForm = (props) => {
                 <DiscardButton form={form} />
                 <Button
                   type="primary"
+                  disabled={areRequiredFieldsMissing()}
                   onClick={() => onFinish()}
                   htmlType="submit"
                   loading={submitLoading || loading}
@@ -248,25 +261,39 @@ const ScheduleForm = (props) => {
             </Flex>
           </div>
         </PageHeaderAlt>
-        <div className="container">
-          <Tabs
-            activeKey={activeTabKey}
-            onChange={handleTabChange}
-            style={{ marginTop: 30 }}
-            items={[
-              {
-                label: "Theator Selection",
-                key: "1",
-                children: <ScheduleDetailForm form={form} mode={mode} />,
-              },
-              {
-                label: "Schedule Layout",
-                key: "2",
-                children: <MovieScheduler />,
-              },
-            ]}
-          />
-        </div>
+        <Form.Item
+          noStyle
+          shouldUpdate={(prevValues, currentValues) =>
+            prevValues.theatre_id !== currentValues.theatre_id ||
+            prevValues.place !== currentValues.place ||
+            prevValues.venue_id !== currentValues.venue_id ||
+            prevValues.start_date !== currentValues.start_date ||
+            prevValues.end_date !== currentValues.end_date
+          }
+        >
+          {() => {
+            return (
+              <Tabs
+                activeKey={activeTabKey}
+                onChange={handleTabChange}
+                style={{ marginTop: 30 }}
+                items={[
+                  {
+                    label: "Theatre Selection",
+                    key: "1",
+                    children: <ScheduleDetailForm form={form} mode={mode} />,
+                  },
+                  {
+                    label: "Schedule Layout",
+                    key: "2",
+                    disabled: areRequiredFieldsMissing(),
+                    children: <MovieScheduler />,
+                  },
+                ]}
+              />
+            );
+          }}
+        </Form.Item>
       </Form>
       <LoadingOverlay loading={loading} />
       <WarningModal
