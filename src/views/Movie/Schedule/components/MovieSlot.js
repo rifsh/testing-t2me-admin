@@ -49,6 +49,7 @@ export const MovieSlot = ({
     if (!e.target.closest(".drag-handle")) return;
 
     e.preventDefault();
+    e.stopPropagation();
 
     // Record the initial position where mouse was pressed
     mouseDownPos.current = { x: e.clientX, y: e.clientY };
@@ -86,6 +87,8 @@ export const MovieSlot = ({
     }
 
     e.preventDefault();
+
+    if (!timelineRef.current) return;
 
     const timelineRect = timelineRef.current.getBoundingClientRect();
 
@@ -163,7 +166,15 @@ export const MovieSlot = ({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [dragStarted, isDragging, dragOffset, originalPosition, dragPosition]);
+  }, [
+    dragStarted,
+    isDragging,
+    dragOffset,
+    originalPosition,
+    dragPosition,
+    scale,
+    xDomain,
+  ]);
 
   // Calculate displayed position (original or drag position)
   const displayLeft = isDragging
@@ -206,7 +217,7 @@ Screen: ${screens[isDragging ? dragPosition.y : movie.screen]}`;
   return (
     <Tooltip title={tooltipTitle} placement="top">
       <div
-        className={`absolute transition-shadow ${
+        className={`absolute transition-shadow movie-slot ${
           isDragging ? "shadow-lg z-50" : "z-10"
         }`}
         style={{

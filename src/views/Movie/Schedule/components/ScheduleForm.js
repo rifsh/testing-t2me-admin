@@ -1,12 +1,11 @@
-import React from 'react';
-import { Typography, Space, Select, TimePicker, InputNumber } from 'antd';
-import dayjs from 'dayjs';
-import ScreenSelector from './ScreenSelector';
+import React from "react";
+import { Form, Select, TimePicker, InputNumber, Typography } from "antd";
+import dayjs from "dayjs";
 
-const { Text } = Typography;
 const { Option } = Select;
+const { Text } = Typography;
 
-const ScheduleForm = ({
+export default function ScheduleForm({
   movies,
   screens,
   selectedMovieId,
@@ -17,37 +16,31 @@ const ScheduleForm = ({
   setSelectedTime,
   setSelectedScreen,
   setIntervalTime,
-}) => {
+  selectedDate,
+}) {
+  const handleTimeChange = (time) => {
+    setSelectedTime(time);
+  };
+
+  const format = "h:mm A";
+
   return (
-    <Space direction="vertical" style={{ width: "100%" }} size="large">
-      <div>
-        <Text strong>Screen:</Text>
-        <ScreenSelector 
-          screens={screens}
-          selectedScreen={selectedScreen}
-          onScreenChange={setSelectedScreen}
-        />
-      </div>
+    <Form layout="vertical">
+      {selectedDate && (
+        <div className="mb-4">
+          <Text type="secondary">
+            Scheduling for:{" "}
+            <strong>{selectedDate.format("dddd, MMMM D, YYYY")}</strong>
+          </Text>
+        </div>
+      )}
 
-      <div>
-        <Text strong>Start Time:</Text>
-        <TimePicker
-          style={{ width: "100%", marginTop: 8 }}
-          format="HH:mm"
-          value={selectedTime}
-          onChange={setSelectedTime}
-          minuteStep={5}
-          use12Hours={false}
-        />
-      </div>
-
-      <div>
-        <Text strong>Movie:</Text>
+      <Form.Item label="Movie" required>
         <Select
-          style={{ width: "100%", marginTop: 8 }}
           placeholder="Select a movie"
           value={selectedMovieId}
           onChange={setSelectedMovieId}
+          style={{ width: "100%" }}
         >
           {movies.map((movie) => (
             <Option key={movie.id} value={movie.id}>
@@ -55,35 +48,68 @@ const ScheduleForm = ({
             </Option>
           ))}
         </Select>
-      </div>
+      </Form.Item>
 
-      <div>
-        <Text strong>Interval Time (minutes):</Text>
+      <Form.Item label="Screen" required>
+        <Select
+          placeholder="Select a screen"
+          value={selectedScreen !== null ? selectedScreen : undefined}
+          onChange={setSelectedScreen}
+          style={{ width: "100%" }}
+        >
+          {screens.map((screen, index) => (
+            <Option key={index} value={index}>
+              {screen}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
+
+      <Form.Item label="Start Time" required>
+        <TimePicker
+          value={selectedTime}
+          onChange={handleTimeChange}
+          format={format}
+          minuteStep={5}
+          style={{ width: "100%" }}
+          use12Hours
+        />
+      </Form.Item>
+
+      <Form.Item
+        label="Interval After Movie (minutes)"
+        tooltip="Time reserved for cleaning and preparation between movies"
+      >
         <InputNumber
-          style={{ width: "100%", marginTop: 8 }}
           min={0}
           max={60}
+          step={5}
           value={intervalTime}
-          onChange={(value) => setIntervalTime(value)}
+          onChange={setIntervalTime}
+          style={{ width: "100%" }}
         />
-        <Text type="secondary" className="mt-1 block">
-          Time between movies for breaks and setup
-        </Text>
-      </div>
+      </Form.Item>
 
       {selectedMovieId && (
-        <div>
-          <Text type="secondary">
-            Duration: {movies.find((m) => m.id === selectedMovieId)?.duration} minutes
-          </Text>
-          <Text type="secondary" className="block">
-            Total Time: {movies.find((m) => m.id === selectedMovieId)?.duration + intervalTime} minutes
-            (including {intervalTime} min interval)
-          </Text>
-        </div>
+        <Form.Item label="Selected Movie Details">
+          <div>
+            {movies
+              .filter((movie) => movie.id === selectedMovieId)
+              .map((movie) => (
+                <div key={movie.id}>
+                  <Text>Title: {movie.title}</Text>
+                  <br />
+                  <Text>Duration: {movie.duration} minutes</Text>
+                  <br />
+                  <Text>
+                    Total Time: {movie.duration + intervalTime} minutes
+                    (including {intervalTime} min interval)
+                  </Text>
+                </div>
+              ))}
+          </div>
+        </Form.Item>
       )}
-    </Space>
+    </Form>
   );
-};
-
-export default ScheduleForm;
+}

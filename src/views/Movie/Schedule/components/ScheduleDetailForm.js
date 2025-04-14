@@ -174,7 +174,11 @@ function ScheduleDetailForm({ form, mode }) {
               />
             </Col>
             <Col span={24}>
-              <TheaterListForm form={form} onSelect={handleTheatreSelect} />
+              <TheaterListForm
+                rules={[{ required: true }]}
+                form={form}
+                onSelect={handleTheatreSelect}
+              />
               {response && response.items.length <= 0 && (
                 <Alert
                   message="No screens found for this theater"

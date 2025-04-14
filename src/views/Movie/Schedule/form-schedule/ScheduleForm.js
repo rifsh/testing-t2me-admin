@@ -61,7 +61,6 @@ const ScheduleForm = (props) => {
     editable_status,
   } = useSelector((state) => state.movieSeatSlice);
 
-  // Function to check if required fields are missing
   const areRequiredFieldsMissing = () => {
     const values = form.getFieldsValue();
     return (

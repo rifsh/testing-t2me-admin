@@ -1,6 +1,16 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Layout, Button, Typography, message, Modal, Drawer, Card } from "antd";
+import {
+  Layout,
+  Typography,
+  message,
+  Modal,
+  Drawer,
+  Card,
+  Button,
+  Tooltip,
+} from "antd";
+import { ZoomInOutlined, ZoomOutOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import MovieDetails from "./MovieDetails";
 import {
@@ -8,11 +18,11 @@ import {
   addScheduledMovie,
   removeScheduledMovie,
   updateScheduledMovie,
+  setXDomain,
 } from "store/slices/movieScheduleSlice";
 import Header from "./Header";
 import Timeline from "./Timeline";
 import ScheduleForm from "./ScheduleForm";
-import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import {
   timeToDate,
   dateToTime,
@@ -21,12 +31,10 @@ import {
   checkOverlap,
   calculateVisibleWidth,
 } from "../utils";
-import { fetchScreenData } from "store/slices/screenSlice";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
-// Main App Component
 export default function MovieScheduler() {
   const dispatch = useDispatch();
   const containerRef = useRef(null);
@@ -37,32 +45,40 @@ export default function MovieScheduler() {
   const [selectedScreen, setSelectedScreen] = useState(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [tooltipInfo, setTooltipInfo] = useState(null);
-  const [intervalTime, setIntervalTime] = useState(15); // Default interval time in minutes
+  const [intervalTime, setIntervalTime] = useState(15);
+  const [scale, setScale] = useState({ x: 80 });
 
-  // Get state from Redux store
   const movies = useSelector((state) => state.movieScheduleSlice.movies);
-  const scheduledMovies = useSelector(
+  const allScheduledMovies = useSelector(
     (state) => state.movieScheduleSlice.scheduledMovies
   );
   const selectedMovie = useSelector(
     (state) => state.movieScheduleSlice.selectedMovie
   );
+  const selectedDate = useSelector(
+    (state) => state.movieScheduleSlice.selectedDate
+  );
+  const xDomain = useSelector((state) => state.movieScheduleSlice.xDomain);
 
-  // Fixed 12-hour domain for better visibility (from 0 to 12)
-  const xDomain = [0, 12];
-  // Scale (pixels per hour)
-  const scale = { x: 80 }; // Increased scale for better readability
+  const scheduledMovies = allScheduledMovies.filter((movie) => {
+    if (!selectedDate) return true;
 
-  // Get screen data from Redux state
+    if (movie.scheduleDate) {
+      const movieDate = dayjs(movie.scheduleDate).format("YYYY-MM-DD");
+      const currentDate = selectedDate.format("YYYY-MM-DD");
+      return movieDate === currentDate;
+    }
+
+    return false;
+  });
+
   const { response, loading, error } = useSelector((state) => state.screen);
 
-  // Extract screen names properly
   const extractScreenNames = () => {
     if (!response || !response.items || response.items.length === 0) {
       return [];
     }
 
-    // Flatten all screens from all theaters
     const allScreens = [];
     response.items.forEach((theatre) => {
       if (theatre.movie_screen && Array.isArray(theatre.movie_screen)) {
@@ -79,8 +95,6 @@ export default function MovieScheduler() {
 
   const screens = extractScreenNames();
 
-
-  // Update container width on mount and resize
   useEffect(() => {
     const updateContainerWidth = () => {
       if (containerRef.current) {
@@ -93,23 +107,22 @@ export default function MovieScheduler() {
     return () => window.removeEventListener("resize", updateContainerWidth);
   }, []);
 
-  // Handle mouse move for tooltips
+  // Handle user interactions with the timeline
+  // In MovieScheduler.js, update the handleTimelineMouseMove function
   const handleTimelineMouseMove = (e, timelineRef) => {
-    if (!timelineRef.current) return;
+    // Add a safety check to avoid accessing undefined.current
+    if (!timelineRef || !timelineRef.current) return;
 
     const rect = timelineRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // Calculate time and screen from cursor position
     const screenIndex = Math.floor((y / rect.height) * screens.length);
     const xTime = x / scale.x + xDomain[0];
 
-    // Round to nearest 5 minutes
-    const roundTo = 5 / 60; // 5 minutes in hours
+    const roundTo = 5 / 60;
     const roundedTime = Math.round(xTime / roundTo) * roundTo;
 
-    // Only show tooltip if cursor is within valid area
     if (
       screenIndex >= 0 &&
       screenIndex < screens.length &&
@@ -119,11 +132,9 @@ export default function MovieScheduler() {
       const tooltipWidth = 120;
       const tooltipHeight = 60;
 
-      // Calculate tooltip position
       let tooltipX = x + 20;
       let tooltipY = y;
 
-      // Adjust tooltip position to stay within bounds
       if (tooltipX + tooltipWidth > rect.width) {
         tooltipX = x - tooltipWidth - 10;
       }
@@ -147,13 +158,17 @@ export default function MovieScheduler() {
     setTooltipInfo(null);
   };
 
-  // Handle timeline click to schedule new movie
   const handleTimelineClick = (e) => {
-    // Ignore clicks on movie slots or labels
     if (
       e.target.closest(".cursor-pointer") ||
-      e.target.closest(".drag-handle")
+      e.target.closest(".drag-handle") ||
+      e.target.closest("button")
     ) {
+      return;
+    }
+
+    if (!selectedDate) {
+      message.warning("Please select a date first before scheduling a movie");
       return;
     }
 
@@ -161,15 +176,12 @@ export default function MovieScheduler() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // Calculate the screen and time from pixel position
     const screenIndex = Math.floor((y / rect.height) * screens.length);
     const xTime = x / scale.x + xDomain[0];
 
-    // Round to nearest 5 minutes
-    const roundTo = 5 / 60; // 5 minutes in hours
+    const roundTo = 5 / 60;
     const roundedTime = Math.round(xTime / roundTo) * roundTo;
 
-    // Validate clicked area
     if (
       screenIndex >= 0 &&
       screenIndex < screens.length &&
@@ -182,11 +194,9 @@ export default function MovieScheduler() {
     }
   };
 
-  // Handle movie slot click
   const handleMovieClick = (movie) => {
     const fullMovie = movies.find((m) => m.id === movie.movieId);
     if (fullMovie) {
-      // Combine scheduled movie info with full movie details
       const completeMovieInfo = {
         ...movie,
         genre: fullMovie.genre,
@@ -199,13 +209,10 @@ export default function MovieScheduler() {
     }
   };
 
-  // Handle drag end for movie rescheduling
   const handleMovieDragEnd = (movieId, newStartTime, newEndTime, newScreen) => {
-    // Find the movie
     const movie = scheduledMovies.find((m) => m.id === movieId);
     if (!movie) return;
 
-    // Check for overlapping movies with improved function
     const isOverlapping = checkOverlap(
       newScreen,
       newStartTime,
@@ -219,7 +226,6 @@ export default function MovieScheduler() {
       return;
     }
 
-    // Create updated movie object keeping all original properties
     const updatedMovie = {
       ...movie,
       startTime: newStartTime,
@@ -227,21 +233,23 @@ export default function MovieScheduler() {
       screen: newScreen,
     };
 
-    // Update the movie with new scheduling
     dispatch(updateScheduledMovie(updatedMovie));
 
     message.success(`"${movie.title}" rescheduled successfully`);
 
-    // Update selected movie if it's the one being dragged
     if (selectedMovie && selectedMovie.id === movieId) {
       dispatch(setSelectedMovie(updatedMovie));
     }
   };
 
-  // Handle movie selection from modal
   const handleScheduleMovie = () => {
     if (!selectedMovieId || !selectedTime || selectedScreen === null) {
       message.error("Please select a movie, time, and screen");
+      return;
+    }
+
+    if (!selectedDate) {
+      message.error("Please select a date first");
       return;
     }
 
@@ -253,21 +261,17 @@ export default function MovieScheduler() {
 
     const startTime = dateToTime(selectedTime);
 
-    // Round to nearest 5 minutes
-    const roundTo = 5 / 60; // 5 minutes in hours
+    const roundTo = 5 / 60;
     const roundedStartTime = Math.round(startTime / roundTo) * roundTo;
 
-    // Calculate end time including movie duration and interval time
     const totalDuration = movie.duration + intervalTime;
     const endTime = roundedStartTime + totalDuration / 60;
 
-    // Check if the end time exceeds the 24-hour limit
     if (endTime > 24) {
       message.error("Cannot schedule movie beyond 24:00");
       return;
     }
 
-    // Check for overlapping movies using improved function
     const isOverlapping = checkOverlap(
       selectedScreen,
       roundedStartTime,
@@ -294,6 +298,7 @@ export default function MovieScheduler() {
       genre: movie.genre,
       duration: movie.duration,
       intervalTime: intervalTime,
+      scheduleDate: selectedDate.format("YYYY-MM-DD"),
     };
 
     dispatch(addScheduledMovie(newScheduledMovie));
@@ -326,12 +331,18 @@ export default function MovieScheduler() {
     message.success("Movie removed from schedule");
   };
 
-  const visibleWidth = calculateVisibleWidth(xDomain, scale, containerWidth);
+  // Update the xDomain state when the timeline component changes it
+  const handleXDomainChange = (newXDomain) => {
+    dispatch(setXDomain(newXDomain));
+  };
 
-  // Row height for each screen
+  const handleScaleChange = (newScale) => {
+    setScale(newScale);
+  };
+
+  const visibleWidth = calculateVisibleWidth(xDomain, scale, containerWidth);
   const rowHeight = 80;
 
-  // Show loading state or error if applicable
   if (loading) {
     return (
       <Layout className="min-h-screen">
@@ -365,45 +376,49 @@ export default function MovieScheduler() {
       <Header />
 
       <Layout>
-        <Card>
-          <Content ref={containerRef}>
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <Title level={4} className="m-0">
-                  Schedule Timeline
-                </Title>
-                <Text type="secondary">
-                  Click to schedule • Drag movies to reschedule • Click on movie
-                  for details
-                </Text>
+        <Content className="p-4">
+          <Card>
+            <div ref={containerRef} className="w-full">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <Title level={4} className="m-0">
+                    Schedule Timeline{" "}
+                    {selectedDate && `- ${selectedDate.format("MMMM D, YYYY")}`}
+                  </Title>
+                  <Text type="secondary">
+                    Click to schedule • Drag movies to reschedule • Click on
+                    movie for details • Drag timeline to navigate • Use zoom
+                    controls
+                  </Text>
+                </div>
               </div>
-            </div>
 
-            {screens.length > 0 ? (
-              <Timeline
-                screens={screens}
-                scheduledMovies={scheduledMovies}
-                selectedMovie={selectedMovie}
-                xDomain={xDomain}
-                scale={scale}
-                visibleWidth={visibleWidth}
-                rowHeight={rowHeight}
-                formatTime={formatTime}
-                handleTimelineClick={handleTimelineClick}
-                handleTimelineMouseMove={handleTimelineMouseMove}
-                handleTimelineMouseLeave={handleTimelineMouseLeave}
-                handleMovieClick={handleMovieClick}
-                handleMovieDragEnd={handleMovieDragEnd}
-                tooltipInfo={tooltipInfo}
-                isMovieVisible={(movie) => isMovieVisible(movie, xDomain)}
-              />
-            ) : (
-              <div className="text-center p-8">
-                No screens available. Please add screens to schedule movies.
-              </div>
-            )}
-          </Content>
-        </Card>
+              {screens.length > 0 ? (
+                <Timeline
+                  screens={screens}
+                  scheduledMovies={scheduledMovies}
+                  selectedMovie={selectedMovie}
+                  xDomain={xDomain}
+                  scale={scale}
+                  visibleWidth={visibleWidth}
+                  rowHeight={rowHeight}
+                  formatTime={formatTime}
+                  handleTimelineClick={handleTimelineClick}
+                  handleTimelineMouseMove={handleTimelineMouseMove}
+                  handleTimelineMouseLeave={handleTimelineMouseLeave}
+                  handleMovieClick={handleMovieClick}
+                  handleMovieDragEnd={handleMovieDragEnd}
+                  tooltipInfo={tooltipInfo}
+                  isMovieVisible={(movie) => isMovieVisible(movie, xDomain)}
+                />
+              ) : (
+                <div className="text-center p-8">
+                  No screens available. Please add screens to schedule movies.
+                </div>
+              )}
+            </div>
+          </Card>
+        </Content>
       </Layout>
 
       {/* Movie Details Drawer */}
@@ -448,6 +463,7 @@ export default function MovieScheduler() {
           setSelectedTime={setSelectedTime}
           setSelectedScreen={setSelectedScreen}
           setIntervalTime={setIntervalTime}
+          selectedDate={selectedDate}
         />
       </Modal>
     </Layout>

@@ -13,6 +13,11 @@ export default function ScheduleHeader() {
     (state) => state.movieScheduleSlice
   );
 
+  const handleDateChange = (e) => {
+    const newSelectedDate = dayjs(e.target.value);
+    dispatch(setSelectedDate(newSelectedDate));
+  };
+
   const renderDateTabs = () => {
     if (!dateRange || dateRange.length !== 2) {
       return (
@@ -48,7 +53,7 @@ export default function ScheduleHeader() {
 
         <Radio.Group
           value={selectedDate ? selectedDate.format("YYYY-MM-DD") : null}
-          onChange={(e) => dispatch(setSelectedDate(dayjs(e.target.value)))}
+          onChange={handleDateChange}
           buttonStyle="solid"
           className="w-full flex"
         >
