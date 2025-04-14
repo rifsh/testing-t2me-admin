@@ -29,6 +29,7 @@ import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 import MovieScheduler from "../components/MovieScheduler";
 import { SEAT_STRUCTURE_TYPES } from "constants/SeatTypes";
 import MovieSeatDetailForm from "views/seat/movie/components/MovieSeatDetailForm";
+import ScheduleDetailForm from "../components/ScheduleDetailForm";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -231,7 +232,7 @@ const ScheduleForm = (props) => {
                 className="mb-3"
                 style={{ fontSize: "20px", fontWeight: "bold" }}
               >
-                {mode === ADD ? "Add Seat Structure" : `Edit Seat Structure`}{" "}
+                {mode === ADD ? "Create Schedule" : `Edit Schedule`}{" "}
               </h2>
               <div className="mb-3">
                 <DiscardButton form={form} />
@@ -256,7 +257,7 @@ const ScheduleForm = (props) => {
               {
                 label: "Theator Selection",
                 key: "1",
-                children: <MovieSeatDetailForm form={form} mode={mode} />,
+                children: <ScheduleDetailForm form={form} mode={mode} />,
               },
               {
                 label: "Schedule Layout",
