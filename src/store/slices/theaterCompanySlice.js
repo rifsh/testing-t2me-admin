@@ -1,18 +1,20 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import TheaterCompanyService from "services/TheaterCompanyService";
 import TheaterService from "services/theaterService";
 
 const initialState = {
     activeTab: "Companies",
     loading: false,
+    singleLoading: false,
     editLoading: false,
+    isDetailModal: false,
     response: null,
     statusEditresponse: null,
     editId: null,
-    selectedTheaterId: null,
-    selectedTheaterScreenCapacity: null,
     editData: [],
     singleResponse: null,
     submitMessage: null,
+    selectedCompanyId: null,
     formType: null,
     editable_status: null,
     message: null,
@@ -20,55 +22,55 @@ const initialState = {
     error: null,
 };
 
-export const createTheater = createAsyncThunk(
-    "cast/createTheater",
+export const createTheaterCompany = createAsyncThunk(
+    "cast/createTheaterCompany",
     async ({ data, action }, { rejectWithValue }) => {
         try {
-            const response = await TheaterService.createTheater(data, action);
+            const response = await TheaterCompanyService.createTheaterCompany(data, action);
             return response;
         } catch (error) {
-            return rejectWithValue(error.response?.data || "Error creating personality details");
+            return rejectWithValue(error.response?.data || "Error creating Company");
         }
     }
 );
-export const fetchTheaters = createAsyncThunk(
-    "cast/fetchTheaters",
+export const fetchTheaterCompanies = createAsyncThunk(
+    "cast/fetchTheaterCompanies",
     async (pageData, { rejectWithValue }) => {
         try {
-            const response = await TheaterService.getTheater(pageData);
+            const response = await TheaterCompanyService.getTheaterCompanies(pageData);
             return response.data[0];
         } catch (error) {
-            return rejectWithValue(error.message || "Failed to fetch screen features");
+            return rejectWithValue(error.message || "Failed to fetch companies");
         }
     }
 );
-export const fetchTheaterByid = createAsyncThunk(
-    "cast/fetchTheaterByid",
-    async (theatre_id, { rejectWithValue }) => {
+export const fetchTheaterCompanyByid = createAsyncThunk(
+    "cast/fetchTheaterCompanyByid",
+    async (company_id, { rejectWithValue }) => {
         try {
-            const response = await TheaterService.getTheaterById(theatre_id);
+            const response = await TheaterCompanyService.getTheaterCompanyById(company_id);
             return response.data[0];
         } catch (error) {
             return rejectWithValue(error.message || "Failed to fetch screen features");
         }
     }
 );
-export const editTheater = createAsyncThunk(
-    "cast/editTheater",
+export const editTheaterCompany = createAsyncThunk(
+    "cast/editTheaterCompany",
     async ({ data, action, pageData }, { rejectWithValue }) => {
         try {
-            const response = await TheaterService.editTheater(data, action, pageData);
+            const response = await TheaterCompanyService.editTheaterCompany(data, action, pageData);
             return response;
         } catch (error) {
             return rejectWithValue(error.response?.data || "Error creating screen");
         }
     }
 );
-export const editTheaterStatus = createAsyncThunk(
-    "cast/editTheaterStatus",
+export const editTheaterCompanyStatus = createAsyncThunk(
+    "cast/editTheaterCompanyStatus",
     async ({ data, action, pageData }, { rejectWithValue }) => {
         try {
-            const response = await TheaterService.editTheaterStatus(data, action, pageData);
+            const response = await TheaterCompanyService.editCompanyTheaterStatus(data, action, pageData);
             return response;
         } catch (error) {
             return rejectWithValue(error.response?.data || "Error creating screen");
@@ -76,11 +78,11 @@ export const editTheaterStatus = createAsyncThunk(
     }
 );
 
-const theaterSlice = createSlice({
-    name: "theater",
+const theaterCompanySlice = createSlice({
+    name: "theaterCompany",
     initialState,
     reducers: {
-        setTheaterEditData(state, action) {
+        setTheaterCompanyEditData(state, action) {
             state.editData = action.payload;
         },
         setTheaterEditId(state, action) {
@@ -89,73 +91,77 @@ const theaterSlice = createSlice({
         setCleraAllData(state) {
             state.response = null;
             state.singleResponse = null;
-            state.selectedTheaterId = null
         },
         setActiveTab: (state, action) => {
             state.activeTab = action.payload;
         },
-        setSeectedTheater: (state, action) => {
-            state.selectedTheaterId = action.payload;
+        setTheaterCompanyEditId(state, action) {
+            state.editId = action.payload;
         },
-        setScreenCapacity: (state, action) => {
-            state.selectedTheaterScreenCapacity = action.payload;
+        setDetailModal: (state, action) => {
+            state.isDetailModal = action.payload;
+            if (!action.payload) {
+                state.singleResponse = null;
+            }
+        },
+        setSelectedCompanyId: (state, action) => {
+            state.selectedCompanyId = action.payload;
         },
     },
     extraReducers: (builder) => {
         builder
-            .addCase(createTheater.pending, (state) => {
+            .addCase(createTheaterCompany.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(createTheater.fulfilled, (state, action) => {
+            .addCase(createTheaterCompany.fulfilled, (state, action) => {
                 state.loading = false;
                 state.response = action.payload.data;
                 state.submitMessage = action.payload.status.message;
             })
-            .addCase(createTheater.rejected, (state, action) => {
+            .addCase(createTheaterCompany.rejected, (state) => {
                 state.loading = false;
-                state.error = action.payload.server_error;
             })
-            .addCase(fetchTheaters.pending, (state) => {
+            .addCase(fetchTheaterCompanies.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(fetchTheaters.fulfilled, (state, action) => {
+            .addCase(fetchTheaterCompanies.fulfilled, (state, action) => {
                 state.loading = false;
                 state.response = action.payload;
                 state.pagination = action.payload;
             })
-            .addCase(fetchTheaters.rejected, (state, action) => {
+            .addCase(fetchTheaterCompanies.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
-            .addCase(fetchTheaterByid.pending, (state) => {
-                state.loading = true;
+            .addCase(fetchTheaterCompanyByid.pending, (state) => {
+                state.singleLoading = true;
             })
-            .addCase(fetchTheaterByid.fulfilled, (state, action) => {
-                state.loading = false;
+            .addCase(fetchTheaterCompanyByid.fulfilled, (state, action) => {
+                state.singleLoading = false;
                 state.singleResponse = action.payload;
             })
-            .addCase(fetchTheaterByid.rejected, (state, action) => {
-                state.loading = false;
+            .addCase(fetchTheaterCompanyByid.rejected, (state, action) => {
+                state.singleLoading = false;
                 state.error = action.payload;
             })
-            .addCase(editTheater.pending, (state) => {
+            .addCase(editTheaterCompany.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(editTheater.fulfilled, (state, { payload }) => {
+            .addCase(editTheaterCompany.fulfilled, (state, { payload }) => {
                 state.loading = false;
                 state.response = payload.data;
                 if (payload.status) {
                     state.message = payload.status.message;
                 }
             })
-            .addCase(editTheater.rejected, (state, action) => {
+            .addCase(editTheaterCompany.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
-            .addCase(editTheaterStatus.pending, (state) => {
+            .addCase(editTheaterCompanyStatus.pending, (state) => {
                 state.editLoading = true;
             })
-            .addCase(editTheaterStatus.fulfilled, (state, { payload }) => {
+            .addCase(editTheaterCompanyStatus.fulfilled, (state, { payload }) => {
                 state.editLoading = false;
                 state.statusEditresponse = payload.data;
                 if (payload.status) {
@@ -163,13 +169,13 @@ const theaterSlice = createSlice({
                     state.editable_status = payload.status?.editable_status;
                 }
             })
-            .addCase(editTheaterStatus.rejected, (state, action) => {
+            .addCase(editTheaterCompanyStatus.rejected, (state, action) => {
                 state.editLoading = false;
                 state.error = action.payload;
             })
     },
 });
 
-export const { setTheaterEditData, setTheaterEditId, setCleraAllData, setActiveTab, setSeectedTheater, setScreenCapacity } = theaterSlice.actions;
+export const { setTheaterCompanyEditData, setTheaterEditId, setCleraAllData, setActiveTab, setDetailModal, setTheaterCompanyEditId, setSelectedCompanyId } = theaterCompanySlice.actions;
 
-export default theaterSlice.reducer;
+export default theaterCompanySlice.reducer;

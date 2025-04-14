@@ -254,12 +254,12 @@ const ScheduleForm = (props) => {
             style={{ marginTop: 30 }}
             items={[
               {
-                label: "Screen Selection",
+                label: "Theator Selection",
                 key: "1",
                 children: <MovieSeatDetailForm form={form} mode={mode} />,
               },
               {
-                label: "Seat Layout",
+                label: "Schedule Layout",
                 key: "2",
                 children: <MovieScheduler />,
               },

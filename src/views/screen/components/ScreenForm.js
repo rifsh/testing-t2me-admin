@@ -14,6 +14,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
     const [message, setMessage] = useState('');
     const dispatch = useDispatch();
     const { screenTechnologies, screenAudioTechnologies, screenFeatures, techLoading, availableSeats } = useSelector((state) => state.screen);
+    const { selectedTheaterId } = useSelector((state) => state.theater);
 
     const rules = {
         subject: [{ required: true, message: 'Please enter screen name' }],
@@ -23,12 +24,12 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
             {
                 validator: (_, value) => {
                     const currentScreens = form.getFieldValue('screens') || [];
-
                     const totalScreenCapacity = currentScreens.reduce((total, screen, screenIndex) => {
                         if (screenIndex === index) return total;
 
                         return total + (screen?.capacity || 0);
                     }, 0);
+                    console.log('capacitylog', totalScreenCapacity)
 
                     const proposedTotalCapacity = totalScreenCapacity + (value || 0);
 
@@ -59,14 +60,14 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
     });
 
     useEffect(() => {
-        if (venue_id) {
-            dispatch(fetchAllTickets({ venue_id: venue_id }));
-            dispatch(fetchScreenTech({ venue_id: venue_id }));
-            dispatch(fetchScreenAudio({ venue_id: venue_id }));
-            dispatch(fetchScreenFeatures({ venue_id: venue_id }));
+        if (selectedTheaterId) {
+            dispatch(fetchAllTickets({ theatre_id: selectedTheaterId }));
+            dispatch(fetchScreenTech({ theatre_id: selectedTheaterId }));
+            dispatch(fetchScreenAudio({ theatre_id: selectedTheaterId }));
+            dispatch(fetchScreenFeatures({ theatre_id: selectedTheaterId }));
             dispatch(setAvailableSeat(capacity));
         }
-    }, [venue_id, dispatch, capacity]);
+    }, [selectedTheaterId, dispatch, capacity]);
 
     useEffect(() => {
         setDataStatus({

@@ -1,6 +1,6 @@
 import React from 'react'
 import TheaterForm from '../components/TheaterForm'
-import { MODE } from 'constants/TextConstant'
+import { FORM_TYPE, MODE } from 'constants/TextConstant'
 import { useParams } from 'react-router-dom'
 
 const Index = () => {
@@ -8,7 +8,7 @@ const Index = () => {
     const theater_id = theaterId ? Number(theaterId) : null;
     return (
         <div>
-            <TheaterForm mode={MODE.EDIT} theaterEditId={theater_id ? theater_id : null} />
+            <TheaterForm mode={MODE.EDIT} formType={FORM_TYPE.THEATER} theaterEditId={theater_id ? theater_id : null} />
         </div>
     )
 }

@@ -6,7 +6,6 @@ import { useParams } from "react-router-dom";
 import {
   getSingleVenues,
 } from "store/slices/locationSlice";
-import VenueTechnologyDisplay from "../components/VenueTechnologyDisplay";
 const { Title, Text } = Typography;
 
 
@@ -25,6 +24,7 @@ const VenueDetails = () => {
   const { singleVenues, loading, error } = useSelector(
     (state) => state.locations
   );
+  console.log(singleVenues, 'addonser');
 
 
 
@@ -97,13 +97,6 @@ const VenueDetails = () => {
           </Row>
         </Card>
       </Col>
-      {singleVenues?.indoor &&
-        <Col span={24}>
-          <Card title={<span style={{ color: "#1890ff" }}>Venue Technology & Features</span>} bordered={false}>
-            <VenueTechnologyDisplay venueData={singleVenues} />
-          </Card>
-        </Col>
-      }
       <Col span={24}>
         {/* Event Add on Services Section */}
         <Card title={<span style={{ color: "#1890ff" }}>Event Add on Services</span>} bordered={false}>

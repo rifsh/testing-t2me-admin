@@ -4,41 +4,30 @@ import {
     Typography,
     Tag,
     Divider,
-    Carousel,
     Button,
     Tabs,
-    Rate,
-    Space,
-    Badge,
-    Avatar,
-    List,
     Collapse,
-    Calendar,
-    Tooltip,
-    Modal
+    Modal,
+    Col
 } from 'antd';
 import {
     EnvironmentOutlined,
     PhoneOutlined,
-    MailOutlined,
     GlobalOutlined,
-    ClockCircleOutlined,
     CarOutlined,
     WifiOutlined,
     CoffeeOutlined,
-    ShareAltOutlined,
-    HeartOutlined,
-    HeartFilled,
     StarOutlined,
-    CalendarOutlined,
     InfoCircleOutlined,
     PictureOutlined,
-    LayoutOutlined
+    LayoutOutlined,
+    MailOutlined
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTheaterByid, setCleraAllData } from 'store/slices/theaterSlice';
 import { useParams } from 'react-router-dom';
 import LoadingOverlay from 'components/util-components/Loader';
+import Technology from 'components/shared-components/Theater/Technology';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -135,7 +124,9 @@ const Index = () => {
                             </Title>
                             {singleResponse?.screen_tech?.length > 0 &&
                                 <div className="flex items-center mt-2">
-                                    <Tag color="blue">{theater.type}</Tag>
+                                    {singleResponse?.screen_tech.map((data, index) => (
+                                        <Tag key={index} color="blue">{data.name}</Tag>
+                                    ))}
                                 </div>
                             }
                             <div className="flex items-center mt-3">
@@ -173,7 +164,7 @@ const Index = () => {
                             <Divider />
 
                             <Title level={4}>Theater Information</Title>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="">
                                 <div>
                                     <div className="mb-4">
                                         <Title level={5} className="mb-2 flex items-center">
@@ -185,18 +176,21 @@ const Index = () => {
                                         </ul>
                                     </div>
 
-                                    <div>
-                                        <Title level={5} className="mb-2 flex items-center">
-                                            <StarOutlined className="mr-2 text-blue-500" /> Screen Types
-                                        </Title>
-                                        <div className="flex flex-wrap gap-2">
-                                            {theater.screenTypes.map((type, index) => (
-                                                <Tag key={index} color="blue">{type}</Tag>
-                                            ))}
-                                        </div>
+                                    <div className="w-full rounded-md p-2">
+                                        <Card
+                                            title={
+                                                <span style={{ color: "#1890ff" }}>
+                                                    Theater Technology & Features
+                                                </span>
+                                            }
+                                            bordered={false}
+                                        >
+                                            <Technology teachData={singleResponse} />
+                                        </Card>
                                     </div>
                                 </div>
                             </div>
+
                         </TabPane>
                     </Tabs>
                 </div>
@@ -204,7 +198,8 @@ const Index = () => {
                 {/* Right Column: Contact & Map */}
                 <div className="space-y-6">
                     <Card title="Contact Information" className="shadow-md">
-                        <div className="space-y-4">
+                        <div className="space-y-5">
+                            {/* Address */}
                             <div className="flex items-start">
                                 <EnvironmentOutlined className="mr-3 mt-1 text-blue-500" />
                                 <div>
@@ -217,21 +212,95 @@ const Index = () => {
                                 </div>
                             </div>
 
+                            {/* Phone */}
                             <div className="flex items-center">
                                 <PhoneOutlined className="mr-3 text-blue-500" />
                                 <div>
                                     <Text strong className="block">Phone</Text>
-                                    <Text className="text-gray-600">{singleResponse?.phone_number}</Text>
+                                    <Text className="text-gray-600">
+                                        {singleResponse?.phone_number || "Not available"}
+                                    </Text>
+                                </div>
+                            </div>
+
+                            {/* Website */}
+                            <div className="flex items-start">
+                                <GlobalOutlined className="mr-3 text-blue-500 mt-1" />
+                                <div className="min-w-0">
+                                    <Text strong className="block">Website</Text>
+                                    {singleResponse?.website ? (
+                                        <a
+                                            href={singleResponse.website.startsWith('http') ? singleResponse.website : `https://${singleResponse.website}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-500 block break-words whitespace-normal"
+                                        >
+                                            {singleResponse.website}
+                                        </a>
+                                    ) : (
+                                        <Text className="text-gray-600">Not available</Text>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                    <Card title="Theater Company Information" className="shadow-md">
+                        <div className="space-y-5">
+                            {/* Theater Company Name */}
+                            <div className="flex items-start">
+                                <StarOutlined className="mr-3 mt-1 text-blue-500" />
+                                <div>
+                                    <Text strong className="block">Theater Company</Text>
+                                    <Text className="text-gray-600">
+                                        {singleResponse?.company?.name || 'N/A'}
+                                    </Text>
+                                </div>
+                            </div>
+
+                            {/* Phone */}
+                            <div className="flex items-center">
+                                <PhoneOutlined className="mr-3 text-blue-500" />
+                                <div>
+                                    <Text strong className="block">Phone</Text>
+                                    <Text className="text-gray-600">
+                                        {singleResponse?.company?.phone_number || "Not available"}
+                                    </Text>
                                 </div>
                             </div>
 
                             <div className="flex items-center">
-                                <GlobalOutlined className="mr-3 text-blue-500" />
+                                <MailOutlined className="mr-3 text-blue-500" />
                                 <div>
+                                    <Text strong className="block">Email</Text>
+                                    <Text className="text-gray-600">
+                                        {singleResponse?.company?.email ? (
+                                            <a href={`mailto:${singleResponse.company.email}`} className="text-blue-500">
+                                                {singleResponse.company.email}
+                                            </a>
+                                        ) : (
+                                            "Not available"
+                                        )}
+                                    </Text>
+                                </div>
+                            </div>
+
+                            {/* Website */}
+                            <div className="flex items-start">
+                                <GlobalOutlined className="mr-3 text-blue-500 mt-1" />
+                                <div className="min-w-0">
                                     <Text strong className="block">Website</Text>
-                                    <a href={`https://${singleResponse?.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-500">
-                                        {singleResponse?.website}
-                                    </a>
+                                    {singleResponse?.company?.website_url ? (
+                                        <a
+                                            href={singleResponse?.company.website_url?.startsWith('http') ? singleResponse?.company.website_url : `https://${singleResponse?.company.website_url}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-500 block break-words whitespace-normal"
+                                        >
+                                            {singleResponse.company.website_url}
+                                        </a>
+                                    ) : (
+                                        <Text className="text-gray-600">Not available</Text>
+                                    )}
                                 </div>
                             </div>
                         </div>
