@@ -203,25 +203,23 @@ const MovieDetails = () => {
                                     }}
                                     onClick={() => handlePreview(media?.url)}
                                 >
-                                    {media.isVideo && (
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                top: '50%',
-                                                left: '50%',
-                                                transform: 'translate(-50%, -50%)',
-                                                background: 'rgba(0,0,0,0.6)',
-                                                borderRadius: '50%',
-                                                width: '50px',
-                                                height: '50px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}
-                                        >
-                                            <PlayCircleOutlined style={{ fontSize: '24px', color: 'white' }} />
-                                        </div>
-                                    )}
+                                    <div
+                                        style={{
+                                            position: 'absolute',
+                                            top: '50%',
+                                            left: '50%',
+                                            transform: 'translate(-50%, -50%)',
+                                            background: 'rgba(0,0,0,0.6)',
+                                            borderRadius: '50%',
+                                            width: '50px',
+                                            height: '50px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <PlayCircleOutlined style={{ fontSize: '24px', color: 'white' }} />
+                                    </div>
                                     {media.mediaLanguage && (
                                         <Tag color="gold" style={{ position: 'absolute', top: '8px', right: '8px' }}>
                                             {media.mediaLanguage}
@@ -248,17 +246,37 @@ const MovieDetails = () => {
                         <Col xs={24} sm={24} md={8} lg={6} xl={6}>
                             <Card
                                 bordered={false}
-                                bodyStyle={{ padding: 0 }}
+                                bodyStyle={{ padding: 0, position: 'relative' }}
                                 cover={
-                                    <img
-                                        alt={movieData?.event_name}
-                                        src={movieSingleResponse?.thumbnail_image || "https://placehold.co/500x750/222222/FFFFFF?text=Movie+Poster"}
-                                        style={{ width: '100%', height: 'auto' }}
-                                    />
+                                    <div style={{ position: 'relative' }}>
+                                        {movieSingleResponse?.movie_details?.[0]?.age_restriction && <div
+                                            style={{
+                                                position: 'absolute',
+                                                top: 8,
+                                                left: 8,
+                                                padding: '4px 10px',
+                                                borderRadius: '4px',
+                                                fontWeight: 'bold',
+                                                fontSize: '12px',
+                                                zIndex: 1,
+                                            }}
+                                        >
+                                            <Tag color="gold">
+                                                {movieSingleResponse?.movie_details?.[0]?.age_restriction}
+                                            </Tag>
+                                        </div>}
+                                        <img
+                                            alt={movieData?.event_name}
+                                            src={
+                                                movieSingleResponse?.thumbnail_image ||
+                                                'https://placehold.co/500x750/222222/FFFFFF?text=Movie+Poster'
+                                            }
+                                            style={{ width: '100%', height: 'auto', display: 'block' }}
+                                        />
+                                    </div>
                                 }
                             />
                         </Col>
-
                         <Col xs={24} sm={24} md={16} lg={18} xl={18}>
                             <Card bordered={false}>
                                 <Row justify="space-between" align="top">

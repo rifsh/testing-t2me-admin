@@ -12,7 +12,6 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import Title from "antd/es/typography/Title";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import { setSelectedScreenData } from "store/slices/screenSlice";
 import { MOVIE_CONSTANTS } from "constants/MovieConstants";
 import MovieDetailsForm from "./MovieDetailsForm";
 import CastDetailsForm from "./CastDetailsForm";
@@ -163,10 +162,7 @@ const AddMovie = ({ mode, id }) => {
     const handleSubmit = async () => {
         try {
             await form.validateFields();
-
             const currentStepData = form.getFieldsValue(true);
-            console.log("Finalssss: ", currentStepData)
-
             const finalFormData = {
                 ...formData,
                 ...currentStepData
@@ -208,8 +204,6 @@ const AddMovie = ({ mode, id }) => {
                 mediaItems: finalFormData.mediaItems || [],
                 cast: transformCastData(finalFormData.cast),
             };
-            console.log("Final form data: ", responseFormattedData)
-
             if (mode === MODE.ADD) {
                 console.log("Final form data: ", responseFormattedData)
                 await dispatch(createMovie({
@@ -218,7 +212,6 @@ const AddMovie = ({ mode, id }) => {
                 }));
 
                 dispatch(setSelectedSubmitItem(responseFormattedData));
-                message.success("Movie created successfully!");
             } else {
                 const formattedData = {
                     ...responseFormattedData,
