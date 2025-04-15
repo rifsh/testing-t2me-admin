@@ -19,6 +19,13 @@ const TheaterListForm = ({ form, label = "Theater", rules, onSelect, mode, disab
 
   }, [dispatch, form, selectedVenue]);
 
+  useEffect(() => {
+    if (response) {
+      console.log("venue_id", response?.items?.map((keys) => keys.theatre));
+    }
+
+  }, [response]);
+
   const handleSetSelectedTheater = (value) => {
     dispatch(setSeectedTheater(value))
     dispatch(fetchTheaterByid({ theatre_id: value }))
@@ -46,13 +53,18 @@ const TheaterListForm = ({ form, label = "Theater", rules, onSelect, mode, disab
         filterOption={(input, option) =>
           option.label.toLowerCase().includes(input.toLowerCase())
         }
-        options={response?.items.map((theater) => ({
-          value: theater.id,
-          label: theater.name,
-        }))}
+        options={
+          response?.items?.flatMap((item) =>
+            item.theatre.map((theater) => ({
+              value: theater.id,
+              label: theater.name,
+            }))
+          ) || []
+        }
         onSelect={handleSetSelectedTheater}
       />
     </Form.Item>
+
   );
 };
 
