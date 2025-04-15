@@ -13,33 +13,41 @@ import {
     Rate,
     Typography,
     Tag,
-    Image
+    Image,
+    Button,
+    Upload
 } from "antd";
 import {
     DollarOutlined,
     CalendarOutlined,
     TeamOutlined,
     TrophyOutlined,
-    GlobalOutlined
+    GlobalOutlined,
+    UploadOutlined,
+    PlusOutlined
 } from "@ant-design/icons";
 import TextEditor from "components/util-components/FormItems/TextEditor";
-import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
-import { ThumbnailImageResolutions } from "constants/SupportFileConstants";
+import { parseSizeToBytes, SupportImageFormat } from "constants/SupportFileConstants";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPersonalitiesData } from "store/slices/castSlice";
 import MovieFilter from "./MovieFilter";
 import LoadingOverlay from "components/util-components/Loader";
 import dayjs from 'dayjs';
+import { MODE } from "constants/TextConstant";
+import Utils from "utils";
 
 const { TextArea } = Input;
 const { Option } = Select;
 const { Title, Text } = Typography;
 
-const MovieDetailsForm = ({ form }) => {
+const MovieDetailsForm = ({ form, mode }) => {
     const dispatch = useDispatch();
     const { response } = useSelector((state => state.cast));
     const { omdbMovie, loading } = useSelector((state) => state.movie);
-
+    const resolution = {
+        max_size: 1080,
+        min_size: 1080,
+    }
     const genres = ["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Thriller", "Animation", "Crime"];
     const languages = ["English", "Hindi", "French", "Spanish", "Chinese", "Tamil", "Malayalam"];
     const currencies = ["USD", "EUR", "GBP", "INR", "JPY", "AUD"];
@@ -48,7 +56,7 @@ const MovieDetailsForm = ({ form }) => {
         if (Array.isArray(e)) {
             return e;
         }
-        return e?.fileList || [];
+        return e?.fileList;
     };
 
     const currencyFormatter = (value) => {
@@ -128,50 +136,8 @@ const MovieDetailsForm = ({ form }) => {
     return (
         <>
             <Card title={<Title level={4}>Movie Details</Title>} bordered>
-                <MovieFilter form={form} onMovieSelect={handleMovieSelect} />
-
+                {mode === MODE.ADD && <MovieFilter form={form} onMovieSelect={handleMovieSelect} />}
                 <Divider />
-
-                {/* {omdbMovie && omdbMovie.Poster && omdbMovie.Poster !== "N/A" && (
-                    <Row gutter={16} style={{ marginBottom: 24 }}>
-                        <Col xs={24} sm={6} md={4}>
-                            <Image
-                                src={omdbMovie.Poster}
-                                alt={omdbMovie.Title}
-                                style={{ maxWidth: '100%', borderRadius: 8 }}
-                                preview={true}
-                            />
-                        </Col>
-                        <Col xs={24} sm={18} md={20}>
-                            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                                <Title level={3}>{omdbMovie.Title} ({omdbMovie.Year})</Title>
-
-                                <Space wrap>
-                                    {omdbMovie.Genre && omdbMovie.Genre.split(',').map(genre => (
-                                        <Tag color="blue" key={genre.trim()}>{genre.trim()}</Tag>
-                                    ))}
-                                </Space>
-
-                                <Space>
-                                    {omdbMovie.Runtime !== "N/A" && (
-                                        <Text><CalendarOutlined /> {omdbMovie.Runtime}</Text>
-                                    )}
-                                    {omdbMovie.imdbRating !== "N/A" && (
-                                        <Text><Rate disabled defaultValue={parseFloat(omdbMovie.imdbRating) / 2} count={5} /> ({omdbMovie.imdbRating}/10)</Text>
-                                    )}
-                                </Space>
-
-                                {omdbMovie.Director !== "N/A" && (
-                                    <Text><strong>Director:</strong> {omdbMovie.Director}</Text>
-                                )}
-
-                                {omdbMovie.Plot !== "N/A" && (
-                                    <Text>{omdbMovie.Plot}</Text>
-                                )}
-                            </Space>
-                        </Col>
-                    </Row>
-                )} */}
 
                 <Row gutter={16}>
                     {/* Basic Information */}
@@ -272,19 +238,6 @@ const MovieDetailsForm = ({ form }) => {
                         </Form.Item>
                     </Col>
 
-                    {/* <Col xs={24} sm={12}>
-                        <Form.Item
-                            name="actors"
-                            label={<span><TeamOutlined /> Actors</span>}
-                        >
-                            <Select mode="tags" placeholder="Enter actors" style={{ width: '100%' }}>
-                                {response?.data?.map(person => (
-                                    <Option key={person.id} value={person.name}>{person.name}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                    </Col> */}
-
                     <Col xs={24} sm={12}>
                         <Form.Item
                             name="awards"
@@ -310,7 +263,7 @@ const MovieDetailsForm = ({ form }) => {
                             label="Genres"
                             rules={[{ required: true, message: "Select genres" }]}
                         >
-                            <Select mode="multiple" placeholder="Select genres">
+                            <Select mode="tags" placeholder="Select genres" >
                                 {genres.map((genre) => (
                                     <Option key={genre} value={genre}>{genre}</Option>
                                 ))}
@@ -354,7 +307,7 @@ const MovieDetailsForm = ({ form }) => {
                     <Col xs={24} sm={12}>
                         <Form.Item
                             label="Age Restriction"
-                            name="ageRestriction"
+                            name="age_restriction"
                             rules={[{ required: true, message: 'Please select an age restriction' }]}
                         >
                             <Select placeholder="Select age restriction">
@@ -378,21 +331,36 @@ const MovieDetailsForm = ({ form }) => {
 
                     <Col xs={24}>
                         <Form.Item
-                            name="Poster"
                             label="Poster Image"
-                            valuePropName="value"
+                            name="thumbnail_image"
+                            valuePropName="fileList"
                             getValueFromEvent={normFile}
                             style={{ marginBottom: "0px", padding: "0px" }}
-                            extra={omdbMovie?.Poster && omdbMovie.Poster !== "N/A" ? "You can upload a custom poster or use the one provided by OMDB." : null}
+                            rules={[{ required: true, message: 'Please add a poster image' }]}
                         >
-                            <ResizedImgePicker
+                            <Upload
+                                listType="picture-card"
                                 maxCount={1}
-                                targetResolution={ThumbnailImageResolutions.EVENT}
-                            />
+                                beforeUpload={(file) =>
+                                    Utils.handleBannerBeforeUpload(
+                                        file,
+                                        resolution?.resolution,
+                                        parseSizeToBytes(resolution?.min_size),
+                                        parseSizeToBytes(resolution?.max_size)
+                                    )
+                                }
+                                accept={`.${SupportImageFormat.join(",.")}`}
+                                fileList={form.getFieldValue('thumbnail_image') || []}
+                            >
+                                    <div>
+                                        <PlusOutlined />
+                                        <div style={{ marginTop: 8 }}>Upload</div>
+                                    </div>
+                            </Upload>
                         </Form.Item>
                     </Col>
                 </Row>
-            </Card>
+            </Card >
             <LoadingOverlay loading={loading} />
         </>
     );

@@ -439,12 +439,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-          (document.cookie = cookie
-            .replace(/^ +/, "")
-            .replace(
-              /=.*/,
-              "=;expires=" + new Date(0).toUTCString() + ";path=/"
-            ))
+        (document.cookie = cookie
+          .replace(/^ +/, "")
+          .replace(
+            /=.*/,
+            "=;expires=" + new Date(0).toUTCString() + ";path=/"
+          ))
       );
 
     // Unregister Service Workers
@@ -489,13 +489,59 @@ class Utils {
         return;
       }
       if (Array.isArray(value)) {
+        if (key === "mediaItems") {
+          if (!value || !Array.isArray(value)) {
+            formData.append(key, JSON.stringify([]));
+            return;
+          }
+
+          const serializedMediaItems = value
+            .filter(item => item.title && item.mediaLanguage && item.url)
+            .map(item => ({
+              title: item.title,
+              mediaLanguage: item.mediaLanguage,
+              url: item.url
+            }));
+
+          formData.append(key, JSON.stringify(serializedMediaItems));
+          return;
+        }
+        if (key === "cast") {
+          if (!value || !Array.isArray(value)) {
+            formData.append(key, JSON.stringify([]));
+            return;
+          }
+
+          const serializedPeople = value
+            .filter(item => {
+              const hasRequiredFields = item.personality_id && item.role;
+
+              if (item.type?.toUpperCase() === "CAST") {
+                return hasRequiredFields && item.character_name;
+              }
+              return hasRequiredFields;
+            })
+            .map(item => ({
+              id: item.personality_id || null,
+              personality_id: item.personality_id,
+              role: Array.isArray(item.role) ? item.role[0] : item.role,
+              ...(item.type?.toUpperCase() === "CAST" && { character_name: item.character_name }),
+              type: item.type?.toUpperCase() || "CAST"
+            }));
+
+          formData.append(key, JSON.stringify(serializedPeople));
+        }
+
+
         if (
           key === "tax_ids" ||
           key === "coupon_ids" ||
           key === "offer_ids" ||
           key === "event_ids" ||
           key === "venue_ids" ||
-          key == "occupation"
+          key == "occupation" ||
+          key === "mediaItems" ||
+          key === "genre"
         ) {
           value.forEach((id) => formData.append(key, id));
           return;
@@ -988,6 +1034,19 @@ class Utils {
     // Filter all seat types to only include those being used
     return allSeatTypes.filter((type) => usedTypeIds.has(type.id));
   };
+
+  static extractVideoId(url) {
+    if (!url) return null;
+    const match = url.match(
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+    );
+    return match ? match[1] : null;
+  }
+
+  static getThumbnail = (url) => {
+    const videoId = this.extractVideoId(url);
+    return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+  }
 }
 
 export default Utils;

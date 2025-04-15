@@ -62,20 +62,21 @@ const ScreenList = () => {
         movie_screens: value.movie_screen,
       }));
 
-      const processedData = newFormattedData.flatMap((venue) =>
-        venue.movie_screens.map((screen, index) => ({
-          key: `${venue.venue_id}-${screen.id}`,
-          venue_name: venue.venue_name,
-          venue_id: venue.venue_id,
-          rowSpan: index === 0 ? venue.movie_screens.length : 0, // Merge venue name cells
-          isFirstRow: index === 0, // Mark first row of each venue
-          ...screen,
-        }))
-      );
-      setData(processedData);
-      setFilteredData(processedData);
-    }
-  }, [response]);
+            const processedData = newFormattedData.flatMap((venue) =>
+                venue.movie_screens.map((screen, index) => ({
+                    key: `${venue.venue_id}-${screen.id}`,
+                    venue_name: venue.venue_name,
+                    venue_id: venue.venue_id,
+                    rowSpan: index === 0 ? venue.movie_screens.length : 0,
+                    isFirstRow: index === 0,
+                    name_of_venue: screen.theatre.venue.name,
+                    ...screen,
+                }))
+            );
+            setData(processedData);
+            setFilteredData(processedData);
+        }
+    }, [response]);
 
   const handleViewDetails = (row) => {
     console.log("Viewing details for:", row);
@@ -159,66 +160,72 @@ const ScreenList = () => {
     );
   };
 
-  const tableColumns = [
-    {
-      title: "Venue Name",
-      dataIndex: "venue_name",
-      key: "venue_name",
-      render: (value, row) => ({
-        children: value,
-        props: { rowSpan: row.rowSpan },
-      }),
-    },
-    {
-      title: "Screen Name",
-      dataIndex: "screen_name",
-      key: "screen_name",
-    },
-    {
-      title: "Capacity",
-      dataIndex: "capacity",
-      key: "capacity",
-    },
-    {
-      title: "Screen Type",
-      dataIndex: "screen_type",
-      key: "screen_type",
-      render: (type) => getScreenTypeTag(type ? type : "N/A"),
-    },
-    {
-      title: "Reserved Seating",
-      dataIndex: "reserved_seating",
-      key: "reserved_seating",
-      render: (reserved) =>
-        reserved ? (
-          <Badge status="success" text="Reserved" />
-        ) : (
-          <Badge status="error" text="Open" />
-        ),
-    },
-    {
-      title: "Technology",
-      dataIndex: "screen_technology",
-      key: "screen_technology",
-      render: (type) => getScreenTypeTag(type.name ? type.name : "N/A"),
-    },
-    {
-      title: "Audio",
-      dataIndex: "audio",
-      key: "audio",
-      render: (type) => getScreenTypeTag(type.name ? type.name : "N/A"),
-    },
-    Utils.statusColumnUtil(handleUpdateStatus),
-    {
-      title: "",
-      dataIndex: "actions",
-      render: (_, row) => (
-        <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
-    },
-  ];
+    const tableColumns = [
+        {
+            title: "Theater Name",
+            dataIndex: "venue_name",
+            key: "venue_name",
+            render: (value, row) => ({
+                children: value,
+                props: { rowSpan: row.rowSpan },
+            }),
+        },
+        {
+            title: "Venue Name",
+            dataIndex: "name_of_venue",
+            key: "name_of_venue",
+
+        },
+        {
+            title: "Screen Name",
+            dataIndex: "screen_name",
+            key: "screen_name",
+
+        },
+        {
+            title: "Capacity",
+            dataIndex: "capacity",
+            key: "capacity",
+        },
+        {
+            title: "Screen Type",
+            dataIndex: "screen_type",
+            key: "screen_type",
+            render: (type) => getScreenTypeTag(type ? type : 'N/A')
+        },
+        {
+            title: "Reserved Seating",
+            dataIndex: "reserved_seating",
+            key: "reserved_seating",
+            render: (reserved) => reserved ?
+                <Badge status="success" text="Reserved" /> :
+                <Badge status="error" text="Open" />
+        },
+        {
+            title: "Technology",
+            dataIndex: "screen_technology",
+            key: "screen_technology",
+            render: (type) => getScreenTypeTag(type.name ? type.name : 'N/A')
+
+        },
+        {
+            title: "Audio",
+            dataIndex: "audio",
+            key: "audio",
+            render: (type) => getScreenTypeTag(type.name ? type.name : 'N/A')
+
+        },
+        Utils.statusColumnUtil(handleUpdateStatus),
+        {
+            title: "",
+            dataIndex: "actions",
+            render: (_, row) => (
+                <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
+                    <Button type="text" icon={<MoreOutlined />} />
+                </Dropdown>
+            ),
+        },
+    ];
 
   return (
     <>

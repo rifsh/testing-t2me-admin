@@ -35,19 +35,25 @@ const TheaterList = () => {
         if (response && response.items) {
             const venueMap = new Map();
 
-            response.items.forEach((theater) => {
-                const venueId = theater.venue.id;
-                if (!venueMap.has(venueId)) {
-                    venueMap.set(venueId, {
-                        venue_id: venueId,
-                        venue_name: theater.venue.name,
-                        theaters: [],
-                    });
-                }
-                venueMap.get(venueId).theaters.push(theater);
-            });
+            // response.items.forEach((theater) => {
+            //     const venueId = theater.id;
+            //     if (!venueMap.has(venueId)) {
+            //         venueMap.set(venueId, {
+            //             venue_id: venueId,
+            //             venue_name: theater?.name,
+            //             theaters: theater?.theatre,
+            //         });
+            //     }
+            //     venueMap.get(venueId).theaters.push(theater);
+            // });
 
-            const formattedData = Array.from(venueMap.values()).flatMap((venue) =>
+            const newFormattedData = response.items.map((value) => ({
+                venue_id: value.id,
+                venue_name: value.name,
+                theaters: value.theatre
+            }))
+
+            const formattedData = newFormattedData.flatMap((venue) =>
                 venue.theaters.map((theater, index) => ({
                     key: `${venue.venue_id}-${theater.id}`,
                     venue_id: venue.venue_id,
@@ -57,7 +63,6 @@ const TheaterList = () => {
                     ...theater,
                 }))
             );
-
             setFilteredData(formattedData);
         }
     }, [response]);
@@ -123,7 +128,7 @@ const TheaterList = () => {
             }),
         },
         {
-            title: "Thater name",
+            title: "Theater name",
             dataIndex: "name",
             render: (name) => <span>{name || "N/A"}</span>,
             sorter: (a, b) => utils.antdTableSorter(a, b, "name"),

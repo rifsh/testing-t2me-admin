@@ -8,7 +8,7 @@ import AddMovie from './AddMovie';
 import { MODE } from 'constants/TextConstant';
 const { Title } = Typography;
 
-const MovieAddForm = ({ mode }) => {
+const MovieAddForm = ({ mode, editId }) => {
     return (
         <div>
             <Form
@@ -28,7 +28,7 @@ const MovieAddForm = ({ mode }) => {
                             {
                                 label: "Movie",
                                 key: "add-movie",
-                                children: <AddMovie mode={mode} />,
+                                children: <AddMovie mode={mode} id={editId ? editId : ''} />,
                             }
                         ]}
                     />

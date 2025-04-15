@@ -17,7 +17,7 @@ import LoadingOverlay from 'components/util-components/Loader';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import { ActionType } from 'utils/api/warning-submit-util';
 import TheaterListForm from 'components/util-components/FormItems/TheaterListForm';
-import { setCleraAllData, setScreenCapacity } from 'store/slices/theaterSlice';
+import { setCleraAllData, setScreenCapacity, setSeectedTheater } from 'store/slices/theaterSlice';
 
 const { Title, Text } = Typography;
 
@@ -33,7 +33,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     const [capacity, setCapacity] = useState(null);
 
     const { response, singleResponse, message: screenMessage, loading, editResponse, editBodyData } = useSelector((state) => state.screen);
-    const { dialogVisible, singleVenues } = useSelector((state) => state.locations);
+    const { dialogVisible, selectedVenue } = useSelector((state) => state.locations);
     const { selectedTheaterId, singleResponse: singleTheaterResponse, selectedTheaterScreenCapacity } = useSelector((state) => state.theater);
 
     const rules = {
@@ -63,11 +63,15 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     useEffect(() => {
         if (singleResponse) {
             setSelectedVenue(true);
-            if (mode === 'EDIT' && !placeSelected) {
-                setVenueId(singleResponse?.venue?.id)
+            if (mode === 'EDIT') {
+                dispatch(getVenues({ place_id: singleResponse?.theatre?.place?.id }))
+                dispatch(setSelectedVenue(singleResponse?.theatre?.venue?.id))
+                dispatch(setSeectedTheater(singleResponse?.theatre?.id))
                 const formValues = {
-                    place: 'Delhi, India' || undefined,
-                    venue_id: singleResponse?.theatre?.venue_id || undefined,
+                    place: singleResponse.theatre.place.name || undefined,
+                    place_id: singleResponse.theatre.place.id || undefined,
+                    venue_id: singleResponse?.theatre?.venue.id || undefined,
+                    theatre_id: singleResponse?.theatre?.name || undefined,
                     screens: [{
                         screen_name: singleResponse?.screen_name || '',
                         screen_number: singleResponse?.screen_number || '',
@@ -77,12 +81,11 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                         reserved_seating: singleResponse?.reserved_seating,
                         time_slots: singleResponse?.time_slots || [],
                         accessibility: singleResponse.accessibilty.map((values) => values.id) || [],
-                        screen_technology_id: Number(singleResponse?.screen_technology.id),
+                        screen_technology_id: singleResponse?.screen_technology?.id,
                         audio_id: singleResponse?.audio.id,
                     }]
                 };
 
-                console.log('Setting form values:', singleVenues);
                 form.setFieldsValue(formValues);
 
                 setTimeout(() => {
@@ -125,8 +128,6 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     };
 
     const handlePlaceSelect = (id) => {
-        console.log('place', id);
-
         setIsLoading(true);
         dispatch(getVenues({ place_id: id, is_indoor: true }));
         form.resetFields([
@@ -176,17 +177,17 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                 const data = {
                     ...values,
                     id: singleResponse?.id,
-
-                    venue_id: venueId
+                    venue_id: selectedVenue
                 }
                 const [screens] = data.screens
                 const updatedScreen = {
                     ...screens,
-                    venue_id: venueId,
+                    venue_id: selectedVenue,
                     id: singleResponse?.id,
+                    theatre_id: selectedTheaterId,
                 };
                 dispatch(setScreenEditData(updatedScreen))
-                const resultAction = await dispatch(validateVenue(venueId));
+                const resultAction = await dispatch(validateVenue(selectedVenue));
                 if (validateVenue.fulfilled.match(resultAction)) {
                     const response = resultAction.payload;
                     if (response.message === "warning") {
@@ -250,7 +251,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                 {mode === "ADD" ? (
                                     <span>Venue Selection</span>
                                 ) : (
-                                    <span>Selecte loaction</span>
+                                    <span>Selected loaction</span>
                                 )}
                                 <InfoCircleOutlined style={{ marginLeft: '8px', color: '#8c8c8c' }} />
                             </div>

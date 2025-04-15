@@ -13,6 +13,7 @@ import {
 import { resetTicketSelection } from "store/slices/ticketSlice";
 import { useDispatch } from "react-redux";
 import { setSelectedScreenData } from "store/slices/screenSlice";
+import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
 
 const { Option } = Select;
 
@@ -78,6 +79,11 @@ function MovieSeatDetailForm({ form, mode }) {
                 label="Screen"
                 onSelect={handleScreenSelect}
                 rules={[{ required: true, message: "Please select a screen" }]}
+              />
+            </Col>
+            <Col xs={24} sm={12}>
+              <TheaterListForm
+                form={form}
               />
             </Col>
             <Col xs={24} sm={12}>

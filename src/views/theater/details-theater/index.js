@@ -28,6 +28,7 @@ import { fetchTheaterByid, setCleraAllData } from 'store/slices/theaterSlice';
 import { useParams } from 'react-router-dom';
 import LoadingOverlay from 'components/util-components/Loader';
 import Technology from 'components/shared-components/Theater/Technology';
+import TheaterScreens from '../components/TheaterScreens';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -162,6 +163,10 @@ const Index = () => {
                             </Paragraph>
 
                             <Divider />
+
+                            {singleResponse?.movie_screen && singleResponse.movie_screen.length > 0 && (
+                                <TheaterScreens screens={singleResponse.movie_screen} />
+                            )}
 
                             <Title level={4}>Theater Information</Title>
                             <div className="">

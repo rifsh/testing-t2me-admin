@@ -182,10 +182,10 @@ const ScreenDetailView = () => {
                                             </Space>
                                         </Descriptions.Item>
                                         <Descriptions.Item label="Location">
-                                            {singleResponse?.venue?.place?.name || 'N/A'}
+                                            {singleResponse?.theatre?.place?.name || 'N/A'}
                                         </Descriptions.Item>
                                         <Descriptions.Item label="Country">
-                                            {singleResponse?.venue?.place?.country?.name || 'N/A'}
+                                            {singleResponse?.theatre?.place?.country?.name || 'N/A'}
                                         </Descriptions.Item>
                                         <Descriptions.Item label="Screen Technology">
                                             {getScreenTypeTag(singleResponse?.screen_technology)}
