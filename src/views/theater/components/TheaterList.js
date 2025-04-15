@@ -128,7 +128,7 @@ const TheaterList = () => {
             }),
         },
         {
-            title: "Thater name",
+            title: "Theater name",
             dataIndex: "name",
             render: (name) => <span>{name || "N/A"}</span>,
             sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
