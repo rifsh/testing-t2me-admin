@@ -25,13 +25,15 @@ import {
     PlayCircleOutlined
 } from '@ant-design/icons';
 import TextEditor from 'components/util-components/FormItems/TextEditor';
+import { useSelector } from 'react-redux';
+import { MODE } from 'constants/TextConstant';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { Dragger } = Upload;
 const { TabPane } = Tabs;
 
-const MovieMediaUploader = ({ form }) => {
+const MovieMediaUploader = ({ form, mode }) => {
     const [previewVisible, setPreviewVisible] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
     const [previewType, setPreviewType] = useState('youtube');
@@ -42,6 +44,7 @@ const MovieMediaUploader = ({ form }) => {
     const [youtubeLinkError, setYoutubeLinkError] = useState('');
     const [activeTab, setActiveTab] = useState('youtube');
     const [mediaItems, setMediaItems] = useState([]);
+    const { movieSingleResponse } = useSelector((state) => state.movie)
 
     const mediaTypes = [
         { label: 'English', value: 'English' },
@@ -66,9 +69,54 @@ const MovieMediaUploader = ({ form }) => {
         return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     };
 
-    // Sync mediaItems with the parent form whenever they change
     useEffect(() => {
-        // Format media items for form submission
+        // This effect should run only when movieSingleResponse changes in edit mode
+        if (mode === MODE.EDIT && movieSingleResponse?.movie_details?.[0]?.media_items?.length > 0) {
+            const existingMediaItems = movieSingleResponse.movie_details[0].media_items;
+
+            // Process and format media items
+            const formattedItems = existingMediaItems.map(item => {
+                if (item.type === 'youtube') {
+                    // For YouTube videos
+                    const videoId = getYoutubeVideoId(item.url);
+                    return {
+                        id: item.id || Date.now().toString(),
+                        type: 'youtube',
+                        videoId,
+                        title: item.title || 'YouTube Video',
+                        mediaType: item.mediaLanguage || item.mediaType || 'English',
+                        url: item.url,
+                        thumbnail: getYoutubeThumbnail(videoId)
+                    };
+                } else {
+                    // For file uploads (you'll need to handle file objects differently)
+                    return {
+                        id: item.id || Date.now().toString(),
+                        type: 'file',
+                        title: item.title || 'File Upload',
+                        mediaType: item.mediaLanguage || item.mediaType || 'English',
+                        url: item.url,
+                        file: item.file,
+                        // You might need additional logic to handle thumbnails for existing files
+                    };
+                }
+            });
+
+            // Set the state
+            setMediaItems(formattedItems);
+
+            // For YouTube links, also update youtubeLinks state
+            const youtubeItems = formattedItems.filter(item => item.type === 'youtube');
+            if (youtubeItems.length > 0) {
+                setYoutubeLinks(youtubeItems);
+            }
+
+            // If there are uploaded files, you might need special handling
+            // to recreate the fileList state
+        }
+    }, [mode, movieSingleResponse]);
+
+    useEffect(() => {
         const formattedMediaItems = mediaItems.map(item => ({
             type: item.type,
             url: item.url,
@@ -78,17 +126,9 @@ const MovieMediaUploader = ({ form }) => {
             ...(item.type === 'file' && { file: item.file })
         }));
 
-        // Set the media items in the form
         form.setFieldsValue({
             mediaItems: formattedMediaItems
         });
-
-        // Add a hidden form item if it doesn't exist in the form already
-        if (!form.getFieldInstance('mediaItems')) {
-            // This is just for debugging - you might need to adjust your parent form
-            console.log('Warning: mediaItems field not found in parent form');
-        }
-
     }, [mediaItems, form]);
 
     const addYoutubeLink = () => {

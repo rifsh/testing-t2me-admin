@@ -70,6 +70,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
     }, [selectedTheaterId, dispatch, capacity]);
 
     useEffect(() => {
+        console.log("screenTechnologies", screenTechnologies)
         setDataStatus({
             technologiesEmpty: !techLoading && (!screenTechnologies || screenTechnologies.length === 0),
             audioEmpty: !techLoading && (!screenAudioTechnologies || screenAudioTechnologies.length === 0),

@@ -49,8 +49,9 @@ const ScreenList = () => {
                     key: `${venue.venue_id}-${screen.id}`,
                     venue_name: venue.venue_name,
                     venue_id: venue.venue_id,
-                    rowSpan: index === 0 ? venue.movie_screens.length : 0, // Merge venue name cells
-                    isFirstRow: index === 0, // Mark first row of each venue
+                    rowSpan: index === 0 ? venue.movie_screens.length : 0,
+                    isFirstRow: index === 0,
+                    name_of_venue: screen.theatre.venue.name,
                     ...screen,
                 }))
             );
@@ -141,13 +142,19 @@ const ScreenList = () => {
 
     const tableColumns = [
         {
-            title: "Venue Name",
+            title: "Theater Name",
             dataIndex: "venue_name",
             key: "venue_name",
             render: (value, row) => ({
                 children: value,
                 props: { rowSpan: row.rowSpan },
             }),
+        },
+        {
+            title: "Venue Name",
+            dataIndex: "name_of_venue",
+            key: "name_of_venue",
+
         },
         {
             title: "Screen Name",

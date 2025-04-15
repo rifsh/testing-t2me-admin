@@ -107,7 +107,7 @@ export const ApiConstant = {
   ADD_THEATER_URL: "/api/v1/movies/secured/theatre/create",
   EDIT_THEATER_URL: "/api/v1/movies/secured/theatre/edit",
   EDIT_THEATER_STATUS_URL: "/api/v1/movies/secured/theatre/edit/status",
-  GET_THEATER_URL: "/api/v1/movies/secured/theatre/all",
+  GET_THEATER_URL: "/api/v1/movies/secured/theatre/by_venue",
   GET_THEATERBYID_URL: "/api/v1/movies/secured/theatre/single",
 
   // THEATER_COMPANY API ENDPOINTS
@@ -126,6 +126,13 @@ export const ApiConstant = {
   FETCH_SCREEN_TECH_URL: "/api/v1/movies/secured/screens/tech",
   FETCH_SCREEN_AUDIO_URL: "/api/v1/movies/secured/screens/audio",
   FETCH_SCREEN_FEATURE_URL: "/api/v1/movies/secured/screens/feature",
+
+  // MOVIE_API_ENDPOINTS
+  ADD_MOVIE_URL: "/api/v1/movies/secured/movie/create",
+  GET_MOVIE_URL: "/api/v1/movies/secured/movie/list",
+  GET_MOVIEBYID_URL: "/api/v1/movies/secured/movie/single",
+  EDIT_MOVIE_STATUS_URL: "/api/v1/movies/secured/movie/edit_status",
+  EDIT_MOVIE_URL: "/api/v1/movies/secured/movie/edit",
 
   //PERSONALITY_API_ENDPOINTS
   ADD_PERSONALITY_URL: "/api/v1/movies/secured/personality",
