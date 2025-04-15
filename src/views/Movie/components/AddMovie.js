@@ -162,7 +162,10 @@ const AddMovie = ({ mode, id }) => {
     const handleSubmit = async () => {
         try {
             await form.validateFields();
+
             const currentStepData = form.getFieldsValue(true);
+            console.log("Finalssss: ", currentStepData)
+
             const finalFormData = {
                 ...formData,
                 ...currentStepData
@@ -197,7 +200,9 @@ const AddMovie = ({ mode, id }) => {
                 director: finalFormData.director,
                 rating: finalFormData.rating,
                 budget_currency: finalFormData.budget_currency,
+                budget: finalFormData.budget,
                 box_office_currency: finalFormData.box_office_currency,
+                box_office: finalFormData.box_office,
                 awards: finalFormData.awards,
                 production_company: finalFormData.production_company,
                 thumbnail_image: finalFormData.thumbnail_image || null,

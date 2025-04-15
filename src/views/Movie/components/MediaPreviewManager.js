@@ -27,6 +27,7 @@ import {
 import TextEditor from 'components/util-components/FormItems/TextEditor';
 import { useSelector } from 'react-redux';
 import { MODE } from 'constants/TextConstant';
+import Utils from 'utils';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -70,49 +71,29 @@ const MovieMediaUploader = ({ form, mode }) => {
     };
 
     useEffect(() => {
-        // This effect should run only when movieSingleResponse changes in edit mode
         if (mode === MODE.EDIT && movieSingleResponse?.movie_details?.[0]?.media_items?.length > 0) {
             const existingMediaItems = movieSingleResponse.movie_details[0].media_items;
 
-            // Process and format media items
             const formattedItems = existingMediaItems.map(item => {
-                if (item.type === 'youtube') {
-                    // For YouTube videos
-                    const videoId = getYoutubeVideoId(item.url);
-                    return {
-                        id: item.id || Date.now().toString(),
-                        type: 'youtube',
-                        videoId,
-                        title: item.title || 'YouTube Video',
-                        mediaType: item.mediaLanguage || item.mediaType || 'English',
-                        url: item.url,
-                        thumbnail: getYoutubeThumbnail(videoId)
-                    };
-                } else {
-                    // For file uploads (you'll need to handle file objects differently)
-                    return {
-                        id: item.id || Date.now().toString(),
-                        type: 'file',
-                        title: item.title || 'File Upload',
-                        mediaType: item.mediaLanguage || item.mediaType || 'English',
-                        url: item.url,
-                        file: item.file,
-                        // You might need additional logic to handle thumbnails for existing files
-                    };
-                }
+                const videoId = getYoutubeVideoId(item.url);
+                return {
+                    id: item.id || Date.now().toString(),
+                    type: 'youtube',
+                    videoId,
+                    title: item.title || 'YouTube Video',
+                    mediaType: item.mediaLanguage || item.mediaType || 'English',
+                    url: item.url,
+                    thumbnail: Utils.getThumbnail(item.url)
+                };
             });
 
-            // Set the state
             setMediaItems(formattedItems);
 
-            // For YouTube links, also update youtubeLinks state
             const youtubeItems = formattedItems.filter(item => item.type === 'youtube');
             if (youtubeItems.length > 0) {
                 setYoutubeLinks(youtubeItems);
             }
 
-            // If there are uploaded files, you might need special handling
-            // to recreate the fileList state
         }
     }, [mode, movieSingleResponse]);
 

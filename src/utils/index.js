@@ -522,7 +522,7 @@ class Utils {
               return hasRequiredFields;
             })
             .map(item => ({
-              id:item.personality_id || null,
+              id: item.personality_id || null,
               personality_id: item.personality_id,
               role: Array.isArray(item.role) ? item.role[0] : item.role,
               ...(item.type?.toUpperCase() === "CAST" && { character_name: item.character_name }),
@@ -1034,6 +1034,19 @@ class Utils {
     // Filter all seat types to only include those being used
     return allSeatTypes.filter((type) => usedTypeIds.has(type.id));
   };
+
+  static extractVideoId(url) {
+    if (!url) return null;
+    const match = url.match(
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+    );
+    return match ? match[1] : null;
+  }
+
+  static getThumbnail = (url) => {
+    const videoId = this.extractVideoId(url);
+    return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+  }
 }
 
 export default Utils;

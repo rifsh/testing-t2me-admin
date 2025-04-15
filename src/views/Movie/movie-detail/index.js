@@ -32,6 +32,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchMoviesById } from 'store/slices/movieSlice';
 import LoadingOverlay from 'components/util-components/Loader';
 import CastAndCrewComponent from '../components/CastAndCrewComponent';
+import Utils from 'utils';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -94,11 +95,10 @@ const MovieDetails = () => {
         }
     }, [movieSingleResponse]);
 
-    // Get YouTube thumbnail from video ID
-    const getYouTubeThumbnail = (url) => {
-        const videoId = extractYouTubeId(url);
-        return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
-    };
+    // const getYouTubeThumbnail = (url) => {
+    //     const videoId = extractYouTubeId(url);
+    //     return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+    // };
 
     // Render appropriate content in preview modal
     const renderPreviewContent = () => {
@@ -155,7 +155,7 @@ const MovieDetails = () => {
                     onClick={() => handlePreview(trailerMedia)}
                 >
                     <img
-                        src={getYouTubeThumbnail(trailerMedia) || "https://placehold.co/600x400/222222/FFFFFF?text=Video+Thumbnail"}
+                        src={Utils.getThumbnail(trailerMedia) || "https://placehold.co/600x400/222222/FFFFFF?text=Video+Thumbnail"}
                         alt="Trailer Thumbnail"
                         style={{ width: '100%', height: 'auto', maxHeight: '350px', objectFit: 'cover' }}
                     />
@@ -197,7 +197,7 @@ const MovieDetails = () => {
                                         position: 'relative',
                                         height: '180px',
                                         background: media?.url ?
-                                            `url(${getYouTubeThumbnail(media?.url)}) center/cover no-repeat` :
+                                            `url(${Utils.getThumbnail(media?.url)}) center/cover no-repeat` :
                                             `url(${media?.thumbnail}) center/cover no-repeat`,
                                         cursor: 'pointer'
                                     }}
@@ -399,7 +399,10 @@ const MovieDetails = () => {
                     <Modal
                         title={currentPreview?.title || "Media Preview"}
                         visible={previewVisible}
-                        onCancel={() => setPreviewVisible(false)}
+                        onCancel={() => {
+                            setPreviewVisible(false);
+                            setCurrentPreview(null);
+                        }}
                         footer={null}
                         width="80%"
                         style={{ top: 20 }}
