@@ -26,6 +26,13 @@ TheaterService.getTheater = (pageData) => {
         params: Utils.filterParams(pageData),
     });
 }
+TheaterService.getTheaterDropdownData = (pageData) => {
+    return fetch({
+        url: ApiConstant.GET_THEATER_DROPDOWN_URL,
+        method: "get",
+        params: Utils.filterParams(pageData),
+    });
+}
 TheaterService.getTheaterById = (theatre_id) => {
     return fetch({
         url: ApiConstant.GET_THEATERBYID_URL,

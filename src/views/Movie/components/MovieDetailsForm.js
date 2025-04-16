@@ -233,6 +233,7 @@ const MovieDetailsForm = ({ form, mode }) => {
                         <Form.Item
                             name="director"
                             label="Director"
+                            rules={[{ required: true, message: "Enter director name" }]}
                         >
                             <Input placeholder="Enter director name" />
                         </Form.Item>

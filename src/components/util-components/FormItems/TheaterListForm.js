@@ -2,8 +2,8 @@ import React, { useEffect, useCallback, useState } from "react";
 import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  fetchDropdownTheaters,
   fetchTheaterByid,
-  fetchTheaters,
   setSeectedTheater
 } from "store/slices/theaterSlice";
 import debounce from "lodash/debounce";
@@ -26,7 +26,7 @@ const TheaterListForm = ({
   const fetchData = (search = null) => {
     const venueId = form.getFieldValue("venue_id");
     if (venueId) {
-      dispatch(fetchTheaters({ venue_id: venueId, search }));
+      dispatch(fetchDropdownTheaters({ venue_id: venueId, search }));
     }
   };
 
@@ -37,9 +37,7 @@ const TheaterListForm = ({
   const handleSetSelectedTheater = (value) => {
     dispatch(setSeectedTheater(value));
     dispatch(fetchTheaterByid({ theatre_id: value }));
-    const theater = response?.items
-      ?.flatMap((item) => item.theatre)
-      .find((theater) => theater.id === value);
+    const theater = response?.items?.find((theater) => theater.id === value);
     if (onSelect) onSelect(theater);
   };
 
@@ -76,13 +74,11 @@ const TheaterListForm = ({
         onSearch={handleSearch}
         filterOption={false} // Use server-side search
         options={
-          response?.items?.flatMap((item) =>
-            item.theatre.map((theater) => ({
-              value: theater.id,
-              label: `${theater.name} (${theater.movie_screen?.length || 0} ${theater.movie_screen?.length === 1 ? "Screen" : "Screens"
-                })`
-            }))
-          ) || []
+          response?.items?.map((theater) => ({
+            value: theater?.id,
+            label: `${theater.name} (${theater.movie_screen?.length || 0} ${theater.movie_screen?.length === 1 ? "Screen" : "Screens"
+              })`
+          })) || []
         }
         onSelect={handleSetSelectedTheater}
       />
