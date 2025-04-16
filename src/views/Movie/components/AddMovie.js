@@ -258,6 +258,12 @@ const AddMovie = ({ mode, id }) => {
         dispatch(setLocationDialogVisible(false));
     };
 
+    useEffect(() => {
+        return () => {
+            console.log("Component unmounted!");
+        };
+    }, [])
+
     return (
         <>
             <Form form={form} layout="vertical">

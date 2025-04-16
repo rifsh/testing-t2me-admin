@@ -35,6 +35,7 @@ import LoadingOverlay from "components/util-components/Loader";
 import dayjs from 'dayjs';
 import { MODE } from "constants/TextConstant";
 import Utils from "utils";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -86,13 +87,11 @@ const MovieDetailsForm = ({ form, mode }) => {
     };
 
     useEffect(() => {
-        dispatch(fetchPersonalitiesData(10));
+        dispatch(fetchPersonalitiesData({ DEFAULT_PAGE_SIZE }));
     }, [dispatch]);
 
     useEffect(() => {
         if (omdbMovie) {
-            console.log("Response movie:", omdbMovie);
-
             const genreArray = omdbMovie.Genre ?
                 omdbMovie.Genre.split(',').map(g => g.trim()) : [];
 
@@ -115,16 +114,7 @@ const MovieDetailsForm = ({ form, mode }) => {
                 actors: getActorsArray(omdbMovie.Actors),
                 awards: omdbMovie.Awards !== "N/A" ? omdbMovie.Awards : '',
                 country: omdbMovie.Country !== "N/A" ? omdbMovie.Country : '',
-                Poster: omdbMovie.Poster && response.Poster !== "images"
-                    ? [
-                        {
-                            uid: "-1",
-                            name: omdbMovie.Poster.split("/").pop(),
-                            status: "done",
-                            url: omdbMovie.Poster,
-                        },
-                    ]
-                    : [],
+                thumbnail_image: undefined
             });
         }
     }, [form, omdbMovie]);
@@ -352,10 +342,10 @@ const MovieDetailsForm = ({ form, mode }) => {
                                 accept={`.${SupportImageFormat.join(",.")}`}
                                 fileList={form.getFieldValue('thumbnail_image') || []}
                             >
-                                    <div>
-                                        <PlusOutlined />
-                                        <div style={{ marginTop: 8 }}>Upload</div>
-                                    </div>
+                                <div>
+                                    <PlusOutlined />
+                                    <div style={{ marginTop: 8 }}>Upload</div>
+                                </div>
                             </Upload>
                         </Form.Item>
                     </Col>

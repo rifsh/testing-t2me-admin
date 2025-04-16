@@ -83,6 +83,7 @@ function MovieSeatDetailForm({ form, mode }) {
             </Col>
             <Col xs={24} sm={12}>
               <TheaterListForm
+                disabled={mode === "EDIT"}
                 form={form}
               />
             </Col>

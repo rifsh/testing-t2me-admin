@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useMemo, useState } from 'react';
 import { Form, Card, Row, Col, Select, Space, Avatar, DatePicker, message, Alert, Button, Tag, Badge } from 'antd';
 import { UserOutlined, InfoCircleOutlined, CalendarOutlined, LoadingOutlined, ExclamationCircleOutlined, FrownOutlined, SearchOutlined, DatabaseOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchMovie, fetchMovieData, setFilterData, setimdbId } from 'store/slices/movieSlice';
+import { clearOMDBData, fetchMovie, fetchMovieData, setFilterData, setimdbId } from 'store/slices/movieSlice';
 import debounce from 'lodash/debounce';
 
 const MovieFilter = ({ form, onMovieSelect }) => {
@@ -54,6 +54,7 @@ const MovieFilter = ({ form, onMovieSelect }) => {
             year: dateString
         }));
         setShowHelper(false);
+        dispatch(clearOMDBData())
     };
 
     const movieOptions = useMemo(() =>
