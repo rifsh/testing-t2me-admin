@@ -49,7 +49,7 @@ const SeatForm = (props) => {
     seats,
     singleSeatStructure,
     usedSeatTypes,
-    
+
     selectedSeatStructure,
     responseImpactData,
     warningPagination,
@@ -62,7 +62,7 @@ const SeatForm = (props) => {
   useEffect(() => {
     if (seatId && mode === EDIT) {
       dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
-    }else{
+    } else {
       dispatch(resetState())
     }
   }, [seatId, dispatch]);
@@ -87,6 +87,7 @@ const SeatForm = (props) => {
         venue_id: singleSeatStructure.venue.id,
         screen_id: singleSeatStructure.screen.id,
         place_id: singleSeatStructure.venue.place.id,
+        theatre_id: singleSeatStructure.theatre.id,
         place: `${singleSeatStructure.venue.place.name}, ${singleSeatStructure.venue.place.country.name}`,
       };
       form.setFieldsValue(values);
@@ -147,7 +148,7 @@ const SeatForm = (props) => {
         if (editSeatStructure.fulfilled.match(resultAction)) {
           dispatch(setSelectedSeatStructure(editData));
           console.log('asdfjflaf');
-          
+
           dispatch(setSeatDialogVisible(true));
         }
       } else {

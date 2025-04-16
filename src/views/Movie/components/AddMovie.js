@@ -17,7 +17,7 @@ import MovieDetailsForm from "./MovieDetailsForm";
 import CastDetailsForm from "./CastDetailsForm";
 import MovieMediaUploader from "./MediaPreviewManager";
 import { MODE } from "constants/TextConstant";
-import { createMovie, editMovie, fetchMoviesById, setEditMovieData } from "store/slices/movieSlice";
+import { clearOMDBData, createMovie, editMovie, fetchMoviesById, setEditMovieData } from "store/slices/movieSlice";
 import { ActionType } from "utils/api/warning-submit-util";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
@@ -177,7 +177,7 @@ const AddMovie = ({ mode, id }) => {
 
             const transformCastData = (castArray) => {
                 return castArray?.map(member => ({
-                    id: member.id || null,
+                    id: mode === MODE.ADD ? null : member.id,
                     personality_id: member.personality_id,
                     actor_name: member.actorName,
                     actor_image: member.actorImage,
@@ -257,6 +257,13 @@ const AddMovie = ({ mode, id }) => {
     const handleModalCancel = () => {
         dispatch(setLocationDialogVisible(false));
     };
+
+    useEffect(() => {
+        return () => {
+            console.log("Component unmounted!");
+            dispatch(clearOMDBData('omdb'));
+        };
+    }, [])
 
     return (
         <>

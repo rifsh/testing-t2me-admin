@@ -123,6 +123,10 @@ const movieSlice = createSlice({
         },
         setMovieFormData(state, action) {
             state.movieFormData.push(action.payload);
+        },
+        clearOMDBData(state) {
+            state.response = null
+            state.omdbMovie = null
         }
     },
     extraReducers: (builder) => {
@@ -210,6 +214,6 @@ const movieSlice = createSlice({
     },
 });
 
-export const { setFilterData, setimdbId, setMovieFormData, setEditMovieId,setEditMovieData } = movieSlice.actions;
+export const { setFilterData, setimdbId, setMovieFormData, setEditMovieId, setEditMovieData, clearOMDBData } = movieSlice.actions;
 
 export default movieSlice.reducer;

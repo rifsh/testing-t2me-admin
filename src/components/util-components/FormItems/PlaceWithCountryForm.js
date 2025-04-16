@@ -1,7 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { message, AutoComplete, Form } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPlaceWithCountry } from "store/slices/locationSlice";
+import debounce from "lodash/debounce";
 
 const PlaceWithCountryForm = ({
   form,
@@ -17,7 +18,6 @@ const PlaceWithCountryForm = ({
   const { placeWithCountryList, loading, error } = useSelector(
     (state) => state.locations
   );
-  console.warn(placeWithCountryList, loading, error, "...");
 
   useEffect(() => {
     if (error) {
@@ -26,12 +26,20 @@ const PlaceWithCountryForm = ({
   }, [error]);
 
   useEffect(() => {
-    dispatch(fetchPlaceWithCountry(""));
+    dispatch(fetchPlaceWithCountry(''));
   }, [dispatch]);
+
+  // Debounced handler
+  const debouncedSearch = useCallback(
+    debounce((value) => {
+      dispatch(fetchPlaceWithCountry(value));
+    }, 500),
+    [dispatch]
+  );
 
   const handleSearch = (value) => {
     if (value) {
-      dispatch(fetchPlaceWithCountry(value));
+      debouncedSearch(value);
     }
   };
 

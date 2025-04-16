@@ -522,7 +522,7 @@ class Utils {
               return hasRequiredFields;
             })
             .map(item => ({
-              id: item.personality_id || null,
+              id: item.id || null,
               personality_id: item.personality_id,
               role: Array.isArray(item.role) ? item.role[0] : item.role,
               ...(item.type?.toUpperCase() === "CAST" && { character_name: item.character_name }),
