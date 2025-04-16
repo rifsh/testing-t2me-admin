@@ -42,6 +42,17 @@ export const fetchTheaters = createAsyncThunk(
         }
     }
 );
+export const fetchDropdownTheaters = createAsyncThunk(
+    "cast/fetchDropdownTheaters",
+    async (pageData, { rejectWithValue }) => {
+        try {
+            const response = await TheaterService.getTheaterDropdownData(pageData);
+            return response.data[0];
+        } catch (error) {
+            return rejectWithValue(error.message || "Failed to fetch screen features");
+        }
+    }
+);
 export const fetchTheaterByid = createAsyncThunk(
     "cast/fetchTheaterByid",
     async (theatre_id, { rejectWithValue }) => {
@@ -124,6 +135,18 @@ const theaterSlice = createSlice({
                 state.pagination = action.payload;
             })
             .addCase(fetchTheaters.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(fetchDropdownTheaters.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchDropdownTheaters.fulfilled, (state, action) => {
+                state.loading = false;
+                state.response = action.payload;
+                state.pagination = action.payload;
+            })
+            .addCase(fetchDropdownTheaters.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

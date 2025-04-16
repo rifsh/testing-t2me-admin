@@ -108,6 +108,7 @@ export const ApiConstant = {
   EDIT_THEATER_URL: "/api/v1/movies/secured/theatre/edit",
   EDIT_THEATER_STATUS_URL: "/api/v1/movies/secured/theatre/edit/status",
   GET_THEATER_URL: "/api/v1/movies/secured/theatre/by_venue",
+  GET_THEATER_DROPDOWN_URL: "/api/v1/movies/secured/theatre/all",
   GET_THEATERBYID_URL: "/api/v1/movies/secured/theatre/single",
 
   // THEATER_COMPANY API ENDPOINTS

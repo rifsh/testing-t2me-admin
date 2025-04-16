@@ -95,10 +95,15 @@ const CastDetailsForm = ({ form: parentForm, initialValues, mode }) => {
             type: 'CAST'
         };
 
-        const updatedTeamMembers = [...teamMembers];
-        updatedTeamMembers.push(newMember);
-        setTeamMembers(updatedTeamMembers);
-        setEditingMember({ ...newMember });
+        setTeamMembers([...teamMembers, newMember]);
+        setEditingMember(newMember);
+
+        setTimeout(() => {
+            const dropdownInput = document.querySelector('.ant-select-selection-search-input');
+            if (dropdownInput) {
+                dropdownInput.focus();
+            }
+        }, 100);
     };
 
     const removeMember = (id) => {
@@ -108,7 +113,7 @@ const CastDetailsForm = ({ form: parentForm, initialValues, mode }) => {
             okText: 'Yes',
             cancelText: 'No',
             onOk() {
-                const updated = teamMembers.filter((member) => member.id !== id);
+                const updated = teamMembers.filter((member) => member.personality_id !== id);
                 setTeamMembers(updated);
                 if (editingMember && editingMember.id === id) {
                     setEditingMember(null);
@@ -130,13 +135,18 @@ const CastDetailsForm = ({ form: parentForm, initialValues, mode }) => {
             type: values.type
         };
 
-        // Update the team members list
-        const updatedTeamMembers = teamMembers.map(member =>
-            member.id === editingMember.id ? updatedMember : member
-        );
-        setTeamMembers(updatedTeamMembers);
+        // Update or add the member
+        if (editingMember.id) {
+            // Existing member - update
+            const updatedTeamMembers = teamMembers.map(member =>
+                member.id === editingMember.id ? updatedMember : member
+            );
+            setTeamMembers(updatedTeamMembers);
+        } else {
+            // New member - add
+            setTeamMembers([...teamMembers, updatedMember]);
+        }
 
-        // Close the edit form
         setEditingMember(null);
     };
 
@@ -220,7 +230,7 @@ const CastDetailsForm = ({ form: parentForm, initialValues, mode }) => {
                             type="text"
                             danger
                             icon={<DeleteOutlined />}
-                            onClick={() => removeMember(record.id)}
+                            onClick={() => removeMember(record.personality_id)}
                         />
                     </Tooltip>
                 </Space>
