@@ -54,7 +54,7 @@ const MovieFilter = ({ form, onMovieSelect }) => {
             year: dateString
         }));
         setShowHelper(false);
-        dispatch(clearOMDBData())
+        dispatch(clearOMDBData());
     };
 
     const movieOptions = useMemo(() =>

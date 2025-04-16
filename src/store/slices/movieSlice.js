@@ -124,8 +124,9 @@ const movieSlice = createSlice({
         setMovieFormData(state, action) {
             state.movieFormData.push(action.payload);
         },
-        clearOMDBData(state, action) {
+        clearOMDBData(state) {
             state.response = null
+            state.omdbMovie = null
         }
     },
     extraReducers: (builder) => {

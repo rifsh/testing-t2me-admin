@@ -146,6 +146,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     }
 
     const handleVenueSelect = (venue) => {
+        form.setFieldValue("theatre_id", undefined);
         setIsLoading(true);
         setVenueSelected(!!venue);
         setVenueId(venue);

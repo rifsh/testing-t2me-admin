@@ -123,6 +123,16 @@ const MovieDetailsForm = ({ form, mode }) => {
         console.log("Selected movie ID:", imdbId);
     };
 
+    useEffect(() => {
+        return () => {
+            form.setFieldsValue({
+                name: '',
+                director: '',
+            });
+            console.log("Component unmounted!");
+        };
+    }, [])
+
     return (
         <>
             <Card title={<Title level={4}>Movie Details</Title>} bordered>

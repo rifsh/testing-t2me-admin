@@ -20,7 +20,7 @@ import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import utils from "utils";
 import { setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
-import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import { DEFAULT_PAGE_SIZE, EVENT_TYPES } from "constants/PageConstants";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
@@ -48,9 +48,14 @@ const EventsList = () => {
     responseImpactData,
   } = useSelector((state) => state.event);
   const { responseData } = useSelector((state) => state.modalSlice);
+  const eventParams = {
+    size: DEFAULT_PAGE_SIZE.size,
+    page: DEFAULT_PAGE_SIZE.page,
+    event_type: EVENT_TYPES.event,
+  }
 
   useEffect(() => {
-    dispatch(fetchAllEvent(DEFAULT_PAGE_SIZE));
+    dispatch(fetchAllEvent(eventParams));
   }, [dispatch]);
 
   const handleViewDetails = async (id) => {

@@ -28,6 +28,7 @@ function MovieSeatDetailForm({ form, mode }) {
     dispatch(getVenues({ place_id: id, is_indoor: true }));
     form.setFieldValue("venue_id", undefined);
     form.setFieldValue("screen_id", undefined);
+    form.setFieldValue("theatre_id", undefined);
     dispatch(resetTicketSelection());
     setSelectedFields({ selectedScreen: null, selectedVenue: null });
     dispatch(setSelectedPlace(id));
@@ -37,6 +38,7 @@ function MovieSeatDetailForm({ form, mode }) {
 
   const handleVenueSelect = (venue) => {
     form.setFieldValue("screen_id", undefined);
+    form.setFieldValue("theatre_id", undefined);
     setSelectedFields({ selectedScreen: null, selectedVenue: venue });
     dispatch(setSelectedVenue(venue));
     dispatch(getSingleVenues(venue));
@@ -45,6 +47,11 @@ function MovieSeatDetailForm({ form, mode }) {
   const handleScreenSelect = (screen) => {
     setSelectedFields({ ...selectedFields, selectedScreen: screen });
     dispatch(setSelectedScreenData(screen));
+  };
+
+  const handleTheaterSelect = (theater) => {
+    form.setFieldValue("screen_id", undefined);
+    setSelectedFields({ ...selectedFields, selectedTheater: theater });
   };
   return (
     <Row gutter={16}>
@@ -73,18 +80,20 @@ function MovieSeatDetailForm({ form, mode }) {
           </Row>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
+              <TheaterListForm
+                disabled={mode === "EDIT"}
+                form={form}
+                onSelect={handleTheaterSelect}
+
+              />
+            </Col>
+            <Col xs={24} sm={12}>
               <ScreenListForm
                 form={form}
                 disabled={mode === "EDIT"}
                 label="Screen"
                 onSelect={handleScreenSelect}
                 rules={[{ required: true, message: "Please select a screen" }]}
-              />
-            </Col>
-            <Col xs={24} sm={12}>
-              <TheaterListForm
-                disabled={mode === "EDIT"}
-                form={form}
               />
             </Col>
             <Col xs={24} sm={12}>

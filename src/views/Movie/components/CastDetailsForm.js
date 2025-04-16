@@ -87,7 +87,6 @@ const CastDetailsForm = ({ form: parentForm, initialValues, mode }) => {
 
     const addMember = () => {
         const newMember = {
-            id: Date.now(),
             personality_id: '',
             actorName: '',
             actorImage: '',
@@ -389,6 +388,7 @@ const CastDetailsForm = ({ form: parentForm, initialValues, mode }) => {
                                 onClick={(e) => {
                                     e.preventDefault();
                                     memberForm.submit();
+                                    console.log("members", memberForm.getFieldValue())
                                 }}
                             >
                                 Save

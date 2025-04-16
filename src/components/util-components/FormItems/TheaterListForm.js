@@ -1,36 +1,58 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchTheaterByid, fetchTheaters, setSeectedTheater } from "store/slices/theaterSlice";
+import {
+  fetchTheaterByid,
+  fetchTheaters,
+  setSeectedTheater
+} from "store/slices/theaterSlice";
+import debounce from "lodash/debounce";
 
-const TheaterListForm = ({ form, label = "Theater", rules, onSelect, mode, disabled }) => {
+const TheaterListForm = ({
+  form,
+  label = "Theater",
+  rules,
+  onSelect,
+  mode,
+  disabled
+}) => {
   const dispatch = useDispatch();
+  const [searchInput, setSearchInput] = useState("");
   const { response, selectedTheater, loading } = useSelector(
     (state) => state.theater
   );
   const { selectedVenue } = useSelector((state) => state.locations);
 
-  useEffect(() => {
+  const fetchData = (search = null) => {
     const venueId = form.getFieldValue("venue_id");
     if (venueId) {
-      dispatch(fetchTheaters({ venue_id: venueId }));
-      console.log("venue_id", venueId);
+      dispatch(fetchTheaters({ venue_id: venueId, search }));
     }
-
-  }, [dispatch, form, selectedVenue]);
+  };
 
   useEffect(() => {
-    if (response) {
-      console.log("venue_id", response?.items?.map((keys) => keys.theatre));
-    }
-
-  }, [response]);
+    fetchData();
+  }, [dispatch, selectedVenue]);
 
   const handleSetSelectedTheater = (value) => {
-    dispatch(setSeectedTheater(value))
-    dispatch(fetchTheaterByid({ theatre_id: value }))
-    const theater = response?.items.find((theater) => theater.id === value);
-    if (onSelect) onSelect(value);
+    dispatch(setSeectedTheater(value));
+    dispatch(fetchTheaterByid({ theatre_id: value }));
+    const theater = response?.items
+      ?.flatMap((item) => item.theatre)
+      .find((theater) => theater.id === value);
+    if (onSelect) onSelect(theater);
+  };
+
+  const debouncedSearch = useCallback(
+    debounce((input) => {
+      setSearchInput(input);
+      fetchData(input || null);
+    }, 300),
+    []
+  );
+
+  const handleSearch = (input) => {
+    debouncedSearch(input);
   };
 
   return (
@@ -42,7 +64,8 @@ const TheaterListForm = ({ form, label = "Theater", rules, onSelect, mode, disab
             <span>Loading theaters...</span>
           ) : (
             <span>
-              No theaters available. You can add a theater under the selected venue.
+              No theaters available. You can add a theater under the selected
+              venue.
             </span>
           )
         }
@@ -50,21 +73,20 @@ const TheaterListForm = ({ form, label = "Theater", rules, onSelect, mode, disab
         loading={loading}
         placeholder="Select a theater"
         showSearch
-        filterOption={(input, option) =>
-          option.label.toLowerCase().includes(input.toLowerCase())
-        }
+        onSearch={handleSearch}
+        filterOption={false} // Use server-side search
         options={
           response?.items?.flatMap((item) =>
             item.theatre.map((theater) => ({
               value: theater.id,
-              label: theater.name,
+              label: `${theater.name} (${theater.movie_screen?.length || 0} ${theater.movie_screen?.length === 1 ? "Screen" : "Screens"
+                })`
             }))
           ) || []
         }
         onSelect={handleSetSelectedTheater}
       />
     </Form.Item>
-
   );
 };
 
