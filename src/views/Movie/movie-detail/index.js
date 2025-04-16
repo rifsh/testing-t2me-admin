@@ -361,8 +361,8 @@ const MovieDetails = () => {
                                 </Paragraph>
 
                                 <Row gutter={[16, 16]}>
-                                    <Col xs={24} sm={24} md={12}>
-                                        <Descriptions title="Production Details" layout="vertical" column={1} bordered>
+                                    <Col xs={24} sm={24} md={24}>
+                                        <Descriptions title="Production Details" layout="horizontal" column={1} bordered>
                                             <Descriptions.Item label="Budget">
                                                 {movieData?.budget || 'N/A'}
                                             </Descriptions.Item>
@@ -375,7 +375,6 @@ const MovieDetails = () => {
                                         </Descriptions>
                                     </Col>
                                 </Row>
-
                                 {renderTrailerSection()}
                             </Card>
                         </Col>
