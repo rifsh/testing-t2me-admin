@@ -35,8 +35,8 @@ const TheaterListForm = ({
   }, [dispatch, selectedVenue]);
 
   const handleSetSelectedTheater = (value) => {
-    dispatch(setSeectedTheater(value));
-    dispatch(fetchTheaterByid({ theatre_id: value }));
+    dispatch(setSeectedTheater(value?.value));
+    dispatch(fetchTheaterByid({ theatre_id: value?.value }));
     const theater = response?.items?.find((theater) => theater.id === value);
     if (onSelect) onSelect(theater);
   };
@@ -72,15 +72,17 @@ const TheaterListForm = ({
         placeholder="Select a theater"
         showSearch
         onSearch={handleSearch}
-        filterOption={false} // Use server-side search
+        filterOption={false}
         options={
           response?.items?.map((theater) => ({
             value: theater?.id,
-            label: `${theater.name} (${theater.movie_screen?.length || 0} ${theater.movie_screen?.length === 1 ? "Screen" : "Screens"
-              })`
+            label: `${theater.name} (${theater.movie_screen?.length || 0} ${theater.movie_screen?.length === 1 ? "Screen" : "Screens"})`,
+            theaterName: theater.name
           })) || []
         }
         onSelect={handleSetSelectedTheater}
+        optionLabelProp="theaterName"
+        labelInValue
       />
     </Form.Item>
   );

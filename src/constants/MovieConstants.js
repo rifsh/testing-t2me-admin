@@ -15,22 +15,22 @@ export const MOVIE_CONSTANTS = {
     ],
 
     castRoles: [
-        { value: "Lead Actor", color: "blue" },
-        { value: "Lead Actress", color: "purple" },
-        { value: "Supporting Actor", color: "green" },
-        { value: "Supporting Actress", color: "magenta" },
-        { value: "Child Artist", color: "gold" },
-        { value: "Guest Appearance", color: "lime" }
+        { value: "Lead Actor", label: "Lead Actor", color: "blue" },
+        { value: "Lead Actress", label: "Lead Actress", color: "purple" },
+        { value: "Supporting Actor", label: "Supporting Actor", color: "green" },
+        { value: "Supporting Actress", label: "Supporting Actress", color: "magenta" },
+        { value: "Child Artist", label: "Child Artist", color: "gold" },
+        { value: "Guest Appearance", label: "Guest Appearance", color: "lime" }
     ],
     crewRoles: [
-        { value: "Director", color: "red" },
-        { value: "Producer", color: "orange" },
-        { value: "Music Director", color: "volcano" },
-        { value: "Cinematographer", color: "geekblue" },
-        { value: "Screenwriter", color: "cyan" },
-        { value: "Art Director", color: "pink" },
-        { value: "Costume Designer", color: "teal" },
-        { value: "Editor", color: "brown" },
-        { value: "Choreographer", color: "purple" }
-    ],
+        { value: "Director", label: "Director", color: "red" },
+        { value: "Producer", label: "Producer", color: "orange" },
+        { value: "Music Director", label: "Music Director", color: "volcano" },
+        { value: "Cinematographer", label: "Cinematographer", color: "geekblue" },
+        { value: "Screenwriter", label: "Screenwriter", color: "cyan" },
+        { value: "Art Director", label: "Art Director", color: "pink" },
+        { value: "Costume Designer", label: "Costume Designer", color: "teal" },
+        { value: "Editor", label: "Editor", color: "brown" },
+        { value: "Choreographer", label: "Choreographer", color: "purple" }
+    ]
 }

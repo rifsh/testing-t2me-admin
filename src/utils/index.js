@@ -566,7 +566,7 @@ class Utils {
           return;
         }
 
-        if (key === "banner_images") {
+        if (key === "banner_images" || key === "banner_image") {
           if (value.length === 0) {
             formData.append(key, ""); // Handle empty case
           } else {
@@ -1023,8 +1023,8 @@ class Utils {
     // Collect all unique seat type IDs being used
     const usedTypeIds = new Set();
 
-    seats.forEach((row) => {
-      row.forEach((seat) => {
+    seats?.forEach((row) => {
+      row?.forEach((seat) => {
         if (seat.isVisible) {
           usedTypeIds.add(seat.type);
         }

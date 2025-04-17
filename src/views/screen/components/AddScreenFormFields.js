@@ -99,8 +99,6 @@ const AddScreenFormFields = ({ mode, screenId }) => {
         if (singleTheaterResponse) {
             setCapacity(singleTheaterResponse?.capacity);
             dispatch(setScreenCapacity(singleTheaterResponse?.number_of_screens));
-            
-            console.log("capascrcount", singleTheaterResponse?.movie_screen?.length - selectedTheaterScreenCapacity)
         }
     }, [singleTheaterResponse])
 
