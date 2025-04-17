@@ -43,7 +43,7 @@ function ScheduleDetailForm({ form, mode }) {
   };
 
   const handleTheatreSelect = (theatre) => {
-    dispatch(fetchScreenData({ theatre_id: theatre }));
+    dispatch(fetchScreenData({ theatre_id: theatre.id }));
   };
 
   const handleStartDateChange = (date) => {

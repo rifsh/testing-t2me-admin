@@ -26,10 +26,11 @@ import { ActionType } from "utils/api/warning-submit-util";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 
-import MovieScheduler from "../components/MovieScheduler";
+// import MovieScheduler from "../components/MovieScheduler";
 import { SEAT_STRUCTURE_TYPES } from "constants/SeatTypes";
 import MovieSeatDetailForm from "views/seat/movie/components/MovieSeatDetailForm";
 import ScheduleDetailForm from "../components/ScheduleDetailForm";
+import MovieScheduler from "../components/MovieScheduler";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -281,12 +282,13 @@ const ScheduleForm = (props) => {
                     label: "Theatre Selection",
                     key: "1",
                     children: <ScheduleDetailForm form={form} mode={mode} />,
+                    // children: <MovieScheduler />,
                   },
                   {
                     label: "Schedule Layout",
                     key: "2",
                     disabled: areRequiredFieldsMissing(),
-                    children: <MovieScheduler />,
+                    children: <MovieScheduler form={form}/>,
                   },
                 ]}
               />
