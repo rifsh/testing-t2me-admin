@@ -7,6 +7,7 @@ import {
   setScheduleSelectTime,
 } from "store/slices/scheduleSlice";
 import { setSelectedVenue } from "store/slices/locationSlice";
+import { EVENT_TYPES } from "constants/PageConstants";
 
 const { Option } = Select;
 
@@ -21,7 +22,7 @@ export function ScheduleDetails({ form, type }) {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        await dispatch(fetchAllEvent({})).unwrap();
+        await dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event })).unwrap();
       } catch (error) {
         console.error("Failed to fetch events:", error);
       }
