@@ -144,38 +144,20 @@ const MovieDetails = () => {
 
         return (
             <div style={{ marginTop: '24px' }}>
-                <Title level={4}>Trailer</Title>
+                <Title level={4}>Banner</Title>
                 <div
                     style={{
                         position: 'relative',
-                        cursor: 'pointer',
                         borderRadius: '8px',
                         overflow: 'hidden'
                     }}
                     onClick={() => handlePreview(trailerMedia)}
                 >
                     <img
-                        src={Utils.getThumbnail(trailerMedia) || "https://placehold.co/600x400/222222/FFFFFF?text=Video+Thumbnail"}
+                        src={movieSingleResponse?.movie_details?.[0]?.banner_image || "https://placehold.co/600x400/222222/FFFFFF?text=Video+Thumbnail"}
                         alt="Trailer Thumbnail"
                         style={{ width: '100%', height: 'auto', maxHeight: '350px', objectFit: 'cover' }}
                     />
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            background: 'rgba(0,0,0,0.6)',
-                            borderRadius: '50%',
-                            width: '80px',
-                            height: '80px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                    >
-                        <PlayCircleOutlined style={{ fontSize: '48px', color: 'white' }} />
-                    </div>
                 </div>
             </div>
         );
@@ -361,8 +343,8 @@ const MovieDetails = () => {
                                 </Paragraph>
 
                                 <Row gutter={[16, 16]}>
-                                    <Col xs={24} sm={24} md={12}>
-                                        <Descriptions title="Production Details" layout="vertical" column={1} bordered>
+                                    <Col xs={24} sm={24} md={24}>
+                                        <Descriptions title="Production Details" layout="horizontal" column={1} bordered>
                                             <Descriptions.Item label="Budget">
                                                 {movieData?.budget || 'N/A'}
                                             </Descriptions.Item>
@@ -375,7 +357,6 @@ const MovieDetails = () => {
                                         </Descriptions>
                                     </Col>
                                 </Row>
-
                                 {renderTrailerSection()}
                             </Card>
                         </Col>

@@ -179,7 +179,7 @@ const TheaterList = () => {
         <Card>
             <Row gutter={16} justify={"space-between"} style={{ marginBottom: 16 }}>
                 <SearchBarWithStatus
-                    placeholder="Enter theater name"
+                    placeholder="Search by theater and venue name"
                     fetchFunction={fetchTheaters}
                 />
 
