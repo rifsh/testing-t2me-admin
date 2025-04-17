@@ -7,7 +7,7 @@ import {
     Col,
     Space,
     message,
-    Steps
+    Tabs
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import Title from "antd/es/typography/Title";
@@ -30,13 +30,18 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 const AddMovie = ({ mode, id }) => {
     const [form] = Form.useForm();
     const dispatch = useDispatch();
-    const [current, setCurrent] = useState(0);
+    const [activeTab, setActiveTab] = useState("0");
+    const [formValidationStatus, setFormValidationStatus] = useState({
+        "0": false,
+        "1": false,
+        "2": false
+    });
     const [formData, setFormData] = useState({
         movieDetails: {},
         cast: [],
         crew: [],
         media: {},
-        thumbnail_image: []
+        mediaItems: [],
     });
     const { loading, movieResponse, submitMessage, movieSingleResponse, movieEditData, message: movieMessage } = useSelector((state) => state.movie);
     const { eventType } = useSelector((state) => state.event);
@@ -54,6 +59,28 @@ const AddMovie = ({ mode, id }) => {
     useEffect(() => {
         if (movieSingleResponse) {
             if (mode === MODE.EDIT && Array.isArray(movieSingleResponse.movie_details)) {
+                const mediaItems = movieSingleResponse?.movie_details[0]?.media_items || [];
+                const thumbnailImage = movieSingleResponse.thumbnail_image && movieSingleResponse.thumbnail_image !== "images"
+                    ? [
+                        {
+                            uid: "-1",
+                            name: movieSingleResponse.thumbnail_image.split("/").pop(),
+                            status: "done",
+                            url: movieSingleResponse.thumbnail_image,
+                        },
+                    ]
+                    : [];
+                const banner_image = movieSingleResponse?.movie_details[0]?.banner_image && movieSingleResponse?.movie_details[0]?.banner_image !== "images"
+                    ? [
+                        {
+                            uid: "-1",
+                            name: movieSingleResponse?.movie_details[0]?.banner_image.split("/").pop(),
+                            status: "done",
+                            url: movieSingleResponse?.movie_details[0]?.banner_image,
+                        },
+                    ]
+                    : [];
+
                 form.setFieldsValue({
                     Title: movieSingleResponse?.event_name,
                     age_restriction: movieSingleResponse.movie_details[0].age_restriction,
@@ -69,78 +96,110 @@ const AddMovie = ({ mode, id }) => {
                     awards: movieSingleResponse?.movie_details[0]?.awards,
                     production_company: movieSingleResponse?.movie_details[0]?.production_company,
                     Plot: movieSingleResponse?.description,
-                    mediaItems: movieSingleResponse?.movie_details[0]?.media_items,
-                    thumbnail_image:
-                        movieSingleResponse.thumbnail_image && movieSingleResponse.thumbnail_image !== "images"
-                            ? [
-                                {
-                                    uid: "-1",
-                                    name: movieSingleResponse.thumbnail_image.split("/").pop(),
-                                    status: "done",
-                                    url: movieSingleResponse.thumbnail_image,
-                                },
-                            ]
-                            : [],
+                    mediaItems: mediaItems,
+                    thumbnail_image: thumbnailImage,
+                    banner_image: banner_image,
                 });
-            }
-        }
-    }, [movieSingleResponse])
 
-    const next = () => {
-        form.validateFields()
-            .then((values) => {
-                const currentStepData = form.getFieldsValue(true);
-
+                // Also update formData state to ensure consistency
                 setFormData(prevData => ({
                     ...prevData,
-                    ...currentStepData,
-                    thumbnail_image: currentStepData.thumbnail_image || prevData.thumbnail_image
+                    mediaItems: mediaItems,
+                    thumbnail_image: thumbnailImage,
+                    banner_image: banner_image,
                 }));
+            }
+        }
+    }, [movieSingleResponse, form, mode]);
 
-                console.log("Current step data:", currentStepData);
-                setCurrent(current + 1);
-            })
-            .catch(() => {
-                message.error("Please complete this step before continuing.");
-            });
+    const handleTabChange = async (key) => {
+        try {
+            // Validate current tab fields before allowing change
+            const currentTabIndex = parseInt(activeTab);
+            const targetTabIndex = parseInt(key);
+
+            // If going forward, validate the current tab first
+            if (targetTabIndex > currentTabIndex) {
+                await validateTabFields(currentTabIndex);
+            }
+
+            // Save current form data regardless of direction
+            const currentStepData = form.getFieldsValue(true);
+
+            setFormData(prevData => ({
+                ...prevData,
+                ...currentStepData,
+                // Ensure media data is preserved
+                thumbnail_image: currentStepData.thumbnail_image || prevData.thumbnail_image,
+                mediaItems: currentStepData.mediaItems || prevData.mediaItems,
+                director: currentStepData.director || prevData.director
+            }));
+
+            // Change the tab
+            setActiveTab(key);
+        } catch (error) {
+            message.error("Please complete this tab before continuing.");
+        }
     };
 
-    const prev = () => {
-        const currentStepData = form.getFieldsValue(true);
-        setFormData(prevData => ({
-            ...prevData,
-            ...currentStepData
-        }));
+    const validateTabFields = async (tabIndex) => {
+        let fieldsToValidate = [];
 
-        setCurrent(current - 1);
+        // Determine which fields to validate based on the tab
+        switch (tabIndex) {
+            case 0:
+                fieldsToValidate = ['Title', 'age_restriction', 'Runtime', 'country', 'Genre', 'Language', 'Released', 'Plot'];
+                break;
+            case 1:
+                // Cast/crew validation if needed
+                // fieldsToValidate = ['cast', 'crew'];
+                break;
+            case 2:
+                // Media validation if needed
+                break;
+            default:
+                break;
+        }
+
+        // Validate the selected fields
+        if (fieldsToValidate.length > 0) {
+            await form.validateFields(fieldsToValidate);
+        }
+
+        // Mark this tab as validated
+        setFormValidationStatus(prev => ({
+            ...prev,
+            [tabIndex]: true
+        }));
     };
 
     useEffect(() => {
+        // Ensure form is updated with current formData when tab changes
         form.setFieldsValue(formData);
-    }, [current, form, formData]);
+    }, [activeTab, form, formData]);
 
-    const renderStepContent = () => {
-        switch (MOVIE_CONSTANTS.MOVIE_STEPS[current].content) {
-            case "movieDetails":
+    const renderTabContent = (tabKey) => {
+        switch (tabKey) {
+            case "0":
                 return <MovieDetailsForm form={form} mode={mode} />;
-            case "castCrew":
+            case "1":
                 return (
                     <CastDetailsForm
                         mode={mode}
                         form={form}
-                        initialValues={
-                            mode === MODE.ADD ? {
-                                cast: formData.cast || [],
-                                crew: formData.crew || []
-                            } : {
-                                cast: movieSingleResponse?.movie_details[0].casts || [],
-                                crew: formData.crew || []
-                            }
-                        }
+                        initialValues={{
+                            cast: mode === MODE.ADD ? formData.cast || [] : movieSingleResponse?.movie_details[0]?.casts || [],
+                            crew: formData.crew || []
+                        }}
                     />
                 );
-            case "mediaPreview":
-                return <MovieMediaUploader form={form} mode={mode} />;
+            case "2":
+                return (
+                    <MovieMediaUploader
+                        form={form}
+                        mode={mode}
+                    />
+                );
             default:
                 return null;
         }
@@ -161,10 +220,10 @@ const AddMovie = ({ mode, id }) => {
 
     const handleSubmit = async () => {
         try {
+            // Final validation of all required fields
             await form.validateFields();
 
             const currentStepData = form.getFieldsValue(true);
-            console.log("Finalssss: ", currentStepData)
 
             const finalFormData = {
                 ...formData,
@@ -186,6 +245,7 @@ const AddMovie = ({ mode, id }) => {
                     type: member.type
                 })) || [];
             };
+            console.log("Final form data: ", finalFormData);
 
             const responseFormattedData = {
                 event_type_id: eventType?.find((item) => item.type === "Movie")?.id || 1,
@@ -206,11 +266,13 @@ const AddMovie = ({ mode, id }) => {
                 awards: finalFormData.awards,
                 production_company: finalFormData.production_company,
                 thumbnail_image: finalFormData.thumbnail_image || null,
+                banner_image: finalFormData.banner_image || null,
                 mediaItems: finalFormData.mediaItems || [],
                 cast: transformCastData(finalFormData.cast),
             };
+
             if (mode === MODE.ADD) {
-                console.log("Final form data: ", responseFormattedData)
+                console.log("Submitting new movie: ", responseFormattedData);
                 await dispatch(createMovie({
                     data: responseFormattedData,
                     action: ActionType.SUBMIT
@@ -222,7 +284,7 @@ const AddMovie = ({ mode, id }) => {
                     ...responseFormattedData,
                     id: id
                 }
-                console.log("Final form data: ", responseFormattedData);
+                console.log("Updating movie: ", formattedData);
                 dispatch(setEditMovieData(formattedData));
                 const resultAction = await dispatch(
                     editMovie({ data: movieEditData, action: ActionType.WARNING })
@@ -236,6 +298,25 @@ const AddMovie = ({ mode, id }) => {
                 errorInfo.errorFields.forEach((field) => {
                     console.log(`Field Error: ${field.name.join(".")} - ${field.errors.join(", ")}`);
                 });
+
+                // Navigate to the tab with errors
+                const firstErrorField = errorInfo.errorFields[0].name[0];
+                let tabWithError = "0"; // Default to first tab
+
+                // Determine which tab has the error
+                const movieDetailsFields = ['Title', 'age_restriction', 'Runtime', 'country', 'Genre', 'Language', 'Released', 'Plot', 'rating', 'budget_currency', 'box_office_currency', 'awards', 'production_company', 'director'];
+                const castFields = ['cast', 'crew'];
+                const mediaFields = ['mediaItems', 'thumbnail_image'];
+
+                if (movieDetailsFields.includes(firstErrorField)) {
+                    tabWithError = "0";
+                } else if (castFields.includes(firstErrorField)) {
+                    tabWithError = "1";
+                } else if (mediaFields.includes(firstErrorField)) {
+                    tabWithError = "2";
+                }
+
+                setActiveTab(tabWithError);
             } else {
                 message.error("An unexpected error occurred. Please try again.");
             }
@@ -263,7 +344,54 @@ const AddMovie = ({ mode, id }) => {
             console.log("Component unmounted!");
             dispatch(clearOMDBData('omdb'));
         };
-    }, [])
+    }, [dispatch]);
+
+    const tabItems = MOVIE_CONSTANTS.MOVIE_STEPS.map((item, index) => ({
+        key: String(index),
+        label: item.title,
+        children: renderTabContent(String(index)),
+    }));
+
+    const handleNext = async () => {
+        try {
+            const currentTabIndex = parseInt(activeTab);
+            await validateTabFields(currentTabIndex);
+
+            // If validation passes, go to next tab
+            const nextTabIndex = currentTabIndex + 1;
+            if (nextTabIndex < MOVIE_CONSTANTS.MOVIE_STEPS.length) {
+                // Save current form data before advancing
+                const currentStepData = form.getFieldsValue(true);
+                setFormData(prevData => ({
+                    ...prevData,
+                    ...currentStepData,
+                    mediaItems: currentStepData.mediaItems || prevData.mediaItems
+                }));
+
+                setActiveTab(String(nextTabIndex));
+            }
+        } catch (error) {
+            message.error("Please complete this tab before continuing.");
+        }
+    };
+
+    const handlePrev = () => {
+        const currentTabIndex = parseInt(activeTab);
+        const prevTabIndex = currentTabIndex - 1;
+        if (prevTabIndex >= 0) {
+            // Save current tab data
+            const currentStepData = form.getFieldsValue(true);
+            setFormData(prevData => ({
+                ...prevData,
+                ...currentStepData,
+                // Explicitly preserve media data
+                // thumbnail_image: currentStepData.thumbnail_image || prevData.thumbnail_image,
+                mediaItems: currentStepData.mediaItems || prevData.mediaItems
+            }));
+
+            setActiveTab(String(prevTabIndex));
+        }
+    };
 
     return (
         <>
@@ -275,43 +403,40 @@ const AddMovie = ({ mode, id }) => {
                             bordered
                             className="movie-information-card"
                         >
-                            <Steps current={current} style={{ marginBottom: 24 }}>
-                                {MOVIE_CONSTANTS.MOVIE_STEPS.map((item) => (
-                                    <Steps.Step key={item.title} title={item.title} />
-                                ))}
-                            </Steps>
-
-                            <div className="steps-content">{renderStepContent()}</div>
+                            <Tabs
+                                activeKey={activeTab}
+                                onChange={handleTabChange}
+                                items={tabItems}
+                                tabBarExtraContent={{
+                                    right: (
+                                        <Space>
+                                            {parseInt(activeTab) > 0 && (
+                                                <Button onClick={handlePrev}>
+                                                    Previous
+                                                </Button>
+                                            )}
+                                            {parseInt(activeTab) < MOVIE_CONSTANTS.MOVIE_STEPS.length - 1 ? (
+                                                <Button type="primary" onClick={handleNext}>
+                                                    Next
+                                                </Button>
+                                            ) : (
+                                                <>
+                                                    <DiscardButton form={form} />
+                                                    <Button
+                                                        type="primary"
+                                                        onClick={handleSubmit}
+                                                        loading={loading}
+                                                    >
+                                                        Submit
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </Space>
+                                    ),
+                                }}
+                            />
                         </Card>
                     </Col>
-                    <Row justify="space-between" style={{ marginTop: 24 }}>
-                        <Space>
-                            {current > 0 && (
-                                <Button onClick={prev}>
-                                    Previous
-                                </Button>
-                            )}
-                        </Space>
-
-                        <Space>
-                            {current < MOVIE_CONSTANTS.MOVIE_STEPS.length - 1 ? (
-                                <Button type="primary" onClick={next}>
-                                    Next
-                                </Button>
-                            ) : (
-                                <>
-                                    <DiscardButton form={form} />
-                                    <Button
-                                        type="primary"
-                                        onClick={handleSubmit}
-                                        loading={loading}
-                                    >
-                                        Submit
-                                    </Button>
-                                </>
-                            )}
-                        </Space>
-                    </Row>
                 </div>
             </Form>
 

@@ -114,7 +114,6 @@ const MovieDetailsForm = ({ form, mode }) => {
                 actors: getActorsArray(omdbMovie.Actors),
                 awards: omdbMovie.Awards !== "N/A" ? omdbMovie.Awards : '',
                 country: omdbMovie.Country !== "N/A" ? omdbMovie.Country : '',
-                thumbnail_image: undefined
             });
         }
     }, [form, omdbMovie]);
@@ -340,7 +339,8 @@ const MovieDetailsForm = ({ form, mode }) => {
                             rules={[{ required: true, message: 'Please add a poster image' }]}
                         >
                             <Upload
-                                listType="picture-card"
+                                name="thumbnail_image"
+                                listType="picture"
                                 maxCount={1}
                                 beforeUpload={(file) =>
                                     Utils.handleBannerBeforeUpload(
@@ -351,12 +351,35 @@ const MovieDetailsForm = ({ form, mode }) => {
                                     )
                                 }
                                 accept={`.${SupportImageFormat.join(",.")}`}
-                                fileList={form.getFieldValue('thumbnail_image') || []}
                             >
-                                <div>
-                                    <PlusOutlined />
-                                    <div style={{ marginTop: 8 }}>Upload</div>
-                                </div>
+                                <Button icon={<UploadOutlined />}>Click to upload</Button>
+                            </Upload>
+                        </Form.Item>
+
+                        <Form.Item
+                            className="mt-3"
+                            name="banner_image"
+                            label="Banner Media"
+                            valuePropName="fileList"
+                            getValueFromEvent={normFile}
+                            rules={[{ required: true, message: 'Please add a Banner image' }]}
+                            style={{ marginBottom: "0px", padding: "0px" }}
+                        >
+                            <Upload
+                                name="thumbnail_image"
+                                listType="picture"
+                                maxCount={1}
+                                beforeUpload={(file) =>
+                                    Utils.handleBannerBeforeUpload(
+                                        file,
+                                        resolution?.resolution,
+                                        parseSizeToBytes(resolution?.min_size),
+                                        parseSizeToBytes(resolution?.max_size)
+                                    )
+                                }
+                                accept={`.${SupportImageFormat.join(",.")}`}
+                            >
+                                <Button icon={<UploadOutlined />}>Click to upload</Button>
                             </Upload>
                         </Form.Item>
                     </Col>
