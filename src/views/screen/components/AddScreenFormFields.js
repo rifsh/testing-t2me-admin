@@ -98,7 +98,9 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     useEffect(() => {
         if (singleTheaterResponse) {
             setCapacity(singleTheaterResponse?.capacity);
-            dispatch(setScreenCapacity(singleTheaterResponse?.number_of_screens))
+            dispatch(setScreenCapacity(singleTheaterResponse?.number_of_screens));
+            
+            console.log("capascrcount", singleTheaterResponse?.movie_screen?.length - selectedTheaterScreenCapacity)
         }
     }, [singleTheaterResponse])
 
@@ -152,8 +154,15 @@ const AddScreenFormFields = ({ mode, screenId }) => {
         setVenueId(venue);
         dispatch(setSelectedVenue(venue))
         dispatch(getSingleVenues(venue))
+        dispatch(setCleraAllData())
         setIsLoading(false);
     }
+
+    const handleTheaterSelect = (theater) => {
+        // Reset screens to just one screen (Screen 1) when theater is selected/re-selected
+        setScreens([{ key: 0 }]);
+        setActiveTab("0"); // Set active tab to the first screen (index 0)
+    };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -281,6 +290,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                             <Col span={24}>
                                 <TheaterListForm
                                     form={form}
+                                    onSelect={handleTheaterSelect}
                                 />
                             </Col>
                         </Row>
@@ -318,7 +328,12 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                 <Card
                                     title={
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Title level={4}>Screen Information</Title>
+                                            <Title level={4}>
+                                                Screen Information{" "}
+                                                <Text type="secondary" strong>
+                                                    (Maximum <Text type="danger">{`${selectedTheaterScreenCapacity} Screens`}</Text>)
+                                                </Text>
+                                            </Title>
                                             {mode === 'ADD' && < Button
                                                 type="primary"
                                                 icon={<PlusOutlined />}
