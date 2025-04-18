@@ -60,7 +60,6 @@ export default function MovieScheduler({ form }) {
     seatStructures: movieSeatStructures,
     intervalTimes,
     dateRange,
-    selectedDate,
   } = useSelector((state) => state.movieScheduleSlice);
   const { movieResponse } = useSelector((state) => state.movie);
   const { response, loading, error } = useSelector((state) => state.screen);
@@ -80,7 +79,6 @@ export default function MovieScheduler({ form }) {
     }
     dispatch(fetchAllCoupons({ ...DEFAULT_PAGE_SIZE, active: true }));
     dispatch(fetchAllOffers({ ...DEFAULT_PAGE_SIZE, active: true }));
-    dispatch(getAllSeatStructures());
   }, [dispatch, movieResponse]);
 
   const handleSearch = (value) => {
@@ -98,7 +96,6 @@ export default function MovieScheduler({ form }) {
   const screens = extractScreenInfo(response);
   const availableMovies = extractMovies(movieResponse);
 
-  // Use the utility functions with proper bindings
   const handleMovieDragStart = (event, movie) => {
     handleDragStart(event, movie, setDraggedMovie, setDraggedScheduledMovie);
   };
@@ -357,7 +354,7 @@ export default function MovieScheduler({ form }) {
           [activeTab]: currentDayMovies.filter((m) => m.id !== updatedMovie.id),
         },
         activeTab,
-        7 // Assuming 7 days in the week
+        7
       );
 
       if (crossDayResult.isValid) {
@@ -372,7 +369,6 @@ export default function MovieScheduler({ form }) {
         return;
       }
     } else {
-      // Standard update
       dispatch(
         scheduleMovie({
           ...scheduledMovies,
@@ -383,12 +379,10 @@ export default function MovieScheduler({ form }) {
       );
     }
 
-    // Update associated data
     updateAssociatedData(updatedMovie);
     closeDetails();
   };
 
-  // Helper function to update associated data
   const updateAssociatedData = (updatedMovie) => {
     if (updatedMovie.coupons && updatedMovie.coupons.length > 0) {
       dispatch(
