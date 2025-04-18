@@ -10,7 +10,6 @@ export default function MovieList({ movies, handleDragStart, handleSearch }) {
     const value = e.target.value;
     setSearchValue(value);
 
-    // Debounce search with setTimeout
     if (handleSearch) {
       const timeoutId = setTimeout(() => {
         handleSearch(value);
