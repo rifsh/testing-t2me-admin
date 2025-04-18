@@ -1,28 +1,41 @@
 import dayjs from "dayjs";
 import { createSlice } from "@reduxjs/toolkit";
-
+const initialState = {
+  scheduledMovies: {},
+  dateRange: [],
+  selectedDate: dayjs().format("YYYY-MM-DD"),
+  selectedMovieId: null,
+  isDetailsOpen: false,
+  seatStructure: null,
+  coupons: {},
+  offers: {},
+  seatStructures: {},
+  intervalTimes: {},
+  activeTab: 0,
+  dateRangeLength: 7,
+  showLengthOptions: false,
+  availableMovies: [],
+};
 const movieScheduleSlice = createSlice({
   name: "movieSchedule",
-  initialState: {
-    scheduledMovies: {}, // Object with tab/weekday keys
-    dateRange: [
-      dayjs().format("YYYY-MM-DD"),
-      dayjs().add(6, "day").format("YYYY-MM-DD"),
-    ],
-    selectedDate: dayjs().format("YYYY-MM-DD"),
-    selectedMovieId: null,
-    isDetailsOpen: false,
-    seatStructure: null,
-    coupons: {},
-    offers: {},
-    seatStructures: {},
-    intervalTimes: {},
-    activeTab: 0, 
-  },
+  initialState,
   reducers: {
+    resetState: () => {
+      return initialState;
+    },
     // Switch between days
+    setavailableMovies: (state, action) => {
+      state.availableMovies = action.payload;
+    },
     setActiveTab: (state, action) => {
       state.activeTab = action.payload;
+    },
+    setDateRangeLength: (state, action) => {
+      state.dateRangeLength = action.payload;
+    },
+
+    setShowLengthOptions: (state, action) => {
+      state.showLengthOptions = action.payload;
     },
 
     // Handle scheduling movies - accept the entire updated scheduledMovies object
@@ -147,9 +160,11 @@ const movieScheduleSlice = createSlice({
 // Export actions
 export const {
   setActiveTab,
+  resetState,
   scheduleMovie,
   scheduleMovieSingle,
   updateScheduledMovie,
+  setavailableMovies,
   removeScheduledMovie,
   setSelectedMovie,
   toggleDetailsOpen,
@@ -160,6 +175,8 @@ export const {
   setIntervalTime,
   setDateRange,
   setSelectedDate,
+  setDateRangeLength,
+  setShowLengthOptions,
 } = movieScheduleSlice.actions;
 
 export default movieScheduleSlice.reducer;
