@@ -1,25 +1,32 @@
 import dayjs from "dayjs";
 import { createSlice } from "@reduxjs/toolkit";
-
+const initialState = {
+  scheduledMovies: {},
+  dateRange: [],
+  selectedDate: dayjs().format("YYYY-MM-DD"),
+  selectedMovieId: null,
+  isDetailsOpen: false,
+  seatStructure: null,
+  coupons: {},
+  offers: {},
+  seatStructures: {},
+  intervalTimes: {},
+  activeTab: 0,
+  dateRangeLength: 7,
+  showLengthOptions: false,
+  availableMovies: [],
+};
 const movieScheduleSlice = createSlice({
   name: "movieSchedule",
-  initialState: {
-    scheduledMovies: {},
-    dateRange: [],
-    selectedDate: dayjs().format("YYYY-MM-DD"),
-    selectedMovieId: null,
-    isDetailsOpen: false,
-    seatStructure: null,
-    coupons: {},
-    offers: {},
-    seatStructures: {},
-    intervalTimes: {},
-    activeTab: 0,
-    dateRangeLength: 7,
-    showLengthOptions: false,
-  },
+  initialState,
   reducers: {
+    resetState: () => {
+      return initialState;
+    },
     // Switch between days
+    setavailableMovies: (state, action) => {
+      state.availableMovies = action.payload;
+    },
     setActiveTab: (state, action) => {
       state.activeTab = action.payload;
     },
@@ -153,9 +160,11 @@ const movieScheduleSlice = createSlice({
 // Export actions
 export const {
   setActiveTab,
+  resetState,
   scheduleMovie,
   scheduleMovieSingle,
   updateScheduledMovie,
+  setavailableMovies,
   removeScheduledMovie,
   setSelectedMovie,
   toggleDetailsOpen,

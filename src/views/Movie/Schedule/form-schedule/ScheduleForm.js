@@ -16,7 +16,6 @@ import {
   setSeatDialogVisible,
   setSeatModalLoading,
   setSelectedSeatStructure,
-  resetState,
 } from "store/slices/movieSeatSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
@@ -27,6 +26,7 @@ import { SEAT_STRUCTURE_TYPES } from "constants/SeatTypes";
 import ScheduleDetailForm from "../components/ScheduleDetailForm";
 import MovieScheduler from "../components/MovieScheduler";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { resetState } from "store/slices/movieScheduleSlice";
 const { Step } = Steps;
 
 const ADD = "ADD";
@@ -61,65 +61,59 @@ const ScheduleForm = (props) => {
     (state) => state.movieScheduleSlice
   );
 
-  const areRequiredFieldsMissing = () => {
-    const values = form.getFieldsValue();
-    return (
-      !values.theatre_id ||
-      !values.place ||
-      !values.venue_id ||
-      !values.start_date ||
-      !values.end_date
-    );
-  };
+  // useEffect(() => {
+  //   if (seatId && mode === EDIT) {
+  //     dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
+  //   } else {
+  //     dispatch(resetState());
+  //   }
+  // }, [seatId, dispatch]);
 
   useEffect(() => {
-    if (seatId && mode === EDIT) {
-      dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
-    } else {
+    if (!form.validateFields) {
       dispatch(resetState());
     }
-  }, [seatId, dispatch]);
-
+  }, [form]);
   useEffect(() => {
     if (error) {
       message.error(error);
     }
   }, [error]);
 
-  useEffect(() => {
-    if (singleSeatStructure && mode === EDIT) {
-      dispatch(
-        getVenues({
-          place_id: singleSeatStructure.venue.place.id,
-          is_indoor: true,
-        })
-      );
-      dispatch(setSelectedVenue(singleSeatStructure.venue));
-      const values = {
-        name: singleSeatStructure.name,
-        venue_id: singleSeatStructure.venue.id,
-        screen_id: singleSeatStructure.screen.id,
-        place_id: singleSeatStructure.venue.place.id,
-        place: `${singleSeatStructure.venue.place.name}, ${singleSeatStructure.venue.place.country.name}`,
-      };
-      form.setFieldsValue(values);
-      if (
-        singleSeatStructure.seat_data &&
-        singleSeatStructure.seat_data.seats
-      ) {
-        dispatch(updateSeats(singleSeatStructure.seat_data.seats));
+  // useEffect(() => {
+  //   if (singleSeatStructure && mode === EDIT) {
+  //     dispatch(
+  //       getVenues({
+  //         place_id: singleSeatStructure.venue.place.id,
+  //         is_indoor: true,
+  //       })
+  //     );
+  //     dispatch(setSelectedVenue(singleSeatStructure.venue));
+  //     const values = {
+  //       name: singleSeatStructure.name,
+  //       venue_id: singleSeatStructure.venue.id,
+  //       screen_id: singleSeatStructure.screen.id,
+  //       place_id: singleSeatStructure.venue.place.id,
+  //       place: `${singleSeatStructure.venue.place.name}, ${singleSeatStructure.venue.place.country.name}`,
+  //     };
+  //     form.setFieldsValue(values);
+  //     if (
+  //       singleSeatStructure.seat_data &&
+  //       singleSeatStructure.seat_data.seats
+  //     ) {
+  //       dispatch(updateSeats(singleSeatStructure.seat_data.seats));
 
-        if (singleSeatStructure.seat_data.seatTypes) {
-          dispatch(
-            loadSeatData({
-              seats: singleSeatStructure.seat_data.seats,
-              seatTypes: singleSeatStructure.seat_data.seatTypes,
-            })
-          );
-        }
-      }
-    }
-  }, [form, singleSeatStructure, mode, dispatch]);
+  //       if (singleSeatStructure.seat_data.seatTypes) {
+  //         dispatch(
+  //           loadSeatData({
+  //             seats: singleSeatStructure.seat_data.seats,
+  //             seatTypes: singleSeatStructure.seat_data.seatTypes,
+  //           })
+  //         );
+  //       }
+  //     }
+  //   }
+  // }, [form, singleSeatStructure, mode, dispatch]);
 
   const handleNext = async () => {
     try {
@@ -145,20 +139,13 @@ const ScheduleForm = (props) => {
       const startDate = dayjs(dateRange[0]);
       const endDate = dayjs(dateRange[1]);
 
-      // Create an array of dates between start and end
       const datesList = [];
       let currentDate = startDate;
-
-      // Alternative approach without isSameOrBefore
       while (!currentDate.isAfter(endDate, "day")) {
         datesList.push(currentDate.format("YYYY-MM-DD"));
         currentDate = currentDate.add(1, "day");
       }
-
-      // Create the restructured data object
       const restructuredData = {};
-
-      // Map from tab/weekday index to actual date
       datesList.forEach((dateString, index) => {
         const scheduledForDay = scheduledMovies[index] || [];
 
@@ -179,62 +166,62 @@ const ScheduleForm = (props) => {
 
       console.log("Restructured Data:", restructuredData);
 
-      setSubmitLoading(true);
+      // setSubmitLoading(true);
 
-      if (mode === EDIT) {
-        let totalVisibleSeats = 0;
-        seats.forEach((row) => {
-          row.forEach((seat) => {
-            if (seat.isVisible) {
-              totalVisibleSeats++;
-            }
-          });
-        });
+      // if (mode === EDIT) {
+      //   let totalVisibleSeats = 0;
+      //   seats.forEach((row) => {
+      //     row.forEach((seat) => {
+      //       if (seat.isVisible) {
+      //         totalVisibleSeats++;
+      //       }
+      //     });
+      //   });
 
-        const editData = {
-          // ...formValues,
-          id: singleSeatStructure.id,
-          total_row: seats.length,
-          total_column: seats[0]?.length || 0,
-          total_seats: totalVisibleSeats,
-          seat_data: {
-            seats,
-            seatTypes: usedSeatTypes,
-          },
-        };
+      //   const editData = {
+      //     // ...formValues,
+      //     id: singleSeatStructure.id,
+      //     total_row: seats.length,
+      //     total_column: seats[0]?.length || 0,
+      //     total_seats: totalVisibleSeats,
+      //     seat_data: {
+      //       seats,
+      //       seatTypes: usedSeatTypes,
+      //     },
+      //   };
 
-        const resultAction = await dispatch(
-          editSeatStructure({ data: editData, action: ActionType.WARNING })
-        );
+      //   const resultAction = await dispatch(
+      //     editSeatStructure({ data: editData, action: ActionType.WARNING })
+      //   );
 
-        if (editSeatStructure.fulfilled.match(resultAction)) {
-          dispatch(setSelectedSeatStructure(editData));
-          dispatch(setSeatDialogVisible(true));
-        }
-      } else {
-        let totalVisibleSeats = 0;
-        seats.forEach((row) => {
-          row.forEach((seat) => {
-            if (seat.isVisible) {
-              totalVisibleSeats++;
-            }
-          });
-        });
+      //   if (editSeatStructure.fulfilled.match(resultAction)) {
+      //     dispatch(setSelectedSeatStructure(editData));
+      //     dispatch(setSeatDialogVisible(true));
+      //   }
+      // } else {
+      //   let totalVisibleSeats = 0;
+      //   seats.forEach((row) => {
+      //     row.forEach((seat) => {
+      //       if (seat.isVisible) {
+      //         totalVisibleSeats++;
+      //       }
+      //     });
+      //   });
 
-        const combinedData = {
-          // ...formValues,
-          total_row: seats.length,
-          total_column: seats[0]?.length || 0,
-          total_seats: totalVisibleSeats,
-          type: SEAT_STRUCTURE_TYPES.MOVIE,
-          seat_data: {
-            seats,
-            seatTypes: usedSeatTypes,
-          },
-        };
+      //   const combinedData = {
+      //     // ...formValues,
+      //     total_row: seats.length,
+      //     total_column: seats[0]?.length || 0,
+      //     total_seats: totalVisibleSeats,
+      //     type: SEAT_STRUCTURE_TYPES.MOVIE,
+      //     seat_data: {
+      //       seats,
+      //       seatTypes: usedSeatTypes,
+      //     },
+      //   };
 
-        dispatch(setSelectedSubmitItem(combinedData));
-      }
+      //   dispatch(setSelectedSubmitItem(combinedData));
+      // }
     } catch (info) {
       console.error("Validation Failed:", info);
       message.error("Please enter all required fields.");

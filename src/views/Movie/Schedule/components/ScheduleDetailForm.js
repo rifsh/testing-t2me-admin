@@ -1,18 +1,23 @@
-import React, { useState } from "react";
-import { Row, Col, Card, Form, DatePicker, Alert, Button, Space } from "antd";
+import React, { useEffect } from "react";
+import {
+  Row,
+  Col,
+  Card,
+  Form,
+  DatePicker,
+  Alert,
+  Button,
+  Space,
+  Select,
+} from "antd";
+import { ClockCircleOutlined } from "@ant-design/icons";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import VenueListForm from "components/util-components/FormItems/VenueList";
-import {
-  getSingleVenues,
-  getVenues,
-  setSelectedPlace,
-  setSelectedVenue,
-  setSelectedVenueList,
-} from "store/slices/locationSlice";
-import { resetTicketSelection } from "store/slices/ticketSlice";
+import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchScreenData } from "store/slices/screenSlice";
 import {
+  setavailableMovies,
   setDateRange,
   setDateRangeLength,
   setSelectedDate,
@@ -20,29 +25,27 @@ import {
 } from "store/slices/movieScheduleSlice";
 import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
 import dayjs from "dayjs";
+import { fetchMoviesData } from "store/slices/movieSlice";
+import { extractMovies, formatMinutes } from "./utils";
 
 function ScheduleDetailForm({ form, mode }) {
   const dispatch = useDispatch();
 
-  const { dateRange, selectedDate, dateRangeLength, showLengthOptions } =
+  const { dateRange, dateRangeLength, showLengthOptions, availableMovies } =
     useSelector((state) => state.movieScheduleSlice);
   const { response } = useSelector((state) => state.screen);
   const startDate = dateRange && dateRange[0] ? dayjs(dateRange[0]) : null;
   const endDate = dateRange && dateRange[1] ? dayjs(dateRange[1]) : null;
+
   const handlePlaceSelect = (id) => {
     dispatch(getVenues({ place_id: id, is_indoor: true }));
     form.setFieldValue("venue_id", undefined);
-    form.setFieldValue("screen_id", undefined);
-    dispatch(resetTicketSelection());
-    dispatch(setSelectedPlace(id));
-    dispatch(setSelectedVenueList("clear"));
-    form.resetFields("venue_id");
+    form.setFieldValue("theatre_id", undefined);
   };
 
   const handleVenueSelect = (venue) => {
     form.setFieldValue("theatre_id", undefined);
     dispatch(setSelectedVenue(venue));
-    dispatch(getSingleVenues(venue));
   };
 
   const handleTheatreSelect = (theatre) => {
@@ -50,6 +53,7 @@ function ScheduleDetailForm({ form, mode }) {
       dispatch(fetchScreenData({ theatre_id: theatre.id }));
     }
   };
+
   const handleStartDateChange = (date) => {
     if (!date) {
       dispatch(setDateRange([]));
@@ -101,6 +105,15 @@ function ScheduleDetailForm({ form, mode }) {
     dispatch(setDateRange([startDate, newEndDate]));
   };
 
+  const handleMovieSelect = (selectedMovieIds) => {
+    if (!allMovies) return;
+
+    const selectedMovies = allMovies.filter((movie) =>
+      selectedMovieIds.includes(movie.id)
+    );
+    dispatch(setavailableMovies(selectedMovies));
+  };
+
   const disabledStartDate = (current) => {
     return current && current < dayjs().startOf("day");
   };
@@ -118,7 +131,23 @@ function ScheduleDetailForm({ form, mode }) {
     venue: [{ required: true, message: "Please select a venue" }],
     startDate: [{ required: true, message: "Please select a start date" }],
     endDate: [{ required: true, message: "Please select an end date" }],
+    movies: [{ required: true, message: "Please select at least one movie" }],
   };
+
+  const { movieResponse } = useSelector((state) => state.movie);
+
+  useEffect(() => {
+    if (!movieResponse) {
+      dispatch(fetchMoviesData({ page: 1, size: 100 })); // Increased size to get more movies
+    }
+
+    // Initialize movies field if not already set
+    if (!form.getFieldValue("movies")) {
+      form.setFieldsValue({ movies: [] });
+    }
+  }, [dispatch, movieResponse, form]);
+
+  const allMovies = extractMovies(movieResponse);
 
   const renderDayOptions = () => {
     if (!showLengthOptions || !startDate) return null;
@@ -142,7 +171,7 @@ function ScheduleDetailForm({ form, mode }) {
 
   return (
     <Row gutter={16}>
-      <Col xs={24} sm={24} md={17}>
+      <Col xs={24} sm={24} md={17} style={{ minHeight: "70vh" }}>
         <Card title="Schedule Details">
           <Row gutter={16}>
             <Col xs={24} sm={12}>
@@ -162,13 +191,13 @@ function ScheduleDetailForm({ form, mode }) {
                 onSelect={(value) => handleVenueSelect(value)}
               />
             </Col>
-            <Col span={24}>
+            <Col xs={24} sm={12}>
               <TheaterListForm
                 rules={[{ required: true }]}
                 form={form}
                 onSelect={handleTheatreSelect}
               />
-              {response && response.items.length <= 0 && (
+              {response && response.items && response.items.length <= 0 && (
                 <Alert
                   message="No screens found for this theater"
                   description="Please select a different theater that has configured screens to continue with scheduling."
@@ -177,6 +206,24 @@ function ScheduleDetailForm({ form, mode }) {
                   className="mb-4"
                 />
               )}
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item name="movie" label="Movies" rules={rules.movies}>
+                <Select
+                  style={{ width: "100%" }}
+                  placeholder="Select movies"
+                  onChange={handleMovieSelect}
+                  mode="multiple"
+                  allowClear
+                  options={
+                    allMovies?.map((movie) => ({
+                      value: movie.id,
+                      label: movie.title,
+                    })) || []
+                  }
+                />
+              </Form.Item>
+              <Form.Item name="movies" hidden />
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item
@@ -225,6 +272,48 @@ function ScheduleDetailForm({ form, mode }) {
                 )}
             </Col>
           </Row>
+        </Card>
+      </Col>
+      <Col xs={24} sm={24} md={7}>
+        <Card title="Selected Movies">
+          <div
+            className="space-y-2"
+            style={{ overflow: "auto", maxHeight: "70vh" }}
+          >
+            {availableMovies.length > 0 ? (
+              availableMovies.map((movie) => (
+                <div
+                  key={movie.id}
+                  className="p-3 rounded-xl border cursor-move flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    {movie.image && (
+                      <img
+                        src={movie.image}
+                        alt={movie.title}
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                      />
+                    )}
+                    <div>
+                      <div className="font-medium">{movie.title}</div>
+                      <div className="text-xs text-gray-500 flex items-center gap-1">
+                        <ClockCircleOutlined />
+                        {formatMinutes(movie.duration)}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ backgroundColor: movie.color }}
+                  ></div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-500 p-4">
+                Select movies to display them here
+              </div>
+            )}
+          </div>
         </Card>
       </Col>
     </Row>

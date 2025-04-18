@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   calculateTimeFromPosition,
   checkScheduleOverlap,
-  extractMovies,
   extractScreenInfo,
   handleCrossDayScheduling,
 } from "./utils";
@@ -19,11 +18,9 @@ import ScheduleGrid from "./ScheduleGrid";
 import HoverIndicator from "./HoverIndicator";
 import ScheduledMovies from "./ScheduledMovies";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchMoviesData } from "store/slices/movieSlice";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { fetchAllCoupons } from "store/slices/couponSlice";
 import { fetchAllOffers } from "store/slices/offerSlice";
-import { getAllSeatStructures } from "store/slices/movieSeatSlice";
 import {
   scheduleMovie,
   setActiveTab,
@@ -31,7 +28,6 @@ import {
   setOffers,
   setSeatStructure,
   setIntervalTime,
-  setSelectedDate,
 } from "store/slices/movieScheduleSlice";
 import { message } from "antd";
 import dayjs from "dayjs";
@@ -51,7 +47,6 @@ export default function MovieScheduler({ form }) {
     y: 0,
   });
 
-  // Redux selectors and refs remain the same
   const {
     scheduledMovies,
     activeTab,
@@ -60,8 +55,9 @@ export default function MovieScheduler({ form }) {
     seatStructures: movieSeatStructures,
     intervalTimes,
     dateRange,
+    availableMovies,
   } = useSelector((state) => state.movieScheduleSlice);
-  const { movieResponse } = useSelector((state) => state.movie);
+
   const { response, loading, error } = useSelector((state) => state.screen);
   const { filteredCoupons } = useSelector((state) => state.coupons);
   const { filteredOffers } = useSelector((state) => state.offers);
@@ -74,27 +70,11 @@ export default function MovieScheduler({ form }) {
   const timeRulerRef = useRef(null);
 
   useEffect(() => {
-    if (!movieResponse) {
-      dispatch(fetchMoviesData({ page: 1, size: 5 }));
-    }
     dispatch(fetchAllCoupons({ ...DEFAULT_PAGE_SIZE, active: true }));
     dispatch(fetchAllOffers({ ...DEFAULT_PAGE_SIZE, active: true }));
-  }, [dispatch, movieResponse]);
-
-  const handleSearch = (value) => {
-    setTimeout(() => {
-      dispatch(
-        fetchMoviesData({
-          page: 1,
-          size: 5,
-          search: value,
-        })
-      );
-    }, 300);
-  };
+  }, [dispatch]);
 
   const screens = extractScreenInfo(response);
-  const availableMovies = extractMovies(movieResponse);
 
   const handleMovieDragStart = (event, movie) => {
     handleDragStart(event, movie, setDraggedMovie, setDraggedScheduledMovie);
@@ -463,7 +443,6 @@ export default function MovieScheduler({ form }) {
         {/* Movie list */}
         <MovieList
           movies={availableMovies}
-          handleSearch={handleSearch}
           handleDragStart={handleMovieDragStart} // Updated to use the wrapper function
         />
 
