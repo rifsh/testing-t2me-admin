@@ -3,22 +3,7 @@ import { CalendarOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { extractMovies, formatMinutes } from "./utils";
 import { Input } from "antd";
 
-export default function MovieList({ movies, handleDragStart, handleSearch }) {
-  const [searchValue, setSearchValue] = useState("");
-
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchValue(value);
-
-    if (handleSearch) {
-      const timeoutId = setTimeout(() => {
-        handleSearch(value);
-      }, 300);
-
-      return () => clearTimeout(timeoutId);
-    }
-  };
-
+export default function MovieList({ movies, handleDragStart }) {
   return (
     <div
       className="w-64 bg-white p-3 rounded-xl shadow"
@@ -28,12 +13,7 @@ export default function MovieList({ movies, handleDragStart, handleSearch }) {
         <CalendarOutlined size={16} />
         Available Movies
       </h2>
-      <Input
-        placeholder="Search Movies"
-        className="mb-2"
-        value={searchValue}
-        onChange={handleSearchChange}
-      />
+
       <div className="space-y-2">
         {movies.length > 0 ? (
           movies.map((movie) => (

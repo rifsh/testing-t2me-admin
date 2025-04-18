@@ -104,7 +104,7 @@ export const getAllSeatStructures = createAsyncThunk(
       return response.data[0];
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || "Error fetching seat structure details"
+        error.response?.data || "Error fetching all seat structure"
       );
     }
   }
@@ -370,7 +370,7 @@ const movieSeatSlice = createSlice({
       .addCase(getAllSeatStructures.rejected, (state, action) => {
         state.loading = false;
         state.error =
-          action.payload?.data || "Error fetching seat structure details";
+          action.payload?.data || "Error fetching seat all structure";
       });
   },
 });
