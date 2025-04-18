@@ -13,7 +13,7 @@ export const dateToTime = (date) => {
   return date.hour() + date.minute() / 60;
 };
 
-// Format time for display (24-hour format with minutes)
+
 export const formatTime = (time) => {
   const hours = Math.floor(time);
   const minutes = Math.round((time - hours) * 60);
@@ -21,11 +21,10 @@ export const formatTime = (time) => {
 };
 
 // Check if a movie is visible in the current domain
-export const isMovieVisible = (movie, xDomain) => {
+export const isMovieVisible = (movie, yDomain) => {
   return (
-    (movie.startTime >= xDomain[0] && movie.startTime <= xDomain[1]) || // Start time visible
-    (movie.endTime > xDomain[0] && movie.endTime <= xDomain[1]) || // End time visible
-    (movie.startTime <= xDomain[0] && movie.endTime > xDomain[1]) // Movie spans entire visible area
+    movie.startTime < yDomain[1] && 
+    movie.endTime > yDomain[0]
   );
 };
 

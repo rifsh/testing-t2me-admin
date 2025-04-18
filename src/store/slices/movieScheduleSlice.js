@@ -1,94 +1,148 @@
-import { createSlice } from "@reduxjs/toolkit";
 import dayjs from "dayjs";
+import { createSlice } from "@reduxjs/toolkit";
 
-const initialState = {
-  movies: [
-    {
-      id: 1,
-      title: "Inception",
-      duration: 148,
-      genre: "Sci-Fi",
-      director: "Christopher Nolan",
-      image:
-        "https://assets-in.bmscdn.com/discovery-catalog/events/tr:w-400,h-600,bg-CCCCCC/et00308207-dffnzphrxk-portrait.jpg",
-    },
-    {
-      id: 2,
-      title: "The Dark Knight",
-      duration: 152,
-      genre: "Action",
-      director: "Christopher Nolan",
-      image:
-        "https://assets-in.bmscdn.com/discovery-catalog/events/tr:w-400,h-600,bg-CCCCCC/et00012473-vlrjfslazp-portrait.jpg",
-    },
-    {
-      id: 3,
-      title: "Interstellar",
-      duration: 169,
-      genre: "Sci-Fi",
-      director: "Christopher Nolan",
-      image:
-        "https://assets-in.bmscdn.com/discovery-catalog/events/tr:w-400,h-600,bg-CCCCCC/et00019066-rtldxrfyzs-portrait.jpg",
-    },
-  ],
-  scheduledMovies: [],
-  selectedMovie: null,
-  dateRange: [dayjs(), dayjs().add(6, "day")], // Default 7-day range
-  selectedDate: dayjs(), // Default to today
-  zoomLevel: 1,
-  xDomain: [8, 24], // Show 8am-midnight by default
+// Mock data for initial state
+const initialMovies = [
+  {
+    id: 1,
+    title: "Interstellar",
+    duration: 169,
+    color: "#4299e1",
+    description: "A team of explorers travel through a wormhole in space.",
+  },
+  {
+    id: 2,
+    title: "The Matrix",
+    duration: 136,
+    color: "#48bb78",
+    description: "A computer hacker learns about the true nature of reality.",
+  },
+  {
+    id: 3,
+    title: "Inception",
+    duration: 148,
+    color: "#ed8936",
+    description:
+      "A thief who steals corporate secrets through dream-sharing technology.",
+  },
+  {
+    id: 4,
+    title: "Pulp Fiction",
+    duration: 154,
+    color: "#9f7aea",
+    description:
+      "The lives of two mob hitmen, a boxer, and a pair of diner bandits intertwine.",
+  },
+  {
+    id: 5,
+    title: "The Dark Knight",
+    duration: 152,
+    color: "#f56565",
+    description: "Batman fights the menace known as the Joker.",
+  },
+];
+
+const screens = ["Screen 1", "Screen 2", "Screen 3", "Screen 4"];
+
+// Generate empty schedule for 7 days
+const generateEmptySchedule = () => {
+  const schedule = {};
+  for (let i = 0; i < 7; i++) {
+    schedule[i] = [];
+  }
+  return schedule;
 };
 
 const movieScheduleSlice = createSlice({
   name: "movieSchedule",
-  initialState,
+  initialState: {
+    movies: initialMovies,
+    screens: screens,
+    scheduledMovies: {}, // Change from array to object with date keys
+    dateRange: [
+      dayjs().format("YYYY-MM-DD"),
+      dayjs().add(6, "day").format("YYYY-MM-DD"),
+    ],
+    selectedDate: dayjs().format("YYYY-MM-DD"),
+    selectedMovieId: null,
+    isDetailsOpen: false,
+    seatStructure: null,
+    coupons: {},
+  },
   reducers: {
-    addMovie: (state, action) => {
-      state.movies.push(action.payload);
+    // Switch between days
+    setActiveTab: (state, action) => {
+      state.activeTab = action.payload;
     },
-    updateMovie: (state, action) => {
-      const index = state.movies.findIndex(
-        (movie) => movie.id === action.payload.id
-      );
-      if (index !== -1) {
-        state.movies[index] = action.payload;
+
+    // Add a movie to the schedule
+    // Update scheduleMovie reducer
+    scheduleMovie: (state, action) => {
+      const { date, movieData } = action.payload;
+
+      // Initialize the date if it doesn't exist
+      if (!state.scheduledMovies[date]) {
+        state.scheduledMovies[date] = [];
+      }
+
+      // Check for conflicts
+      const conflicts = state.scheduledMovies[date].some((movie) => {
+        if (movie.screen !== movieData.screen) return false;
+
+        // Check if the new movie overlaps with an existing one
+        return (
+          movieData.startMinutes < movie.endMinutes &&
+          movieData.endMinutes > movie.startMinutes
+        );
+      });
+
+      if (!conflicts) {
+        state.scheduledMovies[date].push(movieData);
       }
     },
-    removeMovie: (state, action) => {
-      state.movies = state.movies.filter(
-        (movie) => movie.id !== action.payload
-      );
-    },
-    addScheduledMovie: (state, action) => {
-      // Ensure the movie has a scheduleDate property if selectedDate exists
-      if (state.selectedDate && !action.payload.scheduleDate) {
-        action.payload.scheduleDate = state.selectedDate.format("YYYY-MM-DD");
-      }
-      state.scheduledMovies.push(action.payload);
-    },
+
+    // Update updateScheduledMovie reducer
     updateScheduledMovie: (state, action) => {
-      const index = state.scheduledMovies.findIndex(
-        (movie) => movie.id === action.payload.id
-      );
-      if (index !== -1) {
-        // Keep the original scheduleDate unless a new one is provided
-        if (
-          !action.payload.scheduleDate &&
-          state.scheduledMovies[index].scheduleDate
-        ) {
-          action.payload.scheduleDate =
-            state.scheduledMovies[index].scheduleDate;
-        }
-        state.scheduledMovies[index] = action.payload;
+      const { date, updatedMovie } = action.payload;
+
+      if (state.scheduledMovies[date]) {
+        state.scheduledMovies[date] = state.scheduledMovies[date].map((movie) =>
+          movie.id === updatedMovie.id ? updatedMovie : movie
+        );
       }
     },
+
+    // Update removeScheduledMovie reducer
     removeScheduledMovie: (state, action) => {
-      state.scheduledMovies = state.scheduledMovies.filter(
-        (movie) => movie.id !== action.payload
-      );
+      const { date, movieId } = action.payload;
+
+      if (state.scheduledMovies[date]) {
+        state.scheduledMovies[date] = state.scheduledMovies[date].filter(
+          (movie) => movie.id !== movieId
+        );
+      }
     },
+
+    // Set selected movie (for detail view)
     setSelectedMovie: (state, action) => {
-      state.selectedMovie = action.payload;
+      state.selectedMovieId = action.payload;
+    },
+
+    // Toggle detail drawer/modal
+    toggleDetailsOpen: (state, action) => {
+      state.isDetailsOpen =
+        action.payload !== undefined ? action.payload : !state.isDetailsOpen;
+    },
+
+    // Update seat structure
+    updateSeatStructure: (state, action) => {
+      state.seatStructure = action.payload;
+    },
+
+    // Set coupon for a scheduled movie
+    setCoupon: (state, action) => {
+      const { movieId, couponCode } = action.payload;
+      state.coupons[movieId] = couponCode;
     },
     setDateRange: (state, action) => {
       state.dateRange = action.payload;
@@ -113,27 +167,61 @@ const movieScheduleSlice = createSlice({
     setSelectedDate: (state, action) => {
       state.selectedDate = action.payload;
     },
-    setZoomLevel: (state, action) => {
-      state.zoomLevel = action.payload;
-    },
-    setXDomain: (state, action) => {
-      state.xDomain = action.payload;
+    // Add a new movie to the catalog
+    addMovie: (state, action) => {
+      state.movies.push({
+        id: Date.now(),
+        ...action.payload,
+      });
     },
   },
 });
 
+// Export actions
 export const {
-  addMovie,
-  updateMovie,
-  removeMovie,
-  addScheduledMovie,
+  setActiveTab,
+  scheduleMovie,
   updateScheduledMovie,
   removeScheduledMovie,
   setSelectedMovie,
+  toggleDetailsOpen,
+  updateSeatStructure,
+  setCoupon,
   setDateRange,
   setSelectedDate,
-  setZoomLevel,
-  setXDomain,
+  addMovie,
 } = movieScheduleSlice.actions;
+
+// Export selectors
+export const selectMovies = (state) => state.movieSchedule.movies;
+export const selectScreens = (state) => state.movieSchedule.screens;
+export const selectActiveTab = (state) => state.movieSchedule.activeTab;
+export const selectScheduledMovies = (state) =>
+  state.movieSchedule.scheduledMovies;
+export const selectScheduledMoviesForActiveDay = (state) =>
+  state.movieSchedule.scheduledMovies[state.movieSchedule.activeTab];
+export const selectSelectedMovie = (state) => {
+  const id = state.movieSchedule.selectedMovieId;
+  if (!id) return null;
+
+  const day = state.movieSchedule.activeTab;
+  const scheduledMovie = state.movieSchedule.scheduledMovies[day].find(
+    (m) => m.id === id
+  );
+  if (!scheduledMovie) return null;
+
+  const movieDetails = state.movieSchedule.movies.find(
+    (m) => m.id === scheduledMovie.movieId
+  );
+  if (!movieDetails) return null;
+
+  return {
+    ...scheduledMovie,
+    ...movieDetails,
+    coupon: state.movieSchedule.coupons[id] || "",
+  };
+};
+export const selectIsDetailsOpen = (state) => state.movieSchedule.isDetailsOpen;
+export const selectSeatStructure = (state) => state.movieSchedule.seatStructure;
 
 export default movieScheduleSlice.reducer;
