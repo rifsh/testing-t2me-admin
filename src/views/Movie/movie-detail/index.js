@@ -138,7 +138,7 @@ const MovieDetails = () => {
 
     // Render trailer section
     const renderTrailerSection = () => {
-        const trailerMedia = movieSingleResponse?.movie_details?.[0]?.media_items?.[0]?.url;
+        const trailerMedia = movieSingleResponse?.movie_details?.[0]?.banner_image;
 
         if (!trailerMedia) return null;
 
@@ -151,7 +151,6 @@ const MovieDetails = () => {
                         borderRadius: '8px',
                         overflow: 'hidden'
                     }}
-                    onClick={() => handlePreview(trailerMedia)}
                 >
                     <img
                         src={movieSingleResponse?.movie_details?.[0]?.banner_image || "https://placehold.co/600x400/222222/FFFFFF?text=Video+Thumbnail"}
