@@ -17,7 +17,7 @@ const movieScheduleSlice = createSlice({
     offers: {},
     seatStructures: {},
     intervalTimes: {},
-    activeTab: 0, // Default to today (Sunday is 0, Saturday is 6)
+    activeTab: 0, 
   },
   reducers: {
     // Switch between days

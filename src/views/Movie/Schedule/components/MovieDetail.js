@@ -82,10 +82,8 @@ export const MovieDetail = ({
       seatStructure: selectedSeatStructureId,
       intervalTime: intervalTime,
     });
-    // Empty dependency array means this effect runs once on mount
   }, []);
 
-  // Separate effect to update form values when specific states change
   useEffect(() => {
     form.setFieldsValue({
       screen: editedMovie.screen?.id,
