@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchDropdownTheaters,
   fetchTheaterByid,
-  setSeectedTheater
+  setSeectedTheater,
 } from "store/slices/theaterSlice";
 import debounce from "lodash/debounce";
 
@@ -14,7 +14,7 @@ const TheaterListForm = ({
   rules,
   onSelect,
   mode,
-  disabled
+  disabled,
 }) => {
   const dispatch = useDispatch();
   const [searchInput, setSearchInput] = useState("");
@@ -36,8 +36,12 @@ const TheaterListForm = ({
 
   const handleSetSelectedTheater = (value) => {
     dispatch(setSeectedTheater(value?.value));
-    dispatch(fetchTheaterByid({ theatre_id: value?.value }));
-    const theater = response?.items?.find((theater) => theater.id === value);
+    console.log("theretor log", value.value);
+
+    // dispatch(fetchTheaterByid({ theatre_id: value?.value }));
+    const theater = response?.items?.find(
+      (theater) => theater.id === value?.value
+    );
     if (onSelect) onSelect(theater);
   };
 
@@ -76,8 +80,10 @@ const TheaterListForm = ({
         options={
           response?.items?.map((theater) => ({
             value: theater?.id,
-            label: `${theater.name} (${theater.movie_screen?.length || 0} ${theater.movie_screen?.length === 1 ? "Screen" : "Screens"})`,
-            theaterName: theater.name
+            label: `${theater.name} (${theater.movie_screen?.length || 0} ${
+              theater.movie_screen?.length === 1 ? "Screen" : "Screens"
+            })`,
+            theaterName: theater.name,
           })) || []
         }
         onSelect={handleSetSelectedTheater}
