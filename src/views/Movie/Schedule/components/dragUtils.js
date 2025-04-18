@@ -1,5 +1,8 @@
 // dragUtils.js
 import React from "react";
+import { checkScheduleOverlap, handleCrossDayScheduling } from "./utils";
+import { message } from "antd";
+import { setActiveTab } from "store/slices/movieScheduleSlice";
 
 // Creates a styled ghost image for dragging movies
 export const createDragGhost = (movie) => {
@@ -131,6 +134,7 @@ export const handleScheduledMovieDragStart = (
 };
 
 // Handle dropping movies on the schedule
+// Updated handleDrop function for the dragUtils.js file
 export const handleDrop = (
   event,
   draggedMovie,
@@ -147,7 +151,8 @@ export const handleDrop = (
   scheduleMovieAction,
   setDraggedMovie,
   setDraggedScheduledMovie,
-  calculateTimeFromPosition
+  calculateTimeFromPosition,
+  totalDays = 7
 ) => {
   event.preventDefault();
 
@@ -189,20 +194,51 @@ export const handleDrop = (
       intervals: 15, // 15-minute interval between movies
     };
 
-    // Check for conflicts
+    // Check for conflicts using the utility function
     const currentDayMovies = scheduledMovies[activeTab] || [];
-    const conflicts = currentDayMovies.some((movie) => {
-      if (movie.screen.id !== newScheduledMovie.screen.id) return false;
+    const overlapCheck = checkScheduleOverlap(
+      newScheduledMovie,
+      currentDayMovies
+    );
 
-      // Check if the new movie overlaps with an existing one
-      return (
-        newScheduledMovie.startMinutes < movie.endMinutes &&
-        newScheduledMovie.endMinutes > movie.startMinutes
+    if (!overlapCheck.isValid) {
+      // Show error message to user
+      message.error(overlapCheck.message);
+
+      // If the movie starts after midnight, suggest scheduling it on the next day
+      if (overlapCheck.startsAfterMidnight) {
+        const nextDayTab = (activeTab + 1) % totalDays;
+        dispatch(setActiveTab(nextDayTab));
+      }
+
+      return;
+    }
+
+    if (overlapCheck.warning) {
+      // Add the midnight passed flag
+      newScheduledMovie.isMidnightPassed = true;
+
+      // Movie crosses midnight - handle cross-day scheduling
+      const crossDayResult = handleCrossDayScheduling(
+        newScheduledMovie,
+        scheduledMovies,
+        activeTab,
+        totalDays
       );
-    });
 
-    if (!conflicts) {
-      // Use the correct action structure
+      if (crossDayResult.isValid) {
+        // Update multiple days
+        dispatch(
+          scheduleMovieAction({
+            ...scheduledMovies,
+            ...crossDayResult.schedules,
+          })
+        );
+      } else {
+        message.error(crossDayResult.message);
+      }
+    } else {
+      // Standard case - just add to current day
       dispatch(
         scheduleMovieAction({
           ...scheduledMovies,
@@ -230,25 +266,102 @@ export const handleDrop = (
       endMinutes: snappedStartMinutes + duration,
     };
 
-    // Check for conflicts (excluding the movie being dragged)
-    const currentDayMovies = scheduledMovies[activeTab] || [];
-    const conflicts = currentDayMovies.some((movie) => {
-      if (movie.id === draggedScheduledMovie.id) return false;
-      if (movie.screen.id !== updatedScheduledMovie.screen.id) return false;
+    // Check if we're trying to schedule a movie that starts after midnight
+    if (updatedScheduledMovie.startMinutes >= 24 * 60) {
+      // Move the scheduling to the next day
+      const nextDayTab = (activeTab + 1) % totalDays;
+      const adjustedMovie = {
+        ...updatedScheduledMovie,
+        startMinutes: updatedScheduledMovie.startMinutes - 24 * 60,
+        endMinutes: updatedScheduledMovie.endMinutes - 24 * 60,
+        isMidnightPassed: true,
+      };
 
-      // Check if the movie overlaps with an existing one
-      return (
-        updatedScheduledMovie.startMinutes < movie.endMinutes &&
-        updatedScheduledMovie.endMinutes > movie.startMinutes
+      // Switch to next day tab and schedule there
+      dispatch(setActiveTab(nextDayTab));
+
+      // Check if this time slot is available on the next day
+      const nextDayMovies = scheduledMovies[nextDayTab] || [];
+      const nextDayCheck = checkScheduleOverlap(
+        adjustedMovie,
+        nextDayMovies,
+        true,
+        draggedScheduledMovie.id
       );
-    });
 
-    if (!conflicts) {
-      // Use the correct action structure
+      if (!nextDayCheck.isValid) {
+        message.error(nextDayCheck.message);
+        return;
+      }
+
+      // Remove from current day
       dispatch(
         scheduleMovieAction({
           ...scheduledMovies,
-          [activeTab]: (scheduledMovies[activeTab] || []).map((movie) =>
+          [activeTab]: (scheduledMovies[activeTab] || []).filter(
+            (m) => m.id !== draggedScheduledMovie.id
+          ),
+          [nextDayTab]: [...nextDayMovies, adjustedMovie],
+        })
+      );
+
+      setDraggedMovie(null);
+      setDraggedScheduledMovie(null);
+      return;
+    }
+
+    // Check for conflicts using the utility function
+    const currentDayMovies = scheduledMovies[activeTab] || [];
+    const overlapCheck = checkScheduleOverlap(
+      updatedScheduledMovie,
+      currentDayMovies,
+      true,
+      draggedScheduledMovie.id
+    );
+
+    if (!overlapCheck.isValid) {
+      message.error(overlapCheck.message);
+      return;
+    }
+
+    // Keep the isMidnightPassed flag if it already exists
+    if (draggedScheduledMovie.isMidnightPassed) {
+      updatedScheduledMovie.isMidnightPassed = true;
+    }
+
+    if (overlapCheck.warning) {
+      // Update with the midnight passed flag
+      updatedScheduledMovie.isMidnightPassed = true;
+
+      // Handle editing a movie that now crosses midnight
+      const crossDayResult = handleCrossDayScheduling(
+        updatedScheduledMovie,
+        {
+          ...scheduledMovies,
+          [activeTab]: currentDayMovies.filter(
+            (m) => m.id !== draggedScheduledMovie.id
+          ),
+        },
+        activeTab,
+        totalDays
+      );
+
+      if (crossDayResult.isValid) {
+        dispatch(
+          scheduleMovieAction({
+            ...scheduledMovies,
+            ...crossDayResult.schedules,
+          })
+        );
+      } else {
+        message.error(crossDayResult.message);
+      }
+    } else {
+      // Standard case - update in current day
+      dispatch(
+        scheduleMovieAction({
+          ...scheduledMovies,
+          [activeTab]: currentDayMovies.map((movie) =>
             movie.id === draggedScheduledMovie.id
               ? updatedScheduledMovie
               : movie

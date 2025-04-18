@@ -1,10 +1,11 @@
-// MovieScheduler.jsx
 import React, { useState, useRef, useEffect } from "react";
 
 import {
   calculateTimeFromPosition,
+  checkScheduleOverlap,
   extractMovies,
   extractScreenInfo,
+  handleCrossDayScheduling,
 } from "./utils";
 import {
   handleDragStart,
@@ -12,7 +13,6 @@ import {
   handleDrop as utilsHandleDrop,
 } from "./dragUtils";
 import { MovieDetail } from "./MovieDetail";
-import ScheduleHeader from "./Header";
 import MovieList from "./MovieList";
 import TimeRuler from "./TimeRuler";
 import ScheduleGrid from "./ScheduleGrid";
@@ -24,7 +24,15 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { fetchAllCoupons } from "store/slices/couponSlice";
 import { fetchAllOffers } from "store/slices/offerSlice";
 import { getAllSeatStructures } from "store/slices/movieSeatSlice";
-import { scheduleMovie, setActiveTab } from "store/slices/movieScheduleSlice";
+import {
+  scheduleMovie,
+  setActiveTab,
+  setCoupons,
+  setOffers,
+  setSeatStructure,
+  setIntervalTime,
+} from "store/slices/movieScheduleSlice";
+import { message } from "antd";
 
 export default function MovieScheduler({ form }) {
   const dispatch = useDispatch();
@@ -43,9 +51,14 @@ export default function MovieScheduler({ form }) {
   });
 
   // Redux selectors and refs remain the same
-  const { scheduledMovies, activeTab } = useSelector(
-    (state) => state.movieScheduleSlice
-  );
+  const {
+    scheduledMovies,
+    activeTab,
+    coupons: movieCoupons,
+    offers: movieOffers,
+    seatStructures: movieSeatStructures,
+    intervalTimes,
+  } = useSelector((state) => state.movieScheduleSlice);
   const { movieResponse } = useSelector((state) => state.movie);
   const { response, loading, error } = useSelector((state) => state.screen);
   const { filteredCoupons } = useSelector((state) => state.coupons);
@@ -182,6 +195,13 @@ export default function MovieScheduler({ form }) {
       const movie = availableMovies.find(
         (m) => m.id === scheduledMovie.movieId
       );
+
+      // Get associated data for this movie
+      const coupons = movieCoupons[scheduledMovie.id] || [];
+      const offers = movieOffers[scheduledMovie.id] || [];
+      const seatStructureId = movieSeatStructures[scheduledMovie.id] || null;
+      const intervalTime = intervalTimes[scheduledMovie.id] || 15; // Default 15 min
+
       setSelectedMovie({
         ...scheduledMovie,
         title: movie.title,
@@ -196,6 +216,10 @@ export default function MovieScheduler({ form }) {
         director: movie.director,
         released: movie.released,
         rating: movie.rating,
+        coupons: coupons,
+        offers: offers,
+        seatStructureId: seatStructureId,
+        intervalTime: intervalTime,
       });
       setIsDetailsOpen(true);
     }
@@ -223,14 +247,162 @@ export default function MovieScheduler({ form }) {
   const dates = generateDates();
 
   const handleUpdateSchedule = (updatedMovie) => {
-    dispatch(
-      scheduleMovie({
+    // Check if this is an early morning movie (after midnight but before 6am)
+    const isEarlyMorningMovie = updatedMovie.startMinutes >= 0 && updatedMovie.startMinutes < 6 * 60;
+    const startsAfterMidnight = updatedMovie.startMinutes >= 24 * 60;
+    
+    // Handle case where the movie is scheduled for after midnight
+    if (startsAfterMidnight) {
+      // Need to move it to the next day
+      const nextDayTab = (activeTab + 1) % 7;
+      const adjustedMovie = {
+        ...updatedMovie,
+        startMinutes: updatedMovie.startMinutes - 24 * 60,
+        endMinutes: updatedMovie.endMinutes - 24 * 60,
+        isMidnightPassed: true
+      };
+      
+      // Check for overlaps in the next day
+      const nextDayMovies = scheduledMovies[nextDayTab] || [];
+      const overlapCheck = checkScheduleOverlap(
+        adjustedMovie,
+        nextDayMovies,
+        true,
+        updatedMovie.id
+      );
+      
+      if (!overlapCheck.isValid) {
+        message.error(overlapCheck.message);
+        return;
+      }
+      
+      // Remove from current day and add to next day
+      const updatedSchedule = {
         ...scheduledMovies,
-        [activeTab]: (scheduledMovies[activeTab] || []).map((movie) =>
-          movie.id === updatedMovie.id ? updatedMovie : movie
+        [activeTab]: (scheduledMovies[activeTab] || []).filter(
+          m => m.id !== updatedMovie.id && m.originalId !== updatedMovie.id
         ),
-      })
+        [nextDayTab]: [...nextDayMovies, adjustedMovie]
+      };
+      
+      dispatch(scheduleMovie(updatedSchedule));
+      dispatch(setActiveTab(nextDayTab)); // Optionally switch to the next day tab
+      
+      // Update associated data
+      updateAssociatedData(adjustedMovie);
+      closeDetails();
+      return;
+    }
+    
+    // For early morning movies, check if they should be treated as next-day movies
+    if (isEarlyMorningMovie && !updatedMovie.isMidnightPassed) {
+      // This is a morning movie but not marked as midnight passed
+      // Ask user if they want to schedule it for the current day's early morning or previous day's late night
+      const shouldScheduleAsMidnightPass = window.confirm(
+        `Would you like to schedule this as a late-night movie (${updatedMovie.startMinutes} minutes past midnight)?`
+      );
+      
+      if (shouldScheduleAsMidnightPass) {
+        // Handle as midnight passed movie
+        updatedMovie.isMidnightPassed = true;
+      }
+    }
+    
+    // Regular overlap check
+    const currentDayMovies = scheduledMovies[activeTab] || [];
+    const overlapCheck = checkScheduleOverlap(
+      updatedMovie,
+      currentDayMovies,
+      true,
+      updatedMovie.id
     );
+  
+    if (!overlapCheck.isValid) {
+      message.error(overlapCheck.message);
+      return;
+    }
+  
+    // Check if movie crosses midnight
+    if (overlapCheck.warning || overlapCheck.isMidnightPassed) {
+      updatedMovie.isMidnightPassed = true;
+      
+      const crossDayResult = handleCrossDayScheduling(
+        updatedMovie,
+        {
+          ...scheduledMovies,
+          [activeTab]: currentDayMovies.filter(m => m.id !== updatedMovie.id)
+        },
+        activeTab,
+        7 // Assuming 7 days in the week
+      );
+  
+      if (crossDayResult.isValid) {
+        dispatch(scheduleMovie({
+          ...scheduledMovies,
+          ...crossDayResult.schedules
+        }));
+      } else {
+        message.error(crossDayResult.message);
+        return;
+      }
+    } else {
+      // Standard update
+      dispatch(
+        scheduleMovie({
+          ...scheduledMovies,
+          [activeTab]: currentDayMovies.map((movie) =>
+            movie.id === updatedMovie.id ? updatedMovie : movie
+          ),
+        })
+      );
+    }
+  
+    // Update associated data
+    updateAssociatedData(updatedMovie);
+    closeDetails();
+  };
+  
+  // Helper function to update associated data
+  const updateAssociatedData = (updatedMovie) => {
+    if (updatedMovie.coupons && updatedMovie.coupons.length > 0) {
+      dispatch(
+        setCoupons({
+          movieId: updatedMovie.id,
+          couponIds: updatedMovie.coupons,
+        })
+      );
+    }
+  
+    if (updatedMovie.offers && updatedMovie.offers.length > 0) {
+      dispatch(
+        setOffers({
+          movieId: updatedMovie.id,
+          offerIds: updatedMovie.offers,
+        })
+      );
+    }
+  
+    if (updatedMovie.seatStructureId) {
+      dispatch(
+        setSeatStructure({
+          movieId: updatedMovie.id,
+          seatStructureId: updatedMovie.seatStructureId,
+        })
+      );
+    }
+  
+    if (updatedMovie.intervalTime !== undefined) {
+      dispatch(
+        setIntervalTime({
+          movieId: updatedMovie.id,
+          intervalTime: updatedMovie.intervalTime,
+        })
+      );
+    }
+  };
+  
+  // Helper function to close the details panel
+  const closeDetails = () => {
     setIsDetailsOpen(false);
     setSelectedMovie(null);
   };

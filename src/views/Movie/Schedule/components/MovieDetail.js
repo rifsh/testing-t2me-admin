@@ -15,6 +15,8 @@ import {
   Badge,
   Card,
   Image,
+  InputNumber,
+  message,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -26,6 +28,7 @@ import {
   CalendarOutlined,
   GlobalOutlined,
   MinusSquareOutlined,
+  FieldTimeOutlined,
 } from "@ant-design/icons";
 import { formatMinutes } from "./utils";
 import dayjs from "dayjs";
@@ -49,12 +52,19 @@ export const MovieDetail = ({
   screens,
   form,
 }) => {
-  const initialCoupon = movie.coupon || "";
+  const initialCoupons = movie.coupons || [];
+  const initialOffers = movie.offers || [];
+  const initialSeatStructure = movie.seatStructureId || null;
+  const initialIntervalTime = movie.intervalTime || 15; // Default 15 minutes interval
+
   const dispatch = useDispatch();
 
   const [editedMovie, setEditedMovie] = useState(movie);
-  const [selectedSeats, setSelectedSeats] = useState();
-  const [couponCode, setCouponCode] = useState(initialCoupon);
+  const [selectedSeatStructureId, setSelectedSeatStructureId] =
+    useState(initialSeatStructure);
+  const [selectedCouponIds, setSelectedCouponIds] = useState(initialCoupons);
+  const [selectedOfferIds, setSelectedOfferIds] = useState(initialOffers);
+  const [intervalTime, setIntervalTime] = useState(initialIntervalTime);
 
   useEffect(() => {
     dispatch(
@@ -64,12 +74,33 @@ export const MovieDetail = ({
         screen_id: editedMovie.screen?.id,
       })
     );
+
     form.setFieldsValue({
       screen: editedMovie.screen?.id,
-      offer: editedMovie.offer,
-      coupons: couponCode,
+      offers: selectedOfferIds,
+      coupons: selectedCouponIds,
+      seatStructure: selectedSeatStructureId,
+      intervalTime: intervalTime,
     });
-  }, [editedMovie, couponCode, form]);
+    // Empty dependency array means this effect runs once on mount
+  }, []);
+
+  // Separate effect to update form values when specific states change
+  useEffect(() => {
+    form.setFieldsValue({
+      screen: editedMovie.screen?.id,
+      offers: selectedOfferIds,
+      coupons: selectedCouponIds,
+      seatStructure: selectedSeatStructureId,
+      intervalTime: intervalTime,
+    });
+  }, [
+    editedMovie.screen?.id,
+    selectedCouponIds,
+    selectedOfferIds,
+    selectedSeatStructureId,
+    intervalTime,
+  ]);
 
   const handleTimeChange = (time) => {
     if (time) {
@@ -77,14 +108,30 @@ export const MovieDetail = ({
       setEditedMovie({
         ...editedMovie,
         startMinutes: totalMinutes,
-        endMinutes: totalMinutes + movie.duration,
+        endMinutes: totalMinutes + movie.duration + intervalTime, // Include interval time
       });
     }
   };
 
   const handleScreenChange = (value) => {
     const selectedScreen = screens.find((screen) => screen.id === value);
-    setEditedMovie({ ...editedMovie, screen: selectedScreen });
+
+    // Reset seat structure data
+    setSelectedSeatStructureId(null);
+
+    // Update edited movie with new screen and clear seat structure
+    setEditedMovie({
+      ...editedMovie,
+      screen: selectedScreen,
+      seatStructureId: null,
+    });
+
+    // Reset the form field
+    form.setFieldsValue({
+      seatStructure: null,
+    });
+
+    // Fetch new seat structures for selected screen
     dispatch(
       getAllSeatStructures({
         ...DEFAULT_PAGE_SIZE,
@@ -93,32 +140,50 @@ export const MovieDetail = ({
       })
     );
   };
+  const handleSeatStructureChange = (value) => {
+    setSelectedSeatStructureId(value);
+  };
 
-  const handleSeatChange = (seats) => {
-    setSelectedSeats(seats);
+  const handleIntervalTimeChange = (value) => {
+    setIntervalTime(value);
+    // Update end time when interval changes
+    if (editedMovie.startMinutes) {
+      setEditedMovie({
+        ...editedMovie,
+        endMinutes: editedMovie.startMinutes + movie.duration + value,
+      });
+    }
   };
 
   const handleSave = () => {
-    form.validateFields().then((values) => {
-      const selectedScreen = screens.find(
-        (screen) => screen.id === values.screen
-      );
-      onUpdate({
-        ...editedMovie,
-        coupon: values.coupons,
-        offer: values.offer,
-        selectedSeats: selectedSeats,
-        screen: selectedScreen,
+    form
+      .validateFields()
+      .then((values) => {
+        const selectedScreen = screens.find(
+          (screen) => screen.id === values.screen
+        );
+        onUpdate({
+          ...editedMovie,
+          coupons: values.coupons,
+          offers: values.offers,
+          seatStructureId: values.seatStructure,
+          intervalTime: values.intervalTime,
+          screen: selectedScreen,
+          endMinutes:
+            editedMovie.startMinutes + movie.duration + values.intervalTime,
+        });
+      })
+      .catch((error) => {
+        message.error("Please fill all required fields");
       });
-    });
   };
 
-  const handleOfferSelect = (value) => {
-    setEditedMovie({ ...editedMovie, offer: value });
+  const handleOffersSelect = (value) => {
+    setSelectedOfferIds(value);
   };
 
-  const handleCouponSelect = (value) => {
-    setCouponCode(value);
+  const handleCouponsSelect = (value) => {
+    setSelectedCouponIds(value);
   };
 
   const minutesToTime = (minutes) => {
@@ -164,9 +229,11 @@ export const MovieDetail = ({
         form={form}
         layout="vertical"
         initialValues={{
-          screen: editedMovie.screen,
-          offer: editedMovie.offer,
-          coupons: couponCode,
+          screen: editedMovie.screen?.id,
+          offers: selectedOfferIds,
+          coupons: selectedCouponIds,
+          seatStructure: selectedSeatStructureId,
+          intervalTime: intervalTime,
         }}
       >
         <Row gutter={[24, 24]}>
@@ -202,6 +269,39 @@ export const MovieDetail = ({
                 {movie.director && (
                   <div>
                     <Text strong>Director:</Text> {movie.director}
+                  </div>
+                )}
+
+                {movie.language && (
+                  <div>
+                    <Text strong>Language:</Text> {movie.language}
+                  </div>
+                )}
+
+                {movie.genre && (
+                  <div>
+                    <Space>
+                      <TagOutlined />
+                      <Text>{movie.genre}</Text>
+                    </Space>
+                  </div>
+                )}
+
+                {movie.rating && (
+                  <div>
+                    <Space>
+                      <StarOutlined style={{ color: "#faad14" }} />
+                      <Text>{movie.rating}/10</Text>
+                    </Space>
+                  </div>
+                )}
+
+                {movie.release_date && (
+                  <div>
+                    <Space>
+                      <CalendarOutlined />
+                      <Text>{movie.release_date}</Text>
+                    </Space>
                   </div>
                 )}
               </Space>
@@ -252,29 +352,61 @@ export const MovieDetail = ({
                     />
                   </Form.Item>
 
-                  <Badge.Ribbon text="Scheduled Time" color={movie.color}>
-                    <Card size="small">
-                      <Text>
-                        {formatTimeFromMinutes(editedMovie.startMinutes)} -{" "}
-                        {formatTimeFromMinutes(editedMovie.endMinutes)}
-                      </Text>
-                    </Card>
-                  </Badge.Ribbon>
+                  <Card
+                    size="small"
+                    title="Showing Time"
+                    extra={<Tag color={movie.color}>Scheduled</Tag>}
+                    style={{ marginBottom: "16px" }}
+                  >
+                    <Row align="middle">
+                      <Col span={24}>
+                        <Space direction="vertical" style={{ width: "100%" }}>
+                          <Space>
+                            <ClockCircleOutlined />
+                            <Text strong>Show Time:</Text>
+                            <Text>
+                              {formatTimeFromMinutes(editedMovie.startMinutes)}{" "}
+                              - {formatTimeFromMinutes(editedMovie.endMinutes)}
+                            </Text>
+                          </Space>
+                          {intervalTime > 0 && (
+                            <Space>
+                              <FieldTimeOutlined />
+                              <Text strong>Interval:</Text>
+                              <Text>{intervalTime} minutes</Text>
+                            </Space>
+                          )}
+                          <Space>
+                            <GlobalOutlined />
+                            <Text strong>Duration:</Text>
+                            <Text>{formatMinutes(movie.duration)}</Text>
+                          </Space>
+                        </Space>
+                      </Col>
+                    </Row>
+                  </Card>
                 </Col>
 
                 <Col xs={24} md={12}>
-                  <Form.Item label="Select Seats Structure">
+                  <Form.Item
+                    name="seatStructure"
+                    label="Select Seats Structure"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select a seat structure",
+                      },
+                    ]}
+                  >
                     <Select
                       style={{ width: "100%" }}
                       placeholder="Select a seats structure"
-                      value={selectedSeats}
-                      onChange={handleSeatChange}
-                      maxTagCount={5}
+                      onChange={handleSeatStructureChange}
                       showSearch
                       allowClear
                     >
                       {seats.map((item) => (
-                        <Option key={item.id || item.name} value={item.name}>
+                        <Option key={item.id} value={item.id}>
                           <Space>
                             <MinusSquareOutlined />
                             {item.name}
@@ -282,6 +414,22 @@ export const MovieDetail = ({
                         </Option>
                       ))}
                     </Select>
+                  </Form.Item>
+                  <Form.Item
+                    name="intervalTime"
+                    label="Interval Time (minutes)"
+                    rules={[
+                      { required: true, message: "Please enter interval time" },
+                    ]}
+                  >
+                    <InputNumber
+                      style={{ width: "100%" }}
+                      min={0}
+                      max={60}
+                      onChange={handleIntervalTimeChange}
+                      addonAfter={<FieldTimeOutlined />}
+                      placeholder="Enter interval time in minutes"
+                    />
                   </Form.Item>
                 </Col>
               </Row>
@@ -291,10 +439,11 @@ export const MovieDetail = ({
             <Card title="Promotions & Offers" bordered={false}>
               <Row gutter={24}>
                 <Col xs={24} md={12}>
-                  <Form.Item name="offer" label="Apply Offer">
+                  <Form.Item name="offers" label="Apply Offers">
                     <Select
-                      placeholder="Select an offer"
-                      onChange={handleOfferSelect}
+                      placeholder="Select offers"
+                      onChange={handleOffersSelect}
+                      mode="multiple"
                       allowClear
                     >
                       {offers &&
@@ -311,10 +460,11 @@ export const MovieDetail = ({
                 </Col>
 
                 <Col xs={24} md={12}>
-                  <Form.Item name="coupons" label="Apply Coupon">
+                  <Form.Item name="coupons" label="Apply Coupons">
                     <Select
-                      placeholder="Select a coupon"
-                      onChange={handleCouponSelect}
+                      placeholder="Select coupons"
+                      onChange={handleCouponsSelect}
+                      mode="multiple"
                       allowClear
                     >
                       {coupons &&

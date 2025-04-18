@@ -14,6 +14,9 @@ const movieScheduleSlice = createSlice({
     isDetailsOpen: false,
     seatStructure: null,
     coupons: {},
+    offers: {},
+    seatStructures: {},
+    intervalTimes: {},
     activeTab: 0, // Default to today (Sunday is 0, Saturday is 6)
   },
   reducers: {
@@ -90,10 +93,28 @@ const movieScheduleSlice = createSlice({
       state.seatStructure = action.payload;
     },
 
-    // Set coupon for a scheduled movie
-    setCoupon: (state, action) => {
-      const { movieId, couponCode } = action.payload;
-      state.coupons[movieId] = couponCode;
+    // Set coupons for a scheduled movie (as a list)
+    setCoupons: (state, action) => {
+      const { movieId, couponIds } = action.payload;
+      state.coupons[movieId] = couponIds;
+    },
+
+    // Set offers for a scheduled movie (as a list)
+    setOffers: (state, action) => {
+      const { movieId, offerIds } = action.payload;
+      state.offers[movieId] = offerIds;
+    },
+
+    // Set seat structure for a scheduled movie
+    setSeatStructure: (state, action) => {
+      const { movieId, seatStructureId } = action.payload;
+      state.seatStructures[movieId] = seatStructureId;
+    },
+
+    // Set interval time for a scheduled movie
+    setIntervalTime: (state, action) => {
+      const { movieId, intervalTime } = action.payload;
+      state.intervalTimes[movieId] = intervalTime;
     },
 
     setDateRange: (state, action) => {
@@ -133,7 +154,10 @@ export const {
   setSelectedMovie,
   toggleDetailsOpen,
   updateSeatStructure,
-  setCoupon,
+  setCoupons,
+  setOffers,
+  setSeatStructure,
+  setIntervalTime,
   setDateRange,
   setSelectedDate,
 } = movieScheduleSlice.actions;
