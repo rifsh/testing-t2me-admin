@@ -12,19 +12,28 @@ export default function ScheduledMovies({
   handleScheduledMovieClick,
   handleScheduledMovieDragStart,
 }) {
-  return scheduledMovies[activeTab].map((scheduledMovie) => {
+  // Handle case where scheduledMovies[activeTab] is undefined
+  const currentTabMovies = scheduledMovies[activeTab] || [];
+
+  return currentTabMovies.map((scheduledMovie) => {
+    // Find the movie in the available movies list
     const movie = movies.find((m) => m.id === scheduledMovie.movieId);
     if (!movie) return null;
 
+    // Find the screen index
     const screenIndex = screens.findIndex(
       (screen) => screen.id === scheduledMovie.screen.id
     );
+    if (screenIndex === -1) return null; // Skip if screen not found
+
+    // Calculate positioning
     const top = screenIndex * rowHeight;
     const left = (scheduledMovie.startMinutes / 60) * hourWidth;
     const width =
       ((scheduledMovie.endMinutes - scheduledMovie.startMinutes) / 60) *
       hourWidth;
 
+    // Format time display
     const startHour = Math.floor(scheduledMovie.startMinutes / 60);
     const startMinute = scheduledMovie.startMinutes % 60;
     const endHour = Math.floor(scheduledMovie.endMinutes / 60);

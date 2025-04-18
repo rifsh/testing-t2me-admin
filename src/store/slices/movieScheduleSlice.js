@@ -1,64 +1,10 @@
 import dayjs from "dayjs";
 import { createSlice } from "@reduxjs/toolkit";
 
-// Mock data for initial state
-const initialMovies = [
-  {
-    id: 1,
-    title: "Interstellar",
-    duration: 169,
-    color: "#4299e1",
-    description: "A team of explorers travel through a wormhole in space.",
-  },
-  {
-    id: 2,
-    title: "The Matrix",
-    duration: 136,
-    color: "#48bb78",
-    description: "A computer hacker learns about the true nature of reality.",
-  },
-  {
-    id: 3,
-    title: "Inception",
-    duration: 148,
-    color: "#ed8936",
-    description:
-      "A thief who steals corporate secrets through dream-sharing technology.",
-  },
-  {
-    id: 4,
-    title: "Pulp Fiction",
-    duration: 154,
-    color: "#9f7aea",
-    description:
-      "The lives of two mob hitmen, a boxer, and a pair of diner bandits intertwine.",
-  },
-  {
-    id: 5,
-    title: "The Dark Knight",
-    duration: 152,
-    color: "#f56565",
-    description: "Batman fights the menace known as the Joker.",
-  },
-];
-
-const screens = ["Screen 1", "Screen 2", "Screen 3", "Screen 4"];
-
-// Generate empty schedule for 7 days
-const generateEmptySchedule = () => {
-  const schedule = {};
-  for (let i = 0; i < 7; i++) {
-    schedule[i] = [];
-  }
-  return schedule;
-};
-
 const movieScheduleSlice = createSlice({
   name: "movieSchedule",
   initialState: {
-    movies: initialMovies,
-    screens: screens,
-    scheduledMovies: {}, // Change from array to object with date keys
+    scheduledMovies: {}, // Object with tab/weekday keys
     dateRange: [
       dayjs().format("YYYY-MM-DD"),
       dayjs().add(6, "day").format("YYYY-MM-DD"),
@@ -68,6 +14,7 @@ const movieScheduleSlice = createSlice({
     isDetailsOpen: false,
     seatStructure: null,
     coupons: {},
+    activeTab: 0, // Default to today (Sunday is 0, Saturday is 6)
   },
   reducers: {
     // Switch between days
@@ -75,9 +22,13 @@ const movieScheduleSlice = createSlice({
       state.activeTab = action.payload;
     },
 
-    // Add a movie to the schedule
-    // Update scheduleMovie reducer
+    // Handle scheduling movies - accept the entire updated scheduledMovies object
     scheduleMovie: (state, action) => {
+      state.scheduledMovies = action.payload;
+    },
+
+    // Legacy reducer for scheduling a single movie
+    scheduleMovieSingle: (state, action) => {
       const { date, movieData } = action.payload;
 
       // Initialize the date if it doesn't exist
@@ -101,7 +52,7 @@ const movieScheduleSlice = createSlice({
       }
     },
 
-    // Update updateScheduledMovie reducer
+    // Update scheduled movie reducer
     updateScheduledMovie: (state, action) => {
       const { date, updatedMovie } = action.payload;
 
@@ -112,7 +63,7 @@ const movieScheduleSlice = createSlice({
       }
     },
 
-    // Update removeScheduledMovie reducer
+    // Remove scheduled movie reducer
     removeScheduledMovie: (state, action) => {
       const { date, movieId } = action.payload;
 
@@ -144,6 +95,7 @@ const movieScheduleSlice = createSlice({
       const { movieId, couponCode } = action.payload;
       state.coupons[movieId] = couponCode;
     },
+
     setDateRange: (state, action) => {
       state.dateRange = action.payload;
 
@@ -164,15 +116,9 @@ const movieScheduleSlice = createSlice({
         state.selectedDate = action.payload[0];
       }
     },
+
     setSelectedDate: (state, action) => {
       state.selectedDate = action.payload;
-    },
-    // Add a new movie to the catalog
-    addMovie: (state, action) => {
-      state.movies.push({
-        id: Date.now(),
-        ...action.payload,
-      });
     },
   },
 });
@@ -181,6 +127,7 @@ const movieScheduleSlice = createSlice({
 export const {
   setActiveTab,
   scheduleMovie,
+  scheduleMovieSingle,
   updateScheduledMovie,
   removeScheduledMovie,
   setSelectedMovie,
@@ -189,39 +136,6 @@ export const {
   setCoupon,
   setDateRange,
   setSelectedDate,
-  addMovie,
 } = movieScheduleSlice.actions;
-
-// Export selectors
-export const selectMovies = (state) => state.movieSchedule.movies;
-export const selectScreens = (state) => state.movieSchedule.screens;
-export const selectActiveTab = (state) => state.movieSchedule.activeTab;
-export const selectScheduledMovies = (state) =>
-  state.movieSchedule.scheduledMovies;
-export const selectScheduledMoviesForActiveDay = (state) =>
-  state.movieSchedule.scheduledMovies[state.movieSchedule.activeTab];
-export const selectSelectedMovie = (state) => {
-  const id = state.movieSchedule.selectedMovieId;
-  if (!id) return null;
-
-  const day = state.movieSchedule.activeTab;
-  const scheduledMovie = state.movieSchedule.scheduledMovies[day].find(
-    (m) => m.id === id
-  );
-  if (!scheduledMovie) return null;
-
-  const movieDetails = state.movieSchedule.movies.find(
-    (m) => m.id === scheduledMovie.movieId
-  );
-  if (!movieDetails) return null;
-
-  return {
-    ...scheduledMovie,
-    ...movieDetails,
-    coupon: state.movieSchedule.coupons[id] || "",
-  };
-};
-export const selectIsDetailsOpen = (state) => state.movieSchedule.isDetailsOpen;
-export const selectSeatStructure = (state) => state.movieSchedule.seatStructure;
 
 export default movieScheduleSlice.reducer;
