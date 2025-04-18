@@ -12,20 +12,23 @@ import {
 import { resetTicketSelection } from "store/slices/ticketSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchScreenData } from "store/slices/screenSlice";
-import { setDateRange, setSelectedDate } from "store/slices/movieScheduleSlice";
+import {
+  setDateRange,
+  setDateRangeLength,
+  setSelectedDate,
+  setShowLengthOptions,
+} from "store/slices/movieScheduleSlice";
 import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
 import dayjs from "dayjs";
 
 function ScheduleDetailForm({ form, mode }) {
   const dispatch = useDispatch();
 
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [dateRangeLength, setDateRangeLength] = useState(7);
-  const [showLengthOptions, setShowLengthOptions] = useState(false);
-
+  const { dateRange, selectedDate, dateRangeLength, showLengthOptions } =
+    useSelector((state) => state.movieScheduleSlice);
   const { response } = useSelector((state) => state.screen);
-
+  const startDate = dateRange && dateRange[0] ? dayjs(dateRange[0]) : null;
+  const endDate = dateRange && dateRange[1] ? dayjs(dateRange[1]) : null;
   const handlePlaceSelect = (id) => {
     dispatch(getVenues({ place_id: id, is_indoor: true }));
     form.setFieldValue("venue_id", undefined);
@@ -49,22 +52,18 @@ function ScheduleDetailForm({ form, mode }) {
   };
   const handleStartDateChange = (date) => {
     if (!date) {
-      setStartDate(null);
-      setEndDate(null);
-      setShowLengthOptions(false);
-      form.setFieldsValue({ end_date: null });
       dispatch(setDateRange([]));
       dispatch(setSelectedDate(null));
+      dispatch(setShowLengthOptions(false));
+      form.setFieldsValue({ end_date: null });
       return;
     }
 
-    setStartDate(date);
+    dispatch(setShowLengthOptions(true));
+
     const newEndDate = date.add(dateRangeLength - 1, "day");
-    setEndDate(newEndDate);
-
-    setShowLengthOptions(true);
-
     form.setFieldsValue({ end_date: newEndDate });
+
     dispatch(setDateRange([date, newEndDate]));
     dispatch(setSelectedDate(date));
   };
@@ -72,43 +71,32 @@ function ScheduleDetailForm({ form, mode }) {
   const handleEndDateChange = (date) => {
     if (!date || !startDate) return;
 
-    const maxAllowedEndDate = startDate.add(6, "day");
+    const maxAllowedEndDate = startDate.add(7, "day");
 
     if (date.isAfter(maxAllowedEndDate)) {
-      setEndDate(maxAllowedEndDate);
       form.setFieldsValue({ end_date: maxAllowedEndDate });
-
-      setDateRangeLength(7);
-
+      dispatch(setDateRangeLength(7));
       dispatch(setDateRange([startDate, maxAllowedEndDate]));
       return;
     }
 
     if (date.isBefore(startDate)) {
-      setEndDate(startDate);
       form.setFieldsValue({ end_date: startDate });
-
-      setDateRangeLength(1);
-
+      dispatch(setDateRangeLength(1));
       dispatch(setDateRange([startDate, startDate]));
       return;
     }
 
-    setEndDate(date);
-
     const newRangeLength = date.diff(startDate, "day") + 1;
-    setDateRangeLength(newRangeLength);
-
+    dispatch(setDateRangeLength(newRangeLength));
     dispatch(setDateRange([startDate, date]));
   };
 
   const handleDayLengthChange = (days) => {
     if (!startDate || days < 1 || days > 7) return;
 
-    setDateRangeLength(days);
+    dispatch(setDateRangeLength(days));
     const newEndDate = startDate.add(days - 1, "day");
-    setEndDate(newEndDate);
-
     form.setFieldsValue({ end_date: newEndDate });
     dispatch(setDateRange([startDate, newEndDate]));
   };

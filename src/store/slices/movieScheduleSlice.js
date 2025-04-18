@@ -4,11 +4,8 @@ import { createSlice } from "@reduxjs/toolkit";
 const movieScheduleSlice = createSlice({
   name: "movieSchedule",
   initialState: {
-    scheduledMovies: {}, // Object with tab/weekday keys
-    dateRange: [
-      dayjs().format("YYYY-MM-DD"),
-      dayjs().add(6, "day").format("YYYY-MM-DD"),
-    ],
+    scheduledMovies: {},
+    dateRange: [],
     selectedDate: dayjs().format("YYYY-MM-DD"),
     selectedMovieId: null,
     isDetailsOpen: false,
@@ -17,12 +14,21 @@ const movieScheduleSlice = createSlice({
     offers: {},
     seatStructures: {},
     intervalTimes: {},
-    activeTab: 0, 
+    activeTab: 0,
+    dateRangeLength: 7,
+    showLengthOptions: false,
   },
   reducers: {
     // Switch between days
     setActiveTab: (state, action) => {
       state.activeTab = action.payload;
+    },
+    setDateRangeLength: (state, action) => {
+      state.dateRangeLength = action.payload;
+    },
+
+    setShowLengthOptions: (state, action) => {
+      state.showLengthOptions = action.payload;
     },
 
     // Handle scheduling movies - accept the entire updated scheduledMovies object
@@ -160,6 +166,8 @@ export const {
   setIntervalTime,
   setDateRange,
   setSelectedDate,
+  setDateRangeLength,
+  setShowLengthOptions,
 } = movieScheduleSlice.actions;
 
 export default movieScheduleSlice.reducer;
