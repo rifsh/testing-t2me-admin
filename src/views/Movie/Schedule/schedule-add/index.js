@@ -1,9 +1,9 @@
-import React from 'react'
+import React from "react";
+import MovieScheduler from "../components/MovieScheduler";
+import ScheduleForm from "../form-schedule/ScheduleForm";
 
 const Index = () => {
-    return (
-        <div>Index</div>
-    )
-}
+  return <ScheduleForm />;
+};
 
-export default Index
+export default Index;

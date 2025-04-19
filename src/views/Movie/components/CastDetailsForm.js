@@ -10,7 +10,6 @@ import {
     Modal,
     Tooltip,
     Tag,
-    Segmented,
     Empty,
     Typography,
     Form,
@@ -26,119 +25,99 @@ import {
     EditOutlined
 } from "@ant-design/icons";
 import CelebritiesListDropDown from "components/util-components/FormItems/CelebritiesListDropDown";
+import { MOVIE_CONSTANTS } from "constants/MovieConstants";
+import { MODE } from "constants/TextConstant";
 
 const { Option } = Select;
 const { Title } = Typography;
 
-const CastDetailsForm = ({ form: parentForm, initialValues }) => {
-    const [activeTab, setActiveTab] = useState("cast");
-    const [castMembers, setCastMembers] = useState(initialValues?.cast || []);
-    const [crewMembers, setCrewMembers] = useState(initialValues?.crew || []);
+const CastDetailsForm = ({ form: parentForm, initialValues, mode }) => {
+    const [teamMembers, setTeamMembers] = useState(initialValues?.cast || []);
     const [editingMember, setEditingMember] = useState(null);
-    const [memberForm] = Form.useForm(); // Create a separate form instance for the edit modal
+    const [memberForm] = Form.useForm();
 
-    // Roles categorized for Cast and Crew
-    const castRoles = [
-        { value: "Lead Actor", color: "blue" },
-        { value: "Lead Actress", color: "purple" },
-        { value: "Supporting Actor", color: "green" },
-        { value: "Supporting Actress", color: "magenta" },
-        { value: "Child Artist", color: "gold" },
-        { value: "Guest Appearance", color: "lime" }
-    ];
-
-    const crewRoles = [
-        { value: "Director", color: "red" },
-        { value: "Producer", color: "orange" },
-        { value: "Music Director", color: "volcano" },
-        { value: "Cinematographer", color: "geekblue" },
-        { value: "Screenwriter", color: "cyan" },
-        { value: "Art Director", color: "pink" },
-        { value: "Costume Designer", color: "teal" },
-        { value: "Editor", color: "brown" },
-        { value: "Choreographer", color: "purple" }
-    ];
-
-    // Sync with parent form
     useEffect(() => {
         if (parentForm) {
-            // Set values and notify parent form of changes
             parentForm.setFieldsValue({
-                cast: castMembers,
-                crew: crewMembers
+                cast: teamMembers
             });
 
-            // Force form to register these changes
-            parentForm.validateFields(['cast', 'crew']).catch(() => {
-                // Ignore validation errors
-            });
+            parentForm.validateFields(['cast']).catch(() => { });
         }
-    }, [castMembers, crewMembers, parentForm]);
+    }, [teamMembers, parentForm]);
 
-    // Initialize with parent form values
     useEffect(() => {
         if (initialValues) {
-            setCastMembers(initialValues.cast || []);
-            setCrewMembers(initialValues.crew || []);
-        }
-    }, [initialValues]);
+            if (initialValues.cast && mode === MODE.EDIT) {
+                const formattedCast = initialValues.cast.map(member => ({
+                    id: member.id || null,
+                    personality_id: member.personality?.id,
+                    actorName: member.personality?.name,
+                    actorImage: member.personality?.thumbnail_image,
+                    character_name: member.character_name,
+                    role: member.role,
+                    type: member.type || 'CAST'
+                }));
 
-    // Update form values when editing member changes
+                setTeamMembers(formattedCast);
+                console.log('formvalues', formattedCast)
+                if (parentForm) {
+                    parentForm.setFieldsValue({
+                        cast: formattedCast
+                    });
+                }
+            } else {
+                setTeamMembers(initialValues.cast || []);
+            }
+        }
+    }, [parentForm]);
+
     useEffect(() => {
         if (editingMember) {
             memberForm.setFieldsValue({
-                actorName: editingMember.actorId, // This needs to match the dropdown's expected value
+                personality_id: editingMember.personality_id,
                 actorDisplayName: editingMember.actorName,
                 actorImage: editingMember.actorImage,
-                characterName: editingMember.characterName,
-                role: editingMember.role
+                character_name: editingMember.character_name,
+                role: editingMember.role,
+                type: editingMember.type
             });
+            console.log("editingMember", editingMember)
         }
     }, [editingMember, memberForm]);
 
-    const addMember = (type) => {
+    const addMember = () => {
         const newMember = {
-            id: Date.now(),
+            personality_id: '',
             actorName: '',
-            actorId: '',
             actorImage: '',
-            characterName: type === "cast" ? '' : undefined,
-            role: ''
+            character_name: '',
+            role: '',
+            type: 'CAST'
         };
 
-        if (type === "cast") {
-            const updatedCastMembers = [...castMembers];
-            updatedCastMembers.push(newMember);
-            setCastMembers(updatedCastMembers);
-        } else {
-            const updatedCrewMembers = [...crewMembers];
-            updatedCrewMembers.push(newMember);
-            setCrewMembers(updatedCrewMembers);
-        }
+        setTeamMembers([...teamMembers, newMember]);
+        setEditingMember(newMember);
 
-        // Set editing state
-        setEditingMember({ ...newMember, type });
+        setTimeout(() => {
+            const dropdownInput = document.querySelector('.ant-select-selection-search-input');
+            if (dropdownInput) {
+                dropdownInput.focus();
+            }
+        }, 100);
     };
 
-    const removeMember = (type, id) => {
+    const removeMember = (id) => {
         Modal.confirm({
-            title: `Remove ${type === "cast" ? "Cast" : "Crew"} Member`,
-            content: `Are you sure you want to remove this ${type === "cast" ? "cast" : "crew"} member?`,
+            title: `Remove Team Member`,
+            content: `Are you sure you want to remove this team member?`,
             okText: 'Yes',
             cancelText: 'No',
             onOk() {
-                if (type === "cast") {
-                    const updated = castMembers.filter((member) => member.id !== id);
-                    setCastMembers(updated);
-                    if (editingMember && editingMember.id === id) {
-                        setEditingMember(null);
-                    }
-                } else {
-                    const updated = crewMembers.filter((member) => member.id !== id);
-                    setCrewMembers(updated);
-                    if (editingMember && editingMember.id === id) {
-                        setEditingMember(null);
-                    }
+                const updated = teamMembers.filter((member) => member.personality_id !== id);
+                setTeamMembers(updated);
+                if (editingMember && editingMember.id === id) {
+                    setEditingMember(null);
                 }
             }
         });
@@ -147,36 +126,35 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
     const handleFormSubmit = (values) => {
         if (!editingMember) return;
 
-        const type = editingMember.type;
         const updatedMember = {
             ...editingMember,
-            actorId: values.actorName, // This is the ID from the dropdown
-            actorName: values.actorDisplayName, // Store the display name separately
-            actorImage: values.actorImage, // Store the image URL
-            characterName: values.characterName,
-            role: values.role
+            personality_id: values.personality_id,
+            actorName: values.actorDisplayName,
+            actorImage: values.actorImage,
+            character_name: values.character_name,
+            role: values.role,
+            type: values.type
         };
 
-        if (type === "cast") {
-            // Update the cast members list
-            const updatedCastMembers = castMembers.map(member =>
-                member.id === editingMember.id ? updatedMember : member
+        // Update or add the member
+        if (editingMember.personality_id) {
+            // Existing member - update
+            const updatedTeamMembers = teamMembers.map(member =>
+                member.personality_id === editingMember.personality_id ? updatedMember : member
             );
-            setCastMembers(updatedCastMembers);
+            setTeamMembers(updatedTeamMembers);
+            console.log("Edit member", updatedTeamMembers)
+
         } else {
-            // Update the crew members list
-            const updatedCrewMembers = crewMembers.map(member =>
-                member.id === editingMember.id ? updatedMember : member
-            );
-            setCrewMembers(updatedCrewMembers);
+            // New member - add
+            setTeamMembers([...teamMembers, updatedMember]);
         }
 
-        // Close the edit form
         setEditingMember(null);
     };
 
-    const handleEditMember = (type, member) => {
-        setEditingMember({ ...member, type });
+    const handleEditMember = (member) => {
+        setEditingMember({ ...member });
     };
 
     // Handle the selection from the CelebritiesListDropDown
@@ -184,15 +162,15 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
         if (!editingMember) return;
 
         memberForm.setFieldsValue({
-            actorName: value,  // This is the ID
-            actorDisplayName: option.label,  // This is the display name
-            actorImage: option.image  // This is the image URL
+            personality_id: value,
+            actorDisplayName: option.label,
+            actorImage: option.image
         });
     };
 
-    const castColumns = [
+    const columns = [
         {
-            title: 'Actor',
+            title: 'Name',
             dataIndex: 'actorName',
             key: 'actorName',
             render: (text, record) => (
@@ -216,81 +194,26 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
         },
         {
             title: 'Character',
-            dataIndex: 'characterName',
-            key: 'characterName',
-            render: (text) => text || '-'
-        },
-        {
-            title: 'Role',
-            dataIndex: 'role',
-            key: 'role',
-            render: (role) => (
-                role ? (
-                    <Tag color={castRoles.find(r => r.value === role)?.color}>
-                        {role}
-                    </Tag>
-                ) : '-'
-            )
-        },
-        {
-            title: 'Actions',
-            key: 'actions',
-            render: (_, record) => (
-                <Space size="middle">
-                    <Tooltip title="Edit">
-                        <Button
-                            type="text"
-                            icon={<EditOutlined />}
-                            onClick={() => handleEditMember("cast", record)}
-                        />
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                        <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => removeMember("cast", record.id)}
-                        />
-                    </Tooltip>
-                </Space>
-            )
-        }
-    ];
-
-    const crewColumns = [
-        {
-            title: 'Member',
-            dataIndex: 'actorName',
-            key: 'actorName',
+            dataIndex: 'character_name',
+            key: 'character_name',
             render: (text, record) => (
-                <Space>
-                    <Avatar
-                        size="large"
-                        src={record.actorImage}
-                        style={{
-                            background: 'linear-gradient(135deg, #1890ff, #722ed1)',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            fontSize: '18px'
-                        }}
-                    >
-                        {text ? text.charAt(0).toUpperCase() : 'A'}
-                    </Avatar>
-                    <span>{text || 'Unnamed'}</span>
-                </Space>
+                record.type === "CAST" ? (text || '-') : '-'
             )
         },
         {
             title: 'Role',
             dataIndex: 'role',
             key: 'role',
-            render: (role) => (
-                role ? (
-                    <Tag color={crewRoles.find(r => r.value === role)?.color}>
-                        {role}
-                    </Tag>
-                ) : '-'
+            render: (role) => role || '-'
+        },
+        {
+            title: 'Type',
+            dataIndex: 'type',
+            key: 'type',
+            render: (type) => (
+                <Tag color={type === "CAST" ? "blue" : "green"}>
+                    {type}
+                </Tag>
             )
         },
         {
@@ -302,7 +225,7 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
                         <Button
                             type="text"
                             icon={<EditOutlined />}
-                            onClick={() => handleEditMember("crew", record)}
+                            onClick={() => handleEditMember(record)}
                         />
                     </Tooltip>
                     <Tooltip title="Delete">
@@ -310,7 +233,7 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
                             type="text"
                             danger
                             icon={<DeleteOutlined />}
-                            onClick={() => removeMember("crew", record.id)}
+                            onClick={() => removeMember(record.personality_id)}
                         />
                     </Tooltip>
                 </Space>
@@ -318,13 +241,13 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
         }
     ];
 
-    const renderEmptyState = (type) => (
+    const renderEmptyState = () => (
         <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
                 <span>
-                    No {type === "cast" ? "cast" : "crew"} members added yet.
-                    Click "Add {type === "cast" ? "Cast" : "Crew"} Member" to get started!
+                    No team members added yet.
+                    Click "Add Team Member" to get started!
                 </span>
             }
             style={{
@@ -332,34 +255,21 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
                 background: '#f9f9f9',
                 borderRadius: '12px'
             }}
-        >
-            <Button
-                type="primary"
-                icon={<UserAddOutlined />}
-                onClick={() => addMember(type)}
-            >
-                Add {type === "cast" ? "Cast" : "Crew"} Member
-            </Button>
-        </Empty>
+        />
     );
 
     const renderMemberForm = () => {
         if (!editingMember) return null;
 
-        const type = editingMember.type;
         return (
             <Card
                 title={
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>Edit {type === "cast" ? "Cast" : "Crew"} Member</span>
+                        <span>Edit Team Member</span>
                         <Button type="text" onClick={() => {
                             // Remove unsaved members when closing form
-                            if (!editingMember.actorName) {
-                                if (type === "cast") {
-                                    setCastMembers(castMembers.filter(m => m.id !== editingMember.id));
-                                } else {
-                                    setCrewMembers(crewMembers.filter(m => m.id !== editingMember.id));
-                                }
+                            if (!editingMember.personality_id) {
+                                setTeamMembers(teamMembers.filter(m => m.id !== editingMember.id));
                             }
                             setEditingMember(null);
                         }}>✕</Button>
@@ -372,22 +282,23 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
                     layout="vertical"
                     onFinish={handleFormSubmit}
                     initialValues={{
-                        actorName: editingMember.actorId,
+                        personality_id: editingMember.personality_id,
                         actorDisplayName: editingMember.actorName,
                         actorImage: editingMember.actorImage,
-                        characterName: editingMember.characterName,
-                        role: editingMember.role
+                        character_name: editingMember.character_name,
+                        role: editingMember.role,
+                        type: editingMember.type
                     }}
                 >
                     <Row gutter={16}>
                         <Col xs={24} sm={12}>
                             <Form.Item
-                                name="actorName"
-                                label="Actor"
-                                rules={[{ required: true, message: 'Please select an actor' }]}
+                                name="personality_id"
+                                label="Person"
+                                rules={[{ required: true, message: 'Please select a person' }]}
                             >
                                 <CelebritiesListDropDown
-                                    value={editingMember.actorId}
+                                    value={editingMember.personality_id}
                                     onChange={handleCelebritySelect}
                                 />
                             </Form.Item>
@@ -400,37 +311,88 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
                             </Form.Item>
                         </Col>
 
-                        {type === "cast" && (
-                            <Col xs={24} sm={12}>
-                                <Form.Item
-                                    name="characterName"
-                                    label="Character Name"
-                                    rules={[{ required: true, message: 'Please enter character name' }]}
-                                >
-                                    <Input placeholder="Enter character name" />
-                                </Form.Item>
-                            </Col>
-                        )}
-
-                        <Col xs={24}>
+                        <Col xs={24} sm={12}>
                             <Form.Item
-                                name="role"
-                                label="Role"
-                                rules={[{ required: true, message: 'Please select a role' }]}
+                                name="type"
+                                label="Type"
+                                rules={[{ required: true, message: 'Please select a type' }]}
                             >
-                                <Select placeholder="Select role"
-                                    mode="tags"
-                                    tokenSeparators={[',']}
-                                    allowClear={false}
-                                >
-                                    {(type === "cast" ? castRoles : crewRoles).map((role) => (
-                                        <Option key={role.value} value={role.value}>
-                                            <Tag color={role.color}>{role.value}</Tag>
-                                        </Option>
-                                    ))}
+                                <Select>
+                                    <Option value="CAST">CAST</Option>
+                                    <Option value="CREW">CREW</Option>
                                 </Select>
                             </Form.Item>
                         </Col>
+
+                        <Form.Item
+                            noStyle
+                            shouldUpdate={(prevValues, currentValues) => prevValues.type !== currentValues.type}
+                        >
+                            {({ getFieldValue }) => {
+                                const type = getFieldValue('type');
+                                return type === "CAST" ? (
+                                    <Col xs={24} sm={12}>
+                                        <Form.Item
+                                            name="character_name"
+                                            label="Character Name"
+                                            rules={[{ required: true, message: 'Please enter character name' }]}
+                                        >
+                                            <Input placeholder="Enter character name" />
+                                        </Form.Item>
+                                    </Col>
+                                ) : null;
+                            }}
+                        </Form.Item>
+
+                        <Form.Item
+                            noStyle
+                            shouldUpdate={(prevValues, currentValues) => prevValues.type !== currentValues.type}
+                        >
+                            {({ getFieldValue }) => {
+                                const type = getFieldValue('type');
+                                return type === "CAST" ? (
+                                    <Col xs={24}>
+                                        <Form.Item
+                                            name="role"
+                                            label="Role"
+                                            rules={[{ required: true, message: 'Please select a role' }]}
+                                        >
+                                            <Select
+                                                mode="tags"
+                                                placeholder="Select or enter role"
+                                                tokenSeparators={[',']}
+                                            >
+                                                {MOVIE_CONSTANTS.castRoles.map(occ => (
+                                                    <Option key={occ.value} value={occ.value}>
+                                                        {occ.label}
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+                                    </Col>
+                                ) : (
+                                    <Col xs={24}>
+                                        <Form.Item
+                                            name="role"
+                                            label="Role"
+                                            rules={[{ required: true, message: 'Please select a role' }]}
+                                        >
+                                            <Select placeholder="Select role"
+                                                mode="tags"
+                                                tokenSeparators={[',']}
+                                                allowClear={false}
+                                            >
+                                                {MOVIE_CONSTANTS.crewRoles.map((role) => (
+                                                    <Option key={role.value} value={role.value}>
+                                                        <Tag color={role.color}>{role.value}</Tag>
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
+                                    </Col>
+                                );
+                            }}
+                        </Form.Item>
 
                         <Col xs={24} style={{ textAlign: 'right' }}>
                             <Button
@@ -439,6 +401,7 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
                                 onClick={(e) => {
                                     e.preventDefault();
                                     memberForm.submit();
+                                    console.log("members", memberForm.getFieldValue())
                                 }}
                             >
                                 Save
@@ -450,16 +413,15 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
         );
     };
 
-    // Create hidden fields in the parent form to store cast and crew data
-    const renderHiddenParentFormFields = () => (
-        <>
-            <Form.Item name="cast" hidden>
-                <Input />
-            </Form.Item>
-            <Form.Item name="crew" hidden>
-                <Input />
-            </Form.Item>
-        </>
+    // Create hidden field in the parent form to store cast data
+    const renderHiddenParentFormField = () => (
+        <Form.Item name="cast" hidden>
+            <Input />
+        </Form.Item>
+    );
+
+    const filteredMembers = teamMembers.filter(m =>
+        m.personality_id && m.role && (m.type !== "CAST" || m.character_name)
     );
 
     return (
@@ -472,7 +434,7 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
             }}
             bodyStyle={{ padding: '24px' }}
         >
-            {renderHiddenParentFormFields()}
+            {renderHiddenParentFormField()}
 
             <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -484,43 +446,13 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
                     </Title>
                 </div>
 
-                <Segmented
-                    options={[
-                        {
-                            label: (
-                                <div style={{ padding: '4px 0' }}>
-                                    <UserOutlined />
-                                    <div>Cast ({castMembers.filter(m => m.actorName && m.characterName && m.role).length})</div>
-                                </div>
-                            ),
-                            value: 'cast',
-                        },
-                        {
-                            label: (
-                                <div style={{ padding: '4px 0' }}>
-                                    <TeamOutlined />
-                                    <div>Crew ({crewMembers.filter(m => m.actorName && m.role).length})</div>
-                                </div>
-                            ),
-                            value: 'crew',
-                        },
-                    ]}
-                    block
-                    value={activeTab}
-                    onChange={(value) => {
-                        setActiveTab(value);
-                        setEditingMember(null);
-                    }}
-                    style={{ marginBottom: '24px' }}
-                />
-
                 <div style={{ marginBottom: '20px' }}>
                     <Button
                         type="primary"
                         icon={<UserAddOutlined />}
-                        onClick={() => addMember(activeTab)}
+                        onClick={() => addMember()}
                     >
-                        Add {activeTab === "cast" ? "Cast" : "Crew"} Member
+                        Add Team Member
                     </Button>
                 </div>
 
@@ -528,40 +460,33 @@ const CastDetailsForm = ({ form: parentForm, initialValues }) => {
             </div>
 
             <div style={{ minHeight: '200px' }}>
-                {activeTab === "cast" && (
-                    <>
-                        {castMembers.filter(m => m.actorName && m.characterName && m.role).length === 0 ?
-                            renderEmptyState("cast") : (
-                                <Table
-                                    columns={castColumns}
-                                    dataSource={castMembers.filter(m => m.actorName && m.characterName && m.role)}
-                                    rowKey="id"
-                                    pagination={false}
-                                    bordered
-                                    style={{ borderRadius: '8px', overflow: 'hidden' }}
-                                />
-                            )}
-                    </>
-                )}
-
-                {activeTab === "crew" && (
-                    <>
-                        {crewMembers.filter(m => m.actorName && m.role).length === 0 ?
-                            renderEmptyState("crew") : (
-                                <Table
-                                    columns={crewColumns}
-                                    dataSource={crewMembers.filter(m => m.actorName && m.role)}
-                                    rowKey="id"
-                                    pagination={false}
-                                    bordered
-                                    style={{ borderRadius: '8px', overflow: 'hidden' }}
-                                />
-                            )}
-                    </>
+                {mode === MODE.ADD ? (
+                    filteredMembers.length === 0 ? (
+                        renderEmptyState()
+                    ) : (
+                        <Table
+                            columns={columns}
+                            dataSource={filteredMembers}
+                            rowKey="id"
+                            pagination={false}
+                            bordered
+                            style={{ borderRadius: '8px', overflow: 'hidden' }}
+                        />
+                    )
+                ) : (
+                    <Table
+                        columns={columns}
+                        dataSource={filteredMembers}
+                        rowKey="id"
+                        pagination={false}
+                        bordered
+                        style={{ borderRadius: '8px', overflow: 'hidden' }}
+                    />
                 )}
             </div>
+
         </Card>
     );
-}
+};
 
 export default CastDetailsForm;

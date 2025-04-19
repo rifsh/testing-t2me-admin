@@ -25,6 +25,7 @@ import PaymentMethodTabs from "./PaymentMethodTabs";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { EVENT_TYPES } from "constants/PageConstants";
 
 const { Option } = Select;
 
@@ -42,7 +43,7 @@ const PaymentFormFields = ({ mode, id }) => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchAllEvent({}));
+    dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
   }, [dispatch]);
 
   const handleSelectEvent = (id) => {

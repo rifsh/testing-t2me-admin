@@ -14,17 +14,17 @@ const { Title, Paragraph } = Typography;
 const VenueTechnologyDisplay = ({ venueData }) => {
     const data = {
         screenTech:
-            venueData.screen_tech?.map((tech) => ({
+            venueData?.screen_tech?.map((tech) => ({
                 name: tech.name,
                 description: tech.description,
             })) || [],
         audioTech:
-            venueData.audio?.map((audio) => ({
+            venueData?.audio?.map((audio) => ({
                 name: audio.name,
                 description: audio.description,
             })) || [],
         accessibilityFeatures:
-            venueData.accessibility?.map((feature) => ({
+            venueData?.accessibility?.map((feature) => ({
                 name: feature.name,
                 description: feature.description,
             })) || [],

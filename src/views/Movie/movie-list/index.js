@@ -2,37 +2,82 @@ import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Dropdown, Tag, Badge, Space } from "antd";
 import { EditOutlined, EyeOutlined, MoreOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { setSelectedItem } from 'store/slices/modalSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDialogVisible, setSelectedItem } from 'store/slices/modalSlice';
 import SearchBarWithStatus from 'components/util-components/Search/SearchBarWithStatus';
-import { moviesMockData } from './MockData';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import { editMovieStatus, fetchMoviesData, setEditMovieId } from 'store/slices/movieSlice';
+import { DEFAULT_PAGE_SIZE } from 'constants/PageConstants';
+import { setLocationDialogVisible, setLocationModalLoading } from 'store/slices/locationSlice';
+import WarningModal from 'components/util-components/ModalItems/WarningModal';
+import { TextConstants } from 'constants/TextConstant';
+import Utils from 'utils';
+import StatusSubmitAndConfirmModal from 'components/util-components/ModalItems/StatusSubmitModal';
+import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatusModal';
 
 const Index = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    
+    const [formattedData, setFormattedData] = useState([]);
+    const { pagination, loading, movieResponse, movieEditId, editResponse, message, editable_status } = useSelector((state) => state.movie)
+    const {
+        dialogVisible,
+        modalLoading,
+    } = useSelector((state) => state.locations);
+
     useEffect(() => {
+        dispatch(fetchMoviesData(DEFAULT_PAGE_SIZE))
     }, [dispatch]);
 
     useEffect(() => {
-    }, []);
+        if (movieResponse) {
+            const processedData = movieResponse?.items?.flatMap(item =>
+                item.movie_details.map(detail => ({
+                    id: item.id,
+                    title: item.event_name,
+                    description: item.description,
+                    thumbnail_image: item.thumbnail_image,
+                    genre: detail.genre,
+                    language: detail.language,
+                    country: detail.country,
+                    director: detail.director,
+                    released: detail.released,
+                    rating: detail.rating,
+                    runtime: detail.runtime,
+                    media_items: detail.media_items,
+                    casts: detail.casts,
+                    awards: detail.awards,
+                    box_office: detail.box_office,
+                    box_office_currency: detail.box_office_currency,
+                    budget: detail.budget,
+                    budget_currency: detail.budget_currency,
+                    production_company: detail.production_company,
+                    status: item.status,
+                }))
+            );
+            setFormattedData(processedData)
+        }
+    }, [movieResponse]);
 
     const handleViewDetails = (movie) => {
-        navigate(`${APP_PREFIX_PATH}/movie/details`);
+        navigate(`${APP_PREFIX_PATH}/movie/details/${movie.id}`);
     };
 
     const handleEditMovie = (movie) => {
+        dispatch(setEditMovieId(movie.id));
+        dispatch(setLocationDialogVisible(true));
     };
-
-    const handleModalSubmit = () => {
+    const handleModalSubmit = async () => {
+        dispatch(setLocationModalLoading(true));
+        navigate(`${APP_PREFIX_PATH}/movie/edit/${movieEditId}`);
+        dispatch(setLocationDialogVisible(false));
+        dispatch(setLocationModalLoading(false));
     };
 
     const handleModalCancel = () => {
+        dispatch(setLocationDialogVisible(false));
     };
 
-    const handlePagination = (page, pageSize) => {
-    };
 
     const getDropdownMenu = (movie) => [
         {
@@ -57,13 +102,15 @@ const Index = () => {
         },
     ];
 
-    const getStatusBadge = (isActive) => (
-        isActive ? <Badge status="success" text="Active" /> : <Badge status="error" text="Inactive" />
-    );
+    const handleUpdateStatus = (item) => {
+        const newStatus = !item.status;
+        const data = { status: newStatus, id: item.id };
+        dispatch(setSelectedItem(data));
+        dispatch(setDialogVisible(true));
+    };
 
-    const handleUpdateStatus = (movie) => {
-        const newStatus = !movie.status;
-        dispatch(setSelectedItem({ status: newStatus, id: movie.id }));
+    const handlePagination = (page, pageSize) => {
+        dispatch(fetchMoviesData({ page: page, size: pageSize }));
     };
 
     const tableColumns = [
@@ -80,9 +127,14 @@ const Index = () => {
         },
         {
             title: "Duration",
-            dataIndex: "duration",
+            dataIndex: "runtime",
             key: "duration",
-            render: (duration) => `${duration} min`,
+            render: (duration) => {
+                if (!duration || typeof duration !== 'number') return 'N/A';
+                const hours = Math.floor(duration / 60);
+                const minutes = duration % 60;
+                return `${hours > 0 ? `${hours} hr ` : ''}${minutes > 0 ? `${minutes} min` : ''}`.trim();
+            },
         },
         {
             title: "Language",
@@ -95,12 +147,7 @@ const Index = () => {
             key: "rating",
             render: (rating) => <Tag color={rating > 7 ? "green" : "red"}>{rating}/10</Tag>
         },
-        {
-            title: "Status",
-            dataIndex: "status",
-            key: "status",
-            render: (status) => getStatusBadge(status),
-        },
+        Utils.statusColumnUtil(handleUpdateStatus),
         {
             title: "Actions",
             dataIndex: "actions",
@@ -115,7 +162,7 @@ const Index = () => {
     return (
         <Card>
             <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: "10px" }}>
-                <SearchBarWithStatus placeholder="Search by title or genre" />
+                <SearchBarWithStatus placeholder="Search by title" fetchFunction={fetchMoviesData} />
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`${APP_PREFIX_PATH}/movie/add`)}>
                     Add Movie
                 </Button>
@@ -123,22 +170,23 @@ const Index = () => {
 
             <Table
                 columns={tableColumns}
-                dataSource={moviesMockData}
+                dataSource={formattedData}
                 rowKey="id"
-            // loading={movieLoader || loading}
-            // pagination={{
-            //     current: pagination.current,
-            //     pageSize: pagination.pageSize,
-            //     total: pagination.total,
-            //     onChange: handlePagination,
-            //     showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} movies`
-            // }}
+                loading={loading}
+                pagination={{
+                    current: pagination.current,
+                    pageSize: pagination.pageSize,
+                    total: pagination.total,
+                    onChange: (page, pageSize) => handlePagination(page, pageSize),
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} movies`
+                }}
             />
 
-            {/* <WarningModal
+            <WarningModal
                 mode="itemmodal"
                 visible={dialogVisible}
                 title="Edit Movie"
+                details={TextConstants.DefaultEditContent3}
                 warningMessage="Do you want to proceed to the edit page?"
                 onSubmit={handleModalSubmit}
                 onCancel={handleModalCancel}
@@ -147,13 +195,28 @@ const Index = () => {
                 loading={modalLoading}
             />
 
+            <UpdateStatusModal
+                responseMessage={message}
+                editFunction={editMovieStatus}
+                getAllFunction={(pageData) => fetchMoviesData(pageData)}
+                // tableConfig={{
+                //     title: "Active Schedules",
+                //     dataKey: "items",
+                // }}
+                editable_status={editable_status}
+                responseData={editResponse}
+                loading={loading}
+            />
+
             <StatusSubmitAndConfirmModal
                 editFunction={editMovieStatus}
-                // getAllFunction={fetchMovies}
-                responseData={response}
+                getAllFunction={fetchMoviesData}
+                responseData={editResponse}
                 responseMessage={message}
                 pageData={DEFAULT_PAGE_SIZE}
-            /> */}
+                onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+                onCloseMessage={TextConstants.StatusUpdateCanceled}
+            />
         </Card>
     );
 }

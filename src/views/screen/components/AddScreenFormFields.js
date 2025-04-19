@@ -16,6 +16,8 @@ import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import LoadingOverlay from 'components/util-components/Loader';
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import { ActionType } from 'utils/api/warning-submit-util';
+import TheaterListForm from 'components/util-components/FormItems/TheaterListForm';
+import { setCleraAllData, setScreenCapacity, setSeectedTheater } from 'store/slices/theaterSlice';
 
 const { Title, Text } = Typography;
 
@@ -31,8 +33,8 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     const [capacity, setCapacity] = useState(null);
 
     const { response, singleResponse, message: screenMessage, loading, editResponse, editBodyData } = useSelector((state) => state.screen);
-    const { dialogVisible, singleVenues } = useSelector((state) => state.locations);
-    // const { filteredTickets, loading: ticketsLoading } = useSelector((state) => state.tickets);
+    const { dialogVisible, selectedVenue } = useSelector((state) => state.locations);
+    const { selectedTheaterId, singleResponse: singleTheaterResponse, selectedTheaterScreenCapacity } = useSelector((state) => state.theater);
 
     const rules = {
         place: [{ required: true, message: "Please select a place" }],
@@ -61,11 +63,15 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     useEffect(() => {
         if (singleResponse) {
             setSelectedVenue(true);
-            if (mode === 'EDIT' && !placeSelected) {
-                setVenueId(singleResponse?.venue?.id)
+            if (mode === 'EDIT') {
+                dispatch(getVenues({ place_id: singleResponse?.theatre?.place?.id }))
+                dispatch(setSelectedVenue(singleResponse?.theatre?.venue?.id))
+                dispatch(setSeectedTheater(singleResponse?.theatre?.id))
                 const formValues = {
-                    place: singleResponse?.venue?.place?.name || undefined,
-                    venue_id: singleResponse?.venue?.name || undefined,
+                    place: singleResponse.theatre.place.name || undefined,
+                    place_id: singleResponse.theatre.place.id || undefined,
+                    venue_id: singleResponse?.theatre?.venue.id || undefined,
+                    theatre_id: singleResponse?.theatre?.name || undefined,
                     screens: [{
                         screen_name: singleResponse?.screen_name || '',
                         screen_number: singleResponse?.screen_number || '',
@@ -75,12 +81,11 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                         reserved_seating: singleResponse?.reserved_seating,
                         time_slots: singleResponse?.time_slots || [],
                         accessibility: singleResponse.accessibilty.map((values) => values.id) || [],
-                        screen_technology_id: Number(singleResponse?.screen_technology.id),
+                        screen_technology_id: singleResponse?.screen_technology?.id,
                         audio_id: singleResponse?.audio.id,
                     }]
                 };
 
-                console.log('Setting form values:', singleVenues);
                 form.setFieldsValue(formValues);
 
                 setTimeout(() => {
@@ -91,10 +96,17 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     }, [singleResponse, form, placeSelected === false]);
 
     useEffect(() => {
-        setCapacity(singleVenues?.capacity)
-    }, [singleVenues])
+        if (singleTheaterResponse) {
+            setCapacity(singleTheaterResponse?.capacity);
+            dispatch(setScreenCapacity(singleTheaterResponse?.number_of_screens));
+        }
+    }, [singleTheaterResponse])
 
     const addScreen = () => {
+        console.log('singlesss', screens.length + 1);
+        if (screens.length + 1 > selectedTheaterScreenCapacity) {
+            return message.info('Maximum screen capacity exceeded');
+        }
         const newScreens = [...screens, { key: screens.length }];
         setScreens(newScreens);
         setActiveTab(String(screens.length));
@@ -116,15 +128,15 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     };
 
     const handlePlaceSelect = (id) => {
-        console.log('place', id);
-
         setIsLoading(true);
         dispatch(getVenues({ place_id: id, is_indoor: true }));
         form.resetFields([
             "venue_id",
+            "theatre_id",
             "screens",
         ]);
         setPlaceSelected(true);
+        dispatch(setCleraAllData());
         dispatch(resetTicketSelection());
         dispatch(setSelectedPlace(id));
         dispatch(setSelectedVenueList("clear"));
@@ -134,16 +146,21 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     }
 
     const handleVenueSelect = (venue) => {
+        form.setFieldValue("theatre_id", undefined);
         setIsLoading(true);
-        console.log("venue", venue);
-        form.resetFields(["screens"]);
-        setScreens([{ key: 0 }]);
         setVenueSelected(!!venue);
         setVenueId(venue);
         dispatch(setSelectedVenue(venue))
         dispatch(getSingleVenues(venue))
+        dispatch(setCleraAllData())
         setIsLoading(false);
     }
+
+    const handleTheaterSelect = (theater) => {
+        // Reset screens to just one screen (Screen 1) when theater is selected/re-selected
+        setScreens([{ key: 0 }]);
+        setActiveTab("0"); // Set active tab to the first screen (index 0)
+    };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -168,17 +185,17 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                 const data = {
                     ...values,
                     id: singleResponse?.id,
-
-                    venue_id: venueId
+                    venue_id: selectedVenue
                 }
                 const [screens] = data.screens
                 const updatedScreen = {
                     ...screens,
-                    venue_id: venueId,
+                    venue_id: selectedVenue,
                     id: singleResponse?.id,
+                    theatre_id: selectedTheaterId,
                 };
                 dispatch(setScreenEditData(updatedScreen))
-                const resultAction = await dispatch(validateVenue(venueId));
+                const resultAction = await dispatch(validateVenue(selectedVenue));
                 if (validateVenue.fulfilled.match(resultAction)) {
                     const response = resultAction.payload;
                     if (response.message === "warning") {
@@ -242,7 +259,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                 {mode === "ADD" ? (
                                     <span>Venue Selection</span>
                                 ) : (
-                                    <span>Selecte loaction</span>
+                                    <span>Selected loaction</span>
                                 )}
                                 <InfoCircleOutlined style={{ marginLeft: '8px', color: '#8c8c8c' }} />
                             </div>
@@ -268,22 +285,29 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                     onSelect={(value) => handleVenueSelect(value)}
                                 />
                             </Col>
+                            <Col span={24}>
+                                <TheaterListForm
+                                    form={form}
+                                    onSelect={handleTheaterSelect}
+                                />
+                            </Col>
                         </Row>
                     </Card>
                 </Col>
             </Row>
 
             <>
-                {!venueSelected && mode === 'ADD' && < Alert
-                    message="Venue Required"
-                    description="Please select a venue to configure screens."
-                    type="info"
-                    showIcon
-                />}
+                {!selectedTheaterId && mode === 'ADD' &&
+                    < Alert
+                        message="Theater Required"
+                        description="Please select a theater to configure screens."
+                        type="info"
+                        showIcon
+                    />}
             </>
 
             <div style={{ marginTop: 16 }}>
-                <Collapse in={!!form.getFieldValue('venue_id')}>
+                <Collapse in={!!form.getFieldValue('theatre_id')}>
                     <div>
                         <div style={{ textAlign: 'center', padding: '20px' }}>
                         </div>
@@ -302,7 +326,12 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                 <Card
                                     title={
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Title level={4}>Screen Information</Title>
+                                            <Title level={4}>
+                                                Screen Information{" "}
+                                                <Text type="secondary" strong>
+                                                    (Maximum <Text type="danger">{`${selectedTheaterScreenCapacity} Screens`}</Text>)
+                                                </Text>
+                                            </Title>
                                             {mode === 'ADD' && < Button
                                                 type="primary"
                                                 icon={<PlusOutlined />}
@@ -316,10 +345,10 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                     bordered
                                     className="screen-information-card"
                                 >
-                                    {!venueSelected && mode === 'ADD' ? (
+                                    {!selectedTheaterId && mode === 'ADD' ? (
                                         <Alert
-                                            message="Venue Required"
-                                            description="Please select a venue to configure screens."
+                                            message="Theater Required"
+                                            description="Please select a theater to configure screens."
                                             type="info"
                                             showIcon
                                         />

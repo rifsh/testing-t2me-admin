@@ -13,6 +13,7 @@ import {
 import { resetTicketSelection } from "store/slices/ticketSlice";
 import { useDispatch } from "react-redux";
 import { setSelectedScreenData } from "store/slices/screenSlice";
+import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
 
 const { Option } = Select;
 
@@ -27,6 +28,7 @@ function MovieSeatDetailForm({ form, mode }) {
     dispatch(getVenues({ place_id: id, is_indoor: true }));
     form.setFieldValue("venue_id", undefined);
     form.setFieldValue("screen_id", undefined);
+    form.setFieldValue("theatre_id", undefined);
     dispatch(resetTicketSelection());
     setSelectedFields({ selectedScreen: null, selectedVenue: null });
     dispatch(setSelectedPlace(id));
@@ -36,6 +38,7 @@ function MovieSeatDetailForm({ form, mode }) {
 
   const handleVenueSelect = (venue) => {
     form.setFieldValue("screen_id", undefined);
+    form.setFieldValue("theatre_id", undefined);
     setSelectedFields({ selectedScreen: null, selectedVenue: venue });
     dispatch(setSelectedVenue(venue));
     dispatch(getSingleVenues(venue));
@@ -44,6 +47,11 @@ function MovieSeatDetailForm({ form, mode }) {
   const handleScreenSelect = (screen) => {
     setSelectedFields({ ...selectedFields, selectedScreen: screen });
     dispatch(setSelectedScreenData(screen));
+  };
+
+  const handleTheaterSelect = (theater) => {
+    form.setFieldValue("screen_id", undefined);
+    setSelectedFields({ ...selectedFields, selectedTheater: theater });
   };
   return (
     <Row gutter={16}>
@@ -71,6 +79,14 @@ function MovieSeatDetailForm({ form, mode }) {
             </Col>
           </Row>
           <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <TheaterListForm
+                disabled={mode === "EDIT"}
+                form={form}
+                onSelect={handleTheaterSelect}
+
+              />
+            </Col>
             <Col xs={24} sm={12}>
               <ScreenListForm
                 form={form}

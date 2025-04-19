@@ -204,20 +204,20 @@ const superAdminDashBoardNavTree = [
                 submenu: [],
               },
               {
-                key: "movie.seat",
-                path: `${APP_PREFIX_PATH}/seat/movie/list`,
-                title: "sidenav.seat",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
                 key: "movie.screen",
                 path: `${APP_PREFIX_PATH}/screen/list`,
                 title: "sidenav.screen",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 isGroupTitle: false,
+              },
+              {
+                key: "movie.seat",
+                path: `${APP_PREFIX_PATH}/seat/movie/list`,
+                title: "sidenav.seat",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
               },
               {
                 key: "movie.cast",

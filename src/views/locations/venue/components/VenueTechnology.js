@@ -5,15 +5,13 @@ import { DesktopOutlined, SoundOutlined, SafetyOutlined, PlusOutlined, MinusCirc
 const VenueTechnology = ({ form }) => {
 
     useEffect(() => {
-        // if (venueData) {
-        //     form.setFieldsValue({
-        //         screen_tech: venueData.screen_tech || [],
-        //         audios: venueData.audio || [],
-        //         accessbility_feature: venueData.accessibility || []
-        //     });
-        // }
-        console.log("edited", form.getFieldsValue());
+        const currentValues = form.getFieldsValue();
 
+        form.setFieldsValue({
+            screen_tech: currentValues.screen_tech?.length ? currentValues.screen_tech : [{ name: '', description: '' }],
+            audios: currentValues.audios?.length ? currentValues.audios : [{ name: '', description: '' }],
+            accessbility_feature: currentValues.accessbility_feature?.length ? currentValues.accessbility_feature : [{ name: '', description: '' }],
+        });
     }, [form]);
 
     return (

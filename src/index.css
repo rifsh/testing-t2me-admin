@@ -46,6 +46,10 @@
     margin-bottom: 24px;
 }
 
+.theater-header-row td {
+    border-top: 1px solid #e5e5e5 !important;
+}
+
 @media (max-width: 768px) {
     .ant-descriptions-item>span {
         display: flex;

@@ -14,6 +14,7 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
     const [message, setMessage] = useState('');
     const dispatch = useDispatch();
     const { screenTechnologies, screenAudioTechnologies, screenFeatures, techLoading, availableSeats } = useSelector((state) => state.screen);
+    const { selectedTheaterId } = useSelector((state) => state.theater);
 
     const rules = {
         subject: [{ required: true, message: 'Please enter screen name' }],
@@ -23,12 +24,12 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
             {
                 validator: (_, value) => {
                     const currentScreens = form.getFieldValue('screens') || [];
-
                     const totalScreenCapacity = currentScreens.reduce((total, screen, screenIndex) => {
                         if (screenIndex === index) return total;
 
                         return total + (screen?.capacity || 0);
                     }, 0);
+                    console.log('capacitylog', totalScreenCapacity)
 
                     const proposedTotalCapacity = totalScreenCapacity + (value || 0);
 
@@ -59,16 +60,17 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
     });
 
     useEffect(() => {
-        if (venue_id) {
-            dispatch(fetchAllTickets({ venue_id: venue_id }));
-            dispatch(fetchScreenTech({ venue_id: venue_id }));
-            dispatch(fetchScreenAudio({ venue_id: venue_id }));
-            dispatch(fetchScreenFeatures({ venue_id: venue_id }));
+        if (selectedTheaterId) {
+            dispatch(fetchAllTickets({ theatre_id: selectedTheaterId }));
+            dispatch(fetchScreenTech({ theatre_id: selectedTheaterId }));
+            dispatch(fetchScreenAudio({ theatre_id: selectedTheaterId }));
+            dispatch(fetchScreenFeatures({ theatre_id: selectedTheaterId }));
             dispatch(setAvailableSeat(capacity));
         }
-    }, [venue_id, dispatch, capacity]);
+    }, [selectedTheaterId, dispatch, capacity]);
 
     useEffect(() => {
+        console.log("screenTechnologies", screenTechnologies)
         setDataStatus({
             technologiesEmpty: !techLoading && (!screenTechnologies || screenTechnologies.length === 0),
             audioEmpty: !techLoading && (!screenAudioTechnologies || screenAudioTechnologies.length === 0),
@@ -154,10 +156,17 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                     </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
-                    <Form.Item name={['screens', index, 'seat_structure_id']} label="Seat Structure">
+                    {/* <Form.Item name={['screens', index, 'seat_structure_id']} label="Seat Structure">
                         <Select placeholder="Select seat structure">
                             {screenOptions.seatStructures.map(({ value, label }) => (
                                 <Option key={value} value={value}>{label}</Option>
+                            ))}
+                        </Select>
+                    </Form.Item> */}
+                    <Form.Item name={['screens', index, 'time_slots']} label="Available Times">
+                        <Select mode="multiple" placeholder="Select available time slots">
+                            {screenOptions.availableTimes.map(({ value, label }) => (
+                                <Option key={value} value={label}>{label}</Option>
                             ))}
                         </Select>
                     </Form.Item>
@@ -190,13 +199,13 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                 index={index}
                 rules={rules} /> */}
 
-            <Form.Item name={['screens', index, 'time_slots']} label="Available Times">
+            {/* <Form.Item name={['screens', index, 'time_slots']} label="Available Times">
                 <Select mode="multiple" placeholder="Select available time slots">
                     {screenOptions.availableTimes.map(({ value, label }) => (
                         <Option key={value} value={label}>{label}</Option>
                     ))}
                 </Select>
-            </Form.Item>
+            </Form.Item> */}
 
             <Card title="Additional Settings" style={{ marginBottom: '20px' }}>
                 <Row gutter={16}>

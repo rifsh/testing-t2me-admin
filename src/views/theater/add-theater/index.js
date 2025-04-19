@@ -5,7 +5,7 @@ import { MODE } from 'constants/TextConstant'
 const Index = () => {
     return (
         <div>
-            <TheaterForm mode={MODE.ADD} />
+            <TheaterForm mode={MODE.ADD}/>
         </div>
     )
 }

@@ -2,12 +2,18 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import TheaterService from "services/theaterService";
 
 const initialState = {
+    activeTab: "Companies",
     loading: false,
+    editLoading: false,
     response: null,
+    statusEditresponse: null,
     editId: null,
+    selectedTheaterId: null,
+    selectedTheaterScreenCapacity: null,
     editData: [],
     singleResponse: null,
     submitMessage: null,
+    formType: null,
     editable_status: null,
     message: null,
     pagination: { size: 10, page: 1 },
@@ -30,6 +36,17 @@ export const fetchTheaters = createAsyncThunk(
     async (pageData, { rejectWithValue }) => {
         try {
             const response = await TheaterService.getTheater(pageData);
+            return response.data[0];
+        } catch (error) {
+            return rejectWithValue(error.message || "Failed to fetch screen features");
+        }
+    }
+);
+export const fetchDropdownTheaters = createAsyncThunk(
+    "cast/fetchDropdownTheaters",
+    async (pageData, { rejectWithValue }) => {
+        try {
+            const response = await TheaterService.getTheaterDropdownData(pageData);
             return response.data[0];
         } catch (error) {
             return rejectWithValue(error.message || "Failed to fetch screen features");
@@ -83,7 +100,17 @@ const theaterSlice = createSlice({
         setCleraAllData(state) {
             state.response = null;
             state.singleResponse = null;
-        }
+            state.selectedTheaterId = null
+        },
+        setActiveTab: (state, action) => {
+            state.activeTab = action.payload;
+        },
+        setSeectedTheater: (state, action) => {
+            state.selectedTheaterId = action.payload;
+        },
+        setScreenCapacity: (state, action) => {
+            state.selectedTheaterScreenCapacity = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -95,8 +122,9 @@ const theaterSlice = createSlice({
                 state.response = action.payload.data;
                 state.submitMessage = action.payload.status.message;
             })
-            .addCase(createTheater.rejected, (state) => {
+            .addCase(createTheater.rejected, (state, action) => {
                 state.loading = false;
+                state.error = action.payload.server_error;
             })
             .addCase(fetchTheaters.pending, (state) => {
                 state.loading = true;
@@ -107,6 +135,18 @@ const theaterSlice = createSlice({
                 state.pagination = action.payload;
             })
             .addCase(fetchTheaters.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(fetchDropdownTheaters.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchDropdownTheaters.fulfilled, (state, action) => {
+                state.loading = false;
+                state.response = action.payload;
+                state.pagination = action.payload;
+            })
+            .addCase(fetchDropdownTheaters.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
@@ -136,23 +176,23 @@ const theaterSlice = createSlice({
                 state.error = action.payload;
             })
             .addCase(editTheaterStatus.pending, (state) => {
-                state.loading = true;
+                state.editLoading = true;
             })
             .addCase(editTheaterStatus.fulfilled, (state, { payload }) => {
-                state.loading = false;
-                state.response = payload.data;
+                state.editLoading = false;
+                state.statusEditresponse = payload.data;
                 if (payload.status) {
                     state.message = payload.status.message;
                     state.editable_status = payload.status?.editable_status;
                 }
             })
             .addCase(editTheaterStatus.rejected, (state, action) => {
-                state.loading = false;
+                state.editLoading = false;
                 state.error = action.payload;
             })
     },
 });
 
-export const { setTheaterEditData, setTheaterEditId, setCleraAllData } = theaterSlice.actions;
+export const { setTheaterEditData, setTheaterEditId, setCleraAllData, setActiveTab, setSeectedTheater, setScreenCapacity } = theaterSlice.actions;
 
 export default theaterSlice.reducer;

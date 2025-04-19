@@ -31,3 +31,7 @@ export const MODE = {
   ADD: "ADD",
   EDIT: "EDIT"
 }
+export const FORM_TYPE = {
+  THEATER: "theater",
+  THEATER_COMPANY: "company",
+}

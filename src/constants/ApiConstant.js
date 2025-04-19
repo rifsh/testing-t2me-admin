@@ -104,28 +104,43 @@ export const ApiConstant = {
     "/api/v1/events/secured/organizer_event_secondary_update",
 
   // THEATER API ENDPOINTS
-  ADD_THEATER_URL: "/api/v1/moies/secured/theatre/create",
-  EDIT_THEATER_URL: "/api/v1/moies/secured/theatre/edit",
-  EDIT_THEATER_STATUS_URL: "/api/v1/moies/secured/theatre/edit_status",
-  GET_THEATER_URL: "/api/v1/moies/secured/theatre/all",
-  GET_THEATERBYID_URL: "/api/v1/moies/secured/theatre/single",
+  ADD_THEATER_URL: "/api/v1/movies/secured/theatre/create",
+  EDIT_THEATER_URL: "/api/v1/movies/secured/theatre/edit",
+  EDIT_THEATER_STATUS_URL: "/api/v1/movies/secured/theatre/edit/status",
+  GET_THEATER_URL: "/api/v1/movies/secured/theatre/by_venue",
+  GET_THEATER_DROPDOWN_URL: "/api/v1/movies/secured/theatre/all",
+  GET_THEATERBYID_URL: "/api/v1/movies/secured/theatre/single",
+
+  // THEATER_COMPANY API ENDPOINTS
+  ADD_THEATER_COMPANY_URL: "/api/v1/movies/secured/theatre_company/create",
+  EDIT_THEATER_COMPANY_URL: "/api/v1/movies/secured/theatre_company/edit",
+  EDIT_THEATER_COMPANY_STATUS_URL: "/api/v1/movies/secured/theatre_company/status",
+  GET_THEATER_COMPANY_URL: "/api/v1/movies/secured/theatre_company/all",
+  GET_THEATER_COMPANY_BYID_URL: "/api/v1/movies/secured/theatre_company/single",
 
   //SCREEN API ENDPOINTS
-  ADD_SCREEN_URL: "/api/v1/moies/secured/screens/creation",
-  EDIT_SCREEN_URL: "/api/v1/moies/secured/screens/edit",
-  EDIT_SCREEN_STATUS_URL: "/api/v1/moies/secured/screens/edit_status",
-  GET_ALL_SCREEN_URL: "/api/v1/moies/secured/screens",
-  GET_SCREEN_ById_URL: "/api/v1/moies/secured/screens/single",
-  FETCH_SCREEN_TECH_URL: "/api/v1/moies/secured/screens/tech",
-  FETCH_SCREEN_AUDIO_URL: "/api/v1/moies/secured/screens/audio",
-  FETCH_SCREEN_FEATURE_URL: "/api/v1/moies/secured/screens/feature",
+  ADD_SCREEN_URL: "/api/v1/movies/secured/screens/creation",
+  EDIT_SCREEN_URL: "/api/v1/movies/secured/screens/edit",
+  EDIT_SCREEN_STATUS_URL: "/api/v1/movies/secured/screens/edit_status",
+  GET_ALL_SCREEN_URL: "/api/v1/movies/secured/screens",
+  GET_SCREEN_ById_URL: "/api/v1/movies/secured/screens/single",
+  FETCH_SCREEN_TECH_URL: "/api/v1/movies/secured/screens/tech",
+  FETCH_SCREEN_AUDIO_URL: "/api/v1/movies/secured/screens/audio",
+  FETCH_SCREEN_FEATURE_URL: "/api/v1/movies/secured/screens/feature",
+
+  // MOVIE_API_ENDPOINTS
+  ADD_MOVIE_URL: "/api/v1/movies/secured/movie/create",
+  GET_MOVIE_URL: "/api/v1/movies/secured/movie/list",
+  GET_MOVIEBYID_URL: "/api/v1/movies/secured/movie/single",
+  EDIT_MOVIE_STATUS_URL: "/api/v1/movies/secured/movie/edit_status",
+  EDIT_MOVIE_URL: "/api/v1/movies/secured/movie/edit",
 
   //PERSONALITY_API_ENDPOINTS
-  ADD_PERSONALITY_URL: "/api/v1/moies/secured/personality",
-  GET_PERSONALITY_URL: "/api/v1/moies/secured/personality",
-  GET_PERSONALITYBYID_URL: "/api/v1/moies/secured/personality/single",
-  EDIT_PERSONALITY_STATUS_URL: "/api/v1/moies/secured/personality/edit_status",
-  EDIT_PERSONALITY_URL: "/api/v1/moies/secured/personality/edit",
+  ADD_PERSONALITY_URL: "/api/v1/movies/secured/personality",
+  GET_PERSONALITY_URL: "/api/v1/movies/secured/personality",
+  GET_PERSONALITYBYID_URL: "/api/v1/movies/secured/personality/single",
+  EDIT_PERSONALITY_STATUS_URL: "/api/v1/movies/secured/personality/edit_status",
+  EDIT_PERSONALITY_URL: "/api/v1/movies/secured/personality/edit",
 
   // OMDB API ENDPOINTS
   OMDB_API_URL: "/api/v1/app_management/public/omdb_data_search",

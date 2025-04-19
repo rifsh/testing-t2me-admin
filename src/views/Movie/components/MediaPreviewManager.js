@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Upload,
     Button,
@@ -25,13 +25,16 @@ import {
     PlayCircleOutlined
 } from '@ant-design/icons';
 import TextEditor from 'components/util-components/FormItems/TextEditor';
+import { useSelector } from 'react-redux';
+import { MODE } from 'constants/TextConstant';
+import Utils from 'utils';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { Dragger } = Upload;
 const { TabPane } = Tabs;
 
-const MovieMediaUploader = ({ form }) => {
+const MovieMediaUploader = ({ form, mode, initialMedia = [], initialThumbnail = [] }) => {
     const [previewVisible, setPreviewVisible] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
     const [previewType, setPreviewType] = useState('youtube');
@@ -41,16 +44,8 @@ const MovieMediaUploader = ({ form }) => {
     const [currentYoutubeLink, setCurrentYoutubeLink] = useState('');
     const [youtubeLinkError, setYoutubeLinkError] = useState('');
     const [activeTab, setActiveTab] = useState('youtube');
-    const [mediaItems, setMediaItems] = useState([]);
-
-    const mediaTypes = [
-        { label: 'English', value: 'English' },
-        { label: 'Malayalam', value: 'Malayalam' },
-        { label: 'Tamil', value: 'Tamil' },
-        { label: 'Hindi', value: 'Hindi' },
-        { label: 'Kannada', value: 'Kannada' },
-        { label: 'Telungu', value: 'Telungu' }
-    ];
+    const { movieSingleResponse } = useSelector((state) => state.movie);
+    const initializedRef = useRef(false);
 
     const validateYoutubeUrl = (url) => {
         const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})$/;
@@ -66,9 +61,39 @@ const MovieMediaUploader = ({ form }) => {
         return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     };
 
-    // Sync mediaItems with the parent form whenever they change
+    const [mediaItems, setMediaItems] = useState(() => {
+        // Initialize from props or existing response
+        if (mode === MODE.EDIT && movieSingleResponse?.movie_details?.[0]?.media_items?.length > 0) {
+            return movieSingleResponse.movie_details[0].media_items.map(item => ({
+                id: item.id || Date.now().toString(),
+                type: 'youtube',
+                videoId: getYoutubeVideoId(item.url),
+                title: item.title || 'YouTube Video',
+                mediaType: item.mediaLanguage || 'English',
+                url: item.url,
+                thumbnail: Utils.getThumbnail(item.url)
+            }));
+        }
+        return initialMedia;
+    });
+    const [thumbnail, setThumbnail] = useState(initialThumbnail);
+
+
+    const mediaTypes = [
+        { label: 'English', value: 'English' },
+        { label: 'Malayalam', value: 'Malayalam' },
+        { label: 'Tamil', value: 'Tamil' },
+        { label: 'Hindi', value: 'Hindi' },
+        { label: 'Kannada', value: 'Kannada' },
+        { label: 'Telungu', value: 'Telungu' }
+    ];
+
     useEffect(() => {
-        // Format media items for form submission
+        if (!initializedRef.current && initialMedia.length > 0) {
+            setMediaItems(initialMedia);
+            initializedRef.current = true;
+        }
+
         const formattedMediaItems = mediaItems.map(item => ({
             type: item.type,
             url: item.url,
@@ -78,17 +103,57 @@ const MovieMediaUploader = ({ form }) => {
             ...(item.type === 'file' && { file: item.file })
         }));
 
-        // Set the media items in the form
+        form.setFieldsValue({
+            mediaItems: formattedMediaItems,
+        });
+    }, [mediaItems, thumbnail, form, initialMedia]);
+
+    // Initialize YouTube links from mediaItems
+    useEffect(() => {
+        const youtubeItems = mediaItems.filter(item => item.type === 'youtube');
+        setYoutubeLinks(youtubeItems);
+    }, [mediaItems]);
+
+    useEffect(() => {
+        if (mode === MODE.EDIT && movieSingleResponse?.movie_details?.[0]?.media_items?.length > 0) {
+            const existingMediaItems = movieSingleResponse.movie_details[0].media_items;
+
+            const formattedItems = existingMediaItems.map(item => {
+                const videoId = getYoutubeVideoId(item.url);
+                return {
+                    id: item.id || Date.now().toString(),
+                    type: 'youtube',
+                    videoId,
+                    title: item.title || 'YouTube Video',
+                    mediaType: item.mediaLanguage || item.mediaType || 'English',
+                    url: item.url,
+                    thumbnail: Utils.getThumbnail(item.url)
+                };
+            });
+
+            setMediaItems(formattedItems);
+
+            const youtubeItems = formattedItems.filter(item => item.type === 'youtube');
+            if (youtubeItems.length > 0) {
+                setYoutubeLinks(youtubeItems);
+            }
+
+        }
+    }, [mode, movieSingleResponse]);
+
+    useEffect(() => {
+        const formattedMediaItems = mediaItems.map(item => ({
+            type: item.type,
+            url: item.url,
+            title: item.title,
+            mediaLanguage: item.mediaType,
+            ...(item.type === 'youtube' && { videoId: item.videoId }),
+            ...(item.type === 'file' && { file: item.file })
+        }));
+
         form.setFieldsValue({
             mediaItems: formattedMediaItems
         });
-
-        // Add a hidden form item if it doesn't exist in the form already
-        if (!form.getFieldInstance('mediaItems')) {
-            // This is just for debugging - you might need to adjust your parent form
-            console.log('Warning: mediaItems field not found in parent form');
-        }
-
     }, [mediaItems, form]);
 
     const addYoutubeLink = () => {
@@ -228,203 +293,205 @@ const MovieMediaUploader = ({ form }) => {
     };
 
     return (
-        <Card title={<Title level={4}>Add Movie Media</Title>}>
-            {/* Add hidden Form.Item to ensure the field is registered with the form */}
-            <Form.Item name="mediaItems" hidden={true}>
-                <Input />
-            </Form.Item>
+        <Form form={form} layout="vertical">
+            <Card title={<Title level={4}>Add Movie Media</Title>}>
+                {/* Add hidden Form.Item to ensure the field is registered with the form */}
+                <Form.Item name="mediaItems" hidden={true}>
+                    <Input />
+                </Form.Item>
 
-            <Tabs defaultActiveKey="youtube" onChange={setActiveTab}>
-                <div className="youtube-link-input" style={{ marginBottom: 24 }}>
-                    <Row gutter={[16, 16]} align="middle">
-                        <Col xs={24} md={16}>
-                            <Input
-                                placeholder="Enter YouTube video URL (e.g., https://www.youtube.com/watch?v=abcdef123456)"
-                                value={currentYoutubeLink}
-                                onChange={e => {
-                                    setCurrentYoutubeLink(e.target.value);
-                                    setYoutubeLinkError('');
-                                }}
-                                prefix={<YoutubeOutlined style={{ color: '#ff0000' }} />}
-                                status={youtubeLinkError ? 'error' : ''}
-                            />
-                            {youtubeLinkError && <Text type="danger">{youtubeLinkError}</Text>}
-                        </Col>
-                        <Col xs={24} md={8}>
-                            <Button
-                                type="primary"
-                                onClick={addYoutubeLink}
-                                icon={<PlusOutlined />}
-                                block
-                            >
-                                Add YouTube Video
-                            </Button>
-                        </Col>
-                    </Row>
-                </div>
-            </Tabs>
-
-            <Divider />
-
-            <div style={{ marginBottom: 24 }}>
-                <Title level={5}>All Media Items ({mediaItems.length})</Title>
-                {mediaItems.length > 0 ? (
-                    <Card>
-                        <Row gutter={[16, 16]}>
-                            {mediaItems.map((item, index) => {
-                                const isYoutube = item.type === 'youtube';
-                                const thumbnail = isYoutube
-                                    ? item.thumbnail
-                                    : (thumbnailUrls[item.id] || (item.file?.originFileObj && URL.createObjectURL(item.file.originFileObj)));
-
-                                return (
-                                    <Col key={`${item.type}-${item.id}`} xs={24} sm={12} md={8} lg={6}>
-                                        <Card
-                                            size="small"
-                                            cover={
-                                                <div style={{ position: 'relative', height: 120, overflow: 'hidden' }}>
-                                                    {thumbnail ? (
-                                                        <img
-                                                            src={thumbnail}
-                                                            alt={item.title}
-                                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                        />
-                                                    ) : (
-                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: '#e6e6e6' }}>
-                                                            {isYoutube ? <YoutubeOutlined style={{ fontSize: 32, color: '#ff0000' }} /> : <FileImageOutlined style={{ fontSize: 32, color: '#999' }} />}
-                                                        </div>
-                                                    )}
-                                                    <div
-                                                        style={{
-                                                            position: 'absolute',
-                                                            top: 8,
-                                                            right: 8,
-                                                            background: 'rgba(0,0,0,0.6)',
-                                                            color: 'white',
-                                                            padding: '2px 8px',
-                                                            borderRadius: 4,
-                                                            fontSize: 12
-                                                        }}
-                                                    >
-                                                        {mediaTypes.find(type => type.value === item.mediaType)?.label || item.mediaType}
-                                                    </div>
-                                                    <Space
-                                                        style={{
-                                                            position: 'absolute',
-                                                            bottom: 0,
-                                                            left: 0,
-                                                            right: 0,
-                                                            padding: '8px',
-                                                            background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
-                                                            display: 'flex',
-                                                            justifyContent: 'space-between'
-                                                        }}
-                                                    >
-                                                        <Select
-                                                            showSearch
-                                                            size="small"
-                                                            value={item.mediaType}
-                                                            style={{ width: 100 }}
-                                                            onChange={(value) => updateMediaItemType(item.id, item.type, value)}
-                                                        >
-                                                            {mediaTypes.map(type => (
-                                                                <Option key={type.value} value={type.value}>
-                                                                    {type.label}
-                                                                </Option>
-                                                            ))}
-                                                        </Select>
-                                                    </Space>
-                                                </div>
-                                            }
-                                        >
-                                            <Card.Meta
-                                                title={
-                                                    <Input
-                                                        size="small"
-                                                        value={item.title}
-                                                        onChange={(e) => updateMediaItemTitle(item.id, item.type, e.target.value)}
-                                                        style={{ marginBottom: 8 }}
-                                                    />
-                                                }
-                                                description={
-                                                    <Row gutter={8} align="middle">
-                                                        <Col>{isYoutube ? 'YouTube' : 'File Upload'}</Col>
-                                                        <Col flex="auto"></Col>
-                                                        <Col>
-                                                            <Button
-                                                                type="text"
-                                                                size="small"
-                                                                icon={<PlayCircleOutlined />}
-                                                                onClick={() => showPreview(index, item.type)}
-                                                            />
-                                                        </Col>
-                                                        <Col>
-                                                            <Button
-                                                                type="text"
-                                                                size="small"
-                                                                icon={<DeleteOutlined style={{ color: 'red' }} />}
-                                                                onClick={() => isYoutube ?
-                                                                    removeYoutubeLink(item.id) :
-                                                                    removeFile({ uid: item.id })
-                                                                }
-                                                            />
-                                                        </Col>
-                                                    </Row>
-                                                }
-                                            />
-                                        </Card>
-                                    </Col>
-                                );
-                            })}
+                <Tabs defaultActiveKey="youtube" onChange={setActiveTab}>
+                    <div className="youtube-link-input" style={{ marginBottom: 24 }}>
+                        <Row gutter={[16, 16]} align="middle">
+                            <Col xs={24} md={16}>
+                                <Input
+                                    placeholder="Enter YouTube video URL (e.g., https://www.youtube.com/watch?v=abcdef123456)"
+                                    value={currentYoutubeLink}
+                                    onChange={e => {
+                                        setCurrentYoutubeLink(e.target.value);
+                                        setYoutubeLinkError('');
+                                    }}
+                                    prefix={<YoutubeOutlined style={{ color: '#ff0000' }} />}
+                                    status={youtubeLinkError ? 'error' : ''}
+                                />
+                                {youtubeLinkError && <Text type="danger">{youtubeLinkError}</Text>}
+                            </Col>
+                            <Col xs={24} md={8}>
+                                <Button
+                                    type="primary"
+                                    onClick={addYoutubeLink}
+                                    icon={<PlusOutlined />}
+                                    block
+                                >
+                                    Add YouTube Video
+                                </Button>
+                            </Col>
                         </Row>
-                    </Card>
-                ) : (
-                    <Empty description="No media items added yet" />
-                )}
-            </div>
-
-            <Modal
-                title={
-                    previewType === 'youtube'
-                        ? 'YouTube Video Preview'
-                        : `Media Preview (${previewIndex + 1} of ${mediaItems.length})`
-                }
-                visible={previewVisible}
-                onCancel={() => setPreviewVisible(false)}
-                footer={
-                    <Space>
-                        <Button
-                            disabled={previewIndex === 0}
-                            onClick={() => setPreviewIndex(prev => prev - 1)}
-                        >
-                            Previous
-                        </Button>
-                        <Button
-                            disabled={previewIndex === mediaItems.length - 1}
-                            onClick={() => setPreviewIndex(prev => prev + 1)}
-                        >
-                            Next
-                        </Button>
-                        <Button type="primary" onClick={() => setPreviewVisible(false)}>
-                            Close
-                        </Button>
-                    </Space>
-                }
-                width="90%"
-                style={{ maxWidth: 900 }}
-                closeIcon={<CloseOutlined />}
-            >
-                <div style={{ textAlign: 'center', padding: 16 }}>
-                    {renderPreviewContent()}
-
-                    <div style={{ marginTop: 16 }}>
-                        <Text strong>
-                            {mediaItems[previewIndex]?.title || 'Media Preview'}
-                        </Text>
                     </div>
+                </Tabs>
+
+                <Divider />
+
+                <div style={{ marginBottom: 24 }}>
+                    <Title level={5}>All Media Items ({mediaItems.length})</Title>
+                    {mediaItems.length > 0 ? (
+                        <Card>
+                            <Row gutter={[16, 16]}>
+                                {mediaItems.map((item, index) => {
+                                    const isYoutube = item.type === 'youtube';
+                                    const thumbnail = isYoutube
+                                        ? item.thumbnail
+                                        : (thumbnailUrls[item.id] || (item.file?.originFileObj && URL.createObjectURL(item.file.originFileObj)));
+
+                                    return (
+                                        <Col key={`${item.type}-${item.id}`} xs={24} sm={12} md={8} lg={6}>
+                                            <Card
+                                                size="small"
+                                                cover={
+                                                    <div style={{ position: 'relative', height: 120, overflow: 'hidden' }}>
+                                                        {thumbnail ? (
+                                                            <img
+                                                                src={thumbnail}
+                                                                alt={item.title}
+                                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                            />
+                                                        ) : (
+                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: '#e6e6e6' }}>
+                                                                {isYoutube ? <YoutubeOutlined style={{ fontSize: 32, color: '#ff0000' }} /> : <FileImageOutlined style={{ fontSize: 32, color: '#999' }} />}
+                                                            </div>
+                                                        )}
+                                                        <div
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: 8,
+                                                                right: 8,
+                                                                background: 'rgba(0,0,0,0.6)',
+                                                                color: 'white',
+                                                                padding: '2px 8px',
+                                                                borderRadius: 4,
+                                                                fontSize: 12
+                                                            }}
+                                                        >
+                                                            {mediaTypes.find(type => type.value === item.mediaType)?.label || item.mediaType}
+                                                        </div>
+                                                        <Space
+                                                            style={{
+                                                                position: 'absolute',
+                                                                bottom: 0,
+                                                                left: 0,
+                                                                right: 0,
+                                                                padding: '8px',
+                                                                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                                                                display: 'flex',
+                                                                justifyContent: 'space-between'
+                                                            }}
+                                                        >
+                                                            <Select
+                                                                showSearch
+                                                                size="small"
+                                                                value={item.mediaType}
+                                                                style={{ width: 100 }}
+                                                                onChange={(value) => updateMediaItemType(item.id, item.type, value)}
+                                                            >
+                                                                {mediaTypes.map(type => (
+                                                                    <Option key={type.value} value={type.value}>
+                                                                        {type.label}
+                                                                    </Option>
+                                                                ))}
+                                                            </Select>
+                                                        </Space>
+                                                    </div>
+                                                }
+                                            >
+                                                <Card.Meta
+                                                    title={
+                                                        <Input
+                                                            size="small"
+                                                            value={item.title}
+                                                            onChange={(e) => updateMediaItemTitle(item.id, item.type, e.target.value)}
+                                                            style={{ marginBottom: 8 }}
+                                                        />
+                                                    }
+                                                    description={
+                                                        <Row gutter={8} align="middle">
+                                                            <Col>{isYoutube ? 'YouTube' : 'File Upload'}</Col>
+                                                            <Col flex="auto"></Col>
+                                                            <Col>
+                                                                <Button
+                                                                    type="text"
+                                                                    size="small"
+                                                                    icon={<PlayCircleOutlined />}
+                                                                    onClick={() => showPreview(index, item.type)}
+                                                                />
+                                                            </Col>
+                                                            <Col>
+                                                                <Button
+                                                                    type="text"
+                                                                    size="small"
+                                                                    icon={<DeleteOutlined style={{ color: 'red' }} />}
+                                                                    onClick={() => isYoutube ?
+                                                                        removeYoutubeLink(item.id) :
+                                                                        removeFile({ uid: item.id })
+                                                                    }
+                                                                />
+                                                            </Col>
+                                                        </Row>
+                                                    }
+                                                />
+                                            </Card>
+                                        </Col>
+                                    );
+                                })}
+                            </Row>
+                        </Card>
+                    ) : (
+                        <Empty description="No media items added yet" />
+                    )}
                 </div>
-            </Modal>
-        </Card>
+
+                <Modal
+                    title={
+                        previewType === 'youtube'
+                            ? 'YouTube Video Preview'
+                            : `Media Preview (${previewIndex + 1} of ${mediaItems.length})`
+                    }
+                    visible={previewVisible}
+                    onCancel={() => setPreviewVisible(false)}
+                    footer={
+                        <Space>
+                            <Button
+                                disabled={previewIndex === 0}
+                                onClick={() => setPreviewIndex(prev => prev - 1)}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                disabled={previewIndex === mediaItems.length - 1}
+                                onClick={() => setPreviewIndex(prev => prev + 1)}
+                            >
+                                Next
+                            </Button>
+                            <Button type="primary" onClick={() => setPreviewVisible(false)}>
+                                Close
+                            </Button>
+                        </Space>
+                    }
+                    width="90%"
+                    style={{ maxWidth: 900 }}
+                    closeIcon={<CloseOutlined />}
+                >
+                    <div style={{ textAlign: 'center', padding: 16 }}>
+                        {renderPreviewContent()}
+
+                        <div style={{ marginTop: 16 }}>
+                            <Text strong>
+                                {mediaItems[previewIndex]?.title || 'Media Preview'}
+                            </Text>
+                        </div>
+                    </div>
+                </Modal>
+            </Card>
+        </Form>
     );
 };
 
