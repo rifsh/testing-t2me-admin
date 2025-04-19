@@ -93,9 +93,11 @@ const EventsList = () => {
     dispatch(setSelectedItem(data));
     dispatch(setStatusDialogVisible(true));
   };
+  
   const handlePagination = (page, size) => {
-    dispatch(fetchAllEvent({ page: page, size: size }));
+      dispatch(fetchAllEvent({ page: page, size: size, event_type: EVENT_TYPES.event }));
   };
+
   const handleModalSubmit = async () => {
     dispatch(setModalLoading(true));
     navigate(`${APP_PREFIX_PATH}/event/edit/${editItemId}`);
