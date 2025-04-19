@@ -93,9 +93,11 @@ const EventsList = () => {
     dispatch(setSelectedItem(data));
     dispatch(setStatusDialogVisible(true));
   };
+
   const handlePagination = (page, size) => {
-    dispatch(fetchAllEvent({ page: page, size: size }));
+    dispatch(fetchAllEvent({ page: page, size: size, event_type: EVENT_TYPES.event }));
   };
+
   const handleModalSubmit = async () => {
     dispatch(setModalLoading(true));
     navigate(`${APP_PREFIX_PATH}/event/edit/${editItemId}`);
@@ -189,6 +191,7 @@ const EventsList = () => {
           page: 1,
           size: 10,
           active: activeStatus,
+          event_type: EVENT_TYPES.event
         })
       );
     }
@@ -199,7 +202,7 @@ const EventsList = () => {
       console.log("is empty search");
 
       dispatch(
-        fetchAllEvent({ search: null, page: 1, size: 10, active: activeStatus })
+        fetchAllEvent({ search: null, page: 1, size: 10, active: activeStatus, event_type: EVENT_TYPES.event })
       );
     }
   };
@@ -207,7 +210,7 @@ const EventsList = () => {
   const handleShowStatus = (status) => {
     setactiveStatus(status);
     dispatch(
-      fetchAllEvent({ search: searchTerm, page: 1, size: 10, active: status })
+      fetchAllEvent({ search: searchTerm, page: 1, size: 10, active: status, event_type: EVENT_TYPES.event })
     );
     // dispatch(filterEvent({ searchTerm: null, status }));
   };
