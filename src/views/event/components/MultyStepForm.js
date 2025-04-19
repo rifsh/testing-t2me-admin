@@ -57,6 +57,7 @@ import { getCurrentUser } from "configs/UserAccessConfig";
 import { getEventFormSteps } from "configs/UserAccessConfig";
 import getEventFormItems from "configs/UserAccessConfig";
 import { getSingleLeadEvents, addLeadEvent } from "store/slices/leadEventSlice";
+import { EVENT_TYPES } from "constants/PageConstants";
 
 const MultyStepEventForm = ({ eventId, mode }) => {
   const {
@@ -505,7 +506,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           event_qna: !submitData.event_qna ? [] : submitData.event_qna,
           max_tickets: parseInt(submitData.max_tickets || "0", 10),
           event_type_id:
-            eventType.find((item) => item.name === "General")?.id || 1,
+            eventType.find((item) => item.name === EVENT_TYPES.event)?.id || 1,
         };
         const resultAction = await dispatch(
           validateOfferCoupon({
