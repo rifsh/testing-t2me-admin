@@ -1,12 +1,6 @@
+
+
 import React from "react";
-import {
-  Card,
-  Row,
-  Col,
-  Table,
-  Badge,
-  ProgressBar,
-} from "react-bootstrap";
 import { Bar, Pie, Line } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 Chart.register(...registerables);
@@ -80,7 +74,7 @@ const OrganizerReports = () => {
     },
   ];
 
-  // Calculate statistics
+  // Calculate statistics (same as before)
   const totalStats = {
     scheduled: scheduledEvents.length,
     upcoming: scheduledEvents.filter((e) => e.status === "Upcoming").length,
@@ -103,29 +97,41 @@ const OrganizerReports = () => {
   };
 
   const getStatusBadge = (status) => {
+    const baseClasses = "px-3 py-1 rounded-md text-sm font-medium";
     switch (status) {
       case "Upcoming":
         return (
-          <Badge className="p-3 bg-primary text-white rounded-md">
+          <span className={`${baseClasses} bg-blue-100 text-blue-800`}>
             Upcoming
-          </Badge>
+          </span>
         );
       case "Completed":
-        return <Badge className="p-3 bg-success rounded-md">Completed</Badge>;
+        return (
+          <span className={`${baseClasses} bg-green-100 text-green-800`}>
+            Completed
+          </span>
+        );
       case "Cancelled":
-        return <Badge className="p-3 bg-danger rounded-md">Cancelled</Badge>;
+        return (
+          <span className={`${baseClasses} bg-red-100 text-red-800`}>
+            Cancelled
+          </span>
+        );
       default:
-        return <Badge className="p-3 bg-warning rounded-md">Unknown</Badge>;
+        return (
+          <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>
+            Unknown
+          </span>
+        );
     }
   };
 
-  // Format date
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  // Chart data
+  // Chart data (same as before)
   const statusChartData = {
     labels: ["Upcoming", "Completed", "Cancelled"],
     datasets: [
@@ -167,225 +173,269 @@ const OrganizerReports = () => {
   };
 
   return (
-    <div className="container-fluid py-4">
-      <h2 className="mb-4 fw-bold text-primary">Organizer Dashboard</h2>
+    <div className="container mx-auto px-4 py-6">
+      <h2 className="text-2xl font-bold text-blue-600 mb-6">
+        Organizer Dashboard
+      </h2>
 
-      {/* All Events in Separate Rows */}
-      <div className="shadow-sm border-0 mb-4 w-full">
-        <div className="table-responsive">
-          <Table hover className="mb-0 w-100">
-            <thead>
-              <tr className="text-nowrap">
-                <th className="ps-4">Image</th>
-                <th>Event</th>
-
-                <th>Dates</th>
-                <th>Attendance</th>
-                <th>Revenue</th>
-                <th>Status</th>
-                {/* <th className="pe-4">Actions</th> */}
+      {/* Events Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Image
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Event
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Dates
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Attendance
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Revenue
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-white divide-y divide-gray-200">
               {scheduledEvents.map((event) => (
-                <tr
-                  key={event.id}
-                  className="border py-4 align-middle text-center"
-                >
-                  <td>
-                    <div className="d-flex justify-content-center align-items-center">
+                <tr key={event.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center justify-center">
                       <img
                         src={event.image}
                         alt={event.title}
-                        className="rounded-circle me-3"
-                        style={{
-                          width: "60px",
-                          height: "60px",
-                          objectFit: "cover",
-                          border: "2px solid #f8f9fa",
-                        }}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-100"
                       />
                     </div>
                   </td>
-
-                  <td>
-                    <div>
-                      <div className="fw-bold">{event.title}</div>
-                      <small className="text-muted">
-                        Updated:{" "}
-                        {new Date(event.updatedAt).toLocaleDateString()}
-                      </small>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">
+                      {event.title}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Updated: {new Date(event.updatedAt).toLocaleDateString()}
                     </div>
                   </td>
-
-                  <td>
-                    <div>
-                      {formatDate(event.startDate)} -{" "}
-                      {formatDate(event.endDate)}
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(event.startDate)} - {formatDate(event.endDate)}
                   </td>
-
-                  <td>
-                    <div className="d-flex align-items-center justify-content-center ">
-                      <div className="me-2">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="mr-2 text-sm text-gray-500">
                         {event.attendees}/{event.capacity}
                       </div>
-                      <ProgressBar
-                        now={(event.attendees / event.capacity) * 100}
-                        style={{ width: "80px", height: "6px" }}
-                        variant={
-                          event.status === "Cancelled" ? "danger" : "primary"
-                        }
-                      />
+                      <div className="w-20 bg-gray-200 rounded-full h-1.5">
+                        <div
+                          className={`h-1.5 rounded-full ${
+                            event.status === "Cancelled"
+                              ? "bg-red-500"
+                              : "bg-blue-500"
+                          }`}
+                          style={{
+                            width: `${
+                              (event.attendees / event.capacity) * 100
+                            }%`,
+                          }}
+                        ></div>
+                      </div>
                     </div>
                   </td>
-
-                  <td className="fw-bold">${event.revenue.toLocaleString()}</td>
-
-                  <td>{getStatusBadge(event.status)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
+                    ${event.revenue.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getStatusBadge(event.status)}
+                  </td>
                 </tr>
               ))}
             </tbody>
-          </Table>
+          </table>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <Row className="mb-4 g-4">
-        <Col xl={3} lg={6} md={6}>
-          <Card className="shadow-sm border-0 h-100">
-            <Card.Body className="text-center">
-              <div className="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
-                <i className="bi bi-calendar-event fs-3 text-primary"></i>
-              </div>
-              <Card.Title className="text-muted mb-1">Total Events</Card.Title>
-              <Card.Text className="fs-2 fw-bold">
-                {totalStats.scheduled}
-              </Card.Text>
-              <small className="text-muted">Last updated today</small>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col xl={3} lg={6} md={6}>
-          <Card className="shadow-sm border-0 h-100">
-            <Card.Body className="text-center">
-              <div className="bg-info bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
-                <i className="bi bi-people fs-3 text-info"></i>
-              </div>
-              <Card.Title className="text-muted mb-1">
-                Total Attendees
-              </Card.Title>
-              <Card.Text className="fs-2 fw-bold">
-                {totalStats.totalAttendees}
-              </Card.Text>
-              <small className="text-muted">Across all events</small>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col xl={3} lg={6} md={6}>
-          <Card className="shadow-sm border-0 h-100">
-            <Card.Body className="text-center">
-              <div className="bg-success bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
-                <i className="bi bi-currency-dollar fs-3 text-success"></i>
-              </div>
-              <Card.Title className="text-muted mb-1">Total Revenue</Card.Title>
-              <Card.Text className="fs-2 fw-bold">
-                ${totalStats.totalRevenue.toLocaleString()}
-              </Card.Text>
-              <small className="text-muted">From ticket sales</small>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col xl={3} lg={6} md={6}>
-          <Card className="shadow-sm border-0 h-100">
-            <Card.Body className="text-center">
-              <div className="bg-warning bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
-                <i className="bi bi-graph-up fs-3 text-warning"></i>
-              </div>
-              <Card.Title className="text-muted mb-1">
-                Avg Attendance
-              </Card.Title>
-              <Card.Text className="fs-2 fw-bold">
-                {totalStats.avgAttendance}%
-              </Card.Text>
-              <ProgressBar
-                now={totalStats.avgAttendance}
-                className="mt-2"
-                variant="warning"
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Total Events */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+          <div className="bg-blue-50 p-3 rounded-full inline-flex items-center justify-center mb-3">
+            <svg
+              className="w-6 h-6 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+            </svg>
+          </div>
+          <h3 className="text-gray-500 text-sm font-medium mb-1">
+            Total Events
+          </h3>
+          <p className="text-2xl font-bold text-gray-900">
+            {totalStats.scheduled}
+          </p>
+          <p className="text-xs text-gray-400">Last updated today</p>
+        </div>
+
+        {/* Total Attendees */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+          <div className="bg-cyan-50 p-3 rounded-full inline-flex items-center justify-center mb-3">
+            <svg
+              className="w-6 h-6 text-cyan-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-gray-500 text-sm font-medium mb-1">
+            Total Attendees
+          </h3>
+          <p className="text-2xl font-bold text-gray-900">
+            {totalStats.totalAttendees}
+          </p>
+          <p className="text-xs text-gray-400">Across all events</p>
+        </div>
+
+        {/* Total Revenue */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+          <div className="bg-green-50 p-3 rounded-full inline-flex items-center justify-center mb-3">
+            <svg
+              className="w-6 h-6 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-gray-500 text-sm font-medium mb-1">
+            Total Revenue
+          </h3>
+          <p className="text-2xl font-bold text-gray-900">
+            ${totalStats.totalRevenue.toLocaleString()}
+          </p>
+          <p className="text-xs text-gray-400">From ticket sales</p>
+        </div>
+
+        {/* Avg Attendance */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+          <div className="bg-yellow-50 p-3 rounded-full inline-flex items-center justify-center mb-3">
+            <svg
+              className="w-6 h-6 text-yellow-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-gray-500 text-sm font-medium mb-1">
+            Avg Attendance
+          </h3>
+          <p className="text-2xl font-bold text-gray-900">
+            {totalStats.avgAttendance}%
+          </p>
+          <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+            <div
+              className="bg-yellow-500 h-1.5 rounded-full"
+              style={{ width: `${totalStats.avgAttendance}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
 
       {/* Charts Row */}
-      <Row className="mb-4 g-4">
-        <Col lg={4} md={6}>
-          <Card className="shadow-sm border-0 h-100">
-            <Card.Body>
-              <Card.Title className="text-muted mb-3">
-                Event Status Distribution
-              </Card.Title>
-              <div style={{ height: "250px" }}>
-                <Pie
-                  data={statusChartData}
-                  options={{
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: "bottom",
-                      },
-                    },
-                  }}
-                />
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col lg={4} md={6}>
-          <Card className="shadow-sm border-0 h-100">
-            <Card.Body>
-              <Card.Title className="text-muted mb-3">Event Revenue</Card.Title>
-              <div style={{ height: "250px" }}>
-                <Bar
-                  data={revenueChartData}
-                  options={{
-                    maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                      },
-                    },
-                  }}
-                />
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col lg={4} md={12}>
-          <Card className="shadow-sm border-0 h-100">
-            <Card.Body>
-              <Card.Title className="text-muted mb-3">
-                Attendance Rates
-              </Card.Title>
-              <div style={{ height: "250px" }}>
-                <Line
-                  data={attendanceChartData}
-                  options={{
-                    maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        max: 100,
-                      },
-                    },
-                  }}
-                />
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Event Status Distribution */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-gray-500 text-sm font-medium mb-3">
+            Event Status Distribution
+          </h3>
+          <div className="h-64">
+            <Pie
+              data={statusChartData}
+              options={{
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: "bottom",
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Event Revenue */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-gray-500 text-sm font-medium mb-3">
+            Event Revenue
+          </h3>
+          <div className="h-64">
+            <Bar
+              data={revenueChartData}
+              options={{
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Attendance Rates */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-gray-500 text-sm font-medium mb-3">
+            Attendance Rates
+          </h3>
+          <div className="h-64">
+            <Line
+              data={attendanceChartData}
+              options={{
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    max: 100,
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
