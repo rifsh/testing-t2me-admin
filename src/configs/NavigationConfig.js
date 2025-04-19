@@ -69,7 +69,6 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         isGroupTitle: false,
         submenu: [
-
           {
             key: "general",
             path: `${APP_PREFIX_PATH}/services/submenu1`,
@@ -244,7 +243,6 @@ const superAdminDashBoardNavTree = [
                 breadcrumb: false,
                 isGroupTitle: false,
               },
-
             ],
           },
           {
@@ -255,8 +253,6 @@ const superAdminDashBoardNavTree = [
             breadcrumb: false,
             isGroupTitle: false,
             submenu: [
-
-
               {
                 key: "dine.dine",
                 path: `${APP_PREFIX_PATH}/dine/list`,
@@ -275,8 +271,6 @@ const superAdminDashBoardNavTree = [
                 isGroupTitle: false,
               },
 
-              
-             
               {
                 key: "dine.schedule",
                 path: `${APP_PREFIX_PATH}dine/schedule/list`,
@@ -285,7 +279,6 @@ const superAdminDashBoardNavTree = [
                 breadcrumb: false,
                 isGroupTitle: false,
               },
-             
             ],
           },
         ],
@@ -357,7 +350,7 @@ const superAdminDashBoardNavTree = [
         icon: OrderedListOutlined,
         breadcrumb: false,
         submenu: [],
-      }
+      },
       /////////////////
       // {
       //   key: "customerEvent.convert",
@@ -856,6 +849,27 @@ const eventOrganaizerDashBoardNavTree = [
       // },
     ],
   },
+
+  {
+    key: "Reports",
+    path: `${APP_PREFIX_PATH}/apps`,
+    title: "sidenav.apps.reports",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    isGroupTitle: false,
+    submenu: [
+      {
+        key: "organizer.reports",
+        path: `${APP_PREFIX_PATH}/organizer/reports`,
+        title: "sidenav.apps.reports",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
+  }
+  
+  
 ];
 const techSupportingTeamDashBoardNavTree = [
   {
