@@ -20,9 +20,10 @@ const movieScheduleSlice = createSlice({
   name: "movieSchedule",
   initialState,
   reducers: {
-    resetState: () => {
-      return initialState;
-    },
+    resetState: () => ({
+      ...initialState,
+    }),
+
     // Switch between days
     setavailableMovies: (state, action) => {
       state.availableMovies = action.payload;
