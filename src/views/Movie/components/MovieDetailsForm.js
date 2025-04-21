@@ -135,7 +135,7 @@ const MovieDetailsForm = ({ form, mode }) => {
     return (
         <>
             <Card title={<Title level={4}>Movie Details</Title>} bordered>
-                {mode === MODE.ADD && <MovieFilter form={form} onMovieSelect={handleMovieSelect} />}
+                <MovieFilter form={form} onMovieSelect={handleMovieSelect} />
                 <Divider />
 
                 <Row gutter={16}>

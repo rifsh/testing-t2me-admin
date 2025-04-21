@@ -148,7 +148,7 @@ const EventTypeList = () => {
     },
     Utils.statusColumnUtil(handleUpdateStatus),
     {
-      title: "",
+      title: "Actions",
       dataIndex: "actions",
       render: (_, row) => (
         <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>

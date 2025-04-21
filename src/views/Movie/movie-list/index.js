@@ -58,7 +58,7 @@ const Index = () => {
             setFormattedData(processedData)
         }
     }, [movieResponse]);
-    console.warn("Formatted Data", formattedData)
+    console.warn("Formatted Data", movieResponse)
     const handleViewDetails = (movie) => {
         navigate(`${APP_PREFIX_PATH}/movie/details/${movie.id}`);
     };

@@ -41,7 +41,6 @@ const MovieDetails = () => {
     const dispatch = useDispatch();
     const [previewVisible, setPreviewVisible] = useState(false);
     const [currentPreview, setCurrentPreview] = useState(null);
-    const [movieData, setMovieData] = useState(null);
     const [cast, setCast] = useState([]);
     const [crew, setCrew] = useState([]);
     const { id } = useParams();
@@ -86,10 +85,7 @@ const MovieDetails = () => {
     }, [dispatch, movieId]);
 
     useEffect(() => {
-        if (Array.isArray(movieSingleResponse) && movieSingleResponse.length > 0) {
-            setMovieData(movieSingleResponse[0]);
-            // console.log('castsss', movieSingleResponse.movie_details[0].casts.map((x) => x.type === 'CAST'))
-
+        if (movieSingleResponse) {
             setCast(movieSingleResponse?.casts.filter((x) => x.type === 'CAST') || []);
             setCrew(movieSingleResponse?.casts.filter((x) => x.type === 'CREW') || []);
         }
@@ -164,11 +160,11 @@ const MovieDetails = () => {
 
     // Render media items/gallery section
     const renderMediaGallery = () => {
-        if (!movieData?.media_items?.length) return <Text type="secondary">No media available</Text>;
+        if (!movieSingleResponse?.media_items?.length) return <Text type="secondary">No media available</Text>;
 
         return (
             <Row gutter={[16, 16]}>
-                {movieData?.media_items?.map((media, index) => (
+                {movieSingleResponse?.media_items?.map((media, index) => (
                     <Col xs={24} sm={12} md={8} lg={6} key={index}>
                         <Card
                             hoverable
@@ -247,7 +243,7 @@ const MovieDetails = () => {
                                             </Tag>
                                         </div>}
                                         <img
-                                            alt={movieData?.title}
+                                            alt={movieSingleResponse?.title}
                                             src={
                                                 movieSingleResponse?.thumbnail_image ||
                                                 'https://placehold.co/500x750/222222/FFFFFF?text=Movie+Poster'
@@ -265,7 +261,7 @@ const MovieDetails = () => {
                                         <Title level={2} style={{ marginBottom: '4px' }}>{movieSingleResponse?.title}</Title>
                                         <TrophyOutlined style={{ color: '#faad14', fontSize: 16 }} />
                                         <Text type="secondary" italic style={{ marginLeft: 4 }}>
-                                            {movieData?.awards || 'No awards information'}
+                                            {movieSingleResponse?.awards || 'No awards information'}
                                         </Text>
                                     </Col>
                                     <Col>
@@ -345,13 +341,13 @@ const MovieDetails = () => {
                                     <Col xs={24} sm={24} md={24}>
                                         <Descriptions title="Production Details" layout="horizontal" column={1} bordered>
                                             <Descriptions.Item label="Budget">
-                                                {movieData?.budget || 'N/A'}
+                                                {movieSingleResponse?.budget || 'N/A'}
                                             </Descriptions.Item>
                                             <Descriptions.Item label="Box Office">
-                                                {movieData?.box_office || 'N/A'}
+                                                {movieSingleResponse?.box_office || 'N/A'}
                                             </Descriptions.Item>
                                             <Descriptions.Item label="Production">
-                                                {movieData?.production_company || 'N/A'}
+                                                {movieSingleResponse?.production_company || 'N/A'}
                                             </Descriptions.Item>
                                         </Descriptions>
                                     </Col>

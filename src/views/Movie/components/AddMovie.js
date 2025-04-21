@@ -67,9 +67,9 @@ const AddMovie = ({ mode, id }) => {
     console.warn("Movie Edit Data");
     if (movieSingleResponse) {
       if (mode === MODE.EDIT) {
-        console.warn("Movie Single Response", movieSingleResponse);
         const mediaItems =
           movieSingleResponse?.media_items || [];
+        console.log("Movie Single Response", mediaItems);
         const thumbnailImage =
           movieSingleResponse.thumbnail_image &&
             movieSingleResponse.thumbnail_image !== "images"
@@ -142,30 +142,19 @@ const AddMovie = ({ mode, id }) => {
       // Save current form data regardless of direction
       const currentStepData = form.getFieldsValue(true);
 
-      // If movieSingleResponse is needed for additional form updates
-      const updatedData = {
+      setFormData(prevData => ({
+        ...prevData,
         ...currentStepData,
-        mediaItems: movieSingleResponse?.media_items,
-        thumbnail_image:
-          movieSingleResponse?.thumbnail_image &&
-            movieSingleResponse.thumbnail_image !== "images"
-            ? [
-              {
-                uid: "-1",
-                name: movieSingleResponse.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: movieSingleResponse.thumbnail_image,
-              },
-            ]
-            : [],
-      };
+        // Ensure media data is preserved
+        thumbnail_image: currentStepData.thumbnail_image || prevData.thumbnail_image,
+        mediaItems: currentStepData.mediaItems || prevData.mediaItems,
+        director: currentStepData.director || prevData.director
+      }));
 
-      form.setFieldsValue(updatedData);
-
-      // Update the active tab
+      // Change the tab
       setActiveTab(key);
     } catch (error) {
-      console.error("Validation failed or error in switching tab:", error);
+      message.error("Please complete this tab before continuing.");
     }
   };
 
@@ -233,7 +222,7 @@ const AddMovie = ({ mode, id }) => {
           />
         );
       case "2":
-        return <MovieMediaUploader form={form} mode={mode} initialMedia={formData.mediaItems} initialThumbnail={formData.mediaItems} />;
+        return <MovieMediaUploader form={form} mode={mode} />;
       default:
         return null;
     }
@@ -396,7 +385,6 @@ const AddMovie = ({ mode, id }) => {
 
   useEffect(() => {
     return () => {
-      console.log("Component unmounted!");
       dispatch(clearOMDBData("omdb"));
     };
   }, [dispatch]);
@@ -417,10 +405,10 @@ const AddMovie = ({ mode, id }) => {
       if (nextTabIndex < MOVIE_CONSTANTS.MOVIE_STEPS.length) {
         // Save current form data before advancing
         const currentStepData = form.getFieldsValue(true);
-        setFormData((prevData) => ({
+        setFormData(prevData => ({
           ...prevData,
           ...currentStepData,
-          mediaItems: currentStepData.mediaItems || prevData.mediaItems,
+          mediaItems: currentStepData.mediaItems || prevData.mediaItems
         }));
 
         setActiveTab(String(nextTabIndex));
@@ -436,12 +424,12 @@ const AddMovie = ({ mode, id }) => {
     if (prevTabIndex >= 0) {
       // Save current tab data
       const currentStepData = form.getFieldsValue(true);
-      setFormData((prevData) => ({
+      setFormData(prevData => ({
         ...prevData,
         ...currentStepData,
         // Explicitly preserve media data
         // thumbnail_image: currentStepData.thumbnail_image || prevData.thumbnail_image,
-        mediaItems: currentStepData.mediaItems || prevData.mediaItems,
+        mediaItems: currentStepData.mediaItems || prevData.mediaItems
       }));
 
       setActiveTab(String(prevTabIndex));
