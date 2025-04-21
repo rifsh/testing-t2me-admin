@@ -439,12 +439,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-        (document.cookie = cookie
-          .replace(/^ +/, "")
-          .replace(
-            /=.*/,
-            "=;expires=" + new Date(0).toUTCString() + ";path=/"
-          ))
+          (document.cookie = cookie
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date(0).toUTCString() + ";path=/"
+            ))
       );
 
     // Unregister Service Workers
@@ -496,11 +496,11 @@ class Utils {
           }
 
           const serializedMediaItems = value
-            .filter(item => item.title && item.mediaLanguage && item.url)
-            .map(item => ({
+            .filter((item) => item.title && item.mediaLanguage && item.url)
+            .map((item) => ({
               title: item.title,
               mediaLanguage: item.mediaLanguage,
-              url: item.url
+              url: item.url,
             }));
 
           formData.append(key, JSON.stringify(serializedMediaItems));
@@ -513,7 +513,7 @@ class Utils {
           }
 
           const serializedPeople = value
-            .filter(item => {
+            .filter((item) => {
               const hasRequiredFields = item.personality_id && item.role;
 
               if (item.type?.toUpperCase() === "CAST") {
@@ -521,17 +521,18 @@ class Utils {
               }
               return hasRequiredFields;
             })
-            .map(item => ({
+            .map((item) => ({
               id: item.id || null,
               personality_id: item.personality_id,
               role: Array.isArray(item.role) ? item.role[0] : item.role,
-              ...(item.type?.toUpperCase() === "CAST" && { character_name: item.character_name }),
-              type: item.type?.toUpperCase() || "CAST"
+              ...(item.type?.toUpperCase() === "CAST" && {
+                character_name: item.character_name,
+              }),
+              type: item.type?.toUpperCase() || "CAST",
             }));
 
           formData.append(key, JSON.stringify(serializedPeople));
         }
-
 
         if (
           key === "tax_ids" ||
@@ -969,6 +970,7 @@ class Utils {
           type: "standard",
           price: seatTypes.find((type) => type.id === "standard").basePrice,
           isVisible: true,
+          status: null,
           number: j + 1,
         });
       }
@@ -1045,8 +1047,10 @@ class Utils {
 
   static getThumbnail = (url) => {
     const videoId = this.extractVideoId(url);
-    return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
-  }
+    return videoId
+      ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+      : null;
+  };
 }
 
 export default Utils;

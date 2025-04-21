@@ -51,7 +51,8 @@ function MovieSeatDetailForm({ form, mode }) {
 
   const handleTheaterSelect = (theater) => {
     form.setFieldValue("screen_id", undefined);
-    setSelectedFields({ ...selectedFields, selectedTheater: theater });
+    form.setFieldValue("theatre_id", theater.id);
+    setSelectedFields({ ...selectedFields, selectedTheater: theater.id });
   };
   return (
     <Row gutter={16}>
@@ -84,7 +85,6 @@ function MovieSeatDetailForm({ form, mode }) {
                 disabled={mode === "EDIT"}
                 form={form}
                 onSelect={handleTheaterSelect}
-
               />
             </Col>
             <Col xs={24} sm={12}>
