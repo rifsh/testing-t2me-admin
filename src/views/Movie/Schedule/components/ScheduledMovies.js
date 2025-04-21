@@ -1,5 +1,4 @@
 import React from "react";
-import { InfoOutlined } from "@ant-design/icons";
 
 export default function ScheduledMovies({
   scheduledMovies,
@@ -35,7 +34,7 @@ export default function ScheduledMovies({
         minutesToMidnight,
         // scheduledMovie.actualDuration ||
         //   scheduledMovie.originalDuration ||
-          scheduledMovie.endMinutes - scheduledMovie.startMinutes
+        scheduledMovie.endMinutes - scheduledMovie.startMinutes
       );
 
       displayWidth = (effectiveMinutes / 60) * hourWidth;
@@ -78,7 +77,7 @@ export default function ScheduledMovies({
         style={{
           top: `${top + rowHeight / 2 - 10}px`,
           left: `${left + sidebarWidth}px`,
-          width: `${displayWidth}px`, 
+          width: `${displayWidth}px`,
           height: `${20}px`,
         }}
       >
@@ -99,7 +98,7 @@ export default function ScheduledMovies({
           className="absolute top-1/2 transform -translate-y-1/2 bg-white shadow-md rounded-md flex items-center p-1 cursor-pointer z-10"
           style={{
             maxWidth: cardWidth + "px",
-            left: `${(displayWidth - cardWidth) / 2}px`, 
+            left: `${(displayWidth - cardWidth) / 2}px`,
             borderLeft: scheduledMovie.isContinuation
               ? `3px solid ${movie.color || "#1890ff"}`
               : "none",
@@ -125,9 +124,9 @@ export default function ScheduledMovies({
               {scheduledMovie.isMidnightPassed && " ↪"}
             </div>
           </div>
-          <div className="ml-1 flex-shrink-0 text-gray-500">
+          {/* <div className="ml-1 flex-shrink-0 text-gray-500">
             <InfoOutlined style={{ fontSize: "12px" }} />
-          </div>
+          </div> */}
         </div>
       </div>
     );

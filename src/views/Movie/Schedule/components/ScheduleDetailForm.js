@@ -20,6 +20,7 @@ import {
   setavailableMovies,
   setDateRange,
   setDateRangeLength,
+  setInitialBookingStartDate,
   setSelectedDate,
   setShowLengthOptions,
 } from "store/slices/movieScheduleSlice";
@@ -45,7 +46,7 @@ function ScheduleDetailForm({ form, mode }) {
 
   const handleVenueSelect = (venue) => {
     form.setFieldValue("theatre_id", undefined);
-    dispatch(setSelectedVenue(venue));
+    // dispatch(setSelectedVenue(venue));
   };
 
   const handleTheatreSelect = (theatre) => {
@@ -53,7 +54,9 @@ function ScheduleDetailForm({ form, mode }) {
       dispatch(fetchScreenData({ theatre_id: theatre.id }));
     }
   };
-
+  const handleBookingStartDate = (date) => {
+    dispatch(setInitialBookingStartDate(date));
+  };
   const handleStartDateChange = (date) => {
     if (!date) {
       dispatch(setDateRange([]));
@@ -94,15 +97,6 @@ function ScheduleDetailForm({ form, mode }) {
     const newRangeLength = date.diff(startDate, "day") + 1;
     dispatch(setDateRangeLength(newRangeLength));
     dispatch(setDateRange([startDate, date]));
-  };
-
-  const handleDayLengthChange = (days) => {
-    if (!startDate || days < 1 || days > 7) return;
-
-    dispatch(setDateRangeLength(days));
-    const newEndDate = startDate.add(days - 1, "day");
-    form.setFieldsValue({ end_date: newEndDate });
-    dispatch(setDateRange([startDate, newEndDate]));
   };
 
   const handleMovieSelect = (selectedMovieIds) => {
@@ -254,6 +248,24 @@ function ScheduleDetailForm({ form, mode }) {
                     className="mb-4"
                   />
                 )}
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label="Booking Start Date"
+                name="booking_start_date"
+                rules={rules.startDate}
+                tooltip="Select the first day of your schedule"
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  disabledDate={disabledStartDate}
+                  // value={startDate}
+                  onChange={handleBookingStartDate}
+                  placeholder="Select start date"
+                  showTime={true}
+                  showSecond={false}
+                />
+              </Form.Item>
             </Col>
           </Row>
         </Card>
