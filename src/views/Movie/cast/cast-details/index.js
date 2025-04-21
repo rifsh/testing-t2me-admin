@@ -45,13 +45,6 @@ const ActorProfile = () => {
         dispatch(fetchPersonalitiesById({ person_id: id }))
     }, [dispatch, id]);
 
-    useEffect(() => {
-        if (response) {
-            console.log("fetching", response);
-
-        }
-    }, [id, response]);
-
     const calculateAge = (birthDate) => {
         const today = new Date();
         const birth = new Date(birthDate);
@@ -86,7 +79,7 @@ const ActorProfile = () => {
                 type="error"
                 showIcon
                 action={
-                    <Link to={`${APP_PREFIX_PATH}/cast/list`}>
+                    <Link to={`${APP_PREFIX_PATH}/personality/list`}>
                         <Button size="small" type="primary">
                             Return to Actor List
                         </Button>

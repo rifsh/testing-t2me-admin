@@ -1,471 +1,504 @@
-import React, { useRef, useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useState, useRef, useEffect } from "react";
+
 import {
-  Layout,
-  Typography,
-  message,
-  Modal,
-  Drawer,
-  Card,
-  Button,
-  Tooltip,
-} from "antd";
-import { ZoomInOutlined, ZoomOutOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
-import MovieDetails from "./MovieDetails";
+  calculateTimeFromPosition,
+  checkScheduleOverlap,
+  extractScreenInfo,
+  handleCrossDayScheduling,
+} from "./utils";
 import {
-  setSelectedMovie,
-  addScheduledMovie,
-  removeScheduledMovie,
-  updateScheduledMovie,
-  setXDomain,
+  handleDragStart,
+  handleScheduledMovieDragStart,
+  handleDrop as utilsHandleDrop,
+} from "./dragUtils";
+import { MovieDetail } from "./MovieDetail";
+import MovieList from "./MovieList";
+import TimeRuler from "./TimeRuler";
+import ScheduleGrid from "./ScheduleGrid";
+import HoverIndicator from "./HoverIndicator";
+import ScheduledMovies from "./ScheduledMovies";
+import { useDispatch, useSelector } from "react-redux";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import { fetchAllCoupons } from "store/slices/couponSlice";
+import { fetchAllOffers } from "store/slices/offerSlice";
+import {
+  scheduleMovie,
+  setActiveTab,
+  setCoupons,
+  setOffers,
+  setSeatStructure,
+  setIntervalTime,
 } from "store/slices/movieScheduleSlice";
-import Header from "./Header";
-import Timeline from "./Timeline";
-import ScheduleForm from "./ScheduleForm";
-import {
-  timeToDate,
-  dateToTime,
-  formatTime,
-  isMovieVisible,
-  checkOverlap,
-  calculateVisibleWidth,
-} from "../utils";
-
-const { Content } = Layout;
-const { Title, Text } = Typography;
-
-export default function MovieScheduler() {
+import { message } from "antd";
+import dayjs from "dayjs";
+export default function MovieScheduler({ form }) {
   const dispatch = useDispatch();
-  const containerRef = useRef(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isDetailsVisible, setIsDetailsVisible] = useState(false);
-  const [selectedMovieId, setSelectedMovieId] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [selectedScreen, setSelectedScreen] = useState(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [tooltipInfo, setTooltipInfo] = useState(null);
-  const [intervalTime, setIntervalTime] = useState(15);
-  const [scale, setScale] = useState({ x: 80 });
 
-  const movies = useSelector((state) => state.movieScheduleSlice.movies);
-  const allScheduledMovies = useSelector(
-    (state) => state.movieScheduleSlice.scheduledMovies
-  );
-  const selectedMovie = useSelector(
-    (state) => state.movieScheduleSlice.selectedMovie
-  );
-  const selectedDate = useSelector(
-    (state) => state.movieScheduleSlice.selectedDate
-  );
-  const xDomain = useSelector((state) => state.movieScheduleSlice.xDomain);
+  const [draggedMovie, setDraggedMovie] = useState(null);
+  const [draggedScheduledMovie, setDraggedScheduledMovie] = useState(null);
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const scheduledMovies = allScheduledMovies.filter((movie) => {
-    if (!selectedDate) return true;
-
-    if (movie.scheduleDate) {
-      const movieDate = dayjs(movie.scheduleDate).format("YYYY-MM-DD");
-      const currentDate = selectedDate.format("YYYY-MM-DD");
-      return movieDate === currentDate;
-    }
-
-    return false;
+  const [hoverPosition, setHoverPosition] = useState({
+    visible: false,
+    time: null,
+    screen: null,
+    x: 0,
+    y: 0,
   });
 
+  const {
+    scheduledMovies,
+    activeTab,
+    coupons: movieCoupons,
+    offers: movieOffers,
+    seatStructures: movieSeatStructures,
+    intervalTimes,
+    dateRange,
+    availableMovies,
+  } = useSelector((state) => state.movieScheduleSlice);
+
   const { response, loading, error } = useSelector((state) => state.screen);
-
-  const extractScreenNames = () => {
-    if (!response || !response.items || response.items.length === 0) {
-      return [];
-    }
-
-    const allScreens = [];
-    response.items.forEach((theatre) => {
-      if (theatre.movie_screen && Array.isArray(theatre.movie_screen)) {
-        theatre.movie_screen.forEach((screen) => {
-          if (screen && screen.screen_name) {
-            allScreens.push(screen.screen_name);
-          }
-        });
-      }
-    });
-
-    return allScreens;
-  };
-
-  const screens = extractScreenNames();
+  const { filteredCoupons } = useSelector((state) => state.coupons);
+  const { filteredOffers } = useSelector((state) => state.offers);
+  const { allSeats } = useSelector((state) => state.movieSeatSlice);
+  const hourWidth = 100;
+  const rowHeight = 80;
+  const sidebarWidth = 128;
+  const gridRef = useRef(null);
+  const gridContentRef = useRef(null);
+  const timeRulerRef = useRef(null);
 
   useEffect(() => {
-    const updateContainerWidth = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.clientWidth - 24);
-      }
-    };
+    dispatch(fetchAllCoupons({ ...DEFAULT_PAGE_SIZE, active: true }));
+    dispatch(fetchAllOffers({ ...DEFAULT_PAGE_SIZE, active: true }));
+  }, [dispatch]);
 
-    updateContainerWidth();
-    window.addEventListener("resize", updateContainerWidth);
-    return () => window.removeEventListener("resize", updateContainerWidth);
-  }, []);
+  const screens = extractScreenInfo(response);
 
-  // Handle user interactions with the timeline
-  // In MovieScheduler.js, update the handleTimelineMouseMove function
-  const handleTimelineMouseMove = (e, timelineRef) => {
-    // Add a safety check to avoid accessing undefined.current
-    if (!timelineRef || !timelineRef.current) return;
-
-    const rect = timelineRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const screenIndex = Math.floor((y / rect.height) * screens.length);
-    const xTime = x / scale.x + xDomain[0];
-
-    const roundTo = 5 / 60;
-    const roundedTime = Math.round(xTime / roundTo) * roundTo;
-
-    if (
-      screenIndex >= 0 &&
-      screenIndex < screens.length &&
-      roundedTime >= 0 &&
-      roundedTime <= 24
-    ) {
-      const tooltipWidth = 120;
-      const tooltipHeight = 60;
-
-      let tooltipX = x + 20;
-      let tooltipY = y;
-
-      if (tooltipX + tooltipWidth > rect.width) {
-        tooltipX = x - tooltipWidth - 10;
-      }
-      if (tooltipY + tooltipHeight > rect.height) {
-        tooltipY = rect.height - tooltipHeight;
-      }
-      tooltipY = Math.max(tooltipY, 0);
-
-      setTooltipInfo({
-        screen: screens[screenIndex],
-        time: formatTime(roundedTime),
-        x: tooltipX,
-        y: tooltipY,
-      });
-    } else {
-      setTooltipInfo(null);
-    }
+  const handleMovieDragStart = (event, movie) => {
+    handleDragStart(event, movie, setDraggedMovie, setDraggedScheduledMovie);
   };
 
-  const handleTimelineMouseLeave = () => {
-    setTooltipInfo(null);
+  const handleMovieScheduledDragStart = (event, scheduledMovie) => {
+    handleScheduledMovieDragStart(
+      event,
+      scheduledMovie,
+      availableMovies,
+      setDraggedScheduledMovie,
+      setDraggedMovie
+    );
   };
 
-  const handleTimelineClick = (e) => {
-    if (
-      e.target.closest(".cursor-pointer") ||
-      e.target.closest(".drag-handle") ||
-      e.target.closest("button")
-    ) {
-      return;
-    }
-
-    if (!selectedDate) {
-      message.warning("Please select a date first before scheduling a movie");
-      return;
-    }
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const screenIndex = Math.floor((y / rect.height) * screens.length);
-    const xTime = x / scale.x + xDomain[0];
-
-    const roundTo = 5 / 60;
-    const roundedTime = Math.round(xTime / roundTo) * roundTo;
-
-    if (
-      screenIndex >= 0 &&
-      screenIndex < screens.length &&
-      roundedTime >= 0 &&
-      roundedTime <= 24
-    ) {
-      setSelectedScreen(screenIndex);
-      setSelectedTime(timeToDate(roundedTime));
-      setIsModalVisible(true);
-    }
-  };
-
-  const handleMovieClick = (movie) => {
-    const fullMovie = movies.find((m) => m.id === movie.movieId);
-    if (fullMovie) {
-      const completeMovieInfo = {
-        ...movie,
-        genre: fullMovie.genre,
-        director: fullMovie.director,
-        image: fullMovie.image,
-        duration: fullMovie.duration,
-      };
-      dispatch(setSelectedMovie(completeMovieInfo));
-      setIsDetailsVisible(true);
-    }
-  };
-
-  const handleMovieDragEnd = (movieId, newStartTime, newEndTime, newScreen) => {
-    const movie = scheduledMovies.find((m) => m.id === movieId);
-    if (!movie) return;
-
-    const isOverlapping = checkOverlap(
-      newScreen,
-      newStartTime,
-      newEndTime,
+  const handleDropMovie = (event) => {
+    utilsHandleDrop(
+      event,
+      draggedMovie,
+      draggedScheduledMovie,
+      gridContentRef,
+      timeRulerRef,
+      screens,
+      hourWidth,
+      rowHeight,
       scheduledMovies,
-      movieId
+      activeTab,
+      availableMovies,
+      dispatch,
+      scheduleMovie,
+      setDraggedMovie,
+      setDraggedScheduledMovie,
+      calculateTimeFromPosition
     );
-
-    if (isOverlapping) {
-      message.error("Cannot reschedule: Time slot overlaps with another movie");
-      return;
-    }
-
-    const updatedMovie = {
-      ...movie,
-      startTime: newStartTime,
-      endTime: newEndTime,
-      screen: newScreen,
-    };
-
-    dispatch(updateScheduledMovie(updatedMovie));
-
-    message.success(`"${movie.title}" rescheduled successfully`);
-
-    if (selectedMovie && selectedMovie.id === movieId) {
-      dispatch(setSelectedMovie(updatedMovie));
-    }
   };
 
-  const handleScheduleMovie = () => {
-    if (!selectedMovieId || !selectedTime || selectedScreen === null) {
-      message.error("Please select a movie, time, and screen");
+  const handleMouseLeave = () => {
+    setHoverPosition({ visible: false });
+  };
+
+  // Handle mouse move for hover positioning (keep this in component)
+  const handleMouseMove = (event) => {
+    if (!gridContentRef.current || !timeRulerRef.current) return;
+
+    const gridRect = gridContentRef.current.getBoundingClientRect();
+    const timeRulerRect = timeRulerRef.current.getBoundingClientRect();
+
+    // Calculate position relative to the grid content
+    const x = event.clientX - gridRect.left;
+    const y = event.clientY - gridRect.top;
+
+    // Calculate screen index correctly based on y position
+    const screenIndex = Math.floor(y / rowHeight);
+
+    // Don't show if outside valid area
+    if (screenIndex < 0 || screenIndex >= screens.length) {
+      setHoverPosition({ visible: false });
       return;
     }
 
-    if (!selectedDate) {
-      message.error("Please select a date first");
-      return;
-    }
-
-    const movie = movies.find((m) => m.id === selectedMovieId);
-    if (!movie) {
-      message.error("Invalid movie selection");
-      return;
-    }
-
-    const startTime = dateToTime(selectedTime);
-
-    const roundTo = 5 / 60;
-    const roundedStartTime = Math.round(startTime / roundTo) * roundTo;
-
-    const totalDuration = movie.duration + intervalTime;
-    const endTime = roundedStartTime + totalDuration / 60;
-
-    if (endTime > 24) {
-      message.error("Cannot schedule movie beyond 24:00");
-      return;
-    }
-
-    const isOverlapping = checkOverlap(
-      selectedScreen,
-      roundedStartTime,
-      endTime,
-      scheduledMovies
+    // Calculate time using client position relative to time ruler
+    const time = calculateTimeFromPosition(
+      event.clientX,
+      timeRulerRect,
+      hourWidth
     );
+    const formattedTime = `${time.hour
+      .toString()
+      .padStart(2, "0")}:${time.minute.toString().padStart(2, "0")}`;
 
-    if (isOverlapping) {
-      message.error(
-        "Cannot schedule movie: Time slot overlaps with another movie"
+    // Calculate position for the vertical time indicator line
+    const offsetX = event.clientX - timeRulerRect.left;
+
+    setHoverPosition({
+      visible: true,
+      time: formattedTime,
+      screen: screens[screenIndex].name,
+      x: event.clientX,
+      y: event.clientY,
+      timeLineX: offsetX,
+      screenLineY: screenIndex * rowHeight,
+    });
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    handleMouseMove(event);
+  };
+
+  const handleScheduledMovieClick = (event, scheduledMovie) => {
+    if (!draggedScheduledMovie) {
+      event.stopPropagation();
+      const movie = availableMovies.find(
+        (m) => m.id === scheduledMovie.movieId
       );
+
+      // Get associated data for this movie
+      const coupons = movieCoupons[scheduledMovie.id] || [];
+      const offers = movieOffers[scheduledMovie.id] || [];
+      const seatStructureId = movieSeatStructures[scheduledMovie.id] || null;
+      const intervalTime = intervalTimes[scheduledMovie.id] || 15; // Default 15 min
+
+      setSelectedMovie({
+        ...scheduledMovie,
+        title: movie.title,
+        duration: movie.duration,
+        color: movie.color,
+        image: movie.image || movie.thumbnail_image,
+        thumbnail_image: movie.thumbnail_image || movie.image,
+        description: movie.description,
+        genre: movie.genre,
+        language: movie.language,
+        country: movie.country,
+        director: movie.director,
+        released: movie.released,
+        rating: movie.rating,
+        coupons: coupons,
+        offers: offers,
+        seatStructureId: seatStructureId,
+        intervalTime: intervalTime,
+      });
+      setIsDetailsOpen(true);
+    }
+  };
+
+  // In MovieScheduler component:
+  const generateDates = () => {
+    const dates = [];
+
+    // Check if we have a valid date range
+    if (dateRange && dateRange.length === 2 && dateRange[0] && dateRange[1]) {
+      const startDate = dayjs(dateRange[0]);
+      const endDate = dayjs(dateRange[1]);
+      const dayCount = Math.min(endDate.diff(startDate, "day") + 1, 7); // Limit to max 7 days
+
+      // Generate dates from selected range
+      for (let i = 0; i < dayCount; i++) {
+        const date = startDate.add(i, "day");
+        const jsDate = date.toDate();
+
+        const day = jsDate.toLocaleDateString("en-US", { weekday: "short" });
+        const dayNum = jsDate.getDate();
+        const month = jsDate.toLocaleDateString("en-US", { month: "short" });
+
+        dates.push({
+          day,
+          dayNum,
+          month,
+          weekday: i, // Use index as weekday to match activeTab
+        });
+      }
+    } else {
+      // Fallback to current behavior if no date range is set
+      const today = new Date();
+
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+
+        const day = date.toLocaleDateString("en-US", { weekday: "short" });
+        const dayNum = date.getDate();
+        const month = date.toLocaleDateString("en-US", { month: "short" });
+
+        dates.push({ day, dayNum, month, weekday: date.getDay() });
+      }
+    }
+
+    return dates;
+  };
+  const dates = generateDates();
+
+  const handleUpdateSchedule = (updatedMovie) => {
+    // Check if this is an early morning movie (after midnight but before 6am)
+    const isEarlyMorningMovie =
+      updatedMovie.startMinutes >= 0 && updatedMovie.startMinutes < 6 * 60;
+    const startsAfterMidnight = updatedMovie.startMinutes >= 24 * 60;
+
+    // Handle case where the movie is scheduled for after midnight
+    if (startsAfterMidnight) {
+      // Need to move it to the next day
+      const nextDayTab = (activeTab + 1) % 7;
+      const adjustedMovie = {
+        ...updatedMovie,
+        startMinutes: updatedMovie.startMinutes - 24 * 60,
+        endMinutes: updatedMovie.endMinutes - 24 * 60,
+        isMidnightPassed: true,
+      };
+
+      // Check for overlaps in the next day
+      const nextDayMovies = scheduledMovies[nextDayTab] || [];
+      const overlapCheck = checkScheduleOverlap(
+        adjustedMovie,
+        nextDayMovies,
+        true,
+        updatedMovie.id
+      );
+
+      if (!overlapCheck.isValid) {
+        message.error(overlapCheck.message);
+        return;
+      }
+
+      // Remove from current day and add to next day
+      const updatedSchedule = {
+        ...scheduledMovies,
+        [activeTab]: (scheduledMovies[activeTab] || []).filter(
+          (m) => m.id !== updatedMovie.id && m.originalId !== updatedMovie.id
+        ),
+        [nextDayTab]: [...nextDayMovies, adjustedMovie],
+      };
+
+      dispatch(scheduleMovie(updatedSchedule));
+      dispatch(setActiveTab(nextDayTab)); // Optionally switch to the next day tab
+
+      // Update associated data
+      updateAssociatedData(adjustedMovie);
+      closeDetails();
       return;
     }
 
-    const newScheduledMovie = {
-      id: Date.now(),
-      movieId: movie.id,
-      screen: selectedScreen,
-      startTime: roundedStartTime,
-      endTime: endTime,
-      title: movie.title,
-      image: movie.image,
-      director: movie.director,
-      genre: movie.genre,
-      duration: movie.duration,
-      intervalTime: intervalTime,
-      scheduleDate: selectedDate.format("YYYY-MM-DD"),
-    };
+    // For early morning movies, check if they should be treated as next-day movies
+    if (isEarlyMorningMovie && !updatedMovie.isMidnightPassed) {
+      // This is a morning movie but not marked as midnight passed
+      // Ask user if they want to schedule it for the current day's early morning or previous day's late night
+      const shouldScheduleAsMidnightPass = window.confirm(
+        `Would you like to schedule this as a late-night movie (${updatedMovie.startMinutes} minutes past midnight)?`
+      );
 
-    dispatch(addScheduledMovie(newScheduledMovie));
-    message.success(`"${movie.title}" scheduled successfully`);
-    setIsModalVisible(false);
-    resetModalFields();
-  };
-
-  // Reset modal fields
-  const resetModalFields = () => {
-    setSelectedMovieId(null);
-    setSelectedTime(null);
-    setSelectedScreen(null);
-    setIntervalTime(15); // Reset to default interval
-  };
-
-  // Close movie details panel
-  const handleCloseDetails = () => {
-    setIsDetailsVisible(false);
-    dispatch(setSelectedMovie(null));
-  };
-
-  // Delete scheduled movie
-  const deleteScheduledMovie = (id) => {
-    dispatch(removeScheduledMovie(id));
-    if (selectedMovie && selectedMovie.id === id) {
-      setIsDetailsVisible(false);
-      dispatch(setSelectedMovie(null));
+      if (shouldScheduleAsMidnightPass) {
+        // Handle as midnight passed movie
+        updatedMovie.isMidnightPassed = true;
+      }
     }
-    message.success("Movie removed from schedule");
-  };
 
-  // Update the xDomain state when the timeline component changes it
-  const handleXDomainChange = (newXDomain) => {
-    dispatch(setXDomain(newXDomain));
-  };
-
-  const handleScaleChange = (newScale) => {
-    setScale(newScale);
-  };
-
-  const visibleWidth = calculateVisibleWidth(xDomain, scale, containerWidth);
-  const rowHeight = 80;
-
-  if (loading) {
-    return (
-      <Layout className="min-h-screen">
-        <Header />
-        <Content className="p-4">
-          <Card>
-            <div className="text-center p-8">Loading screen data...</div>
-          </Card>
-        </Content>
-      </Layout>
+    // Regular overlap check
+    const currentDayMovies = scheduledMovies[activeTab] || [];
+    const overlapCheck = checkScheduleOverlap(
+      updatedMovie,
+      currentDayMovies,
+      true,
+      updatedMovie.id
     );
-  }
 
-  if (error) {
-    return (
-      <Layout className="min-h-screen">
-        <Header />
-        <Content className="p-4">
-          <Card>
-            <div className="text-center p-8 text-red-500">
-              Error loading screen data: {error}
-            </div>
-          </Card>
-        </Content>
-      </Layout>
+    if (!overlapCheck.isValid) {
+      message.error(overlapCheck.message);
+      return;
+    }
+
+    // Check if movie crosses midnight
+    if (overlapCheck.warning || overlapCheck.isMidnightPassed) {
+      updatedMovie.isMidnightPassed = true;
+
+      const crossDayResult = handleCrossDayScheduling(
+        updatedMovie,
+        {
+          ...scheduledMovies,
+          [activeTab]: currentDayMovies.filter((m) => m.id !== updatedMovie.id),
+        },
+        activeTab,
+        7
+      );
+
+      if (crossDayResult.isValid) {
+        dispatch(
+          scheduleMovie({
+            ...scheduledMovies,
+            ...crossDayResult.schedules,
+          })
+        );
+      } else {
+        message.error(crossDayResult.message);
+        return;
+      }
+    } else {
+      dispatch(
+        scheduleMovie({
+          ...scheduledMovies,
+          [activeTab]: currentDayMovies.map((movie) =>
+            movie.id === updatedMovie.id ? updatedMovie : movie
+          ),
+        })
+      );
+    }
+
+    updateAssociatedData(updatedMovie);
+    closeDetails();
+  };
+
+  const updateAssociatedData = (updatedMovie) => {
+    if (updatedMovie.coupons && updatedMovie.coupons.length > 0) {
+      dispatch(
+        setCoupons({
+          movieId: updatedMovie.id,
+          couponIds: updatedMovie.coupons,
+        })
+      );
+    }
+
+    if (updatedMovie.offers && updatedMovie.offers.length > 0) {
+      dispatch(
+        setOffers({
+          movieId: updatedMovie.id,
+          offerIds: updatedMovie.offers,
+        })
+      );
+    }
+
+    if (updatedMovie.seatStructureId) {
+      dispatch(
+        setSeatStructure({
+          movieId: updatedMovie.id,
+          seatStructureId: updatedMovie.seatStructureId,
+        })
+      );
+    }
+
+    if (updatedMovie.intervalTime !== undefined) {
+      dispatch(
+        setIntervalTime({
+          movieId: updatedMovie.id,
+          intervalTime: updatedMovie.intervalTime,
+        })
+      );
+    }
+  };
+
+  // Helper function to close the details panel
+  const closeDetails = () => {
+    setIsDetailsOpen(false);
+    setSelectedMovie(null);
+  };
+
+  const handleRemoveSchedule = (id) => {
+    dispatch(
+      scheduleMovie({
+        ...scheduledMovies,
+        [activeTab]: (scheduledMovies[activeTab] || []).filter(
+          (movie) => movie.id !== id
+        ),
+      })
     );
-  }
+    setIsDetailsOpen(false);
+    setSelectedMovie(null);
+  };
 
   return (
-    <Layout className="min-h-screen">
-      <Header />
-
-      <Layout>
-        <Content className="p-4">
-          <Card>
-            <div ref={containerRef} className="w-full">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <Title level={4} className="m-0">
-                    Schedule Timeline{" "}
-                    {selectedDate && `- ${selectedDate.format("MMMM D, YYYY")}`}
-                  </Title>
-                  <Text type="secondary">
-                    Click to schedule • Drag movies to reschedule • Click on
-                    movie for details • Drag timeline to navigate • Use zoom
-                    controls
-                  </Text>
-                </div>
-              </div>
-
-              {screens.length > 0 ? (
-                <Timeline
-                  screens={screens}
-                  scheduledMovies={scheduledMovies}
-                  selectedMovie={selectedMovie}
-                  xDomain={xDomain}
-                  scale={scale}
-                  visibleWidth={visibleWidth}
-                  rowHeight={rowHeight}
-                  formatTime={formatTime}
-                  handleTimelineClick={handleTimelineClick}
-                  handleTimelineMouseMove={handleTimelineMouseMove}
-                  handleTimelineMouseLeave={handleTimelineMouseLeave}
-                  handleMovieClick={handleMovieClick}
-                  handleMovieDragEnd={handleMovieDragEnd}
-                  tooltipInfo={tooltipInfo}
-                  isMovieVisible={(movie) => isMovieVisible(movie, xDomain)}
-                />
-              ) : (
-                <div className="text-center p-8">
-                  No screens available. Please add screens to schedule movies.
-                </div>
-              )}
-            </div>
-          </Card>
-        </Content>
-      </Layout>
-
-      {/* Movie Details Drawer */}
-      <Drawer
-        title="Movie Details"
-        placement="right"
-        width={400}
-        open={isDetailsVisible && selectedMovie}
-        onClose={handleCloseDetails}
-        destroyOnClose
-      >
-        {selectedMovie && (
-          <MovieDetails
-            movie={selectedMovie}
-            formatTime={formatTime}
-            screens={screens}
-            onClose={handleCloseDetails}
-            onDelete={deleteScheduledMovie}
-          />
-        )}
-      </Drawer>
-
-      {/* Modal for scheduling movies */}
-      <Modal
-        title="Schedule Movie"
-        open={isModalVisible}
-        onCancel={() => {
-          setIsModalVisible(false);
-          resetModalFields();
-        }}
-        onOk={handleScheduleMovie}
-        destroyOnClose
-      >
-        <ScheduleForm
-          movies={movies}
-          screens={screens}
-          selectedMovieId={selectedMovieId}
-          selectedTime={selectedTime}
-          selectedScreen={selectedScreen}
-          intervalTime={intervalTime}
-          setSelectedMovieId={setSelectedMovieId}
-          setSelectedTime={setSelectedTime}
-          setSelectedScreen={setSelectedScreen}
-          setIntervalTime={setIntervalTime}
-          selectedDate={selectedDate}
+    <div className="container mx-auto">
+      <div className="flex mb-4 border-b p-2 bg-white rounded-xl">
+        {dates.map((date, index) => (
+          <button
+            key={index}
+            className={`py-2 px-4 flex flex-col items-center ${
+              activeTab === date.weekday
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-600"
+            }`}
+            onClick={() => dispatch(setActiveTab(date.weekday))}
+          >
+            <span className="text-sm">{date.day}</span>
+            <span className="font-bold">{date.dayNum}</span>
+            <span className="text-xs">{date.month}</span>
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-4">
+        {/* Movie list */}
+        <MovieList
+          movies={availableMovies}
+          handleDragStart={handleMovieDragStart} // Updated to use the wrapper function
         />
-      </Modal>
-    </Layout>
+
+        <div
+          className="flex-1 overflow-x-auto bg-white p-4 rounded-xl shadow"
+          ref={gridRef}
+        >
+          <TimeRuler hourWidth={hourWidth} timeRulerRef={timeRulerRef} />
+          <div
+            className="relative"
+            ref={gridContentRef}
+            onDrop={handleDropMovie} // Updated to use the wrapper function
+            onDragOver={handleDragOver}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+          >
+            <ScheduleGrid
+              screens={screens}
+              hourWidth={hourWidth}
+              rowHeight={rowHeight}
+            />
+
+            <ScheduledMovies
+              scheduledMovies={scheduledMovies}
+              activeTab={activeTab}
+              screens={screens}
+              movies={availableMovies}
+              rowHeight={rowHeight}
+              hourWidth={hourWidth}
+              sidebarWidth={sidebarWidth}
+              handleScheduledMovieClick={handleScheduledMovieClick}
+              handleScheduledMovieDragStart={handleMovieScheduledDragStart} // Updated to use the wrapper function
+            />
+
+            <HoverIndicator
+              hoverPosition={hoverPosition}
+              sidebarWidth={sidebarWidth}
+              rowHeight={rowHeight}
+            />
+          </div>
+        </div>
+      </div>
+
+      {isDetailsOpen && selectedMovie && (
+        <MovieDetail
+          form={form}
+          movie={selectedMovie}
+          screens={screens}
+          coupons={filteredCoupons}
+          seats={allSeats}
+          offers={filteredOffers}
+          onUpdate={handleUpdateSchedule}
+          onClose={() => setIsDetailsOpen(false)}
+          onDelete={handleRemoveSchedule}
+        />
+      )}
+    </div>
   );
 }

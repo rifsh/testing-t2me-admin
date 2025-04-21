@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Card, Form, Select, Input } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllEvent, setSelectedEvent } from "store/slices/eventSlice";
@@ -7,6 +7,8 @@ import {
   setScheduleSelectTime,
 } from "store/slices/scheduleSlice";
 import { setSelectedVenue } from "store/slices/locationSlice";
+import { EVENT_TYPES } from "constants/PageConstants";
+import { debounce } from "lodash";
 
 const { Option } = Select;
 
@@ -21,7 +23,7 @@ export function ScheduleDetails({ form, type }) {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        await dispatch(fetchAllEvent({})).unwrap();
+        await dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event })).unwrap();
       } catch (error) {
         console.error("Failed to fetch events:", error);
       }
@@ -75,6 +77,21 @@ export function ScheduleDetails({ form, type }) {
     dispatch(resetSchedule());
   };
 
+  const debouncedSearch = useCallback(
+    debounce((value) => {
+      dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event, search: value }));
+    }, 500),
+    [dispatch]
+  );
+
+  const handleSearch = (value) => {
+    if (value.trim()) {
+      debouncedSearch(value);
+    } else {
+      dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
+    }
+  }
+
   return (
     <Card title="Schedule Details">
       <Form.Item
@@ -95,7 +112,9 @@ export function ScheduleDetails({ form, type }) {
           className="w-100"
           placeholder="Select an event"
           onChange={handleSelectEvent}
+          onSearch={handleSearch}
           allowClear
+          showArrow
           showSearch
           filterOption={(input, option) =>
             option?.label?.toLowerCase()?.includes(input.toLowerCase())

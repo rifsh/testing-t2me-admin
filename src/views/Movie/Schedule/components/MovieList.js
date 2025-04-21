@@ -1,64 +1,56 @@
-import React from "react";
-import { List, Card, Typography } from "antd";
+import React, { useState } from "react";
+import { CalendarOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import { extractMovies, formatMinutes } from "./utils";
+import { Input } from "antd";
 
-const { Text } = Typography;
-
-const MovieList = ({ movies, onMovieSelect }) => {
+export default function MovieList({ movies, handleDragStart }) {
   return (
-    <List
-      dataSource={movies}
-      renderItem={(movie) => (
-        <List.Item style={{ padding: "8px 16px" }}>
-          <Card
-            hoverable
-            bodyStyle={{ padding: 12 }}
-            style={{ width: "100%", cursor: "pointer" }}
-            onClick={() => onMovieSelect(movie)}
-          >
-            <div className="flex">
-              <div style={{ width: 60, height: 80, overflow: "hidden" }}>
-                {movie.image ? (
+    <div
+      className="w-64 bg-white p-3 rounded-xl shadow"
+      style={{ overflow: "auto", maxHeight: "80vh" }}
+    >
+      <h2 className="font-bold mb-4 flex items-center gap-1">
+        <CalendarOutlined size={16} />
+        Available Movies
+      </h2>
+
+      <div className="space-y-2">
+        {movies.length > 0 ? (
+          movies.map((movie) => (
+            <div
+              key={movie.id}
+              className="p-3 rounded-xl border cursor-move flex items-center justify-between"
+              draggable
+              onDragStart={(e) => handleDragStart(e, movie)}
+            >
+              <div className="flex items-center gap-2">
+                {movie.image && (
                   <img
                     src={movie.image}
                     alt={movie.title}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
+                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                   />
-                ) : (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      backgroundColor: "#f0f0f0",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    No Image
-                  </div>
                 )}
-              </div>
-              <div className="ml-3 flex-1">
-                <div className="font-semibold text-sm truncate">
-                  {movie.title}
-                </div>
-                <Text type="secondary" className="text-xs">
-                  {movie.duration} min | {movie.genre}
-                </Text>
-                <div className="text-xs text-gray-500 mt-1">
-                  Dir: {movie.director}
+                <div>
+                  <div className="font-medium">{movie.title}</div>
+                  <div className="text-xs text-gray-500 flex items-center gap-1">
+                    <ClockCircleOutlined size={12} />
+                    {formatMinutes(movie.duration)}
+                  </div>
                 </div>
               </div>
+              <div
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: movie.color }}
+              ></div>
             </div>
-          </Card>
-        </List.Item>
-      )}
-    />
+          ))
+        ) : (
+          <div className="text-center text-gray-500 p-4">
+            No movies available
+          </div>
+        )}
+      </div>
+    </div>
   );
-};
-
-export default MovieList;
+}

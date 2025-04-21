@@ -1,4 +1,4 @@
-import { Card, Tabs } from 'antd'
+import { Card, Tabs } from 'antd';
 import React from 'react'
 import TheaterList from '../components/TheaterList';
 import TheaterCompaniesList from '../components/TheaterCompaniesList';

@@ -7,78 +7,57 @@ import debounce from 'lodash/debounce';
 
 const CelebritiesListDropDown = ({ value, onChange, disabled = false, style = {} }) => {
     const dispatch = useDispatch();
-    const { response, loading, error } = useSelector((state) => state.cast);
-    const [searchValue, setSearchValue] = useState('');
-    const [options, setOptions] = useState([]);
+    const { response, loading, error } = useSelector(state => state.cast);
     const [localOptions, setLocalOptions] = useState([]);
-    const [initialFetchDone, setInitialFetchDone] = useState(false);
 
-    // Initial data fetch
+    // Initial fetch
     useEffect(() => {
-        const fetchInitialData = async () => {
-            try {
-                await dispatch(fetchPersonalitiesData()).unwrap();
-                setInitialFetchDone(true);
-            } catch (err) {
-                console.log('error occured', err)
-            }
-        };
-
-        fetchInitialData();
+        dispatch(fetchPersonalitiesData());
     }, [dispatch]);
 
-    // Update options when API response changes
-    useEffect(() => {
-        if (response?.items) {
-            // Filter out duplicates by ID
-            const uniqueOptions = [...new Map(
-                [...response.items, ...localOptions].map(item => [item.id, item])
-            ).values()];
-            setOptions(uniqueOptions);
-        }
-    }, [response, localOptions]);
-
-    // Show error message if API fails
+    // Error handler
     useEffect(() => {
         if (error) {
             message.error('Failed to load or search actors list. Please try again later.');
         }
     }, [error]);
 
-    // Debounced search function
+    // Debounced search
     const debouncedSearch = useCallback(
-        debounce((value) => {
-            if (value?.trim()) {
-                dispatch(fetchPersonalitiesData({ search: value.trim() }));
-            }
+        debounce(value => {
+            dispatch(fetchPersonalitiesData({ search: value }));
         }, 300),
         [dispatch]
     );
 
+    const handleSearch = (val) => {
+        if (val.trim()) {
+            debouncedSearch(val);
+        } else {
+            dispatch(fetchPersonalitiesData());
+        }
+    };
+
     const handleChange = (selectedValue, option) => {
+        dispatch(fetchPersonalitiesData({}));
         if (onChange && selectedValue) {
             onChange(selectedValue, option);
         }
     };
 
-    const handleSearch = (value) => {
-        setSearchValue(value || '');
-        if (value?.trim()) {
-            debouncedSearch(value);
-        }
-    };
-
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && searchValue?.trim() &&
-            !options.some(opt => opt.name?.toLowerCase() === searchValue.trim().toLowerCase())) {
+        const search = e.target.value.trim();
+        if (e.key === 'Enter' && search &&
+            !allOptions.some(opt => opt.name?.toLowerCase() === search.toLowerCase())
+        ) {
             const newOption = {
                 id: `new-${Date.now()}`,
-                name: searchValue.trim(),
+                name: search,
                 thumbnail_image: null,
                 isCustom: true
             };
-
             setLocalOptions(prev => [...prev, newOption]);
+            message.success(`Added "${search}" to options`);
             handleChange(newOption.id, {
                 key: newOption.id,
                 value: newOption.id,
@@ -86,21 +65,16 @@ const CelebritiesListDropDown = ({ value, onChange, disabled = false, style = {}
                 image: newOption.thumbnail_image,
                 isCustom: true
             });
-
-            message.success(`Added "${newOption.name}" to options`);
-            setSearchValue('');
         }
     };
 
-    const handleDropdownOpen = () => {
-        if (initialFetchDone) {
-            dispatch(fetchPersonalitiesData());
-        }
-    };
+    const allOptions = useMemo(() => {
+        const combined = [...(response?.items || []), ...localOptions];
+        return [...new Map(combined.map(item => [item.id, item])).values()];
+    }, [response, localOptions]);
 
-    // Memoize the rendered options to prevent unnecessary re-renders
-    const renderedOptions = useMemo(() => {
-        return options.map((actor) => (
+    const renderedOptions = useMemo(() => (
+        allOptions.map(actor => (
             <Select.Option
                 key={actor.id}
                 value={actor.id}
@@ -113,18 +87,17 @@ const CelebritiesListDropDown = ({ value, onChange, disabled = false, style = {}
                         src={actor.thumbnail_image}
                         icon={<UserOutlined />}
                         size={40}
-                        alt={actor.name || 'Actor'}
+                        alt={actor.name}
                     />
                     <span>{actor.name}{actor.isCustom ? ' (custom)' : ''}</span>
                 </Space>
             </Select.Option>
-        ));
-    }, [options]);
+        ))
+    ), [allOptions]);
 
     return (
         <Select
             value={value}
-            onClick={handleDropdownOpen}
             onSearch={handleSearch}
             onChange={handleChange}
             onInputKeyDown={handleKeyDown}
@@ -134,12 +107,11 @@ const CelebritiesListDropDown = ({ value, onChange, disabled = false, style = {}
             showSearch
             loading={loading}
             disabled={disabled}
-            filterOption={(input, option) => {
-                return option?.label?.toLowerCase().includes(input.toLowerCase());
-            }}
-            notFoundContent={loading ? 'Loading...' : searchValue ? 'Press Enter to add as new' : 'No data'}
+            filterOption={(input, option) =>
+                option?.label?.toLowerCase().includes(input.toLowerCase())
+            }
+            notFoundContent={loading ? 'Loading...' : 'Press Enter to add as new'}
             allowClear
-            maxTagCount={3}
             showArrow
         >
             {renderedOptions}

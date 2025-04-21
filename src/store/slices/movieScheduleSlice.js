@@ -1,95 +1,135 @@
-import { createSlice } from "@reduxjs/toolkit";
 import dayjs from "dayjs";
-
+import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
-  movies: [
-    {
-      id: 1,
-      title: "Inception",
-      duration: 148,
-      genre: "Sci-Fi",
-      director: "Christopher Nolan",
-      image:
-        "https://assets-in.bmscdn.com/discovery-catalog/events/tr:w-400,h-600,bg-CCCCCC/et00308207-dffnzphrxk-portrait.jpg",
-    },
-    {
-      id: 2,
-      title: "The Dark Knight",
-      duration: 152,
-      genre: "Action",
-      director: "Christopher Nolan",
-      image:
-        "https://assets-in.bmscdn.com/discovery-catalog/events/tr:w-400,h-600,bg-CCCCCC/et00012473-vlrjfslazp-portrait.jpg",
-    },
-    {
-      id: 3,
-      title: "Interstellar",
-      duration: 169,
-      genre: "Sci-Fi",
-      director: "Christopher Nolan",
-      image:
-        "https://assets-in.bmscdn.com/discovery-catalog/events/tr:w-400,h-600,bg-CCCCCC/et00019066-rtldxrfyzs-portrait.jpg",
-    },
-  ],
-  scheduledMovies: [],
-  selectedMovie: null,
-  dateRange: [dayjs(), dayjs().add(6, "day")], // Default 7-day range
-  selectedDate: dayjs(), // Default to today
-  zoomLevel: 1,
-  xDomain: [8, 24], // Show 8am-midnight by default
+  scheduledMovies: {},
+  dateRange: [],
+  selectedDate: dayjs().format("YYYY-MM-DD"),
+  selectedMovieId: null,
+  isDetailsOpen: false,
+  seatStructure: null,
+  coupons: {},
+  offers: {},
+  seatStructures: {},
+  intervalTimes: {},
+  activeTab: 0,
+  dateRangeLength: 7,
+  showLengthOptions: false,
+  availableMovies: [],
 };
-
 const movieScheduleSlice = createSlice({
   name: "movieSchedule",
   initialState,
   reducers: {
-    addMovie: (state, action) => {
-      state.movies.push(action.payload);
+    resetState: () => {
+      return initialState;
     },
-    updateMovie: (state, action) => {
-      const index = state.movies.findIndex(
-        (movie) => movie.id === action.payload.id
-      );
-      if (index !== -1) {
-        state.movies[index] = action.payload;
+    // Switch between days
+    setavailableMovies: (state, action) => {
+      state.availableMovies = action.payload;
+    },
+    setActiveTab: (state, action) => {
+      state.activeTab = action.payload;
+    },
+    setDateRangeLength: (state, action) => {
+      state.dateRangeLength = action.payload;
+    },
+
+    setShowLengthOptions: (state, action) => {
+      state.showLengthOptions = action.payload;
+    },
+
+    // Handle scheduling movies - accept the entire updated scheduledMovies object
+    scheduleMovie: (state, action) => {
+      state.scheduledMovies = action.payload;
+    },
+
+    // Legacy reducer for scheduling a single movie
+    scheduleMovieSingle: (state, action) => {
+      const { date, movieData } = action.payload;
+
+      // Initialize the date if it doesn't exist
+      if (!state.scheduledMovies[date]) {
+        state.scheduledMovies[date] = [];
+      }
+
+      // Check for conflicts
+      const conflicts = state.scheduledMovies[date].some((movie) => {
+        if (movie.screen !== movieData.screen) return false;
+
+        // Check if the new movie overlaps with an existing one
+        return (
+          movieData.startMinutes < movie.endMinutes &&
+          movieData.endMinutes > movie.startMinutes
+        );
+      });
+
+      if (!conflicts) {
+        state.scheduledMovies[date].push(movieData);
       }
     },
-    removeMovie: (state, action) => {
-      state.movies = state.movies.filter(
-        (movie) => movie.id !== action.payload
-      );
-    },
-    addScheduledMovie: (state, action) => {
-      // Ensure the movie has a scheduleDate property if selectedDate exists
-      if (state.selectedDate && !action.payload.scheduleDate) {
-        action.payload.scheduleDate = state.selectedDate.format("YYYY-MM-DD");
-      }
-      state.scheduledMovies.push(action.payload);
-    },
+
+    // Update scheduled movie reducer
     updateScheduledMovie: (state, action) => {
-      const index = state.scheduledMovies.findIndex(
-        (movie) => movie.id === action.payload.id
-      );
-      if (index !== -1) {
-        // Keep the original scheduleDate unless a new one is provided
-        if (
-          !action.payload.scheduleDate &&
-          state.scheduledMovies[index].scheduleDate
-        ) {
-          action.payload.scheduleDate =
-            state.scheduledMovies[index].scheduleDate;
-        }
-        state.scheduledMovies[index] = action.payload;
+      const { date, updatedMovie } = action.payload;
+
+      if (state.scheduledMovies[date]) {
+        state.scheduledMovies[date] = state.scheduledMovies[date].map((movie) =>
+          movie.id === updatedMovie.id ? updatedMovie : movie
+        );
       }
     },
+
+    // Remove scheduled movie reducer
     removeScheduledMovie: (state, action) => {
-      state.scheduledMovies = state.scheduledMovies.filter(
-        (movie) => movie.id !== action.payload
-      );
+      const { date, movieId } = action.payload;
+
+      if (state.scheduledMovies[date]) {
+        state.scheduledMovies[date] = state.scheduledMovies[date].filter(
+          (movie) => movie.id !== movieId
+        );
+      }
     },
+
+    // Set selected movie (for detail view)
     setSelectedMovie: (state, action) => {
-      state.selectedMovie = action.payload;
+      state.selectedMovieId = action.payload;
     },
+
+    // Toggle detail drawer/modal
+    toggleDetailsOpen: (state, action) => {
+      state.isDetailsOpen =
+        action.payload !== undefined ? action.payload : !state.isDetailsOpen;
+    },
+
+    // Update seat structure
+    updateSeatStructure: (state, action) => {
+      state.seatStructure = action.payload;
+    },
+
+    // Set coupons for a scheduled movie (as a list)
+    setCoupons: (state, action) => {
+      const { movieId, couponIds } = action.payload;
+      state.coupons[movieId] = couponIds;
+    },
+
+    // Set offers for a scheduled movie (as a list)
+    setOffers: (state, action) => {
+      const { movieId, offerIds } = action.payload;
+      state.offers[movieId] = offerIds;
+    },
+
+    // Set seat structure for a scheduled movie
+    setSeatStructure: (state, action) => {
+      const { movieId, seatStructureId } = action.payload;
+      state.seatStructures[movieId] = seatStructureId;
+    },
+
+    // Set interval time for a scheduled movie
+    setIntervalTime: (state, action) => {
+      const { movieId, intervalTime } = action.payload;
+      state.intervalTimes[movieId] = intervalTime;
+    },
+
     setDateRange: (state, action) => {
       state.dateRange = action.payload;
 
@@ -110,30 +150,33 @@ const movieScheduleSlice = createSlice({
         state.selectedDate = action.payload[0];
       }
     },
+
     setSelectedDate: (state, action) => {
       state.selectedDate = action.payload;
-    },
-    setZoomLevel: (state, action) => {
-      state.zoomLevel = action.payload;
-    },
-    setXDomain: (state, action) => {
-      state.xDomain = action.payload;
     },
   },
 });
 
+// Export actions
 export const {
-  addMovie,
-  updateMovie,
-  removeMovie,
-  addScheduledMovie,
+  setActiveTab,
+  resetState,
+  scheduleMovie,
+  scheduleMovieSingle,
   updateScheduledMovie,
+  setavailableMovies,
   removeScheduledMovie,
   setSelectedMovie,
+  toggleDetailsOpen,
+  updateSeatStructure,
+  setCoupons,
+  setOffers,
+  setSeatStructure,
+  setIntervalTime,
   setDateRange,
   setSelectedDate,
-  setZoomLevel,
-  setXDomain,
+  setDateRangeLength,
+  setShowLengthOptions,
 } = movieScheduleSlice.actions;
 
 export default movieScheduleSlice.reducer;
