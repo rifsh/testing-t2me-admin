@@ -70,10 +70,9 @@ const ScheduleForm = (props) => {
   // }, [seatId, dispatch]);
 
   useEffect(() => {
-    if (!form.validateFields) {
-      dispatch(resetState());
-    }
+    dispatch(resetState());
   }, [form]);
+
   useEffect(() => {
     if (error) {
       message.error(error);
@@ -164,6 +163,7 @@ const ScheduleForm = (props) => {
         }
       });
 
+      console.log("scheduledMovies Data:", scheduledMovies);
       console.log("Restructured Data:", restructuredData);
 
       // setSubmitLoading(true);

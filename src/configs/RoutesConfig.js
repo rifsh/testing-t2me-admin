@@ -549,6 +549,13 @@ export const protectedRoutes = [
     ),
   },
   {
+    key: "alerts.list",
+    path: `${APP_PREFIX_PATH}/alerts/details/:issueId`,
+    component: React.lazy(() =>
+      import("views/app-views/apps/alerts/alerts-details")
+    )
+  },
+  {
     key: "event.type.list",
     path: `${APP_PREFIX_PATH}/event/type/list`,
     component: React.lazy(() => import("views/event-type/list-type")),

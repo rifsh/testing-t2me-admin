@@ -74,6 +74,8 @@ export const fetchMoviesData = createAsyncThunk(
     async (pageData, { rejectWithValue }) => {
         try {
             const response = await movieService.getMovieData(pageData);
+            console.log(response,'adsfasfjsfaf');
+            
             return response.data[0];
 
         } catch (error) {

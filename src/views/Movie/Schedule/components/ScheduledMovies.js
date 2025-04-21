@@ -12,28 +12,41 @@ export default function ScheduledMovies({
   handleScheduledMovieClick,
   handleScheduledMovieDragStart,
 }) {
-  // Handle case where scheduledMovies[activeTab] is undefined
   const currentTabMovies = scheduledMovies[activeTab] || [];
 
   return currentTabMovies.map((scheduledMovie) => {
-    // Find the movie in the available movies list
     const movie = movies.find((m) => m.id === scheduledMovie.movieId);
     if (!movie) return null;
 
-    // Find the screen index
     const screenIndex = screens.findIndex(
       (screen) => screen.id === scheduledMovie.screen.id
     );
-    if (screenIndex === -1) return null; // Skip if screen not found
+    if (screenIndex === -1) return null;
 
-    // Calculate positioning
     const top = screenIndex * rowHeight;
     const left = (scheduledMovie.startMinutes / 60) * hourWidth;
-    const width =
-      ((scheduledMovie.endMinutes - scheduledMovie.startMinutes) / 60) *
-      hourWidth;
 
-    // Format time display
+    let displayWidth;
+
+    if (scheduledMovie.isMidnightPassed) {
+      const minutesToMidnight = 24 * 60 - scheduledMovie.startMinutes;
+
+      const effectiveMinutes = Math.min(
+        minutesToMidnight,
+        // scheduledMovie.actualDuration ||
+        //   scheduledMovie.originalDuration ||
+          scheduledMovie.endMinutes - scheduledMovie.startMinutes
+      );
+
+      displayWidth = (effectiveMinutes / 60) * hourWidth;
+    } else if (scheduledMovie.isContinuation) {
+      displayWidth = (scheduledMovie.endMinutes / 60) * hourWidth;
+    } else {
+      displayWidth =
+        ((scheduledMovie.endMinutes - scheduledMovie.startMinutes) / 60) *
+        hourWidth;
+    }
+
     const startHour = Math.floor(scheduledMovie.startMinutes / 60);
     const startMinute = scheduledMovie.startMinutes % 60;
     const endHour = Math.floor(scheduledMovie.endMinutes / 60);
@@ -46,9 +59,17 @@ export default function ScheduledMovies({
       .toString()
       .padStart(2, "0")}`;
 
-    // Calculate card width
     const cardMaxWidth = 180;
-    const cardWidth = Math.min(width, cardMaxWidth);
+    const cardWidth = Math.min(displayWidth, cardMaxWidth);
+
+    const fullDuration =
+      scheduledMovie.actualDuration ||
+      scheduledMovie.originalDuration ||
+      scheduledMovie.endMinutes - scheduledMovie.startMinutes;
+
+    const fullDurationHours = Math.floor(fullDuration / 60);
+    const fullDurationMinutes = fullDuration % 60;
+    const fullDurationText = `${fullDurationHours}h ${fullDurationMinutes}m`;
 
     return (
       <div
@@ -57,22 +78,31 @@ export default function ScheduledMovies({
         style={{
           top: `${top + rowHeight / 2 - 10}px`,
           left: `${left + sidebarWidth}px`,
-          width: `${width}px`,
+          width: `${displayWidth}px`, 
           height: `${20}px`,
         }}
       >
-        {/* Simple duration line */}
         <div
           className="absolute h-1 rounded-full w-full top-1/2 transform -translate-y-1/2"
-          style={{ backgroundColor: movie.color || "#1890ff" }}
+          style={{
+            backgroundColor: movie.color || "#1890ff",
+            opacity: scheduledMovie.isContinuation ? 0.7 : 1,
+          }}
+          title={
+            scheduledMovie.isMidnightPassed || scheduledMovie.isContinuation
+              ? `Full duration: ${fullDurationText}`
+              : undefined
+          }
         />
 
-        {/* Movie card - centered */}
         <div
           className="absolute top-1/2 transform -translate-y-1/2 bg-white shadow-md rounded-md flex items-center p-1 cursor-pointer z-10"
           style={{
             maxWidth: cardWidth + "px",
-            left: `${(width - cardWidth) / 2}px`, // Center the card
+            left: `${(displayWidth - cardWidth) / 2}px`, 
+            borderLeft: scheduledMovie.isContinuation
+              ? `3px solid ${movie.color || "#1890ff"}`
+              : "none",
           }}
           onClick={(e) => handleScheduledMovieClick(e, scheduledMovie)}
           draggable
@@ -86,9 +116,13 @@ export default function ScheduledMovies({
             />
           )}
           <div className="flex-grow overflow-hidden">
-            <div className="font-medium text-xs truncate">{movie.title}</div>
+            <div className="font-medium text-xs truncate">
+              {scheduledMovie.isContinuation && "↪ "}
+              {movie.title}
+            </div>
             <div className="text-xs text-gray-500">
               {startTimeFormatted} - {endTimeFormatted}
+              {scheduledMovie.isMidnightPassed && " ↪"}
             </div>
           </div>
           <div className="ml-1 flex-shrink-0 text-gray-500">
