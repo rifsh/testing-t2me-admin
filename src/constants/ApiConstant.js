@@ -147,16 +147,16 @@ export const ApiConstant = {
   OMDB_DETAIL_API_URL: "/api/v1/shared/app_management/public/omdb_movie_details",
 
   // VALIDATION API ENDPOINTS
-  PLACE_VALIDATE_URL: "/api/v1/validation/secured/validate_place",
-  COUNTRY_VALIDATE_URL: "/api/v1/validation/secured/validate_country",
-  CATEGORY_VALIDATE_URL: "/api/v1/validation/secured/validate_category",
-  SUB_CATEGORY_VALIDATE_URL: "/api/v1/validation/secured/validate_subcategory",
-  VENUE_VALIDATE_URL: "/api/v1/validation/secured/validate_venue",
-  TAX_VALIDATE_URL: "/api/v1/validation/secured/validate_tax",
-  MULT_EVENT_VALIDATE_URL: "/api/v1/validation/secured/validate_multiple_event",
-  TICKET_VALIDATE_URL: "/api/v1/validation/secured/validate_ticket",
-  OFFER_COUPON_VALIDATE_URL: "/api/v1/validation/secured/validate_offer_coupon",
-  ADCATEGORY_VALIDATE_URL: "/api/v1/validation/secured/validate_ad_category",
+  PLACE_VALIDATE_URL: "/api/v1/shared/validation/secured/validate_place",
+  COUNTRY_VALIDATE_URL: "/api/v1/shared/validation/secured/validate_country",
+  CATEGORY_VALIDATE_URL: "/api/v1/shared/validation/secured/validate_category",
+  SUB_CATEGORY_VALIDATE_URL: "/api/v1/shared/validation/secured/validate_subcategory",
+  VENUE_VALIDATE_URL: "/api/v1/shared/validation/secured/validate_venue",
+  TAX_VALIDATE_URL: "/api/v1/shared/validation/secured/validate_tax",
+  MULT_EVENT_VALIDATE_URL: "/api/v1/shared/validation/secured/validate_multiple_event",
+  TICKET_VALIDATE_URL: "/api/v1/shared/validation/secured/validate_ticket",
+  OFFER_COUPON_VALIDATE_URL: "/api/v1/shared/validation/secured/validate_offer_coupon",
+  ADCATEGORY_VALIDATE_URL: "/api/v1/shared/validation/secured/validate_ad_category",
 
   // FOOTER URLS
 
