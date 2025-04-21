@@ -44,7 +44,7 @@ const IssueDetails = () => {
 
     return()=>{
       if (!IssueDetails){
-        navigate(`${APP_PREFIX_PATH}/issue/list`);
+        navigate(`${APP_PREFIX_PATH}/alerts/list`);
       }
 
     }
@@ -175,10 +175,11 @@ const IssueDetails = () => {
         );
 
         if (IssueReasignUpdate.fulfilled.match(reassignAction)) {
+          console.warn("Reassigned successfully", reassignAction.payload);
           message.success(
             `Issue reassigned to ${IssueDetails.role_assignable}, the issue will no longer be available in your dashboard`
           );
-          navigate(`${APP_PREFIX_PATH}/issue/list`);
+          navigate(`${APP_PREFIX_PATH}/alerts/list`);
         }
       }
     } catch (error) {
@@ -218,7 +219,7 @@ const IssueDetails = () => {
 
       if (IssueCloseUpdate.fulfilled.match(resultAction)) {
         message.success("Ticket closed");
-        navigate(`${APP_PREFIX_PATH}/issue/list`);
+        navigate(`${APP_PREFIX_PATH}/alerts/list`);
       }
     }
     } catch (error) {
@@ -256,7 +257,7 @@ const IssueDetails = () => {
               <Title level={3} style={{ margin: 0 }}>{IssueDetails.subject}</Title>
             </Col>
             <Col>
-  {IssueDetails.status_changable && !IssueDetails.ticket_status &&(
+  {/* {IssueDetails.status_changable && !IssueDetails.ticket_status &&(
     <Select
       value={IssueDetails?.issue_status}
       onChange={handleChange}
@@ -273,7 +274,7 @@ const IssueDetails = () => {
         </Option>
       ))}
     </Select>
-  )}
+  )} */}
 </Col>
 
           </Row>
@@ -351,7 +352,7 @@ const IssueDetails = () => {
         </Row>
       </Card>
       {/* Action Buttons */}
-      <Row justify="center" style={{ marginTop: 24 }} gutter={[16, 16]}>
+      {/* <Row justify="center" style={{ marginTop: 24 }} gutter={[16, 16]}>
   {!IssueDetails.ticket_status &&
     (IssueDetails.assignable ? (
       <Col>
@@ -376,7 +377,7 @@ const IssueDetails = () => {
         </Col>
       )
     ))}
-</Row>
+</Row> */}
 
       {/* Comments Section */}
       <Card style={{ marginTop: 16 }}>

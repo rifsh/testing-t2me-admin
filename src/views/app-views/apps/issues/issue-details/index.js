@@ -253,24 +253,34 @@ const IssueDetails = () => {
     if (!AssignmentDetails?.length) return null;
   
     return (
-      <Space direction="horizontal" size="small" style={{ width: '100%' }}>
-        {AssignmentDetails.map((assignment, index) => (
-          <Space key={index} align="center" style={{ width: '100%' }}>
-            <Card style={{ flex: 1 }} className="assignment-card">
-              <Space direction="vertical">
-                <Text strong>{assignment.assigned_user.email}</Text>
-                <Text type="secondary">{assignment.assigned_role.name}</Text>
-                <Text type="secondary">
-                  {moment(assignment.created_at).format('MMM DD, YYYY HH:mm')}
-                </Text>
-              </Space>
-            </Card>
-            {index < AssignmentDetails.length - 1 && (
-              <RightOutlined style={{ color: '#999' }} />
-            )}
-          </Space>
-        ))}
-      </Space>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
+  {AssignmentDetails.map((assignment, index) => (
+    <div
+      key={index}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        flex: '1 1 250px',
+        maxWidth: '300px',
+        minWidth: '250px',
+      }}
+    >
+      <Card style={{ width: '100%' }} className="assignment-card">
+        <Space direction="vertical">
+          <Text strong>{assignment.assigned_user.email}</Text>
+          <Text type="secondary">{assignment.assigned_role.name}</Text>
+          <Text type="secondary">
+            {moment(assignment.created_at).format('MMM DD, YYYY HH:mm')}
+          </Text>
+        </Space>
+      </Card>
+      {index < AssignmentDetails.length - 1 && (
+        <RightOutlined style={{ color: '#999', marginLeft: 8 }} />
+      )}
+    </div>
+  ))}
+</div>
+
     );
   };
 
