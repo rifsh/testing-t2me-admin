@@ -179,7 +179,7 @@ const CastDetailsForm = ({ form: parentForm, initialValues, mode }) => {
                         size="large"
                         src={record.actorImage}
                         style={{
-                            background: 'linear-gradient(135deg, #1890ff, #722ed1)',
+                            background: 'gray',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',

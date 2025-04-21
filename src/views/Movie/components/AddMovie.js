@@ -67,34 +67,34 @@ const AddMovie = ({ mode, id }) => {
     console.warn("Movie Edit Data");
     if (movieSingleResponse) {
       if (mode === MODE.EDIT) {
-        console.warn("Movie Single Response", movieSingleResponse);
         const mediaItems =
-          movieSingleResponse?.movie_details[0]?.media_items || [];
+          movieSingleResponse?.media_items || [];
+        console.log("Movie Single Response", mediaItems);
         const thumbnailImage =
           movieSingleResponse.thumbnail_image &&
-          movieSingleResponse.thumbnail_image !== "images"
+            movieSingleResponse.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: movieSingleResponse.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: movieSingleResponse.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: movieSingleResponse.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: movieSingleResponse.thumbnail_image,
+              },
+            ]
             : [];
         const banner_image =
-          movieSingleResponse?.movie_details[0]?.banner_image &&
-          movieSingleResponse?.movie_details[0]?.banner_image !== "images"
+          movieSingleResponse?.banner_image &&
+            movieSingleResponse?.banner_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: movieSingleResponse?.movie_details[0]?.banner_image
-                    .split("/")
-                    .pop(),
-                  status: "done",
-                  url: movieSingleResponse?.movie_details[0]?.banner_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: movieSingleResponse?.banner_image
+                  .split("/")
+                  .pop(),
+                status: "done",
+                url: movieSingleResponse?.banner_image,
+              },
+            ]
             : [];
 
         form.setFieldsValue({
@@ -108,7 +108,9 @@ const AddMovie = ({ mode, id }) => {
           rating: movieSingleResponse?.rating,
           Released: dayjs(movieSingleResponse?.released, "YYYY-MM-DD"),
           budget_currency: movieSingleResponse?.budget_currency,
+          budget: movieSingleResponse?.budget,
           box_office_currency: movieSingleResponse?.box_office_currency,
+          box_office: movieSingleResponse?.box_office,
           awards: movieSingleResponse?.awards,
           production_company: movieSingleResponse?.production_company,
           Plot: movieSingleResponse?.description,
@@ -142,55 +144,21 @@ const AddMovie = ({ mode, id }) => {
       // Save current form data regardless of direction
       const currentStepData = form.getFieldsValue(true);
 
-      // If movieSingleResponse is needed for additional form updates
-      const updatedData = {
+      setFormData(prevData => ({
+        ...prevData,
         ...currentStepData,
-        mediaItems: movieSingleResponse?.media_items,
-        thumbnail_image:
-          movieSingleResponse?.thumbnail_image &&
-          movieSingleResponse.thumbnail_image !== "images"
-            ? [
-                {
-                  uid: "-1",
-                  name: movieSingleResponse.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: movieSingleResponse.thumbnail_image,
-                },
-              ]
-            : [],
-      };
+        // Ensure media data is preserved
+        thumbnail_image: currentStepData.thumbnail_image || prevData.thumbnail_image,
+        mediaItems: currentStepData.mediaItems || prevData.mediaItems,
+        director: currentStepData.director || prevData.director
+      }));
 
-      form.setFieldsValue(updatedData);
-
-      // Update the active tab
+      // Change the tab
       setActiveTab(key);
     } catch (error) {
-      console.error("Validation failed or error in switching tab:", error);
+      message.error("Please complete this tab before continuing.");
     }
   };
-
-  const next = () => {
-    form.validateFields()
-        .then((values) => {
-            const currentStepData = form.getFieldsValue(true);
-
-            setFormData((prevData) => ({
-                ...prevData,
-                ...currentStepData,
-                // Ensure media data is preserved
-                thumbnail_image: currentStepData.thumbnail_image || prevData.thumbnail_image,
-                mediaItems: currentStepData.mediaItems || prevData.mediaItems,
-                director: currentStepData.director || prevData.director,
-            }));
-
-            // Change the tab
-            // setActiveTab(key); // Make sure 'key' is defined or passed to this function
-        })
-        .catch(() => {
-            message.error("Please complete this tab before continuing.");
-        });
-};
-
 
   const validateTabFields = async (tabIndex) => {
     let fieldsToValidate = [];
@@ -250,14 +218,12 @@ const AddMovie = ({ mode, id }) => {
               cast:
                 mode === MODE.ADD
                   ? formData.cast || []
-                  : movieSingleResponse?.movie_details?.[0]?.casts || [],
+                  : movieSingleResponse?.casts || [],
               crew: formData.crew || [],
             }}
           />
         );
       case "2":
-        return <MovieMediaUploader form={form} mode={mode} />;
-      case "mediaPreview":
         return <MovieMediaUploader form={form} mode={mode} />;
       default:
         return null;
@@ -421,7 +387,6 @@ const AddMovie = ({ mode, id }) => {
 
   useEffect(() => {
     return () => {
-      console.log("Component unmounted!");
       dispatch(clearOMDBData("omdb"));
     };
   }, [dispatch]);
@@ -442,10 +407,10 @@ const AddMovie = ({ mode, id }) => {
       if (nextTabIndex < MOVIE_CONSTANTS.MOVIE_STEPS.length) {
         // Save current form data before advancing
         const currentStepData = form.getFieldsValue(true);
-        setFormData((prevData) => ({
+        setFormData(prevData => ({
           ...prevData,
           ...currentStepData,
-          mediaItems: currentStepData.mediaItems || prevData.mediaItems,
+          mediaItems: currentStepData.mediaItems || prevData.mediaItems
         }));
 
         setActiveTab(String(nextTabIndex));
@@ -461,12 +426,12 @@ const AddMovie = ({ mode, id }) => {
     if (prevTabIndex >= 0) {
       // Save current tab data
       const currentStepData = form.getFieldsValue(true);
-      setFormData((prevData) => ({
+      setFormData(prevData => ({
         ...prevData,
         ...currentStepData,
         // Explicitly preserve media data
         // thumbnail_image: currentStepData.thumbnail_image || prevData.thumbnail_image,
-        mediaItems: currentStepData.mediaItems || prevData.mediaItems,
+        mediaItems: currentStepData.mediaItems || prevData.mediaItems
       }));
 
       setActiveTab(String(prevTabIndex));
@@ -494,7 +459,7 @@ const AddMovie = ({ mode, id }) => {
                         <Button onClick={handlePrev}>Previous</Button>
                       )}
                       {parseInt(activeTab) <
-                      MOVIE_CONSTANTS.MOVIE_STEPS.length - 1 ? (
+                        MOVIE_CONSTANTS.MOVIE_STEPS.length - 1 ? (
                         <Button type="primary" onClick={handleNext}>
                           Next
                         </Button>
