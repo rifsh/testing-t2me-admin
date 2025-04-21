@@ -13,7 +13,7 @@ UserService.getAllRoles = function (pageData) {
 };
 UserService.getAllUsers = function (pageData) {
   return fetch({
-    url: "/api/v1/auth/secured/users/",
+    url:`${ApiConstant.USER_URL}`,
     method: "get",
     params: Utils.filterParams(pageData),
   });
