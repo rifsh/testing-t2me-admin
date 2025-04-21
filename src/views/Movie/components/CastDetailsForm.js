@@ -70,7 +70,7 @@ const CastDetailsForm = ({ form: parentForm, initialValues, mode }) => {
                 setTeamMembers(initialValues.cast || []);
             }
         }
-    }, [initialValues, mode, parentForm]);
+    }, [parentForm]);
 
     useEffect(() => {
         if (editingMember) {
@@ -82,6 +82,7 @@ const CastDetailsForm = ({ form: parentForm, initialValues, mode }) => {
                 role: editingMember.role,
                 type: editingMember.type
             });
+            console.log("editingMember", editingMember)
         }
     }, [editingMember, memberForm]);
 
@@ -136,12 +137,14 @@ const CastDetailsForm = ({ form: parentForm, initialValues, mode }) => {
         };
 
         // Update or add the member
-        if (editingMember.id) {
+        if (editingMember.personality_id) {
             // Existing member - update
             const updatedTeamMembers = teamMembers.map(member =>
-                member.id === editingMember.id ? updatedMember : member
+                member.personality_id === editingMember.personality_id ? updatedMember : member
             );
             setTeamMembers(updatedTeamMembers);
+            console.log("Edit member", updatedTeamMembers)
+
         } else {
             // New member - add
             setTeamMembers([...teamMembers, updatedMember]);

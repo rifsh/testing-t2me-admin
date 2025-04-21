@@ -57,6 +57,7 @@ import { getCurrentUser } from "configs/UserAccessConfig";
 import { getEventFormSteps } from "configs/UserAccessConfig";
 import getEventFormItems from "configs/UserAccessConfig";
 import { getSingleLeadEvents, addLeadEvent } from "store/slices/leadEventSlice";
+import { EVENT_TYPES } from "constants/PageConstants";
 
 const MultyStepEventForm = ({ eventId, mode }) => {
   const {
@@ -175,29 +176,29 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           eventDetails.event_coupons?.map((coupon) => coupon.coupons.id) || [],
         thumbnail_image: eventDetails.thumbnail_image
           ? [
-              {
-                uid: "-1",
-                name: eventDetails.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: eventDetails.thumbnail_image,
-              },
-            ]
+            {
+              uid: "-1",
+              name: eventDetails.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: eventDetails.thumbnail_image,
+            },
+          ]
           : [],
         banner_images: eventDetails.media
           ? eventDetails.media.map((image, index) => ({
-              uid: `-${index + 1}`,
-              name: image.media_url.split("/").pop(),
-              status: "done",
-              url: image.media_url,
-            }))
+            uid: `-${index + 1}`,
+            name: image.media_url.split("/").pop(),
+            status: "done",
+            url: image.media_url,
+          }))
           : [],
         event_images: eventDetails.event_images
           ? eventDetails.event_images.map((image, index) => ({
-              uid: `-${index + 1}`,
-              name: image.image.split("/").pop(),
-              status: "done",
-              url: image.image,
-            }))
+            uid: `-${index + 1}`,
+            name: image.image.split("/").pop(),
+            status: "done",
+            url: image.image,
+          }))
           : [],
       };
 
@@ -498,14 +499,14 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           ...venue_id,
           ...ticket_structure,
           ...offers,
-          lead_id:eventId,
+          lead_id: eventId,
           event_add_on_services: !submitData.event_add_on_services
             ? []
             : submitData.event_add_on_services,
           event_qna: !submitData.event_qna ? [] : submitData.event_qna,
           max_tickets: parseInt(submitData.max_tickets || "0", 10),
           event_type_id:
-            eventType.find((item) => item.type === "General")?.id || 1,
+            eventType.find((item) => item.name === EVENT_TYPES.event)?.id || 1,
         };
         const resultAction = await dispatch(
           validateOfferCoupon({
