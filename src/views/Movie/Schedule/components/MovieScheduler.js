@@ -247,23 +247,40 @@ export default function MovieScheduler({ form }) {
   const dates = generateDates();
 
   const handleUpdateSchedule = (updatedMovie) => {
-    // Check if this is an early morning movie (after midnight but before 6am)
-    const isEarlyMorningMovie =
-      updatedMovie.startMinutes >= 0 && updatedMovie.startMinutes < 6 * 60;
-    const startsAfterMidnight = updatedMovie.startMinutes >= 24 * 60;
+    // Always ensure we have a temp_id for cross-day movie parts
+    const temp_id =
+      updatedMovie.temp_id ||
+      `movie_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    updatedMovie.temp_id = temp_id;
 
-    // Handle case where the movie is scheduled for after midnight
-    if (startsAfterMidnight) {
-      // Need to move it to the next day
+    // Calculate true duration - use stored values if available, or calculate
+    const duration =
+      updatedMovie.actualDuration ||
+      updatedMovie.originalDuration ||
+      updatedMovie.endMinutes - updatedMovie.startMinutes;
+
+    // Make sure we store both duration properties consistently
+    updatedMovie.actualDuration = duration;
+    updatedMovie.originalDuration = duration;
+
+    // If the movie is a continuation, recalculate its end time based on actual duration
+    if (updatedMovie.isContinuation && updatedMovie.startMinutes === 0) {
+      updatedMovie.endMinutes = duration;
+    }
+    // If this is after midnight (24 hours), move to next day tab
+    if (updatedMovie.startMinutes >= 24 * 60) {
       const nextDayTab = (activeTab + 1) % 7;
+
+      // Adjust times for next day (subtract 24 hours in minutes)
       const adjustedMovie = {
         ...updatedMovie,
         startMinutes: updatedMovie.startMinutes - 24 * 60,
         endMinutes: updatedMovie.endMinutes - 24 * 60,
-        isMidnightPassed: true,
+        isMidnightPassed: false, // Reset as it's now properly on next day
+        temp_id: temp_id,
       };
 
-      // Check for overlaps in the next day
+      // Check for conflicts on next day
       const nextDayMovies = scheduledMovies[nextDayTab] || [];
       const overlapCheck = checkScheduleOverlap(
         adjustedMovie,
@@ -274,65 +291,51 @@ export default function MovieScheduler({ form }) {
 
       if (!overlapCheck.isValid) {
         message.error(overlapCheck.message);
-        return;
+        return false;
       }
 
-      // Remove from current day and add to next day
-      const updatedSchedule = {
-        ...scheduledMovies,
-        [activeTab]: (scheduledMovies[activeTab] || []).filter(
-          (m) => m.id !== updatedMovie.id && m.originalId !== updatedMovie.id
-        ),
-        [nextDayTab]: [...nextDayMovies, adjustedMovie],
-      };
+      // Remove all related movie parts from all days
+      const updatedSchedule = {};
+      for (const [tab, movies] of Object.entries(scheduledMovies)) {
+        updatedSchedule[tab] = movies.filter((m) => m.temp_id !== temp_id);
+      }
+
+      // Add to next day
+      updatedSchedule[nextDayTab] = [
+        ...(updatedSchedule[nextDayTab] || []),
+        adjustedMovie,
+      ];
 
       dispatch(scheduleMovie(updatedSchedule));
-      dispatch(setActiveTab(nextDayTab)); // Optionally switch to the next day tab
+      dispatch(setActiveTab(nextDayTab)); // Switch to next day tab
 
-      // Update associated data
       updateAssociatedData(adjustedMovie);
       closeDetails();
-      return;
+      return true;
     }
 
-    // For early morning movies, check if they should be treated as next-day movies
-    if (isEarlyMorningMovie && !updatedMovie.isMidnightPassed) {
-      // This is a morning movie but not marked as midnight passed
-      // Ask user if they want to schedule it for the current day's early morning or previous day's late night
-      const shouldScheduleAsMidnightPass = window.confirm(
-        `Would you like to schedule this as a late-night movie (${updatedMovie.startMinutes} minutes past midnight)?`
-      );
+    // Check if movie crosses midnight (ends after 24 hours)
+    const crossesMidnight = updatedMovie.endMinutes > 24 * 60;
 
-      if (shouldScheduleAsMidnightPass) {
-        // Handle as midnight passed movie
-        updatedMovie.isMidnightPassed = true;
-      }
-    }
+    if (crossesMidnight) {
+      // Show warning that movie crosses into next day
+      message.warning(`This movie crosses midnight into the next day.`);
 
-    // Regular overlap check
-    const currentDayMovies = scheduledMovies[activeTab] || [];
-    const overlapCheck = checkScheduleOverlap(
-      updatedMovie,
-      currentDayMovies,
-      true,
-      updatedMovie.id
-    );
-
-    if (!overlapCheck.isValid) {
-      message.error(overlapCheck.message);
-      return;
-    }
-
-    // Check if movie crosses midnight
-    if (overlapCheck.warning || overlapCheck.isMidnightPassed) {
+      // Mark as midnight passed
       updatedMovie.isMidnightPassed = true;
 
+      // First, remove all movie parts with same temp_id from all days
+      const cleanedSchedule = {};
+      for (const [tab, movies] of Object.entries(scheduledMovies)) {
+        cleanedSchedule[tab] = movies.filter(
+          (m) => m.temp_id !== temp_id && m.id !== updatedMovie.id
+        );
+      }
+
+      // Handle cross-day scheduling using utility function
       const crossDayResult = handleCrossDayScheduling(
         updatedMovie,
-        {
-          ...scheduledMovies,
-          [activeTab]: currentDayMovies.filter((m) => m.id !== updatedMovie.id),
-        },
+        cleanedSchedule,
         activeTab,
         7
       );
@@ -340,29 +343,53 @@ export default function MovieScheduler({ form }) {
       if (crossDayResult.isValid) {
         dispatch(
           scheduleMovie({
-            ...scheduledMovies,
+            ...cleanedSchedule,
             ...crossDayResult.schedules,
           })
         );
+
+        updateAssociatedData(updatedMovie);
+        closeDetails();
+        return true;
       } else {
         message.error(crossDayResult.message);
-        return;
+        return false;
       }
     } else {
-      dispatch(
-        scheduleMovie({
-          ...scheduledMovies,
-          [activeTab]: currentDayMovies.map((movie) =>
-            movie.id === updatedMovie.id ? updatedMovie : movie
-          ),
-        })
+      // Regular scheduling - verify no conflicts
+      const currentDayMovies = scheduledMovies[activeTab] || [];
+      const overlapCheck = checkScheduleOverlap(
+        updatedMovie,
+        currentDayMovies,
+        true,
+        updatedMovie.id
       );
+
+      if (!overlapCheck.isValid) {
+        message.error(overlapCheck.message);
+        return false;
+      }
+
+      // Remove all related movie parts
+      const cleanedSchedule = {};
+      for (const [tab, movies] of Object.entries(scheduledMovies)) {
+        cleanedSchedule[tab] = movies.filter(
+          (m) => m.temp_id !== temp_id && m.id !== updatedMovie.id
+        );
+      }
+
+      // Add updated movie to current day
+      cleanedSchedule[activeTab] = [
+        ...(cleanedSchedule[activeTab] || []),
+        updatedMovie,
+      ];
+
+      dispatch(scheduleMovie(cleanedSchedule));
+      updateAssociatedData(updatedMovie);
+      closeDetails();
+      return true;
     }
-
-    updateAssociatedData(updatedMovie);
-    closeDetails();
   };
-
   const updateAssociatedData = (updatedMovie) => {
     if (updatedMovie.coupons && updatedMovie.coupons.length > 0) {
       dispatch(
@@ -408,14 +435,23 @@ export default function MovieScheduler({ form }) {
   };
 
   const handleRemoveSchedule = (id) => {
-    dispatch(
-      scheduleMovie({
-        ...scheduledMovies,
-        [activeTab]: (scheduledMovies[activeTab] || []).filter(
-          (movie) => movie.id !== id
-        ),
-      })
+    // Find the movie to be deleted
+    const movieToDelete = (scheduledMovies[activeTab] || []).find(
+      (movie) => movie.id === id
     );
+
+    if (!movieToDelete) return;
+
+    // Get the temp_id to remove all related movie parts
+    const temp_id = movieToDelete.temp_id;
+
+    // Create updated schedule by removing all movies with the same temp_id
+    const updatedSchedule = {};
+    for (const [tab, movies] of Object.entries(scheduledMovies)) {
+      updatedSchedule[tab] = movies.filter((m) => m.temp_id !== temp_id);
+    }
+
+    dispatch(scheduleMovie(updatedSchedule));
     setIsDetailsOpen(false);
     setSelectedMovie(null);
   };

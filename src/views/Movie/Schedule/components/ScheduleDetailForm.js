@@ -138,36 +138,15 @@ function ScheduleDetailForm({ form, mode }) {
 
   useEffect(() => {
     if (!movieResponse) {
-      dispatch(fetchMoviesData({ page: 1, size: 100 })); // Increased size to get more movies
+      dispatch(fetchMoviesData({ page: 1, size: 10 }));
     }
 
-    // Initialize movies field if not already set
     if (!form.getFieldValue("movies")) {
       form.setFieldsValue({ movies: [] });
     }
   }, [dispatch, movieResponse, form]);
 
   const allMovies = extractMovies(movieResponse);
-
-  const renderDayOptions = () => {
-    if (!showLengthOptions || !startDate) return null;
-
-    return (
-      <Form.Item label="Number of Days">
-        <Space>
-          {[1, 2, 3, 4, 5, 6, 7].map((days) => (
-            <Button
-              key={days}
-              type={dateRangeLength === days ? "primary" : "default"}
-              onClick={() => handleDayLengthChange(days)}
-            >
-              {days} {days === 1 ? "day" : "days"}
-            </Button>
-          ))}
-        </Space>
-      </Form.Item>
-    );
-  };
 
   return (
     <Row gutter={16}>
@@ -208,9 +187,14 @@ function ScheduleDetailForm({ form, mode }) {
               )}
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item name="movie" label="Movies" rules={rules.movies}>
+              <Form.Item
+                name="movie"
+                label="Movies"
+                rules={rules.movies}
+                // style={{ }}
+              >
                 <Select
-                  style={{ width: "100%" }}
+                  style={{ minHeight: "40px", width: "100%", padding: "0px" }}
                   placeholder="Select movies"
                   onChange={handleMovieSelect}
                   mode="multiple"
@@ -258,7 +242,7 @@ function ScheduleDetailForm({ form, mode }) {
                 />
               </Form.Item>
             </Col>
-            <Col span={24}>{renderDayOptions()}</Col>
+
             <Col span={24}>
               {startDate &&
                 endDate &&
