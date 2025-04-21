@@ -74,6 +74,8 @@ const MovieMediaUploader = ({ form, mode, initialMedia = [], initialThumbnail = 
                 thumbnail: Utils.getThumbnail(item.url)
             }));
         }
+
+        console.log("initialMedia", initialMedia)
         return initialMedia;
     });
     const [thumbnail, setThumbnail] = useState(initialThumbnail);
@@ -338,10 +340,7 @@ const MovieMediaUploader = ({ form, mode, initialMedia = [], initialThumbnail = 
                         <Card>
                             <Row gutter={[16, 16]}>
                                 {mediaItems.map((item, index) => {
-                                    const isYoutube = item.type === 'youtube';
-                                    const thumbnail = isYoutube
-                                        ? item.thumbnail
-                                        : (thumbnailUrls[item.id] || (item.file?.originFileObj && URL.createObjectURL(item.file.originFileObj)));
+                                    const thumbnail = item.thumbnail;
 
                                     return (
                                         <Col key={`${item.type}-${item.id}`} xs={24} sm={12} md={8} lg={6}>
@@ -357,7 +356,7 @@ const MovieMediaUploader = ({ form, mode, initialMedia = [], initialThumbnail = 
                                                             />
                                                         ) : (
                                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: '#e6e6e6' }}>
-                                                                {isYoutube ? <YoutubeOutlined style={{ fontSize: 32, color: '#ff0000' }} /> : <FileImageOutlined style={{ fontSize: 32, color: '#999' }} />}
+                                                                {<YoutubeOutlined style={{ fontSize: 32, color: '#ff0000' }} />}
                                                             </div>
                                                         )}
                                                         <div
@@ -414,7 +413,7 @@ const MovieMediaUploader = ({ form, mode, initialMedia = [], initialThumbnail = 
                                                     }
                                                     description={
                                                         <Row gutter={8} align="middle">
-                                                            <Col>{isYoutube ? 'YouTube' : 'File Upload'}</Col>
+                                                            <Col>{'YouTube'}</Col>
                                                             <Col flex="auto"></Col>
                                                             <Col>
                                                                 <Button
@@ -429,10 +428,7 @@ const MovieMediaUploader = ({ form, mode, initialMedia = [], initialThumbnail = 
                                                                     type="text"
                                                                     size="small"
                                                                     icon={<DeleteOutlined style={{ color: 'red' }} />}
-                                                                    onClick={() => isYoutube ?
-                                                                        removeYoutubeLink(item.id) :
-                                                                        removeFile({ uid: item.id })
-                                                                    }
+                                                                    onClick={() => removeYoutubeLink(item.id)}
                                                                 />
                                                             </Col>
                                                         </Row>

@@ -69,32 +69,32 @@ const AddMovie = ({ mode, id }) => {
       if (mode === MODE.EDIT) {
         console.warn("Movie Single Response", movieSingleResponse);
         const mediaItems =
-          movieSingleResponse?.movie_details[0]?.media_items || [];
+          movieSingleResponse?.media_items || [];
         const thumbnailImage =
           movieSingleResponse.thumbnail_image &&
-          movieSingleResponse.thumbnail_image !== "images"
+            movieSingleResponse.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: movieSingleResponse.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: movieSingleResponse.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: movieSingleResponse.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: movieSingleResponse.thumbnail_image,
+              },
+            ]
             : [];
         const banner_image =
-          movieSingleResponse?.movie_details[0]?.banner_image &&
-          movieSingleResponse?.movie_details[0]?.banner_image !== "images"
+          movieSingleResponse?.banner_image &&
+            movieSingleResponse?.banner_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: movieSingleResponse?.movie_details[0]?.banner_image
-                    .split("/")
-                    .pop(),
-                  status: "done",
-                  url: movieSingleResponse?.movie_details[0]?.banner_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: movieSingleResponse?.banner_image
+                  .split("/")
+                  .pop(),
+                status: "done",
+                url: movieSingleResponse?.banner_image,
+              },
+            ]
             : [];
 
         form.setFieldsValue({
@@ -148,15 +148,15 @@ const AddMovie = ({ mode, id }) => {
         mediaItems: movieSingleResponse?.media_items,
         thumbnail_image:
           movieSingleResponse?.thumbnail_image &&
-          movieSingleResponse.thumbnail_image !== "images"
+            movieSingleResponse.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: movieSingleResponse.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: movieSingleResponse.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: movieSingleResponse.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: movieSingleResponse.thumbnail_image,
+              },
+            ]
             : [],
       };
 
@@ -168,29 +168,6 @@ const AddMovie = ({ mode, id }) => {
       console.error("Validation failed or error in switching tab:", error);
     }
   };
-
-  const next = () => {
-    form.validateFields()
-        .then((values) => {
-            const currentStepData = form.getFieldsValue(true);
-
-            setFormData((prevData) => ({
-                ...prevData,
-                ...currentStepData,
-                // Ensure media data is preserved
-                thumbnail_image: currentStepData.thumbnail_image || prevData.thumbnail_image,
-                mediaItems: currentStepData.mediaItems || prevData.mediaItems,
-                director: currentStepData.director || prevData.director,
-            }));
-
-            // Change the tab
-            // setActiveTab(key); // Make sure 'key' is defined or passed to this function
-        })
-        .catch(() => {
-            message.error("Please complete this tab before continuing.");
-        });
-};
-
 
   const validateTabFields = async (tabIndex) => {
     let fieldsToValidate = [];
@@ -250,15 +227,13 @@ const AddMovie = ({ mode, id }) => {
               cast:
                 mode === MODE.ADD
                   ? formData.cast || []
-                  : movieSingleResponse?.movie_details?.[0]?.casts || [],
+                  : movieSingleResponse?.casts || [],
               crew: formData.crew || [],
             }}
           />
         );
       case "2":
-        return <MovieMediaUploader form={form} mode={mode} />;
-      case "mediaPreview":
-        return <MovieMediaUploader form={form} mode={mode} />;
+        return <MovieMediaUploader form={form} mode={mode} initialMedia={formData.mediaItems} initialThumbnail={formData.mediaItems} />;
       default:
         return null;
     }
@@ -494,7 +469,7 @@ const AddMovie = ({ mode, id }) => {
                         <Button onClick={handlePrev}>Previous</Button>
                       )}
                       {parseInt(activeTab) <
-                      MOVIE_CONSTANTS.MOVIE_STEPS.length - 1 ? (
+                        MOVIE_CONSTANTS.MOVIE_STEPS.length - 1 ? (
                         <Button type="primary" onClick={handleNext}>
                           Next
                         </Button>
