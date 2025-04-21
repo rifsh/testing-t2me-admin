@@ -67,7 +67,7 @@ export const MovieDetail = ({
     : initialBookingStartDate
     ? initialBookingStartDate
     : dayjs();
-    
+
   const [editedMovie, setEditedMovie] = useState(movie);
   const [selectedSeatStructureId, setSelectedSeatStructureId] =
     useState(initialSeatStructure);
@@ -466,7 +466,6 @@ export const MovieDetail = ({
               </Row>
             </Card>
 
-            {/* Promotions & Offers */}
             <Card title="Promotions & Offers" bordered={false}>
               <Row gutter={24}>
                 <Col xs={24} md={12}>

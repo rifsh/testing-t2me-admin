@@ -744,7 +744,9 @@ export function ScheduleTimeSlots({ form }) {
         Schedule Time Slots{" "}
         <TimezoneClock
           timezone={getEventTimezone()}
-          eventDetails={eventDetails}
+          countyName={
+            eventDetails?.venue_events?.[0]?.venue?.place?.country?.name
+          }
         />
       </Title>
 

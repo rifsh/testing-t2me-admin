@@ -46,7 +46,7 @@ function ScheduleDetailForm({ form, mode }) {
 
   const handleVenueSelect = (venue) => {
     form.setFieldValue("theatre_id", undefined);
-    dispatch(setSelectedVenue(venue));
+    // dispatch(setSelectedVenue(venue));
   };
 
   const handleTheatreSelect = (theatre) => {

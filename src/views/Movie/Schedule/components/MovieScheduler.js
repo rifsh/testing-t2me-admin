@@ -32,6 +32,7 @@ import {
 } from "store/slices/movieScheduleSlice";
 import { message } from "antd";
 import dayjs from "dayjs";
+import TimezoneClock from "components/util-components/timezone/TimeZoneClock";
 export default function MovieScheduler({ form }) {
   const dispatch = useDispatch();
 
@@ -61,6 +62,7 @@ export default function MovieScheduler({ form }) {
   } = useSelector((state) => state.movieScheduleSlice);
 
   const { response, loading, error } = useSelector((state) => state.screen);
+  const { selectedVenue } = useSelector((state) => state.locations);
   const { filteredCoupons } = useSelector((state) => state.coupons);
   const { filteredOffers } = useSelector((state) => state.offers);
   const { allSeats } = useSelector((state) => state.movieSeatSlice);
@@ -470,22 +472,30 @@ export default function MovieScheduler({ form }) {
 
   return (
     <div className="container mx-auto">
-      <div className="flex mb-4 border-b p-2 bg-white rounded-xl">
-        {dates.map((date, index) => (
-          <button
-            key={index}
-            className={`py-2 px-4 flex flex-col items-center ${
-              activeTab === date.weekday
-                ? "border-b-2 border-blue-500 text-blue-500"
-                : "text-gray-600"
-            }`}
-            onClick={() => dispatch(setActiveTab(date.weekday))}
-          >
-            <span className="text-sm">{date.day}</span>
-            <span className="font-bold">{date.dayNum}</span>
-            <span className="text-xs">{date.month}</span>
-          </button>
-        ))}
+      <div className="flex mb-4 border-b p-2 bg-white rounded-xl justify-between">
+        <div className="flex">
+          {dates.map((date, index) => (
+            <button
+              key={index}
+              className={`py-2 px-4 flex flex-col items-center ${
+                activeTab === date.weekday
+                  ? "border-b-2 border-blue-500 text-blue-500"
+                  : "text-gray-600"
+              }`}
+              onClick={() => dispatch(setActiveTab(date.weekday))}
+            >
+              <span className="text-sm">{date.day}</span>
+              <span className="font-bold">{date.dayNum}</span>
+              <span className="text-xs">{date.month}</span>
+            </button>
+          ))}
+        </div>
+        <div className="border p-2 rounded-xl flex items-center">
+          <TimezoneClock
+            timezone={selectedVenue.place.country.time_zone}
+            countyName={selectedVenue.place.country.name}
+          />
+        </div>
       </div>
       <div className="flex gap-4">
         {/* Movie list */}
