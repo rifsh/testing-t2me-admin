@@ -52,24 +52,26 @@ const AddMovie = ({ mode, id }) => {
     }, [dispatch, eventType.length, id]);
 
     useEffect(() => {
+        console.warn("Movie Edit Data")
         if (movieSingleResponse) {
-            if (mode === MODE.EDIT && Array.isArray(movieSingleResponse.movie_details)) {
+            if (mode === MODE.EDIT) {
+                console.warn("Movie Single Response", movieSingleResponse)
                 form.setFieldsValue({
-                    Title: movieSingleResponse?.event_name,
-                    age_restriction: movieSingleResponse.movie_details[0].age_restriction,
-                    Runtime: movieSingleResponse?.movie_details[0]?.runtime,
-                    country: movieSingleResponse?.movie_details[0]?.country,
-                    director: movieSingleResponse?.movie_details[0]?.director,
-                    Genre: movieSingleResponse?.movie_details[0]?.genre,
-                    Language: movieSingleResponse?.movie_details[0]?.language,
-                    rating: movieSingleResponse?.movie_details[0]?.rating,
-                    Released: dayjs(movieSingleResponse?.movie_details[0]?.released, "YYYY-MM-DD"),
-                    budget_currency: movieSingleResponse?.movie_details[0]?.budget_currency,
-                    box_office_currency: movieSingleResponse?.movie_details[0]?.box_office_currency,
-                    awards: movieSingleResponse?.movie_details[0]?.awards,
-                    production_company: movieSingleResponse?.movie_details[0]?.production_company,
+                    Title: movieSingleResponse?.title,
+                    age_restriction: movieSingleResponse.age_restriction,
+                    Runtime: movieSingleResponse?.runtime,
+                    country: movieSingleResponse?.country,
+                    director: movieSingleResponse?.director,
+                    Genre: movieSingleResponse?.genre,
+                    Language: movieSingleResponse?.language,
+                    rating: movieSingleResponse?.rating,
+                    Released: dayjs(movieSingleResponse?.released, "YYYY-MM-DD"),
+                    budget_currency: movieSingleResponse?.budget_currency,
+                    box_office_currency: movieSingleResponse?.box_office_currency,
+                    awards: movieSingleResponse?.awards,
+                    production_company: movieSingleResponse?.production_company,
                     Plot: movieSingleResponse?.description,
-                    mediaItems: movieSingleResponse?.movie_details[0]?.media_items,
+                    mediaItems: movieSingleResponse?.media_items,
                     thumbnail_image:
                         movieSingleResponse.thumbnail_image && movieSingleResponse.thumbnail_image !== "images"
                             ? [
@@ -133,7 +135,7 @@ const AddMovie = ({ mode, id }) => {
                                 cast: formData.cast || [],
                                 crew: formData.crew || []
                             } : {
-                                cast: movieSingleResponse?.movie_details[0].casts || [],
+                                cast: movieSingleResponse?.casts || [],
                                 crew: formData.crew || []
                             }
                         }
@@ -189,7 +191,7 @@ const AddMovie = ({ mode, id }) => {
 
             const responseFormattedData = {
                 event_type_id: eventType?.find((item) => item.type === "Movie")?.id || 1,
-                event_name: finalFormData.Title,
+                title: finalFormData.Title,
                 age_restriction: finalFormData.age_restriction,
                 runtime: finalFormData.Runtime,
                 language: finalFormData.Language,

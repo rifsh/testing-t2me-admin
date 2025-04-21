@@ -30,13 +30,13 @@ const Index = () => {
     }, [dispatch]);
 
     useEffect(() => {
+        console.warn("Movie Response", movieResponse)
         if (movieResponse) {
-            const processedData = movieResponse?.items?.flatMap(item =>
-                item.movie_details.map(detail => ({
-                    id: item.id,
-                    title: item.event_name,
-                    description: item.description,
-                    thumbnail_image: item.thumbnail_image,
+            const processedData = movieResponse?.items?.map(detail => ({
+                    id: detail.id,
+                    title: detail.title,
+                    description: detail.description,
+                    thumbnail_image: detail.thumbnail_image,
                     genre: detail.genre,
                     language: detail.language,
                     country: detail.country,
@@ -52,13 +52,13 @@ const Index = () => {
                     budget: detail.budget,
                     budget_currency: detail.budget_currency,
                     production_company: detail.production_company,
-                    status: item.status,
-                }))
+                    status: detail.status,
+                })
             );
             setFormattedData(processedData)
         }
     }, [movieResponse]);
-
+    console.warn("Formatted Data", formattedData)
     const handleViewDetails = (movie) => {
         navigate(`${APP_PREFIX_PATH}/movie/details/${movie.id}`);
     };
