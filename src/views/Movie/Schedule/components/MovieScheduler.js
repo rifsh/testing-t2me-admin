@@ -28,6 +28,7 @@ import {
   setOffers,
   setSeatStructure,
   setIntervalTime,
+  setBookingStartDate,
 } from "store/slices/movieScheduleSlice";
 import { message } from "antd";
 import dayjs from "dayjs";
@@ -56,6 +57,7 @@ export default function MovieScheduler({ form }) {
     intervalTimes,
     dateRange,
     availableMovies,
+    bookingStartDates,
   } = useSelector((state) => state.movieScheduleSlice);
 
   const { response, loading, error } = useSelector((state) => state.screen);
@@ -176,7 +178,7 @@ export default function MovieScheduler({ form }) {
       const offers = movieOffers[scheduledMovie.id] || [];
       const seatStructureId = movieSeatStructures[scheduledMovie.id] || null;
       const intervalTime = intervalTimes[scheduledMovie.id] || 15; // Default 15 min
-
+      const bookingStartDate = bookingStartDates[scheduledMovie.id] || null;
       setSelectedMovie({
         ...scheduledMovie,
         title: movie.title,
@@ -195,6 +197,7 @@ export default function MovieScheduler({ form }) {
         offers: offers,
         seatStructureId: seatStructureId,
         intervalTime: intervalTime,
+        bookingStartDate: bookingStartDate,
       });
       setIsDetailsOpen(true);
     }
@@ -423,6 +426,15 @@ export default function MovieScheduler({ form }) {
         setIntervalTime({
           movieId: updatedMovie.id,
           intervalTime: updatedMovie.intervalTime,
+        })
+      );
+    }
+
+    if (updatedMovie.bookingStartDate !== undefined) {
+      dispatch(
+        setBookingStartDate({
+          movieId: updatedMovie.id,
+          bookingStartDate: updatedMovie.bookingStartDate,
         })
       );
     }

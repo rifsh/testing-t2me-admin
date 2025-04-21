@@ -17,6 +17,7 @@ import {
   Image,
   InputNumber,
   message,
+  DatePicker,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -33,7 +34,7 @@ import {
 import { formatMinutes } from "./utils";
 import dayjs from "dayjs";
 import { ChairOutlined } from "@mui/icons-material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { getAllSeatStructures } from "store/slices/movieSeatSlice";
 
@@ -52,19 +53,28 @@ export const MovieDetail = ({
   screens,
   form,
 }) => {
+  const dispatch = useDispatch();
+  const { initialBookingStartDate } = useSelector(
+    (state) => state.movieScheduleSlice
+  );
+
   const initialCoupons = movie.coupons || [];
   const initialOffers = movie.offers || [];
   const initialSeatStructure = movie.seatStructureId || null;
-  const initialIntervalTime = movie.intervalTime || 15; // Default 15 minutes interval
-
-  const dispatch = useDispatch();
-
+  const initialIntervalTime = movie.intervalTime || 15;
+  const initialBookingDate = movie.bookingStartDate
+    ? dayjs(movie.bookingStartDate)
+    : initialBookingStartDate
+    ? initialBookingStartDate
+    : dayjs();
+    
   const [editedMovie, setEditedMovie] = useState(movie);
   const [selectedSeatStructureId, setSelectedSeatStructureId] =
     useState(initialSeatStructure);
   const [selectedCouponIds, setSelectedCouponIds] = useState(initialCoupons);
   const [selectedOfferIds, setSelectedOfferIds] = useState(initialOffers);
   const [intervalTime, setIntervalTime] = useState(initialIntervalTime);
+  const [bookingStartDate, setBookingStartDate] = useState(initialBookingDate);
 
   useEffect(() => {
     dispatch(
@@ -81,6 +91,7 @@ export const MovieDetail = ({
       coupons: selectedCouponIds,
       seatStructure: selectedSeatStructureId,
       intervalTime: intervalTime,
+      booking_start_date: bookingStartDate,
     });
   }, []);
 
@@ -91,6 +102,7 @@ export const MovieDetail = ({
       coupons: selectedCouponIds,
       seatStructure: selectedSeatStructureId,
       intervalTime: intervalTime,
+      booking_start_date: bookingStartDate,
     });
   }, [
     editedMovie.screen?.id,
@@ -98,6 +110,7 @@ export const MovieDetail = ({
     selectedOfferIds,
     selectedSeatStructureId,
     intervalTime,
+    bookingStartDate,
   ]);
 
   const handleTimeChange = (time) => {
@@ -110,7 +123,9 @@ export const MovieDetail = ({
       });
     }
   };
-
+  const handleBookingStartDateChange = (date) => {
+    setBookingStartDate(date);
+  };
   const handleScreenChange = (value) => {
     const selectedScreen = screens.find((screen) => screen.id === value);
 
@@ -167,6 +182,10 @@ export const MovieDetail = ({
           seatStructureId: values.seatStructure,
           intervalTime: values.intervalTime,
           screen: selectedScreen,
+          bookingStartDate: values.booking_start_date
+            ? values.booking_start_date.toISOString()
+            : null,
+
           endMinutes:
             editedMovie.startMinutes + movie.duration + values.intervalTime,
         });
@@ -427,6 +446,20 @@ export const MovieDetail = ({
                       onChange={handleIntervalTimeChange}
                       addonAfter={<FieldTimeOutlined />}
                       placeholder="Enter interval time in minutes"
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="Booking Start Date"
+                    name="booking_start_date"
+                    tooltip="Select when users can start booking this show"
+                  >
+                    <DatePicker
+                      style={{ width: "100%" }}
+                      value={bookingStartDate}
+                      onChange={handleBookingStartDateChange}
+                      placeholder="Select booking start date"
+                      showTime={true}
+                      showSecond={false}
                     />
                   </Form.Item>
                 </Col>

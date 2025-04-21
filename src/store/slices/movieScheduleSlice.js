@@ -11,6 +11,8 @@ const initialState = {
   offers: {},
   seatStructures: {},
   intervalTimes: {},
+  bookingStartDates: {},
+  initialBookingStartDate: null,
   activeTab: 0,
   dateRangeLength: 7,
   showLengthOptions: false,
@@ -23,8 +25,13 @@ const movieScheduleSlice = createSlice({
     resetState: () => ({
       ...initialState,
     }),
-
-    // Switch between days
+    setBookingStartDate: (state, action) => {
+      const { movieId, bookingStartDate } = action.payload;
+      state.bookingStartDates[movieId] = bookingStartDate;
+    },
+    setInitialBookingStartDate: (state, action) => {
+      state.initialBookingStartDate = action.payload;
+    },
     setavailableMovies: (state, action) => {
       state.availableMovies = action.payload;
     },
@@ -178,6 +185,8 @@ export const {
   setSelectedDate,
   setDateRangeLength,
   setShowLengthOptions,
+  setBookingStartDate,
+  setInitialBookingStartDate,
 } = movieScheduleSlice.actions;
 
 export default movieScheduleSlice.reducer;
