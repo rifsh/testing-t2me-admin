@@ -138,7 +138,7 @@ function ScheduleDetailForm({ form, mode }) {
 
   useEffect(() => {
     if (!movieResponse) {
-      dispatch(fetchMoviesData({ page: 1, size: 100 }));
+      dispatch(fetchMoviesData({ page: 1, size: 10 }));
     }
 
     if (!form.getFieldValue("movies")) {

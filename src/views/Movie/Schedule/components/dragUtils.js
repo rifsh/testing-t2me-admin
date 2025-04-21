@@ -218,6 +218,12 @@ export const handleDrop = (
 
     // Adjust for midnight crossing
     if (newScheduledMovie.endMinutes > 24 * 60) {
+      console.log("Movie crosses midnight", {
+        startMinutes: newScheduledMovie.startMinutes,
+        endMinutes: newScheduledMovie.endMinutes,
+        duration: draggedMovie.duration,
+      });
+
       // Movie crosses midnight - handle cross-day scheduling
       const crossDayResult = handleCrossDayScheduling(
         newScheduledMovie,
@@ -225,6 +231,8 @@ export const handleDrop = (
         activeTab,
         totalDays
       );
+
+      console.log("Cross day scheduling result:", crossDayResult);
 
       if (crossDayResult.isValid) {
         // Update multiple days

@@ -86,43 +86,41 @@ export const getRandomColor = (id) => {
 };
 
 export const extractMovies = (movies) => {
-  if (!movies || !movies.items) {
+  if (!movies || !movies.items || !Array.isArray(movies.items)) {
     return [];
   }
 
-  return movies.items.reduce((acc, item) => {
-    if (!item || !item.movie_details || !Array.isArray(item.movie_details)) {
-      return acc;
-    }
+  return movies.items
+    .map((item) => {
+      if (!item) return null;
 
-    const movieDetails = item.movie_details.map((detail) => ({
-      id: item.id,
-      title: item.event_name || "Untitled",
-      description: item.description || "",
-      thumbnail_image: item.thumbnail_image || "",
-      genre: detail.genre || "",
-      language: detail.language || "",
-      country: detail.country || "",
-      director: detail.director || "",
-      released: detail.released || "",
-      rating: detail.rating || "",
-      runtime: parseInt(detail.runtime, 10) || 90,
-      duration: parseInt(detail.runtime, 10) || 90, // Add duration field explicitly
-      image: item.thumbnail_image || "", // Add image field explicitly
-      color: getRandomColor(item.id), // Generate a color based on movie ID
-      media_items: detail.media_items || [],
-      casts: detail.casts || [],
-      awards: detail.awards || "",
-      box_office: detail.box_office || "",
-      box_office_currency: detail.box_office_currency || "",
-      budget: detail.budget || "",
-      budget_currency: detail.budget_currency || "",
-      production_company: detail.production_company || "",
-      status: item.status || "",
-    }));
-
-    return [...acc, ...movieDetails];
-  }, []);
+      return {
+        id: item.id,
+        title: item.title || "Untitled",
+        description: item.description || "",
+        thumbnail_image: item.thumbnail_image || "",
+        genre: item.genre || [],
+        language: item.language || "",
+        country: item.country || "",
+        director: item.director || "",
+        released: item.released || "",
+        rating: item.rating || "",
+        runtime: parseInt(item.runtime, 10) || 90,
+        duration: parseInt(item.runtime, 10) || 90,
+        image: item.thumbnail_image || "",
+        color: getRandomColor(item.id), // Assuming getRandomColor is defined elsewhere
+        media_items: item.media_items || [],
+        casts: item.casts || [],
+        awards: item.awards || "",
+        box_office: item.box_office || "",
+        box_office_currency: item.box_office_currency || "",
+        budget: item.budget || "",
+        budget_currency: item.budget_currency || "",
+        production_company: item.production_company || "",
+        status: item.status || false,
+      };
+    })
+    .filter(Boolean); // Remove null entries
 };
 
 export const extractScreenInfo = (response) => {
@@ -184,12 +182,10 @@ export const checkScheduleOverlap = (
       return false;
     }
 
-    // Only check movies on the same screen
     if (movie.screen.id !== movieToCheck.screen.id) {
       return false;
     }
 
-    // Standard overlap check: new movie starts before existing ends AND new movie ends after existing starts
     return (
       movieToCheck.startMinutes < movie.endMinutes &&
       movieToCheck.endMinutes > movie.startMinutes
@@ -204,7 +200,6 @@ export const checkScheduleOverlap = (
     };
   }
 
-  // Valid schedule, but warn if it crosses midnight
   if (crossesMidnight) {
     return {
       isValid: true,
@@ -214,7 +209,6 @@ export const checkScheduleOverlap = (
     };
   }
 
-  // No issues found
   return {
     isValid: true,
   };
@@ -225,59 +219,62 @@ export const handleCrossDayScheduling = (
   currentDay,
   totalDays = 7
 ) => {
-  // Store the original duration
   const originalDuration =
     scheduledMovie.actualDuration ||
     scheduledMovie.endMinutes - scheduledMovie.startMinutes;
 
-  // Calculate minutes on current day (until midnight) and next day (after midnight)
   const minutesOnCurrentDay = 24 * 60 - scheduledMovie.startMinutes;
   const minutesOnNextDay = originalDuration - minutesOnCurrentDay;
 
-  // Generate a response object
   const result = {
     isValid: true,
     schedules: {},
     message: "",
   };
 
-  // Get the next day index
   const nextDayIndex = (currentDay + 1) % totalDays;
 
   // Create first part (on current day)
   const firstPart = {
     ...scheduledMovie,
-    endMinutes: 24 * 60, // End at midnight
-    isMidnightPassed: true, // Flag that it passes midnight
-    actualDuration: originalDuration, // Store the complete duration
-    originalDuration: originalDuration, // Additional backup of duration
+    endMinutes: 24 * 60, 
+    isMidnightPassed: true, 
+    actualDuration: originalDuration, 
+    originalDuration: originalDuration, 
   };
 
   // Create second part (on next day)
   const secondPart = {
     ...scheduledMovie,
-    id: scheduledMovie.id + 1000000, // Generate a different ID
-    startMinutes: 0, // Start at midnight (00:00)
-    endMinutes: minutesOnNextDay, // Only the part after midnight
-    isContinuation: true, // Mark as continuation
-    originalId: scheduledMovie.id, // Reference to original part
-    actualDuration: originalDuration, // Store the complete duration
-    originalDuration: originalDuration, // Additional backup of duration
+    id: scheduledMovie.id + 1000000, 
+    startMinutes: 0,
+    endMinutes: minutesOnNextDay, 
+    isContinuation: true,
+    originalId: scheduledMovie.id, 
+    actualDuration: originalDuration, 
+    originalDuration: originalDuration, 
   };
 
-  // Double check the second part's end time
-  if (secondPart.endMinutes <= 0 || secondPart.endMinutes > 24 * 60) {
+  if (secondPart.endMinutes <= 0) {
     console.error("Invalid second part end time in cross-day scheduling", {
       originalDuration,
       minutesOnCurrentDay,
       calculatedEndMinutes: secondPart.endMinutes,
     });
 
-    // Fix the end time to avoid rendering issues
-    secondPart.endMinutes = Math.max(1, Math.min(24 * 60, minutesOnNextDay));
+    secondPart.endMinutes = 1;
+    result.message = "Warning: Movie extends only slightly past midnight.";
+  } else if (secondPart.endMinutes > 24 * 60) {
+    console.error("Second part end time exceeds 24 hours", {
+      originalDuration,
+      minutesOnCurrentDay,
+      calculatedEndMinutes: secondPart.endMinutes,
+    });
+
+    secondPart.endMinutes = 24 * 60;
+    result.message = "Warning: Movie duration has been capped at 24 hours.";
   }
 
-  // Check for conflicts on current day
   const currentDayMovies = existingSchedules[currentDay] || [];
   const firstPartOverlap = checkScheduleOverlap(
     firstPart,
@@ -286,7 +283,6 @@ export const handleCrossDayScheduling = (
     scheduledMovie.id
   );
 
-  // Check for conflicts on next day
   const nextDayMovies = existingSchedules[nextDayIndex] || [];
   const secondPartOverlap = checkScheduleOverlap(
     secondPart,
@@ -294,7 +290,6 @@ export const handleCrossDayScheduling = (
     true
   );
 
-  // If conflicts on either day, report errors
   if (!firstPartOverlap.isValid) {
     result.isValid = false;
     result.message = `Conflict on current day: ${firstPartOverlap.message}`;
@@ -307,7 +302,6 @@ export const handleCrossDayScheduling = (
     return result;
   }
 
-  // Update schedules
   result.schedules[currentDay] = [...currentDayMovies, firstPart];
   result.schedules[nextDayIndex] = [...nextDayMovies, secondPart];
 
