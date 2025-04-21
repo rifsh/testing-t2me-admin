@@ -29,9 +29,22 @@ export default function ScheduledMovies({
     // Calculate positioning
     const top = screenIndex * rowHeight;
     const left = (scheduledMovie.startMinutes / 60) * hourWidth;
-    const width =
-      ((scheduledMovie.endMinutes - scheduledMovie.startMinutes) / 60) *
-      hourWidth;
+
+    // Calculate the display width based on the specific situation
+    let displayWidth;
+
+    if (scheduledMovie.isMidnightPassed) {
+      // For first part movies that pass midnight, show only until midnight (24:00)
+      displayWidth = ((24 * 60 - scheduledMovie.startMinutes) / 60) * hourWidth;
+    } else if (scheduledMovie.isContinuation) {
+      // For continuation parts (second part), show only from midnight to end time
+      displayWidth = (scheduledMovie.endMinutes / 60) * hourWidth;
+    } else {
+      // Normal case - within same day
+      displayWidth =
+        ((scheduledMovie.endMinutes - scheduledMovie.startMinutes) / 60) *
+        hourWidth;
+    }
 
     // Format time display
     const startHour = Math.floor(scheduledMovie.startMinutes / 60);
@@ -48,7 +61,7 @@ export default function ScheduledMovies({
 
     // Calculate card width
     const cardMaxWidth = 180;
-    const cardWidth = Math.min(width, cardMaxWidth);
+    const cardWidth = Math.min(displayWidth, cardMaxWidth);
 
     return (
       <div
@@ -57,14 +70,17 @@ export default function ScheduledMovies({
         style={{
           top: `${top + rowHeight / 2 - 10}px`,
           left: `${left + sidebarWidth}px`,
-          width: `${width}px`,
+          width: `${displayWidth}px`,
           height: `${20}px`,
         }}
       >
         {/* Simple duration line */}
         <div
           className="absolute h-1 rounded-full w-full top-1/2 transform -translate-y-1/2"
-          style={{ backgroundColor: movie.color || "#1890ff" }}
+          style={{
+            backgroundColor: movie.color || "#1890ff",
+            opacity: scheduledMovie.isContinuation ? 0.7 : 1,
+          }}
         />
 
         {/* Movie card - centered */}
@@ -72,7 +88,10 @@ export default function ScheduledMovies({
           className="absolute top-1/2 transform -translate-y-1/2 bg-white shadow-md rounded-md flex items-center p-1 cursor-pointer z-10"
           style={{
             maxWidth: cardWidth + "px",
-            left: `${(width - cardWidth) / 2}px`, // Center the card
+            left: `${(displayWidth - cardWidth) / 2}px`, // Center the card
+            borderLeft: scheduledMovie.isContinuation
+              ? `3px solid ${movie.color || "#1890ff"}`
+              : "none",
           }}
           onClick={(e) => handleScheduledMovieClick(e, scheduledMovie)}
           draggable
@@ -86,9 +105,13 @@ export default function ScheduledMovies({
             />
           )}
           <div className="flex-grow overflow-hidden">
-            <div className="font-medium text-xs truncate">{movie.title}</div>
+            <div className="font-medium text-xs truncate">
+              {scheduledMovie.isContinuation && "↪ "}
+              {movie.title}
+            </div>
             <div className="text-xs text-gray-500">
               {startTimeFormatted} - {endTimeFormatted}
+              {scheduledMovie.isMidnightPassed && " ↪"}
             </div>
           </div>
           <div className="ml-1 flex-shrink-0 text-gray-500">

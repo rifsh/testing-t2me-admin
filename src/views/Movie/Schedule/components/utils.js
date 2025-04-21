@@ -219,112 +219,97 @@ export const checkScheduleOverlap = (
     isValid: true,
   };
 };
-
 export const handleCrossDayScheduling = (
-  movieToSchedule,
-  scheduledMovies,
-  currentTab,
-  totalDays
+  scheduledMovie,
+  existingSchedules,
+  currentDay,
+  totalDays = 7
 ) => {
+  // Store the original duration
+  const originalDuration =
+    scheduledMovie.actualDuration ||
+    scheduledMovie.endMinutes - scheduledMovie.startMinutes;
+
+  // Calculate minutes on current day (until midnight) and next day (after midnight)
+  const minutesOnCurrentDay = 24 * 60 - scheduledMovie.startMinutes;
+  const minutesOnNextDay = originalDuration - minutesOnCurrentDay;
+
+  // Generate a response object
   const result = {
     isValid: true,
     schedules: {},
+    message: "",
   };
 
-  // Base case: movie fits within the current day
-  if (movieToSchedule.endMinutes <= 24 * 60) {
-    // Simple case - just add to the current day
-    result.schedules[currentTab] = [
-      ...(scheduledMovies[currentTab] || []),
-      movieToSchedule,
-    ];
-    return result;
-  }
+  // Get the next day index
+  const nextDayIndex = (currentDay + 1) % totalDays;
 
-  // Movie crosses to next day
-  const nextDayTab = (currentTab + 1) % totalDays;
-
-  // Calculate the part that goes to the next day
-  const currentDayMovie = {
-    ...movieToSchedule,
+  // Create first part (on current day)
+  const firstPart = {
+    ...scheduledMovie,
     endMinutes: 24 * 60, // End at midnight
-    isMidnightPassed: true, // Add the flag for midnight passed
+    isMidnightPassed: true, // Flag that it passes midnight
+    actualDuration: originalDuration, // Store the complete duration
+    originalDuration: originalDuration, // Additional backup of duration
   };
 
-  // Calculate how much time goes to the next day
-  const nextDayDuration = movieToSchedule.endMinutes - 24 * 60;
-
-  const nextDayMovie = {
-    ...movieToSchedule,
-    id: movieToSchedule.id + "_continued", // Mark as continuation
-    startMinutes: 0, // Start at beginning of day
-    endMinutes: nextDayDuration, // Remaining minutes after midnight
-    isContinuation: true, // Flag as continuation
-    isMidnightPassed: true, // Flag for midnight passed
-    originalId: movieToSchedule.id, // Reference to original
+  // Create second part (on next day)
+  const secondPart = {
+    ...scheduledMovie,
+    id: scheduledMovie.id + 1000000, // Generate a different ID
+    startMinutes: 0, // Start at midnight (00:00)
+    endMinutes: minutesOnNextDay, // Only the part after midnight
+    isContinuation: true, // Mark as continuation
+    originalId: scheduledMovie.id, // Reference to original part
+    actualDuration: originalDuration, // Store the complete duration
+    originalDuration: originalDuration, // Additional backup of duration
   };
 
-  // Check if the movie starts after midnight (for editing scenarios)
-  const startsAfterMidnight = movieToSchedule.startMinutes >= 24 * 60;
+  // Double check the second part's end time
+  if (secondPart.endMinutes <= 0 || secondPart.endMinutes > 24 * 60) {
+    console.error("Invalid second part end time in cross-day scheduling", {
+      originalDuration,
+      minutesOnCurrentDay,
+      calculatedEndMinutes: secondPart.endMinutes,
+    });
 
-  if (startsAfterMidnight) {
-    // Adjust to only schedule on the next day
-    const adjustedMovie = {
-      ...movieToSchedule,
-      startMinutes: movieToSchedule.startMinutes - 24 * 60,
-      endMinutes: movieToSchedule.endMinutes - 24 * 60,
-      isMidnightPassed: true,
-    };
-
-    // Check if this time slot is available on the next day
-    const nextDayCheck = checkScheduleOverlap(
-      adjustedMovie,
-      scheduledMovies[nextDayTab] || []
-    );
-
-    if (!nextDayCheck.isValid) {
-      return {
-        isValid: false,
-        message: `Cannot schedule: ${nextDayCheck.message} on the next day`,
-      };
-    }
-
-    // Only schedule on the next day
-    result.schedules[nextDayTab] = [
-      ...(scheduledMovies[nextDayTab] || []),
-      adjustedMovie,
-    ];
-
-    // Clear any previous entry on the current day
-    result.schedules[currentTab] = (scheduledMovies[currentTab] || []).filter(
-      (m) => m.id !== movieToSchedule.id
-    );
-
-    return result;
+    // Fix the end time to avoid rendering issues
+    secondPart.endMinutes = Math.max(1, Math.min(24 * 60, minutesOnNextDay));
   }
 
-  // Check if next day slot is available
-  const nextDayCheck = checkScheduleOverlap(
-    nextDayMovie,
-    scheduledMovies[nextDayTab] || []
+  // Check for conflicts on current day
+  const currentDayMovies = existingSchedules[currentDay] || [];
+  const firstPartOverlap = checkScheduleOverlap(
+    firstPart,
+    currentDayMovies,
+    true,
+    scheduledMovie.id
   );
 
-  if (!nextDayCheck.isValid) {
-    return {
-      isValid: false,
-      message: `Cannot schedule: ${nextDayCheck.message} on the next day`,
-    };
+  // Check for conflicts on next day
+  const nextDayMovies = existingSchedules[nextDayIndex] || [];
+  const secondPartOverlap = checkScheduleOverlap(
+    secondPart,
+    nextDayMovies,
+    true
+  );
+
+  // If conflicts on either day, report errors
+  if (!firstPartOverlap.isValid) {
+    result.isValid = false;
+    result.message = `Conflict on current day: ${firstPartOverlap.message}`;
+    return result;
   }
 
-  // Both days are valid, create the schedule
-  result.schedules[currentTab] = [
-    ...(scheduledMovies[currentTab] || []),
-    currentDayMovie,
-  ];
-  result.schedules[nextDayTab] = [
-    ...(scheduledMovies[nextDayTab] || []),
-    nextDayMovie,
-  ];
+  if (!secondPartOverlap.isValid) {
+    result.isValid = false;
+    result.message = `Conflict on next day: ${secondPartOverlap.message}`;
+    return result;
+  }
+
+  // Update schedules
+  result.schedules[currentDay] = [...currentDayMovies, firstPart];
+  result.schedules[nextDayIndex] = [...nextDayMovies, secondPart];
 
   return result;
 };
