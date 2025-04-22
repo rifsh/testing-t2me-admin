@@ -138,7 +138,7 @@ const TaxList = () => {
     },
     Utils.statusColumnUtil(handleUpdateStatus),
     {
-      title: "Actions",
+      title: "",
       dataIndex: "actions",
       render: (_, elm) => (
         <div className="text-right">

@@ -186,4 +186,8 @@ export const ApiConstant = {
   MOVIE_SEAT_EDIT_URL: "/api/v1/movie/seats/secured/seatstructure/edit",
   MOVIE_SEAT_STATUS_URL: "/api/v1/movie/seats/secured/seatstructure/edit/status",
   MOVIE_SEAT_DETAILS_URL: "/api/v1/movie/seats/secured/seatstructure/single",
+  
+  //movie schedule api
+  MOVIE_SCHEDULE_URL: "/api/v1/movie/movies/secured/movie_schedules",
+ 
 };

@@ -1,6 +1,10 @@
 // dragUtils.js
 import React from "react";
-import { checkScheduleOverlap, handleCrossDayScheduling } from "./utils";
+import {
+  checkScheduleOverlap,
+  checkScheduleOverlapWithTimezone,
+  handleCrossDayScheduling,
+} from "./utils";
 import { message } from "antd";
 import { setActiveTab } from "store/slices/movieScheduleSlice";
 
@@ -132,6 +136,9 @@ export const handleScheduledMovieDragStart = (
     document.body.removeChild(ghost);
   }, 0);
 };
+
+// Update in dragUtils.js
+
 export const handleDrop = (
   event,
   draggedMovie,
@@ -149,7 +156,10 @@ export const handleDrop = (
   setDraggedMovie,
   setDraggedScheduledMovie,
   calculateTimeFromPosition,
-  totalDays = 7
+  venueTimezone = null,
+  dateRange = null,
+  totalDays = 7,
+  bookingStartDate
 ) => {
   event.preventDefault();
 
@@ -189,6 +199,8 @@ export const handleDrop = (
       id: Date.now(),
       movieId: draggedMovie.id,
       screen: screens[screenIndex],
+      title: draggedMovie.title,
+      bookingStartDate: bookingStartDate,
       startMinutes: snappedStartMinutes,
       endMinutes: snappedStartMinutes + draggedMovie.duration,
       intervals: 15, // 15-minute interval between movies
@@ -196,11 +208,16 @@ export const handleDrop = (
       actualDuration: draggedMovie.duration, // Store the actual duration
     };
 
-    // Check for conflicts using the utility function
+    // Check for conflicts using the utility function with timezone validation
     const currentDayMovies = scheduledMovies[activeTab] || [];
-    const overlapCheck = checkScheduleOverlap(
+    const overlapCheck = checkScheduleOverlapWithTimezone(
       newScheduledMovie,
-      currentDayMovies
+      currentDayMovies,
+      false,
+      null,
+      venueTimezone,
+      activeTab,
+      dateRange
     );
 
     if (!overlapCheck.isValid) {
@@ -317,11 +334,14 @@ export const handleDrop = (
 
       // Check if this time slot is available on the next day
       const nextDayMovies = scheduledMovies[nextDayTab] || [];
-      const nextDayCheck = checkScheduleOverlap(
+      const nextDayCheck = checkScheduleOverlapWithTimezone(
         adjustedMovie,
         nextDayMovies,
         true,
-        draggedScheduledMovie.id
+        draggedScheduledMovie.id,
+        venueTimezone,
+        nextDayTab,
+        dateRange
       );
 
       if (!nextDayCheck.isValid) {
@@ -342,13 +362,16 @@ export const handleDrop = (
 
       dispatch(scheduleMovieAction(updatedSchedule));
     } else {
-      // Check for conflicts using the utility function
+      // Check for conflicts using the utility function with timezone validation
       const currentDayMovies = scheduledMovies[activeTab] || [];
-      const overlapCheck = checkScheduleOverlap(
+      const overlapCheck = checkScheduleOverlapWithTimezone(
         updatedScheduledMovie,
         currentDayMovies,
         true,
-        draggedScheduledMovie.id
+        draggedScheduledMovie.id,
+        venueTimezone,
+        activeTab,
+        dateRange
       );
 
       if (!overlapCheck.isValid) {

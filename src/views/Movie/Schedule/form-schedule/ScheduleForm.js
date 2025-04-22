@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
-import { Form, Button, message, Card, Steps, Divider } from "antd";
+import { Form, Button, message, Card, Steps, Divider, Modal } from "antd";
 import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { useSelector, useDispatch } from "react-redux";
@@ -26,7 +26,8 @@ import { SEAT_STRUCTURE_TYPES } from "constants/SeatTypes";
 import ScheduleDetailForm from "../components/ScheduleDetailForm";
 import MovieScheduler from "../components/MovieScheduler";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
-import { resetState } from "store/slices/movieScheduleSlice";
+import { addMovieSchedule, resetState } from "store/slices/movieScheduleSlice";
+import { restructureForAPI } from "../components/utils";
 const { Step } = Steps;
 
 const ADD = "ADD";
@@ -39,6 +40,7 @@ const ScheduleForm = (props) => {
   const [form] = Form.useForm();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [formValue, setFormValue] = useState({});
 
   const {
     loading,
@@ -56,10 +58,12 @@ const ScheduleForm = (props) => {
     modalLoading,
     seatDialogVisible,
     editable_status,
-  } = useSelector((state) => state.movieSeatSlice);
-  const { scheduledMovies, dateRange } = useSelector(
-    (state) => state.movieScheduleSlice
-  );
+    scheduledMovies,
+    dateRange,
+  } = useSelector((state) => state.movieScheduleSlice);
+  // const {  } = useSelector(
+  //   (state) => state.movieScheduleSlice
+  // );
 
   // useEffect(() => {
   //   if (seatId && mode === EDIT) {
@@ -71,7 +75,7 @@ const ScheduleForm = (props) => {
 
   useEffect(() => {
     dispatch(resetState());
-  }, [form]);
+  }, []);
 
   useEffect(() => {
     if (error) {
@@ -117,6 +121,9 @@ const ScheduleForm = (props) => {
   const handleNext = async () => {
     try {
       await form.validateFields();
+      const formFields = form.getFieldsValue();
+      console.log("formFields", formFields);
+      setFormValue(formFields);
       setCurrentStep(1);
     } catch (info) {
       console.error("Validation Failed:", info);
@@ -129,104 +136,89 @@ const ScheduleForm = (props) => {
   };
 
   dayjs.extend(isSameOrBefore);
-
   const handleSubmit = async () => {
+    setSubmitLoading(true);
+
     try {
-      // const formValues = await form.validateFields();
-      // console.log("Form values:", formValues);
+      const formFields = form.getFieldsValue();
 
-      const startDate = dayjs(dateRange[0]);
-      const endDate = dayjs(dateRange[1]);
+      // Get validation result along with payload
+      const validationResult = restructureForAPI(formValue, scheduledMovies);
 
-      const datesList = [];
-      let currentDate = startDate;
-      while (!currentDate.isAfter(endDate, "day")) {
-        datesList.push(currentDate.format("YYYY-MM-DD"));
-        currentDate = currentDate.add(1, "day");
-      }
-      const restructuredData = {};
-      datesList.forEach((dateString, index) => {
-        const scheduledForDay = scheduledMovies[index] || [];
-
-        if (scheduledForDay.length > 0) {
-          restructuredData[dateString] = scheduledForDay.map((movie) => ({
-            movieId: movie.movieId,
-            screenId:
-              typeof movie.screen === "object" ? movie.screen.id : movie.screen,
-            startMinutes: movie.startMinutes,
-            endMinutes: movie.endMinutes,
-            intervals: movie.intervalTime || 15,
-            seatStructureId: movie.seatStructureId || null,
-            coupons: movie.coupons || [],
-            offers: movie.offers || [],
-          }));
+      // Handle validation failures
+      if (!validationResult.isValid) {
+        // Handle different validation errors
+        if (validationResult.message === "Missing seat structure") {
+          Modal.error(validationResult.details);
+          console.error("Validation Failed: Missing seat structures");
+          return;
+        } else if (validationResult.message === "No scheduled movies") {
+          Modal.error(validationResult.details);
+          console.error("Validation Failed: No scheduled movies");
+          return;
         }
-      });
+      }
 
-      console.log("scheduledMovies Data:", scheduledMovies);
-      console.log("Restructured Data:", restructuredData);
+      // Handle empty dates warning
+      if (validationResult.message === "Empty dates found") {
+        // Check if there are gap dates (dates between scheduled dates that are empty)
+        const hasGapDates =
+          validationResult.details.emptyGapDates &&
+          validationResult.details.emptyGapDates.length > 0;
 
-      // setSubmitLoading(true);
+        const hasEdgeDates =
+          validationResult.details.emptyEdgeDates &&
+          validationResult.details.emptyEdgeDates.length > 0;
 
-      // if (mode === EDIT) {
-      //   let totalVisibleSeats = 0;
-      //   seats.forEach((row) => {
-      //     row.forEach((seat) => {
-      //       if (seat.isVisible) {
-      //         totalVisibleSeats++;
-      //       }
-      //     });
-      //   });
+        // If we only have edge dates (beginning/end), show a simpler confirmation
+        if (hasEdgeDates && !hasGapDates) {
+          Modal.confirm({
+            title: validationResult.details.title,
+            content: validationResult.details.content,
+            okText: "Continue",
+            cancelText: "Cancel",
+            onOk: () => {
+              proceedWithSubmission(validationResult.data);
+            },
+          });
+          return;
+        }
 
-      //   const editData = {
-      //     // ...formValues,
-      //     id: singleSeatStructure.id,
-      //     total_row: seats.length,
-      //     total_column: seats[0]?.length || 0,
-      //     total_seats: totalVisibleSeats,
-      //     seat_data: {
-      //       seats,
-      //       seatTypes: usedSeatTypes,
-      //     },
-      //   };
+        // If we have gap dates, show a more detailed confirmation with different wording
+        if (hasGapDates) {
+          Modal.confirm({
+            title: "Schedule Contains Empty Dates",
+            content: validationResult.details.content,
+            okText: "Continue with Gaps",
+            cancelText: "Cancel",
+            onOk: () => {
+              proceedWithSubmission(validationResult.data);
+            },
+          });
+          return;
+        }
+      }
 
-      //   const resultAction = await dispatch(
-      //     editSeatStructure({ data: editData, action: ActionType.WARNING })
-      //   );
-
-      //   if (editSeatStructure.fulfilled.match(resultAction)) {
-      //     dispatch(setSelectedSeatStructure(editData));
-      //     dispatch(setSeatDialogVisible(true));
-      //   }
-      // } else {
-      //   let totalVisibleSeats = 0;
-      //   seats.forEach((row) => {
-      //     row.forEach((seat) => {
-      //       if (seat.isVisible) {
-      //         totalVisibleSeats++;
-      //       }
-      //     });
-      //   });
-
-      //   const combinedData = {
-      //     // ...formValues,
-      //     total_row: seats.length,
-      //     total_column: seats[0]?.length || 0,
-      //     total_seats: totalVisibleSeats,
-      //     type: SEAT_STRUCTURE_TYPES.MOVIE,
-      //     seat_data: {
-      //       seats,
-      //       seatTypes: usedSeatTypes,
-      //     },
-      //   };
-
-      //   dispatch(setSelectedSubmitItem(combinedData));
-      // }
-    } catch (info) {
-      console.error("Validation Failed:", info);
-      message.error("Please enter all required fields.");
+      // If we got here, everything is valid
+      proceedWithSubmission(validationResult.data);
+    } catch (error) {
+      console.error("Submission error:", error);
+      message.error("An error occurred during submission. Please try again.");
     } finally {
       setSubmitLoading(false);
+    }
+  };
+
+  // Helper function to handle the actual submission
+  const proceedWithSubmission = (apiPayload) => {
+    console.log("API Payload:", apiPayload);
+
+    if (mode === EDIT) {
+      // Edit mode logic here
+      // ...
+    } else {
+      // Create mode
+      dispatch(setSelectedSubmitItem(apiPayload));
     }
   };
 
@@ -337,7 +329,7 @@ const ScheduleForm = (props) => {
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={mode === EDIT ? editSeatStructure : addSeatStructure}
+        addFunction={mode === EDIT ? editSeatStructure : addMovieSchedule}
         navigationPath={`${APP_PREFIX_PATH}/seat/movie/list`}
         responseMessage={responseMessage}
         pagination={submitPagination}
