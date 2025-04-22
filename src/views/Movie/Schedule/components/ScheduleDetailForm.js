@@ -9,6 +9,9 @@ import {
   Button,
   Space,
   Select,
+  message,
+  Modal,
+  Input,
 } from "antd";
 import { ClockCircleOutlined } from "@ant-design/icons";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
@@ -17,6 +20,8 @@ import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchScreenData } from "store/slices/screenSlice";
 import {
+  resetSchedules,
+  resetState,
   setavailableMovies,
   setDateRange,
   setDateRangeLength,
@@ -32,8 +37,13 @@ import { extractMovies, formatMinutes } from "./utils";
 function ScheduleDetailForm({ form, mode }) {
   const dispatch = useDispatch();
 
-  const { dateRange, dateRangeLength, showLengthOptions, availableMovies } =
-    useSelector((state) => state.movieScheduleSlice);
+  const {
+    dateRange,
+    scheduledMovies,
+    dateRangeLength,
+    showLengthOptions,
+    availableMovies,
+  } = useSelector((state) => state.movieScheduleSlice);
   const { response } = useSelector((state) => state.screen);
   const startDate = dateRange && dateRange[0] ? dayjs(dateRange[0]) : null;
   const endDate = dateRange && dateRange[1] ? dayjs(dateRange[1]) : null;
@@ -58,6 +68,25 @@ function ScheduleDetailForm({ form, mode }) {
     dispatch(setInitialBookingStartDate(date));
   };
   const handleStartDateChange = (date) => {
+    if (Object.keys(scheduledMovies).length > 0) {
+      Modal.confirm({
+        title: "Warning",
+        content:
+          "Changing the date will clear all scheduled movies. Do you want to continue?",
+        okText: "Yes, Continue",
+        cancelText: "No, Cancel",
+        onOk: () => {
+          proceedWithDateChange(date);
+        },
+      });
+    } else {
+      proceedWithDateChange(date);
+    }
+  };
+
+  const proceedWithDateChange = (date) => {
+    dispatch(resetSchedules());
+
     if (!date) {
       dispatch(setDateRange([]));
       dispatch(setSelectedDate(null));
@@ -147,6 +176,15 @@ function ScheduleDetailForm({ form, mode }) {
       <Col xs={24} sm={24} md={17} style={{ minHeight: "70vh" }}>
         <Card title="Schedule Details">
           <Row gutter={16}>
+            <Col xs={24} sm={24}>
+              <Form.Item
+                name={"name"}
+                label="Schedule Name"
+                rules={[{ required: true, message: "Please enter name" }]}
+              >
+                <Input placeholder="Please enter schedule name" />
+              </Form.Item>
+            </Col>
             <Col xs={24} sm={12}>
               <PlaceWithCountryForm
                 form={form}
@@ -185,6 +223,7 @@ function ScheduleDetailForm({ form, mode }) {
                 name="movie"
                 label="Movies"
                 rules={rules.movies}
+
                 // style={{ }}
               >
                 <Select
@@ -202,6 +241,24 @@ function ScheduleDetailForm({ form, mode }) {
                 />
               </Form.Item>
               <Form.Item name="movies" hidden />
+            </Col>
+            <Col xs={24} sm={24}>
+              <Form.Item
+                label="Default Booking Start Date"
+                name="booking_start_date"
+                rules={rules.startDate}
+                tooltip="Select the first day of your schedule"
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  disabledDate={disabledStartDate}
+                  // value={startDate}
+                  onChange={handleBookingStartDate}
+                  placeholder="Select start date"
+                  showTime={true}
+                  showSecond={false}
+                />
+              </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item
@@ -248,24 +305,6 @@ function ScheduleDetailForm({ form, mode }) {
                     className="mb-4"
                   />
                 )}
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                label="Booking Start Date"
-                name="booking_start_date"
-                rules={rules.startDate}
-                tooltip="Select the first day of your schedule"
-              >
-                <DatePicker
-                  style={{ width: "100%" }}
-                  disabledDate={disabledStartDate}
-                  // value={startDate}
-                  onChange={handleBookingStartDate}
-                  placeholder="Select start date"
-                  showTime={true}
-                  showSecond={false}
-                />
-              </Form.Item>
             </Col>
           </Row>
         </Card>

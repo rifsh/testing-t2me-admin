@@ -18,6 +18,7 @@ import {
   InputNumber,
   message,
   DatePicker,
+  Radio,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -67,7 +68,10 @@ export const MovieDetail = ({
     : initialBookingStartDate
     ? initialBookingStartDate
     : dayjs();
+  const initialIsOnlineTicket =
+    movie.isOnlineTicket !== undefined ? movie.isOnlineTicket : true;
 
+  const [isOnlineTicket, setIsOnlineTicket] = useState(initialIsOnlineTicket);
   const [editedMovie, setEditedMovie] = useState(movie);
   const [selectedSeatStructureId, setSelectedSeatStructureId] =
     useState(initialSeatStructure);
@@ -92,6 +96,7 @@ export const MovieDetail = ({
       seatStructure: selectedSeatStructureId,
       intervalTime: intervalTime,
       booking_start_date: bookingStartDate,
+      is_online_ticket: isOnlineTicket,
     });
   }, []);
 
@@ -103,6 +108,7 @@ export const MovieDetail = ({
       seatStructure: selectedSeatStructureId,
       intervalTime: intervalTime,
       booking_start_date: bookingStartDate,
+      is_online_ticket: isOnlineTicket,
     });
   }, [
     editedMovie.screen?.id,
@@ -111,8 +117,11 @@ export const MovieDetail = ({
     selectedSeatStructureId,
     intervalTime,
     bookingStartDate,
+    isOnlineTicket,
   ]);
-
+  const handleIsOnlineTicketChange = (e) => {
+    setIsOnlineTicket(e.target.value);
+  };
   const handleTimeChange = (time) => {
     if (time) {
       const totalMinutes = time.hour() * 60 + time.minute();
@@ -185,7 +194,7 @@ export const MovieDetail = ({
           bookingStartDate: values.booking_start_date
             ? values.booking_start_date.toISOString()
             : null,
-
+          isOnlineTicket: values.is_online_ticket,
           endMinutes:
             editedMovie.startMinutes + movie.duration + values.intervalTime,
         });
@@ -251,6 +260,7 @@ export const MovieDetail = ({
           coupons: selectedCouponIds,
           seatStructure: selectedSeatStructureId,
           intervalTime: intervalTime,
+          is_online_ticket: isOnlineTicket,
         }}
       >
         <Row gutter={[24, 24]}>
@@ -507,6 +517,21 @@ export const MovieDetail = ({
                           </Option>
                         ))}
                     </Select>
+                  </Form.Item>
+                </Col>
+                <Col xs={24} style={{ marginTop: 16 }}>
+                  <Form.Item
+                    name="is_online_ticket"
+                    label="Online Ticket"
+                    tooltip="Allow this movie to be booked online"
+                  >
+                    <Radio.Group
+                      onChange={handleIsOnlineTicketChange}
+                      value={isOnlineTicket}
+                    >
+                      <Radio value={true}>Yes</Radio>
+                      <Radio value={false}>No</Radio>
+                    </Radio.Group>
                   </Form.Item>
                 </Col>
               </Row>

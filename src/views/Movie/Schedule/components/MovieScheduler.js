@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   calculateTimeFromPosition,
   checkScheduleOverlap,
+  checkScheduleOverlapWithTimezone,
+  checkTimezoneValidity,
   extractScreenInfo,
   handleCrossDayScheduling,
 } from "./utils";
@@ -59,6 +61,7 @@ export default function MovieScheduler({ form }) {
     dateRange,
     availableMovies,
     bookingStartDates,
+    initialBookingStartDate,
   } = useSelector((state) => state.movieScheduleSlice);
 
   const { response, loading, error } = useSelector((state) => state.screen);
@@ -111,7 +114,10 @@ export default function MovieScheduler({ form }) {
       scheduleMovie,
       setDraggedMovie,
       setDraggedScheduledMovie,
-      calculateTimeFromPosition
+      calculateTimeFromPosition,
+      selectedVenue?.place?.country?.time_zone || null,
+      dateRange,
+      initialBookingStartDate
     );
   };
 
@@ -272,6 +278,10 @@ export default function MovieScheduler({ form }) {
     if (updatedMovie.isContinuation && updatedMovie.startMinutes === 0) {
       updatedMovie.endMinutes = duration;
     }
+
+    // Check timezone validation
+    const venueTimezone = selectedVenue?.place?.country?.time_zone || null;
+
     // If this is after midnight (24 hours), move to next day tab
     if (updatedMovie.startMinutes >= 24 * 60) {
       const nextDayTab = (activeTab + 1) % 7;
@@ -285,13 +295,16 @@ export default function MovieScheduler({ form }) {
         temp_id: temp_id,
       };
 
-      // Check for conflicts on next day
+      // Check for conflicts on next day including timezone validation
       const nextDayMovies = scheduledMovies[nextDayTab] || [];
-      const overlapCheck = checkScheduleOverlap(
+      const overlapCheck = checkScheduleOverlapWithTimezone(
         adjustedMovie,
         nextDayMovies,
         true,
-        updatedMovie.id
+        updatedMovie.id,
+        venueTimezone,
+        nextDayTab,
+        dateRange
       );
 
       if (!overlapCheck.isValid) {
@@ -361,13 +374,16 @@ export default function MovieScheduler({ form }) {
         return false;
       }
     } else {
-      // Regular scheduling - verify no conflicts
+      // Regular scheduling - verify no conflicts with timezone validation
       const currentDayMovies = scheduledMovies[activeTab] || [];
-      const overlapCheck = checkScheduleOverlap(
+      const overlapCheck = checkScheduleOverlapWithTimezone(
         updatedMovie,
         currentDayMovies,
         true,
-        updatedMovie.id
+        updatedMovie.id,
+        venueTimezone,
+        activeTab,
+        dateRange
       );
 
       if (!overlapCheck.isValid) {
@@ -440,6 +456,15 @@ export default function MovieScheduler({ form }) {
         })
       );
     }
+    // if (updatedMovie.isOnlineTicket !== undefined) {
+    //   dispatch({
+    //     type: "SET_ONLINE_TICKET_STATUS",
+    //     payload: {
+    //       movieId: updatedMovie.id,
+    //       isOnlineTicket: updatedMovie.isOnlineTicket,
+    //     },
+    //   });
+    // }
   };
 
   // Helper function to close the details panel

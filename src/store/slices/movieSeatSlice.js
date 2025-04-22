@@ -9,6 +9,8 @@ export const initialState = {
   responseData: null,
   responseMessage: null,
   editable_status: null,
+  validationStatus: false,
+  pagination: { size: 10, page: 1 },
   editSeatItemId: null,
   responseImpactData: null,
   warningPagination: { size: 10, page: 1 },
@@ -17,8 +19,7 @@ export const initialState = {
   selectedSeatStructure: null,
   allSeats: [],
   singleSeatStructure: null,
-  validationStatus: false,
-  pagination: { size: 10, page: 1 },
+  
   seatDialogVisible: false,
   seatModalLoading: false,
 
