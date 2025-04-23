@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Badge, Button, Card, Menu, Table } from "antd";
+import { Badge, Button, Card, Menu, Table, Tag } from "antd";
 import Flex from "components/shared-components/Flex";
 import { EditOutlined, EyeOutlined, FormOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -13,12 +13,12 @@ import SearchBarWithStatus from "components/util-components/Search/SearchBarWith
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { getAllMovieSchedule } from "store/slices/movieScheduleSlice";
-
+import dayjs from "dayjs";
 const ScheduleList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredSchedules, message, pagination, editable_status, loading } =
-    useSelector((state) => state.schedules);
+  const { allSchedule, message, pagination, editable_status, loading } =
+    useSelector((state) => state.movieScheduleSlice);
   // const [form] = Form.useForm();
 
   useEffect(() => {
@@ -34,8 +34,8 @@ const ScheduleList = () => {
     dispatch(setSelectedItem(data));
   };
   const handleViewDetails = async (id) => {
-    await dispatch(fetchSingleSchedules({ id: id }));
-    navigate(`${APP_PREFIX_PATH}/schedule/${id}`);
+    // await dispatch(fetchSingleSchedules({ id: id }));
+    navigate(`${APP_PREFIX_PATH}/movie-schedule/details/${id}`);
   };
   const handleEditSchedule = async (id) => {
     await dispatch(fetchSingleSchedules({ id: id }));
@@ -59,56 +59,78 @@ const ScheduleList = () => {
   );
   const tableColumns = [
     {
-      title: "Schedule Name",
+      title: "Show Name",
       dataIndex: "name",
       sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
     },
     {
-      title: "Event",
-      dataIndex: ["event", "event_name"],
-      sorter: (a, b) =>
-        Utils.antdTableObjectSorter(a, b, ["event", "event_name"]),
-    },
-    {
-      title: "Start Time",
+      title: "Date",
       dataIndex: "start_date",
+      render: (text) => dayjs(text).format("YYYY-MM-DD"),
       sorter: (a, b) => Utils.antdTableSorter(a, b, "start_date"),
     },
     {
-      title: "End Time",
-      dataIndex: "end_date",
-      sorter: (a, b) => Utils.antdTableSorter(a, b, "end_date"),
+      title: "Time",
+      render: (_, record) => (
+        <span>{`${record.start_time.slice(0, 5)} - ${record.end_time.slice(
+          0,
+          5
+        )}`}</span>
+      ),
+      sorter: (a, b) => Utils.antdTableSorter(a, b, "start_time"),
     },
-    Utils.statusColumnUtil(handleUpdateStatus),
     {
-      title: "Is Scheduled",
-      dataIndex: "schedule_status",
+      title: "Duration",
       render: (_, record) => {
+        const movieShow = record.movie_show && record.movie_show[0];
+        return movieShow ? `${movieShow.duration} mins` : "-";
+      },
+    },
+    {
+      title: "Status",
+      dataIndex: "schedule_status",
+      render: (status) => {
         const statusMap = {
-          "Event Expired": { text: "Event Expired", badge: "error" },
-          "Event Upcoming": { text: "Event Upcoming", badge: "processing" },
-          "Event Running": { text: "Event Running", badge: "success" },
-          "Event Disabled": { text: "Event Disabled", badge: "error" },
-          "Event Booking Enabled": {
-            text: "Event Booking Enabled",
-            badge: "success",
-          },
-          "Event Ad running": { text: "Event Ad running", badge: "warning" },
+          Upcoming: { text: "Upcoming", badge: "processing" },
+          Running: { text: "Running", badge: "success" },
+          Expired: { text: "Expired", badge: "error" },
+          Disabled: { text: "Disabled", badge: "error" },
+          "Booking Enabled": { text: "Booking Enabled", badge: "success" },
         };
 
-        const status = statusMap[record.schedule_status] || {
-          text: record.schedule_status,
+        const statusInfo = statusMap[status] || {
+          text: status,
           badge: "default",
         };
 
         return (
           <div>
-            <Badge status={status.badge} />
-            <span className="mx-2">{status.text}</span>
+            <Badge status={statusInfo.badge} />
+            <span className="mx-2">{statusInfo.text}</span>
           </div>
         );
       },
       sorter: (a, b) => Utils.antdTableSorter(a, b, "schedule_status"),
+    },
+    {
+      title: "Booking",
+      render: (_, record) => {
+        const movieShow = record.movie_show && record.movie_show[0];
+        if (!movieShow) return "-";
+
+        return movieShow.is_online_ticket ? (
+          <Tag color="green">Online Booking</Tag>
+        ) : (
+          <Tag color="orange">Offline Only</Tag>
+        );
+      },
+    },
+    {
+      title: "Screen",
+      render: (_, record) => {
+        const movieShow = record.movie_show && record.movie_show[0];
+        return movieShow ? `Screen ${movieShow.screen_id}` : "-";
+      },
     },
     {
       title: "",
@@ -136,7 +158,7 @@ const ScheduleList = () => {
       <div>
         <Table
           columns={tableColumns}
-          dataSource={filteredSchedules}
+          dataSource={allSchedule}
           rowKey="id"
           loading={loading}
           pagination={{

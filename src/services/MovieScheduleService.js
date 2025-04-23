@@ -42,9 +42,9 @@ MovieScheduleService.editSeatStructureStatus = function (
   });
 };
 
-MovieScheduleService.getSeatStructureDetails = function (pageData) {
+MovieScheduleService.getScheduleDetails = function (pageData) {
   return fetch({
-    url: `${ApiConstant.MOVIE_SEAT_DETAILS_URL}`,
+    url: `${ApiConstant.MOVIE_SCHEDULE_DETAILS_URL}`,
     method: "get",
     params: Utils.filterParams(pageData),
   });

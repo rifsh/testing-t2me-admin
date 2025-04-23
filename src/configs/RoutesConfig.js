@@ -97,7 +97,8 @@ export const protectedRoutes = [
     key: "movie.movie.list",
     path: `${APP_PREFIX_PATH}/movie/list`,
     component: React.lazy(() => import("views/Movie/movie-list")),
-  }, {
+  },
+  {
     key: "movie.movie.add",
     path: `${APP_PREFIX_PATH}/movie/edit/:id`,
     component: React.lazy(() => import("views/Movie/movie-edit")),
@@ -132,11 +133,7 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/personality/edit/:id`,
     component: React.lazy(() => import("views/Movie/cast/cast-edit")),
   },
-  {
-    key: "movie.schedule",
-    path: `${APP_PREFIX_PATH}/movie-schedule/list`,
-    component: React.lazy(() => import("views/Movie/Schedule/schedule-list")),
-  },
+
   {
     key: "dine.list",
     path: `${APP_PREFIX_PATH}/dine/list`,
@@ -168,9 +165,19 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/Movie/Schedule/schedule-list")),
   },
   {
-    key: "movie.schedule",
+    key: "movie.schedule.add",
     path: `${APP_PREFIX_PATH}/movie-schedule/add`,
     component: React.lazy(() => import("views/Movie/Schedule/schedule-add")),
+  },
+  {
+    key: "movie.schedule.list",
+    path: `${APP_PREFIX_PATH}/movie-schedule/list`,
+    component: React.lazy(() => import("views/Movie/Schedule/schedule-list")),
+  },
+  {
+    key: "movie.schedule.details",
+    path: `${APP_PREFIX_PATH}/movie-schedule/details/:scheduleId`,
+    component: React.lazy(() => import("views/Movie/Schedule/schedule-detail")),
   },
   {
     key: "movie.theater",
@@ -195,12 +202,12 @@ export const protectedRoutes = [
   {
     key: "movie.theater",
     path: `${APP_PREFIX_PATH}/movie-theater-company/add`,
-    component: React.lazy(() => import("views/theater/add-company"))
+    component: React.lazy(() => import("views/theater/add-company")),
   },
   {
     key: "movie.theater",
     path: `${APP_PREFIX_PATH}/movie-theater-company/edit/:company_id`,
-    component: React.lazy(() => import("views/theater/edit-company"))
+    component: React.lazy(() => import("views/theater/edit-company")),
   },
   {
     key: "event.details",
@@ -359,6 +366,26 @@ export const protectedRoutes = [
   },
   {
     key: "seat.movie.details",
+    path: `${APP_PREFIX_PATH}/seat/movie/:seatId`,
+    component: React.lazy(() => import("views/seat/movie/details-seat")),
+  },
+  {
+    key: "seat.event.list",
+    path: `${APP_PREFIX_PATH}/seat/movie/list`,
+    component: React.lazy(() => import("views/seat/movie/list-seat")),
+  },
+  {
+    key: "seat.event.add",
+    path: `${APP_PREFIX_PATH}/seat/movie/add`,
+    component: React.lazy(() => import("views/seat/movie/add-seat")),
+  },
+  {
+    key: "seat.event.add",
+    path: `${APP_PREFIX_PATH}/seat/movie/edit/:seatId`,
+    component: React.lazy(() => import("views/seat/movie/edit-seat")),
+  },
+  {
+    key: "seat.event.details",
     path: `${APP_PREFIX_PATH}/seat/movie/:seatId`,
     component: React.lazy(() => import("views/seat/movie/details-seat")),
   },
@@ -553,7 +580,7 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/alerts/details/:issueId`,
     component: React.lazy(() =>
       import("views/app-views/apps/alerts/alerts-details")
-    )
+    ),
   },
   {
     key: "event.type.list",
@@ -693,7 +720,5 @@ export const protectedRoutes = [
     component: React.lazy(() =>
       import("views/app-views/apps/organizer/reports")
     ),
-  }
-  
-
+  },
 ];
