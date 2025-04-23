@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Badge, Button, Card, Menu, Table, Tag } from "antd";
+import { Badge, Button, Card, Collapse, Menu, Table, Tag } from "antd";
 import Flex from "components/shared-components/Flex";
 import { EditOutlined, EyeOutlined, FormOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -123,13 +123,6 @@ const ScheduleList = () => {
         ) : (
           <Tag color="orange">Offline Only</Tag>
         );
-      },
-    },
-    {
-      title: "Screen",
-      render: (_, record) => {
-        const movieShow = record.movie_show && record.movie_show[0];
-        return movieShow ? `Screen ${movieShow.screen_id}` : "-";
       },
     },
     {
