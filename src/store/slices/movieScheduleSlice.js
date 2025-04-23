@@ -20,6 +20,9 @@ const initialState = {
   availableMovies: [],
 
   //api state
+  allSchedule: [],
+  singleSchedule: {},
+  //common api state
   loading: false,
   error: null,
   message: null,
@@ -28,7 +31,6 @@ const initialState = {
   editable_status: null,
   validationStatus: false,
   pagination: { size: 10, page: 1 },
-  allSchedule:[],
   editSeatItemId: null,
   responseImpactData: null,
   warningPagination: { size: 10, page: 1 },
@@ -87,13 +89,11 @@ export const editSeatStructureStatus = createAsyncThunk(
   }
 );
 
-export const getMovieSeatStructureDetails = createAsyncThunk(
+export const getMovieScheduleDetails = createAsyncThunk(
   "movieSchedule/getDetails",
   async (pageData, { rejectWithValue }) => {
     try {
-      const response = await MovieScheduleService.getSeatStructureDetails(
-        pageData
-      );
+      const response = await MovieScheduleService.getScheduleDetails(pageData);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -107,9 +107,7 @@ export const getAllMovieSchedule = createAsyncThunk(
   "movieSchedule/getAllSchedule",
   async (pageData, { rejectWithValue }) => {
     try {
-      const response = await MovieScheduleService.getAllMovieSchedule(
-        pageData
-      );
+      const response = await MovieScheduleService.getAllMovieSchedule(pageData);
       return response.data[0];
     } catch (error) {
       return rejectWithValue(
@@ -337,16 +335,16 @@ const movieScheduleSlice = createSlice({
       })
 
       // Get seat structure details cases
-      .addCase(getMovieSeatStructureDetails.pending, (state) => {
+      .addCase(getMovieScheduleDetails.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getMovieSeatStructureDetails.fulfilled, (state, action) => {
+      .addCase(getMovieScheduleDetails.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.singleSeatStructure = action.payload[0];
+        state.singleSchedule = action.payload[0];
       })
-      .addCase(getMovieSeatStructureDetails.rejected, (state, action) => {
+      .addCase(getMovieScheduleDetails.rejected, (state, action) => {
         state.loading = false;
         state.error =
           action.payload?.data || "Error fetching seat structure details";
