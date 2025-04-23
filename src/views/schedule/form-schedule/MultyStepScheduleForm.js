@@ -25,7 +25,7 @@ import LoadingOverlay from "components/util-components/Loader/index";
 
 import ConfirmationPage from "../components/ConfirmationPage";
 
-const MultyStepScheduleForm = ({ mode, id, type = 'event' }) => {
+const MultyStepScheduleForm = ({ mode, id }) => {
   const steps = [
     "Schedule Details",
     "Time Slots",
@@ -245,6 +245,8 @@ const MultyStepScheduleForm = ({ mode, id, type = 'event' }) => {
       const submitData = {
         start_date: startDate,
         end_date: endDate,
+        max_ticket_per_booking: values.max_ticket_per_booking,
+        is_multi_date: values.is_multi_date,
         booking_start_date_time: dayjs(values.booking_start_date_time).format(
           "YYYY-MM-DDTHH:mm"
         ),
@@ -356,7 +358,7 @@ const MultyStepScheduleForm = ({ mode, id, type = 'event' }) => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return <ScheduleDetails form={form} type={type}/>;
+        return <ScheduleDetails form={form} />;
       case 2:
         return <ScheduleTimeSlots form={form} mode={mode} />;
       case 3:

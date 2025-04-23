@@ -1,22 +1,18 @@
 import React, { useEffect } from "react";
-import { Badge, Button, Card, Menu,  Table } from "antd";
+import { Badge, Button, Card, Menu, Table } from "antd";
 import Flex from "components/shared-components/Flex";
 import { EditOutlined, EyeOutlined, FormOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  editSchedule,
-  fetchAllSchedules,
-  fetchSingleSchedules,
-} from "store/slices/scheduleSlice";
+import { editSchedule, fetchSingleSchedules } from "store/slices/scheduleSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import { setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
-
+import { getAllMovieSchedule } from "store/slices/movieScheduleSlice";
 
 const ScheduleList = () => {
   const navigate = useNavigate();
@@ -26,25 +22,25 @@ const ScheduleList = () => {
   // const [form] = Form.useForm();
 
   useEffect(() => {
-    dispatch(fetchAllSchedules(DEFAULT_PAGE_SIZE));
+    dispatch(getAllMovieSchedule(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
   const handlePagination = (page, size) => {
-    dispatch(fetchAllSchedules({ page: page, size: size }));
+    dispatch(getAllMovieSchedule({ page: page, size: size }));
   };
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
   };
-   const handleViewDetails = async (id) => {
-      await dispatch(fetchSingleSchedules({id:id}));
-      navigate(`${APP_PREFIX_PATH}/schedule/${id}`);
-    };
-   const handleEditSchedule = async (id) => {
-      await dispatch(fetchSingleSchedules({id:id}));
-      navigate(`${APP_PREFIX_PATH}/schedule/edit/${id}`);
-    };
+  const handleViewDetails = async (id) => {
+    await dispatch(fetchSingleSchedules({ id: id }));
+    navigate(`${APP_PREFIX_PATH}/schedule/${id}`);
+  };
+  const handleEditSchedule = async (id) => {
+    await dispatch(fetchSingleSchedules({ id: id }));
+    navigate(`${APP_PREFIX_PATH}/schedule/edit/${id}`);
+  };
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
@@ -56,7 +52,7 @@ const ScheduleList = () => {
       <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditSchedule(row.id)}>
           <EditOutlined />
-          <span className="ml-2">Edit Event</span>    
+          <span className="ml-2">Edit Event</span>
         </Flex>
       </Menu.Item>
     </Menu>
@@ -128,7 +124,7 @@ const ScheduleList = () => {
   return (
     <Card>
       <Flex alignItems="center" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={fetchAllSchedules} />
+        <SearchBarWithStatus fetchFunction={getAllMovieSchedule} />
         <Button
           type="primary"
           icon={<FormOutlined />}
@@ -156,7 +152,7 @@ const ScheduleList = () => {
         responseMessage={message}
         editable_status={editable_status}
         editFunction={editSchedule}
-        getAllFunction={(pageData) => fetchAllSchedules(pageData)}
+        getAllFunction={(pageData) => getAllMovieSchedule(pageData)}
         pageData={{ page: 1, size: 10 }}
       />
     </Card>
