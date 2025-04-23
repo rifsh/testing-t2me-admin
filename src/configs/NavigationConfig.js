@@ -185,6 +185,14 @@ const superAdminDashBoardNavTree = [
                 breadcrumb: false,
                 submenu: [],
               },
+              {
+                key: "seat.event.list",
+                path: `${APP_PREFIX_PATH}/seat/movie/list`,
+                title: "sidenav.seat",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
+              },
             ],
           },
           {
@@ -867,9 +875,7 @@ const eventOrganaizerDashBoardNavTree = [
         submenu: [],
       },
     ],
-  }
-  
-  
+  },
 ];
 const techSupportingTeamDashBoardNavTree = [
   {

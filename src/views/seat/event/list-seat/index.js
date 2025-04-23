@@ -10,7 +10,6 @@ import {
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
@@ -194,7 +193,7 @@ const MovieSeatList = () => {
         <Button
           type="primary"
           icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/seat/movie/add`)}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/seat/event/add`)}
         >
           Add Seat Structure
         </Button>

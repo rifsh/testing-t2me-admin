@@ -1,5 +1,5 @@
 import React from 'react'
-import ScheduleForm from '../../../schedule/form-schedule/MultyStepScheduleForm'
+import ScheduleForm from '../../../schedule/event/form-schedule/MultyStepScheduleForm'
 
 const Index = () => {
     return (
