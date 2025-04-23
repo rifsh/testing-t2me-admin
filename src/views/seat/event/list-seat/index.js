@@ -20,11 +20,11 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import {
-  getAllSeatStructures,
   editSeatStructureStatus,
   setEditSeatItemId,
   setSeatDialogVisible,
   setSeatModalLoading,
+  getEventAllSeatStructures,
 } from "store/slices/movieSeatSlice";
 
 const MovieSeatList = () => {
@@ -45,7 +45,7 @@ const MovieSeatList = () => {
   const { responseData } = useSelector((state) => state.modalSlice);
 
   useEffect(() => {
-    dispatch(getAllSeatStructures(DEFAULT_PAGE_SIZE));
+    dispatch(getEventAllSeatStructures(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
   const handleUpdateStatus = (item) => {
@@ -63,7 +63,7 @@ const MovieSeatList = () => {
 
   const handleEditModalSubmit = async () => {
     dispatch(setSeatModalLoading(true));
-    navigate(`${APP_PREFIX_PATH}/seat/movie/edit/${editSeatItemId}`);
+    navigate(`${APP_PREFIX_PATH}/seat/event/edit/${editSeatItemId}`);
     dispatch(setSeatDialogVisible(false));
     dispatch(setSeatModalLoading(false));
   };
@@ -81,7 +81,7 @@ const MovieSeatList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       ),
-      onClick: () => navigate(`${APP_PREFIX_PATH}/seat/movie/${row.id}`),
+      onClick: () => navigate(`${APP_PREFIX_PATH}/seat/event/${row.id}`),
     },
     {
       key: "edit",
@@ -183,13 +183,13 @@ const MovieSeatList = () => {
   ];
 
   const handlePagination = (page, size) => {
-    dispatch(getAllSeatStructures({ page: page, size: size }));
+    dispatch(getEventAllSeatStructures({ page: page, size: size }));
   };
 
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={getAllSeatStructures} />
+        <SearchBarWithStatus fetchFunction={getEventAllSeatStructures} />
         <Button
           type="primary"
           icon={<FormOutlined />}
@@ -227,7 +227,7 @@ const MovieSeatList = () => {
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editSeatStructureStatus}
-        getAllFunction={(pageData) => getAllSeatStructures(pageData)}
+        getAllFunction={(pageData) => getEventAllSeatStructures(pageData)}
         pageData={{ page: 1, size: 10 }}
         tableConfig={{
           title: "Active Schedules",
@@ -241,7 +241,7 @@ const MovieSeatList = () => {
 
       <StatusSubmitAndConfirmModal
         editFunction={editSeatStructureStatus}
-        getAllFunction={getAllSeatStructures}
+        getAllFunction={getEventAllSeatStructures}
         responseData={responseData}
         responseMessage={message}
         pageData={DEFAULT_PAGE_SIZE}

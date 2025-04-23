@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Badge, Button, Card, Collapse, Menu, Table, Tag } from "antd";
+import { Avatar, Badge, Button, Card, List, Menu, Table, Tag } from "antd";
 import Flex from "components/shared-components/Flex";
 import { EditOutlined, EyeOutlined, FormOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -14,12 +14,12 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { getAllMovieSchedule } from "store/slices/movieScheduleSlice";
 import dayjs from "dayjs";
+
 const ScheduleList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { allSchedule, message, pagination, editable_status, loading } =
     useSelector((state) => state.movieScheduleSlice);
-  // const [form] = Form.useForm();
 
   useEffect(() => {
     dispatch(getAllMovieSchedule(DEFAULT_PAGE_SIZE));
@@ -28,19 +28,22 @@ const ScheduleList = () => {
   const handlePagination = (page, size) => {
     dispatch(getAllMovieSchedule({ page: page, size: size }));
   };
+
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
   };
+
   const handleViewDetails = async (id) => {
-    // await dispatch(fetchSingleSchedules({ id: id }));
     navigate(`${APP_PREFIX_PATH}/movie-schedule/details/${id}`);
   };
+
   const handleEditSchedule = async (id) => {
     await dispatch(fetchSingleSchedules({ id: id }));
     navigate(`${APP_PREFIX_PATH}/schedule/edit/${id}`);
   };
+
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
@@ -57,11 +60,25 @@ const ScheduleList = () => {
       </Menu.Item>
     </Menu>
   );
+
   const tableColumns = [
     {
       title: "Show Name",
       dataIndex: "name",
       sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
+    },
+    {
+      title: "Theater & Venue",
+      render: (_, record) => (
+        <div>
+          <div>
+            <strong>{record.theatre.name}</strong>
+          </div>
+          <div>
+            {record.theatre.venue.name}, {record.theatre.place.name}
+          </div>
+        </div>
+      ),
     },
     {
       title: "Date",
@@ -78,13 +95,6 @@ const ScheduleList = () => {
         )}`}</span>
       ),
       sorter: (a, b) => Utils.antdTableSorter(a, b, "start_time"),
-    },
-    {
-      title: "Duration",
-      render: (_, record) => {
-        const movieShow = record.movie_show && record.movie_show[0];
-        return movieShow ? `${movieShow.duration} mins` : "-";
-      },
     },
     {
       title: "Status",
@@ -111,19 +121,6 @@ const ScheduleList = () => {
         );
       },
       sorter: (a, b) => Utils.antdTableSorter(a, b, "schedule_status"),
-    },
-    {
-      title: "Booking",
-      render: (_, record) => {
-        const movieShow = record.movie_show && record.movie_show[0];
-        if (!movieShow) return "-";
-
-        return movieShow.is_online_ticket ? (
-          <Tag color="green">Online Booking</Tag>
-        ) : (
-          <Tag color="orange">Offline Only</Tag>
-        );
-      },
     },
     {
       title: "",
@@ -154,6 +151,45 @@ const ScheduleList = () => {
           dataSource={allSchedule}
           rowKey="id"
           loading={loading}
+          expandable={{
+            expandedRowRender: (record) => (
+              <List
+                itemLayout="horizontal"
+                dataSource={record.movie_show}
+                renderItem={(item) => (
+                  <List.Item>
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar
+                          src={item.movie?.thumbnail_image}
+                          shape="square"
+                          size={64}
+                        />
+                      }
+                      title={<span>{item.movie?.title}</span>}
+                      description={
+                        <div>
+                          <div>
+                            Screen: {item.screen?.screen_name} (Capacity:{" "}
+                            {item.screen?.capacity})
+                          </div>
+                          <div>Status: {item.movie_status}</div>
+                          {item.movie?.description && (
+                            <div
+                              dangerouslySetInnerHTML={{
+                                __html: item.movie.description,
+                              }}
+                            ></div>
+                          )}
+                        </div>
+                      }
+                    />
+                    <Tag color="orange">{item.movie_status}</Tag>
+                  </List.Item>
+                )}
+              />
+            ),
+          }}
           pagination={{
             current: pagination.page,
             pageSize: pagination.size,

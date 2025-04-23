@@ -9,7 +9,7 @@ import { Modal, Card, message } from "antd";
 import LayoutToolbar from "./LayoutToolbar";
 import TheaterGrid from "./TheaterGrid";
 
-const TheaterLayout = () => {
+const TheaterLayout = ({ type }) => {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showHiddenSeats, setShowHiddenSeats] = useState(true);
 
@@ -72,6 +72,7 @@ const TheaterLayout = () => {
       <div className="flex-1">
         <div className="max-w-7xl mx-auto">
           <TheaterGrid
+            type={type}
             isPreviewMode={isPreviewMode}
             showHiddenSeats={showHiddenSeats}
           />

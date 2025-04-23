@@ -21,7 +21,7 @@ const initialState = {
 
   //api state
   allSchedule: [],
-  singleSchedule: {},
+  singleSchedule: null,
   //common api state
   loading: false,
   error: null,

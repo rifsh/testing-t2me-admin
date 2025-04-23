@@ -19,7 +19,7 @@ export const initialState = {
   selectedSeatStructure: null,
   allSeats: [],
   singleSeatStructure: null,
-  
+
   seatDialogVisible: false,
   seatModalLoading: false,
 
@@ -102,6 +102,89 @@ export const getAllSeatStructures = createAsyncThunk(
   async (pageData, { rejectWithValue }) => {
     try {
       const response = await MovieSeatService.getAllSeatStructures(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching all seat structure"
+      );
+    }
+  }
+);
+export const addEventSeatStructure = createAsyncThunk(
+  "eventSeat/add",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.addEventSeatStructure(
+        data,
+        action
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error creating seat structure"
+      );
+    }
+  }
+);
+
+export const editEventSeatStructure = createAsyncThunk(
+  "eventSeat/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.editEventSeatStructure(
+        data,
+        action
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error updating seat structure"
+      );
+    }
+  }
+);
+
+export const editEventSeatStructureStatus = createAsyncThunk(
+  "eventSeat/editStatus",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.editEventSeatStructureStatus(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error updating seat structure status"
+      );
+    }
+  }
+);
+
+export const getEventSeatStructureDetails = createAsyncThunk(
+  "eventSeat/getDetails",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.getEventSeatStructureDetails(
+        pageData
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching seat structure details"
+      );
+    }
+  }
+);
+
+export const getEventAllSeatStructures = createAsyncThunk(
+  "eventSeat/getAllSeats",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.getEventAllSeatStructures(
+        pageData
+      );
       return response.data[0];
     } catch (error) {
       return rejectWithValue(
@@ -369,6 +452,96 @@ const movieSeatSlice = createSlice({
         state.pagination = action.payload;
       })
       .addCase(getAllSeatStructures.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error fetching seat all structure";
+      })
+      .addCase(addEventSeatStructure.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addEventSeatStructure.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(addEventSeatStructure.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.data || "Error creating seat structure";
+      })
+
+      // Edit seat structure cases
+      .addCase(editEventSeatStructure.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editEventSeatStructure.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseMessage = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(editEventSeatStructure.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.data || "Error updating seat structure";
+      })
+
+      // Edit seat structure status cases
+      .addCase(editEventSeatStructureStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editEventSeatStructureStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseMessage = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(editEventSeatStructureStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error updating seat structure status";
+      })
+
+      // Get seat structure details cases
+      .addCase(getEventSeatStructureDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getEventSeatStructureDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.singleSeatStructure = action.payload[0];
+      })
+      .addCase(getEventSeatStructureDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error fetching seat structure details";
+      })
+      .addCase(getEventAllSeatStructures.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getEventAllSeatStructures.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.allSeats = action.payload.items;
+        state.pagination = action.payload;
+      })
+      .addCase(getEventAllSeatStructures.rejected, (state, action) => {
         state.loading = false;
         state.error =
           action.payload?.data || "Error fetching seat all structure";

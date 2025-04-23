@@ -81,22 +81,6 @@ function MovieSeatDetailForm({ form, mode }) {
           </Row>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <TheaterListForm
-                disabled={mode === "EDIT"}
-                form={form}
-                onSelect={handleTheaterSelect}
-              />
-            </Col>
-            <Col xs={24} sm={12}>
-              <ScreenListForm
-                form={form}
-                disabled={mode === "EDIT"}
-                label="Screen"
-                onSelect={handleScreenSelect}
-                rules={[{ required: true, message: "Please select a screen" }]}
-              />
-            </Col>
-            <Col xs={24} sm={12}>
               <Form.Item
                 name="name"
                 label="Seat Structure Name"
