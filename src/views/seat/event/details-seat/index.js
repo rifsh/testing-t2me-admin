@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { getMovieSeatStructureDetails } from "store/slices/movieSeatSlice";
+import { getEventSeatStructureDetails } from "store/slices/movieSeatSlice";
 import Loading from "components/shared-components/Loading";
 import {
   LoadingOutlined,
@@ -24,7 +24,7 @@ export default function SeatDetailsPage() {
   const navigate = useNavigate();
   useEffect(() => {
     if (seatId) {
-      dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
+      dispatch(getEventSeatStructureDetails({ seat_id: seatId }));
     }
   }, [seatId, dispatch]);
 
@@ -45,7 +45,7 @@ export default function SeatDetailsPage() {
   };
 
   const handleEdit = () => {
-    navigate(`${APP_PREFIX_PATH}/seat/movie/edit/${seatId}`);
+    navigate(`${APP_PREFIX_PATH}/seat/event/edit/${seatId}`);
   };
 
   if (loading) {
@@ -78,7 +78,7 @@ export default function SeatDetailsPage() {
             icon={<ReloadOutlined />}
             onClick={() => {
               // Retry loading the data
-              dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
+              dispatch(getEventSeatStructureDetails({ seat_id: seatId }));
             }}
             key="retry"
           >
@@ -112,7 +112,7 @@ export default function SeatDetailsPage() {
           <Button
             onClick={() => {
               // Retry loading the data
-              dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
+              dispatch(getEventSeatStructureDetails({ seat_id: seatId }));
             }}
             key="retry"
           >
@@ -145,7 +145,7 @@ export default function SeatDetailsPage() {
           </Button>,
           <Button
             onClick={() => {
-              dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
+              dispatch(getEventSeatStructureDetails({ seat_id: seatId }));
             }}
             key="retry"
           >

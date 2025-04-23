@@ -6,7 +6,6 @@ import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 
 import { useSelector, useDispatch } from "react-redux";
-import TheaterLayout from "../components/TheaterLayout";
 import MovieSeatDetailForm from "../components/MovieSeatDetailForm";
 import { SEAT_STRUCTURE_TYPES } from "constants/SeatTypes";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
@@ -28,6 +27,7 @@ import { ActionType } from "utils/api/warning-submit-util";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 import { fetchScreenData } from "store/slices/screenSlice";
+import TheaterLayout from "views/seat/components/TheaterLayout";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -63,7 +63,7 @@ const SeatForm = (props) => {
     if (seatId && mode === EDIT) {
       dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
     } else {
-      dispatch(resetState())
+      dispatch(resetState());
     }
   }, [seatId, dispatch]);
 
@@ -147,7 +147,7 @@ const SeatForm = (props) => {
 
         if (editSeatStructure.fulfilled.match(resultAction)) {
           dispatch(setSelectedSeatStructure(editData));
-          console.log('asdfjflaf');
+          console.log("asdfjflaf");
 
           dispatch(setSeatDialogVisible(true));
         }
@@ -261,7 +261,7 @@ const SeatForm = (props) => {
               {
                 label: "Seat Layout",
                 key: "2",
-                children: <TheaterLayout />,
+                children: <TheaterLayout type={"MOVIE"} />,
               },
             ]}
           />

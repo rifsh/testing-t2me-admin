@@ -187,7 +187,7 @@ const superAdminDashBoardNavTree = [
               },
               {
                 key: "seat.event.list",
-                path: `${APP_PREFIX_PATH}/seat/movie/list`,
+                path: `${APP_PREFIX_PATH}/seat/event/list`,
                 title: "sidenav.seat",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
