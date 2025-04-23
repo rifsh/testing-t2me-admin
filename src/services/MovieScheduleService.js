@@ -50,9 +50,9 @@ MovieScheduleService.getSeatStructureDetails = function (pageData) {
   });
 };
 
-MovieScheduleService.getAllSeatStructures = function (params) {
+MovieScheduleService.getAllMovieSchedule = function (params) {
   return fetch({
-    url: ApiConstant.MOVIE_SEAT_URL,
+    url: ApiConstant.MOVIE_SCHEDULE_URL,
     method: "get",
     params: Utils.filterParams(params),
   });
