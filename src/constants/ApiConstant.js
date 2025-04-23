@@ -1,5 +1,6 @@
 export const ApiConstant = {
   API_BASE_URL: "https://uat-tickets2me.mitetechnology.com",
+  LOGIN: "/api/v1/shared/auth/public/token",
   LOG_OUT: "/api/v1/shared/auth/secured/logout",
   LEAD_REGISTER: "/api/v1/shared/auth/public/register/lead_organizer",
   LEAD_OTP_VERIFY: "/api/v1/shared/auth/public/lead_otp",
@@ -57,8 +58,8 @@ export const ApiConstant = {
   AVAILABLE_TAX_CATEGORY_URL: "/api/v1/location/secured/available_tax_category",
   TICKET_URL: "/api/v1/event/tickets/secured/ticketstructure",
   AVAILABLE_TICKET_TYPE_URL: "/api/v1/event/events/secured/available_types",
-  SCHEDULE_URL: "/api/v1/event/events/secured/schedules",
-  SINGLE_SCHEDULE_URL: "/api/v1/event/events/secured/schedules/details",
+  SCHEDULE_URL: "/api/v1/event/schedule/secured/schedules",
+  SINGLE_SCHEDULE_URL: "/api/v1/event/schedule/secured/schedules/details",
   STATICS_EVENT_LIST: "/api/v1/shared/statics/secured/events",
   STATICS_USER_LIST: "/api/v1/shared/statics/secured/users",
   STATICS_SCHEDULES_LIST: "/api/v1/shared/statics/secured/schedules",
