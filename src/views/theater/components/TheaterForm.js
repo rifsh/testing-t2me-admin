@@ -26,12 +26,17 @@ import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import { fetchTheaterCompanies, setSelectedCompanyId } from 'store/slices/theaterCompanySlice';
 import { Option } from 'antd/es/mentions';
 import TheaterCompanyList from 'components/util-components/FormItems/TheaterCompanyList';
+import OffersDropdown from 'components/util-components/FormItems/OffersDropdown';
+import CoupenDropdown from 'components/util-components/FormItems/CoupenDropdown';
+import OffersAndCouponsPanel from './OffersAndCoupons';
+import { validateOfferCoupon } from 'store/slices/offerSlice';
 
 const { Title } = Typography;
 
 const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
     const dispatch = useDispatch();
     const [form] = Form.useForm();
+    const { selectedCoupons, selectedOffers, } = useSelector((state) => state.event);
     const { response, loading, submitMessage, singleResponse, message: theaterMessages, editData, error } = useSelector((state) => state.theater);
     const { selectedPlace, selectedVenue, dialogVisible } = useSelector((state) => state.locations);
     const { selectedCompanyId } = useSelector((state) => state.theaterCompany);
@@ -98,14 +103,26 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
         event.preventDefault();
         try {
             const values = await form.validateFields();
-            console.log(values)
+            const offers = {
+                offer_ids: selectedOffers?.map((offer) => offer.id) || [],
+                coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
+            };
             const formattedData = {
                 ...values,
                 place_id: selectedPlace,
+                offer_ids: offers.offer_ids,
+                coupon_ids: offers.coupon_ids,
             }
+            console.log("formattedDatasssss", formattedData)
             if (mode === MODE.ADD) {
+                const offersResultAction = await dispatch(
+                    validateOfferCoupon({
+                        offers: selectedOffers,
+                        coupons: selectedCoupons,
+                    })
+                );
                 const resultAction = await dispatch(validateVenue(values.venue_id));
-                if (validateVenue.fulfilled.match(resultAction)) {
+                if (validateVenue.fulfilled.match(resultAction) && validateOfferCoupon.fulfilled.match(offersResultAction)) {
                     const response = resultAction.payload;
                     if (response.message === "warning") {
                         dispatch(setPlaceValidationDialogVisible(true));
@@ -332,6 +349,15 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                                 </Form.Item>
                             </Col>
                         </Row>
+                        <Row gutter={24}>
+                            <Col xs={24} md={12}>
+                                <OffersDropdown />
+                            </Col>
+                            <Col xs={24} md={12}>
+                                <CoupenDropdown />
+                            </Col>
+                        </Row>
+                        <OffersAndCouponsPanel />
                         <Form.Item
                             label="Description"
                             name="description"
