@@ -8,6 +8,7 @@ import {
 import EventMockData from "mock/data/eventData";
 import EventService from "services/EventService";
 const initialState = {
+  availableSeats: [],
   eventDetails: {},
   eventTypeDetails: null,
   events: [],
@@ -210,9 +211,13 @@ export const editEvent = createAsyncThunk(
 );
 export const updateEventType = createAsyncThunk(
   "event/updateEventType",
-  async ({ data, action,pageData }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await EventService.updateEventType(data, action,pageData);
+      const response = await EventService.updateEventType(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -296,6 +301,9 @@ const eventSlice = createSlice({
     },
     setEditItemId: (state, action) => {
       state.editItemId = action.payload;
+    },
+    setavailableSeats: (state, action) => {
+      state.availableSeats = action.payload;
     },
     setCurrentStep(state, action) {
       state.currentStep = action.payload;
@@ -388,8 +396,8 @@ const eventSlice = createSlice({
         state.responseMessage = action.payload.status.message;
       })
       .addCase(addEvent.rejected, (state, action) => {
-        console.error("AddEvent - Rejected", action.payload);
         state.loading = false;
+        console.error("AddEvent - Rejected", action.payload);
         state.error = action.payload.data;
         state.responseMessage = action.payload.status.message;
       })
@@ -566,15 +574,18 @@ const eventSlice = createSlice({
           return acc;
         }, []);
 
-        const uniqueCoupons = eventData?.event_coupons?.reduce((acc, current) => {
-          const isDuplicate = acc.find(
-            (item) => item.coupons.id === current.coupons.id
-          );
-          if (!isDuplicate) {
-            acc.push(current);
-          }
-          return acc;
-        }, []);
+        const uniqueCoupons = eventData?.event_coupons?.reduce(
+          (acc, current) => {
+            const isDuplicate = acc.find(
+              (item) => item.coupons.id === current.coupons.id
+            );
+            if (!isDuplicate) {
+              acc.push(current);
+            }
+            return acc;
+          },
+          []
+        );
 
         eventData.event_offers = uniqueOffers;
         eventData.event_coupons = uniqueCoupons;
@@ -630,6 +641,7 @@ const eventSlice = createSlice({
 export const {
   setDialogVisible,
   setModalLoading,
+  setavailableSeats,
   setSelectedEvent,
   filterEvent,
   setSubmitData,

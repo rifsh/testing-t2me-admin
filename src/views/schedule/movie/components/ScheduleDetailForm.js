@@ -28,6 +28,7 @@ import {
   setInitialBookingStartDate,
   setSelectedDate,
   setShowLengthOptions,
+  scheduleMovie,
 } from "store/slices/movieScheduleSlice";
 import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
 import dayjs from "dayjs";
@@ -64,9 +65,11 @@ function ScheduleDetailForm({ form, mode }) {
       dispatch(fetchScreenData({ theatre_id: theatre.id }));
     }
   };
+
   const handleBookingStartDate = (date) => {
     dispatch(setInitialBookingStartDate(date));
   };
+
   const handleStartDateChange = (date) => {
     if (Object.keys(scheduledMovies).length > 0) {
       Modal.confirm({
@@ -128,13 +131,70 @@ function ScheduleDetailForm({ form, mode }) {
     dispatch(setDateRange([startDate, date]));
   };
 
+  const isMovieScheduled = (movieId) => {
+    for (const day in scheduledMovies) {
+      if (scheduledMovies[day]?.some((movie) => movie.movieId === movieId)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const removeMovieFromSchedule = (movieId) => {
+    const updatedSchedule = {};
+
+    for (const [day, movies] of Object.entries(scheduledMovies)) {
+      updatedSchedule[day] = movies.filter(
+        (movie) => movie.movieId !== movieId
+      );
+    }
+
+    dispatch(scheduleMovie(updatedSchedule));
+  };
+
   const handleMovieSelect = (selectedMovieIds) => {
     if (!allMovies) return;
+
+    const previousSelectedIds = availableMovies.map((movie) => movie.id);
+
+    const removedMovieIds = previousSelectedIds.filter(
+      (id) => !selectedMovieIds.includes(id)
+    );
+
+    const hasScheduledRemovals = removedMovieIds.some((id) =>
+      isMovieScheduled(id)
+    );
+
+    if (hasScheduledRemovals) {
+      Modal.confirm({
+        title: "Warning",
+        content:
+          "Removing this movie will delete all scheduled instances. Continue?",
+        okText: "Yes, Remove",
+        cancelText: "Cancel",
+        onOk: () => {
+          processingMovieSelection(selectedMovieIds, removedMovieIds);
+        },
+        onCancel: () => {
+          form.setFieldsValue({ movie: previousSelectedIds });
+        },
+      });
+    } else {
+      processingMovieSelection(selectedMovieIds);
+    }
+  };
+
+  const processingMovieSelection = (selectedMovieIds, removedMovieIds = []) => {
+    if (removedMovieIds.length > 0) {
+      removedMovieIds.forEach((id) => removeMovieFromSchedule(id));
+    }
 
     const selectedMovies = allMovies.filter((movie) =>
       selectedMovieIds.includes(movie.id)
     );
     dispatch(setavailableMovies(selectedMovies));
+
+    form.setFieldsValue({ movies: selectedMovieIds });
   };
 
   const disabledStartDate = (current) => {
@@ -219,13 +279,7 @@ function ScheduleDetailForm({ form, mode }) {
               )}
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item
-                name="movie"
-                label="Movies"
-                rules={rules.movies}
-
-                // style={{ }}
-              >
+              <Form.Item name="movie" label="Movies" rules={rules.movies}>
                 <Select
                   style={{ minHeight: "40px", width: "100%", padding: "0px" }}
                   placeholder="Select movies"
@@ -252,7 +306,6 @@ function ScheduleDetailForm({ form, mode }) {
                 <DatePicker
                   style={{ width: "100%" }}
                   disabledDate={disabledStartDate}
-                  // value={startDate}
                   onChange={handleBookingStartDate}
                   placeholder="Select start date"
                   showTime={true}

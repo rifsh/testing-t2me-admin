@@ -761,6 +761,10 @@ class Utils {
           formData.append("ticket_structure", JSON.stringify(value));
           return;
         }
+        if (key === "event_seat_structure_id") {
+          formData.append("event_seat_structure_id", JSON.stringify(value));
+          return;
+        }
         if (key === "add_on_services") {
           formData.append("add_on_services", JSON.stringify(value));
           return;

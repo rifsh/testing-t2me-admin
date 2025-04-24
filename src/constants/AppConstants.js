@@ -1,3 +1,5 @@
+
+
 //advertisement category codes
 export const AdvCategoryCode = [
   "payment-bottom-banner",
@@ -6,3 +8,7 @@ export const AdvCategoryCode = [
   "event-sidebar-banner",
   
 ];
+export const AvailableBookingType={
+  SEAT_STRUCTURE :"SEAT STRUCTURE"
+}
+

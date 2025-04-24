@@ -1,10 +1,10 @@
 import React from "react";
 import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { 
-  setSelectedTicketSet, 
+import {
+  setSelectedTicketSet,
   setSelectedTicketStructureforEvent,
-  addOrUpdateTicketSetforEvent 
+  addOrUpdateTicketSetforEvent,
 } from "store/slices/ticketSlice";
 
 const { Option } = Select;
@@ -16,7 +16,7 @@ export const TicketStructureSelector = ({ form }) => {
     loading,
     selectedTicketType,
     availableTicketSets,
-    ticketTypes
+    ticketTypes,
   } = useSelector((state) => state.tickets);
 
   const handleSelectTicketSet = (setName) => {
@@ -27,15 +27,14 @@ export const TicketStructureSelector = ({ form }) => {
     const selectedSet = availableTicketSets.find(
       (set) => set.ticket_set === setName
     );
-  
-    // Check if this ticket set already exists in any ticket type
-    const isDuplicate = ticketTypes.some(type => 
-      type.ticket_types?.some(set => 
-        set.ticket_set === setName && 
-        type.name === selectedStructure?.name
+
+    const isDuplicate = ticketTypes.some((type) =>
+      type.ticket_types?.some(
+        (set) =>
+          set.ticket_set === setName && type.name === selectedStructure?.name
       )
     );
-  
+
     if (!isDuplicate) {
       const ticketSetData = {
         venue_id: selectedStructure?.venue_id,
@@ -45,13 +44,13 @@ export const TicketStructureSelector = ({ form }) => {
         base_price: selectedStructure?.base_price,
         ticket_set: selectedSet?.ticket_set,
         tickets: selectedSet?.tickets,
-        id: selectedStructure.id,  
-        ticketStructureId: selectedStructure.id
+        id: selectedStructure.id,
+        ticketStructureId: selectedStructure.id,
       };
-  
+
       dispatch(addOrUpdateTicketSetforEvent(ticketSetData));
       dispatch(setSelectedTicketSet(setName));
-  
+
       form.setFieldsValue({
         ticket_set: null,
       });
@@ -73,10 +72,14 @@ export const TicketStructureSelector = ({ form }) => {
 
   const getFieldPrefix = () => {
     switch (selectedTicketType) {
-      case 2: return 'ticket';
-      case 1: return 'seat';
-      case 3: return 'movie_seat';
-      default: return 'ticket';
+      case 2:
+        return "ticket";
+      case 1:
+        return "seat";
+      case 3:
+        return "stadium_seat";
+      default:
+        return "ticket";
     }
   };
 
@@ -84,13 +87,13 @@ export const TicketStructureSelector = ({ form }) => {
     const structureNames = {
       2: "Ticket Type",
       1: "Seat Type",
-      3: "Movie Seat Type",
+      3: "Stadium Seat Type",
     };
 
     const fieldNames = {
       2: "ticket_structure_id",
       1: "seat_structure_id",
-      3: "movie_seat_structure_id",
+      3: "Stadium_seat_structure_id",
     };
 
     return (
@@ -121,33 +124,36 @@ export const TicketStructureSelector = ({ form }) => {
           </Select>
         </Form.Item>
         {selectedTicketType && availableTicketSets.length > 0 && (
-          <Form.Item
-            name="ticket_set"
-            label="Sub Type">
+          <Form.Item name="ticket_set" label="Sub Type">
             <Select
               className="w-100"
-              
               placeholder="Choose a Ticket Set"
               loading={loading}
               onChange={handleSelectTicketSet}
             >
               {availableTicketSets.map((ticketSet) => {
-                const isDisabled = ticketTypes.some(type => 
-                  type.ticket_types?.some(set => 
-                    set.ticket_set === ticketSet.ticket_set &&
-                    type.name === filteredTickets.find(
-                      t => t.id === form.getFieldValue(`${getFieldPrefix()}_structure_id`)
-                    )?.name
+                const isDisabled = ticketTypes.some((type) =>
+                  type.ticket_types?.some(
+                    (set) =>
+                      set.ticket_set === ticketSet.ticket_set &&
+                      type.name ===
+                        filteredTickets.find(
+                          (t) =>
+                            t.id ===
+                            form.getFieldValue(
+                              `${getFieldPrefix()}_structure_id`
+                            )
+                        )?.name
                   )
                 );
 
                 return (
-                  <Option 
-                    key={ticketSet.ticket_set} 
+                  <Option
+                    key={ticketSet.ticket_set}
                     value={ticketSet.ticket_set}
                     disabled={isDisabled}
                   >
-                    {ticketSet.ticket_set} {isDisabled ? '(Already Added)' : ''}
+                    {ticketSet.ticket_set} {isDisabled ? "(Already Added)" : ""}
                   </Option>
                 );
               })}
@@ -161,4 +167,4 @@ export const TicketStructureSelector = ({ form }) => {
   return selectedTicketType ? renderStructureField() : null;
 };
 
-export default TicketStructureSelector; 
+export default TicketStructureSelector;
