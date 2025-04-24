@@ -147,6 +147,11 @@ export const ApiConstant = {
   EDIT_MOVIE_STATUS_URL: "/api/v1/movie/movies/secured/movie/edit_status",
   EDIT_MOVIE_URL: "/api/v1/movie/movies/secured/movie/edit",
 
+  // LANGUAGE_API_ENDPOINTS
+  GET_LANGUAGES: "/api/v1/movie/movies/secured/languages",
+  // GENRES_API_ENDPOINTS
+  GET_GENRES: "/api/v1/movie/movies/secured/genre",
+
   //PERSONALITY_API_ENDPOINTS
   ADD_PERSONALITY_URL: "/api/v1/movie/movies/secured/personality",
   GET_PERSONALITY_URL: "/api/v1/movie/movies/secured/personality",
