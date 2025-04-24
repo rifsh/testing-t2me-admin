@@ -424,7 +424,7 @@ const VenueFormFields = ({ mode, venue }) => {
               onSelect={handlePlaceSelect}
               rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
             />
-            place
+            
             <Form.Item
               name="name"
               label="Venue"
