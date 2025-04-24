@@ -30,7 +30,7 @@ import {
   setSelectedDroppedFile,
   filterBanner,
 } from "store/slices/advertisementSlice";
-import { ScheduleTimeSlots } from "views/schedule/components/ScheduleTimeSlotes";
+import { ScheduleTimeSlots } from "views/schedule/event/components/ScheduleTimeSlotes";
 
 const { Dragger } = Upload;
 const { Title, Text, Paragraph } = Typography;

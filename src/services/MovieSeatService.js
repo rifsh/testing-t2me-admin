@@ -58,4 +58,58 @@ MovieSeatService.getAllSeatStructures = function (params) {
   });
 };
 
+
+MovieSeatService.addEventSeatStructure = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+
+  return fetch({
+    url: `${ApiConstant.EVENT_SEAT_URL}?action=${encodedAction}`,
+    method: "post",
+    data: data,
+  });
+};
+
+MovieSeatService.editEventSeatStructure = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.EVENT_SEAT_EDIT_URL}?action=${encodedAction}&seat_id=${data.id}`,
+    method: "put",
+    data: data,
+    params: Utils.filterParams(pageData),
+  });
+};
+MovieSeatService.editEventSeatStructureStatus = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.EVENT_SEAT_STATUS_URL}?action=${encodedAction}&seat_id=${data.id}`,
+    method: "put",
+    data: data,
+    params: Utils.filterParams(pageData),
+  });
+};
+
+MovieSeatService.getEventSeatStructureDetails = function (pageData) {
+  return fetch({
+    url: `${ApiConstant.EVENT_SEAT_DETAILS_URL}`,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
+
+MovieSeatService.getEventAllSeatStructures = function (params) {
+  return fetch({
+    url: ApiConstant.EVENT_SEAT_URL,
+    method: "get",
+    params: Utils.filterParams(params),
+  });
+};
+
 export default MovieSeatService;

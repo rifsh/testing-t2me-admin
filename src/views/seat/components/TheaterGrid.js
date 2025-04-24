@@ -12,7 +12,7 @@ import { BorderOuterOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
 
-const TheaterGrid = ({ isPreviewMode, showHiddenSeats }) => {
+const TheaterGrid = ({ isPreviewMode, showHiddenSeats, type }) => {
   const dispatch = useDispatch();
   const { seats, selectedSeats, seatTypes, zoomLevel } = useSelector(
     (state) => state.movieSeatSlice
@@ -105,7 +105,7 @@ const TheaterGrid = ({ isPreviewMode, showHiddenSeats }) => {
   return (
     <Card>
       <div className="relative overflow-auto p-4" style={{ height: "70vh" }}>
-        <ScreenComponent />
+        {type === "MOVIE" && <ScreenComponent />}
 
         <div
           className="flex flex-col items-center space-y-2 min-w-max"

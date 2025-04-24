@@ -6,28 +6,28 @@ import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 
 import { useSelector, useDispatch } from "react-redux";
+import TheaterLayout from "../../components/TheaterLayout";
 import MovieSeatDetailForm from "../components/MovieSeatDetailForm";
 import { SEAT_STRUCTURE_TYPES } from "constants/SeatTypes";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import LoadingOverlay from "components/util-components/Loader/index";
 import {
-  addSeatStructure,
-  editSeatStructure,
-  getMovieSeatStructureDetails,
   loadSeatData,
   updateSeats,
   setSeatDialogVisible,
   setSeatModalLoading,
   setSelectedSeatStructure,
   resetState,
+  addEventSeatStructure,
+  editEventSeatStructure,
+  getEventSeatStructureDetails,
 } from "store/slices/movieSeatSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 import { fetchScreenData } from "store/slices/screenSlice";
-import TheaterLayout from "views/seat/components/TheaterLayout";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -61,7 +61,7 @@ const SeatForm = (props) => {
 
   useEffect(() => {
     if (seatId && mode === EDIT) {
-      dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
+      dispatch(getEventSeatStructureDetails({ seat_id: seatId }));
     } else {
       dispatch(resetState());
     }
@@ -85,9 +85,8 @@ const SeatForm = (props) => {
       const values = {
         name: singleSeatStructure.name,
         venue_id: singleSeatStructure.venue.id,
-        screen_id: singleSeatStructure.screen.id,
         place_id: singleSeatStructure.venue.place.id,
-        theatre_id: singleSeatStructure.theatre.id,
+
         place: `${singleSeatStructure.venue.place.name}, ${singleSeatStructure.venue.place.country.name}`,
       };
       form.setFieldsValue(values);
@@ -142,10 +141,10 @@ const SeatForm = (props) => {
         };
 
         const resultAction = await dispatch(
-          editSeatStructure({ data: editData, action: ActionType.WARNING })
+          editEventSeatStructure({ data: editData, action: ActionType.WARNING })
         );
 
-        if (editSeatStructure.fulfilled.match(resultAction)) {
+        if (editEventSeatStructure.fulfilled.match(resultAction)) {
           dispatch(setSelectedSeatStructure(editData));
           console.log("asdfjflaf");
 
@@ -189,7 +188,7 @@ const SeatForm = (props) => {
 
   const handleWarningPagination = (page, size) => {
     dispatch(
-      editSeatStructure({
+      editEventSeatStructure({
         data: selectedSeatStructure,
         action: ActionType.WARNING,
         pageData: { page: page, size: size },
@@ -200,14 +199,14 @@ const SeatForm = (props) => {
   const handleModalSubmit = async () => {
     dispatch(setSeatModalLoading(true));
     const resultAction = await dispatch(
-      editSeatStructure({
+      editEventSeatStructure({
         data: selectedSeatStructure,
         action: ActionType.SUBMIT,
       })
     );
     dispatch(setSeatModalLoading(false));
     dispatch(setSeatDialogVisible(false));
-    if (editSeatStructure.fulfilled.match(resultAction)) {
+    if (editEventSeatStructure.fulfilled.match(resultAction)) {
       dispatch(setSelectedSubmitItem(selectedSeatStructure));
     }
   };
@@ -261,7 +260,7 @@ const SeatForm = (props) => {
               {
                 label: "Seat Layout",
                 key: "2",
-                children: <TheaterLayout type={"MOVIE"} />,
+                children: <TheaterLayout />,
               },
             ]}
           />
@@ -289,8 +288,10 @@ const SeatForm = (props) => {
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={mode === EDIT ? editSeatStructure : addSeatStructure}
-        navigationPath={`${APP_PREFIX_PATH}/seat/movie/list`}
+        addFunction={
+          mode === EDIT ? editEventSeatStructure : addEventSeatStructure
+        }
+        navigationPath={`${APP_PREFIX_PATH}/seat/event/list`}
         responseMessage={responseMessage}
         pagination={submitPagination}
       />

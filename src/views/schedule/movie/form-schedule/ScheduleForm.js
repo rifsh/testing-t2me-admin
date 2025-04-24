@@ -330,7 +330,7 @@ const ScheduleForm = (props) => {
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === EDIT ? editSeatStructure : addMovieSchedule}
-        navigationPath={`${APP_PREFIX_PATH}/seat/movie/list`}
+        navigationPath={`${APP_PREFIX_PATH}/movie-schedule/list`}
         responseMessage={responseMessage}
         pagination={submitPagination}
       />
