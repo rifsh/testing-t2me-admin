@@ -272,7 +272,7 @@ const AddMovie = ({ mode, id }) => {
           })) || []
         );
       };
-      console.log("Final form data: ", finalFormData);
+      console.log("Final form data: ", formData);
 
       const responseFormattedData = {
         event_type_id:
@@ -280,8 +280,8 @@ const AddMovie = ({ mode, id }) => {
         title: finalFormData.Title,
         age_restriction: finalFormData.age_restriction,
         runtime: finalFormData.Runtime,
-        language: finalFormData.Language,
-        genre: finalFormData.Genre,
+        language: finalFormData.language,
+        genre: finalFormData.genre,
         released: releasedFormatted,
         description: finalFormData.Plot,
         country: finalFormData.country,

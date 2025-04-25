@@ -19,6 +19,20 @@ movieService.getOmdbMovie = function (pageData) {
         params: Utils.filterParams(pageData),
     });
 };
+movieService.getMovieLanguages = function (pageData) {
+    return fetch({
+        url: ApiConstant.GET_LANGUAGES,
+        method: "get",
+        params: Utils.filterParams(pageData),
+    });
+};
+movieService.getMovieGenres = function (pageData) {
+    return fetch({
+        url: ApiConstant.GET_GENRES,
+        method: "get",
+        params: Utils.filterParams(pageData),
+    });
+};
 movieService.addMovie = function (data, action) {
     const formData = Utils.createFormData(data, {
         fileKeys: ["thumbnail_image"],

@@ -33,15 +33,19 @@ const PlaceWithCountryForm = ({
   const debouncedSearch = useCallback(
     debounce((value) => {
       dispatch(fetchPlaceWithCountry(value));
-    }, 500),
+    }, 300),
     [dispatch]
   );
 
   const handleSearch = (value) => {
-    if (value) {
-      debouncedSearch(value);
+    const trimmedValue = value.trim();
+    if (trimmedValue) {
+      debouncedSearch(trimmedValue);
+    } else {
+      dispatch(fetchPlaceWithCountry(''));
     }
   };
+
 
   const handleSelect = async (value, option) => {
     try {
@@ -79,6 +83,7 @@ const PlaceWithCountryForm = ({
           options={autoCompleteOptions}
           loading={loading}
           disabled={disabled}
+          allowClear
         />
       </Form.Item>
     </Form>
