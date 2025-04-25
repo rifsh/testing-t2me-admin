@@ -40,6 +40,7 @@ import TimezoneClock from "components/util-components/timezone/TimeZoneClock";
 
 import TimeSlots from "./TimeSlote";
 import { ScheduleTimeValidator } from "../utils/ScheduleTimeValidator";
+import { AvailableBookingType } from "constants/AppConstants";
 
 const { Title } = Typography;
 
@@ -360,11 +361,17 @@ export function ScheduleTimeSlots({ form }) {
       return;
     }
 
-    if (!sourceSlot?.ticketType) {
-      message.warning("Please select a ticket type first");
-      return;
+    if (eventDetails.available_types === AvailableBookingType.SEAT_STRUCTURE) {
+      if (!sourceSlot?.seat_strcture_id) {
+        message.warning("Please select a Seat Structure first");
+        return;
+      }
+    } else {
+      if (!sourceSlot?.ticketType) {
+        message.warning("Please select a ticket type first");
+        return;
+      }
     }
-
     if (sourceSlot.is_midnight_passed) {
       message.warning(
         "Slots with midnight passed cannot be applied to other dates"
@@ -639,6 +646,24 @@ export function ScheduleTimeSlots({ form }) {
       })),
     }));
   }, [eventDetails, selectedVenue]);
+  const availableSeats = () => {
+    // Check if event_venue_seat_structure exists
+    if (!eventDetails?.event_venue_seat_structure) return [];
+
+    // If no venue is selected, return empty array
+    if (selectedVenue === undefined || selectedVenue === null) return [];
+
+    // Find the venue seat structure for the selected venue using venue_id
+    const venueSeatStructure = eventDetails.event_venue_seat_structure.find(
+      (vts) => vts.venue_id === selectedVenue
+    );
+
+    // If no venue seat structure found or no event_seats, return empty array
+    if (!venueSeatStructure || !venueSeatStructure.event_seats) return [];
+
+    // Return the event_seats for the selected venue
+    return venueSeatStructure.event_seats;
+  };
 
   const renderTimeDateTimeSlots = (dateStr) => {
     return (
@@ -654,6 +679,8 @@ export function ScheduleTimeSlots({ form }) {
         onAddSlot={handleAddTimeSlot}
         onRemoveSlot={handleRemoveTimeSlot}
         onApplyToAll={applySlotToAllDates}
+        eventDetails={eventDetails}
+        availableSeats={availableSeats()}
       />
     );
   };

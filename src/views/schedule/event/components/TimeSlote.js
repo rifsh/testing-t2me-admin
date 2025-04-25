@@ -39,7 +39,10 @@ const TimeSlots = ({
   onAddSlot,
   onRemoveSlot,
   onApplyToAll,
+  eventDetails,
+  availableSeats,
 }) => {
+  const { Option } = Select;
   const dispatch = useDispatch();
   const getDateCoverage = (timeSlots = {}, dateStr) => {
     if (!dateStr) {
@@ -280,6 +283,7 @@ const TimeSlots = ({
                   "is_midnight_passed",
                   "show_end_date",
                   "ticketType",
+                  "seat_strcture_id"
                 ]);
               });
             }
@@ -300,7 +304,7 @@ const TimeSlots = ({
       }
       batchUpdate([{ dateStr, index, field: type, value }]);
     }
-    if (type === "ticketType") {
+    if (type === "ticketType" || type === "seat_strcture_id") {
       console.log(value, "dsfjakljflsjfka");
 
       batchUpdate([{ dateStr, index, field: type, value }]);
@@ -577,29 +581,64 @@ const TimeSlots = ({
                 </Col>
               )}
               <Col span={5}>
-                <Form.Item
-                  label="Ticket Type"
-                  name={["timeSlots", dateStr, index, "ticketType"]}
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please select a ticket type",
-                    },
-                  ]}
-                >
-                  <Cascader
-                    options={ticketOptions}
-                    expandTrigger="click"
-                    displayRender={displayRender}
-                    onChange={(value) => {
-                      handleTimeChange(dateStr, index, "ticketType", value);
-                    }}
-                    placeholder="Select Ticket Type"
-                    style={{ width: "100%" }}
-                    changeOnSelect={false}
-                    notFoundContent="No ticket types available"
-                  />
-                </Form.Item>
+                {eventDetails.available_types === "SEAT STRUCTURE" ? (
+                  <Form.Item
+                    label="Seat Structure"
+                    name={["timeSlots", dateStr, index, "seat_strcture_id"]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select a seat structure",
+                      },
+                    ]}
+                  >
+                    <Select
+                      className="w-100"
+                      placeholder="Choose seats"
+                      onChange={(value) => {
+                        handleTimeChange(
+                          dateStr,
+                          index,
+                          "seat_strcture_id",
+                          value
+                        );
+                      }}
+                      showSearch
+                    >
+                      {Array.isArray(availableSeats)
+                        ? availableSeats.map((seat) => (
+                            <Option key={seat.id} value={seat.id}>
+                              {seat.name}
+                            </Option>
+                          ))
+                        : null}
+                    </Select>
+                  </Form.Item>
+                ) : (
+                  <Form.Item
+                    label="Ticket Type"
+                    name={["timeSlots", dateStr, index, "ticketType"]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select a ticket type",
+                      },
+                    ]}
+                  >
+                    <Cascader
+                      options={ticketOptions}
+                      expandTrigger="click"
+                      displayRender={displayRender}
+                      onChange={(value) => {
+                        handleTimeChange(dateStr, index, "ticketType", value);
+                      }}
+                      placeholder="Select Ticket Type"
+                      style={{ width: "100%" }}
+                      changeOnSelect={false}
+                      notFoundContent="No ticket types available"
+                    />
+                  </Form.Item>
+                )}
               </Col>
 
               <Col span={4}>
