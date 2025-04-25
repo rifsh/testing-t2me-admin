@@ -29,6 +29,7 @@ import { useParams } from 'react-router-dom';
 import LoadingOverlay from 'components/util-components/Loader';
 import Technology from 'components/shared-components/Theater/Technology';
 import TheaterScreens from '../components/TheaterScreens';
+import TheaterOffers from '../components/TheaterOffers';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -196,6 +197,10 @@ const Index = () => {
                                 </div>
                             </div>
 
+                        </TabPane>
+
+                        <TabPane tab="Offers & Coupons" key="2" >
+                            <TheaterOffers theaterData={singleResponse} />
                         </TabPane>
                     </Tabs>
                 </div>
