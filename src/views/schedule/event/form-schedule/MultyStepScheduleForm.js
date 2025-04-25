@@ -24,6 +24,7 @@ import dayjs from "dayjs";
 import LoadingOverlay from "components/util-components/Loader/index";
 
 import ConfirmationPage from "../components/ConfirmationPage";
+import { AvailableBookingType } from "constants/AppConstants";
 
 const MultyStepScheduleForm = ({ mode, id }) => {
   const steps = [
@@ -235,6 +236,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
                 end_time: endTime,
                 ticket_structure_id: ticketStructureId,
                 ticket_set: ticketSet,
+                seat_structure_id: slot.seat_structure_id,
                 is_midnight: slot.is_midnight_passed ? "true" : "false",
               };
             }),
@@ -334,10 +336,23 @@ const MultyStepScheduleForm = ({ mode, id }) => {
               );
               return;
             }
-
-            if (!slot.ticketType) {
-              message.error(`Ticket type is required for all slots on ${date}`);
-              return;
+            if (
+              eventDetails.available_types ===
+              AvailableBookingType.SEAT_STRUCTURE
+            ) {
+              if (!slot.seat_structure_id) {
+                message.error(
+                  `Seat Structure is required for all slots on ${date}`
+                );
+                return;
+              }
+            } else {
+              if (!slot.ticketType) {
+                message.error(
+                  `Ticket type is required for all slots on ${date}`
+                );
+                return;
+              }
             }
           }
         }

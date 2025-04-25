@@ -40,6 +40,7 @@ import TimezoneClock from "components/util-components/timezone/TimeZoneClock";
 
 import TimeSlots from "./TimeSlote";
 import { ScheduleTimeValidator } from "../utils/ScheduleTimeValidator";
+import { AvailableBookingType } from "constants/AppConstants";
 
 const { Title } = Typography;
 
@@ -111,7 +112,7 @@ export function ScheduleTimeSlots({ form }) {
         if (!slot) return true;
 
         // Check all required fields for null, undefined, or empty string
-        const requiredFields = ["start_time", "ticketType"];
+        const requiredFields = ["start_time"];
         const hasEmptyRequired = requiredFields.some((field) => {
           const value = slot[field];
           return value === null || value === undefined || value === "";
@@ -132,7 +133,7 @@ export function ScheduleTimeSlots({ form }) {
 
       // Check if slots are complete
       const allSlotsComplete = slotsArray.every((slot) => {
-        if (!slot || !slot.start_time || !slot.ticketType) return false;
+        if (!slot || !slot.start_time) return false;
         if (slot.is_midnight_passed) {
           return !!slot.show_end_date;
         }
@@ -246,7 +247,7 @@ export function ScheduleTimeSlots({ form }) {
     const datesWithIncompleteSlots = dates.filter((date) => {
       const slots = timeSlots[date] || [];
       return slots.some((slot) => {
-        return slot && (!slot.start_time || !slot.end_time || !slot.ticketType);
+        return slot && (!slot.start_time || !slot.end_time);
       });
     });
 
@@ -319,6 +320,7 @@ export function ScheduleTimeSlots({ form }) {
                     .minute(sourceSlot.end_time.minute())
                 : null,
               ticketType: sourceSlot.ticketType,
+              seat_structure_id: sourceSlot.seat_structure_id,
               is_midnight_passed: false,
               show_end_date: null,
             }));
@@ -360,11 +362,17 @@ export function ScheduleTimeSlots({ form }) {
       return;
     }
 
-    if (!sourceSlot?.ticketType) {
-      message.warning("Please select a ticket type first");
-      return;
+    if (eventDetails.available_types === AvailableBookingType.SEAT_STRUCTURE) {
+      if (!sourceSlot?.seat_structure_id) {
+        message.warning("Please select a Seat Structure first");
+        return;
+      }
+    } else {
+      if (!sourceSlot?.ticketType) {
+        message.warning("Please select a ticket type first");
+        return;
+      }
     }
-
     if (sourceSlot.is_midnight_passed) {
       message.warning(
         "Slots with midnight passed cannot be applied to other dates"
@@ -432,6 +440,7 @@ export function ScheduleTimeSlots({ form }) {
                         .minute(sourceSlot.end_time.minute())
                     : null,
                   ticketType: sourceSlot.ticketType,
+                  seat_structure_id: sourceSlot.seat_structure_id,
                   is_midnight_passed: false,
                   show_end_date: null,
                 };
@@ -441,6 +450,7 @@ export function ScheduleTimeSlots({ form }) {
                   start_time: null,
                   end_time: null,
                   ticketType: null,
+                  seat_structure_id:null,
                   is_midnight_passed: false,
                   show_end_date: null,
                 }
@@ -639,6 +649,24 @@ export function ScheduleTimeSlots({ form }) {
       })),
     }));
   }, [eventDetails, selectedVenue]);
+  const availableSeats = () => {
+    // Check if event_venue_seat_structure exists
+    if (!eventDetails?.event_venue_seat_structure) return [];
+
+    // If no venue is selected, return empty array
+    if (selectedVenue === undefined || selectedVenue === null) return [];
+
+    // Find the venue seat structure for the selected venue using venue_id
+    const venueSeatStructure = eventDetails.event_venue_seat_structure.find(
+      (vts) => vts.venue_id === selectedVenue
+    );
+
+    // If no venue seat structure found or no event_seats, return empty array
+    if (!venueSeatStructure || !venueSeatStructure.event_seats) return [];
+
+    // Return the event_seats for the selected venue
+    return venueSeatStructure.event_seats;
+  };
 
   const renderTimeDateTimeSlots = (dateStr) => {
     return (
@@ -654,6 +682,8 @@ export function ScheduleTimeSlots({ form }) {
         onAddSlot={handleAddTimeSlot}
         onRemoveSlot={handleRemoveTimeSlot}
         onApplyToAll={applySlotToAllDates}
+        eventDetails={eventDetails}
+        availableSeats={availableSeats()}
       />
     );
   };

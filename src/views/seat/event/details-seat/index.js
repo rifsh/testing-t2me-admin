@@ -192,9 +192,7 @@ export default function SeatDetailsPage() {
             {name || "Unnamed Seat Structure"}
           </h1>
           <div className="mt-2 text-gray-600">
-            <p className="text-lg">
-              {venue?.name || "No Venue"} | {screen?.screen_name || "No Screen"}
-            </p>
+            <p className="text-lg">{venue?.name || "No Venue"}</p>
             <p className="mt-1">
               Type: <span className="font-medium">{type || "N/A"}</span> | Total
               Seats: <span className="font-medium">{total_seats || 0}</span>
@@ -219,11 +217,6 @@ export default function SeatDetailsPage() {
       </div>
 
       <div className="p-6">
-        <div className="mb-10 text-center">
-          <div className="h-8 bg-gray-700 rounded-t-lg w-3/4 mx-auto mb-2 shadow-md"></div>
-          <p className="text-sm font-medium text-gray-500">SCREEN</p>
-        </div>
-
         <div className="flex justify-center overflow-x-auto">
           <div
             className="inline-block transition-transform duration-200"
