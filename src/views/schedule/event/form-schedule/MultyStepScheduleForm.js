@@ -236,7 +236,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
                 end_time: endTime,
                 ticket_structure_id: ticketStructureId,
                 ticket_set: ticketSet,
-                seat_strcture_id: slot.seat_strcture_id,
+                seat_structure_id: slot.seat_structure_id,
                 is_midnight: slot.is_midnight_passed ? "true" : "false",
               };
             }),
@@ -340,7 +340,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
               eventDetails.available_types ===
               AvailableBookingType.SEAT_STRUCTURE
             ) {
-              if (!slot.seat_strcture_id) {
+              if (!slot.seat_structure_id) {
                 message.error(
                   `Seat Structure is required for all slots on ${date}`
                 );

@@ -649,7 +649,7 @@ class TimeSlotValidator {
 
     // Check if all existing slots have required fields filled
     return currentDateSlots.every(
-      (slot) => slot.start_time && slot.end_time && slot.ticketType
+      (slot) => slot.start_time && slot.end_time && slot.ticketType&&slot.seat_structure_id
     );
   }
 
@@ -709,7 +709,7 @@ class TimeSlotValidator {
 
     const lastSlot = currentDateSlots[currentDateSlots.length - 1];
     const isLastSlotComplete =
-      lastSlot.start_time && lastSlot.end_time && lastSlot.ticketType;
+      lastSlot.start_time && lastSlot.end_time && lastSlot.ticketType && lastSlot.seat_structure_id;
 
     return (
       isLastSlotComplete &&
