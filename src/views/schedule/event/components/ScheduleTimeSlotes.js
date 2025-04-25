@@ -112,7 +112,7 @@ export function ScheduleTimeSlots({ form }) {
         if (!slot) return true;
 
         // Check all required fields for null, undefined, or empty string
-        const requiredFields = ["start_time", "ticketType"];
+        const requiredFields = ["start_time"];
         const hasEmptyRequired = requiredFields.some((field) => {
           const value = slot[field];
           return value === null || value === undefined || value === "";
@@ -133,7 +133,7 @@ export function ScheduleTimeSlots({ form }) {
 
       // Check if slots are complete
       const allSlotsComplete = slotsArray.every((slot) => {
-        if (!slot || !slot.start_time || !slot.ticketType) return false;
+        if (!slot || !slot.start_time) return false;
         if (slot.is_midnight_passed) {
           return !!slot.show_end_date;
         }
@@ -247,7 +247,7 @@ export function ScheduleTimeSlots({ form }) {
     const datesWithIncompleteSlots = dates.filter((date) => {
       const slots = timeSlots[date] || [];
       return slots.some((slot) => {
-        return slot && (!slot.start_time || !slot.end_time || !slot.ticketType);
+        return slot && (!slot.start_time || !slot.end_time);
       });
     });
 
@@ -320,6 +320,7 @@ export function ScheduleTimeSlots({ form }) {
                     .minute(sourceSlot.end_time.minute())
                 : null,
               ticketType: sourceSlot.ticketType,
+              seat_structure_id: sourceSlot.seat_structure_id,
               is_midnight_passed: false,
               show_end_date: null,
             }));
@@ -362,7 +363,7 @@ export function ScheduleTimeSlots({ form }) {
     }
 
     if (eventDetails.available_types === AvailableBookingType.SEAT_STRUCTURE) {
-      if (!sourceSlot?.seat_strcture_id) {
+      if (!sourceSlot?.seat_structure_id) {
         message.warning("Please select a Seat Structure first");
         return;
       }
@@ -439,6 +440,7 @@ export function ScheduleTimeSlots({ form }) {
                         .minute(sourceSlot.end_time.minute())
                     : null,
                   ticketType: sourceSlot.ticketType,
+                  seat_structure_id: sourceSlot.seat_structure_id,
                   is_midnight_passed: false,
                   show_end_date: null,
                 };
@@ -448,6 +450,7 @@ export function ScheduleTimeSlots({ form }) {
                   start_time: null,
                   end_time: null,
                   ticketType: null,
+                  seat_structure_id:null,
                   is_midnight_passed: false,
                   show_end_date: null,
                 }

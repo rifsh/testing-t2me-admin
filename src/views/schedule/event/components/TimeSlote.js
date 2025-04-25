@@ -179,7 +179,7 @@ const TimeSlots = ({
               "end_time",
               "is_midnight_passed",
               "show_end_date",
-              "ticketType",
+              "ticketType","seat_structure_id"
             ]);
           });
 
@@ -283,7 +283,7 @@ const TimeSlots = ({
                   "is_midnight_passed",
                   "show_end_date",
                   "ticketType",
-                  "seat_strcture_id"
+                  "seat_structure_id"
                 ]);
               });
             }
@@ -304,7 +304,7 @@ const TimeSlots = ({
       }
       batchUpdate([{ dateStr, index, field: type, value }]);
     }
-    if (type === "ticketType" || type === "seat_strcture_id") {
+    if (type === "ticketType" || type === "seat_structure_id") {
       console.log(value, "dsfjakljflsjfka");
 
       batchUpdate([{ dateStr, index, field: type, value }]);
@@ -584,7 +584,7 @@ const TimeSlots = ({
                 {eventDetails.available_types === "SEAT STRUCTURE" ? (
                   <Form.Item
                     label="Seat Structure"
-                    name={["timeSlots", dateStr, index, "seat_strcture_id"]}
+                    name={["timeSlots", dateStr, index, "seat_structure_id"]}
                     rules={[
                       {
                         required: true,
@@ -599,7 +599,7 @@ const TimeSlots = ({
                         handleTimeChange(
                           dateStr,
                           index,
-                          "seat_strcture_id",
+                          "seat_structure_id",
                           value
                         );
                       }}
