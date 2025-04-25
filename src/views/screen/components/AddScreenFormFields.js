@@ -157,9 +157,8 @@ const AddScreenFormFields = ({ mode, screenId }) => {
     }
 
     const handleTheaterSelect = (theater) => {
-        // Reset screens to just one screen (Screen 1) when theater is selected/re-selected
         setScreens([{ key: 0 }]);
-        setActiveTab("0"); // Set active tab to the first screen (index 0)
+        setActiveTab("0");
     };
 
     const handleSubmit = async (event) => {
@@ -167,13 +166,17 @@ const AddScreenFormFields = ({ mode, screenId }) => {
         try {
             const values = await form.validateFields();
             if (mode === "ADD") {
+                const data = {
+                    ...values,
+                    theatre_id: selectedTheaterId
+                }
                 const resultAction = await dispatch(validateVenue(values.venue_id));
                 if (validateVenue.fulfilled.match(resultAction)) {
                     const response = resultAction.payload;
                     if (response.message === "warning") {
                         dispatch(setPlaceValidationDialogVisible(true));
                     } else if (response.data && response.data[0]?.validation_status) {
-                        dispatch(setSelectedSubmitItem(values));
+                        dispatch(setSelectedSubmitItem(data));
                     }
                 } else if (validatePlace.rejected.match(resultAction)) {
                     const error = resultAction.error;
@@ -192,7 +195,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                     ...screens,
                     venue_id: selectedVenue,
                     id: singleResponse?.id,
-                    theatre_id: selectedTheaterId,
+                    theatre_id: selectedTheaterId?.value,
                 };
                 dispatch(setScreenEditData(updatedScreen))
                 const resultAction = await dispatch(validateVenue(selectedVenue));

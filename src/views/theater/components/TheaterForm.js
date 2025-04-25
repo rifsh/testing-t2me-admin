@@ -64,7 +64,6 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
 
     useEffect(() => {
         if (mode === MODE.EDIT && singleResponse) {
-            console.log("singleResponse", singleResponse);
             dispatch(setSelectedPlace(singleResponse?.place.id));
             dispatch(setSelectedVenue(singleResponse?.venue.id));
             dispatch(setSelectedCompanyId(singleResponse?.company.id));
@@ -95,6 +94,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                         ]
                         : [],
             })
+            console.log('singleResponse', singleResponse?.movie_coupons)
         }
 
     }, [singleResponse])
