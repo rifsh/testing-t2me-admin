@@ -737,5 +737,16 @@ export const protectedRoutes = [
       import("views/app-views/apps/super-admin/reports")
     ),
   },
-
+  {
+    path: `${APP_PREFIX_PATH}/super-admin/organizer-details/:organizerId`,
+    component: React.lazy(() =>
+      import("views/app-views/apps/super-admin/organizer-details")
+    ),
+  },
+  {
+    path: `${APP_PREFIX_PATH}/super-admin/organizer-details/event-details/:eventId`,
+    component: React.lazy(() =>
+      import("views/app-views/apps/super-admin/organizer-details/event-details")
+    ),
+  },
 ];

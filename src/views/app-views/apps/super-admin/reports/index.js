@@ -1,6 +1,9 @@
 import React from "react";
 import { Bar, Pie, Line } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
+import { Link } from "react-router-dom";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
+
 Chart.register(...registerables);
 
 const SuperAdminReport = () => {
@@ -47,10 +50,6 @@ const SuperAdminReport = () => {
       lastLogin: "2025-04-12",
     },
   ];
-
-//   const allEvents = [
-//     //... include events array from previous example
-//   ];
 
   // Statistics calculations
   const platformStats = {
@@ -168,9 +167,12 @@ const SuperAdminReport = () => {
               {organizers.map((organizer) => (
                 <tr key={organizer.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">
+                    <Link
+                      to={`${APP_PREFIX_PATH}/super-admin/organizer-details/${organizer.id}`}
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
                       {organizer.name}
-                    </div>
+                    </Link>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {organizer.email}
@@ -355,9 +357,6 @@ const SuperAdminReport = () => {
           </div>
         </div>
       </div>
-
-      {/* All Events Table (from previous example) */}
-      {/* Include the events table component from previous organizer report here */}
     </div>
   );
 };
