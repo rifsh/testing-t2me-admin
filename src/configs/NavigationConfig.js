@@ -185,14 +185,6 @@ const superAdminDashBoardNavTree = [
                 breadcrumb: false,
                 submenu: [],
               },
-              {
-                key: "seat.event.list",
-                path: `${APP_PREFIX_PATH}/seat/event/list`,
-                title: "sidenav.seat",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
             ],
           },
           {
@@ -437,6 +429,15 @@ const superAdminDashBoardNavTree = [
     icon: DashboardOutlined,
     breadcrumb: false,
     submenu: [],
+  },
+  {
+    key: "super-admin.reports",
+    path: `${APP_PREFIX_PATH}/super-admin/reports`,
+    title: "sidenav.apps.admin-reports",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    submenu: [],
+    
   },
 
   {
@@ -859,7 +860,7 @@ const eventOrganaizerDashBoardNavTree = [
   },
 
   {
-    key: "Events",
+    key: "Reports",
     path: `${APP_PREFIX_PATH}/apps`,
     title: "sidenav.apps.reports",
     icon: DashboardOutlined,
@@ -867,15 +868,25 @@ const eventOrganaizerDashBoardNavTree = [
     isGroupTitle: false,
     submenu: [
       {
-        key: "organizer.reports",
-        path: `${APP_PREFIX_PATH}/organizer/reports`,
-        title: "sidenav.apps.reports",
+        key: "organizer.reports.events",
+        path: `${APP_PREFIX_PATH}/organizer/reports/events`,
+        title: "sidenav.apps.reports.events",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "organizer.reports.movies",
+        path: `${APP_PREFIX_PATH}/organizer/reports/movies`,
+        title: "sidenav.apps.reports.movies",
         icon: OrderedListOutlined,
         breadcrumb: false,
         submenu: [],
       },
     ],
-  },
+  }
+  
+  
 ];
 const techSupportingTeamDashBoardNavTree = [
   {

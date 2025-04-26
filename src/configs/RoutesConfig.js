@@ -718,9 +718,24 @@ export const protectedRoutes = [
 
   {
     key: "organizer.reports",
-    path: `${APP_PREFIX_PATH}/organizer/reports`,
+    path: `${APP_PREFIX_PATH}/organizer/reports/events`,
     component: React.lazy(() =>
-      import("views/app-views/apps/organizer/reports")
+      import("views/app-views/apps/organizer/reports/events")
     ),
   },
+  {
+    key: "organizer.reports",
+    path: `${APP_PREFIX_PATH}/organizer/reports/movies`,
+    component: React.lazy(() =>
+      import("views/app-views/apps/organizer/reports/movies")
+    ),
+  },
+  {
+    key: "super-admin.reports",
+    path: `${APP_PREFIX_PATH}/super-admin/reports`,
+    component: React.lazy(() =>
+      import("views/app-views/apps/super-admin/reports")
+    ),
+  },
+
 ];
