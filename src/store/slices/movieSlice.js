@@ -3,6 +3,8 @@ import movieService from "services/MovieService";
 
 const initialState = {
     movieFormData: [],
+    movieLanguages: [],
+    movieGenres: [],
     loading: false,
     editLoading: false,
     response: null,
@@ -46,6 +48,30 @@ export const fetchMovie = createAsyncThunk(
         }
     }
 );
+export const fetchMovieLanguages = createAsyncThunk(
+    "cast/fetchMovieLanguages",
+    async (pageData, { rejectWithValue }) => {
+        try {
+            const response = await movieService.getMovieLanguages(pageData);
+            return response.data;
+
+        } catch (error) {
+            return rejectWithValue(error.message || "Failed to fetch Movie features");
+        }
+    }
+);
+export const fetchMoviegenres = createAsyncThunk(
+    "cast/fetchMoviegenres",
+    async (pageData, { rejectWithValue }) => {
+        try {
+            const response = await movieService.getMovieGenres(pageData);
+            return response.data;
+
+        } catch (error) {
+            return rejectWithValue(error.message || "Failed to fetch Movie features");
+        }
+    }
+);
 export const createMovie = createAsyncThunk(
     "cast/createMovie",
     async ({ data, action }, { rejectWithValue }) => {
@@ -74,6 +100,8 @@ export const fetchMoviesData = createAsyncThunk(
     async (pageData, { rejectWithValue }) => {
         try {
             const response = await movieService.getMovieData(pageData);
+            console.log(response, 'adsfasfjsfaf');
+
             return response.data[0];
 
         } catch (error) {
@@ -139,6 +167,26 @@ const movieSlice = createSlice({
                 state.response = action.payload;
             })
             .addCase(fetchMovieData.rejected, (state) => {
+                state.loading = false;
+            })
+            .addCase(fetchMoviegenres.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchMoviegenres.fulfilled, (state, action) => {
+                state.loading = false;
+                state.movieGenres = action.payload;
+            })
+            .addCase(fetchMoviegenres.rejected, (state) => {
+                state.loading = false;
+            })
+            .addCase(fetchMovieLanguages.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchMovieLanguages.fulfilled, (state, action) => {
+                state.loading = false;
+                state.movieLanguages = action.payload;
+            })
+            .addCase(fetchMovieLanguages.rejected, (state) => {
                 state.loading = false;
             })
             .addCase(fetchMovie.pending, (state) => {

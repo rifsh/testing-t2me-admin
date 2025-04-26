@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Avatar, List, Typography, Tabs, Badge, Tag, Tooltip, Divider, Empty, Skeleton } from 'antd';
 import { UserOutlined, TeamOutlined, VideoCameraOutlined, InfoCircleOutlined, CalendarOutlined, GlobalOutlined, TrophyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -153,6 +153,11 @@ const CastAndCrewComponent = ({ cast = [], crew = [], fallbackCast = [], fallbac
             </Card>
         );
     };
+
+    useEffect(() => {
+        console.log("movieSingleResponse", cast)
+
+    }, [])
 
     const renderEmptyState = () => (
         <Empty

@@ -41,9 +41,11 @@ import {
   SupportImageFormat,
   SupportFormatContent,
   parseSizeToBytes,
+  ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import { filterOption } from "components/util-components/FormItems/dropDownSearch";
+import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Option } = Select;
 const ADD = "ADD";
@@ -154,7 +156,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
     if (Array.isArray(e)) {
       return e;
     }
-    return e?.fileList;
+    return e?.fileList || [];
   };
 
   const handlePlaceChange = (placeId) => {
@@ -306,31 +308,18 @@ const AdBannerFormFields = ({ mode, banner }) => {
             >
               <Input placeholder="Description" />
             </Form.Item>
-
             <Form.Item
               name="media_path"
               label="Banner Media"
-              valuePropName="fileList"
+              rules={[{ required: true }]}
+              valuePropName="value"
               getValueFromEvent={normFile}
-              rules={rules.thumbnail_image}
               style={{ marginBottom: "0px", padding: "0px" }}
             >
-              <Upload
-                name="thumbnail_image"
-                listType="picture"
-                maxCount={1}
-                beforeUpload={(file) =>
-                  Utils.handleBannerBeforeUpload(
-                    file,
-                    selectedCategory?.resolution,
-                    parseSizeToBytes(selectedCategory?.min_size),
-                    parseSizeToBytes(selectedCategory?.max_size)
-                  )
-                }
-                accept={`.${SupportImageFormat.join(",.")}`}
-              >
-                <Button icon={<UploadOutlined />}>Click to upload</Button>
-              </Upload>
+              <ResizedImgePicker
+                maxCount={20}
+                targetResolution={ThumbnailImageResolutions.EVENT_BANNER}
+              />
             </Form.Item>
 
             <Text
@@ -354,7 +343,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
             <Form.Item
               name="ads_url"
               label="Banner Redirect Url"
-              rules={rules.name}
+              // rules={rules.name}
             >
               <Input placeholder="Enter banner url" />
             </Form.Item>

@@ -63,8 +63,8 @@ const MovieMediaUploader = ({ form, mode, initialMedia = [], initialThumbnail = 
 
     const [mediaItems, setMediaItems] = useState(() => {
         // Initialize from props or existing response
-        if (mode === MODE.EDIT && movieSingleResponse?.movie_details?.[0]?.media_items?.length > 0) {
-            return movieSingleResponse.movie_details[0].media_items.map(item => ({
+        if (mode === MODE.EDIT) {
+            return movieSingleResponse.media_items.map(item => ({
                 id: item.id || Date.now().toString(),
                 type: 'youtube',
                 videoId: getYoutubeVideoId(item.url),
@@ -78,6 +78,10 @@ const MovieMediaUploader = ({ form, mode, initialMedia = [], initialThumbnail = 
     });
     const [thumbnail, setThumbnail] = useState(initialThumbnail);
 
+    useEffect(() => {
+
+        console.log("initialMedia", movieSingleResponse)
+    }, [movieSingleResponse]);
 
     const mediaTypes = [
         { label: 'English', value: 'English' },

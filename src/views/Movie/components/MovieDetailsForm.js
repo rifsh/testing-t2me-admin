@@ -36,6 +36,8 @@ import dayjs from 'dayjs';
 import { MODE } from "constants/TextConstant";
 import Utils from "utils";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import { fetchMoviegenres, fetchMovieLanguages } from "store/slices/movieSlice";
+import GenericDropdown from "views/theater/components/GenericDropdown";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -44,7 +46,7 @@ const { Title, Text } = Typography;
 const MovieDetailsForm = ({ form, mode }) => {
     const dispatch = useDispatch();
     const { response } = useSelector((state => state.cast));
-    const { omdbMovie, loading } = useSelector((state) => state.movie);
+    const { omdbMovie, loading, movieLanguages, movieGenres } = useSelector((state) => state.movie);
     const resolution = {
         max_size: 1080,
         min_size: 1080,
@@ -88,6 +90,7 @@ const MovieDetailsForm = ({ form, mode }) => {
 
     useEffect(() => {
         dispatch(fetchPersonalitiesData({ DEFAULT_PAGE_SIZE }));
+        dispatch(fetchPersonalitiesData({ DEFAULT_PAGE_SIZE }));
     }, [dispatch]);
 
     useEffect(() => {
@@ -106,8 +109,8 @@ const MovieDetailsForm = ({ form, mode }) => {
                 Runtime: getRuntimeMinutes(omdbMovie.Runtime),
                 Released: releaseDate,
                 production_company: omdbMovie.Production !== "N/A" ? omdbMovie.Production : '',
-                Genre: genreArray,
-                Language: languageArray[0] || '',
+                // genre: genreArray,
+                // language: languageArray[0] || '',
                 rating: getImdbRating(omdbMovie),
                 Plot: omdbMovie.Plot || '',
                 director: omdbMovie.Director || '',
@@ -131,6 +134,12 @@ const MovieDetailsForm = ({ form, mode }) => {
             console.log("Component unmounted!");
         };
     }, [])
+
+    useEffect(() => {
+        if (movieGenres) {
+            console.log("movieGenres", movieGenres);
+        }
+    }, [movieGenres])
 
     return (
         <>
@@ -258,31 +267,37 @@ const MovieDetailsForm = ({ form, mode }) => {
 
                     {/* Genres and Language */}
                     <Col xs={24} sm={12}>
-                        <Form.Item
-                            name="Genre"
+                        <GenericDropdown
+                            name="genre"
                             label="Genres"
-                            rules={[{ required: true, message: "Select genres" }]}
-                        >
-                            <Select mode="tags" placeholder="Select genres" >
-                                {genres.map((genre) => (
-                                    <Option key={genre} value={genre}>{genre}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
+                            mode="multiple"
+                            rules={[{ required: true, message: 'Please select genres!' }]}
+                            fetchOptions={fetchMoviegenres}
+                            optionsData={movieGenres}
+                            loading={loading}
+                            optionLabelKey="name"
+                            optionExtraLabel=""
+                            optionValueKey="id"
+                            searchParamKey="search"
+                            form={form}
+                        />
                     </Col>
 
                     <Col xs={24} sm={12}>
-                        <Form.Item
-                            name="Language"
+                        <GenericDropdown
+                            name="language"
                             label="Language"
-                            rules={[{ required: true, message: "Select language" }]}
-                        >
-                            <Select placeholder="Select language">
-                                {languages.map((lang) => (
-                                    <Option key={lang} value={lang}>{lang}</Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
+                            mode="multiple"
+                            rules={[{ required: true, message: 'Please select languages!' }]}
+                            fetchOptions={fetchMovieLanguages}
+                            optionsData={movieLanguages}
+                            loading={loading}
+                            optionLabelKey="language"
+                            optionExtraLabel="native_name"
+                            optionValueKey="id"
+                            searchParamKey="search"
+                            form={form}
+                        />
                     </Col>
 
                     <Col xs={24} sm={12}>

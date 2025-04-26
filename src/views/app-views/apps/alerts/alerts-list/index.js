@@ -44,7 +44,7 @@ const IssueList = () => {
   const handleViewDetails = async (id) => {
     console.warn(id)
     await dispatch(fetchIssueDetails(id));
-    navigate(`${APP_PREFIX_PATH}/issue/details/${id}`);
+    navigate(`${APP_PREFIX_PATH}/alerts/details/${id}`);
   };
 
   // const handleEditEvent = async (id) => {
@@ -153,18 +153,18 @@ const IssueList = () => {
     }
 
 
-    // ,
-    // {
-    //   title: "",
-    //   dataIndex: "actions",
-    //   render: (_, elm) => (
-    //     <div className="text-right">
-    //       <EllipsisDropdown 
-    //       menu={dropdownMenu(elm)}
-    //        />
-    //     </div>
-    //   ),
-    // },
+    ,
+    {
+      title: "",
+      dataIndex: "actions",
+      render: (_, elm) => (
+        <div className="text-right">
+          <EllipsisDropdown 
+          menu={dropdownMenu(elm)}
+           />
+        </div>
+      ),
+    },
   ];
   const [searchTerm, setSearchTerm] = useState();
   const [activeStatus, setactiveStatus] = useState();

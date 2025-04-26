@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import MovieScheduleService from "services/MovieScheduleService";
 const initialState = {
   scheduledMovies: {},
   dateRange: [],
@@ -11,21 +12,136 @@ const initialState = {
   offers: {},
   seatStructures: {},
   intervalTimes: {},
+  bookingStartDates: {},
+  initialBookingStartDate: null,
   activeTab: 0,
   dateRangeLength: 7,
   showLengthOptions: false,
   availableMovies: [],
+
+  //api state
+  allSchedule: [],
+  singleSchedule: null,
+  //common api state
+  loading: false,
+  error: null,
+  message: null,
+  responseData: null,
+  responseMessage: null,
+  editable_status: null,
+  validationStatus: false,
+  pagination: { size: 10, page: 1 },
+  editSeatItemId: null,
+  responseImpactData: null,
+  warningPagination: { size: 10, page: 1 },
+  submitPagination: { size: 10, page: 1 },
 };
+
+export const addMovieSchedule = createAsyncThunk(
+  "movieSchedule/add",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await MovieScheduleService.addMovieSchedule(
+        data,
+        action
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error creating seat structure"
+      );
+    }
+  }
+);
+
+export const editSeatStructure = createAsyncThunk(
+  "movieSchedule/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await MovieScheduleService.editSeatStructure(
+        data,
+        action
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error updating seat structure"
+      );
+    }
+  }
+);
+
+export const editSeatStructureStatus = createAsyncThunk(
+  "movieSchedule/editStatus",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      const response = await MovieScheduleService.editSeatStructureStatus(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error updating seat structure status"
+      );
+    }
+  }
+);
+
+export const getMovieScheduleDetails = createAsyncThunk(
+  "movieSchedule/getDetails",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await MovieScheduleService.getScheduleDetails(pageData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching seat structure details"
+      );
+    }
+  }
+);
+
+export const getAllMovieSchedule = createAsyncThunk(
+  "movieSchedule/getAllSchedule",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await MovieScheduleService.getAllMovieSchedule(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching all seat structure"
+      );
+    }
+  }
+);
+
 const movieScheduleSlice = createSlice({
   name: "movieSchedule",
   initialState,
   reducers: {
-    resetState: () => {
-      return initialState;
+    resetState: () => ({
+      ...initialState,
+    }),
+    setBookingStartDate: (state, action) => {
+      const { movieId, bookingStartDate } = action.payload;
+      state.bookingStartDates[movieId] = bookingStartDate;
     },
-    // Switch between days
+    setInitialBookingStartDate: (state, action) => {
+      state.initialBookingStartDate = action.payload;
+    },
     setavailableMovies: (state, action) => {
       state.availableMovies = action.payload;
+    },
+    resetSchedules: (state) => {
+      state.scheduledMovies = {};
+      state.coupons = {};
+      state.offers = {};
+      state.seatStructures = {};
+      state.intervalTimes = {};
+      state.selectedMovieId = null;
+      state.isDetailsOpen = false;
     },
     setActiveTab: (state, action) => {
       state.activeTab = action.payload;
@@ -155,6 +271,100 @@ const movieScheduleSlice = createSlice({
       state.selectedDate = action.payload;
     },
   },
+  extraReducers: (builder) => {
+    builder
+      // Add seat structure cases
+      .addCase(addMovieSchedule.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addMovieSchedule.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+      })
+      .addCase(addMovieSchedule.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.data || "Error creating seat structure";
+      })
+
+      // Edit seat structure cases
+      .addCase(editSeatStructure.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editSeatStructure.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseMessage = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(editSeatStructure.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.data || "Error updating seat structure";
+      })
+
+      // Edit seat structure status cases
+      .addCase(editSeatStructureStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editSeatStructureStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseMessage = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(editSeatStructureStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error updating seat structure status";
+      })
+
+      // Get seat structure details cases
+      .addCase(getMovieScheduleDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getMovieScheduleDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.singleSchedule = action.payload[0];
+      })
+      .addCase(getMovieScheduleDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error fetching seat structure details";
+      })
+      .addCase(getAllMovieSchedule.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getAllMovieSchedule.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.allSchedule = action.payload.items;
+        state.pagination = action.payload;
+      })
+      .addCase(getAllMovieSchedule.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error fetching seat all structure";
+      });
+  },
 });
 
 // Export actions
@@ -177,6 +387,9 @@ export const {
   setSelectedDate,
   setDateRangeLength,
   setShowLengthOptions,
+  setBookingStartDate,
+  setInitialBookingStartDate,
+  resetSchedules,
 } = movieScheduleSlice.actions;
 
 export default movieScheduleSlice.reducer;

@@ -5,7 +5,7 @@ import Utils from "utils";
 const AuthService = {};
 AuthService.login = function (data) {
 	return fetch({
-		url: `/api/v1/auth/public/token`,
+		url: ApiConstant.LOGIN,
 		method: 'post',
 		data: data
 	})

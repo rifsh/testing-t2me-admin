@@ -41,7 +41,6 @@ const MovieDetails = () => {
     const dispatch = useDispatch();
     const [previewVisible, setPreviewVisible] = useState(false);
     const [currentPreview, setCurrentPreview] = useState(null);
-    const [movieData, setMovieData] = useState(null);
     const [cast, setCast] = useState([]);
     const [crew, setCrew] = useState([]);
     const { id } = useParams();
@@ -86,12 +85,9 @@ const MovieDetails = () => {
     }, [dispatch, movieId]);
 
     useEffect(() => {
-        if (Array.isArray(movieSingleResponse?.movie_details) && movieSingleResponse.movie_details.length > 0) {
-            setMovieData(movieSingleResponse.movie_details[0]);
-            // console.log('castsss', movieSingleResponse.movie_details[0].casts.map((x) => x.type === 'CAST'))
-
-            setCast(movieSingleResponse.movie_details[0]?.casts.filter((x) => x.type === 'CAST') || []);
-            setCrew(movieSingleResponse.movie_details[0]?.casts.filter((x) => x.type === 'CREW') || []);
+        if (movieSingleResponse) {
+            setCast(movieSingleResponse?.casts.filter((x) => x.type === 'CAST') || []);
+            setCrew(movieSingleResponse?.casts.filter((x) => x.type === 'CREW') || []);
         }
     }, [movieSingleResponse]);
 
@@ -164,11 +160,11 @@ const MovieDetails = () => {
 
     // Render media items/gallery section
     const renderMediaGallery = () => {
-        if (!movieData?.media_items?.length) return <Text type="secondary">No media available</Text>;
+        if (!movieSingleResponse?.media_items?.length) return <Text type="secondary">No media available</Text>;
 
         return (
             <Row gutter={[16, 16]}>
-                {movieData?.media_items?.map((media, index) => (
+                {movieSingleResponse?.media_items?.map((media, index) => (
                     <Col xs={24} sm={12} md={8} lg={6} key={index}>
                         <Card
                             hoverable
@@ -230,7 +226,7 @@ const MovieDetails = () => {
                                 bodyStyle={{ padding: 0, position: 'relative' }}
                                 cover={
                                     <div style={{ position: 'relative' }}>
-                                        {movieSingleResponse?.movie_details?.[0]?.age_restriction && <div
+                                        {movieSingleResponse?.movie_details?.age_restriction && <div
                                             style={{
                                                 position: 'absolute',
                                                 top: 8,
@@ -243,11 +239,11 @@ const MovieDetails = () => {
                                             }}
                                         >
                                             <Tag color="gold">
-                                                {movieSingleResponse?.movie_details?.[0]?.age_restriction}
+                                                {movieSingleResponse?.age_restriction}
                                             </Tag>
                                         </div>}
                                         <img
-                                            alt={movieData?.event_name}
+                                            alt={movieSingleResponse?.title}
                                             src={
                                                 movieSingleResponse?.thumbnail_image ||
                                                 'https://placehold.co/500x750/222222/FFFFFF?text=Movie+Poster'
@@ -262,27 +258,27 @@ const MovieDetails = () => {
                             <Card bordered={false}>
                                 <Row justify="space-between" align="top">
                                     <Col>
-                                        <Title level={2} style={{ marginBottom: '4px' }}>{movieSingleResponse?.event_name}</Title>
+                                        <Title level={2} style={{ marginBottom: '4px' }}>{movieSingleResponse?.title}</Title>
                                         <TrophyOutlined style={{ color: '#faad14', fontSize: 16 }} />
                                         <Text type="secondary" italic style={{ marginLeft: 4 }}>
-                                            {movieData?.awards || 'No awards information'}
+                                            {movieSingleResponse?.awards || 'No awards information'}
                                         </Text>
                                     </Col>
                                     <Col>
                                         <Space align="center">
-                                            {movieSingleResponse?.movie_details?.[0]?.rating ? (
+                                            {movieSingleResponse?.rating ? (
                                                 <>
                                                     <Rate
                                                         allowHalf
                                                         disabled
-                                                        value={Number(movieSingleResponse.movie_details[0].rating) / 2}
+                                                        value={Number(movieSingleResponse.rating) / 2}
                                                     />
                                                     <Text strong>
-                                                        {Number(movieSingleResponse.movie_details[0].rating).toFixed(1)}/10
+                                                        {Number(movieSingleResponse.rating).toFixed(1)}/10
                                                     </Text>
-                                                    {movieSingleResponse.movie_details[0].voteCount && (
+                                                    {movieSingleResponse.voteCount && (
                                                         <Text type="secondary">
-                                                            ({movieSingleResponse.movie_details[0].voteCount} votes)
+                                                            ({movieSingleResponse.voteCount} votes)
                                                         </Text>
                                                     )}
                                                 </>
@@ -296,36 +292,36 @@ const MovieDetails = () => {
                                 <Divider style={{ margin: '16px 0' }} />
 
                                 <Space size={[0, 8]} wrap>
-                                    {Array.isArray(movieSingleResponse?.movie_details?.[0]?.genre) &&
-                                        movieSingleResponse.movie_details[0].genre.map((g, i) => (
+                                    {Array.isArray(movieSingleResponse?.genre) &&
+                                        movieSingleResponse.genre.map((g, i) => (
                                             <Tag color="blue" key={i} style={{ margin: '4px' }}>{g}</Tag>
                                         ))
                                     }
                                 </Space>
                                 <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
-                                    {Array.isArray(movieSingleResponse?.movie_details) && (
+                                    {Array.isArray(movieSingleResponse) && (
                                         <Col xs={24} sm={12} md={8}>
                                             <Statistic
                                                 title="Release Year"
-                                                value={new Date(movieSingleResponse.movie_details[0]?.released).getFullYear()}
+                                                value={new Date(movieSingleResponse?.released).getFullYear()}
                                                 prefix={<CalendarOutlined />}
                                             />
                                         </Col>
                                     )}
-                                    {Array.isArray(movieSingleResponse?.movie_details) && (
+                                    {Array.isArray(movieSingleResponse) && (
                                         <Col xs={24} sm={12} md={8}>
                                             <Statistic
                                                 title="Duration"
-                                                value={`${movieSingleResponse?.movie_details[0]?.runtime} min`}
+                                                value={`${movieSingleResponse?.runtime} min`}
                                                 prefix={<ClockCircleOutlined />}
                                             />
                                         </Col>
                                     )}
-                                    {Array.isArray(movieSingleResponse?.movie_details) && (
+                                    {Array.isArray(movieSingleResponse) && (
                                         <Col xs={24} sm={12} md={8}>
                                             <Statistic
                                                 title="Language"
-                                                value={movieSingleResponse?.movie_details[0]?.language}
+                                                value={movieSingleResponse?.language}
                                                 prefix={<GlobalOutlined />}
                                             />
                                         </Col>
@@ -345,13 +341,13 @@ const MovieDetails = () => {
                                     <Col xs={24} sm={24} md={24}>
                                         <Descriptions title="Production Details" layout="horizontal" column={1} bordered>
                                             <Descriptions.Item label="Budget">
-                                                {movieData?.budget || 'N/A'}
+                                                {movieSingleResponse?.budget || 'N/A'}
                                             </Descriptions.Item>
                                             <Descriptions.Item label="Box Office">
-                                                {movieData?.box_office || 'N/A'}
+                                                {movieSingleResponse?.box_office || 'N/A'}
                                             </Descriptions.Item>
                                             <Descriptions.Item label="Production">
-                                                {movieData?.production_company || 'N/A'}
+                                                {movieSingleResponse?.production_company || 'N/A'}
                                             </Descriptions.Item>
                                         </Descriptions>
                                     </Col>

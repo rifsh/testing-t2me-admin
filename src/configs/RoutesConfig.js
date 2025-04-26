@@ -97,7 +97,8 @@ export const protectedRoutes = [
     key: "movie.movie.list",
     path: `${APP_PREFIX_PATH}/movie/list`,
     component: React.lazy(() => import("views/Movie/movie-list")),
-  }, {
+  },
+  {
     key: "movie.movie.add",
     path: `${APP_PREFIX_PATH}/movie/edit/:id`,
     component: React.lazy(() => import("views/Movie/movie-edit")),
@@ -132,11 +133,7 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/personality/edit/:id`,
     component: React.lazy(() => import("views/Movie/cast/cast-edit")),
   },
-  {
-    key: "movie.schedule",
-    path: `${APP_PREFIX_PATH}/movie-schedule/list`,
-    component: React.lazy(() => import("views/Movie/Schedule/schedule-list")),
-  },
+
   {
     key: "dine.list",
     path: `${APP_PREFIX_PATH}/dine/list`,
@@ -165,12 +162,22 @@ export const protectedRoutes = [
   {
     key: "dine.details",
     path: `${APP_PREFIX_PATH}/movie-schedule/list`,
-    component: React.lazy(() => import("views/Movie/Schedule/schedule-list")),
+    component: React.lazy(() => import("views/schedule/movie/schedule-list")),
   },
   {
-    key: "movie.schedule",
+    key: "movie.schedule.add",
     path: `${APP_PREFIX_PATH}/movie-schedule/add`,
-    component: React.lazy(() => import("views/Movie/Schedule/schedule-add")),
+    component: React.lazy(() => import("views/schedule/movie/schedule-add")),
+  },
+  {
+    key: "movie.schedule.list",
+    path: `${APP_PREFIX_PATH}/movie-schedule/list`,
+    component: React.lazy(() => import("views/schedule/movie/schedule-list")),
+  },
+  {
+    key: "movie.schedule.details",
+    path: `${APP_PREFIX_PATH}/movie-schedule/details/:scheduleId`,
+    component: React.lazy(() => import("views/schedule/movie/schedule-detail")),
   },
   {
     key: "movie.theater",
@@ -195,12 +202,12 @@ export const protectedRoutes = [
   {
     key: "movie.theater",
     path: `${APP_PREFIX_PATH}/movie-theater-company/add`,
-    component: React.lazy(() => import("views/theater/add-company"))
+    component: React.lazy(() => import("views/theater/add-company")),
   },
   {
     key: "movie.theater",
     path: `${APP_PREFIX_PATH}/movie-theater-company/edit/:company_id`,
-    component: React.lazy(() => import("views/theater/edit-company"))
+    component: React.lazy(() => import("views/theater/edit-company")),
   },
   {
     key: "event.details",
@@ -363,24 +370,46 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/seat/movie/details-seat")),
   },
   {
+    key: "seat.event.list",
+    path: `${APP_PREFIX_PATH}/seat/event/list`,
+    component: React.lazy(() => import("views/seat/event/list-seat")),
+  },
+  {
+    key: "seat.event.add",
+    path: `${APP_PREFIX_PATH}/seat/event/add`,
+    component: React.lazy(() => import("views/seat/event/add-seat")),
+  },
+  {
+    key: "seat.event.add",
+    path: `${APP_PREFIX_PATH}/seat/event/edit/:seatId`,
+    component: React.lazy(() => import("views/seat/event/edit-seat")),
+  },
+  {
+    key: "seat.event.details",
+    path: `${APP_PREFIX_PATH}/seat/event/:seatId`,
+    component: React.lazy(() => import("views/seat/event/details-seat")),
+  },
+  {
     key: "schedule.list",
     path: `${APP_PREFIX_PATH}/schedule/list`,
-    component: React.lazy(() => import("views/schedule/list-schedule")),
+    component: React.lazy(() => import("views/schedule/event/list-schedule")),
   },
   {
     key: "schedule.details",
     path: `${APP_PREFIX_PATH}/schedule/:scheduleId`,
-    component: React.lazy(() => import("views/schedule/schedule-details")),
+    component: React.lazy(() =>
+      import("views/schedule/event/schedule-details")
+    ),
   },
   {
     key: "schedule.add",
     path: `${APP_PREFIX_PATH}/schedule/add`,
-    component: React.lazy(() => import("views/schedule/add-schedule")),
+    component: React.lazy(() => import("views/schedule/event/add-schedule")),
   },
   {
     key: "schedule.edit",
     path: `${APP_PREFIX_PATH}/schedule/edit/:scheduleId`,
-    component: React.lazy(() => import("views/schedule/edit-schedule")),
+    component: React.lazy(() => import("views/schedule/event/edit-schedule")),
   },
   {
     key: "payment.list",
@@ -549,6 +578,13 @@ export const protectedRoutes = [
     ),
   },
   {
+    key: "alerts.list",
+    path: `${APP_PREFIX_PATH}/alerts/details/:issueId`,
+    component: React.lazy(() =>
+      import("views/app-views/apps/alerts/alerts-details")
+    ),
+  },
+  {
     key: "event.type.list",
     path: `${APP_PREFIX_PATH}/event/type/list`,
     component: React.lazy(() => import("views/event-type/list-type")),
@@ -686,7 +722,5 @@ export const protectedRoutes = [
     component: React.lazy(() =>
       import("views/app-views/apps/organizer/reports")
     ),
-  }
-  
-
+  },
 ];

@@ -78,6 +78,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     editable_status,
     eventType,
     messages: warningMessage,
+    availableSeats,
   } = useSelector((state) => state.event);
   const { singleLeadEvent, error } = useSelector((state) => state.leadEvents);
   const { ticketTypes, filteredTickets, availableTicketTyps } = useSelector(
@@ -176,29 +177,29 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           eventDetails.event_coupons?.map((coupon) => coupon.coupons.id) || [],
         thumbnail_image: eventDetails.thumbnail_image
           ? [
-            {
-              uid: "-1",
-              name: eventDetails.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: eventDetails.thumbnail_image,
-            },
-          ]
+              {
+                uid: "-1",
+                name: eventDetails.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: eventDetails.thumbnail_image,
+              },
+            ]
           : [],
         banner_images: eventDetails.media
           ? eventDetails.media.map((image, index) => ({
-            uid: `-${index + 1}`,
-            name: image.media_url.split("/").pop(),
-            status: "done",
-            url: image.media_url,
-          }))
+              uid: `-${index + 1}`,
+              name: image.media_url.split("/").pop(),
+              status: "done",
+              url: image.media_url,
+            }))
           : [],
         event_images: eventDetails.event_images
           ? eventDetails.event_images.map((image, index) => ({
-            uid: `-${index + 1}`,
-            name: image.image.split("/").pop(),
-            status: "done",
-            url: image.image,
-          }))
+              uid: `-${index + 1}`,
+              name: image.image.split("/").pop(),
+              status: "done",
+              url: image.image,
+            }))
           : [],
       };
 
@@ -507,7 +508,12 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           max_tickets: parseInt(submitData.max_tickets || "0", 10),
           event_type_id:
             eventType.find((item) => item.name === EVENT_TYPES.event)?.id || 1,
+          event_seat_structure_id: parseInt(
+            availableSeats.map((item) => item.id)
+          ),
         };
+        console.log(finalData);
+        
         const resultAction = await dispatch(
           validateOfferCoupon({
             offers: selectedOffers,
@@ -639,7 +645,8 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           </Button>
         )}
       </div>
-      <LoadingOverlay loading={loading} />
+      {/* <LoadingOverlay loading={loading} />
+       */}
 
       <WarningModal
         visible={dialogVisible}
