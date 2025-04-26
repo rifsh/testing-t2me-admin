@@ -1,98 +1,93 @@
-
-
-import React from "react";
+import React, { useRef } from "react";
 import { Bar, Pie, Line } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
+import ScheduledMovies from "views/schedule/movie/components/ScheduledMovies";
 Chart.register(...registerables);
 
-const OrganizerReports = () => {
-  const scheduledEvents = [
+const MovieOrganizerReports = () => {
+  const reportRef = useRef(null);
+
+  const movies = [
     {
       id: 1,
-      title: "Tech Conference 2025",
+      title: "Annyeshippin Kandethuvin",
       image:
-        "https://media.licdn.com/dms/image/v2/C561BAQE-51J-8KkMZg/company-background_10000/company-background_10000/0/1584559866970/eventscom_cover?e=2147483647&v=beta&t=3bktbE7ts5aNwH8XEUM5rW0G2aMbuQ1b2dHBVQgZqmA",
-      startDate: "2025-05-20",
-      endDate: "2025-05-22",
-      status: "Upcoming",
-      updatedAt: "2025-04-10",
-      attendees: 250,
-      capacity: 300,
-      revenue: 12500,
+        "https://m.media-amazon.com/images/M/MV5BZTVhN2VmNTgtMjQ0ZC00OTc1LWE2ZGItMjFkYTUzMzcyMTJkXkEyXkFqcGc@._V1_.jpg",
+      releaseDate: "2025-05-20",
+      status: "Released",
+      lastUpdated: "2025-04-10",
+      ticketsSold: 125000,
+      totalSeats: 150000,
+      boxOfficeRevenue: 3750000,
     },
     {
       id: 2,
-      title: "Startup Meetup",
+      title: "Kumbalangi Nights",
       image:
-        "https://mediaim.expedia.com/destination/9/cd8a3f3db7149b0ce36d052aea1182df.jpg",
-      startDate: "2025-03-10",
-      endDate: "2025-03-11",
+        "https://assets.vogue.in/photos/5db957d8177d2f00087466b4/2:3/w_2560%2Cc_limit/Kumbalangi-Nights-01.jpg",
+      releaseDate: "2025-03-10",
       status: "Completed",
-      updatedAt: "2025-03-05",
-      attendees: 180,
-      capacity: 200,
-      revenue: 9000,
+      lastUpdated: "2025-03-05",
+      ticketsSold: 98000,
+      totalSeats: 120000,
+      boxOfficeRevenue: 2940000,
     },
     {
       id: 3,
-      title: "AI Workshop",
+      title: "Kaduva",
       image:
-        "https://s7ap1.scene7.com/is/image/incredibleindia/india-gate-delhi-1-attr-hero?qlt=82&ts=1727351922349",
-      startDate: "2025-04-18",
-      endDate: "2025-04-19",
+        "https://m.media-amazon.com/images/M/MV5BZWY1NWZlNDMtMTgxNC00ZGNiLTgwZjgtZWRkZmY4ZjVhN2M1XkEyXkFqcGc@._V1_.jpg",
+      releaseDate: "2025-04-18",
       status: "Upcoming",
-      updatedAt: "2025-04-12",
-      attendees: 95,
-      capacity: 120,
-      revenue: 4750,
+      lastUpdated: "2025-04-12",
+      ticketsSold: 45000,
+      totalSeats: 100000,
+      boxOfficeRevenue: 1350000,
     },
     {
       id: 4,
-      title: "Health Summit",
+      title: "Super Sharanya",
       image:
-        "https://aurifer.tax/wp-content/uploads/2023/03/1295CA28-51B0-4890-B288-7E2B6ABCA328.jpeg",
-      startDate: "2025-02-01",
-      endDate: "2025-02-03",
+        "https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/941f52133698221.61c36c24decd0.jpg",
+      releaseDate: "2025-02-01",
       status: "Cancelled",
-      updatedAt: "2025-01-25",
-      attendees: 0,
-      capacity: 150,
-      revenue: 0,
+      lastUpdated: "2025-01-25",
+      ticketsSold: 0,
+      totalSeats: 80000,
+      boxOfficeRevenue: 0,
     },
     {
       id: 5,
-      title: "Marketing Seminar",
+      title: "Thudarum",
       image:
-        "https://media.licdn.com/dms/image/v2/C561BAQE-51J-8KkMZg/company-background_10000/company-background_10000/0/1584559866970/eventscom_cover?e=2147483647&v=beta&t=3bktbE7ts5aNwH8XEUM5rW0G2aMbuQ1b2dHBVQgZqmA",
-      startDate: "2025-06-15",
-      endDate: "2025-06-16",
+        "https://preview.redd.it/thudarum-%E0%B4%A4-%E0%B4%9F%E0%B4%B0-reviews-and-ratings-25-april-2025-v0-wvwwwke7cwwe1.jpeg?width=640&crop=smart&auto=webp&s=3ff281a27c3cc8c4a1282fd494b4144315e6fc4e",
+      releaseDate: "2025-06-15",
       status: "Upcoming",
-      updatedAt: "2025-04-14",
-      attendees: 210,
-      capacity: 250,
-      revenue: 10500,
+      lastUpdated: "2025-04-14",
+      ticketsSold: 65000,
+      totalSeats: 200000,
+      boxOfficeRevenue: 1950000,
     },
   ];
 
-  // Calculate statistics (same as before)
+  // Calculate statistics
   const totalStats = {
-    scheduled: scheduledEvents.length,
-    upcoming: scheduledEvents.filter((e) => e.status === "Upcoming").length,
-    completed: scheduledEvents.filter((e) => e.status === "Completed").length,
-    cancelled: scheduledEvents.filter((e) => e.status === "Cancelled").length,
-    totalRevenue: scheduledEvents.reduce(
-      (sum, event) => sum + event.revenue,
+    totalMovies: movies.length,
+    upcoming: movies.filter((m) => m.status === "Upcoming").length,
+    released: movies.filter((m) => m.status === "Released").length,
+    cancelled: movies.filter((m) => m.status === "Cancelled").length,
+    totalRevenue: movies.reduce(
+      (sum, movie) => sum + movie.boxOfficeRevenue,
       0
     ),
-    totalAttendees: scheduledEvents.reduce(
-      (sum, event) => sum + event.attendees,
-      0
-    ),
-    avgAttendance: Math.round(
-      scheduledEvents.reduce(
-        (sum, event) => sum + (event.attendees / event.capacity) * 100,
+    totalTickets: movies.reduce((sum, movie) => sum + movie.ticketsSold, 0),
+    avgOccupancy: Math.round(
+      movies.reduce(
+        (sum, movie) => sum + (movie.ticketsSold / movie.totalSeats) * 100,
         0
-      ) / scheduledEvents.length
+      ) / movies.length
     ),
   };
 
@@ -105,10 +100,10 @@ const OrganizerReports = () => {
             Upcoming
           </span>
         );
-      case "Completed":
+      case "Released":
         return (
           <span className={`${baseClasses} bg-green-100 text-green-800`}>
-            Completed
+            Released
           </span>
         );
       case "Cancelled":
@@ -131,12 +126,12 @@ const OrganizerReports = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  // Chart data (same as before)
+  // Chart data
   const statusChartData = {
-    labels: ["Upcoming", "Completed", "Cancelled"],
+    labels: ["Upcoming", "Released", "Cancelled"],
     datasets: [
       {
-        data: [totalStats.upcoming, totalStats.completed, totalStats.cancelled],
+        data: [totalStats.upcoming, totalStats.released, totalStats.cancelled],
         backgroundColor: ["#0dcaf0", "#198754", "#dc3545"],
         borderWidth: 1,
       },
@@ -144,11 +139,11 @@ const OrganizerReports = () => {
   };
 
   const revenueChartData = {
-    labels: scheduledEvents.map((event) => event.title),
+    labels: movies.map((movie) => movie.title),
     datasets: [
       {
-        label: "Revenue ($)",
-        data: scheduledEvents.map((event) => event.revenue),
+        label: "Box Office Revenue ($)",
+        data: movies.map((movie) => movie.boxOfficeRevenue),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 2,
@@ -156,13 +151,13 @@ const OrganizerReports = () => {
     ],
   };
 
-  const attendanceChartData = {
-    labels: scheduledEvents.map((event) => event.title),
+  const occupancyChartData = {
+    labels: movies.map((movie) => movie.title),
     datasets: [
       {
-        label: "Attendance Rate (%)",
-        data: scheduledEvents.map((event) =>
-          Math.round((event.attendees / event.capacity) * 100)
+        label: "Seat Occupancy Rate (%)",
+        data: movies.map((movie) =>
+          Math.round((movie.ticketsSold / movie.totalSeats) * 100)
         ),
         backgroundColor: "rgba(153, 102, 255, 0.6)",
         borderColor: "rgba(153, 102, 255, 1)",
@@ -172,29 +167,102 @@ const OrganizerReports = () => {
     ],
   };
 
-  return (
-    <div className="container mx-auto px-4 py-6">
-      <h2 className="text-2xl font-bold text-blue-600 mb-6">
-        Organizer Dashboard
-      </h2>
+  const handleExportCSV = () => {
+    const csvContent = [
+      [
+        "Title",
+        "Start Date",
+        "End Date",
+        "Attendees",
+        "Capacity",
+        "Revenue",
+        "Status",
+      ],
+      ...ScheduledMovies.map((event) => [
+        `"${event.title}"`,
+        event.startDate,
+        event.endDate,
+        event.attendees,
+        event.capacity,
+        event.revenue,
+        event.status,
+      ]),
+    ]
+      .map((e) => e.join(","))
+      .join("\n");
 
-      {/* Events Table */}
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "events-report.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  // PDF Export Handler
+  const handleExportPDF = async () => {
+    try {
+      if (!reportRef.current) {
+        console.error("Report element not found");
+        return;
+      }
+
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 1,
+        logging: true,
+        useCORS: true,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("landscape");
+      const imgWidth = pdf.internal.pageSize.getWidth();
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      pdf.save("events-report.pdf");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-6" ref={reportRef}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-blue-600">Movie Reports</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+          >
+            Export CSV
+          </button>
+          <button
+            onClick={handleExportPDF}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+          >
+            Export PDF
+          </button>
+        </div>
+      </div>
+
+      {/* Movies Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Image
+                  Poster
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Event
+                  Movie
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Dates
+                  Release Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Attendance
+                  Occupancy
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Revenue
@@ -205,43 +273,44 @@ const OrganizerReports = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {scheduledEvents.map((event) => (
-                <tr key={event.id} className="hover:bg-gray-50">
+              {movies.map((movie) => (
+                <tr key={movie.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center justify-center">
                       <img
-                        src={event.image}
-                        alt={event.title}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-100"
+                        src={movie.image}
+                        alt={movie.title}
+                        className="w-12 h-12 rounded object-cover border-2 border-gray-100"
                       />
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900">
-                      {event.title}
+                      {movie.title}
                     </div>
                     <div className="text-sm text-gray-500">
-                      Updated: {new Date(event.updatedAt).toLocaleDateString()}
+                      Updated: {formatDate(movie.lastUpdated)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(event.startDate)} - {formatDate(event.endDate)}
+                    {formatDate(movie.releaseDate)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="mr-2 text-sm text-gray-500">
-                        {event.attendees}/{event.capacity}
+                        {movie.ticketsSold.toLocaleString()}/
+                        {movie.totalSeats.toLocaleString()}
                       </div>
                       <div className="w-20 bg-gray-200 rounded-full h-1.5">
                         <div
                           className={`h-1.5 rounded-full ${
-                            event.status === "Cancelled"
+                            movie.status === "Cancelled"
                               ? "bg-red-500"
                               : "bg-blue-500"
                           }`}
                           style={{
                             width: `${
-                              (event.attendees / event.capacity) * 100
+                              (movie.ticketsSold / movie.totalSeats) * 100
                             }%`,
                           }}
                         ></div>
@@ -249,10 +318,10 @@ const OrganizerReports = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
-                    ${event.revenue.toLocaleString()}
+                    ${movie.boxOfficeRevenue.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(event.status)}
+                    {getStatusBadge(movie.status)}
                   </td>
                 </tr>
               ))}
@@ -263,7 +332,7 @@ const OrganizerReports = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Events */}
+        {/* Total Movies */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
           <div className="bg-blue-50 p-3 rounded-full inline-flex items-center justify-center mb-3">
             <svg
@@ -276,20 +345,20 @@ const OrganizerReports = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
               />
             </svg>
           </div>
           <h3 className="text-gray-500 text-sm font-medium mb-1">
-            Total Events
+            Total Movies
           </h3>
           <p className="text-2xl font-bold text-gray-900">
-            {totalStats.scheduled}
+            {totalStats.totalMovies}
           </p>
-          <p className="text-xs text-gray-400">Last updated today</p>
+          <p className="text-xs text-gray-400">Currently managing</p>
         </div>
 
-        {/* Total Attendees */}
+        {/* Total Tickets Sold */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
           <div className="bg-cyan-50 p-3 rounded-full inline-flex items-center justify-center mb-3">
             <svg
@@ -302,17 +371,17 @@ const OrganizerReports = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="2"
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
               />
             </svg>
           </div>
           <h3 className="text-gray-500 text-sm font-medium mb-1">
-            Total Attendees
+            Tickets Sold
           </h3>
           <p className="text-2xl font-bold text-gray-900">
-            {totalStats.totalAttendees}
+            {totalStats.totalTickets.toLocaleString()}
           </p>
-          <p className="text-xs text-gray-400">Across all events</p>
+          <p className="text-xs text-gray-400">Total admissions</p>
         </div>
 
         {/* Total Revenue */}
@@ -338,10 +407,10 @@ const OrganizerReports = () => {
           <p className="text-2xl font-bold text-gray-900">
             ${totalStats.totalRevenue.toLocaleString()}
           </p>
-          <p className="text-xs text-gray-400">From ticket sales</p>
+          <p className="text-xs text-gray-400">Box office earnings</p>
         </div>
 
-        {/* Avg Attendance */}
+        {/* Avg Occupancy */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
           <div className="bg-yellow-50 p-3 rounded-full inline-flex items-center justify-center mb-3">
             <svg
@@ -359,15 +428,15 @@ const OrganizerReports = () => {
             </svg>
           </div>
           <h3 className="text-gray-500 text-sm font-medium mb-1">
-            Avg Attendance
+            Avg Occupancy
           </h3>
           <p className="text-2xl font-bold text-gray-900">
-            {totalStats.avgAttendance}%
+            {totalStats.avgOccupancy}%
           </p>
           <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
             <div
               className="bg-yellow-500 h-1.5 rounded-full"
-              style={{ width: `${totalStats.avgAttendance}%` }}
+              style={{ width: `${totalStats.avgOccupancy}%` }}
             ></div>
           </div>
         </div>
@@ -375,62 +444,49 @@ const OrganizerReports = () => {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Event Status Distribution */}
+        {/* Movie Status Distribution */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-gray-500 text-sm font-medium mb-3">
-            Event Status Distribution
+            Movie Status Distribution
           </h3>
           <div className="h-64">
             <Pie
               data={statusChartData}
               options={{
                 maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: "bottom",
-                  },
-                },
+                plugins: { legend: { position: "bottom" } },
               }}
             />
           </div>
         </div>
 
-        {/* Event Revenue */}
+        {/* Box Office Performance */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-gray-500 text-sm font-medium mb-3">
-            Event Revenue
+            Box Office Performance
           </h3>
           <div className="h-64">
             <Bar
               data={revenueChartData}
               options={{
                 maintainAspectRatio: false,
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                  },
-                },
+                scales: { y: { beginAtZero: true } },
               }}
             />
           </div>
         </div>
 
-        {/* Attendance Rates */}
+        {/* Seat Occupancy Rates */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-gray-500 text-sm font-medium mb-3">
-            Attendance Rates
+            Seat Occupancy Rates
           </h3>
           <div className="h-64">
             <Line
-              data={attendanceChartData}
+              data={occupancyChartData}
               options={{
                 maintainAspectRatio: false,
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    max: 100,
-                  },
-                },
+                scales: { y: { beginAtZero: true, max: 100 } },
               }}
             />
           </div>
@@ -440,4 +496,4 @@ const OrganizerReports = () => {
   );
 };
 
-export default OrganizerReports;
+export default MovieOrganizerReports;
