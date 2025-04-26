@@ -175,7 +175,7 @@ const OrganizerReports = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <h2 className="text-2xl font-bold text-blue-600 mb-6">
-        Organizer Dashboard
+        Good Morning Suresh Kumar
       </h2>
 
       {/* Events Table */}

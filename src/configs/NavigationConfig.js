@@ -851,7 +851,7 @@ const eventOrganaizerDashBoardNavTree = [
   },
 
   {
-    key: "Reports",
+    key: "Events",
     path: `${APP_PREFIX_PATH}/apps`,
     title: "sidenav.apps.reports",
     icon: DashboardOutlined,
