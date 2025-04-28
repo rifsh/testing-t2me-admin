@@ -493,3 +493,4 @@ const MovieOrganizerReports = () => {
 };
 
 export default MovieOrganizerReports;
+  

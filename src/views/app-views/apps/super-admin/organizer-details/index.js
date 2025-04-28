@@ -10,7 +10,6 @@ Chart.register(...registerables);
 
 const OrganizerDetail = () => {
   const { organizerId } = useParams();
-  console.log(organizerId, "organizerId");
 
   // Hardcoded data - replace with your actual data structure
   const organizers = [
@@ -164,7 +163,7 @@ const OrganizerDetail = () => {
     labels: ["Active Events", "Completed Events"],
     datasets: [
       {
-        data: [8, 4], // Example data
+        data: [8, 4],
         backgroundColor: ["#198754", "#dc3545"],
       },
     ],

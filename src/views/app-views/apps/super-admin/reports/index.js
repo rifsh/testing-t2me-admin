@@ -542,15 +542,18 @@
 
 // latest - total , events ,movies report
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Bar, Pie, Line } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { Link } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 Chart.register(...registerables);
 
 const SuperAdminReport = () => {
+  const reportRef = useRef(null);
   const [activeTab, setActiveTab] = useState("total");
 
   // Mock data with separate event organizers and movie organizers
@@ -778,9 +781,42 @@ const SuperAdminReport = () => {
     total: [17, 27, 21, 35, 25, 31], // Sum of events and movies
   };
 
+  const handleExportPdf = async () => {
+    const input = reportRef.current;
+    const canvas = await html2canvas(input, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgWidth = 210; // A4 width in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+    pdf.save("report.pdf");
+  };
+
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h2 className="text-2xl font-bold text-blue-600 mb-6">Reports</h2>
+    <div className="container mx-auto px-4 py-6" ref={reportRef}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-blue-600">Reports</h2>
+        <button
+          onClick={handleExportPdf}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+          Export PDF
+        </button>
+      </div>
 
       {/* Report Type Tabs */}
       <div className="flex gap-4 mb-6">
@@ -1152,39 +1188,6 @@ const SuperAdminReport = () => {
           </div>
         </div>
       </div>
-
-      {/* Summary Stats */}
-      {/* <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-        <h3 className="text-lg font-medium mb-4">Platform Summary</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-2">Event Organizers</h4>
-            <p className="text-2xl font-bold">{platformStats.totalEventOrganizers}</p>
-            <p className="text-sm text-gray-500">
-              <span className="text-green-600 font-medium">{platformStats.activeEventOrganizers}</span> active
-            </p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-2">Movie Organizers</h4>
-            <p className="text-2xl font-bold">{platformStats.totalMovieOrganizers}</p>
-            <p className="text-sm text-gray-500">
-              <span className="text-green-600 font-medium">{platformStats.activeMovieOrganizers}</span> active
-            </p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-2">Event Statistics</h4>
-            <p className="text-lg font-bold">{platformStats.totalEvents} events</p>
-            <p className="text-sm text-gray-500">{platformStats.totalEventAttendees.toLocaleString()} attendees</p>
-            <p className="text-sm text-green-600 font-medium">${platformStats.totalEventRevenue.toLocaleString()} revenue</p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-2">Movie Statistics</h4>
-            <p className="text-lg font-bold">{platformStats.totalMovies} movies</p>
-            <p className="text-sm text-gray-500">{platformStats.totalMovieAttendees.toLocaleString()} attendees</p>
-            <p className="text-sm text-green-600 font-medium">${platformStats.totalMovieRevenue.toLocaleString()} revenue</p>
-          </div>
-        </div>
-      </div> */}
 
       {/* Summary Stats */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">

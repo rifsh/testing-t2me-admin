@@ -430,14 +430,33 @@ const superAdminDashBoardNavTree = [
     breadcrumb: false,
     submenu: [],
   },
+  // {
+  //   key: "super-admin.reports",
+  //   path: `${APP_PREFIX_PATH}/super-admin/reports`,
+  //   title: "sidenav.apps.admin-reports",
+  //   icon: DashboardOutlined,
+  //   breadcrumb: false,
+  //   submenu: [],
+
+  // },
+
   {
-    key: "super-admin.reports",
-    path: `${APP_PREFIX_PATH}/super-admin/reports`,
-    title: "sidenav.apps.admin-reports",
-    icon: DashboardOutlined,
-    breadcrumb: false,
-    submenu: [],
-    
+    key: "Reports",
+    path: `${APP_PREFIX_PATH}/apps`,
+    title: "sidenav.apps.reports",
+    icon: SettingOutlined,
+    breadcrumb: true,
+    isGroupTitle: true,
+    submenu: [
+      {
+        key: "super-admin.reports",
+        path: `${APP_PREFIX_PATH}/super-admin/reports`,
+        title: "sidenav.apps.admin-reports",
+        icon: DashboardOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
   },
 
   {
@@ -884,9 +903,7 @@ const eventOrganaizerDashBoardNavTree = [
         submenu: [],
       },
     ],
-  }
-  
-  
+  },
 ];
 const techSupportingTeamDashBoardNavTree = [
   {
