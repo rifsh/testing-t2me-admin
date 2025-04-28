@@ -3,6 +3,8 @@
 import React, { useRef } from "react";
 import { Bar, Pie, Line } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
+import previewImage from "assets/preview/event.jpg";
+
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 Chart.register(...registerables);
@@ -14,8 +16,7 @@ const OrganizerReports = () => {
     {
       id: 1,
       title: "Tech Conference 2025",
-      image:
-        "https://media.licdn.com/dms/image/v2/C561BAQE-51J-8KkMZg/company-background_10000/company-background_10000/0/1584559866970/eventscom_cover?e=2147483647&v=beta&t=3bktbE7ts5aNwH8XEUM5rW0G2aMbuQ1b2dHBVQgZqmA",
+      image: previewImage,
       startDate: "2025-05-20",
       endDate: "2025-05-22",
       status: "Upcoming",
@@ -27,8 +28,7 @@ const OrganizerReports = () => {
     {
       id: 2,
       title: "Startup Meetup",
-      image:
-        "https://mediaim.expedia.com/destination/9/cd8a3f3db7149b0ce36d052aea1182df.jpg",
+      image: previewImage,
       startDate: "2025-03-10",
       endDate: "2025-03-11",
       status: "Completed",
@@ -40,8 +40,7 @@ const OrganizerReports = () => {
     {
       id: 3,
       title: "AI Workshop",
-      image:
-        "https://s7ap1.scene7.com/is/image/incredibleindia/india-gate-delhi-1-attr-hero?qlt=82&ts=1727351922349",
+      image: previewImage,
       startDate: "2025-04-18",
       endDate: "2025-04-19",
       status: "Upcoming",
@@ -53,8 +52,7 @@ const OrganizerReports = () => {
     {
       id: 4,
       title: "Health Summit",
-      image:
-        "https://aurifer.tax/wp-content/uploads/2023/03/1295CA28-51B0-4890-B288-7E2B6ABCA328.jpeg",
+      image: previewImage,
       startDate: "2025-02-01",
       endDate: "2025-02-03",
       status: "Cancelled",
@@ -66,8 +64,7 @@ const OrganizerReports = () => {
     {
       id: 5,
       title: "Marketing Seminar",
-      image:
-        "https://media.licdn.com/dms/image/v2/C561BAQE-51J-8KkMZg/company-background_10000/company-background_10000/0/1584559866970/eventscom_cover?e=2147483647&v=beta&t=3bktbE7ts5aNwH8XEUM5rW0G2aMbuQ1b2dHBVQgZqmA",
+      image: previewImage,
       startDate: "2025-06-15",
       endDate: "2025-06-16",
       status: "Upcoming",
