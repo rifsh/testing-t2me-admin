@@ -1,23 +1,25 @@
 import React from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import previewImage from "assets/preview/event.jpg";
 
 Chart.register(...registerables);
 
 const EventDetail = () => {
   const { eventId } = useParams();
-console.log(eventId,'id');
+  const navigate = useNavigate();
 
   // Hardcoded events data
   const events = [
     {
       id: 1,
       title: "Tech Conference 2025",
-      image: "https://cdn.pixabay.com/photo/2016/11/23/15/48/audience-1853662_640.jpg",
-      description: "Annual technology conference featuring top industry experts",
+      image: previewImage,
+      description:
+        "Annual technology conference featuring top industry experts",
       startDate: "2025-05-20",
       endDate: "2025-05-22",
       location: "Convention Center, New Delhi",
@@ -28,35 +30,41 @@ console.log(eventId,'id');
       ticketTypes: [
         { name: "General Admission", price: 50, sold: 200 },
         { name: "VIP Pass", price: 150, sold: 50 },
-      ]
+      ],
     },
     {
-        id: 2,
-        title: "Tech Conference 2025",
-        image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8RXZlbnQlMjB3YWxscGFwZXJ8ZW58MHx8MHx8fDA%3D",
-        description: "Annual technology conference featuring top industry experts",
-        startDate: "2025-05-20",
-        endDate: "2025-05-22",
-        location: "Convention Center, New Delhi",
-        status: "Upcoming",
-        attendees: 250,
-        capacity: 300,
-        revenue: 12500,
-        ticketTypes: [
-          { name: "General Admission", price: 50, sold: 200 },
-          { name: "VIP Pass", price: 150, sold: 50 },
-        ]
-      },
+      id: 2,
+      title: "Tech Conference 2025",
+      image: previewImage,
+      description:
+        "Annual technology conference featuring top industry experts",
+      startDate: "2025-05-20",
+      endDate: "2025-05-22",
+      location: "Convention Center, New Delhi",
+      status: "Upcoming",
+      attendees: 250,
+      capacity: 300,
+      revenue: 12500,
+      ticketTypes: [
+        { name: "General Admission", price: 50, sold: 200 },
+        { name: "VIP Pass", price: 150, sold: 50 },
+      ],
+    },
     // Add more events similarly
   ];
 
-  const event = events.find(e => e.id === parseInt(eventId));
+  const event = events.find((e) => e.id === parseInt(eventId));
 
   if (!event) {
     return (
       <div className="container mx-auto px-4 py-6 text-center">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">Event not found</h2>
-        <Link  to="/super-admin/event-details" className="text-blue-600 hover:underline">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">
+          Event not found
+        </h2>
+        <Link
+          to="/super-admin/event-details"
+          className="text-blue-600 hover:underline"
+        >
           Back to Events
         </Link>
       </div>
@@ -65,47 +73,53 @@ console.log(eventId,'id');
 
   // Chart data
   const ticketSalesData = {
-    labels: event.ticketTypes.map(t => t.name),
-    datasets: [{
-      data: event.ticketTypes.map(t => t.sold),
-      backgroundColor: ["#0dcaf0", "#198754"],
-    }]
+    labels: event.ticketTypes.map((t) => t.name),
+    datasets: [
+      {
+        data: event.ticketTypes.map((t) => t.sold),
+        backgroundColor: ["#0dcaf0", "#198754"],
+      },
+    ],
   };
 
   const revenueData = {
     labels: ["Current Revenue", "Potential Revenue"],
-    datasets: [{
-      data: [
-        event.revenue,
-        (event.capacity - event.attendees) * event.ticketTypes[0].price
-      ],
-      backgroundColor: ["#4c51bf", "#cbd5e0"],
-    }]
+    datasets: [
+      {
+        data: [
+          event.revenue,
+          (event.capacity - event.attendees) * event.ticketTypes[0].price,
+        ],
+        backgroundColor: ["#4c51bf", "#cbd5e0"],
+      },
+    ],
   };
 
   // Export handlers
   const handleExportPDF = async () => {
-    const input = document.getElementById('event-content');
+    const input = document.getElementById("event-content");
     const canvas = await html2canvas(input);
-    const imgData = canvas.toDataURL('image/png');
-    
+    const imgData = canvas.toDataURL("image/png");
+
     const pdf = new jsPDF();
     const imgWidth = 200;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-    pdf.addImage(imgData, 'PNG', 5, 5, imgWidth, imgHeight);
+
+    pdf.addImage(imgData, "PNG", 5, 5, imgWidth, imgHeight);
     pdf.save(`${event.title}-report.pdf`);
   };
 
   const handleExportCSV = () => {
     const csvContent = [
       ["Ticket Type", "Price", "Sold"],
-      ...event.ticketTypes.map(ticket => [
+      ...event.ticketTypes.map((ticket) => [
         ticket.name,
         ticket.price,
-        ticket.sold
-      ])
-    ].map(e => e.join(",")).join("\n");
+        ticket.sold,
+      ]),
+    ]
+      .map((e) => e.join(","))
+      .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
@@ -118,32 +132,38 @@ console.log(eventId,'id');
   return (
     <div className="container mx-auto px-4 py-6" id="event-content">
       <div className="mb-6">
-        <Link 
-          to="/organizer/reports" 
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-        >
-          &larr; Back to Events
-        </Link>
+      <span
+      onClick={() => navigate(-1)}
+      className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer"
+    >
+      &larr; Back to Events
+    </span>
       </div>
 
       {/* Event Header */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
         <div className="flex flex-col md:flex-row gap-8">
-          <img 
-            src={event.image} 
-            alt={event.title} 
+          <img
+            src={event.image}
+            alt={event.title}
             className="w-full md:w-1/2 h-64 object-cover rounded-lg"
           />
           <div className="w-full md:w-1/2">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              {event.title}
+            </h1>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <p className="text-sm text-gray-600">Start Date</p>
-                <p className="font-medium">{new Date(event.startDate).toLocaleDateString()}</p>
+                <p className="font-medium">
+                  {new Date(event.startDate).toLocaleDateString()}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">End Date</p>
-                <p className="font-medium">{new Date(event.endDate).toLocaleDateString()}</p>
+                <p className="font-medium">
+                  {new Date(event.endDate).toLocaleDateString()}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Location</p>
@@ -166,7 +186,9 @@ console.log(eventId,'id');
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <h3 className="text-gray-500 text-sm font-medium mb-2">Attendance</h3>
           <div className="flex items-center justify-between">
-            <p className="text-2xl font-bold">{event.attendees}/{event.capacity}</p>
+            <p className="text-2xl font-bold">
+              {event.attendees}/{event.capacity}
+            </p>
             <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
               {Math.round((event.attendees / event.capacity) * 100)}%
             </span>
@@ -174,14 +196,18 @@ console.log(eventId,'id');
         </div>
 
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-gray-500 text-sm font-medium mb-2">Total Revenue</h3>
+          <h3 className="text-gray-500 text-sm font-medium mb-2">
+            Total Revenue
+          </h3>
           <p className="text-2xl font-bold text-green-600">
             ${event.revenue.toLocaleString()}
           </p>
         </div>
 
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-gray-500 text-sm font-medium mb-2">Ticket Sales</h3>
+          <h3 className="text-gray-500 text-sm font-medium mb-2">
+            Ticket Sales
+          </h3>
           <div className="flex justify-between items-center">
             {event.ticketTypes.map((ticket, index) => (
               <div key={index} className="text-center">
@@ -196,9 +222,11 @@ console.log(eventId,'id');
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-gray-500 text-sm font-medium mb-4">Ticket Sales Distribution</h3>
+          <h3 className="text-gray-500 text-sm font-medium mb-4">
+            Ticket Sales Distribution
+          </h3>
           <div className="h-64">
-            <Pie 
+            <Pie
               data={ticketSalesData}
               options={{ maintainAspectRatio: false }}
             />
@@ -206,13 +234,15 @@ console.log(eventId,'id');
         </div>
 
         <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-gray-500 text-sm font-medium mb-4">Revenue Breakdown</h3>
+          <h3 className="text-gray-500 text-sm font-medium mb-4">
+            Revenue Breakdown
+          </h3>
           <div className="h-64">
             <Bar
               data={revenueData}
               options={{
                 maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } }
+                scales: { y: { beginAtZero: true } },
               }}
             />
           </div>
@@ -242,16 +272,26 @@ console.log(eventId,'id');
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Ticket Type</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Price</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Sold</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Remaining</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Ticket Type
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Price
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Sold
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Remaining
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {event.ticketTypes.map((ticket, index) => (
                 <tr key={index}>
-                  <td className="px-4 py-3 font-medium text-gray-900">{ticket.name}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">
+                    {ticket.name}
+                  </td>
                   <td className="px-4 py-3">${ticket.price}</td>
                   <td className="px-4 py-3">{ticket.sold}</td>
                   <td className="px-4 py-3">{event.capacity - ticket.sold}</td>

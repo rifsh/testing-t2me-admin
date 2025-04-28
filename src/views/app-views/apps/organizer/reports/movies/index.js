@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { Bar, Pie, Line } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
+import previewImage from "assets/preview/prakashan.jpg";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import ScheduledMovies from "views/schedule/movie/components/ScheduledMovies";
@@ -13,8 +14,7 @@ const MovieOrganizerReports = () => {
     {
       id: 1,
       title: "Annyeshippin Kandethuvin",
-      image:
-        "https://m.media-amazon.com/images/M/MV5BZTVhN2VmNTgtMjQ0ZC00OTc1LWE2ZGItMjFkYTUzMzcyMTJkXkEyXkFqcGc@._V1_.jpg",
+      image: previewImage,
       releaseDate: "2025-05-20",
       status: "Released",
       lastUpdated: "2025-04-10",
@@ -25,8 +25,7 @@ const MovieOrganizerReports = () => {
     {
       id: 2,
       title: "Kumbalangi Nights",
-      image:
-        "https://assets.vogue.in/photos/5db957d8177d2f00087466b4/2:3/w_2560%2Cc_limit/Kumbalangi-Nights-01.jpg",
+      image: previewImage,
       releaseDate: "2025-03-10",
       status: "Completed",
       lastUpdated: "2025-03-05",
@@ -37,8 +36,7 @@ const MovieOrganizerReports = () => {
     {
       id: 3,
       title: "Kaduva",
-      image:
-        "https://m.media-amazon.com/images/M/MV5BZWY1NWZlNDMtMTgxNC00ZGNiLTgwZjgtZWRkZmY4ZjVhN2M1XkEyXkFqcGc@._V1_.jpg",
+      image: previewImage,
       releaseDate: "2025-04-18",
       status: "Upcoming",
       lastUpdated: "2025-04-12",
@@ -49,8 +47,7 @@ const MovieOrganizerReports = () => {
     {
       id: 4,
       title: "Super Sharanya",
-      image:
-        "https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/941f52133698221.61c36c24decd0.jpg",
+      image: previewImage,
       releaseDate: "2025-02-01",
       status: "Cancelled",
       lastUpdated: "2025-01-25",
@@ -61,8 +58,7 @@ const MovieOrganizerReports = () => {
     {
       id: 5,
       title: "Thudarum",
-      image:
-        "https://preview.redd.it/thudarum-%E0%B4%A4-%E0%B4%9F%E0%B4%B0-reviews-and-ratings-25-april-2025-v0-wvwwwke7cwwe1.jpeg?width=640&crop=smart&auto=webp&s=3ff281a27c3cc8c4a1282fd494b4144315e6fc4e",
+      image: previewImage,
       releaseDate: "2025-06-15",
       status: "Upcoming",
       lastUpdated: "2025-04-14",
