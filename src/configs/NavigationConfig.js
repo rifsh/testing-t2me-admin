@@ -879,30 +879,12 @@ const eventOrganaizerDashBoardNavTree = [
   },
 
   {
-    key: "Reports",
-    path: `${APP_PREFIX_PATH}/apps`,
+    key: "organizer.reports",
+    path: `${APP_PREFIX_PATH}/organizer/reports`,
     title: "sidenav.apps.reports",
     icon: DashboardOutlined,
     breadcrumb: false,
     isGroupTitle: false,
-    submenu: [
-      {
-        key: "organizer.reports.events",
-        path: `${APP_PREFIX_PATH}/organizer/reports/events`,
-        title: "sidenav.apps.reports.events",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "organizer.reports.movies",
-        path: `${APP_PREFIX_PATH}/organizer/reports/movies`,
-        title: "sidenav.apps.reports.movies",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-    ],
   },
 ];
 const techSupportingTeamDashBoardNavTree = [

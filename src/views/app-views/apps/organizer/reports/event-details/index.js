@@ -69,8 +69,8 @@
 //   return (
 //     <div className="container mx-auto px-4 py-6">
 //       <div className="mb-6">
-//         <Link 
-//           to="/" 
+//         <Link
+//           to="/"
 //           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
 //         >
 //           &larr; Back to Events
@@ -81,9 +81,9 @@
 //       <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
 //         <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
 //         <div className="flex flex-col md:flex-row gap-8">
-//           <img 
-//             src={event.image} 
-//             alt={event.title} 
+//           <img
+//             src={event.image}
+//             alt={event.title}
 //             className="w-full md:w-1/2 h-64 object-cover rounded-lg"
 //           />
 //           <div className="w-full md:w-1/2">
@@ -149,7 +149,7 @@
 //         <div className="bg-white p-6 rounded-lg border border-gray-200">
 //           <h3 className="text-gray-500 text-sm font-medium mb-4">Ticket Sales Distribution</h3>
 //           <div className="h-64">
-//             <Pie 
+//             <Pie
 //               data={ticketsSoldData}
 //               options={{ maintainAspectRatio: false }}
 //             />
@@ -199,9 +199,8 @@
 
 // export default EventDetail;
 
-
 import React from "react";
-import {  Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import previewImage from "assets/preview/event.jpg";
@@ -210,13 +209,13 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 Chart.register(...registerables);
 
 const EventDetail = () => {
-
   // Mock data - replace with API call
   const event = {
     id: 1,
     title: "Tech Conference 2025",
     image: previewImage,
-    description: "Annual technology conference featuring industry leaders and innovative startups.",
+    description:
+      "Annual technology conference featuring industry leaders and innovative startups.",
     startDate: "2025-05-20",
     endDate: "2025-05-22",
     location: "San Francisco Convention Center",
@@ -233,20 +232,36 @@ const EventDetail = () => {
       { date: "2025-05-20", time: "09:00", title: "Opening Keynote" },
       { date: "2025-05-20", time: "11:00", title: "AI Workshop" },
       { date: "2025-05-21", time: "10:00", title: "Startup Pitch Competition" },
-    ]
+    ],
   };
 
   const getStatusBadge = (status) => {
     const baseClasses = "px-3 py-1 rounded-md text-sm font-medium";
     switch (status) {
       case "Upcoming":
-        return <span className={`${baseClasses} bg-blue-100 text-blue-800`}>Upcoming</span>;
+        return (
+          <span className={`${baseClasses} bg-blue-100 text-blue-800`}>
+            Upcoming
+          </span>
+        );
       case "Completed":
-        return <span className={`${baseClasses} bg-green-100 text-green-800`}>Completed</span>;
+        return (
+          <span className={`${baseClasses} bg-green-100 text-green-800`}>
+            Completed
+          </span>
+        );
       case "Cancelled":
-        return <span className={`${baseClasses} bg-red-100 text-red-800`}>Cancelled</span>;
+        return (
+          <span className={`${baseClasses} bg-red-100 text-red-800`}>
+            Cancelled
+          </span>
+        );
       default:
-        return <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>Unknown</span>;
+        return (
+          <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>
+            Unknown
+          </span>
+        );
     }
   };
 
@@ -257,10 +272,10 @@ const EventDetail = () => {
 
   // Chart data
   const ticketSalesData = {
-    labels: event.ticketTypes.map(t => t.name),
+    labels: event.ticketTypes.map((t) => t.name),
     datasets: [
       {
-        data: event.ticketTypes.map(t => t.sold),
+        data: event.ticketTypes.map((t) => t.sold),
         backgroundColor: ["#0dcaf0", "#198754", "#dc3545"],
         borderWidth: 1,
       },
@@ -268,11 +283,11 @@ const EventDetail = () => {
   };
 
   const revenueData = {
-    labels: event.ticketTypes.map(t => t.name),
+    labels: event.ticketTypes.map((t) => t.name),
     datasets: [
       {
         label: "Revenue ($)",
-        data: event.ticketTypes.map(t => t.price * t.sold),
+        data: event.ticketTypes.map((t) => t.price * t.sold),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 2,
@@ -283,8 +298,8 @@ const EventDetail = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
-        <Link 
-          to={`${APP_PREFIX_PATH}/organizer/reports/events`}
+        <Link
+          to={`${APP_PREFIX_PATH}/organizer/reports`}
           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
         >
           &larr; Back to Events
@@ -294,15 +309,17 @@ const EventDetail = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
         {/* Event Header */}
         <div className="flex flex-col md:flex-row gap-6 mb-8">
-          <img 
-            src={event.image} 
-            alt={event.title} 
-            className="w-full md:w-1/3 h-64 object-cover rounded-lg"
+          <img
+            src={event.image}
+            alt={event.title}
+            className="w-full md:w-2/5 h-64 object-cover rounded-lg"
           />
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{event.title}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {event.title}
+            </h1>
             <p className="text-gray-600 mb-4">{event.description}</p>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="text-sm text-gray-500">Organizer</div>
@@ -337,37 +354,37 @@ const EventDetail = () => {
               ({Math.round((event.attendees / event.capacity) * 100)}% filled)
             </div>
           </div>
-          
+
           <div className="bg-green-50 p-4 rounded-lg">
             <div className="text-sm text-gray-600 mb-1">Total Revenue</div>
             <div className="text-2xl font-bold text-green-600">
               ${event.revenue.toLocaleString()}
             </div>
           </div>
-          
+
           <div className="bg-purple-50 p-4 rounded-lg">
             <div className="text-sm text-gray-600 mb-1">Ticket Types</div>
-            <div className="text-2xl font-bold">
-              {event.ticketTypes.length}
-            </div>
+            <div className="text-2xl font-bold">{event.ticketTypes.length}</div>
           </div>
         </div>
 
         {/* Charts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <h3 className="text-lg font-medium mb-4">Ticket Sales Distribution</h3>
+            <h3 className="text-lg font-medium mb-4">
+              Ticket Sales Distribution
+            </h3>
             <div className="h-64">
               <Pie
                 data={ticketSalesData}
                 options={{
                   maintainAspectRatio: false,
-                  plugins: { legend: { position: 'bottom' } }
+                  plugins: { legend: { position: "bottom" } },
                 }}
               />
             </div>
           </div>
-          
+
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <h3 className="text-lg font-medium mb-4">Revenue by Ticket Type</h3>
             <div className="h-64">
@@ -375,7 +392,7 @@ const EventDetail = () => {
                 data={revenueData}
                 options={{
                   maintainAspectRatio: false,
-                  scales: { y: { beginAtZero: true } }
+                  scales: { y: { beginAtZero: true } },
                 }}
               />
             </div>
@@ -387,12 +404,15 @@ const EventDetail = () => {
           <h3 className="text-lg font-medium mb-4">Event Schedule</h3>
           <div className="space-y-4">
             {event.schedule.map((item, index) => (
-              <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
+              <div
+                key={index}
+                className="flex items-center p-3 bg-gray-50 rounded-lg"
+              >
                 <div className="w-20">
                   <div className="text-sm font-medium">
-                    {new Date(item.date).toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric' 
+                    {new Date(item.date).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
                     })}
                   </div>
                   <div className="text-sm text-gray-500">{item.time}</div>
