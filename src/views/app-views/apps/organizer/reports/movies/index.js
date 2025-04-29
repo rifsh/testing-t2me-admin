@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { Bar, Pie, Line } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
-import previewImage from "assets/preview/prakashan.jpg";
+import previewImage from "assets/preview/thudarum-1.jpg";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import ScheduledMovies from "views/schedule/movie/components/ScheduledMovies";

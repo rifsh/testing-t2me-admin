@@ -762,4 +762,10 @@ export const protectedRoutes = [
       import("views/app-views/apps/super-admin/organizer-details/event-details")
     ),
   },
+  {
+    path: `${APP_PREFIX_PATH}/super-admin/organizer-details/movie-details/:movieId`,
+    component: React.lazy(() =>
+      import("views/app-views/apps/super-admin/organizer-details/movie-details")
+    ),
+  },
 ];
