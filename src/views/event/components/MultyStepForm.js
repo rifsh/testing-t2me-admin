@@ -511,7 +511,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           event_seat_structure_id:
             availableSeats.length > 0
               ? parseInt(availableSeats.map((item) => item.id))
-              : [],
+              : null,
         };
         console.log(finalData);
 
