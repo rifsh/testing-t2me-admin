@@ -508,12 +508,13 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           max_tickets: parseInt(submitData.max_tickets || "0", 10),
           event_type_id:
             eventType.find((item) => item.name === EVENT_TYPES.event)?.id || 1,
-          event_seat_structure_id: parseInt(
-            availableSeats.map((item) => item.id)
-          ),
+          event_seat_structure_id:
+            availableSeats.length > 0
+              ? parseInt(availableSeats.map((item) => item.id))
+              : [],
         };
         console.log(finalData);
-        
+
         const resultAction = await dispatch(
           validateOfferCoupon({
             offers: selectedOffers,
