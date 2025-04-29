@@ -718,30 +718,24 @@ export const protectedRoutes = [
 
   {
     key: "organizer.reports",
-    path: `${APP_PREFIX_PATH}/organizer/reports/events`,
+    path: `${APP_PREFIX_PATH}/organizer/reports`,
     component: React.lazy(() =>
-      import("views/app-views/apps/organizer/reports/events")
+      import("views/app-views/apps/organizer/reports")
+    ),
+  },
+
+  {
+    path: `${APP_PREFIX_PATH}/organizer/reports/event-details/:eventId`,
+    component: React.lazy(() =>
+      import("views/app-views/apps/organizer/reports/event-details")
     ),
   },
   {
-    key: "organizer.reports",
-    path: `${APP_PREFIX_PATH}/organizer/reports/movies`,
+    path: `${APP_PREFIX_PATH}/organizer/reports/movie-details/:movieId`,
     component: React.lazy(() =>
-      import("views/app-views/apps/organizer/reports/movies")
+      import("views/app-views/apps/organizer/reports/movie-details")
     ),
   },
-  {
-    path: `${APP_PREFIX_PATH}/organizer/reports/events/event-details/:eventId`,
-    component: React.lazy(() =>
-      import("views/app-views/apps/organizer/reports/events/event-details")
-    ),
-  },
-  // {
-  //   path: `${APP_PREFIX_PATH}/organizer/reports/movies/movie-details/:movieId`,
-  //   component: React.lazy(() =>
-  //     import("views/app-views/apps/organizer/reports/movies/movie-details")
-  //   ),
-  // },
 
   {
     key: "super-admin.reports",
@@ -760,6 +754,12 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/super-admin/organizer-details/event-details/:eventId`,
     component: React.lazy(() =>
       import("views/app-views/apps/super-admin/organizer-details/event-details")
+    ),
+  },
+  {
+    path: `${APP_PREFIX_PATH}/super-admin/organizer-details/movie-details/:movieId`,
+    component: React.lazy(() =>
+      import("views/app-views/apps/super-admin/organizer-details/movie-details")
     ),
   },
 ];

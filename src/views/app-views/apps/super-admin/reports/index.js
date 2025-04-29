@@ -555,7 +555,10 @@ Chart.register(...registerables);
 const SuperAdminReport = () => {
   const reportRef = useRef(null);
   const [activeTab, setActiveTab] = useState("total");
-
+  const [pagination, setPagination] = useState({
+    page: 1,
+    size: 5,
+  });
   // Mock data with separate event organizers and movie organizers
   const eventOrganizers = [
     {
@@ -708,21 +711,30 @@ const SuperAdminReport = () => {
     }
   };
 
-  // Get current organizers list based on active tab
+
+
   const getCurrentOrganizers = () => {
+    let data;
+
     switch (activeTab) {
       case "events":
-        return eventOrganizers;
+        data = eventOrganizers;
+        break;
       case "movies":
-        return movieOrganizers;
-      default: // total - combine both lists
-        // Add a type property to distinguish between event and movie organizers
-        const combinedOrganizers = [
+        data = movieOrganizers;
+        break;
+      default:
+        data = [
           ...eventOrganizers.map((org) => ({ ...org, type: "event" })),
           ...movieOrganizers.map((org) => ({ ...org, type: "movie" })),
         ];
-        return combinedOrganizers;
+        break;
     }
+
+    const startIndex = (pagination.page - 1) * pagination.size;
+    const endIndex = startIndex + pagination.size;
+
+    return data.slice(startIndex, endIndex);
   };
 
   // Get tab title
@@ -736,6 +748,16 @@ const SuperAdminReport = () => {
         return "Total (Events + Movies)";
     }
   };
+  const totalItems = (() => {
+    switch (activeTab) {
+      case "events":
+        return eventOrganizers.length;
+      case "movies":
+        return movieOrganizers.length;
+      default:
+        return eventOrganizers.length + movieOrganizers.length;
+    }
+  })();
 
   // Chart data
   const organizerPerformanceData = {
@@ -1072,6 +1094,77 @@ const SuperAdminReport = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination outside table and aligned right */}
+        <div className="flex justify-end p-4">
+          <div className="flex items-center space-x-2">
+            {/* Previous Button */}
+            <button
+              onClick={() =>
+                setPagination((prev) => ({
+                  ...prev,
+                  page: Math.max(1, prev.page - 1),
+                }))
+              }
+              disabled={pagination.page === 1}
+              className={`w-8 h-8 flex items-center justify-center rounded-full border text-gray-600 ${
+                pagination.page === 1
+                  ? "bg-gray-200 cursor-not-allowed"
+                  : "hover:bg-blue-100"
+              }`}
+            >
+              ‹
+            </button>
+
+            {/* Page Numbers */}
+            {Array.from({
+              length: Math.ceil(totalItems / pagination.size),
+            }).map((_, index) => {
+              const pageNum = index + 1;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() =>
+                    setPagination((prev) => ({
+                      ...prev,
+                      page: pageNum,
+                    }))
+                  }
+                  className={`w-8 h-8 flex items-center justify-center rounded-full border text-sm ${
+                    pagination.page === pageNum
+                      ? "bg-blue-600 text-white"
+                      : "hover:bg-blue-100 text-gray-600"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            {/* Next Button */}
+            <button
+              onClick={() =>
+                setPagination((prev) => ({
+                  ...prev,
+                  page: Math.min(
+                    Math.ceil(totalItems / pagination.size),
+                    prev.page + 1
+                  ),
+                }))
+              }
+              disabled={
+                pagination.page === Math.ceil(totalItems / pagination.size)
+              }
+              className={`w-8 h-8 flex items-center justify-center rounded-full border text-gray-600 ${
+                pagination.page === Math.ceil(totalItems / pagination.size)
+                  ? "bg-gray-200 cursor-not-allowed"
+                  : "hover:bg-blue-100"
+              }`}
+            >
+              ›
+            </button>
+          </div>
         </div>
       </div>
 
