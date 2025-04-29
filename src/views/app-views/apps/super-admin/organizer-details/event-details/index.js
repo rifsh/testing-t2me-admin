@@ -132,12 +132,12 @@ const EventDetail = () => {
   return (
     <div className="container mx-auto px-4 py-6" id="event-content">
       <div className="mb-6">
-      <span
-      onClick={() => navigate(-1)}
-      className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer"
-    >
-      &larr; Back to Events
-    </span>
+        <span
+          onClick={() => navigate(-1)}
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer"
+        >
+          &larr; Back to Events
+        </span>
       </div>
 
       {/* Event Header */}

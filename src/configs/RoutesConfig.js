@@ -731,6 +731,19 @@ export const protectedRoutes = [
     ),
   },
   {
+    path: `${APP_PREFIX_PATH}/organizer/reports/events/event-details/:eventId`,
+    component: React.lazy(() =>
+      import("views/app-views/apps/organizer/reports/events/event-details")
+    ),
+  },
+  // {
+  //   path: `${APP_PREFIX_PATH}/organizer/reports/movies/movie-details/:movieId`,
+  //   component: React.lazy(() =>
+  //     import("views/app-views/apps/organizer/reports/movies/movie-details")
+  //   ),
+  // },
+
+  {
     key: "super-admin.reports",
     path: `${APP_PREFIX_PATH}/super-admin/reports`,
     component: React.lazy(() =>
