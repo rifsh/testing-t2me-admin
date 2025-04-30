@@ -1,3 +1,5 @@
+// Organizer Report Page - Filter Months, pagination
+
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
@@ -5,14 +7,21 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import "jspdf-autotable";
 import previewImage from "assets/preview/thudarum-1.jpg";
+import eventImage from "assets/preview/event.jpg";
 import { Link } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { Table } from "antd";
+import { Table, Select, DatePicker } from "antd";
+import dayjs from "dayjs";
 
 Chart.register(...registerables);
 
-const CombinedReport = () => {
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+
+const OrganizerReport = () => {
   const [activeSegment, setActiveSegment] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("all");
+  const [customDateRange, setCustomDateRange] = useState([]);
   const reportRef = useRef(null);
   const [pagination, setPagination] = useState({
     current: 1,
@@ -26,9 +35,10 @@ const CombinedReport = () => {
       {
         id: 1,
         title: "Tech Conference 2025",
+        image: eventImage,
         type: "event",
-        startDate: "2025-05-20",
-        endDate: "2025-05-22",
+        startDate: "2025-03-20",
+        endDate: "2025-03-22",
         status: "Upcoming",
         updatedAt: "2025-04-10",
         attendees: 250,
@@ -38,9 +48,10 @@ const CombinedReport = () => {
       {
         id: 2,
         title: "Startup Meetup",
+        image: eventImage,
         type: "event",
-        startDate: "2025-03-10",
-        endDate: "2025-03-11",
+        startDate: "2025-04-10",
+        endDate: "2025-04-11",
         status: "Completed",
         updatedAt: "2025-03-05",
         attendees: 180,
@@ -50,9 +61,10 @@ const CombinedReport = () => {
       {
         id: 3,
         title: "AI Workshop",
+        image: eventImage,
         type: "event",
-        startDate: "2025-04-18",
-        endDate: "2025-04-19",
+        startDate: "2024-04-18",
+        endDate: "2024-04-19",
         status: "Upcoming",
         updatedAt: "2025-04-12",
         attendees: 95,
@@ -62,6 +74,7 @@ const CombinedReport = () => {
       {
         id: 4,
         title: "Health Summit",
+        image: eventImage,
         type: "event",
         startDate: "2025-02-01",
         endDate: "2025-02-03",
@@ -74,14 +87,41 @@ const CombinedReport = () => {
       {
         id: 5,
         title: "Marketing Seminar",
+        image: eventImage,
         type: "event",
-        startDate: "2025-06-15",
-        endDate: "2025-06-16",
+        startDate: "2025-04-15",
+        endDate: "2025-04-16",
         status: "Upcoming",
         updatedAt: "2025-04-14",
         attendees: 210,
         capacity: 250,
         revenue: 10500,
+      },
+      {
+        id: 6,
+        title: "Winter Tech Fest",
+        image: eventImage,
+        type: "event",
+        startDate: "2024-12-15",
+        endDate: "2024-12-17",
+        status: "Completed",
+        updatedAt: "2024-12-10",
+        attendees: 320,
+        capacity: 350,
+        revenue: 16000,
+      },
+      {
+        id: 7,
+        title: "Spring Developer Conference",
+        image: eventImage,
+        type: "event",
+        startDate: "2025-04-05",
+        endDate: "2025-04-07",
+        status: "Completed",
+        updatedAt: "2025-04-01",
+        attendees: 275,
+        capacity: 300,
+        revenue: 13750,
       },
     ],
     []
@@ -92,6 +132,7 @@ const CombinedReport = () => {
       {
         id: 1,
         title: "Galactic Wars: New Dawn",
+        image: previewImage,
         type: "movie",
         releaseDate: "2025-05-20",
         status: "Released",
@@ -103,6 +144,7 @@ const CombinedReport = () => {
       {
         id: 2,
         title: "Ocean's Legacy",
+        image: previewImage,
         type: "movie",
         releaseDate: "2025-03-10",
         status: "Completed",
@@ -114,6 +156,7 @@ const CombinedReport = () => {
       {
         id: 3,
         title: "The Midnight Detective",
+        image: previewImage,
         type: "movie",
         releaseDate: "2025-04-18",
         status: "Upcoming",
@@ -125,6 +168,7 @@ const CombinedReport = () => {
       {
         id: 4,
         title: "Desert Dreams",
+        image: previewImage,
         type: "movie",
         releaseDate: "2025-02-01",
         status: "Cancelled",
@@ -136,6 +180,7 @@ const CombinedReport = () => {
       {
         id: 5,
         title: "Future City",
+        image: previewImage,
         type: "movie",
         releaseDate: "2025-06-15",
         status: "Upcoming",
@@ -144,12 +189,36 @@ const CombinedReport = () => {
         totalSeats: 200000,
         revenue: 1950000,
       },
+      {
+        id: 6,
+        title: "Holiday Special",
+        image: previewImage,
+        type: "movie",
+        releaseDate: "2024-12-20",
+        status: "Completed",
+        lastUpdated: "2024-12-15",
+        ticketsSold: 150000,
+        totalSeats: 180000,
+        revenue: 4500000,
+      },
+      {
+        id: 7,
+        title: "Spring Awakening",
+        image: previewImage,
+        type: "movie",
+        releaseDate: "2025-04-01",
+        status: "Completed",
+        lastUpdated: "2025-03-28",
+        ticketsSold: 110000,
+        totalSeats: 150000,
+        revenue: 3300000,
+      },
     ],
     []
   );
 
-  // Combined data handling
-  const items = useMemo(() => {
+  // Filter items based on time filter
+  const baseItems = useMemo(() => {
     return activeSegment === "all"
       ? [...events, ...movies]
       : activeSegment === "events"
@@ -157,26 +226,83 @@ const CombinedReport = () => {
       : movies;
   }, [activeSegment, events, movies]);
 
+  // Memoize the filtered items
+  const filteredItems = useMemo(() => {
+    if (timeFilter === "all" && customDateRange.length === 0) {
+      return baseItems;
+    }
+
+    const now = dayjs();
+    let startDate, endDate;
+
+    switch (timeFilter) {
+      case "last-month":
+        startDate = now.subtract(1, "month");
+        break;
+      case "last-3-months":
+        startDate = now.subtract(3, "month");
+        break;
+      case "last-year":
+        startDate = now.subtract(1, "year");
+        break;
+      case "custom":
+        if (customDateRange.length === 2) {
+          startDate = customDateRange[0];
+          endDate = customDateRange[1];
+        }
+        break;
+      default:
+        return baseItems;
+    }
+
+    return baseItems.filter((item) => {
+      const dateField =
+        item.type === "event" ? item.startDate : item.releaseDate;
+      const itemDate = dayjs(dateField);
+
+      if (timeFilter === "custom") {
+        return itemDate.isAfter(startDate) && itemDate.isBefore(endDate);
+      }
+      return itemDate.isAfter(startDate);
+    });
+  }, [baseItems, timeFilter, customDateRange]);
+
+  // Calculate paginated data
+  const paginatedItems = useMemo(() => {
+    const startIndex = (pagination.current - 1) * pagination.pageSize;
+    return filteredItems.slice(startIndex, startIndex + pagination.pageSize);
+  }, [filteredItems, pagination.current, pagination.pageSize]);
+
   useEffect(() => {
     setPagination((prev) => ({
       ...prev,
-      total: items.length,
+      current: 1,
+      total: filteredItems.length,
     }));
-  }, [items]);
+  }, [filteredItems]);
 
-  // Statistics calculations
+  // Handle pagination change
+  const handlePagination = (page, pageSize) => {
+    setPagination({
+      current: page,
+      pageSize: pageSize,
+      total: filteredItems.length,
+    });
+  };
+
+  // Statistics calculations based on filtered items
   const totalStats = {
-    totalItems: items.length,
-    totalRevenue: items.reduce((sum, item) => sum + item.revenue, 0),
-    upcoming: items.filter((i) => i.status === "Upcoming").length,
-    completed: items.filter((i) => i.status === "Completed").length,
-    released: items.filter((i) => i.status === "Released").length,
-    cancelled: items.filter((i) => i.status === "Cancelled").length,
-    totalAttendees: items.reduce(
+    totalItems: filteredItems.length,
+    totalRevenue: filteredItems.reduce((sum, item) => sum + item.revenue, 0),
+    upcoming: filteredItems.filter((i) => i.status === "Upcoming").length,
+    completed: filteredItems.filter((i) => i.status === "Completed").length,
+    released: filteredItems.filter((i) => i.status === "Released").length,
+    cancelled: filteredItems.filter((i) => i.status === "Cancelled").length,
+    totalAttendees: filteredItems.reduce(
       (sum, item) => (item.type === "event" ? sum + item.attendees : sum),
       0
     ),
-    totalTickets: items.reduce(
+    totalTickets: filteredItems.reduce(
       (sum, item) => (item.type === "movie" ? sum + item.ticketsSold : sum),
       0
     ),
@@ -196,7 +322,7 @@ const CombinedReport = () => {
       maximumFractionDigits: 0,
     }).format(amount);
 
-  // Enhanced chart configurations
+  // Enhanced chart configurations based on filtered items
   const statusChartData = {
     labels: ["Upcoming", "Completed", "Released", "Cancelled"],
     datasets: [
@@ -214,12 +340,12 @@ const CombinedReport = () => {
   };
 
   const revenueChartData = {
-    labels: items.map((i) => i.title),
+    labels: filteredItems.map((i) => i.title),
     datasets: [
       {
         label: "Revenue",
-        data: items.map((i) => i.revenue),
-        backgroundColor: items.map((i) =>
+        data: filteredItems.map((i) => i.revenue),
+        backgroundColor: filteredItems.map((i) =>
           i.type === "event" ? "#3b82f6" : "#10b981"
         ),
         borderRadius: 4,
@@ -283,13 +409,20 @@ const CombinedReport = () => {
     }
   };
 
-  // Handle pagination change
-  const handlePagination = (page, pageSize) => {
-    setPagination({
-      current: page,
-      pageSize: pageSize,
-      total: items.length,
-    });
+  // Handle time filter change
+  const handleTimeFilterChange = (value) => {
+    setTimeFilter(value);
+    if (value !== "custom") {
+      setCustomDateRange([]);
+    }
+  };
+
+  // Handle custom date range change
+  const handleDateRangeChange = (dates) => {
+    setCustomDateRange(dates);
+    if (dates && dates.length === 2) {
+      setTimeFilter("custom");
+    }
   };
 
   // Table columns configuration
@@ -308,7 +441,7 @@ const CombinedReport = () => {
           className="flex items-center gap-4 hover:text-blue-600 transition-colors"
         >
           <img
-            src={previewImage}
+            src={record.image}
             alt={record.title}
             className="w-12 h-12 rounded-lg object-cover border border-gray-200"
           />
@@ -401,6 +534,23 @@ const CombinedReport = () => {
           <h2 className="text-2xl font-bold text-gray-800">Organizer Report</h2>
           <p className="text-gray-500 text-sm mt-1">
             Comprehensive overview of all {activeSegment} activities
+            {timeFilter !== "all" && (
+              <span className="ml-2">
+                (
+                {timeFilter === "custom" && customDateRange.length === 2
+                  ? `Custom range: ${formatDate(
+                      customDateRange[0]
+                    )} to ${formatDate(customDateRange[1])}`
+                  : timeFilter === "last-month"
+                  ? "Last month"
+                  : timeFilter === "last-3-months"
+                  ? "Last 3 months"
+                  : timeFilter === "last-year"
+                  ? "Last year"
+                  : ""}
+                )
+              </span>
+            )}
           </p>
         </div>
 
@@ -426,6 +576,27 @@ const CombinedReport = () => {
           </div>
 
           <div className="flex gap-2">
+            <Select
+              defaultValue="all"
+              style={{ width: 150 }}
+              onChange={handleTimeFilterChange}
+              value={timeFilter}
+            >
+              <Option value="all">All Time</Option>
+              <Option value="last-month">Last Month</Option>
+              <Option value="last-3-months">Last 3 Months</Option>
+              <Option value="last-year">Last Year</Option>
+              <Option value="custom">Custom Range</Option>
+            </Select>
+
+            {timeFilter === "custom" && (
+              <RangePicker
+                value={customDateRange}
+                onChange={handleDateRangeChange}
+                style={{ width: 250 }}
+              />
+            )}
+
             <button
               onClick={handleExportPDF}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-2 transition-colors"
@@ -645,15 +816,16 @@ const CombinedReport = () => {
         </div>
       </div>
 
+      {/* Enhanced Data Table with Ant Design Pagination */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <Table
           columns={tableColumns}
-          dataSource={items}
+          dataSource={paginatedItems}
           rowKey="id"
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,
-            total: pagination.total,
+            total: filteredItems.length,
             onChange: handlePagination,
             // showSizeChanger: true,
             // pageSizeOptions: ["5", "10", "20", "50"],
@@ -669,4 +841,4 @@ const CombinedReport = () => {
   );
 };
 
-export default CombinedReport;
+export default OrganizerReport;
