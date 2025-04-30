@@ -361,14 +361,32 @@ const OrganizerDetail = () => {
   return (
     <div className="container mx-auto px-4 py-6" id="organizer-content">
       <div className="mb-6">
-        <Link
-          to="/super-admin/reports"
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-        >
-          &larr; Back to Organizers
-        </Link>
-      </div>
+        <div className="flex justify-between items-center">
+          <Link
+            to="/super-admin/reports"
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            &larr; Back to Organizers
+          </Link>
 
+          <div className="flex gap-2 ml-auto">
+            {" "}
+            {/* Added ml-auto here */}
+            <button
+              onClick={handleExportCSV}
+              className="px-3 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700"
+            >
+              Export CSV
+            </button>
+            <button
+              onClick={handleExportPDF}
+              className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+            >
+              Export PDF
+            </button>
+          </div>
+        </div>
+      </div>
       {/* Organizer Header */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
         <div className="flex flex-col md:flex-row justify-between items-start gap-4">
@@ -467,7 +485,7 @@ const OrganizerDetail = () => {
           <h3 className="text-gray-700 font-medium">
             {organizer.type === "event" ? "Events" : "Movies"} List
           </h3>
-          <div className="flex gap-2">
+          {/* <div className="flex gap-2">
             <button
               onClick={handleExportCSV}
               className="px-3 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700"
@@ -480,7 +498,7 @@ const OrganizerDetail = () => {
             >
               Export PDF
             </button>
-          </div>
+          </div> */}
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full">
