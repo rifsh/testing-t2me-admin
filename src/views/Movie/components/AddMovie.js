@@ -67,7 +67,7 @@ const AddMovie = ({ mode, id }) => {
     console.warn("Movie Edit Data");
     if (movieSingleResponse) {
       if (mode === MODE.EDIT) {
-        const genres = movieSingleResponse?.genre?.map((genresIds) => Number(genresIds));
+        const genres = movieSingleResponse?.genres?.map((genre) => Number(genre.id));
         const mediaItems =
           movieSingleResponse?.media_items || [];
         const thumbnailImage =
@@ -103,8 +103,8 @@ const AddMovie = ({ mode, id }) => {
           Runtime: movieSingleResponse?.runtime,
           country: movieSingleResponse?.country,
           director: movieSingleResponse?.director,
-          genre: movieSingleResponse?.genre ? genres : undefined,
-          language: movieSingleResponse?.language ? Number(movieSingleResponse?.language) : undefined,
+          genre: movieSingleResponse?.genres?.length ? genres : undefined,
+          language: movieSingleResponse?.languages?.length ? movieSingleResponse?.languages?.map((lang) => lang?.id) : undefined,
           rating: movieSingleResponse?.rating,
           Released: dayjs(movieSingleResponse?.released, "YYYY-MM-DD"),
           budget_currency: movieSingleResponse?.budget_currency,
@@ -130,7 +130,7 @@ const AddMovie = ({ mode, id }) => {
       console.log('movieSingleResponse', movieSingleResponse)
     }
   }, [movieSingleResponse, form, mode]);
-  
+
   const handleTabChange = async (key) => {
     try {
       // Validate current tab fields before allowing change
