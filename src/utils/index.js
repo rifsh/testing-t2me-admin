@@ -543,7 +543,7 @@ class Utils {
           key == "occupation" ||
           key === "mediaItems" ||
           key === "genre" ||
-          key === "language"
+          key === "languages"
         ) {
           value.forEach((id) => formData.append(key, id));
           return;

@@ -281,7 +281,7 @@ const AddMovie = ({ mode, id }) => {
         title: finalFormData.Title,
         age_restriction: finalFormData.age_restriction,
         runtime: finalFormData.Runtime,
-        language: finalFormData.language,
+        languages: finalFormData.language,
         genre: finalFormData.genre,
         released: releasedFormatted,
         description: finalFormData.Plot,
