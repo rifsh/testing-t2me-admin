@@ -292,9 +292,9 @@ const MovieDetails = () => {
                                 <Divider style={{ margin: '16px 0' }} />
 
                                 <Space size={[0, 8]} wrap>
-                                    {Array.isArray(movieSingleResponse?.genre) &&
-                                        movieSingleResponse.genre.map((g, i) => (
-                                            <Tag color="blue" key={i} style={{ margin: '4px' }}>{g}</Tag>
+                                    {Array.isArray(movieSingleResponse?.genres) &&
+                                        movieSingleResponse?.genres?.map((g) => (
+                                            <Tag color="blue" key={g.id} style={{ margin: '4px' }}>{g.name}</Tag>
                                         ))
                                     }
                                 </Space>
@@ -317,15 +317,30 @@ const MovieDetails = () => {
                                             />
                                         </Col>
                                     )}
-                                    {Array.isArray(movieSingleResponse) && (
+                                    {/* {Array.isArray(movieSingleResponse?.languages) && (
                                         <Col xs={24} sm={12} md={8}>
-                                            <Statistic
-                                                title="Language"
-                                                value={movieSingleResponse?.language}
-                                                prefix={<GlobalOutlined />}
-                                            />
+                                            <div className="ant-statistic">
+                                                <div className="ant-statistic-title">
+                                                    <GlobalOutlined style={{ marginRight: 4 }} />
+                                                    Language
+                                                </div>
+                                                <div className="ant-statistic-content">
+                                                    {movieSingleResponse.languages.map((lang) => lang.name).join(', ')}
+                                                </div>
+                                            </div>
                                         </Col>
-                                    )}
+                                    )} */}
+                                    <Space size={[0, 8]} wrap>
+                                        {/* <div className="ant-statistic-title">
+                                            <GlobalOutlined style={{ marginRight: 4 }} />
+                                            Languages
+                                        </div> <br /> */}
+                                        {Array.isArray(movieSingleResponse?.languages) &&
+                                            movieSingleResponse?.languages?.map((g) => (
+                                                <Tag color="gray" key={g.id} style={{ margin: '4px' }}>{g.name}</Tag>
+                                            ))
+                                        }
+                                    </Space>
                                 </Row>
 
                                 <Divider style={{ margin: '16px 0' }} />
@@ -386,7 +401,7 @@ const MovieDetails = () => {
                     >
                         {renderPreviewContent()}
                     </Modal>
-                </div>
+                </div >
             )}
             <LoadingOverlay loading={loading} />
         </>
