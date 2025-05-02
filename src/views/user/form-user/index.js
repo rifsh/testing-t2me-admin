@@ -60,13 +60,13 @@ const UserForm = ({ mode, user }) => {
         thumbnail_image:
           user.thumbnail_image && user.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: user.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: user.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: user.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: user.thumbnail_image,
+              },
+            ]
             : [],
       };
       if (user.role.position_id === UserRoleConstants.eventOrganizerRoleId) {
@@ -134,9 +134,10 @@ const UserForm = ({ mode, user }) => {
           values.position_id === UserRoleConstants.eventSupportingTeamRoleId
         ) {
           console.log(values.event_ids, "EVENT IDS");
+          console.log(formData, "THEATER IDSssss");
 
           const resultAction = await dispatch(
-            validateMultipleEvent(values.event_ids)
+            validateMultipleEvent(values.theatre_ids)
           );
 
           if (validateMultipleEvent.fulfilled.match(resultAction)) {
