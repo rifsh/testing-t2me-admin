@@ -137,7 +137,7 @@ const UserForm = ({ mode, user }) => {
           console.log(formData, "THEATER IDSssss");
 
           const resultAction = await dispatch(
-            validateMultipleEvent(values.theatre_ids)
+            validateMultipleEvent(values.event_ids)
           );
 
           if (validateMultipleEvent.fulfilled.match(resultAction)) {

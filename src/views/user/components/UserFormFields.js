@@ -270,7 +270,7 @@ function UserFormFields({ mode, user }) {
         {(selectedRole === UserRoleConstants.eventOrganizerRoleId ||
           selectedRole === UserRoleConstants.eventSupportingTeamRoleId) && (
             <>
-              <Radio.Group
+              {/* <Radio.Group
                 onChange={onRadioChange}
                 className="mt-2"
                 value={value}
@@ -293,7 +293,40 @@ function UserFormFields({ mode, user }) {
                   },
                 ]}
               />
-              {value === 1 && < Form.Item
+              {value === 1 &&
+                < Form.Item
+                  name="event_ids"
+                  className="my-10"
+                  label={
+                    <span>
+                      Events&nbsp;
+                      <Tooltip title="Please select your events">
+                        <InfoCircleOutlined />
+                      </Tooltip>
+                    </span>
+                  }
+                  validateTrigger={["onChange"]}
+                  hasFeedback
+                >
+                  <Select
+                    mode="multiple"
+                    loading={eventLoading}
+                    style={{ width: "100%" }}
+                    placeholder="Please select your events"
+                    maxTagCount={5}
+                    showArrow
+                  >
+                    {filteredEvents.map((event) => (
+                      <Option key={event.id} value={event.id}>
+                        {event.event_name}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>}
+
+              {value === 2 &&
+              } */}
+              < Form.Item
                 name="event_ids"
                 className="my-10"
                 label={
@@ -321,55 +354,23 @@ function UserFormFields({ mode, user }) {
                     </Option>
                   ))}
                 </Select>
-              </Form.Item>}
-
-              {value === 2 &&
-                // < Form.Item
-                //   name="theatre_ids"
-                //   className="my-10"
-                //   label={
-                //     <span>
-                //       Theaters&nbsp;
-                //       <Tooltip title="Please select your theaters">
-                //         <InfoCircleOutlined />
-                //       </Tooltip>
-                //     </span>
-                //   }
-                //   validateTrigger={["onChange"]}
-                //   hasFeedback
-                // >
-                //   <Select
-                //     mode="multiple"
-                //     loading={eventLoading}
-                //     style={{ width: "100%" }}
-                //     placeholder="Please select your theaters"
-                //     maxTagCount={5}
-                //     showArrow
-                //   >
-                //     {filteredEvents.map((event) => (
-                //       <Option key={event.id} value={event.id}>
-                //         {event.event_name}
-                //       </Option>
-                //     ))}
-                //   </Select>
-                // </Form.Item>
-                <div className="my-10">
-                  <GenericDropdown
-                    name="theatre_ids"
-                    label="Theaters"
-                    mode="multiple"
-                    rules={[{ required: false, message: 'Please select your theaters!' }]}
-                    fetchOptions={fetchTheaters}
-                    optionsData={response?.items}
-                    loading={loading}
-                    optionLabelKey="name"
-                    optionExtraLabel=""
-                    optionValueKey="id"
-                    searchParamKey="search"
-                    isInfoVisible={true}
-                  />
-                </div>
-              }
+              </Form.Item>
+              <div className="my-10">
+                <GenericDropdown
+                  name="theatre_ids"
+                  label="Theaters"
+                  mode="multiple"
+                  rules={[{ required: false, message: 'Please select your theaters!' }]}
+                  fetchOptions={fetchTheaters}
+                  optionsData={response?.items}
+                  loading={loading}
+                  optionLabelKey="name"
+                  optionExtraLabel=""
+                  optionValueKey="id"
+                  searchParamKey="search"
+                  isInfoVisible={true}
+                />
+              </div>
             </>
           )
         }
