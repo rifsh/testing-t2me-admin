@@ -349,19 +349,7 @@ const IssueDetails = () => {
       )}
 
       {/* Comment Input Section */}
-     {IssueDetails.superadmin_access && <div style={{ marginTop: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
-        <TextArea
-          rows={3}
-          value={adminCommentText}
-          onChange={(e) => setAdminCommentText(e.target.value)}
-          placeholder="Write a comment..."
-        />
-        <Button type="primary" 
-        onClick={handleAdminCommentSubmit} disabled={!adminCommentText.trim()}
-        >
-          Comment
-        </Button>
-      </div>}
+     
     </div>
   );
 };
@@ -592,6 +580,19 @@ const IssueDetails = () => {
           {renderCommentList()}
         </Space>
       </Card>
+      {IssueDetails.superadmin_access && <div style={{ marginTop: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+        <TextArea
+          rows={3}
+          value={adminCommentText}
+          onChange={(e) => setAdminCommentText(e.target.value)}
+          placeholder="Write a comment..."
+        />
+        <Button type="primary" 
+        onClick={handleAdminCommentSubmit} disabled={!adminCommentText.trim()}
+        >
+          Comment
+        </Button>
+      </div>}
 
       {/* Comment Modal */}
       <CommentShowModal
@@ -621,6 +622,7 @@ const IssueDetails = () => {
       `}</style>
     </div>
   );
+  
 };
 
 export default IssueDetails;
