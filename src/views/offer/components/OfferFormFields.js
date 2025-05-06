@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Input,
   Row,
@@ -12,6 +12,7 @@ import {
   Typography,
   InputNumber,
   Radio,
+  Select,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsDateRequired } from "store/slices/offerSlice";
@@ -23,6 +24,9 @@ import {
   ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
+import { fetchMoviesData } from "store/slices/movieSlice";
+import { fetchAllEvent } from "store/slices/eventSlice";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Text } = Typography;
 const rules = {
@@ -64,12 +68,17 @@ const rules = {
   ],
 };
 
-function OfferFormFields() {
+function OfferFormFields({ type }) {
   const dispatch = useDispatch();
   const { isDateRequired } = useSelector((state) => state.offers);
   const [form] = Form.useForm();
-  const startDate = Form.useWatch("start_date", form);
-
+  const { movieResponse } = useSelector((state) => state.movie);
+  useEffect(() => {
+    if (type === "movie") {
+      dispatch(fetchAllEvent(DEFAULT_PAGE_SIZE));
+    }
+    dispatch(fetchMoviesData(DEFAULT_PAGE_SIZE));
+  }, [dispatch]);
   const handleRequiredChanges = (e) => {
     dispatch(setIsDateRequired(e.target.checked));
     // Reset dates when toggling date requirement
@@ -110,14 +119,28 @@ function OfferFormFields() {
     }
     return e?.fileList || [];
   };
+  const { Option } = Select;
 
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Offer Details">
+          {type === "movie" && (
+            <Form.Item name="movie_ids" label="Movie" rules={rules.name}>
+              <Select placeholder="Select offer type" mode="multiple">
+                {movieResponse?.items?.map((movie) => (
+                  <Option key={movie.id} value={movie.id}>
+                    {movie.title}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
+
           <Form.Item name="name" label="Offer Name" rules={rules.name}>
             <Input placeholder="Enter offer name" />
           </Form.Item>
+
           <Form.Item
             name="is_percentage"
             label="Discount Type"
