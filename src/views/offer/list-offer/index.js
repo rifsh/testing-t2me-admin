@@ -7,7 +7,7 @@ import {
   EditOutlined,
 } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   editOffer,
@@ -30,6 +30,9 @@ import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/S
 const OfferList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const type = params.get("type");
   const {
     filteredOffers,
     pagination,
@@ -155,9 +158,9 @@ const OfferList = () => {
         <Button
           type="primary"
           icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add`)}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)}
         >
-          Add Offer
+          Add {type.charAt(0).toUpperCase() + type.slice(1)} Offer
         </Button>
       </Flex>
       <Table
@@ -165,7 +168,7 @@ const OfferList = () => {
         dataSource={filteredOffers}
         rowKey="id"
         loading={loading}
-        pagination={{  
+        pagination={{
           current: pagination.page,
           pageSize: pagination.size,
           total: pagination.total,

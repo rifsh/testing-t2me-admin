@@ -27,7 +27,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 const ADD = "ADD";
 // const EDIT = "EDIT";
 
-const OfferForm = ({ mode, offer }) => {
+const OfferForm = ({ mode, offer,type }) => {
   const {
     loading,
     error,
@@ -206,8 +206,8 @@ const OfferForm = ({ mode, offer }) => {
               {
                 label: "General",
                 key: "1",
-                children: <OfferFormFields />,
-              },
+                children: <OfferFormFields type={type}/>,
+              }, 
             ]}
           />
         </div>
