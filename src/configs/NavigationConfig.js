@@ -120,7 +120,7 @@ const superAdminDashBoardNavTree = [
               },
               {
                 key: "offer.list",
-                path: `${APP_PREFIX_PATH}/offer/list`,
+                path: `${APP_PREFIX_PATH}/offer/list?type=general`,
                 title: "sidenav.offer",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
@@ -128,7 +128,7 @@ const superAdminDashBoardNavTree = [
               },
               {
                 key: "coupon.list",
-                path: `${APP_PREFIX_PATH}/coupon/list`,
+                path: `${APP_PREFIX_PATH}/coupon/list?type=general`,
                 title: "sidenav.coupon",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
@@ -606,7 +606,7 @@ const techAdminDashBoardNavTree = [
           },
           {
             key: "offer.list",
-            path: `${APP_PREFIX_PATH}/offer/list`,
+            path: `${APP_PREFIX_PATH}/offer/list?type=general`,
             title: "sidenav.offer",
             icon: OrderedListOutlined,
             breadcrumb: false,
@@ -614,7 +614,7 @@ const techAdminDashBoardNavTree = [
           },
           {
             key: "coupon.list",
-            path: `${APP_PREFIX_PATH}/coupon/list`,
+            path: `${APP_PREFIX_PATH}/coupon/list?type=general`,
             title: "sidenav.coupon",
             icon: OrderedListOutlined,
             breadcrumb: false,
@@ -825,7 +825,7 @@ const eventOrganaizerDashBoardNavTree = [
       },
       {
         key: "coupon.event.list",
-        path: `${APP_PREFIX_PATH}/coupon/list`,
+        path: `${APP_PREFIX_PATH}/coupon/list?type=event`,
         title: "sidenav.coupon",
         icon: OrderedListOutlined,
         breadcrumb: false,
@@ -859,7 +859,7 @@ const eventOrganaizerDashBoardNavTree = [
       },
       {
         key: "coupon.movie.list",
-        path: `${APP_PREFIX_PATH}/coupon/list`,
+        path: `${APP_PREFIX_PATH}/coupon/list?type=movie`,
         title: "sidenav.coupon",
         icon: OrderedListOutlined,
         breadcrumb: false,

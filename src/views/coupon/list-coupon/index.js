@@ -18,7 +18,7 @@ import {
   EditOutlined,
 } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   editCoupon,
@@ -44,6 +44,9 @@ const { Option } = Select;
 const CouponList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const type = params.get("type");
   const {
     filteredCoupons,
     pagination,
@@ -78,7 +81,7 @@ const CouponList = () => {
     setSelectedCoupon(null);
   };
 
-  const handleUpdateStatus = (item) => { 
+  const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
@@ -90,7 +93,7 @@ const CouponList = () => {
   };
   const handleModalSubmit = async () => {
     dispatch(setCouponModalLoading(true));
-    navigate(`${APP_PREFIX_PATH}/coupon/edit/${editItemId}`);
+    navigate(`${APP_PREFIX_PATH}/coupon/edit/${editItemId}?type=${type}`);
 
     console.log(editItemId, "9234239423490823498234098234908");
     dispatch(setCouponDialogVisible(false));
@@ -173,9 +176,9 @@ const CouponList = () => {
         <Button
           type="primary"
           icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/coupon/add`)}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/coupon/add?type=${type}`)}
         >
-          Add Coupon
+          Add {type.charAt(0).toUpperCase() + type.slice(1)} Coupon
         </Button>
       </Flex>
 

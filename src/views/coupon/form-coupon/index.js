@@ -27,7 +27,7 @@ import { ActionType } from "utils/api/warning-submit-util";
 const ADD = "ADD";
 // const EDIT = 'EDIT'
 
-const CouponForm = ({ mode, coupon }) => {
+const CouponForm = ({ mode, coupon ,type}) => {
   const {
     loading,
     error,
@@ -257,7 +257,7 @@ const CouponForm = ({ mode, coupon }) => {
               {
                 label: "General",
                 key: "1",
-                children: <CouponFormFields form={form} />,
+                children: <CouponFormFields form={form} type={type} />,
               },
             ]}
           />
@@ -286,7 +286,7 @@ const CouponForm = ({ mode, coupon }) => {
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? editCoupon : addCoupon}
-        navigationPath={`${APP_PREFIX_PATH}/coupon/list`}
+        navigationPath={`${APP_PREFIX_PATH}/coupon/list?type=${type}`}
         responseMessage={responseMessage}
         pagination={submitPagination}
       />
