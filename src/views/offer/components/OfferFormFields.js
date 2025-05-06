@@ -27,6 +27,7 @@ import ResizedImgePicker from "components/util-components/Image/ResizedImgePicke
 import { fetchMoviesData } from "store/slices/movieSlice";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import { fetchTheaterByid, fetchTheaters } from "store/slices/theaterSlice";
 
 const { Text } = Typography;
 const rules = {
@@ -72,12 +73,11 @@ function OfferFormFields({ type }) {
   const dispatch = useDispatch();
   const { isDateRequired } = useSelector((state) => state.offers);
   const [form] = Form.useForm();
-  const { movieResponse } = useSelector((state) => state.movie);
+  const { response } = useSelector((state) => state.movie);
   useEffect(() => {
     if (type === "movie") {
-      dispatch(fetchAllEvent(DEFAULT_PAGE_SIZE));
+      dispatch(fetchTheaters(DEFAULT_PAGE_SIZE));
     }
-    dispatch(fetchMoviesData(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
   const handleRequiredChanges = (e) => {
     dispatch(setIsDateRequired(e.target.checked));
@@ -126,11 +126,15 @@ function OfferFormFields({ type }) {
       <Col xs={24} sm={24} md={17}>
         <Card title="Offer Details">
           {type === "movie" && (
-            <Form.Item name="movie_ids" label="Movie" rules={rules.name}>
+            <Form.Item
+              name="theatre_ids"
+              label="Theatre"
+              rules={[{ required: true, message: "Please select a theatre" }]}
+            >
               <Select placeholder="Select offer type" mode="multiple">
-                {movieResponse?.items?.map((movie) => (
+                {response?.items?.map((movie) => (
                   <Option key={movie.id} value={movie.id}>
-                    {movie.title}
+                    {movie.name}
                   </Option>
                 ))}
               </Select>

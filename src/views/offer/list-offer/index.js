@@ -51,7 +51,7 @@ const OfferList = () => {
   const [selectedOffer, setSelectedOffer] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchAllOffers(DEFAULT_PAGE_SIZE));
+    dispatch(fetchAllOffers({ ...DEFAULT_PAGE_SIZE, filters: "approved" }));
   }, [dispatch]);
 
   const showModal = (offer) => {
@@ -76,8 +76,7 @@ const OfferList = () => {
   };
   const handleModalSubmit = async () => {
     dispatch(setOfferModalLoading(true));
-    navigate(`${APP_PREFIX_PATH}/offer/edit/${editItemId}`);
-    console.log(editItemId, "9234239423490823498234098234908");
+    navigate(`${APP_PREFIX_PATH}/offer/edit/${editItemId}?type=${type}`);
     dispatch(setOfferDialogVisible(false));
     dispatch(setOfferModalLoading(false));
   };

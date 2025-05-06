@@ -1,10 +1,13 @@
 import React, { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import CouponForm from "../form-coupon";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCouponDetails } from "store/slices/couponSlice";
 
 const EditEvent = () => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const type = params.get("type");
   const dispatch = useDispatch();
   const { couponId } = useParams();
   const { couponDetails } = useSelector((state) => state.coupons);
@@ -14,7 +17,7 @@ const EditEvent = () => {
     }
   }, [dispatch, couponId]);
 
-  return <CouponForm mode={"EDIT"} coupon={couponDetails}/>;
+  return <CouponForm mode={"EDIT"} coupon={couponDetails} type={type} />;
 };
 
 export default EditEvent;
