@@ -10,14 +10,14 @@ import { UserRoleConstants } from "constants/UserRoleConstant";
 import { jwtDecode } from "jwt-decode";
 
 const superAdminDashBoardNavTree = [
-  {
-    key: "dashboards",
-    path: `${APP_PREFIX_PATH}/dashboards`,
-    title: "sidenav.dashboard",
-    icon: DashboardOutlined,
-    breadcrumb: false,
-    isGroupTitle: true,
-    submenu: [
+  // {
+  //   key: "dashboards",
+  //   path: `${APP_PREFIX_PATH}/dashboards`,
+  //   title: "sidenav.dashboard",
+  //   icon: DashboardOutlined,
+  //   breadcrumb: false,
+  //   isGroupTitle: true,
+  //   submenu: [
       // {
       //   key: 'dashboards-default',
       //   path: `${APP_PREFIX_PATH}/dashboards/default`,
@@ -26,14 +26,14 @@ const superAdminDashBoardNavTree = [
       //   breadcrumb: false,
       //   submenu: []
       // },
-      {
-        key: "dashboards-statics",
-        path: `${APP_PREFIX_PATH}/dashboards/statics`,
-        title: "sidenav.dashboard.statics",
-        icon: DashboardOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
+      // {
+      //   key: "dashboards-statics",
+      //   path: `${APP_PREFIX_PATH}/dashboards/statics`,
+      //   title: "sidenav.dashboard.statics",
+      //   icon: DashboardOutlined,
+      //   breadcrumb: false,
+      //   submenu: [],
+      // },
       // {
       //   key: 'dashboards-analytic',
       //   path: `${APP_PREFIX_PATH}/dashboards/analytic`,
@@ -50,8 +50,8 @@ const superAdminDashBoardNavTree = [
       //   breadcrumb: false,
       //   submenu: []
       // }
-    ],
-  },
+  //   ],
+  // },
 
   {
     key: "Applications",
