@@ -33,32 +33,32 @@ const Index = () => {
         console.warn("Movie Response", movieResponse)
         if (movieResponse) {
             const processedData = movieResponse?.items?.map(detail => ({
-                    id: detail.id,
-                    title: detail.title,
-                    description: detail.description,
-                    thumbnail_image: detail.thumbnail_image,
-                    genre: detail.genre,
-                    language: detail.language,
-                    country: detail.country,
-                    director: detail.director,
-                    released: detail.released,
-                    rating: detail.rating,
-                    runtime: detail.runtime,
-                    media_items: detail.media_items,
-                    casts: detail.casts,
-                    awards: detail.awards,
-                    box_office: detail.box_office,
-                    box_office_currency: detail.box_office_currency,
-                    budget: detail.budget,
-                    budget_currency: detail.budget_currency,
-                    production_company: detail.production_company,
-                    status: detail.status,
-                })
+                id: detail?.id,
+                title: detail?.title,
+                description: detail?.description,
+                thumbnail_image: detail?.thumbnail_image,
+                genre: detail?.genres?.map((genr) => genr?.name),
+                language: detail?.languages?.map((lang) => lang?.name),
+                country: detail?.country,
+                director: detail?.director,
+                released: detail?.released,
+                rating: detail?.rating,
+                runtime: detail?.runtime,
+                media_items: detail?.media_items,
+                casts: detail?.casts,
+                awards: detail?.awards,
+                box_office: detail?.box_office,
+                box_office_currency: detail?.box_office_currency,
+                budget: detail?.budget,
+                budget_currency: detail?.budget_currency,
+                production_company: detail?.production_company,
+                status: detail?.status,
+            })
             );
             setFormattedData(processedData)
         }
+        console.log("Formatted Data", movieResponse)
     }, [movieResponse]);
-    console.warn("Formatted Data", movieResponse)
     const handleViewDetails = (movie) => {
         navigate(`${APP_PREFIX_PATH}/movie/details/${movie.id}`);
     };
@@ -140,6 +140,8 @@ const Index = () => {
             title: "Language",
             dataIndex: "language",
             key: "language",
+            render: (language) => language.map((language) => <Tag key={language}>{language}</Tag>)
+
         },
         {
             title: "Rating",
