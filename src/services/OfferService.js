@@ -1,5 +1,7 @@
 import fetch from "auth/FetchInterceptor";
+import { getCurrentUser, getUserRole } from "configs/UserAccessConfig";
 import { ApiConstant } from "constants/ApiConstant";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
 
@@ -11,8 +13,13 @@ OfferService.addOffer = function (data, action) {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
+
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.OFFER_URL,
+    ApiConstant.ORGANIZER_OFFER_URL
+  );
   return fetch({
-    url: `${ApiConstant.OFFER_URL}?action=${encodedAction}`,
+    url: `${offreUrl}?action=${encodedAction}`,
     method: "post",
     data: formData,
     headers: {
@@ -50,8 +57,13 @@ OfferService.editOfferStatus = function (
   pageData = { page: 1, size: 10 }
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
+
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.OFFER_STATUS_URL,
+    ApiConstant.ORGANIZER_OFFER_STATUS_URL
+  );
   return fetch({
-    url: `${ApiConstant.OFFER_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    url: `${offreUrl}/${data.id}?action=${encodedAction}`,
     method: "put",
     params: Utils.filterParams(pageData),
     data: data,
@@ -59,16 +71,26 @@ OfferService.editOfferStatus = function (
 };
 
 OfferService.getAllOffer = function (pageData) {
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.OFFER_URL,
+    ApiConstant.ORGANIZER_OFFER_URL
+  );
+
   return fetch({
-    url: ApiConstant.OFFER_URL,
+    url: offreUrl,
     method: "get",
     params: Utils.filterParams(pageData),
   });
 };
 
 OfferService.fetchOfferDetails = function (offerId) {
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.OFFER_DETAIL_URL,
+    ApiConstant.ORGANIZER_OFFER_DETAIL_URL
+  );
+
   return fetch({
-    url: `${ApiConstant.OFFER_DETAIL_URL}?offer_id=${offerId}`,
+    url: `${offreUrl}?offer_id=${offerId}`,
     method: "get",
   });
 };
