@@ -32,9 +32,9 @@ const { Option } = Select;
 const OrganizerOfferStatusList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-    const location = useLocation();
-    const params = new URLSearchParams(location.search);
-    const type = params.get("type");
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const type = params.get("type");
   const {
     filteredOffers,
     pagination,
@@ -57,21 +57,30 @@ const OrganizerOfferStatusList = () => {
       })
     );
   }, [dispatch]);
+
   const handlePagination = (page, size) => {
-    dispatch(fetchOrganizerUpdates({ page: page, size: size }));
+    dispatch(
+      fetchAllOffers({
+        page: page,
+        size: size,
+        event_code: Utils.getEventTypeCodeWithType(type),
+      })
+    );
   };
+
   const handleViewDetails = async (id) => {
     console.log(id);
-    navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/details/${id}`);
+    navigate(`${APP_PREFIX_PATH}/track/offer/status/details/${id}`);
   };
 
   const handleShowStatus = (status) => {
     setactiveStatus(status);
     dispatch(
-      fetchOrganizerUpdates({
+      fetchAllOffers({
         page: 1,
         size: 10,
         filters: status,
+        event_code: Utils.getEventTypeCodeWithType(type),
       })
     );
   };
@@ -89,15 +98,16 @@ const OrganizerOfferStatusList = () => {
 
   const tableColumns = [
     {
-      title: "Organiser Name",
-      dataIndex: ["organizer", "username"],
-      sorter: (a, b) => a.organizer?.username - b.organizer?.username,
+      title: "Offer Name",
+      dataIndex: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
-
     {
-      title: "Event",
-      dataIndex: 'name',
-      sorter: (a, b) => a.events?.event_name - a.events?.event_name,
+      title: "Theaters",
+      dataIndex: "theatre_ids",
+      render: (theatreIds) => {
+        return theatreIds ? `${theatreIds.length} theaters selected` : "None";
+      },
     },
     {
       title: "Status",
@@ -143,8 +153,11 @@ const OrganizerOfferStatusList = () => {
     <Card>
       <Row gutter={16} justify="start" align="" wrap={false}>
         <SearchBarWithStatus
-          fetchFunction={fetchOrganizerUpdates}
+          fetchFunction={fetchAllOffers}
           isStatus={false}
+          additionalParams={{
+            event_code: Utils.getEventTypeCodeWithType(type),
+          }}
         />
 
         <div className="mb-3">
@@ -165,7 +178,7 @@ const OrganizerOfferStatusList = () => {
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={filteredOffers} //{orgUpdates}//{filteredPlaces}
+          dataSource={filteredOffers}
           rowKey="id"
           loading={loading}
           pagination={{
@@ -176,13 +189,6 @@ const OrganizerOfferStatusList = () => {
           }}
         />
       </div>
-      <UpdateStatusModal
-        responseMessage={message}
-        editFunction={editPlace}
-        getAllFunction={(pageData) => getPlaces(pageData)}
-        pageData={{ page: 1, size: 10 }}
-        editable_status={editable_status}
-      />
     </Card>
   );
 };

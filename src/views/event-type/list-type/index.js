@@ -161,7 +161,7 @@ const EventTypeList = () => {
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={fetchAllEvent} />
+        <SearchBarWithStatus fetchFunction={fetchEventType} />
         <Button
           type="primary"
           icon={<FormOutlined />}

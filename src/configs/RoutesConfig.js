@@ -49,11 +49,11 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/dashboards/sales`,
     component: React.lazy(() => import("views/app-views/dashboards/sales")),
   },
-  {
-    key: "dashboard.statics",
-    path: `${APP_PREFIX_PATH}/dashboards/statics`,
-    component: React.lazy(() => import("views/app-views/dashboards/statics")),
-  },
+  // {
+  //   key: "dashboard.statics",
+  //   path: `${APP_PREFIX_PATH}/dashboards/statics`,
+  //   component: React.lazy(() => import("views/app-views/dashboards/statics")),
+  // },
   {
     key: "event.add",
     path: `${APP_PREFIX_PATH}/event/add`,
@@ -309,6 +309,11 @@ export const protectedRoutes = [
     key: "trackRequest.offer.status",
     path: `${APP_PREFIX_PATH}/track/offer/status/list`,
     component: React.lazy(() => import("views/track-team/event-organizer copy/status-list")),
+  },
+  {
+    key: "trackRequest.offer.status.details",
+    path: `${APP_PREFIX_PATH}/track/offer/status/details/:offerId`,
+    component: React.lazy(() => import("views/track-team/event-organizer copy/status-details")),
   },
   {
     key: "offer.add",

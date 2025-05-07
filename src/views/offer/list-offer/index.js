@@ -55,8 +55,8 @@ const OfferList = () => {
     dispatch(
       fetchAllOffers({
         ...DEFAULT_PAGE_SIZE,
-        // filters: "approved",
-        // event_code: Utils.getEventTypeCodeWithType(type),
+        filters: "approved",
+        event_code: Utils.getEventTypeCodeWithType(type),
       })
     );
   }, [dispatch]);

@@ -442,12 +442,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-          (document.cookie = cookie
-            .replace(/^ +/, "")
-            .replace(
-              /=.*/,
-              "=;expires=" + new Date(0).toUTCString() + ";path=/"
-            ))
+        (document.cookie = cookie
+          .replace(/^ +/, "")
+          .replace(
+            /=.*/,
+            "=;expires=" + new Date(0).toUTCString() + ";path=/"
+          ))
       );
 
     // Unregister Service Workers
@@ -545,6 +545,7 @@ class Utils {
           key === "venue_ids" ||
           key == "occupation" ||
           key === "mediaItems" ||
+          key === "theatre_ids" ||
           key === "genre" ||
           key === "languages"
         ) {

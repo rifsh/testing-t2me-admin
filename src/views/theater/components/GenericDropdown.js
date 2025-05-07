@@ -1,7 +1,8 @@
-import { Form, Select } from 'antd';
+import { Form, Select, Tooltip } from 'antd';
 import { debounce } from 'lodash';
 import React, { useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { InfoCircleOutlined } from "@ant-design/icons";
 
 const GenericDropdown = ({
   form,
@@ -17,6 +18,9 @@ const GenericDropdown = ({
   optionValueKey = "value",
   optionExtraLabel,
   searchParamKey = "search",
+  isInfoVisible = false,
+  maxTagCount = 5,
+  hasFeedback = false
 }) => {
   const dispatch = useDispatch();
 
@@ -48,10 +52,28 @@ const GenericDropdown = ({
   }));
 
   return (
-    <Form.Item name={name} label={label} rules={rules}>
+    <Form.Item
+      name={name}
+      label={
+        isInfoVisible ? (
+          <span>
+            {label}&nbsp;
+            <Tooltip title={`Please select your ${label}`}>
+              <InfoCircleOutlined />
+            </Tooltip>
+          </span>
+        ) : (
+          <span>{label}</span>
+        )
+      }
+      rules={rules}
+      hasFeedback={hasFeedback}
+    >
+
       <Select
         mode={mode}
         showSearch
+        maxTagCount={maxTagCount}
         onSearch={handleSearch}
         placeholder={`Select ${label.toLowerCase()}`}
         disabled={disabled}

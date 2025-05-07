@@ -22,7 +22,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
-import { getCurrentUser } from "configs/UserAccessConfig";
+import { getCurrentUser, isOrganizer } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 
 const TheaterList = () => {
@@ -47,10 +47,7 @@ const TheaterList = () => {
     dispatch(
       fetchTheaters({
         ...DEFAULT_PAGE_SIZE,
-        organizer:
-          getCurrentUser().role_id === UserRoleConstants.eventOrganizerRoleId
-            ? true
-            : false,
+        organizer:isOrganizer(),
       })
     );
   }, [dispatch]);

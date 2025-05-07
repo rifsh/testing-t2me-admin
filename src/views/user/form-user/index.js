@@ -28,6 +28,7 @@ import {
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { UserRoleConstants } from "constants/UserRoleConstant";
+import { fetchDropdownTheaters } from "store/slices/theaterSlice";
 
 const ADD = "ADD";
 
@@ -60,17 +61,18 @@ const UserForm = ({ mode, user }) => {
         thumbnail_image:
           user.thumbnail_image && user.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: user.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: user.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: user.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: user.thumbnail_image,
+              },
+            ]
             : [],
       };
       if (user.role.position_id === UserRoleConstants.eventOrganizerRoleId) {
         dispatch(fetchAllEvent({}));
+        dispatch(fetchDropdownTheaters({}));
       }
 
       if (
@@ -79,6 +81,9 @@ const UserForm = ({ mode, user }) => {
       ) {
         formData.event_ids = user.events
           ? user.events.map((event) => event.id)
+          : [];
+        formData.theatre_ids = user.theatres
+          ? user.theatres.map((theater) => theater.id)
           : [];
       }
       dispatch(setSelectedRole(user.role.position_id));
@@ -134,19 +139,20 @@ const UserForm = ({ mode, user }) => {
           values.position_id === UserRoleConstants.eventSupportingTeamRoleId
         ) {
           console.log(values.event_ids, "EVENT IDS");
+          console.log(formData, "THEATER IDSssss");
 
           const resultAction = await dispatch(
             validateMultipleEvent(values.event_ids)
           );
 
-          if (validateMultipleEvent.fulfilled.match(resultAction)) {
-            const response = resultAction.payload;
-            if (response.message === "warning") {
-              dispatch(setEventValidationDialogVisible(true));
-            } else if (response.data && response.data[0]?.validation_status) {
-              dispatch(setSelectedSubmitItem(formData));
-            }
-          }
+          // if (validateMultipleEvent.fulfilled.match(resultAction)) {
+          //   const response = resultAction.payload;
+          //   if (response.message === "warning") {
+          //     dispatch(setEventValidationDialogVisible(true));
+          //   } else if (response.data && response.data[0]?.validation_status) {
+          //   }
+          // }
+          dispatch(setSelectedSubmitItem(formData));
         } else {
           dispatch(setSelectedSubmitItem(formData));
         }
