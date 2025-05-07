@@ -27,7 +27,7 @@ import {
 import Utils from "utils/index";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import GenericDropdown from "views/theater/components/GenericDropdown";
-import { fetchTheaters } from "store/slices/theaterSlice";
+import { fetchDropdownTheaters, fetchTheaters } from "store/slices/theaterSlice";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -57,7 +57,7 @@ function UserFormFields({ mode, user }) {
     dispatch(setSelectedRole(role));
     if (role === UserRoleConstants.eventOrganizerRoleId) {
       dispatch(fetchAllEvent({}));
-      dispatch(fetchTheaters({}));
+      dispatch(fetchDropdownTheaters({}));
     }
   };
 
@@ -160,7 +160,22 @@ function UserFormFields({ mode, user }) {
                 </Select>
               </Form.Item>
             )}
-
+          <div className="my-10">
+            <GenericDropdown
+              name="theatre_ids"
+              label="Theaters"
+              mode="multiple"
+              rules={[{ required: false, message: 'Please select your theaters!' }]}
+              fetchOptions={fetchDropdownTheaters}
+              optionsData={response?.items}
+              loading={loading}
+              optionLabelKey="name"
+              optionExtraLabel=""
+              optionValueKey="id"
+              searchParamKey="search"
+              isInfoVisible={true}
+            />
+          </div>
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
@@ -361,7 +376,7 @@ function UserFormFields({ mode, user }) {
                   label="Theaters"
                   mode="multiple"
                   rules={[{ required: false, message: 'Please select your theaters!' }]}
-                  fetchOptions={fetchTheaters}
+                  fetchOptions={fetchDropdownTheaters}
                   optionsData={response?.items}
                   loading={loading}
                   optionLabelKey="name"
