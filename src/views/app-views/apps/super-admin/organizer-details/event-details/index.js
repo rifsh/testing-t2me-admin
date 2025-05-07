@@ -4,54 +4,13 @@ import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
-import previewImage from "assets/preview/event.jpg";
+import { events } from "mock/data/reportData";
 
 Chart.register(...registerables);
 
 const EventDetail = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
-
-  // Hardcoded events data
-  const events = [
-    {
-      id: 1,
-      title: "Tech Conference 2025",
-      image: previewImage,
-      description:
-        "Annual technology conference featuring top industry experts",
-      startDate: "2025-05-20",
-      endDate: "2025-05-22",
-      location: "Convention Center, New Delhi",
-      status: "Upcoming",
-      attendees: 250,
-      capacity: 300,
-      revenue: 12500,
-      ticketTypes: [
-        { name: "General Admission", price: 50, sold: 200 },
-        { name: "VIP Pass", price: 150, sold: 50 },
-      ],
-    },
-    {
-      id: 2,
-      title: "Tech Conference 2025",
-      image: previewImage,
-      description:
-        "Annual technology conference featuring top industry experts",
-      startDate: "2025-05-20",
-      endDate: "2025-05-22",
-      location: "Convention Center, New Delhi",
-      status: "Upcoming",
-      attendees: 250,
-      capacity: 300,
-      revenue: 12500,
-      ticketTypes: [
-        { name: "General Admission", price: 50, sold: 200 },
-        { name: "VIP Pass", price: 150, sold: 50 },
-      ],
-    },
-    // Add more events similarly
-  ];
 
   const event = events.find((e) => e.id === parseInt(eventId));
 
