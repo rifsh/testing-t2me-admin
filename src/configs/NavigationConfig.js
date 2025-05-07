@@ -50,6 +50,38 @@ const superAdminDashBoardNavTree = [
   //   breadcrumb: false,
   //   submenu: []
   // }
+  // {
+  //   key: 'dashboards-default',
+  //   path: `${APP_PREFIX_PATH}/dashboards/default`,
+  //   title: 'sidenav.dashboard.default',
+  //   icon: DashboardOutlined,
+  //   breadcrumb: false,
+  //   submenu: []
+  // },
+  // {
+  //   key: "dashboards-statics",
+  //   path: `${APP_PREFIX_PATH}/dashboards/statics`,
+  //   title: "sidenav.dashboard.statics",
+  //   icon: DashboardOutlined,
+  //   breadcrumb: false,
+  //   submenu: [],
+  // },
+  // {
+  //   key: 'dashboards-analytic',
+  //   path: `${APP_PREFIX_PATH}/dashboards/analytic`,
+  //   title: 'sidenav.dashboard.analytic',
+  //   icon: DotChartOutlined,
+  //   breadcrumb: false,
+  //   submenu: []
+  // },
+  // {
+  //   key: 'dashboards-sales',
+  //   path: `${APP_PREFIX_PATH}/dashboards/sales`,
+  //   title: 'sidenav.dashboard.sales',
+  //   icon: FundOutlined,
+  //   breadcrumb: false,
+  //   submenu: []
+  // }
   //   ],
   // },
 
@@ -216,7 +248,7 @@ const superAdminDashBoardNavTree = [
             submenu: [
               {
                 key: "movie.theater",
-                path: `${APP_PREFIX_PATH}/movie-theater/list`,
+                path: `${APP_PREFIX_PATH}/movie-theater-company/list`,
                 title: "sidenav.theater",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
@@ -824,6 +856,80 @@ const eventOrganaizerDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
+      // {
+      //   key: "offer.event.list",
+      //   path: `${APP_PREFIX_PATH}/offer/list?type=event`,
+      //   title: "sidenav.offer",
+      //   icon: OrderedListOutlined,
+      //   breadcrumb: false,
+      //   submenu: [],
+      // },
+      // {
+      //   key: "coupon.event.list",
+      //   path: `${APP_PREFIX_PATH}/coupon/list?type=event`,
+      //   title: "sidenav.coupon",
+      //   icon: OrderedListOutlined,
+      //   breadcrumb: false,
+      //   submenu: [],
+      // },
+    ],
+  },
+  {
+    key: "Movie",
+    path: `${APP_PREFIX_PATH}/forms`,
+    title: "sidenav.movie",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    isGroupTitle: false,
+    submenu: [
+      {
+        key: "movie.movie.list",
+        path: `${APP_PREFIX_PATH}/movie/list`,
+        title: "sidenav.movie",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "movie.theater",
+        path: `${APP_PREFIX_PATH}/movie-theater/list`,
+        title: "sidenav.theater",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "movie.screen",
+        path: `${APP_PREFIX_PATH}/screen/list`,
+        title: "sidenav.screen",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        isGroupTitle: false,
+      },
+      {
+        key: "movie.seat",
+        path: `${APP_PREFIX_PATH}/seat/movie/list`,
+        title: "sidenav.seat",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "offer.movie.list",
+        path: `${APP_PREFIX_PATH}/offer/list?type=movie`,
+        title: "sidenav.offer",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "coupon.movie.list",
+        path: `${APP_PREFIX_PATH}/coupon/list?type=movie`,
+        title: "sidenav.coupon",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
     ],
   },
   // {
@@ -851,12 +957,48 @@ const eventOrganaizerDashBoardNavTree = [
     breadcrumb: false,
     submenu: [
       {
-        key: "eventOrganiser.update",
-        path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
-        title: "sidenav.eventcoordinatorupdates",
-        icon: OrderedListOutlined,
+        key: "trackRequest.event",
+        path: `${APP_PREFIX_PATH}/forms`,
+        title: "sidenav.event",
+        icon: DashboardOutlined,
         breadcrumb: false,
-        submenu: [],
+        isGroupTitle: false,
+        submenu: [
+          {
+            key: "eventOrganiser.update",
+            path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+            title: "sidenav.eventcoordinatorupdates",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+        ],
+      },
+      {
+        key: "trackRequest.movie",
+        path: `${APP_PREFIX_PATH}/forms`,
+        title: "sidenav.movie",
+        icon: DashboardOutlined,
+        breadcrumb: false,
+        isGroupTitle: false,
+        submenu: [
+          {
+            key: "trackRequest.movie.update",
+            path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+            title: "sidenav.eventcoordinatorupdates",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "trackRequest.movie.offer.status",
+            path: `${APP_PREFIX_PATH}/track/offer/status/list?type=movie`,
+            title: "sidenav.offer",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+        ],
       },
     ],
   },

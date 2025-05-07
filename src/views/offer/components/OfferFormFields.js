@@ -28,6 +28,8 @@ import { fetchMoviesData } from "store/slices/movieSlice";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { fetchTheaterByid, fetchTheaters } from "store/slices/theaterSlice";
+import { EventType } from "constants/AppConstants";
+import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
 
 const { Text } = Typography;
 const rules = {
@@ -74,11 +76,11 @@ function OfferFormFields({ type }) {
   const { isDateRequired } = useSelector((state) => state.offers);
   const [form] = Form.useForm();
   const { response } = useSelector((state) => state.movie);
-  useEffect(() => {
-    if (type === "movie") {
-      dispatch(fetchTheaters(DEFAULT_PAGE_SIZE));
-    }
-  }, [dispatch]);
+  // useEffect(() => {
+  //   if (type === EventType.MOVIE) {
+  //     dispatch(fetchTheaters(DEFAULT_PAGE_SIZE));
+  //   }
+  // }, [dispatch]);
   const handleRequiredChanges = (e) => {
     dispatch(setIsDateRequired(e.target.checked));
     // Reset dates when toggling date requirement
@@ -125,20 +127,32 @@ function OfferFormFields({ type }) {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Offer Details">
-          {type === "movie" && (
-            <Form.Item
+          {type === EventType.MOVIE && (
+            <TheaterListForm
+              rules={[{ required: true }]}
+              form={form}
+              onSelect={(theater) => {
+              }}
+              mode="multiple"
               name="theatre_ids"
-              label="Theatre"
-              rules={[{ required: true, message: "Please select a theatre" }]}
-            >
-              <Select placeholder="Select offer type" mode="multiple">
-                {response?.items?.map((movie) => (
-                  <Option key={movie.id} value={movie.id}>
-                    {movie.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
+              label="Theater"
+              apiParams={{
+                organizer: true,
+              }}
+            />
+            // <Form.Item
+            //   name="theatre_ids"
+            //   label="Theatre"
+            //   rules={[{ required: true, message: "Please select a theatre" }]}
+            // >
+            //   <Select placeholder="Select offer type" mode="multiple">
+            //     {response?.items?.map((movie) => (
+            //       <Option key={movie.id} value={movie.id}>
+            //         {movie.name}
+            //       </Option>
+            //     ))}
+            //   </Select>
+            // </Form.Item>
           )}
 
           <Form.Item name="name" label="Offer Name" rules={rules.name}>

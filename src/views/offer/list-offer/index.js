@@ -26,6 +26,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import { EventCodeConstants, EventType } from "constants/AppConstants";
 
 const OfferList = () => {
   const navigate = useNavigate();
@@ -51,7 +52,13 @@ const OfferList = () => {
   const [selectedOffer, setSelectedOffer] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchAllOffers({ ...DEFAULT_PAGE_SIZE, filters: "approved" }));
+    dispatch(
+      fetchAllOffers({
+        ...DEFAULT_PAGE_SIZE,
+        filters: "approved",
+        event_code: Utils.getEventTypeCodeWithType(type),
+      })
+    );
   }, [dispatch]);
 
   const showModal = (offer) => {
