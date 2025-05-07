@@ -101,6 +101,7 @@ const OfferForm = ({ mode, offer, type }) => {
 
         const editData = {
           ...values,
+          theatre_ids: values.theatre_ids.map((item) => item.id),
           id: offer.id,
         };
         console.log("Edit Data:", editData);
@@ -121,6 +122,7 @@ const OfferForm = ({ mode, offer, type }) => {
         values.date_required = values.date_required ?? isDateRequired;
         const formData = {
           ...values,
+          theatre_ids: values.theatre_ids.map((item) => item.value),
         };
         console.log("DATA IS THIS", formData);
 

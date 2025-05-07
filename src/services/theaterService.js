@@ -21,7 +21,7 @@ TheaterService.createTheater = (data, action) => {
 
 TheaterService.getTheater = (pageData) => {
     return fetch({
-        url: "/api/v1/shared/auth/secured/users/related_entries",
+        url: ApiConstant.GET_THEATER_URL,
         method: "get",
         params: Utils.filterParams(pageData),
     });

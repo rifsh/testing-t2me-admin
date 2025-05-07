@@ -252,7 +252,7 @@ const CompanyForm = ({ mode, CompanyEditId }) => {
             <SubmitAndConfirmModal
                 responseData={response}
                 addFunction={mode === MODE.ADD ? createTheaterCompany : editTheaterCompany}
-                navigationPath={`${APP_PREFIX_PATH}/movie-theater/list`}
+                navigationPath={`${APP_PREFIX_PATH}/movie-theater-company/list`}
                 responseMessage={submitMessage}
             />
         </div>

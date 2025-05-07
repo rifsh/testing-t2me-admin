@@ -13,6 +13,14 @@ import {
   UNAUTHENTICATED_ENTRY,
 } from "./AppConfig";
 
+export const isOrganizer = () => {
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
+    console.error("User not authenticated. Cannot check role.");
+    return false;
+  }
+  return currentUser.role_id === UserRoleConstants.eventOrganizerRoleId;
+};
 export const getCurrentUser = () => {
   const token = localStorage.getItem(AUTH_TOKEN);
 

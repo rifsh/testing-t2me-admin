@@ -15,7 +15,9 @@ const TheaterListForm = ({
   rules,
   onSelect,
   mode,
+  name = "theater_id",
   disabled,
+  apiParams,
 }) => {
   const dispatch = useDispatch();
   const [searchInput, setSearchInput] = useState("");
@@ -26,22 +28,30 @@ const TheaterListForm = ({
 
   const fetchData = (search = null) => {
     const venueId = form.getFieldValue("venue_id");
-    if (venueId) {
-      dispatch(fetchDropdownTheaters({ venue_id: venueId, search }));
-    }
+    // if (venueId) {
+      dispatch(
+        fetchDropdownTheaters({
+          venue_id: venueId,
+          search,
+          ...(apiParams || {}), 
+        })
+      );
+    // }
   };
 
   useEffect(() => {
     fetchData();
-  }, [dispatch, selectedVenue]);
+  }, [dispatch, selectedVenue, apiParams]);
 
   const handleSetSelectedTheater = (value) => {
-    dispatch(setSeectedTheater(value?.value));
-    const theater = response?.items?.find(
-      (theater) => theater.id === value?.value
-    );
-    dispatch(setScreenCapacity(theater?.number_of_screens))
-    if (onSelect) onSelect(theater);
+    if (value) {
+      dispatch(setSeectedTheater(value.value));
+      const theater = response?.items?.find(
+        (theater) => theater.id === value.value
+      );
+      dispatch(setScreenCapacity(theater?.number_of_screens));
+      if (onSelect) onSelect(theater);
+    }
   };
 
   const debouncedSearch = useCallback(
@@ -49,7 +59,7 @@ const TheaterListForm = ({
       setSearchInput(input);
       fetchData(input || null);
     }, 300),
-    []
+    [apiParams] 
   );
 
   const handleSearch = (input) => {
@@ -57,7 +67,7 @@ const TheaterListForm = ({
   };
 
   return (
-    <Form.Item name="theatre_id" label={label} rules={rules}>
+    <Form.Item name={name} label={label} rules={rules}>
       <Select
         mode={mode}
         notFoundContent={
@@ -79,8 +89,9 @@ const TheaterListForm = ({
         options={
           response?.items?.map((theater) => ({
             value: theater?.id,
-            label: `${theater.name} (${theater.movie_screen?.length || 0} ${theater.movie_screen?.length === 1 ? "Screen" : "Screens"
-              })`,
+            label: `${theater.name} (${theater.movie_screen?.length || 0} ${
+              theater.movie_screen?.length === 1 ? "Screen" : "Screens"
+            })`,
             theaterName: theater.name,
           })) || []
         }

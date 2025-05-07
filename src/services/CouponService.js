@@ -11,8 +11,12 @@ CouponService.addCoupon = function (data, action) {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.COUPON_URL,
+    ApiConstant.ORGANIZER_COUPON_URL
+  );
   return fetch({
-    url: `${ApiConstant.COUPON_URL}?action=${encodedAction}`,
+    url: `${offreUrl}?action=${encodedAction}`,
     method: "post",
     data: formData,
     headers: {
@@ -32,8 +36,12 @@ CouponService.editCoupon = function (
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.COUPON_URL,
+    ApiConstant.ORGANIZER_COUPON_URL
+  );
   return fetch({
-    url: `${ApiConstant.COUPON_URL}/${data.id}?action=${encodedAction}`,
+    url: `${offreUrl}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
     params: Utils.filterParams(pageData),
@@ -49,8 +57,12 @@ CouponService.editCouponStatus = function (
   pageData = { page: 1, size: 10 }
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.COUPON_STATUS_URL,
+    ApiConstant.ORGANIZER_COUPON_STATUS_URL
+  );
   return fetch({
-    url: `${ApiConstant.COUPON_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    url: `${offreUrl}/${data.id}?action=${encodedAction}`,
     method: "put",
     params: Utils.filterParams(pageData),
     data: data,
@@ -58,16 +70,24 @@ CouponService.editCouponStatus = function (
 };
 
 CouponService.getAllCoupon = function (pageData) {
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.COUPON_STATUS_URL,
+    ApiConstant.ORGANIZER_COUPON_STATUS_URL
+  );
   return fetch({
-    url: ApiConstant.COUPON_URL,
+    url: offreUrl,
     method: "get",
     params: Utils.filterParams(pageData),
   });
 };
 
 CouponService.fetchCouponDetails = function (couponId) {
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.COUPON_DETAILS_URL,
+    ApiConstant.ORGANIZER_COUPON_DETAILS_URL
+  );
   return fetch({
-    url: `${ApiConstant.COUPON_DETAILS_URL}?coupon_id=${couponId}`,
+    url: `${offreUrl}?coupon_id=${couponId}`,
     method: "get",
   });
 };

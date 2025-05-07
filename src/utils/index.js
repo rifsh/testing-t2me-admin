@@ -8,6 +8,7 @@ import { SupportImageFormat } from "constants/SupportFileConstants";
 import { ENABLE_RESOLUTIONS } from "configs/AppConfig";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
+import { EventCodeConstants, EventType } from "constants/AppConstants";
 class Utils {
   /**
    * Filters out properties with null or undefined values from an object
@@ -1065,7 +1066,18 @@ class Utils {
       ? organizerUrl
       : normalUrl;
   }
-  
+  static getEventTypeCodeWithType(type) {
+    switch (type) {
+      case EventType.EVENT:
+        return EventCodeConstants.GENARAL;
+      case EventType.MOVIE:
+        return EventCodeConstants.MOVIES;
+      case EventType.SPORTS:
+        return EventCodeConstants.SPORTS;
+      default:
+        return EventCodeConstants.GENARAL;
+    }
+  }
 }
 
 export default Utils;
