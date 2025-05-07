@@ -20,6 +20,7 @@ const GenericDropdown = ({
   searchParamKey = "search",
   isInfoVisible = false,
   maxTagCount = 5,
+  hasFeedback = false
 }) => {
   const dispatch = useDispatch();
 
@@ -66,6 +67,7 @@ const GenericDropdown = ({
         )
       }
       rules={rules}
+      hasFeedback={hasFeedback}
     >
 
       <Select

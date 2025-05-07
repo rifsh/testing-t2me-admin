@@ -384,6 +384,7 @@ function UserFormFields({ mode, user }) {
                   optionValueKey="id"
                   searchParamKey="search"
                   isInfoVisible={true}
+                  hasFeedback={true}
                 />
               </div>
             </>
