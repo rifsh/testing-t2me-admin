@@ -22,6 +22,7 @@ import BackPageButoon from 'components/Buttons/BackPageButoon';
 import { mockTimeSlots } from 'constants/TimeSlots';
 import Meta from 'antd/es/card/Meta';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import SeatStructure from '../components/SeatStructure';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -34,6 +35,12 @@ const ScreenDetailView = () => {
     useEffect(() => {
         dispatch(fetchScreenById({ screen_id: screenId }));
     }, [screenId, dispatch]);
+
+    // useEffect(() => {
+    //     if (singleResponse) {
+    //         console.log("screensingleresponse", singleResponse?.seat_structures[0].seat_data)
+    //     }
+    // }, [singleResponse]);
 
 
     const getAccessibilityTags = (accessibilityList) => {
@@ -322,94 +329,53 @@ const ScreenDetailView = () => {
                         tab={<span><SettingOutlined /> Seating & Scheduling</span>}
                         key="seating"
                     >
-                        <Row gutter={[24, 24]}>
-                            <Col xs={24} lg={16}>
-                                <Card
-                                    title={
-                                        <Row justify="space-between" align="middle" style={{ width: '100%' }}>
-                                            <Col>
-                                                <Space>
-                                                    <TeamOutlined />
-                                                    <span>Seating Layout</span>
-                                                </Space>
-                                            </Col>
-                                            <Col>
-                                                <Button
-                                                    type="primary"
-                                                    icon={<FormOutlined />}
-                                                    onClick={() => navigate(`${APP_PREFIX_PATH}/seat/movie/add`)}
-                                                >
-                                                    Add Seat
-                                                </Button>
-                                            </Col>
-                                        </Row>
-                                    }
-                                >
-                                    {singleResponse?.seat_structure_id ? (
-                                        <div className="seating-layout-container" style={{ textAlign: 'center' }}>
-                                            <Image
-                                                width="100%"
-                                                height={400}
-                                                style={{ maxWidth: 700, borderRadius: 8 }}
-                                                src="/api/placeholder/600/400"
-                                                alt="Seating Layout"
-                                                fallback="/api/placeholder/600/400"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <Empty
-                                            description="No seating layout available"
-                                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                        />
-                                    )}
-                                </Card>
-                            </Col>
-
-                            <Col xs={24} lg={8}>
-                                <Card
-                                    title={
-                                        <Space>
-                                            <CalendarOutlined />
-                                            Time Slots
-                                        </Space>
-                                    }
-                                    bordered
-                                    className="timeslots-card"
-                                    style={{ height: '100%' }}
-                                >
-                                    {singleResponse?.time_slots && singleResponse.time_slots.length > 0 ? (
-                                        <div className="time-slots-container">
-                                            {singleResponse.time_slots.map((slotType, typeIndex) => (
-                                                <React.Fragment key={typeIndex}>
-                                                    <Title level={5} style={{ marginTop: typeIndex > 0 ? 16 : 0 }}>
-                                                        <Badge status="processing" text={slotType} />
-                                                    </Title>
-                                                    <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-                                                        {mockTimeSlots[slotType]?.map((timeRange, timeIndex) => (
-                                                            <Col key={`${typeIndex}-${timeIndex}`} xs={24} sm={12}>
-                                                                <Card
-                                                                    size="small"
-                                                                    style={{
-                                                                        textAlign: 'center',
-                                                                        borderLeft: '3px solid #1890ff',
-                                                                        borderRadius: '4px'
-                                                                    }}
-                                                                    hoverable
-                                                                >
-                                                                    <Text>{timeRange}</Text>
-                                                                </Card>
-                                                            </Col>
-                                                        ))}
-                                                    </Row>
-                                                </React.Fragment>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <Empty description="No time slots available" />
-                                    )}
-                                </Card>
-                            </Col>
-                        </Row>
+                        <SeatStructure
+                            SeatStructure={singleResponse?.seat_structures[0] ? singleResponse?.seat_structures[0] : null}
+                        />
+                        <Col xs={24} lg={8}>
+                            <Card
+                                title={
+                                    <Space>
+                                        <CalendarOutlined />
+                                        Time Slots
+                                    </Space>
+                                }
+                                bordered
+                                className="timeslots-card"
+                                style={{ height: '100%' }}
+                            >
+                                {singleResponse?.time_slots && singleResponse.time_slots.length > 0 ? (
+                                    <div className="time-slots-container">
+                                        {singleResponse.time_slots.map((slotType, typeIndex) => (
+                                            <React.Fragment key={typeIndex}>
+                                                <Title level={5} style={{ marginTop: typeIndex > 0 ? 16 : 0 }}>
+                                                    <Badge status="processing" text={slotType} />
+                                                </Title>
+                                                <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+                                                    {mockTimeSlots[slotType]?.map((timeRange, timeIndex) => (
+                                                        <Col key={`${typeIndex}-${timeIndex}`} xs={24} sm={12}>
+                                                            <Card
+                                                                size="small"
+                                                                style={{
+                                                                    textAlign: 'center',
+                                                                    borderLeft: '3px solid #1890ff',
+                                                                    borderRadius: '4px'
+                                                                }}
+                                                                hoverable
+                                                            >
+                                                                <Text>{timeRange}</Text>
+                                                            </Card>
+                                                        </Col>
+                                                    ))}
+                                                </Row>
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <Empty description="No time slots available" />
+                                )}
+                            </Card>
+                        </Col>
                     </TabPane>
                 </Tabs>
             </Card>
