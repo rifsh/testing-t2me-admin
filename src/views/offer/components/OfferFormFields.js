@@ -28,6 +28,7 @@ import { fetchMoviesData } from "store/slices/movieSlice";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { fetchTheaterByid, fetchTheaters } from "store/slices/theaterSlice";
+import { EventType } from "constants/AppConstants";
 
 const { Text } = Typography;
 const rules = {
@@ -75,7 +76,7 @@ function OfferFormFields({ type }) {
   const [form] = Form.useForm();
   const { response } = useSelector((state) => state.movie);
   useEffect(() => {
-    if (type === "movie") {
+    if (type === EventType.MOVIE) {
       dispatch(fetchTheaters(DEFAULT_PAGE_SIZE));
     }
   }, [dispatch]);
@@ -125,7 +126,7 @@ function OfferFormFields({ type }) {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Offer Details">
-          {type === "movie" && (
+          {type === EventType.MOVIE && (
             <Form.Item
               name="theatre_ids"
               label="Theatre"

@@ -8,3 +8,15 @@ export const AdvCategoryCode = [
 export const AvailableBookingType = {
   SEAT_STRUCTURE: "SEAT STRUCTURE",
 };
+export const EventCodeConstants = {
+  GENARAL: 1,
+  MOVIES: 2,
+  SPORTS: 3,
+};
+
+export const EventType = {
+  GENARAL: "general",
+  EVENT: "event",
+  MOVIE: "movie",
+  SPORTS: "sports",
+};

@@ -1,5 +1,6 @@
 import React from "react";
 import { AUTH_PREFIX_PATH, APP_PREFIX_PATH } from "configs/AppConfig";
+import TheaterList from "views/theater/components/TheaterList";
 
 export const publicRoutes = [
   {
@@ -180,9 +181,14 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/schedule/movie/schedule-detail")),
   },
   {
+    key: "movie.theater.company",
+    path: `${APP_PREFIX_PATH}/movie-theater-company/list`,
+    component: React.lazy(() => import("views/theater/list-theater")),
+  },
+  {
     key: "movie.theater",
     path: `${APP_PREFIX_PATH}/movie-theater/list`,
-    component: React.lazy(() => import("views/theater/list-theater")),
+    component: TheaterList,
   },
   {
     key: "movie.theater",
@@ -298,6 +304,11 @@ export const protectedRoutes = [
     key: "offer.list",
     path: `${APP_PREFIX_PATH}/offer/list`,
     component: React.lazy(() => import("views/offer/list-offer")),
+  },
+  {
+    key: "trackRequest.offer.status",
+    path: `${APP_PREFIX_PATH}/track/offer/status/list`,
+    component: React.lazy(() => import("views/track-team/event-organizer copy/status-list")),
   },
   {
     key: "offer.add",

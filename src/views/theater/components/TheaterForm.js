@@ -429,7 +429,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
             <SubmitAndConfirmModal
                 responseData={response}
                 addFunction={mode === MODE.ADD ? createTheater : editTheater}
-                navigationPath={`${APP_PREFIX_PATH}/movie-theater/list`}
+                navigationPath={`${APP_PREFIX_PATH}/movie-theater-company/list`}
                 responseMessage={submitMessage}
             />
         </div>
