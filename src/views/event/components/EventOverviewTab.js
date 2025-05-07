@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, Row, Col, Image, Carousel } from "antd";
+import { Card, Row, Col, Image, Carousel, Badge } from "antd";
 
 const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
 
@@ -35,8 +35,11 @@ const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
                                     icon: "📍"
                                 },
                                 {
-                                    label: "Available Seats",
-                                    value: eventDetails.max_tickets,
+                                    label: "Available Tickets",
+                                    value:
+                                        eventDetails?.schedules && eventDetails.schedules.length > 0
+                                            ? eventDetails.schedules[0].max_ticket_per_booking ?? "N/A"
+                                            : "N/A",
                                     icon: "🎟️"
                                 },
                                 {
@@ -48,7 +51,22 @@ const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
                                     label: "Sub Category",
                                     value: eventDetails.sub_category?.name ?? "N/A",
                                     icon: "🔖"
+                                },
+                                {
+                                    label: "Multiple Dates Available",
+                                    value: (
+                                        eventDetails?.schedules?.[0]?.is_multi_date === true ? (
+                                            <Badge status="success" text="Yes" />
+                                        ) : eventDetails?.schedules?.[0]?.is_multi_date === false ? (
+                                            <Badge status="default" text="No" />
+                                        ) : (
+                                            <Badge status="warning" text="N/A" />
+                                        )
+                                    ),
+                                    icon: "📅"
                                 }
+
+
                             ].map((item, index) => (
                                 <Col xs={24} sm={12} key={index}>
                                     <div style={{ display: "flex", alignItems: "center" }}>
