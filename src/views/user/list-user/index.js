@@ -192,7 +192,7 @@ const UserList = () => {
               {selectedUser.events?.length && Array.isArray(selectedUser.events)
                 ? selectedUser.events.map((event, index) => (
                   <span key={event.id}>
-                    {event.name}
+                    {event.event_name}
                     {index < selectedUser.events.length - 1 && ", "}
                   </span>
                 ))
