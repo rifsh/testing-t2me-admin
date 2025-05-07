@@ -18,40 +18,59 @@ const superAdminDashBoardNavTree = [
   //   breadcrumb: false,
   //   isGroupTitle: true,
   //   submenu: [
-      // {
-      //   key: 'dashboards-default',
-      //   path: `${APP_PREFIX_PATH}/dashboards/default`,
-      //   title: 'sidenav.dashboard.default',
-      //   icon: DashboardOutlined,
-      //   breadcrumb: false,
-      //   submenu: []
-      // },
-      // {
-      //   key: "dashboards-statics",
-      //   path: `${APP_PREFIX_PATH}/dashboards/statics`,
-      //   title: "sidenav.dashboard.statics",
-      //   icon: DashboardOutlined,
-      //   breadcrumb: false,
-      //   submenu: [],
-      // },
-      // {
-      //   key: 'dashboards-analytic',
-      //   path: `${APP_PREFIX_PATH}/dashboards/analytic`,
-      //   title: 'sidenav.dashboard.analytic',
-      //   icon: DotChartOutlined,
-      //   breadcrumb: false,
-      //   submenu: []
-      // },
-      // {
-      //   key: 'dashboards-sales',
-      //   path: `${APP_PREFIX_PATH}/dashboards/sales`,
-      //   title: 'sidenav.dashboard.sales',
-      //   icon: FundOutlined,
-      //   breadcrumb: false,
-      //   submenu: []
-      // }
+  // {
+  //   key: 'dashboards-default',
+  //   path: `${APP_PREFIX_PATH}/dashboards/default`,
+  //   title: 'sidenav.dashboard.default',
+  //   icon: DashboardOutlined,
+  //   breadcrumb: false,
+  //   submenu: []
+  // },
+  // {
+  //   key: "dashboards-statics",
+  //   path: `${APP_PREFIX_PATH}/dashboards/statics`,
+  //   title: "sidenav.dashboard.statics",
+  //   icon: DashboardOutlined,
+  //   breadcrumb: false,
+  //   submenu: [],
+  // },
+  // {
+  //   key: 'dashboards-analytic',
+  //   path: `${APP_PREFIX_PATH}/dashboards/analytic`,
+  //   title: 'sidenav.dashboard.analytic',
+  //   icon: DotChartOutlined,
+  //   breadcrumb: false,
+  //   submenu: []
+  // },
+  // {
+  //   key: 'dashboards-sales',
+  //   path: `${APP_PREFIX_PATH}/dashboards/sales`,
+  //   title: 'sidenav.dashboard.sales',
+  //   icon: FundOutlined,
+  //   breadcrumb: false,
+  //   submenu: []
+  // }
   //   ],
   // },
+
+  {
+    key: "Reports",
+    path: `${APP_PREFIX_PATH}/apps`,
+    title: "sidenav.apps.reports",
+    icon: SettingOutlined,
+    breadcrumb: true,
+    isGroupTitle: true,
+    submenu: [
+      {
+        key: "super-admin.reports",
+        path: `${APP_PREFIX_PATH}/super-admin/reports`,
+        title: "sidenav.apps.admin-reports",
+        icon: DashboardOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ],
+  },
 
   {
     key: "Applications",
@@ -120,7 +139,7 @@ const superAdminDashBoardNavTree = [
               },
               {
                 key: "offer.list",
-                path: `${APP_PREFIX_PATH}/offer/list?type=general`,
+                path: `${APP_PREFIX_PATH}/offer/list`,
                 title: "sidenav.offer",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
@@ -128,7 +147,7 @@ const superAdminDashBoardNavTree = [
               },
               {
                 key: "coupon.list",
-                path: `${APP_PREFIX_PATH}/coupon/list?type=general`,
+                path: `${APP_PREFIX_PATH}/coupon/list`,
                 title: "sidenav.coupon",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
@@ -441,25 +460,6 @@ const superAdminDashBoardNavTree = [
   // },
 
   {
-    key: "Reports",
-    path: `${APP_PREFIX_PATH}/apps`,
-    title: "sidenav.apps.reports",
-    icon: SettingOutlined,
-    breadcrumb: true,
-    isGroupTitle: true,
-    submenu: [
-      {
-        key: "super-admin.reports",
-        path: `${APP_PREFIX_PATH}/super-admin/reports`,
-        title: "sidenav.apps.admin-reports",
-        icon: DashboardOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-    ],
-  },
-
-  {
     key: "app.management",
     path: `${APP_PREFIX_PATH}/app/management`,
     title: "sidenav.app.management",
@@ -606,7 +606,7 @@ const techAdminDashBoardNavTree = [
           },
           {
             key: "offer.list",
-            path: `${APP_PREFIX_PATH}/offer/list?type=general`,
+            path: `${APP_PREFIX_PATH}/offer/list`,
             title: "sidenav.offer",
             icon: OrderedListOutlined,
             breadcrumb: false,
@@ -614,7 +614,7 @@ const techAdminDashBoardNavTree = [
           },
           {
             key: "coupon.list",
-            path: `${APP_PREFIX_PATH}/coupon/list?type=general`,
+            path: `${APP_PREFIX_PATH}/coupon/list`,
             title: "sidenav.coupon",
             icon: OrderedListOutlined,
             breadcrumb: false,
@@ -781,28 +781,37 @@ const techAdminDashBoardNavTree = [
   },
 ];
 const eventOrganaizerDashBoardNavTree = [
-  // {
-  //   key: "dashboards",
-  //   path: `${APP_PREFIX_PATH}/dashboards`,
-  //   title: "sidenav.dashboard",
-  //   icon: DashboardOutlined,
-  //   breadcrumb: false,
-  //   isGroupTitle: true,
-  //   submenu: [
-  //     {
-  //       key: "dashboards-statics",
-  //       path: `${APP_PREFIX_PATH}/dashboards/sales`,
-  //       title: "sidenav.dashboard.statics",
-  //       icon: DashboardOutlined,
-  //       breadcrumb: false,
-  //       submenu: [],
-  //     },
-  //   ],
-  // },
   {
-    key: "Event",
+    key: "reports",
+    path: `${APP_PREFIX_PATH}/apps`,
+    title: "sidenav.apps.reports",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    isGroupTitle: true,
+    submenu: [
+      {
+        key: "organizer.reports",
+        path: `${APP_PREFIX_PATH}/organizer/reports`,
+        title: "sidenav.apps.reports",
+        icon: DashboardOutlined,
+        breadcrumb: false,
+        isGroupTitle: false,
+      },
+
+      // {
+      //   key: "dashboards-statics",
+      //   path: `${APP_PREFIX_PATH}/dashboards/sales`,
+      //   title: "sidenav.dashboard.statics",
+      //   icon: DashboardOutlined,
+      //   breadcrumb: false,
+      //   submenu: [],
+      // },
+    ],
+  },
+  {
+    key: "Forms",
     path: `${APP_PREFIX_PATH}/forms`,
-    title: "sidenav.event",
+    title: "sidenav.forms",
     icon: DashboardOutlined,
     breadcrumb: false,
     isGroupTitle: false,
@@ -811,56 +820,6 @@ const eventOrganaizerDashBoardNavTree = [
         key: "event.list",
         path: `${APP_PREFIX_PATH}/event/list`,
         title: "sidenav.event.list",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "offer.event.list",
-        path: `${APP_PREFIX_PATH}/offer/list?type=event`,
-        title: "sidenav.offer",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "coupon.event.list",
-        path: `${APP_PREFIX_PATH}/coupon/list?type=event`,
-        title: "sidenav.coupon",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-    ],
-  },
-  {
-    key: "Movie",
-    path: `${APP_PREFIX_PATH}/forms`,
-    title: "sidenav.movie",
-    icon: DashboardOutlined,
-    breadcrumb: false,
-    isGroupTitle: false,
-    submenu: [
-      {
-        key: "movie.movie.list",
-        path: `${APP_PREFIX_PATH}/movie/list`,
-        title: "sidenav.movie",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "offer.movie.list",
-        path: `${APP_PREFIX_PATH}/offer/list?type=movie`,
-        title: "sidenav.offer",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "coupon.movie.list",
-        path: `${APP_PREFIX_PATH}/coupon/list?type=movie`,
-        title: "sidenav.coupon",
         icon: OrderedListOutlined,
         breadcrumb: false,
         submenu: [],
@@ -926,15 +885,6 @@ const eventOrganaizerDashBoardNavTree = [
       //   submenu: [],
       // },
     ],
-  },
-
-  {
-    key: "organizer.reports",
-    path: `${APP_PREFIX_PATH}/organizer/reports`,
-    title: "sidenav.apps.reports",
-    icon: DashboardOutlined,
-    breadcrumb: false,
-    isGroupTitle: false,
   },
 ];
 const techSupportingTeamDashBoardNavTree = [

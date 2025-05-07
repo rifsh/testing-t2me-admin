@@ -4,107 +4,13 @@ import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
-import previewImage from "assets/preview/thudarum-1.jpg";
+import { movies } from "mock/data/reportData";
 
 Chart.register(...registerables);
 
 const MovieDetail = () => {
   const { movieId } = useParams();
   const navigate = useNavigate();
-
-  // Hardcoded movies data
-  const movies = [
-    {
-      id: 101,
-      title: "Thudarum",
-      image: previewImage,
-      description: "Epic action-adventure film with stunning visual effects",
-      releaseDate: "2025-07-15",
-      duration: "2h 15min",
-      genre: "Action/Adventure",
-      status: "Now Showing",
-      attendees: 1500,
-      capacity: 2000,
-      revenue: 75000,
-      showtimes: [
-        { time: "10:00 AM", type: "Matinee", price: 8, sold: 300 },
-        { time: "02:30 PM", type: "Afternoon", price: 12, sold: 500 },
-        { time: "07:00 PM", type: "Evening", price: 15, sold: 700 },
-      ],
-    },
-    {
-      id: 102,
-      title: "Jimkhana",
-      image: previewImage,
-      description: "Epic action-adventure film with stunning visual effects",
-      releaseDate: "2025-07-15",
-      duration: "2h 15min",
-      genre: "Action/Adventure",
-      status: "Now Showing",
-      attendees: 1500,
-      capacity: 2000,
-      revenue: 75000,
-      showtimes: [
-        { time: "10:00 AM", type: "Matinee", price: 8, sold: 300 },
-        { time: "02:30 PM", type: "Afternoon", price: 12, sold: 500 },
-        { time: "07:00 PM", type: "Evening", price: 15, sold: 700 },
-      ],
-    },
-    {
-      id: 103,
-      title: "Vikram",
-      image: previewImage,
-      description: "Epic action-adventure film with stunning visual effects",
-      releaseDate: "2025-07-15",
-      duration: "2h 15min",
-      genre: "Action/Adventure",
-      status: "Now Showing",
-      attendees: 1500,
-      capacity: 2000,
-      revenue: 75000,
-      showtimes: [
-        { time: "10:00 AM", type: "Matinee", price: 8, sold: 300 },
-        { time: "02:30 PM", type: "Afternoon", price: 12, sold: 500 },
-        { time: "07:00 PM", type: "Evening", price: 15, sold: 700 },
-      ],
-    },
-    {
-      id: 104,
-      title: "KGF",
-      image: previewImage,
-      description: "Epic action-adventure film with stunning visual effects",
-      releaseDate: "2025-07-15",
-      duration: "2h 15min",
-      genre: "Action/Adventure",
-      status: "Now Showing",
-      attendees: 1500,
-      capacity: 2000,
-      revenue: 75000,
-      showtimes: [
-        { time: "10:00 AM", type: "Matinee", price: 8, sold: 300 },
-        { time: "02:30 PM", type: "Afternoon", price: 12, sold: 500 },
-        { time: "07:00 PM", type: "Evening", price: 15, sold: 700 },
-      ],
-    },
-    {
-      id: 105,
-      title: "Empuraan",
-      image: previewImage,
-      description: "Epic action-adventure film with stunning visual effects",
-      releaseDate: "2025-07-15",
-      duration: "2h 15min",
-      genre: "Action/Adventure",
-      status: "Now Showing",
-      attendees: 1500,
-      capacity: 2000,
-      revenue: 75000,
-      showtimes: [
-        { time: "10:00 AM", type: "Matinee", price: 8, sold: 300 },
-        { time: "02:30 PM", type: "Afternoon", price: 12, sold: 500 },
-        { time: "07:00 PM", type: "Evening", price: 15, sold: 700 },
-      ],
-    },
-  ];
 
   const movie = movies.find((m) => m.id === parseInt(movieId));
 

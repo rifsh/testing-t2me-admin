@@ -1,14 +1,13 @@
 import React, { useRef, useState } from "react";
-import { Bar, Pie, Line } from "react-chartjs-2";
+import { Bar, Line } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { Link } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
-import { DatePicker, Select } from "antd";
+import { DatePicker, Select, message } from "antd";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
-import * as XLSX from 'xlsx';
+import { eventOrganizers, movieOrganizers } from "mock/data/reportData";
+import { exportToExcel, exportToPdf } from "utils/exportUtils";
 dayjs.extend(isBetween);
 
 Chart.register(...registerables);
@@ -18,259 +17,14 @@ const { Option } = Select;
 
 const SuperAdminReport = () => {
   const reportRef = useRef(null);
-  const [activeTab, setActiveTab] = useState("total");
-  const [timeFilter, setTimeFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("events");
+  const [timeFilter, setTimeFilter] = useState("last-3-months");
   const [customDateRange, setCustomDateRange] = useState([]);
   const [pagination, setPagination] = useState({
     page: 1,
     size: 5,
   });
 
-  const eventOrganizers = [
-    {
-      id: 1,
-      name: "Irshad",
-      email: "irshad@mail.com",
-      type: "event",
-      events: 12,
-      attendees: 4500,
-      revenue: 125000,
-      status: "Active",
-      lastLogin: "2025-04-15",
-      registrationDate: "2024-01-01",
-      phone: "+91 9876543210",
-      eventsList: [
-        {
-          id: 1,
-          name: "Tech Conference",
-          date: "2025-03-15",
-          attendees: 1200,
-          revenue: 50000,
-        },
-        {
-          id: 2,
-          name: "Startup Summit",
-          date: "2025-04-20",
-          attendees: 800,
-          revenue: 30000,
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Rifash",
-      email: "rifash@mail.com",
-      type: "event",
-      events: 8,
-      attendees: 12000,
-      revenue: 385000,
-      status: "Active",
-      lastLogin: "2025-04-14",
-      registrationDate: "2024-01-01",
-      phone: "+91 9876543210",
-      eventsList: [
-        {
-          id: 1,
-          name: "Tech Conference",
-          date: "2025-03-15",
-          attendees: 1200,
-          revenue: 50000,
-        },
-        {
-          id: 2,
-          name: "Startup Summit",
-          date: "2025-04-20",
-          attendees: 800,
-          revenue: 30000,
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: "Yasin",
-      email: "yasin@gmail.co",
-      type: "event",
-      events: 5,
-      attendees: 8000,
-      revenue: 215000,
-      status: "Inactive",
-      lastLogin: "2025-04-10",
-      registrationDate: "2024-01-01",
-      phone: "+91 9876543210",
-      eventsList: [
-        {
-          id: 1,
-          name: "Tech Conference",
-          date: "2025-03-15",
-          attendees: 1200,
-          revenue: 50000,
-        },
-        {
-          id: 2,
-          name: "Startup Summit",
-          date: "2025-04-20",
-          attendees: 800,
-          revenue: 30000,
-        },
-      ],
-    },
-    {
-      id: 4,
-      name: "Jasim",
-      email: "jasin@mail.com",
-      type: "event",
-      events: 3,
-      attendees: 1500,
-      revenue: 45000,
-      status: "Inactive",
-      lastLogin: "2025-04-12",
-      registrationDate: "2024-01-01",
-      phone: "+91 9876543210",
-      eventsList: [
-        {
-          id: 1,
-          name: "Tech Conference",
-          date: "2025-03-15",
-          attendees: 1200,
-          revenue: 50000,
-        },
-        {
-          id: 2,
-          name: "Startup Summit",
-          date: "2025-04-20",
-          attendees: 800,
-          revenue: 30000,
-        },
-      ],
-    },
-  ];
-
-  const movieOrganizers = [
-    {
-      id: 101,
-      name: "Jasim",
-      email: "jasim@mail.com",
-      type: "movie",
-      movies: 5,
-      attendees: 3000,
-      revenue: 75000,
-      status: "Active",
-      lastLogin: "2025-04-16",
-      registrationDate: "2024-01-01",
-      phone: "+91 9876543210",
-      moviesList: [
-        {
-          id: 101,
-          name: "Thudarum",
-          releaseDate: "2025-03-15",
-          attendees: 1200,
-          revenue: 50000,
-          showtimes: ["10:00 AM", "02:30 PM", "07:00 PM"],
-        },
-        {
-          id: 102,
-          name: "Jimkhana",
-          releaseDate: "2025-04-20",
-          attendees: 800,
-          revenue: 30000,
-          showtimes: ["11:00 AM", "03:30 PM"],
-        },
-      ],
-    },
-    {
-      id: 102,
-      name: "Ahmad",
-      email: "ahmad@mail.com",
-      type: "movie",
-      movies: 1,
-      attendees: 3000,
-      revenue: 75000,
-      status: "Active",
-      lastLogin: "2025-04-16",
-      registrationDate: "2024-01-01",
-      phone: "+91 9876543210",
-      moviesList: [
-        {
-          id: 103,
-          name: "Vikram",
-          releaseDate: "2025-03-15",
-          attendees: 1200,
-          revenue: 50000,
-          showtimes: ["10:00 AM", "02:30 PM", "07:00 PM"],
-        },
-      ],
-    },
-    {
-      id: 103,
-      name: "Farhan",
-      email: "farhan@mail.com",
-      type: "movie",
-      movies: 2,
-      attendees: 5000,
-      revenue: 85000,
-      status: "Active",
-      lastLogin: "2025-04-16",
-      registrationDate: "2024-01-01",
-      phone: "+91 9876543210",
-      moviesList: [
-        {
-          id: 104,
-          name: "KGF",
-          releaseDate: "2025-03-15",
-          attendees: 1800,
-          revenue: 60000,
-          showtimes: ["10:00 AM", "02:30 PM", "07:00 PM"],
-        },
-        {
-          id: 105,
-          name: "Empuraan",
-          releaseDate: "2025-04-20",
-          attendees: 800,
-          revenue: 30000,
-          showtimes: ["11:00 AM", "03:30 PM"],
-        },
-      ],
-    },
-    {
-      id: 104,
-      name: "Syed",
-      email: "syed@mail.com",
-      type: "movie",
-      movies: 3,
-      attendees: 9000,
-      revenue: 95000,
-      status: "Active",
-      lastLogin: "2025-04-16",
-      registrationDate: "2024-01-01",
-      phone: "+91 9876543210",
-      moviesList: [
-        {
-          id: 106,
-          name: "AaaduJeevitham",
-          releaseDate: "2025-03-15",
-          attendees: 1200,
-          revenue: 50000,
-          showtimes: ["10:00 AM", "02:30 PM", "07:00 PM"],
-        },
-        {
-          id: 107,
-          name: "Chitham",
-          releaseDate: "2025-04-20",
-          attendees: 1000,
-          revenue: 20000,
-          showtimes: ["11:00 AM", "03:30 PM"],
-        },
-        {
-          id: 108,
-          name: "Premalu",
-          releaseDate: "2025-04-20",
-          attendees: 3000,
-          revenue: 25000,
-          showtimes: ["11:00 AM", "03:30 PM"],
-        },
-      ],
-    },
-  ];
   const getStatusBadge = (status) => {
     const baseClasses = "px-3 py-1 rounded-md text-sm font-medium";
     switch (status) {
@@ -306,7 +60,6 @@ const SuperAdminReport = () => {
     }
   };
 
-  // Date filtering functions
   const getDateRange = () => {
     const now = dayjs();
     let startDate,
@@ -324,6 +77,10 @@ const SuperAdminReport = () => {
         break;
       case "custom":
         [startDate, endDate] = customDateRange;
+        if (startDate && endDate && endDate.diff(startDate, "month") > 3) {
+          message.error("Maximum date range allowed is 3 months");
+          return [null, null];
+        }
         break;
       default:
         return [null, null];
@@ -349,7 +106,6 @@ const SuperAdminReport = () => {
     });
   };
 
-  // Modified getCurrentOrganizers with date filtering
   const getCurrentOrganizers = () => {
     let data;
 
@@ -455,76 +211,21 @@ const SuperAdminReport = () => {
     ],
   };
 
-  const statusDistributionData = {
-    labels: ["Active", "Inactive"],
-    datasets: [
-      {
-        data: [
-          activeTab === "events"
-            ? platformStats.activeEventOrganizers
-            : activeTab === "movies"
-            ? platformStats.activeMovieOrganizers
-            : platformStats.activeOrganizers,
-
-          activeTab === "events"
-            ? eventOrganizers.length - platformStats.activeEventOrganizers
-            : activeTab === "movies"
-            ? movieOrganizers.length - platformStats.activeMovieOrganizers
-            : platformStats.totalOrganizers - platformStats.activeOrganizers,
-        ],
-        backgroundColor: ["#198754", "#dc3545"],
-        borderWidth: 1,
-      },
-    ],
-  };
-
   // Timeline data
   const timelineData = {
     events: [12, 19, 15, 25, 18, 22],
     movies: [5, 8, 6, 10, 7, 9],
-    total: [17, 27, 21, 35, 25, 31], // Sum of events and movies
+    total: [17, 27, 21, 35, 25, 31],
   };
 
   const handleExportPdf = async () => {
-    const input = reportRef.current;
-    const canvas = await html2canvas(input, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    const imgWidth = 210; // A4 width in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-    pdf.save("report.pdf");
+    exportToPdf(reportRef, "MyReport.pdf");
   };
-
 
   const handleExportCsv = () => {
-    const table = reportRef.current.querySelector('table');
-    if (!table) {
-      alert('No data available for export!');
-      return;
-    }
-  
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.table_to_sheet(table);
-  
-    // Set column widths (adjust as needed)
-    worksheet['!cols'] = [{ wch: 20 }, { wch: 30 }, { wch: 20 },{ wch: 15 },{ wch: 20 },{ wch: 20 },{ wch: 20 },{ wch: 20 }]; // adjust widths
-
-  
-    // Center-align all cells
-    Object.keys(worksheet).forEach((key) => {
-      if (key.startsWith('!')) return; // Skip metadata
-      if (!worksheet[key].s) worksheet[key].s = {};
-      worksheet[key].s.alignment = { horizontal: 'center', vertical: 'center' };
-    });
-  
-    // Add worksheet and export
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Report');
-    XLSX.writeFile(workbook, 'Report.xlsx');
-  
+    exportToExcel(reportRef, "MyReport.xlsx");
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-6" ref={reportRef}>
       <div className="flex justify-between items-center mb-6">
@@ -539,7 +240,6 @@ const SuperAdminReport = () => {
             }}
             style={{ width: 180 }}
           >
-            <Option value="all">All Dates</Option>
             <Option value="last-month">Last Month</Option>
             <Option value="last-3-months">Last 3 Months</Option>
             <Option value="last-year">Last Year</Option>
@@ -550,8 +250,21 @@ const SuperAdminReport = () => {
             <RangePicker
               value={customDateRange}
               onChange={(dates) => {
+                if (dates && dates[0] && dates[1]) {
+                  const monthDiff = dates[1].diff(dates[0], "month");
+                  if (monthDiff > 3) {
+                    message.error("Maximum date range allowed is 3 months");
+                    return;
+                  }
+                }
                 setCustomDateRange(dates);
                 setPagination((prev) => ({ ...prev, page: 1 }));
+              }}
+              disabledDate={(current) => {
+                if (!customDateRange[0]) return false;
+                const tooLate = current.diff(customDateRange[0], "month") >= 3;
+                const tooEarly = customDateRange[0].diff(current, "month") >= 3;
+                return !!tooEarly || !!tooLate;
               }}
             />
           )}
@@ -598,16 +311,6 @@ const SuperAdminReport = () => {
       </div>
 
       <div className="flex gap-4 mb-6">
-        <button
-          onClick={() => setActiveTab("total")}
-          className={`px-4 py-2 rounded-lg ${
-            activeTab === "total"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          Total
-        </button>
         <button
           onClick={() => setActiveTab("events")}
           className={`px-4 py-2 rounded-lg ${
@@ -924,11 +627,10 @@ const SuperAdminReport = () => {
         </div>
       </div>
 
-      {/* Analytics Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-gray-500 text-sm font-medium mb-3">
-            Organizer {getTabTitle()} Revenue
+            Organizer {activeTab === "events" ? "Event" : "Movie"} Revenue
           </h3>
           <div className="h-64">
             <Bar
@@ -944,190 +646,72 @@ const SuperAdminReport = () => {
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h3 className="text-gray-500 text-sm font-medium mb-3">
-            {activeTab === "events"
-              ? "Event"
-              : activeTab === "movies"
-              ? "Movie"
-              : ""}{" "}
-            Organizer Status Distribution
+            {activeTab === "events" ? "Event" : "Movie"} Timeline
           </h3>
           <div className="h-64">
-            <Pie
-              data={statusDistributionData}
+            <Line
+              data={{
+                labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+                datasets: [
+                  {
+                    label:
+                      activeTab === "events"
+                        ? "Events Created"
+                        : "Movies Released",
+                    data:
+                      activeTab === "events"
+                        ? timelineData.events
+                        : timelineData.movies,
+                    borderColor: activeTab === "events" ? "#198754" : "#dc3545",
+                    backgroundColor:
+                      activeTab === "events"
+                        ? "rgba(25, 135, 84, 0.1)"
+                        : "rgba(220, 53, 69, 0.1)",
+                    tension: 0.4,
+                    fill: true,
+                  },
+                ],
+              }}
               options={{
                 maintainAspectRatio: false,
-                plugins: { legend: { position: "bottom" } },
+                scales: { y: { beginAtZero: true } },
               }}
             />
           </div>
         </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-gray-500 text-sm font-medium mb-3">
-            {getTabTitle()} Timeline
-          </h3>
-          <div className="h-64">
-            {activeTab === "total" ? (
-              <Line
-                data={{
-                  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-                  datasets: [
-                    {
-                      label: "Total Items",
-                      data: timelineData.total,
-                      borderColor: "#0d6efd",
-                      backgroundColor: "rgba(13, 110, 253, 0.1)",
-                      tension: 0.4,
-                      fill: true,
-                    },
-                    {
-                      label: "Events",
-                      data: timelineData.events,
-                      borderColor: "#198754",
-                      tension: 0.4,
-                      borderDash: [5, 5],
-                      fill: false,
-                    },
-                    {
-                      label: "Movies",
-                      data: timelineData.movies,
-                      borderColor: "#dc3545",
-                      tension: 0.4,
-                      borderDash: [5, 5],
-                      fill: false,
-                    },
-                  ],
-                }}
-                options={{
-                  maintainAspectRatio: false,
-                  scales: { y: { beginAtZero: true } },
-                }}
-              />
-            ) : (
-              <Line
-                data={{
-                  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-                  datasets: [
-                    {
-                      label:
-                        activeTab === "events"
-                          ? "Events Created"
-                          : "Movies Released",
-                      data:
-                        activeTab === "events"
-                          ? timelineData.events
-                          : timelineData.movies,
-                      borderColor:
-                        activeTab === "events" ? "#198754" : "#dc3545",
-                      backgroundColor:
-                        activeTab === "events"
-                          ? "rgba(25, 135, 84, 0.1)"
-                          : "rgba(220, 53, 69, 0.1)",
-                      tension: 0.4,
-                      fill: true,
-                    },
-                  ],
-                }}
-                options={{
-                  maintainAspectRatio: false,
-                  scales: { y: { beginAtZero: true } },
-                }}
-              />
-            )}
-          </div>
-        </div>
       </div>
 
-      {/* Summary Stats */}
+      {/* Updated summary stats - removed total section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
         <h3 className="text-lg font-medium mb-4">Platform Summary</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {activeTab === "total" && (
-            <>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Event Organizers
-                </h4>
-                <p className="text-2xl font-bold">
-                  {platformStats.totalEventOrganizers}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <span className="text-green-600 font-medium">
-                    {platformStats.activeEventOrganizers}
-                  </span>{" "}
-                  active
-                </p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Movie Organizers
-                </h4>
-                <p className="text-2xl font-bold">
-                  {platformStats.totalMovieOrganizers}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <span className="text-green-600 font-medium">
-                    {platformStats.activeMovieOrganizers}
-                  </span>{" "}
-                  active
-                </p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Event Statistics
-                </h4>
-                <p className="text-lg font-bold">
-                  {platformStats.totalEvents} events
-                </p>
-                <p className="text-sm text-gray-500">
-                  {platformStats.totalEventAttendees.toLocaleString()} attendees
-                </p>
-                <p className="text-sm text-green-600 font-medium">
-                  ${platformStats.totalEventRevenue.toLocaleString()} revenue
-                </p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Movie Statistics
-                </h4>
-                <p className="text-lg font-bold">
-                  {platformStats.totalMovies} movies
-                </p>
-                <p className="text-sm text-gray-500">
-                  {platformStats.totalMovieAttendees.toLocaleString()} attendees
-                </p>
-                <p className="text-sm text-green-600 font-medium">
-                  ${platformStats.totalMovieRevenue.toLocaleString()} revenue
-                </p>
-              </div>
-            </>
-          )}
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {activeTab === "events" && (
             <>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Event Organizers
-                </h4>
-                <p className="text-2xl font-bold">
-                  {platformStats.totalEventOrganizers}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <span className="text-green-600 font-medium">
-                    {platformStats.activeEventOrganizers}
-                  </span>{" "}
-                  active
-                </p>
-              </div>
-              <div>
+              <div className="border-r border-gray-200 pr-6">
                 <h4 className="text-sm font-medium text-gray-500 mb-2">
                   Total Events
                 </h4>
                 <p className="text-2xl font-bold">
                   {platformStats.totalEvents}
                 </p>
-                <p className="text-sm text-gray-500">
-                  {platformStats.totalEventAttendees.toLocaleString()} attendees
+                <p className="text-sm text-gray-500 mt-1">
+                  {filteredEventOrganizers.length} organizers
+                </p>
+              </div>
+              <div className="border-r border-gray-200 pr-6">
+                <h4 className="text-sm font-medium text-gray-500 mb-2">
+                  Total Attendance
+                </h4>
+                <p className="text-2xl font-bold text-blue-600">
+                  {platformStats.totalEventAttendees.toLocaleString()}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Avg{" "}
+                  {Math.round(
+                    platformStats.totalEventAttendees /
+                      platformStats.totalEvents
+                  ).toLocaleString()}{" "}
+                  per event
                 </p>
               </div>
               <div>
@@ -1137,28 +721,13 @@ const SuperAdminReport = () => {
                 <p className="text-2xl font-bold text-green-600">
                   ${platformStats.totalEventRevenue.toLocaleString()}
                 </p>
-                <p className="text-sm text-gray-500">
-                  Average per organizer: $
+                <p className="text-sm text-gray-500 mt-1">
+                  $
                   {Math.round(
                     platformStats.totalEventRevenue /
-                      platformStats.totalEventOrganizers
-                  ).toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Active Rate
-                </h4>
-                <p className="text-2xl font-bold">
-                  {Math.round(
-                    (platformStats.activeEventOrganizers /
-                      platformStats.totalEventOrganizers) *
-                      100
-                  )}
-                  %
-                </p>
-                <p className="text-sm text-gray-500">
-                  {platformStats.activeEventOrganizers} active organizers
+                      platformStats.totalEventAttendees
+                  ).toLocaleString()}{" "}
+                  per attendee
                 </p>
               </div>
             </>
@@ -1166,29 +735,31 @@ const SuperAdminReport = () => {
 
           {activeTab === "movies" && (
             <>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Movie Organizers
-                </h4>
-                <p className="text-2xl font-bold">
-                  {platformStats.totalMovieOrganizers}
-                </p>
-                <p className="text-sm text-gray-500">
-                  <span className="text-green-600 font-medium">
-                    {platformStats.activeMovieOrganizers}
-                  </span>{" "}
-                  active
-                </p>
-              </div>
-              <div>
+              <div className="border-r border-gray-200 pr-6">
                 <h4 className="text-sm font-medium text-gray-500 mb-2">
                   Total Movies
                 </h4>
                 <p className="text-2xl font-bold">
                   {platformStats.totalMovies}
                 </p>
-                <p className="text-sm text-gray-500">
-                  {platformStats.totalMovieAttendees.toLocaleString()} attendees
+                <p className="text-sm text-gray-500 mt-1">
+                  {filteredMovieOrganizers.length} organizers
+                </p>
+              </div>
+              <div className="border-r border-gray-200 pr-6">
+                <h4 className="text-sm font-medium text-gray-500 mb-2">
+                  Total Attendance
+                </h4>
+                <p className="text-2xl font-bold text-blue-600">
+                  {platformStats.totalMovieAttendees.toLocaleString()}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Avg{" "}
+                  {Math.round(
+                    platformStats.totalMovieAttendees /
+                      platformStats.totalMovies
+                  ).toLocaleString()}{" "}
+                  per movie
                 </p>
               </div>
               <div>
@@ -1198,28 +769,13 @@ const SuperAdminReport = () => {
                 <p className="text-2xl font-bold text-green-600">
                   ${platformStats.totalMovieRevenue.toLocaleString()}
                 </p>
-                <p className="text-sm text-gray-500">
-                  Average per organizer: $
+                <p className="text-sm text-gray-500 mt-1">
+                  $
                   {Math.round(
                     platformStats.totalMovieRevenue /
-                      platformStats.totalMovieOrganizers
-                  ).toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Active Rate
-                </h4>
-                <p className="text-2xl font-bold">
-                  {Math.round(
-                    (platformStats.activeMovieOrganizers /
-                      platformStats.totalMovieOrganizers) *
-                      100
-                  )}
-                  %
-                </p>
-                <p className="text-sm text-gray-500">
-                  {platformStats.activeMovieOrganizers} active organizers
+                      platformStats.totalMovieAttendees
+                  ).toLocaleString()}{" "}
+                  per attendee
                 </p>
               </div>
             </>
