@@ -188,19 +188,33 @@ const UserList = () => {
               {selectedUser.is_active ? "Active" : "Inactive"}
             </Descriptions.Item>
             {/* <Descriptions.Item label="Event Name">"Additional Info" */}
-            <Descriptions.Item label="Event Name">
-              {/* {selectedUser.events || "No additional information available"} */}
-              {selectedUser.events && Array.isArray(selectedUser.events)
+            <Descriptions.Item label="Events">
+              {selectedUser.events?.length && Array.isArray(selectedUser.events)
                 ? selectedUser.events.map((event, index) => (
-                    <span key={event.id}>
-                      {event.event_name}
-                      {index < selectedUser.events.length - 1 && ", "}
-                    </span>
-                  ))
+                  <span key={event.id}>
+                    {event.event_name}
+                    {index < selectedUser.events.length - 1 && ", "}
+                  </span>
+                ))
                 : "No additional information available"}
             </Descriptions.Item>
+
+            <Descriptions.Item label="Theaters">
+              {Array.isArray(selectedUser.theatres) && selectedUser.theatres.length > 0 ? (
+                selectedUser.theatres.map((event, index) => (
+                  <span key={event.id}>
+                    {event.name}
+                    {index < selectedUser.theatres.length - 1 && ", "}
+                  </span>
+                ))
+              ) : (
+                "No additional information available"
+              )}
+            </Descriptions.Item>
+
+
             {selectedUser.thumbnail_image &&
-            selectedUser.thumbnail_image !== "images" ? (
+              selectedUser.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">
                 <img
                   src={selectedUser.thumbnail_image}
