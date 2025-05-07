@@ -781,24 +781,24 @@ const techAdminDashBoardNavTree = [
   },
 ];
 const eventOrganaizerDashBoardNavTree = [
-  {
-    key: "dashboards",
-    path: `${APP_PREFIX_PATH}/dashboards`,
-    title: "sidenav.dashboard",
-    icon: DashboardOutlined,
-    breadcrumb: false,
-    isGroupTitle: true,
-    submenu: [
-      {
-        key: "dashboards-statics",
-        path: `${APP_PREFIX_PATH}/dashboards/sales`,
-        title: "sidenav.dashboard.statics",
-        icon: DashboardOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-    ],
-  },
+  // {
+  //   key: "dashboards",
+  //   path: `${APP_PREFIX_PATH}/dashboards`,
+  //   title: "sidenav.dashboard",
+  //   icon: DashboardOutlined,
+  //   breadcrumb: false,
+  //   isGroupTitle: true,
+  //   submenu: [
+  //     {
+  //       key: "dashboards-statics",
+  //       path: `${APP_PREFIX_PATH}/dashboards/sales`,
+  //       title: "sidenav.dashboard.statics",
+  //       icon: DashboardOutlined,
+  //       breadcrumb: false,
+  //       submenu: [],
+  //     },
+  //   ],
+  // },
   {
     key: "Forms",
     path: `${APP_PREFIX_PATH}/forms`,
