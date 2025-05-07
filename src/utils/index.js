@@ -6,6 +6,8 @@ import {
 } from "store/slices/scheduleSlice";
 import { SupportImageFormat } from "constants/SupportFileConstants";
 import { ENABLE_RESOLUTIONS } from "configs/AppConfig";
+import { getCurrentUser } from "configs/UserAccessConfig";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 class Utils {
   /**
    * Filters out properties with null or undefined values from an object
@@ -1057,6 +1059,13 @@ class Utils {
       ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
       : null;
   };
+  static getUrlByUserRole(normalUrl, organizerUrl) {
+    const currentUser = getCurrentUser();
+    return currentUser.role_id === UserRoleConstants.eventOrganizerRoleId
+      ? organizerUrl
+      : normalUrl;
+  }
+  
 }
 
 export default Utils;

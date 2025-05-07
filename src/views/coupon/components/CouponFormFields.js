@@ -13,6 +13,7 @@ import {
   Radio,
   Alert,
   InputNumber,
+  Select,
 } from "antd";
 import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,17 +31,23 @@ import {
 } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
+import { fetchMoviesData } from "store/slices/movieSlice";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 const { Text } = Typography;
 const { Group: RadioGroup } = Radio;
 
-function CouponFormFields({ form }) {
+function CouponFormFields({ form, type }) {
   const dispatch = useDispatch();
   const startDate = Form.useWatch("start_date", form);
   const { isDateRequired } = useSelector((state) => state.coupons);
   const [couponType, setCouponType] = useState(true);
   const [couponCodeType, setCouponCodeType] = useState(false);
-
+  useEffect(() => {
+    if (type === "movie") {
+      dispatch(fetchMoviesData(DEFAULT_PAGE_SIZE));
+    }
+  }, [dispatch]);
   // Each row can have up to MAX_FIELDS_PER_ROW fields
   const MAX_FIELDS_PER_ROW = 3;
 
@@ -167,11 +174,27 @@ function CouponFormFields({ form }) {
 
   // Get rows for rendering
   const rows = getRows();
-
+  const { movieResponse } = useSelector((state) => state.movie);
+  const { Option } = Select;
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Coupon Details">
+          {type === "movie" && (
+            <Form.Item
+              name="theatre_ids"
+              label="Theatre"
+              rules={[{ required: true, message: "Please select a theatre" }]}
+            >
+              <Select placeholder="Select offer type" mode="multiple">
+                {movieResponse?.items?.map((movie) => (
+                  <Option key={movie.id} value={movie.id}>
+                    {movie.title}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
           <Form.Item
             name="name"
             label="Coupon Name"

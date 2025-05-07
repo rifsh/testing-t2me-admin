@@ -27,7 +27,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 const ADD = "ADD";
 // const EDIT = "EDIT";
 
-const OfferForm = ({ mode, offer }) => {
+const OfferForm = ({ mode, offer, type }) => {
   const {
     loading,
     error,
@@ -58,6 +58,7 @@ const OfferForm = ({ mode, offer }) => {
     if (offer && mode === "EDIT") {
       const formData = {
         name: offer.name,
+        theatre_ids: offer.theatre_ids.map((item) => item.id),
         discount_percentage_amount: offer.discount_percentage_amount,
         is_percentage: offer.is_percentage,
         max_uses: offer.max_uses,
@@ -206,7 +207,7 @@ const OfferForm = ({ mode, offer }) => {
               {
                 label: "General",
                 key: "1",
-                children: <OfferFormFields />,
+                children: <OfferFormFields type={type} />,
               },
             ]}
           />
@@ -235,7 +236,7 @@ const OfferForm = ({ mode, offer }) => {
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? editOffer : addOffer}
-        navigationPath={`${APP_PREFIX_PATH}/offer/list`}
+        navigationPath={`${APP_PREFIX_PATH}/offer/list?type=${type}`}
         responseMessage={responseMessage}
         pagination={submitPagination}
       />

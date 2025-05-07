@@ -53,6 +53,16 @@ export const ApiConstant = {
   COUPON_URL: "/api/v1/shared/offers/secured/coupons",
   COUPON_STATUS_URL: "/api/v1/shared/offers/secured/coupons_status",
   COUPON_DETAILS_URL: "/api/v1/shared/offers/secured/coupons/detail",
+  ORGANIZER_OFFER_URL: "/api/v1/shared/offers/secured/offers/organizer",
+  ORGANIZER_OFFER_STATUS_URL:
+    "/api/v1/shared/offers/secured/offers_status/organizer",
+  ORGANIZER_OFFER_DETAIL_URL:
+    "/api/v1/shared/offers/secured/offers/detail/organizer",
+  ORGANIZER_COUPON_URL: "/api/v1/shared/offers/secured/coupons/organizer",
+  ORGANIZER_COUPON_STATUS_URL:
+    "/api/v1/shared/offers/secured/coupons_status/organizer",
+  ORGANIZER_COUPON_DETAILS_URL:
+    "/api/v1/shared/offers/secured/coupons/detail/organizer",
 
   TAX_URL: "/api/v1/location/secured/taxes",
   TAX_STATUS_URL: "/api/v1/location/secured/taxes_status",
