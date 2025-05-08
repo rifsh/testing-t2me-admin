@@ -16,7 +16,8 @@ OfferService.addOffer = function (data, action) {
 
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_URL,
-    ApiConstant.ORGANIZER_OFFER_URL
+    ApiConstant.ORGANIZER_OFFER_URL,
+    data.isOrganizer
   );
   return fetch({
     url: `${offreUrl}?action=${encodedAction}`,
@@ -60,7 +61,8 @@ OfferService.editOfferStatus = function (
 
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_STATUS_URL,
-    ApiConstant.ORGANIZER_OFFER_STATUS_URL
+    ApiConstant.ORGANIZER_OFFER_STATUS_URL,
+    data.isOrganizer
   );
   return fetch({
     url: `${offreUrl}/${data.id}?action=${encodedAction}`,
@@ -73,7 +75,8 @@ OfferService.editOfferStatus = function (
 OfferService.getAllOffer = function (pageData) {
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_URL,
-    ApiConstant.ORGANIZER_OFFER_URL
+    ApiConstant.ORGANIZER_OFFER_URL,
+    pageData.isOrganizer
   );
 
   return fetch({
@@ -83,10 +86,11 @@ OfferService.getAllOffer = function (pageData) {
   });
 };
 
-OfferService.fetchOfferDetails = function (offerId) {
+OfferService.fetchOfferDetails = function (offerId, isOrganizer) {
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_DETAIL_URL,
-    ApiConstant.ORGANIZER_OFFER_DETAIL_URL
+    ApiConstant.ORGANIZER_OFFER_DETAIL_URL,
+    isOrganizer
   );
 
   return fetch({

@@ -385,6 +385,14 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
+      {
+        key: "trackRequest.movie.offer.status.list",
+        path: `${APP_PREFIX_PATH}/track/offer/status/list?type=movie`,
+        title: "sidenav.offer",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
     ],
   },
   {
@@ -991,9 +999,17 @@ const eventOrganaizerDashBoardNavTree = [
             submenu: [],
           },
           {
-            key: "trackRequest.movie.offer.status",
+            key: "trackRequest.movie.offer.status.list",
             path: `${APP_PREFIX_PATH}/track/offer/status/list?type=movie`,
             title: "sidenav.offer",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "trackRequest.movie.coupon.status.list",
+            path: `${APP_PREFIX_PATH}/track/coupon/status/list?type=movie`,
+            title: "sidenav.coupon",
             icon: OrderedListOutlined,
             breadcrumb: false,
             submenu: [],
