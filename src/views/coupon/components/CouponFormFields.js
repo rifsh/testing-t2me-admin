@@ -33,6 +33,8 @@ import Utils from "utils/index";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 import { fetchMoviesData } from "store/slices/movieSlice";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
+import { EventType } from "constants/AppConstants";
 
 const { Text } = Typography;
 const { Group: RadioGroup } = Radio;
@@ -180,20 +182,18 @@ function CouponFormFields({ form, type }) {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Coupon Details">
-          {type === "movie" && (
-            <Form.Item
+          {type === EventType.MOVIE && (
+            <TheaterListForm
+              rules={[{ required: true }]}
+              form={form}
+              onSelect={(theater) => {}}
+              mode="multiple"
               name="theatre_ids"
-              label="Theatre"
-              rules={[{ required: true, message: "Please select a theatre" }]}
-            >
-              <Select placeholder="Select offer type" mode="multiple">
-                {movieResponse?.items?.map((movie) => (
-                  <Option key={movie.id} value={movie.id}>
-                    {movie.title}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
+              label="Theater"
+              apiParams={{
+                organizer: true,
+              }}
+            />
           )}
           <Form.Item
             name="name"

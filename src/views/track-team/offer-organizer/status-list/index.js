@@ -36,18 +36,9 @@ const OrganizerOfferStatusList = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const type = params.get("type");
-  const {
-    filteredOffers,
-    pagination,
-    loading,
-    editable_status,
-    message,
-    editItemId,
-    dialogVisible,
-    warningPagination,
-    modalLoading,
-    responseImpactData,
-  } = useSelector((state) => state.offers);
+  const { filteredOffers, pagination, loading } = useSelector(
+    (state) => state.offers
+  );
   const [activeStatus, setactiveStatus] = useState();
 
   useEffect(() => {

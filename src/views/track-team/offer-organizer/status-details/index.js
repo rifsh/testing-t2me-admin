@@ -45,31 +45,6 @@ const OrganizerOfferDetail = () => {
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
 
-  // Sample data provided in JSON
-  const offerData = {
-    status: true,
-    created_at: "2025-05-07T14:05:33.326687",
-    updated_at: "2025-05-07T14:05:33.326691",
-    name: "image test123",
-    start_date: null,
-    end_date: null,
-    max_uses: 2,
-    is_general: true,
-    date_required: false,
-    thumbnail_image: "images",
-    key_words: [],
-    is_percentage: true,
-    is_offline: false,
-    discount_percentage_amount: 32,
-    id: 2,
-    is_active: false,
-    used_count: 0,
-    theatre_ids: [18, 23],
-    event_ids: null,
-    approval_status: "pending",
-    organizer_offer_comments: [],
-  };
-
   const {
     singleOrganizerUpdate,
     loading,
@@ -78,9 +53,6 @@ const OrganizerOfferDetail = () => {
     actionType,
     showAllComments,
   } = useSelector((state) => state.organizerUpdates);
-
-  // Use merged data - combining Redux store data with our sample data
-  const mergedData = { ...singleOrganizerUpdate, ...offerData };
 
   useEffect(() => {
     if (offerId) {
@@ -105,7 +77,7 @@ const OrganizerOfferDetail = () => {
         return "approved";
       case "reject":
         return "rejected";
-      case "update":
+      case "change request":
         return "change request";
       default:
         return "pending";
@@ -147,7 +119,7 @@ const OrganizerOfferDetail = () => {
   };
 
   const renderCommentList = () => {
-    const comments = mergedData?.organizer_offer_comments || [];
+    const comments = singleOrganizerUpdate?.organizer_offer_comments || [];
 
     if (comments.length === 0) {
       return <Text type="secondary">No comments yet</Text>;
@@ -206,7 +178,7 @@ const OrganizerOfferDetail = () => {
         return "green";
       case "rejected":
         return "red";
-      case "update":
+      case "change request":
         return "blue";
       case "pending":
         return "orange";
@@ -222,10 +194,11 @@ const OrganizerOfferDetail = () => {
   };
 
   const renderActionButtons = () => {
-    const approvalStatus = mergedData?.approval_status?.toUpperCase();
+    const approvalStatus =
+      singleOrganizerUpdate?.approval_status;
 
     if (
-      approvalStatus === "UPDATES" &&
+      approvalStatus === "change request" &&
       currentUser.role_id === UserRoleConstants.eventOrganizerRoleId
     ) {
       return (
@@ -262,7 +235,7 @@ const OrganizerOfferDetail = () => {
             <Button
               className="text-primary"
               size="large"
-              onClick={() => handleOpenModal("update")}
+              onClick={() => handleOpenModal("change request")}
             >
               Update
             </Button>
@@ -288,33 +261,56 @@ const OrganizerOfferDetail = () => {
       <Card style={{ marginTop: 16 }}>
         <Title level={4}>Offer Information</Title>
         <Row gutter={[24, 24]}>
+          <Col xs={12} md={8} >
+            <Image
+              src={singleOrganizerUpdate.thumbnail_image}
+              alt="Offer Thumbnail"
+              style={{
+                width: "150px",
+                height: "100px",
+                objectFit: "cover",
+                borderRadius: "8px",
+              }}
+              fallback="/img/pexels-teddy-2263436.jpg"
+            />
+          </Col>
           <Col xs={24} md={8}>
             <Text type="secondary">Offer Name</Text>
             <div>
-              <Text strong>{mergedData?.name || "N/A"}</Text>
+              <Text strong>{singleOrganizerUpdate?.name || "N/A"}</Text>
             </div>
           </Col>
           <Col xs={24} md={8}>
             <Text type="secondary">Created At</Text>
             <div>
-              <Text strong>{formatDate(mergedData?.created_at)}</Text>
+              <Text strong>
+                {formatDate(singleOrganizerUpdate?.created_at)}
+              </Text>
             </div>
           </Col>
           <Col xs={24} md={8}>
             <Text type="secondary">Status</Text>
             <div>
-              {mergedData?.approval_status && (
-                <Tag color={getStatusTagColor(mergedData.approval_status)}>
-                  {mergedData.approval_status.charAt(0).toUpperCase() +
-                    mergedData.approval_status.slice(1).toLowerCase()}
+              {singleOrganizerUpdate?.approval_status && (
+                <Tag
+                  color={getStatusTagColor(
+                    singleOrganizerUpdate.approval_status
+                  )}
+                >
+                  {singleOrganizerUpdate.approval_status
+                    .charAt(0)
+                    .toUpperCase() +
+                    singleOrganizerUpdate.approval_status
+                      .slice(1)
+                      .toLowerCase()}
                 </Tag>
               )}
-              {mergedData?.is_active !== undefined && (
+              {singleOrganizerUpdate?.is_active !== undefined && (
                 <Tag
-                  color={mergedData.is_active ? "green" : "red"}
+                  color={singleOrganizerUpdate.is_active ? "green" : "red"}
                   style={{ marginLeft: 8 }}
                 >
-                  {mergedData.is_active ? "Active" : "Inactive"}
+                  {singleOrganizerUpdate.is_active ? "Active" : "Inactive"}
                 </Tag>
               )}
             </div>
@@ -332,7 +328,9 @@ const OrganizerOfferDetail = () => {
             </Space>
             <div>
               <Text strong>
-                {mergedData?.is_percentage ? "Percentage" : "Fixed Amount"}
+                {singleOrganizerUpdate?.is_percentage
+                  ? "Percentage"
+                  : "Fixed Amount"}
               </Text>
             </div>
           </Col>
@@ -343,8 +341,8 @@ const OrganizerOfferDetail = () => {
             </Space>
             <div>
               <Text strong>
-                {mergedData?.discount_percentage_amount || 0}
-                {mergedData?.is_percentage ? "%" : " units"}
+                {singleOrganizerUpdate?.discount_percentage_amount || 0}
+                {singleOrganizerUpdate?.is_percentage ? "%" : " units"}
               </Text>
             </div>
           </Col>
@@ -355,7 +353,9 @@ const OrganizerOfferDetail = () => {
             </Space>
             <div>
               <Text strong>
-                {mergedData?.is_general ? "General Offer" : "Specific Offer"}
+                {singleOrganizerUpdate?.is_general
+                  ? "General Offer"
+                  : "Specific Offer"}
               </Text>
             </div>
           </Col>
@@ -366,7 +366,7 @@ const OrganizerOfferDetail = () => {
             </Space>
             <div>
               <Text strong>
-                {mergedData?.is_offline ? "Offline" : "Online"}
+                {singleOrganizerUpdate?.is_offline ? "Offline" : "Online"}
               </Text>
             </div>
           </Col>
@@ -376,7 +376,9 @@ const OrganizerOfferDetail = () => {
               <Text type="secondary">Maximum Uses</Text>
             </Space>
             <div>
-              <Text strong>{mergedData?.max_uses || "Unlimited"}</Text>
+              <Text strong>
+                {singleOrganizerUpdate?.max_uses || "Unlimited"}
+              </Text>
             </div>
           </Col>
           <Col xs={24} md={8}>
@@ -385,7 +387,7 @@ const OrganizerOfferDetail = () => {
               <Text type="secondary">Used Count</Text>
             </Space>
             <div>
-              <Text strong>{mergedData?.used_count || 0}</Text>
+              <Text strong>{singleOrganizerUpdate?.used_count || 0}</Text>
             </div>
           </Col>
           <Col xs={24} md={8}>
@@ -394,7 +396,9 @@ const OrganizerOfferDetail = () => {
               <Text type="secondary">Date Required</Text>
             </Space>
             <div>
-              <Text strong>{mergedData?.date_required ? "Yes" : "No"}</Text>
+              <Text strong>
+                {singleOrganizerUpdate?.date_required ? "Yes" : "No"}
+              </Text>
             </div>
           </Col>
           <Col xs={24} md={8}>
@@ -404,8 +408,8 @@ const OrganizerOfferDetail = () => {
             </Space>
             <div>
               <Text strong>
-                {mergedData?.start_date
-                  ? formatDate(mergedData.start_date)
+                {singleOrganizerUpdate?.start_date
+                  ? formatDate(singleOrganizerUpdate.start_date)
                   : "Not specified"}
               </Text>
             </div>
@@ -417,8 +421,8 @@ const OrganizerOfferDetail = () => {
             </Space>
             <div>
               <Text strong>
-                {mergedData?.end_date
-                  ? formatDate(mergedData.end_date)
+                {singleOrganizerUpdate?.end_date
+                  ? formatDate(singleOrganizerUpdate.end_date)
                   : "Not specified"}
               </Text>
             </div>
@@ -426,63 +430,35 @@ const OrganizerOfferDetail = () => {
         </Row>
       </Card>
 
-      {mergedData?.theatre_ids && mergedData.theatre_ids.length > 0 && (
-        <Card style={{ marginTop: 16 }}>
-          <Title level={4}>Applicable Theatres</Title>
-          <Row gutter={[16, 16]}>
-            {mergedData.theatre_ids.map((theatreId) => (
-              <Col key={theatreId}>
-                <Tag color="blue">Theatre ID: {theatreId}</Tag>
-              </Col>
-            ))}
-          </Row>
-        </Card>
-      )}
+      {singleOrganizerUpdate?.theatre_ids &&
+        singleOrganizerUpdate.theatre_ids.length > 0 && (
+          <Card style={{ marginTop: 16 }}>
+            <Title level={4}>Applicable Theatres</Title>
+            <Row gutter={[16, 16]}>
+              {singleOrganizerUpdate.theatre_ids.map((theatreId) => (
+                <Col key={theatreId}>
+                  <Tag color="blue">Theatre ID: {theatreId}</Tag>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+        )}
 
-      {mergedData?.key_words && mergedData.key_words.length > 0 && (
-        <Card style={{ marginTop: 16 }}>
-          <Title level={4}>Keywords</Title>
-          <Row gutter={[16, 16]}>
-            {mergedData.key_words.map((keyword, index) => (
-              <Col key={index}>
-                <Tag color="cyan">{keyword}</Tag>
-              </Col>
-            ))}
-          </Row>
-        </Card>
-      )}
+      {singleOrganizerUpdate?.key_words &&
+        singleOrganizerUpdate.key_words.length > 0 && (
+          <Card style={{ marginTop: 16 }}>
+            <Title level={4}>Keywords</Title>
+            <Row gutter={[16, 16]}>
+              {singleOrganizerUpdate.key_words.map((keyword, index) => (
+                <Col key={index}>
+                  <Tag color="cyan">{keyword}</Tag>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+        )}
 
-      {mergedData?.thumbnail_image && (
-        <Card style={{ marginTop: 16 }}>
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            <Space>
-              <Title level={4} style={{ margin: 0 }}>
-                Offer Thumbnail
-              </Title>
-            </Space>
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "center",
-              }}
-            >
-              <Image
-                src={mergedData.thumbnail_image}
-                alt="Offer Thumbnail"
-                style={{
-                  width: "100%",
-                  maxWidth: "400px",
-                  height: "auto",
-                  objectFit: "cover",
-                  borderRadius: "8px",
-                }}
-                fallback="/api/placeholder/400/300"
-              />
-            </div>
-          </Space>
-        </Card>
-      )}
+     
 
       <Card style={{ marginTop: 16 }}>
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>

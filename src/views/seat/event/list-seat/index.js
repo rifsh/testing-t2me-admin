@@ -101,11 +101,7 @@ const MovieSeatList = () => {
       dataIndex: "name",
       sorter: (a, b) => Utils.antdTableSorter(a, b, "name"),
     },
-    {
-      title: "Screen",
-      dataIndex: ["screen", "screen_name"],
-      sorter: (a, b) => Utils.antdTableSorter(a, b, "screen.screen_name"),
-    },
+
     {
       title: "Venue",
       dataIndex: ["venue", "name"],
