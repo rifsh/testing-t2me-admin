@@ -19,12 +19,14 @@ import { setLocationDialogVisible, setLocationModalLoading } from 'store/slices/
 import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import TheaterCompanyDetailModal from './TheaterCompanyDetailModal ';
 import LoadingOverlay from 'components/util-components/Loader';
+import usePaginationHook from 'utils/hooks/usePaginationHandler';
 
 const TheaterCompaniesList = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { response, editLoading, singleLoading, loading, editable_status, statusEditresponse, pagination, message: theaterCompanyMessage, editId, isDetailModal, singleResponse } = useSelector((state) => state.theaterCompany);
     const { dialogVisible, modalLoading, } = useSelector((state) => state.locations);
+    const handlePagination = usePaginationHook(fetchTheaterCompanies);
 
     useEffect(() => {
         dispatch(fetchTheaterCompanies(DEFAULT_PAGE_SIZE));
@@ -69,9 +71,9 @@ const TheaterCompaniesList = () => {
         </Menu>
     );
 
-    const handlePagination = (page, pageSize) => {
-        dispatch(fetchTheaterCompanies({ page: page, size: pageSize }));
-    };
+    // const handlePagination = (page, pageSize) => {
+    //     dispatch(fetchTheaterCompanies({ page: page, size: pageSize }));
+    // };
 
     const handleUpdateStatus = (item) => {
         const newStatus = !item.status;

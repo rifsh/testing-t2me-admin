@@ -36,6 +36,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 
 import { TextConstants } from "constants/TextConstant";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const { Option } = Select;
 
@@ -62,6 +63,7 @@ const TaxList = () => {
     filteredPlaces,
     detailedCountryList,
   } = locationState;
+  const handlePagination = usePaginationHook(fetchAllTax);
 
   useEffect(() => {
     dispatch(fetchAllTax(DEFAULT_PAGE_SIZE));
@@ -73,9 +75,9 @@ const TaxList = () => {
     dispatch(setSelectedItem(data));
     dispatch(setDialogVisible(true));
   };
-  const handlePagination = (page, size) => {
-    dispatch(fetchAllTax({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(fetchAllTax({ page: page, size: size }));
+  // };
 
   const handleEditTax = (id) => {
     dispatch(setEditItemId(id));

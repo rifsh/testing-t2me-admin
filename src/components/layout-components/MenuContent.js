@@ -8,7 +8,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { SIDE_NAV_LIGHT, NAV_TYPE_SIDE } from "constants/ThemeConstant";
 import utils from "utils";
 import { onMobileNavToggle } from "store/slices/themeSlice";
-
 const { useBreakpoint } = Grid;
 
 const MenuItem = ({ title, icon, path }) => {
@@ -87,26 +86,17 @@ const SideNavContent = (props) => {
   }, [location.pathname]);
 
   return (
-    // <Menu
-    //   mode="inline"
-    //   theme={sideNavTheme === SIDE_NAV_LIGHT ? "light" : "dark"}
-    //   style={{ height: "100%", borderInlineEnd: 0 }}
-    //   defaultSelectedKeys={[routeInfo?.key]}
-    //   defaultOpenKeys={defaultOpenKeys}
-    //   className={hideGroupTitle ? "hide-group-title" : ""}
-    //   items={menuItems}
-    // />
-
     <Menu
       mode="inline"
       theme={sideNavTheme === SIDE_NAV_LIGHT ? "light" : "dark"}
       style={{ height: "100%", borderInlineEnd: 0 }}
       selectedKeys={selectedKeys}
-      openKeys={openKeys}
+      // openKeys={openKeys}
       onOpenChange={setOpenKeys}
       className={hideGroupTitle ? "hide-group-title" : ""}
       items={menuItems}
     />
+
   );
 };
 

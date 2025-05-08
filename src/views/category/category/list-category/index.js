@@ -35,6 +35,7 @@ import {
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -44,6 +45,8 @@ const CategoryList = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [modalType, setModalType] = useState("category");
+  const handleCategoryPagination = usePaginationHook(fetchCategories);
+  const handlesubCategorSPagination = usePaginationHook(fetchSubcategories);
 
   const {
     filteredCategories,
@@ -66,7 +69,7 @@ const CategoryList = () => {
   useEffect(() => {
     dispatch(fetchCategories({ page: 1, size: 10 }));
     dispatch(
-      fetchSubcategories({ categoryId: null, data: { page: 1, size: 10 } })
+      fetchSubcategories({ categoryId: null, page: 1, size: 10 })
     );
   }, [dispatch]);
   const handleViewDetails = async (id) => {
@@ -79,19 +82,19 @@ const CategoryList = () => {
     navigate(`${APP_PREFIX_PATH}/subcategory/details/${id}`);
   };
 
-  const handlePagination = (page, size, type) => {
-    if (type === "category") {
-      dispatch(fetchCategories({ page: page, size: size }));
-    }
-    if (type === "subCategory") {
-      dispatch(
-        fetchSubcategories({
-          categoryId: null,
-          data: { page: page, size: size },
-        })
-      );
-    }
-  };
+  // const handlePagination = (page, size, type) => {
+  //   if (type === "category") {
+  //     dispatch(fetchCategories({ page: page, size: size }));
+  //   }
+  //   if (type === "subCategory") {
+  //     dispatch(
+  //       fetchSubcategories({
+  //         categoryId: null,
+  //         data: { page: page, size: size },
+  //       })
+  //     );
+  //   }
+  // };
 
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
@@ -272,8 +275,7 @@ const CategoryList = () => {
               current: pagination.page,
               pageSize: pagination.size,
               total: pagination.total,
-              onChange: (page, pageSize) =>
-                handlePagination(page, pageSize, "category"),
+              onChange: (page, pageSize) => handleCategoryPagination(page, pageSize),
             }}
           />
         </TabPane>
@@ -314,8 +316,7 @@ const CategoryList = () => {
               current: subPagination.page,
               pageSize: subPagination.size,
               total: subPagination.total,
-              onChange: (page, pageSize) =>
-                handlePagination(page, pageSize, "subCategory"),
+              onChange: (page, pageSize) => handlesubCategorSPagination(page, pageSize),
             }}
           />
         </TabPane>

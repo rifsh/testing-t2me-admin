@@ -37,6 +37,7 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { TextConstants } from "constants/TextConstant";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 const { Panel } = Collapse;
 
 const TicketList = () => {
@@ -50,15 +51,16 @@ const TicketList = () => {
     dialogVisible,
     modalLoading,
   } = useSelector((state) => state.tickets);
+  const handlePagination = usePaginationHook(fetchAllTickets);
 
   useEffect(() => {
     dispatch(resetTicketSets());
     dispatch(fetchAllTickets(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
-const handlePagination = (page, pageSize) => {
-  dispatch(fetchAllTickets({ page: page, size: pageSize }));
-};
+  // const handlePagination = (page, pageSize) => {
+  //   dispatch(fetchAllTickets({ page: page, size: pageSize }));
+  // };
 
   const [selectedVenue, setSelectedVenue] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -214,7 +216,7 @@ const handlePagination = (page, pageSize) => {
                           </li>
                         ))}
                       </ul>
-                    </Panel> 
+                    </Panel>
                   ))
                 ) : (
                   <Panel

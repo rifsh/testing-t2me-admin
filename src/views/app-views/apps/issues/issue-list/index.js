@@ -26,6 +26,8 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { getCurrentUser, getUserRole } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice";
 
 const { Option } = Select;
 
@@ -38,6 +40,7 @@ const IssueList = () => {
   const [activeStatus, setactiveStatus] = useState();
   const [userFilter, setUserFilter] = useState();
   const CurrentUser = getCurrentUser();
+  const handlePagination = usePaginationHook(fetchAllissues);
 
   useEffect(() => {
     dispatch(fetchAllissues({ ...DEFAULT_PAGE_SIZE }));
@@ -48,19 +51,20 @@ const IssueList = () => {
     navigate(`${APP_PREFIX_PATH}/issue/details/${id}`);
   };
 
-  const handlePagination = (page, size) => {
-    dispatch(
-      fetchAllissues({
-        page: page,
-        size: size,
-        filter: activeStatus,
-        role_id: userFilter,
-      })
-    );
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(
+  //     fetchAllissues({
+  //       page: page,
+  //       size: size,
+  //       filter: activeStatus,
+  //       role_id: userFilter,
+  //     })
+  //   );
+  // };
 
   const handleSearch = (value) => {
     if (value) {
+      dispatch(setGlobalSearchValue(value));
       setSearchTerm(value);
       dispatch(
         fetchAllissues({
@@ -75,6 +79,7 @@ const IssueList = () => {
 
   const handleSearchIsEmpty = (value) => {
     if (!value) {
+      dispatch(resetSearchValue());
       dispatch(
         fetchAllissues({ search: null, page: 1, size: 10, active: activeStatus })
       );
@@ -110,19 +115,19 @@ const IssueList = () => {
   const getRowStyle = (record) => {
     const isAssignedToMe = record.ticket_assigned?.id === CurrentUser.id;
     const isDone = record?.issue_status === TextConstants.Done;
-    
+
     let style = {
       // cursor: 'pointer',
       transition: 'all 0.3s ease'
     };
-    
+
     if (isAssignedToMe) {
       style.backgroundColor = isDone ? '#f6ffed' : '#f6ffed';
       style.opacity = 1;
     } else {
       style.opacity = 0.8;
     }
-    
+
     return style;
   };
 
@@ -148,7 +153,7 @@ const IssueList = () => {
       dataIndex: "subject",
       sorter: (a, b) => a.subject.localeCompare(b.subject),
       render: (text, record) => (
-        <span style={{ 
+        <span style={{
           fontWeight: record.ticket_assigned?.id === CurrentUser.id ? '500' : 'normal'
         }}>
           {text}
@@ -175,7 +180,7 @@ const IssueList = () => {
       render: (text, record) => {
         const isAssignedToMe = record.ticket_assigned?.id === CurrentUser.id;
         return (
-          <span style={{ 
+          <span style={{
             color: isAssignedToMe ? '#52c41a' : 'inherit',
             fontWeight: isAssignedToMe ? '500' : 'normal'
           }}>
@@ -196,7 +201,7 @@ const IssueList = () => {
         const status = text?.toLowerCase();
         let color = 'default';
         let statusText = text;
-    
+
         if (status === TextConstants.Done) {
           color = 'success';
         } else if (status === TextConstants.Pending) {
@@ -204,11 +209,11 @@ const IssueList = () => {
         } else if (status === 'in progress') {
           color = 'processing';
         }
-    
+
         return (
-          <Tag 
+          <Tag
             color={color}
-            style={{ 
+            style={{
               color: '#000000',  // Force black text
               fontWeight: '400'  // Normal font weight
             }}
@@ -227,9 +232,9 @@ const IssueList = () => {
       title: "Ticket Status",
       dataIndex: "ticket_status",
       render: (ticket_status) => (
-        <Tag 
+        <Tag
           color={ticket_status ? "success" : "error"}
-          style={{ 
+          style={{
             color: '#000000',  // Force black text
             fontWeight: '400'  // Normal font weight
           }}
@@ -248,8 +253,8 @@ const IssueList = () => {
       dataIndex: "actions",
       render: (_, elm) => (
         <div className="text-right" style={{ color: '#000000' }}>
-          <EllipsisDropdown 
-            menu={dropdownMenu(elm)} 
+          <EllipsisDropdown
+            menu={dropdownMenu(elm)}
             menuStyle={{ color: '#000000' }}
           />
         </div>
@@ -296,20 +301,20 @@ const IssueList = () => {
               >
                 <Option value={null}>All</Option>
                 <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
-                {(CurrentUser.role_id === UserRoleConstants.superAdminRoleId || 
+                {(CurrentUser.role_id === UserRoleConstants.superAdminRoleId ||
                   CurrentUser.role_id === UserRoleConstants.techAdminRoleId) && (
-                  <>
-                    <Option value={UserRoleConstants.techAdminRoleId}>
-                      Tech Admin
-                    </Option>
-                    <Option value={UserRoleConstants.techSupportingTeamRoleId}>
-                      Super Supporting Team
-                    </Option>
-                    <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
-                      Event Supporting Team
-                    </Option>
-                  </>
-                )}
+                    <>
+                      <Option value={UserRoleConstants.techAdminRoleId}>
+                        Tech Admin
+                      </Option>
+                      <Option value={UserRoleConstants.techSupportingTeamRoleId}>
+                        Super Supporting Team
+                      </Option>
+                      <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
+                        Event Supporting Team
+                      </Option>
+                    </>
+                  )}
               </Select>
             </div>
           )}

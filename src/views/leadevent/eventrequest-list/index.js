@@ -49,12 +49,12 @@ const LeadEvent = () => {
     dispatch(getLeadEvents({ page: page, size: size }));
   };
 
- 
+
   const handleViewDetails = async (id) => {
     await dispatch(getSingleLeadEvents(id));
     navigate(`${APP_PREFIX_PATH}/leadevent/details/${id}`);
-    };
-    // /lead-details/index
+  };
+  // /lead-details/index
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -204,14 +204,14 @@ const LeadEvent = () => {
         let displayText = approval_status
           ? approval_status.charAt(0).toUpperCase() + approval_status.slice(1)
           : "N/A";
-    
+
         if (approval_status === "approved") {
           color = "green";
           displayText = "Converted"; // Change text for approved status
         } else if (approval_status === "rejected") {
           color = "red";
         }
-    
+
         return <Tag color={color}>{displayText}</Tag>;
       },
       sorter: (a, b) => {

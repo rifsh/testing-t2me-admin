@@ -24,6 +24,7 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import { getCurrentUser, isOrganizer } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const TheaterList = () => {
   const dispatch = useDispatch();
@@ -42,12 +43,13 @@ const TheaterList = () => {
   const { dialogVisible, modalLoading } = useSelector(
     (state) => state.locations
   );
+  const handlePagination = usePaginationHook(fetchTheaters);
 
   useEffect(() => {
     dispatch(
       fetchTheaters({
         ...DEFAULT_PAGE_SIZE,
-        organizer:isOrganizer(),
+        organizer: isOrganizer(),
       })
     );
   }, [dispatch]);
@@ -132,9 +134,9 @@ const TheaterList = () => {
     </Menu>
   );
 
-  const handlePagination = (page, pageSize) => {
-    dispatch(fetchTheaters({ page: page, size: pageSize }));
-  };
+  // const handlePagination = (page, pageSize) => {
+  //   dispatch(fetchTheaters({ page: page, size: pageSize }));
+  // };
 
   const tableColumns = [
     {
@@ -204,18 +206,18 @@ const TheaterList = () => {
 
         {getCurrentUser().role_id !==
           UserRoleConstants.eventOrganizerRoleId && (
-          <Col xs={24} sm={8} style={{ textAlign: "right" }}>
-            <Button
-              type="primary"
-              icon={<FormOutlined />}
-              onClick={() => {
-                navigate(`${APP_PREFIX_PATH}/movie-theater/add`);
-              }}
-            >
-              Add Theater
-            </Button>
-          </Col>
-        )}
+            <Col xs={24} sm={8} style={{ textAlign: "right" }}>
+              <Button
+                type="primary"
+                icon={<FormOutlined />}
+                onClick={() => {
+                  navigate(`${APP_PREFIX_PATH}/movie-theater/add`);
+                }}
+              >
+                Add Theater
+              </Button>
+            </Col>
+          )}
       </Row>
       <div className="table-responsive">
         <Table
