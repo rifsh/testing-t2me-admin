@@ -28,11 +28,13 @@ import {
 } from "store/slices/leadEventSlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 const { Option } = Select;
 const LeadEvent = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [activeStatus, setactiveStatus] = useState();
+  const handlePagination = usePaginationHook(getLeadEvents);
 
   const { filteredLeadEvents, loading, pagination, searchTerm, statusFilter } =
     useSelector((state) => state.leadEvents);
@@ -45,9 +47,9 @@ const LeadEvent = () => {
     dispatch(filterLeadEvents({ searchTerm, status: statusFilter }));
   }, [searchTerm, statusFilter, dispatch]);
 
-  const handlePagination = (page, size) => {
-    dispatch(getLeadEvents({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(getLeadEvents({ page: page, size: size }));
+  // };
 
 
   const handleViewDetails = async (id) => {
