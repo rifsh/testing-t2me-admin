@@ -233,4 +233,9 @@ export const ApiConstant = {
   MOVIE_SCHEDULE_URL: "/api/v1/movie/schedule/secured/movie_schedules",
   // MOVIE_SCHEDULE_DETAILS_URL:"/api/v1/movie/movies/secured/movie_schedules/single",
   MOVIE_SCHEDULE_DETAILS_URL: "/api/v1/movie/schedule/secured/movie_schedules/single",
+
+
+
+  //report based apis
+  ADMIN_REPORT:"/api/v1/shared/report/secured/report_static"
 };

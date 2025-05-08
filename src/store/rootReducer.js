@@ -31,6 +31,7 @@ import layout from "./slices/layoutSlice";
 import issue from "./slices/IssueSlice";
 import payment from "./slices/paymentSlice";
 import  movieScheduleSlice  from "./slices/movieScheduleSlice";
+import report from "./slices/reportSlice"; // Adjust path if needed
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -66,6 +67,7 @@ const rootReducer = (asyncReducers = {}) => {
       leadEvents,
       movieSeatSlice,
       movieScheduleSlice,
+      report,
       ...asyncReducers,
     });
 
