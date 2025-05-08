@@ -24,8 +24,8 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import UserForm from "views/user/form-user";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
-import { fetchAllOffers } from "store/slices/offerSlice";
 import Utils from "utils";
+import { fetchAllCoupons } from "store/slices/couponSlice";
 
 const { Option } = Select;
 
@@ -35,23 +35,14 @@ const OrganizerOfferStatusList = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const type = params.get("type");
-  const {
-    filteredOffers,
-    pagination,
-    loading,
-    editable_status,
-    message,
-    editItemId,
-    dialogVisible,
-    warningPagination,
-    modalLoading,
-    responseImpactData,
-  } = useSelector((state) => state.offers);
+  const { filteredOffers, pagination, loading } = useSelector(
+    (state) => state.offers
+  );
   const [activeStatus, setactiveStatus] = useState();
 
   useEffect(() => {
     dispatch(
-      fetchAllOffers({
+      fetchAllCoupons({
         ...DEFAULT_PAGE_SIZE,
         event_code: Utils.getEventTypeCodeWithType(type),
       })
@@ -60,7 +51,7 @@ const OrganizerOfferStatusList = () => {
 
   const handlePagination = (page, size) => {
     dispatch(
-      fetchAllOffers({
+      fetchAllCoupons({
         page: page,
         size: size,
         event_code: Utils.getEventTypeCodeWithType(type),
@@ -76,7 +67,7 @@ const OrganizerOfferStatusList = () => {
   const handleShowStatus = (status) => {
     setactiveStatus(status);
     dispatch(
-      fetchAllOffers({
+      fetchAllCoupons({
         page: 1,
         size: 10,
         filters: status,
@@ -153,7 +144,7 @@ const OrganizerOfferStatusList = () => {
     <Card>
       <Row gutter={16} justify="start" align="" wrap={false}>
         <SearchBarWithStatus
-          fetchFunction={fetchAllOffers}
+          fetchFunction={fetchAllCoupons}
           isStatus={false}
           additionalParams={{
             event_code: Utils.getEventTypeCodeWithType(type),

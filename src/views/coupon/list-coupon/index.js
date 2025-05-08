@@ -95,7 +95,6 @@ const CouponList = () => {
     dispatch(setCouponModalLoading(true));
     navigate(`${APP_PREFIX_PATH}/coupon/edit/${editItemId}?type=${type}`);
 
-    console.log(editItemId, "9234239423490823498234098234908");
     dispatch(setCouponDialogVisible(false));
     dispatch(setCouponModalLoading(false));
   };
