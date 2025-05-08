@@ -30,7 +30,8 @@ import leadEvents from "./slices/leadEventSlice";
 import layout from "./slices/layoutSlice";
 import issue from "./slices/IssueSlice";
 import payment from "./slices/paymentSlice";
-import  movieScheduleSlice  from "./slices/movieScheduleSlice";
+import movieScheduleSlice from "./slices/movieScheduleSlice";
+import FilterSlice from "./slices/fliterSlice";
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -66,6 +67,7 @@ const rootReducer = (asyncReducers = {}) => {
       leadEvents,
       movieSeatSlice,
       movieScheduleSlice,
+      filter: FilterSlice,
       ...asyncReducers,
     });
 

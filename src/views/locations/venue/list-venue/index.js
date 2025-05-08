@@ -55,6 +55,7 @@ const VenueList = () => {
     responseImpactData,
   } = useSelector((state) => state.locations);
   const [form] = Form.useForm();
+  const { searchValue } = useSelector((state) => state.filter)
 
   useEffect(() => {
     dispatch(getVenues(DEFAULT_PAGE_SIZE));
@@ -72,7 +73,7 @@ const VenueList = () => {
     dispatch(setDialogVisible(true));
   };
   const handlePagination = (page, size) => {
-    dispatch(getVenues({ page: page, size: size }));
+    dispatch(getVenues({ page: page, size: size, search: searchValue }));
   };
   const handleEditVenue = (id) => {
     dispatch(setEditItemId(id));
@@ -148,6 +149,10 @@ const VenueList = () => {
       ),
     },
   ];
+
+  useEffect(() => {
+    console.log("searchValue", searchValue)
+  }, [searchValue])
 
   return (
     <Card>
