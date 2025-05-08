@@ -71,8 +71,8 @@ CouponService.editCouponStatus = function (
 
 CouponService.getAllCoupon = function (pageData) {
   const offreUrl = Utils.getUrlByUserRole(
-    ApiConstant.COUPON_STATUS_URL,
-    ApiConstant.ORGANIZER_COUPON_STATUS_URL
+    ApiConstant.COUPON_URL,
+    ApiConstant.ORGANIZER_COUPON_URL
   );
   return fetch({
     url: offreUrl,
