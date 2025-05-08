@@ -1,16 +1,12 @@
-// Organizer Report Page - Filter Months, pagination
-
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import "jspdf-autotable";
-import previewImage from "assets/preview/thudarum-1.jpg";
-import eventImage from "assets/preview/event.jpg";
 import { Link } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { Table, Select, DatePicker } from "antd";
+import { Table, Select, DatePicker, message } from "antd";
+import { organizerEvents, organizerMovies } from "mock/data/reportData";
+import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import dayjs from "dayjs";
 
 Chart.register(...registerables);
@@ -19,8 +15,8 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const OrganizerReport = () => {
-  const [activeSegment, setActiveSegment] = useState("all");
-  const [timeFilter, setTimeFilter] = useState("all");
+  const [activeSegment, setActiveSegment] = useState("events");
+  const [timeFilter, setTimeFilter] = useState("option");
   const [customDateRange, setCustomDateRange] = useState([]);
   const reportRef = useRef(null);
   const [pagination, setPagination] = useState({
@@ -29,209 +25,11 @@ const OrganizerReport = () => {
     total: 0,
   });
 
-  // Sample Data
-  const events = useMemo(
-    () => [
-      {
-        id: 1,
-        title: "Tech Conference 2025",
-        image: eventImage,
-        type: "event",
-        startDate: "2025-03-20",
-        endDate: "2025-03-22",
-        status: "Upcoming",
-        updatedAt: "2025-04-10",
-        attendees: 250,
-        capacity: 300,
-        revenue: 12500,
-      },
-      {
-        id: 2,
-        title: "Startup Meetup",
-        image: eventImage,
-        type: "event",
-        startDate: "2025-04-10",
-        endDate: "2025-04-11",
-        status: "Completed",
-        updatedAt: "2025-03-05",
-        attendees: 180,
-        capacity: 200,
-        revenue: 9000,
-      },
-      {
-        id: 3,
-        title: "AI Workshop",
-        image: eventImage,
-        type: "event",
-        startDate: "2024-04-18",
-        endDate: "2024-04-19",
-        status: "Upcoming",
-        updatedAt: "2025-04-12",
-        attendees: 95,
-        capacity: 120,
-        revenue: 4750,
-      },
-      {
-        id: 4,
-        title: "Health Summit",
-        image: eventImage,
-        type: "event",
-        startDate: "2025-02-01",
-        endDate: "2025-02-03",
-        status: "Cancelled",
-        updatedAt: "2025-01-25",
-        attendees: 0,
-        capacity: 150,
-        revenue: 0,
-      },
-      {
-        id: 5,
-        title: "Marketing Seminar",
-        image: eventImage,
-        type: "event",
-        startDate: "2025-04-15",
-        endDate: "2025-04-16",
-        status: "Upcoming",
-        updatedAt: "2025-04-14",
-        attendees: 210,
-        capacity: 250,
-        revenue: 10500,
-      },
-      {
-        id: 6,
-        title: "Winter Tech Fest",
-        image: eventImage,
-        type: "event",
-        startDate: "2024-12-15",
-        endDate: "2024-12-17",
-        status: "Completed",
-        updatedAt: "2024-12-10",
-        attendees: 320,
-        capacity: 350,
-        revenue: 16000,
-      },
-      {
-        id: 7,
-        title: "Spring Developer Conference",
-        image: eventImage,
-        type: "event",
-        startDate: "2025-04-05",
-        endDate: "2025-04-07",
-        status: "Completed",
-        updatedAt: "2025-04-01",
-        attendees: 275,
-        capacity: 300,
-        revenue: 13750,
-      },
-    ],
-    []
-  );
-
-  const movies = useMemo(
-    () => [
-      {
-        id: 1,
-        title: "Galactic Wars: New Dawn",
-        image: previewImage,
-        type: "movie",
-        releaseDate: "2025-05-20",
-        status: "Released",
-        lastUpdated: "2025-04-10",
-        ticketsSold: 125000,
-        totalSeats: 150000,
-        revenue: 3750000,
-      },
-      {
-        id: 2,
-        title: "Ocean's Legacy",
-        image: previewImage,
-        type: "movie",
-        releaseDate: "2025-03-10",
-        status: "Completed",
-        lastUpdated: "2025-03-05",
-        ticketsSold: 98000,
-        totalSeats: 120000,
-        revenue: 2940000,
-      },
-      {
-        id: 3,
-        title: "The Midnight Detective",
-        image: previewImage,
-        type: "movie",
-        releaseDate: "2025-04-18",
-        status: "Upcoming",
-        lastUpdated: "2025-04-12",
-        ticketsSold: 45000,
-        totalSeats: 100000,
-        revenue: 1350000,
-      },
-      {
-        id: 4,
-        title: "Desert Dreams",
-        image: previewImage,
-        type: "movie",
-        releaseDate: "2025-02-01",
-        status: "Cancelled",
-        lastUpdated: "2025-01-25",
-        ticketsSold: 0,
-        totalSeats: 80000,
-        revenue: 0,
-      },
-      {
-        id: 5,
-        title: "Future City",
-        image: previewImage,
-        type: "movie",
-        releaseDate: "2025-06-15",
-        status: "Upcoming",
-        lastUpdated: "2025-04-14",
-        ticketsSold: 65000,
-        totalSeats: 200000,
-        revenue: 1950000,
-      },
-      {
-        id: 6,
-        title: "Holiday Special",
-        image: previewImage,
-        type: "movie",
-        releaseDate: "2024-12-20",
-        status: "Completed",
-        lastUpdated: "2024-12-15",
-        ticketsSold: 150000,
-        totalSeats: 180000,
-        revenue: 4500000,
-      },
-      {
-        id: 7,
-        title: "Spring Awakening",
-        image: previewImage,
-        type: "movie",
-        releaseDate: "2025-04-01",
-        status: "Completed",
-        lastUpdated: "2025-03-28",
-        ticketsSold: 110000,
-        totalSeats: 150000,
-        revenue: 3300000,
-      },
-    ],
-    []
-  );
-
-  // Filter items based on time filter
   const baseItems = useMemo(() => {
-    return activeSegment === "all"
-      ? [...events, ...movies]
-      : activeSegment === "events"
-      ? events
-      : movies;
-  }, [activeSegment, events, movies]);
+    return activeSegment === "events" ? organizerEvents : organizerMovies;
+  }, [activeSegment, organizerEvents, organizerMovies]);
 
-  // Memoize the filtered items
   const filteredItems = useMemo(() => {
-    if (timeFilter === "all" && customDateRange.length === 0) {
-      return baseItems;
-    }
-
     const now = dayjs();
     let startDate, endDate;
 
@@ -257,7 +55,7 @@ const OrganizerReport = () => {
 
     return baseItems.filter((item) => {
       const dateField =
-        item.type === "event" ? item.startDate : item.releaseDate;
+        activeSegment === "events" ? item.startDate : item.releaseDate;
       const itemDate = dayjs(dateField);
 
       if (timeFilter === "custom") {
@@ -265,7 +63,37 @@ const OrganizerReport = () => {
       }
       return itemDate.isAfter(startDate);
     });
-  }, [baseItems, timeFilter, customDateRange]);
+  }, [baseItems, timeFilter, customDateRange, activeSegment]);
+
+  // Add custom date range validation
+  const disabledCustomDate = (current) => {
+    if (!customDateRange[0]) return false;
+    const tooLate =
+      customDateRange[0] && current.diff(customDateRange[0], "month") >= 3;
+    const tooEarly =
+      customDateRange[1] && customDateRange[1].diff(current, "month") >= 3;
+    return !!tooEarly || !!tooLate;
+  };
+
+  const handleTimeFilterChange = (value) => {
+    setTimeFilter(value);
+    setCustomDateRange([]);
+  };
+
+  // date range handler with validation
+  const handleDateRangeChange = (dates) => {
+    if (dates && dates[0] && dates[1]) {
+      const monthDiff = dates[1].diff(dates[0], "month");
+      if (monthDiff > 3) {
+        message.error("Maximum date range allowed is 3 months");
+        return;
+      }
+    }
+    setCustomDateRange(dates);
+    if (dates && dates.length === 2) {
+      setTimeFilter("custom");
+    }
+  };
 
   // Calculate paginated data
   const paginatedItems = useMemo(() => {
@@ -385,44 +213,11 @@ const OrganizerReport = () => {
   };
 
   const handleExportPDF = async () => {
-    try {
-      if (!reportRef.current) {
-        console.error("Report element not found");
-        return;
-      }
-
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 1,
-        logging: true,
-        useCORS: true,
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("landscape");
-      const imgWidth = pdf.internal.pageSize.getWidth();
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-      pdf.save("events-report.pdf");
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-    }
+    exportToPdf(reportRef, "MyReport.pdf");
   };
 
-  // Handle time filter change
-  const handleTimeFilterChange = (value) => {
-    setTimeFilter(value);
-    if (value !== "custom") {
-      setCustomDateRange([]);
-    }
-  };
-
-  // Handle custom date range change
-  const handleDateRangeChange = (dates) => {
-    setCustomDateRange(dates);
-    if (dates && dates.length === 2) {
-      setTimeFilter("custom");
-    }
+  const handleExportCSV = () => {
+    exportToExcel(reportRef, "MyReport.xlsx");
   };
 
   // Table columns configuration
@@ -534,30 +329,28 @@ const OrganizerReport = () => {
           <h2 className="text-2xl font-bold text-gray-800">Organizer Report</h2>
           <p className="text-gray-500 text-sm mt-1">
             Comprehensive overview of all {activeSegment} activities
-            {timeFilter !== "all" && (
-              <span className="ml-2">
-                (
-                {timeFilter === "custom" && customDateRange.length === 2
-                  ? `Custom range: ${formatDate(
-                      customDateRange[0]
-                    )} to ${formatDate(customDateRange[1])}`
-                  : timeFilter === "last-month"
-                  ? "Last month"
-                  : timeFilter === "last-3-months"
-                  ? "Last 3 months"
-                  : timeFilter === "last-year"
-                  ? "Last year"
-                  : ""}
-                )
-              </span>
-            )}
+            <span className="ml-2">
+              (
+              {timeFilter === "custom" && customDateRange.length === 2
+                ? `Custom range: ${formatDate(
+                    customDateRange[0]
+                  )} to ${formatDate(customDateRange[1])}`
+                : timeFilter === "last-month"
+                ? "Last month"
+                : timeFilter === "last-3-months"
+                ? "Last 3 months"
+                : timeFilter === "last-year"
+                ? "Last year"
+                : ""}
+              )
+            </span>
           </p>
         </div>
 
         {/* Enhanced Controls */}
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-            {["all", "events", "movies"].map((segment) => (
+            {["events", "movies"].map((segment) => (
               <button
                 key={segment}
                 onClick={() => {
@@ -577,12 +370,11 @@ const OrganizerReport = () => {
 
           <div className="flex gap-2">
             <Select
-              defaultValue="all"
+              defaultValue="last-month"
               style={{ width: 150 }}
               onChange={handleTimeFilterChange}
               value={timeFilter}
             >
-              <Option value="all">All Time</Option>
               <Option value="last-month">Last Month</Option>
               <Option value="last-3-months">Last 3 Months</Option>
               <Option value="last-year">Last Year</Option>
@@ -594,15 +386,17 @@ const OrganizerReport = () => {
                 value={customDateRange}
                 onChange={handleDateRangeChange}
                 style={{ width: 250 }}
+                disabledDate={disabledCustomDate}
+                onCalendarChange={(dates) => dates && setCustomDateRange(dates)}
               />
             )}
 
             <button
               onClick={handleExportPDF}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-2 transition-colors"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
             >
               <svg
-                className="w-4 h-4"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -611,10 +405,29 @@ const OrganizerReport = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                 />
               </svg>
-              PDF
+              Export PDF
+            </button>
+            <button
+              onClick={handleExportCSV}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              Export CSV
             </button>
           </div>
         </div>
@@ -827,13 +640,6 @@ const OrganizerReport = () => {
             pageSize: pagination.pageSize,
             total: filteredItems.length,
             onChange: handlePagination,
-            // showSizeChanger: true,
-            // pageSizeOptions: ["5", "10", "20", "50"],
-            // showTotal: (total, range) => (
-            //   <span className="text-gray-600">
-            //     Showing {range[0]}-{range[1]} of {total} items
-            //   </span>
-            // ),
           }}
         />
       </div>

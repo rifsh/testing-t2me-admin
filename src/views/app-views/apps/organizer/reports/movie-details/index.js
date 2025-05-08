@@ -2,42 +2,12 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
-import previewImage from "assets/preview/thudarum-1.jpg";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { movieDetail } from "mock/data/reportData";
 
 Chart.register(...registerables);
 
 const MovieDetail = () => {
-  // Mock data - replace with API call
-  const movie = {
-    id: 1,
-    title: "Galactic Wars: New Dawn",
-    image: previewImage,
-    description:
-      "Epic space adventure following the rebellion against the galactic empire in a distant future.",
-    releaseDate: "2025-05-20",
-    duration: "142 min",
-    genre: "Sci-Fi, Action",
-    director: "Alex Johnson",
-    status: "Released",
-    rating: "PG-13",
-    ticketsSold: 125000,
-    totalSeats: 150000,
-    revenue: 3750000,
-    showTimes: [
-      { theater: "Cinema City", time: "10:00 AM", seatsAvailable: 45 },
-      { theater: "Cinema City", time: "01:30 PM", seatsAvailable: 12 },
-      { theater: "MegaPlex", time: "04:00 PM", seatsAvailable: 78 },
-      { theater: "MegaPlex", time: "07:30 PM", seatsAvailable: 23 },
-      { theater: "Starlight Theater", time: "09:45 PM", seatsAvailable: 56 },
-    ],
-    ticketTypes: [
-      { name: "Standard", price: 12, sold: 80000 },
-      { name: "Premium", price: 18, sold: 35000 },
-      { name: "VIP", price: 25, sold: 10000 },
-    ],
-  };
-
   const getStatusBadge = (status) => {
     const baseClasses = "px-3 py-1 rounded-md text-sm font-medium";
     switch (status) {
@@ -75,10 +45,10 @@ const MovieDetail = () => {
 
   // Chart data
   const ticketSalesData = {
-    labels: movie.ticketTypes.map((t) => t.name),
+    labels: movieDetail.ticketTypes.map((t) => t.name),
     datasets: [
       {
-        data: movie.ticketTypes.map((t) => t.sold),
+        data: movieDetail.ticketTypes.map((t) => t.sold),
         backgroundColor: ["#0dcaf0", "#198754", "#dc3545"],
         borderWidth: 1,
       },
@@ -86,11 +56,11 @@ const MovieDetail = () => {
   };
 
   const revenueData = {
-    labels: movie.ticketTypes.map((t) => t.name),
+    labels: movieDetail.ticketTypes.map((t) => t.name),
     datasets: [
       {
         label: "Revenue ($)",
-        data: movie.ticketTypes.map((t) => t.price * t.sold),
+        data: movieDetail.ticketTypes.map((t) => t.price * t.sold),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 2,
@@ -113,42 +83,42 @@ const MovieDetail = () => {
         {/* Movie Header */}
         <div className="flex flex-col md:flex-row gap-6 mb-8">
           <img
-            src={movie.image}
-            alt={movie.title}
+            src={movieDetail.image}
+            alt={movieDetail.title}
             className="w-full md:w-2/5 h-64 object-cover rounded-lg"
           />
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {movie.title}
+              {movieDetail.title}
             </h1>
-            <p className="text-gray-600 mb-4">{movie.description}</p>
+            <p className="text-gray-600 mb-4">{movieDetail.description}</p>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <div className="text-sm text-gray-500">Director</div>
-                <div className="font-medium">{movie.director}</div>
+                <div className="font-medium">{movieDetail.director}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">Status</div>
-                <div>{getStatusBadge(movie.status)}</div>
+                <div>{getStatusBadge(movieDetail.status)}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">Release Date</div>
                 <div className="font-medium">
-                  {formatDate(movie.releaseDate)}
+                  {formatDate(movieDetail.releaseDate)}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">Genre</div>
-                <div className="font-medium">{movie.genre}</div>
+                <div className="font-medium">{movieDetail.genre}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">Duration</div>
-                <div className="font-medium">{movie.duration}</div>
+                <div className="font-medium">{movieDetail.duration}</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500">Rating</div>
-                <div className="font-medium">{movie.rating}</div>
+                <div className="font-medium">{movieDetail.rating}</div>
               </div>
             </div>
           </div>
@@ -159,24 +129,30 @@ const MovieDetail = () => {
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="text-sm text-gray-600 mb-1">Ticket Sales</div>
             <div className="text-2xl font-bold">
-              {movie.ticketsSold.toLocaleString()}/
-              {movie.totalSeats.toLocaleString()}
+              {movieDetail.ticketsSold.toLocaleString()}/
+              {movieDetail.totalSeats.toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">
-              ({Math.round((movie.ticketsSold / movie.totalSeats) * 100)}% sold)
+              (
+              {Math.round(
+                (movieDetail.ticketsSold / movieDetail.totalSeats) * 100
+              )}
+              % sold)
             </div>
           </div>
 
           <div className="bg-green-50 p-4 rounded-lg">
             <div className="text-sm text-gray-600 mb-1">Total Revenue</div>
             <div className="text-2xl font-bold text-green-600">
-              ${movie.revenue.toLocaleString()}
+              ${movieDetail.revenue.toLocaleString()}
             </div>
           </div>
 
           <div className="bg-purple-50 p-4 rounded-lg">
             <div className="text-sm text-gray-600 mb-1">Ticket Types</div>
-            <div className="text-2xl font-bold">{movie.ticketTypes.length}</div>
+            <div className="text-2xl font-bold">
+              {movieDetail.ticketTypes.length}
+            </div>
           </div>
         </div>
 
@@ -233,7 +209,7 @@ const MovieDetail = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {movie.showTimes.map((show, index) => (
+                {movieDetail.showTimes.map((show, index) => (
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {show.theater}
