@@ -26,6 +26,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { getCurrentUser, getUserRole } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const { Option } = Select;
 
@@ -40,6 +41,7 @@ const IssueList = () => {
     console.warn('tholi..........', getCurrentUser().role_id)
     dispatch(fetchAllAlertissues({ ...DEFAULT_PAGE_SIZE }));
   }, [dispatch]);
+  const handlePagination = usePaginationHook(fetchAllAlertissues);
 
   const handleViewDetails = async (id) => {
     console.warn(id)
@@ -58,9 +60,9 @@ const IssueList = () => {
   //   dispatch(setSelectedItem(data));
   // };
 
-  const handlePagination = (page, size) => {
-    dispatch(fetchAllAlertissues({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(fetchAllAlertissues({ page: page, size: size }));
+  // };
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
@@ -159,9 +161,9 @@ const IssueList = () => {
       dataIndex: "actions",
       render: (_, elm) => (
         <div className="text-right">
-          <EllipsisDropdown 
-          menu={dropdownMenu(elm)}
-           />
+          <EllipsisDropdown
+            menu={dropdownMenu(elm)}
+          />
         </div>
       ),
     },
@@ -237,45 +239,45 @@ const IssueList = () => {
               >
                 <Option value={null}>All</Option>
                 <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
-                    <Option value={UserRoleConstants.techAdminRoleId}>
-                      Tech Admin
-                    </Option>
-                    <Option value={UserRoleConstants.techSupportingTeamRoleId}>
-                      Super Supporting Team
-                    </Option>
-                    <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
-                      Event Supporting Team
-                    </Option>
-      
-            </Select>
-          </div>
+                <Option value={UserRoleConstants.techAdminRoleId}>
+                  Tech Admin
+                </Option>
+                <Option value={UserRoleConstants.techSupportingTeamRoleId}>
+                  Super Supporting Team
+                </Option>
+                <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
+                  Event Supporting Team
+                </Option>
+
+              </Select>
+            </div>
+          </Flex>
+          {getCurrentUser().role_id == UserRoleConstants.eventOrganizerRoleId && <div>
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              block
+              onClick={() => navigate(`${APP_PREFIX_PATH}/issue/add`)}
+            >
+              Add Issue
+            </Button>
+          </div>}
         </Flex>
-        { getCurrentUser().role_id == UserRoleConstants.eventOrganizerRoleId &&<div>
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/issue/add`)}
-          >
-            Add Issue
-          </Button>
-        </div> }
-      </Flex>
-      <div className="table-responsive">
-        <Table
-          columns={tableColumns}
-          dataSource={issues}
-          rowKey="id"
-          loading={loading}
-          
-          pagination={{
-            current: pagination.page,
-            pageSize: pagination.size,
-            total: pagination.total,
-            onChange: (page, pageSize) => handlePagination(page, pageSize),
-          }}
-        />
-      </div>
+        <div className="table-responsive">
+          <Table
+            columns={tableColumns}
+            dataSource={issues}
+            rowKey="id"
+            loading={loading}
+
+            pagination={{
+              current: pagination.page,
+              pageSize: pagination.size,
+              total: pagination.total,
+              onChange: (page, pageSize) => handlePagination(page, pageSize),
+            }}
+          />
+        </div>
 
         <UpdateStatusModal
           responseMessage={message}

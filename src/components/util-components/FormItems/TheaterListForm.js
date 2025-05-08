@@ -29,13 +29,13 @@ const TheaterListForm = ({
   const fetchData = (search = null) => {
     const venueId = form.getFieldValue("venue_id");
     // if (venueId) {
-      dispatch(
-        fetchDropdownTheaters({
-          venue_id: venueId,
-          search,
-          ...(apiParams || {}), 
-        })
-      );
+    dispatch(
+      fetchDropdownTheaters({
+        venue_id: venueId,
+        search,
+        ...(apiParams || {}),
+      })
+    );
     // }
   };
 
@@ -59,7 +59,7 @@ const TheaterListForm = ({
       setSearchInput(input);
       fetchData(input || null);
     }, 300),
-    [apiParams] 
+    [apiParams]
   );
 
   const handleSearch = (input) => {
@@ -89,9 +89,8 @@ const TheaterListForm = ({
         options={
           response?.items?.map((theater) => ({
             value: theater?.id,
-            label: `${theater.name} (${theater.movie_screen?.length || 0} ${
-              theater.movie_screen?.length === 1 ? "Screen" : "Screens"
-            })`,
+            label: `${theater.name} (${theater.movie_screen?.length || 0} ${theater.movie_screen?.length === 1 ? "Screen" : "Screens"
+              })`,
             theaterName: theater.name,
           })) || []
         }

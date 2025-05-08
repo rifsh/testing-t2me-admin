@@ -15,6 +15,7 @@ const AppInfoList = () => {
 
   // Fetch terms & conditions data from Redux store
   const { termsConditionData, termsLoading: tableLoader } = useSelector((state) => state.auth);
+  // const handlePagination = usePaginationHook(fetchTheaterCompanies);
 
   useEffect(() => {
     dispatch(TermsCondition());

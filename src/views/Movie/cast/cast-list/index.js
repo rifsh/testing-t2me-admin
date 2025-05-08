@@ -15,6 +15,7 @@ import Utils from 'utils';
 import { setDialogVisible, setSelectedItem } from 'store/slices/modalSlice';
 import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatusModal';
 import StatusSubmitAndConfirmModal from 'components/util-components/ModalItems/StatusSubmitModal';
+import usePaginationHook from 'utils/hooks/usePaginationHandler';
 
 const { Text } = Typography;
 
@@ -36,6 +37,7 @@ const Index = () => {
             setFilteredData(response.items);
         }
     }, [response]);
+    const handlePagination = usePaginationHook(fetchPersonalitiesData);
 
     const calculateAge = (birthDate) => {
         if (!birthDate) return '-';
@@ -98,9 +100,9 @@ const Index = () => {
         }
     };
 
-    const handlePagination = (page, pageSize) => {
-        dispatch(fetchPersonalitiesData({ page: page, size: pageSize }));
-    };
+    // const handlePagination = (page, pageSize) => {
+    //     dispatch(fetchPersonalitiesData({ page: page, size: pageSize }));
+    // };
 
     const handleUpdateStatus = (item) => {
         const newStatus = !item.status;

@@ -36,6 +36,7 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 
 const { Option } = Select;
@@ -56,15 +57,16 @@ const CouponList = () => {
     responseImpactData,
   } = useSelector((state) => state.advertisement);
   const { responseData } = useSelector((state) => state.modalSlice);
+  const handlePagination = usePaginationHook(fetchAdSchedules);
 
   useEffect(() => {
     dispatch(fetchAdSchedules({ page: 1, size: 10 }));
     console.log(filteredAdSchedules.length, "-------------------------ssss");
   }, [dispatch]);
 
-  const handlePagination = (page, size, type) => {
-    dispatch(fetchAdSchedules({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size, type) => {
+  //   dispatch(fetchAdSchedules({ page: page, size: size }));
+  // };
   const handleMediaClick = (mediaPath) => {
     dispatch(setSelectedMedia(mediaPath));
     dispatch(setModalVisible(true));

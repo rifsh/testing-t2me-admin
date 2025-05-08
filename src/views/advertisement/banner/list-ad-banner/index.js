@@ -23,6 +23,7 @@ import Utils from "utils";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const AdBannerlist = () => {
   const dispatch = useDispatch();
@@ -43,15 +44,17 @@ const AdBannerlist = () => {
     editable_status,
   } = useSelector((state) => state.advertisement);
   const { responseData } = useSelector((state) => state.modalSlice);
+  const handlePagination = usePaginationHook(fetchAdBanners);
 
   useEffect(() => {
     dispatch(fetchAdBanners({ page: 1, size: 10 }));
     console.log(filteredAdBanner.length, "-------------------------ssss");
   }, [dispatch]);
 
-  const handlePagination = (page, size, type) => {
-    dispatch(fetchAdBanners({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size, type) => {
+  //   dispatch(fetchAdBanners({ page: page, size: size }));
+  // };
+  
   const handleMediaClick = (mediaPath) => {
     dispatch(setSelectedMedia(mediaPath));
     dispatch(setModalVisible(true));
@@ -147,19 +150,19 @@ const AdBannerlist = () => {
     {
       title: "Event Type",
       dataIndex: "event_type.name",
-      render: (_, record) => <span>{record.event_type?.name||"Not Available"}</span>,
+      render: (_, record) => <span>{record.event_type?.name || "Not Available"}</span>,
       sorter: (a, b) => a.event_type.name.localeCompare(b.event_type.name),
     },
     {
       title: "Place",
       dataIndex: "place.name",
-      render: (_, record) => <span>{record.place?.name||"Not Available"}</span>,
+      render: (_, record) => <span>{record.place?.name || "Not Available"}</span>,
       sorter: (a, b) => a.place.name.localeCompare(b.place.name),
     },
     {
       title: "Event",
       dataIndex: "event.event_name",
-      render: (_, record) => (  
+      render: (_, record) => (
         <span>{record.event?.event_name || "Not Available"}</span>
       ),
       sorter: (a, b) =>

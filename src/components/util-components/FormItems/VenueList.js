@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
+import debounce from "lodash/debounce";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 
 const VenueListForm = ({ form, label, rules, onSelect, mode, disabled }) => {
@@ -9,11 +10,22 @@ const VenueListForm = ({ form, label, rules, onSelect, mode, disabled }) => {
     (state) => state.locations
   );
 
+  const placeId = form.getFieldValue("place_id");
+
   useEffect(() => {
-    if (form.getFieldValue("place_id")) {
-      dispatch(getVenues({ place_id: form.getFieldValue("place_id") }));
+    if (placeId) {
+      dispatch(getVenues({ place_id: placeId, search: "" }));
     }
-  }, [dispatch, form]);
+  }, [dispatch, placeId]);
+
+  const debouncedSearch = useCallback(
+    debounce((value) => {
+      if (placeId) {
+        dispatch(getVenues({ place_id: placeId, search: value }));
+      }
+    }, 300),
+    [dispatch, placeId]
+  );
 
   const handleSetSelectedVenue = (value) => {
     const venue = filteredVenues.find((venue) => venue.id === value);
@@ -25,7 +37,12 @@ const VenueListForm = ({ form, label, rules, onSelect, mode, disabled }) => {
     <Form.Item name="venue_id" label={label} rules={rules}>
       <Select
         mode={mode}
-        // defaultValue={null}
+        disabled={disabled}
+        loading={loading}
+        placeholder="Search and select a venue"
+        showSearch
+        filterOption={false} // This disables local filtering so onSearch is used
+        onSearch={debouncedSearch}
         notFoundContent={
           loading ? (
             <span>Loading venues...</span>
@@ -35,13 +52,6 @@ const VenueListForm = ({ form, label, rules, onSelect, mode, disabled }) => {
             </span>
           )
         }
-        disabled={disabled}
-        loading={loading}
-        placeholder="Select a venue"
-        showSearch
-        filterOption={(input, option) =>
-          option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
-        } //
         options={filteredVenues.map((venue) => ({
           value: venue.id,
           label: venue.name,
