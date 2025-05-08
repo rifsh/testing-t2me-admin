@@ -34,6 +34,8 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import { resetSearchValue } from "store/slices/fliterSlice";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const { Option } = Select;
 
@@ -55,9 +57,13 @@ const VenueList = () => {
     responseImpactData,
   } = useSelector((state) => state.locations);
   const [form] = Form.useForm();
+  const handlePagination = usePaginationHook(getVenues);
 
   useEffect(() => {
     dispatch(getVenues(DEFAULT_PAGE_SIZE));
+    return () => {
+      dispatch(resetSearchValue());
+    }
   }, [dispatch]);
 
   const handleViewDetails = async (id) => {
@@ -71,9 +77,9 @@ const VenueList = () => {
     dispatch(setSelectedItem(data));
     dispatch(setDialogVisible(true));
   };
-  const handlePagination = (page, size) => {
-    dispatch(getVenues({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(getVenues({ page: page, size: size, search: searchValue }));
+  // };
   const handleEditVenue = (id) => {
     dispatch(setEditItemId(id));
     dispatch(setLocationDialogVisible(true));

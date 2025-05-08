@@ -14,6 +14,7 @@ import { TextConstants } from 'constants/TextConstant';
 import Utils from 'utils';
 import StatusSubmitAndConfirmModal from 'components/util-components/ModalItems/StatusSubmitModal';
 import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatusModal';
+import usePaginationHook from 'utils/hooks/usePaginationHandler';
 
 const Index = () => {
     const navigate = useNavigate();
@@ -24,6 +25,7 @@ const Index = () => {
         dialogVisible,
         modalLoading,
     } = useSelector((state) => state.locations);
+    const handlePagination = usePaginationHook(fetchMoviesData);
 
     useEffect(() => {
         dispatch(fetchMoviesData(DEFAULT_PAGE_SIZE))
@@ -109,9 +111,9 @@ const Index = () => {
         dispatch(setDialogVisible(true));
     };
 
-    const handlePagination = (page, pageSize) => {
-        dispatch(fetchMoviesData({ page: page, size: pageSize }));
-    };
+    // const handlePagination = (page, pageSize) => {
+    //     dispatch(fetchMoviesData({ page: page, size: pageSize }));
+    // };
 
     const tableColumns = [
         {

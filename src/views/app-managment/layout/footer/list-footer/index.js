@@ -18,6 +18,7 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const { Panel } = Collapse;
 
@@ -29,14 +30,15 @@ const FooterList = () => {
     (state) => state.footer
   );
   const [form] = Form.useForm();
+  const handlePagination = usePaginationHook(fetchFooterData);
 
   useEffect(() => {
     dispatch(fetchFooterData());
   }, [dispatch]);
 
-  const handlePagination = (page, size) => {
-    // dispatch(fetchAllFooter({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size) => {
+  //   // dispatch(fetchAllFooter({ page: page, size: size }));
+  // };
 
   const dropdownMenu = (row) => (
     <Menu>

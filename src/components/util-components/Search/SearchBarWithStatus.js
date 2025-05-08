@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { AutoComplete, Input, Select } from "antd";
 import { useDispatch } from "react-redux";
 import Flex from "components/shared-components/Flex";
+import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -20,6 +21,7 @@ const SearchBarWithStatus = ({
   const handleSearch = (value) => {
     if (value) {
       setSearchValue(value || null);
+      dispatch(setGlobalSearchValue(value));
       dispatch(
         fetchFunction({
           search: value || null,
@@ -35,6 +37,7 @@ const SearchBarWithStatus = ({
   const handleSearchIsEmpty = (value) => {
     if (!value) {
       setSearchValue(null);
+      dispatch(resetSearchValue())
       dispatch(
         fetchFunction({
           search: null,

@@ -1,16 +1,16 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { eventOrganizers, movieOrganizers } from "mock/data/reportData";
+import { exportToPdf, exportToExcel } from "utils/exportUtils";
 
 Chart.register(...registerables);
 
 const OrganizerDetail = () => {
   const { organizerId } = useParams();
+  const reportRef = useRef(null);
 
   const organizer = [...eventOrganizers, ...movieOrganizers].find(
     (org) => org.id === parseInt(organizerId)
@@ -67,52 +67,19 @@ const OrganizerDetail = () => {
 
   // Export handlers
   const handleExportPDF = async () => {
-    const input = document.getElementById("organizer-content");
-    const canvas = await html2canvas(input);
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF();
-    const imgWidth = 200;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(imgData, "PNG", 5, 5, imgWidth, imgHeight);
-    pdf.save(`${organizer.name}-report.pdf`);
+    exportToPdf(reportRef, "MyReport.pdf");
   };
 
   const handleExportCSV = () => {
-    const items =
-      organizer.type === "event" ? organizer.eventsList : organizer.moviesList;
-    const csvContent = [
-      organizer.type === "event"
-        ? ["Event Name", "Date", "Attendees", "Revenue"]
-        : ["Movie Name", "Release Date", "Attendees", "Revenue", "Showtimes"],
-      ...items.map((item) =>
-        organizer.type === "event"
-          ? [item.name, item.date, item.attendees, item.revenue]
-          : [
-              item.name,
-              item.releaseDate,
-              item.attendees,
-              item.revenue,
-              item.showtimes.join(", "),
-            ]
-      ),
-    ]
-      .map((e) => e.join(","))
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${organizer.name}-${
-      organizer.type === "event" ? "events" : "movies"
-    }.csv`;
-    a.click();
+    exportToExcel(reportRef, "MyReport.xlsx");
   };
 
   return (
-    <div className="container mx-auto px-4 py-6" id="organizer-content">
+    <div
+      className="container mx-auto px-4 py-6"
+      id="organizer-content"
+      ref={reportRef}
+    >
       <div className="mb-6">
         <div className="flex justify-between items-center">
           <Link
@@ -124,7 +91,6 @@ const OrganizerDetail = () => {
 
           <div className="flex gap-2 ml-auto">
             {" "}
-            {/* Added ml-auto here */}
             <button
               onClick={handleExportCSV}
               className="px-3 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700"

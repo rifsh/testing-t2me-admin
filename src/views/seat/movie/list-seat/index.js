@@ -27,6 +27,7 @@ import {
   setSeatDialogVisible,
   setSeatModalLoading,
 } from "store/slices/movieSeatSlice";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const MovieSeatList = () => {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ const MovieSeatList = () => {
     responseImpactData,
   } = useSelector((state) => state.movieSeatSlice);
   const { responseData } = useSelector((state) => state.modalSlice);
+  const handlePagination = usePaginationHook(getAllSeatStructures);
 
   useEffect(() => {
     dispatch(getAllSeatStructures(DEFAULT_PAGE_SIZE));
@@ -183,9 +185,9 @@ const MovieSeatList = () => {
     },
   ];
 
-  const handlePagination = (page, size) => {
-    dispatch(getAllSeatStructures({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(getAllSeatStructures({ page: page, size: size }));
+  // };
 
   return (
     <Card>

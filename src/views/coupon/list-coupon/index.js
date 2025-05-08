@@ -184,7 +184,7 @@ const CouponList = () => {
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/coupon/add?type=${type}`)}
         >
-          Add {type.charAt(0).toUpperCase() + type.slice(1)} Coupon
+          Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Coupon
         </Button>
       </Flex>
 

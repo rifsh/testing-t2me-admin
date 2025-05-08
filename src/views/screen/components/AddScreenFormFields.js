@@ -93,6 +93,9 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                 }, 0);
             }
         }
+        return () =>{
+            dispatch(setCleraAllData())
+        }
     }, [singleResponse, form, placeSelected === false]);
 
     useEffect(() => {
@@ -293,6 +296,20 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                                     form={form}
                                     onSelect={handleTheaterSelect}
                                 />
+                                {/* {theaterResponse && <GenericDropdown
+                                    name="theater_id"
+                                    label="Theater"
+                                    mode="single"
+                                    rules={[{ required: true, message: 'Please select languages!' }]}
+                                    fetchOptions={fetchDropdownTheaters}
+                                    optionsData={theaterResponse?.items}
+                                    loading={theatterLoading}
+                                    optionLabelKey="name"
+                                    optionExtraLabel=""
+                                    optionValueKey="id"
+                                    searchParamKey="search"
+                                    form={form}
+                                />} */}
                             </Col>
                         </Row>
                     </Card>
@@ -310,20 +327,11 @@ const AddScreenFormFields = ({ mode, screenId }) => {
             </>
 
             <div style={{ marginTop: 16 }}>
-                <Collapse in={!!form.getFieldValue('theatre_id')}>
+                <Collapse in={!!selectedTheaterId}>
                     <div>
                         <div style={{ textAlign: 'center', padding: '20px' }}>
                         </div>
                         <>
-                            {/* {filteredTickets && filteredTickets.length === 0 && venueSelected && (
-                                <Alert
-                                    message="No Ticket Structures Available"
-                                    description="There are no ticket structures available for this venue. Please configure ticket structures before adding screens."
-                                    type="warning"
-                                    showIcon
-                                    style={{ marginBottom: '16px' }}
-                                />
-                            )} */}
 
                             <Col xs={24} sm={24} md={24}>
                                 <Card

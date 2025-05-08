@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Utils from "utils";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 const { Panel } = Collapse;
 
 const PaymentList = () => {
@@ -34,6 +35,7 @@ const PaymentList = () => {
   );
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const handlePagination = usePaginationHook(fetchAllPayment);
 
   useEffect(() => {
     dispatch(fetchAllPayment(DEFAULT_PAGE_SIZE));
@@ -49,9 +51,9 @@ const PaymentList = () => {
     setSelectedPayment(null);
   };
 
-  const handlePagination = (page, size) => {
-    dispatch(fetchAllPayment({ page, size }));
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(fetchAllPayment({ page, size }));
+  // };
 
   const dropdownMenu = (row) => [
     {

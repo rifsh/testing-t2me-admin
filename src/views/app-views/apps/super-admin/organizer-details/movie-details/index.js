@@ -1,16 +1,16 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import { movies } from "mock/data/reportData";
+import { exportToExcel, exportToPdf } from "utils/exportUtils";
 
 Chart.register(...registerables);
 
 const MovieDetail = () => {
   const { movieId } = useParams();
   const navigate = useNavigate();
+  const reportRef = useRef(null);
 
   const movie = movies.find((m) => m.id === parseInt(movieId));
 
@@ -54,41 +54,19 @@ const MovieDetail = () => {
 
   // Export handlers
   const handleExportPDF = async () => {
-    const input = document.getElementById("movie-content");
-    const canvas = await html2canvas(input);
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF();
-    const imgWidth = 200;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(imgData, "PNG", 5, 5, imgWidth, imgHeight);
-    pdf.save(`${movie.title}-report.pdf`);
+    exportToPdf(reportRef, "MyReport.pdf");
   };
 
   const handleExportCSV = () => {
-    const csvContent = [
-      ["Showtime", "Type", "Price", "Sold"],
-      ...movie.showtimes.map((showtime) => [
-        showtime.time,
-        showtime.type,
-        showtime.price,
-        showtime.sold,
-      ]),
-    ]
-      .map((e) => e.join(","))
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${movie.title}-showtimes.csv`;
-    a.click();
+    exportToExcel(reportRef, "MyReport.xlsx");
   };
 
   return (
-    <div className="container mx-auto px-4 py-6" id="movie-content">
+    <div
+      className="container mx-auto px-4 py-6"
+      id="movie-content"
+      ref={reportRef}
+    >
       <div className="mb-6">
         <span
           onClick={() => navigate(-1)}

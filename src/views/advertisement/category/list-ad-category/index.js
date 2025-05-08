@@ -27,6 +27,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -36,6 +37,7 @@ const CategoryList = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [modalType, setModalType] = useState("category");
+  const handlePagination = usePaginationHook(fetchAdCategories);
 
   const {
     filteredAdCategories,
@@ -56,11 +58,11 @@ const CategoryList = () => {
     dispatch(fetchAdCategories({ page: 1, size: 10 }));
   }, [dispatch]);
 
-  const handlePagination = (page, size, type) => {
-    if (type === "category") {
-      dispatch(fetchAdCategories({ page: page, size: size }));
-    }
-  };
+  // const handlePagination = (page, size, type) => {
+  //   if (type === "category") {
+  //     dispatch(fetchAdCategories({ page: page, size: size }));
+  //   }
+  // };
 
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;

@@ -27,6 +27,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import { EventCodeConstants, EventType } from "constants/AppConstants";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 import { isOrganizer } from "configs/UserAccessConfig";
 
 const OfferList = () => {
@@ -48,7 +49,7 @@ const OfferList = () => {
     responseImpactData,
   } = useSelector((state) => state.offers);
   const { responseData } = useSelector((state) => state.modalSlice);
-
+  const handlePagination = usePaginationHook(fetchAllOffers);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
 
@@ -154,9 +155,9 @@ const OfferList = () => {
       ),
     },
   ];
-  const handlePagination = (page, size) => {
-    dispatch(fetchAllOffers({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(fetchAllOffers({ page: page, size: size }));
+  // };
 
   return (
     <Card>
@@ -167,7 +168,7 @@ const OfferList = () => {
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)}
         >
-          Add {type.charAt(0).toUpperCase() + type.slice(1)} Offer
+          Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
         </Button>
       </Flex>
       <Table

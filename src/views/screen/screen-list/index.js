@@ -30,6 +30,7 @@ import SearchBarWithStatus from "components/util-components/Search/SearchBarWith
 import { TextConstants } from "constants/TextConstant";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const ScreenList = () => {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ const ScreenList = () => {
   const { dialogVisible, modalLoading } = useSelector(
     (state) => state.locations
   );
+  const handlePagination = usePaginationHook(fetchScreenData);
 
   useEffect(() => {
     dispatch(fetchScreenData(DEFAULT_PAGE_SIZE));
@@ -100,9 +102,9 @@ const ScreenList = () => {
     dispatch(setLocationDialogVisible(false));
   };
 
-  const handlePagination = (page, pageSize) => {
-    dispatch(fetchScreenData({ page: page, size: pageSize }));
-  };
+  // const handlePagination = (page, pageSize) => {
+  //   dispatch(fetchScreenData({ page: page, size: pageSize }));
+  // };
 
   const getDropdownMenu = (row) => [
     {

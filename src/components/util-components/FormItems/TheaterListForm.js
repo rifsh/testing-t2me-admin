@@ -91,9 +91,8 @@ const TheaterListForm = ({
         options={
           response?.items?.map((theater) => ({
             value: theater?.id,
-            label: `${theater.name} (${theater.movie_screen?.length || 0} ${
-              theater.movie_screen?.length === 1 ? "Screen" : "Screens"
-            })`,
+            label: `${theater.name} (${theater.movie_screen?.length || 0} ${theater.movie_screen?.length === 1 ? "Screen" : "Screens"
+              })`,
             theaterName: theater.name,
           })) || []
         }
