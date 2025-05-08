@@ -1,28 +1,13 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
-import { Card, Table, Select, Menu, Row, Dropdown, Form, Tag } from "antd";
-import { EyeOutlined, EditOutlined } from "@ant-design/icons";
+import { Card, Table, Select, Menu, Row, Form, Tag } from "antd";
+import { EyeOutlined } from "@ant-design/icons";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
-import dayjs from "dayjs";
-import { DATE_FORMAT_DD_MM_YYYY } from "constants/DateConstant";
-import utils from "utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  editPlace,
-  getPlaces,
-  getSinglePlace,
-} from "store/slices/locationSlice";
-import {
-  fetchOrganizerUpdates,
-  fetchSingleOrganizerUpdate,
-} from "store/slices/EventOrganizerSlice";
-import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
-import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
-import UserForm from "views/user/form-user";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import Utils from "utils";
 import { fetchAllCoupons } from "store/slices/couponSlice";
@@ -35,8 +20,8 @@ const OrganizerOfferStatusList = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const type = params.get("type");
-  const { filteredOffers, pagination, loading } = useSelector(
-    (state) => state.offers
+  const { filteredCoupons, pagination, loading } = useSelector(
+    (state) => state.coupons
   );
   const [activeStatus, setactiveStatus] = useState();
 
@@ -44,6 +29,8 @@ const OrganizerOfferStatusList = () => {
     dispatch(
       fetchAllCoupons({
         ...DEFAULT_PAGE_SIZE,
+        organizer: true,
+        isOrganizer: true,
         event_code: Utils.getEventTypeCodeWithType(type),
       })
     );
@@ -54,6 +41,7 @@ const OrganizerOfferStatusList = () => {
       fetchAllCoupons({
         page: page,
         size: size,
+        isOrganizer: true,
         event_code: Utils.getEventTypeCodeWithType(type),
       })
     );
@@ -61,7 +49,7 @@ const OrganizerOfferStatusList = () => {
 
   const handleViewDetails = async (id) => {
     console.log(id);
-    navigate(`${APP_PREFIX_PATH}/track/offer/status/details/${id}`);
+    navigate(`${APP_PREFIX_PATH}/track/coupon/status/details/${id}`);
   };
 
   const handleShowStatus = (status) => {
@@ -71,6 +59,7 @@ const OrganizerOfferStatusList = () => {
         page: 1,
         size: 10,
         filters: status,
+        isOrganizer: true,
         event_code: Utils.getEventTypeCodeWithType(type),
       })
     );
@@ -112,16 +101,16 @@ const OrganizerOfferStatusList = () => {
         };
 
         const color =
-          text.toLowerCase() === "approved"
+          text?.toLowerCase() === "approved"
             ? "green"
-            : text.toLowerCase() === "rejected"
+            : text?.toLowerCase() === "rejected"
             ? "red"
-            : text.toLowerCase() === "update"
+            : text?.toLowerCase() === "update"
             ? "blue"
             : "orange";
 
         return (
-          <Tag color={color}>{mappedText[text.toLowerCase()] || text}</Tag>
+          <Tag color={color}>{mappedText[text?.toLowerCase()] || text}</Tag>
         );
       },
       sorter: (a, b) => a.approval_status.localeCompare(b.approval_status),
@@ -169,7 +158,7 @@ const OrganizerOfferStatusList = () => {
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={filteredOffers}
+          dataSource={filteredCoupons}
           rowKey="id"
           loading={loading}
           pagination={{

@@ -27,6 +27,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import { EventCodeConstants, EventType } from "constants/AppConstants";
+import { isOrganizer } from "configs/UserAccessConfig";
 
 const OfferList = () => {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ const OfferList = () => {
     dispatch(
       fetchAllOffers({
         ...DEFAULT_PAGE_SIZE,
-        filters: "approved",
+        organizer: isOrganizer() ? false : null,
         event_code: Utils.getEventTypeCodeWithType(type),
       })
     );

@@ -97,4 +97,25 @@ EventOrganizerService.fetchOrganizerSingleOfferUpdate = function (params) {
     params: Utils.filterParams(params),
   });
 };
+EventOrganizerService.submitOrganizerCouponUpdate = function (
+  data,
+  action,
+  params
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+
+  return fetch({
+    url: `${ApiConstant.ORGANIZER_COUPON_APPROVAL_URL}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+    params: Utils.filterParams(params),
+  });
+};
+EventOrganizerService.fetchOrganizerSingleCouponUpdate = function (params) {
+  return fetch({
+    url: `${ApiConstant.ORGANIZER_COUPON_DETAILS_URL}`,
+    method: "get",
+    params: Utils.filterParams(params),
+  });
+};
 export default EventOrganizerService;

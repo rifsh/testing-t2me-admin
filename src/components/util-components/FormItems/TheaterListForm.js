@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useEffect, useCallback, useState, useMemo } from "react";
 import { Form, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -20,35 +20,38 @@ const TheaterListForm = ({
   apiParams,
 }) => {
   const dispatch = useDispatch();
-  const [searchInput, setSearchInput] = useState("");
-  const { response, selectedTheater, loading } = useSelector(
-    (state) => state.theater
-  );
+  const { response, loading } = useSelector((state) => state.theater);
   const { selectedVenue } = useSelector((state) => state.locations);
+  const [searchTerm, setSearchTerm] = useState(null);
 
-  const fetchData = (search = null) => {
+  // Memoize apiParams to prevent unnecessary re-renders
+  const memoizedApiParams = useMemo(
+    () => apiParams || {},
+    [
+      // Stringify the apiParams to properly detect changes
+      apiParams ? JSON.stringify(apiParams) : null,
+    ]
+  );
+
+  const fetchData = useCallback(() => {
     const venueId = form.getFieldValue("venue_id");
-    // if (venueId) {
-      dispatch(
-        fetchDropdownTheaters({
-          venue_id: venueId,
-          search,
-          ...(apiParams || {}), 
-        })
-      );
-    // }
-  };
+    dispatch(
+      fetchDropdownTheaters({
+        venue_id: venueId,
+        search: searchTerm,
+        ...memoizedApiParams,
+      })
+    );
+  }, [dispatch, form, searchTerm, memoizedApiParams]);
 
   useEffect(() => {
     fetchData();
-  }, [dispatch, selectedVenue, apiParams]);
+  }, [fetchData, selectedVenue]); // Only re-fetch when these dependencies change
 
   const handleSetSelectedTheater = (value) => {
     if (value) {
-      dispatch(setSeectedTheater(value.value));
-      const theater = response?.items?.find(
-        (theater) => theater.id === value.value
-      );
+      dispatch(setSeectedTheater(value));
+      const theater = response?.items?.find((theater) => theater.id === value);
       dispatch(setScreenCapacity(theater?.number_of_screens));
       if (onSelect) onSelect(theater);
     }
@@ -56,10 +59,9 @@ const TheaterListForm = ({
 
   const debouncedSearch = useCallback(
     debounce((input) => {
-      setSearchInput(input);
-      fetchData(input || null);
+      setSearchTerm(input || null);
     }, 300),
-    [apiParams] 
+    []
   );
 
   const handleSearch = (input) => {
@@ -96,8 +98,6 @@ const TheaterListForm = ({
           })) || []
         }
         onSelect={handleSetSelectedTheater}
-        optionLabelProp="theaterName"
-        labelInValue
       />
     </Form.Item>
   );

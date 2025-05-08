@@ -311,14 +311,20 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/track-team/offer-organizer/status-list")),
   },
   {
-    key: "trackRequest.offer.status",
+    key: "trackRequest.coupon.status",
     path: `${APP_PREFIX_PATH}/track/coupon/status/list`,
     component: React.lazy(() => import("views/track-team/coupon-organizer/status-list")),
   },
+  
   {
     key: "trackRequest.offer.status.details",
     path: `${APP_PREFIX_PATH}/track/offer/status/details/:offerId`,
     component: React.lazy(() => import("views/track-team/offer-organizer/status-details")),
+  },
+  {
+    key: "trackRequest.coupon.status.details",
+    path: `${APP_PREFIX_PATH}/track/coupon/status/details/:offerId`,
+    component: React.lazy(() => import("views/track-team/coupon-organizer/status-details")),
   },
   {
     key: "offer.add",

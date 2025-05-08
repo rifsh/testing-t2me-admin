@@ -130,7 +130,7 @@ const superAdminDashBoardNavTree = [
             submenu: [
               {
                 key: "event.type",
-                path: `${APP_PREFIX_PATH}/event/type/list`,
+                path: `${APP_PREFIX_PATH}/event/type/list?type=general`,
                 title: "sidenav.event.type",
                 icon: DashboardOutlined,
                 breadcrumb: false,
@@ -171,7 +171,7 @@ const superAdminDashBoardNavTree = [
               },
               {
                 key: "offer.list",
-                path: `${APP_PREFIX_PATH}/offer/list`,
+                path: `${APP_PREFIX_PATH}/offer/list?type=general`,
                 title: "sidenav.offer",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
@@ -179,7 +179,7 @@ const superAdminDashBoardNavTree = [
               },
               {
                 key: "coupon.list",
-                path: `${APP_PREFIX_PATH}/coupon/list`,
+                path: `${APP_PREFIX_PATH}/coupon/list?type=general`,
                 title: "sidenav.coupon",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
@@ -682,7 +682,7 @@ const techAdminDashBoardNavTree = [
           },
           {
             key: "offer.list",
-            path: `${APP_PREFIX_PATH}/offer/list`,
+            path: `${APP_PREFIX_PATH}/offer/list?type=general`,
             title: "sidenav.offer",
             icon: OrderedListOutlined,
             breadcrumb: false,

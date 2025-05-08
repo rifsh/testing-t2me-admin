@@ -13,7 +13,8 @@ CouponService.addCoupon = function (data, action) {
   });
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
-    ApiConstant.ORGANIZER_COUPON_URL
+    ApiConstant.ORGANIZER_COUPON_URL,
+    data.isOrganizer
   );
   return fetch({
     url: `${offreUrl}?action=${encodedAction}`,
@@ -38,7 +39,8 @@ CouponService.editCoupon = function (
   });
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
-    ApiConstant.ORGANIZER_COUPON_URL
+    ApiConstant.ORGANIZER_COUPON_URL,
+    pageData.isOrganizer
   );
   return fetch({
     url: `${offreUrl}/${data.id}?action=${encodedAction}`,
@@ -59,7 +61,8 @@ CouponService.editCouponStatus = function (
   const encodedAction = encodeURIComponent(handleAction(action));
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_STATUS_URL,
-    ApiConstant.ORGANIZER_COUPON_STATUS_URL
+    ApiConstant.ORGANIZER_COUPON_STATUS_URL,
+    pageData.isOrganizer
   );
   return fetch({
     url: `${offreUrl}/${data.id}?action=${encodedAction}`,
@@ -72,7 +75,8 @@ CouponService.editCouponStatus = function (
 CouponService.getAllCoupon = function (pageData) {
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
-    ApiConstant.ORGANIZER_COUPON_URL
+    ApiConstant.ORGANIZER_COUPON_URL,
+    pageData.isOrganizer
   );
   return fetch({
     url: offreUrl,

@@ -1060,13 +1060,8 @@ class Utils {
       ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
       : null;
   };
-  static getUrlByUserRole(normalUrl, organizerUrl, isOrganizer) {
-    const currentUser = getCurrentUser();
-    return isOrganizer
-      ? organizerUrl
-      : currentUser.role_id === UserRoleConstants.eventOrganizerRoleId
-      ? organizerUrl
-      : normalUrl;
+  static getUrlByUserRole(normalUrl, organizerUrl, isOrganizer=false) {
+    return isOrganizer ? organizerUrl : normalUrl;
   }
   static getEventTypeCodeWithType(type) {
     switch (type) {
@@ -1077,7 +1072,7 @@ class Utils {
       case EventType.SPORTS:
         return EventCodeConstants.SPORTS;
       default:
-        return EventCodeConstants.GENARAL;
+        return null;
     }
   }
 }
