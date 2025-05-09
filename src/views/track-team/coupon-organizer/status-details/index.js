@@ -1,33 +1,50 @@
-import React, {  useEffect } from "react";
+import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 import {
   UserOutlined,
   CommentOutlined,
-} from '@ant-design/icons';
-import { Button, Row, Col, Card, Typography, Space, List, Avatar, message, Tag, Image } from "antd";
+  CalendarOutlined,
+  PercentageOutlined,
+  TagOutlined,
+  ShopOutlined,
+} from "@ant-design/icons";
+import {
+  Button,
+  Row,
+  Col,
+  Card,
+  Typography,
+  Space,
+  List,
+  Avatar,
+  message,
+  Tag,
+  Image,
+  Badge,
+} from "antd";
 import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
 import { useParams, useNavigate } from "react-router-dom";
 import { ActionType } from "utils/api/warning-submit-util";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import {
-  fetchSingleOrganizerUpdate,
-  submitOrganizerUpdate,
   setCommentModalVisibility,
   setActionType,
   setComment,
-  toggleComments
+  toggleComments,
+  fetchOrganizerSingleCouponUpdate,
+  submitOrganizerCouponUpdate,
 } from "store/slices/EventOrganizerSlice";
+import { APPROVAL_STATUS } from "constants/AppConstants";
 
 const { Title, Text, Paragraph } = Typography;
 
-const DummyDataExample = () => {
-  const { eventUpId } = useParams();
+const OrganizerOfferDetail = () => {
+  const { offerId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
-
 
   const {
     singleOrganizerUpdate,
@@ -35,14 +52,14 @@ const DummyDataExample = () => {
     isCommentModalVisible,
     comment,
     actionType,
-    showAllComments 
+    showAllComments,
   } = useSelector((state) => state.organizerUpdates);
 
   useEffect(() => {
-    if (eventUpId) {
-      dispatch(fetchSingleOrganizerUpdate(eventUpId));
+    if (offerId) {
+      dispatch(fetchOrganizerSingleCouponUpdate({ coupon_id: offerId }));
     }
-  }, [dispatch, eventUpId]);
+  }, [dispatch, offerId]);
 
   const handleOpenModal = (action) => {
     dispatch(setActionType(action));
@@ -50,20 +67,21 @@ const DummyDataExample = () => {
   };
 
   const handleMakeChanges = () => {
-    navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/update-edit/${eventUpId}`);
-
+    navigate(
+      `${APP_PREFIX_PATH}/coupon/edit/${offerId}?type=movie`
+    );
   };
 
   const getApprovalStatus = (action) => {
     switch (action) {
-      case 'approve':
-        return 'APPROVED';
-      case 'reject':
-        return 'REJECTED';
-      case 'update':
-        return 'UPDATE';
+      case "approve":
+        return APPROVAL_STATUS.APPROVED;
+      case "reject":
+        return APPROVAL_STATUS.REJECTED;
+      case "change request":
+        return APPROVAL_STATUS.CHANGE_REQUEST;
       default:
-        return 'PENDING';
+        return APPROVAL_STATUS.PENDING;
     }
   };
 
@@ -75,40 +93,35 @@ const DummyDataExample = () => {
 
     try {
       const data = {
-        update_id: eventUpId,
-        approval: getApprovalStatus(actionType),
-        comments: comment,
+        offer_id: offerId,
+        status: getApprovalStatus(actionType),
+        comment: comment,
       };
 
       const resultAction = await dispatch(
-        submitOrganizerUpdate({
-
+        submitOrganizerCouponUpdate({
           data: data,
-
-          action: ActionType.WARNING
+          params: { offer_id: offerId },
+          action: ActionType.WARNING,
         })
       );
 
-      if (submitOrganizerUpdate.fulfilled.match(resultAction)) {
+      if (submitOrganizerCouponUpdate.fulfilled.match(resultAction)) {
         message.success(`Update ${actionType}ed successfully`);
-        dispatch(fetchSingleOrganizerUpdate(eventUpId));
-        navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`);
-
+        dispatch(fetchOrganizerSingleCouponUpdate({ offer_id: offerId }));
+        navigate(`${APP_PREFIX_PATH}/track/offer/status/list?type=movie`);
       }
     } catch (error) {
       message.error(`Failed to ${actionType} the update`);
     }
 
-    dispatch(setComment(''));
+    dispatch(setComment(""));
     dispatch(setCommentModalVisibility(false));
-
-
   };
 
-
   const renderCommentList = () => {
-    const comments = singleOrganizerUpdate?.related_comments || [];
-    
+    const comments = singleOrganizerUpdate?.organizer_offer_comments || [];
+
     if (comments.length === 0) {
       return <Text type="secondary">No comments yet</Text>;
     }
@@ -131,7 +144,13 @@ const DummyDataExample = () => {
                   </Space>
                 }
                 description={
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                    }}
+                  >
                     <div>
                       <Paragraph>{item.content}</Paragraph>
                     </div>
@@ -143,7 +162,7 @@ const DummyDataExample = () => {
         />
         {hasMoreComments && (
           <Button
-            style={{ marginTop: '16px' }}
+            style={{ marginTop: "16px" }}
             onClick={() => dispatch(toggleComments())}
           >
             {showAllComments ? "Show Less Comments" : "Show More Comments"}
@@ -152,27 +171,35 @@ const DummyDataExample = () => {
       </div>
     );
   };
+
   const getStatusTagColor = (status) => {
     const statusLower = status?.toLowerCase();
     switch (statusLower) {
-      case 'approved':
-        return 'green';
-      case 'rejected':
-        return 'red';
-      case 'update':
-        return 'blue';
-      case 'pending':
-        return 'orange';
+      case APPROVAL_STATUS.APPROVED:
+        return "green";
+      case APPROVAL_STATUS.REJECTED:
+        return "red";
+      case APPROVAL_STATUS.CHANGE_REQUEST:
+        return "blue";
+      case APPROVAL_STATUS.PENDING:
+        return "orange";
       default:
-        return 'default';
+        return "default";
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "Not specified";
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
   const renderActionButtons = () => {
-    const approvalStatus = singleOrganizerUpdate?.approval_status?.toUpperCase();
+    const approvalStatus =
+      singleOrganizerUpdate?.approval_status?.toLowerCase();
 
     if (
-      approvalStatus === 'UPDATES' &&
+      approvalStatus === APPROVAL_STATUS.CHANGE_REQUEST &&
       currentUser.role_id === UserRoleConstants.eventOrganizerRoleId
     ) {
       return (
@@ -191,7 +218,7 @@ const DummyDataExample = () => {
     }
 
     if (
-      approvalStatus === 'PENDING' &&
+      approvalStatus === APPROVAL_STATUS.PENDING &&
       currentUser.role_id === UserRoleConstants.superAdminRoleId
     ) {
       return (
@@ -200,7 +227,7 @@ const DummyDataExample = () => {
             <Button
               size="large"
               className="text-primary"
-              onClick={() => handleOpenModal('reject')}
+              onClick={() => handleOpenModal("reject")}
             >
               Reject
             </Button>
@@ -209,7 +236,7 @@ const DummyDataExample = () => {
             <Button
               className="text-primary"
               size="large"
-              onClick={() => handleOpenModal('update')}
+              onClick={() => handleOpenModal("change request")}
             >
               Update
             </Button>
@@ -218,7 +245,7 @@ const DummyDataExample = () => {
             <Button
               className="text-primary"
               size="large"
-              onClick={() => handleOpenModal('approve')}
+              onClick={() => handleOpenModal("approve")}
             >
               Approve
             </Button>
@@ -230,125 +257,213 @@ const DummyDataExample = () => {
     return null;
   };
 
-
-
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '24px' }}>
+    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "24px" }}>
       <Card style={{ marginTop: 16 }}>
-        <Title level={4}>Request Information</Title>
+        <Title level={4}>Offer Information</Title>
         <Row gutter={[24, 24]}>
+          <Col xs={12} md={8}>
+            <Image
+              src={
+                singleOrganizerUpdate?.thumbnail_image ||
+                "/img/pexels-teddy-2263436.jpg"
+              }
+              alt="Offer Thumbnail"
+              style={{
+                width: "150px",
+                height: "100px",
+                objectFit: "cover",
+                borderRadius: "8px",
+              }}
+              fallback="/img/pexels-teddy-2263436.jpg"
+            />
+          </Col>
           <Col xs={24} md={8}>
-            <Text type="secondary">Organizer Name</Text>
+            <Text type="secondary">Offer Name</Text>
             <div>
-              <Text strong>{singleOrganizerUpdate.organizer?.username ?? "N/A"}</Text>
+              <Text strong>{singleOrganizerUpdate?.name || "N/A"}</Text>
             </div>
           </Col>
           <Col xs={24} md={8}>
-            <Text type="secondary">Event Name</Text>
+            <Text type="secondary">Created At</Text>
             <div>
-              <Text strong>{singleOrganizerUpdate?.events?.event_name ?? "N/A"}</Text>
+              <Text strong>
+                {formatDate(singleOrganizerUpdate?.created_at)}
+              </Text>
             </div>
           </Col>
           <Col xs={24} md={8}>
             <Text type="secondary">Status</Text>
             <div>
               {singleOrganizerUpdate?.approval_status && (
-                <Tag color={getStatusTagColor(singleOrganizerUpdate.approval_status)}>
-                  {singleOrganizerUpdate.approval_status.charAt(0).toUpperCase() +
-                    singleOrganizerUpdate.approval_status.slice(1).toLowerCase()}
+                <Tag
+                  color={getStatusTagColor(
+                    singleOrganizerUpdate.approval_status
+                  )}
+                >
+                  {singleOrganizerUpdate.approval_status
+                    .charAt(0)
+                    .toUpperCase() +
+                    singleOrganizerUpdate.approval_status
+                      .slice(1)
+                      .toLowerCase()}
+                </Tag>
+              )}
+              {singleOrganizerUpdate?.is_active !== undefined && (
+                <Tag
+                  color={singleOrganizerUpdate.is_active ? "green" : "red"}
+                  style={{ marginLeft: 8 }}
+                >
+                  {singleOrganizerUpdate.is_active ? "Active" : "Inactive"}
                 </Tag>
               )}
             </div>
           </Col>
+          {renderActionButtons()}
         </Row>
       </Card>
-      {renderActionButtons()}
-
-
-      {singleOrganizerUpdate?.updated_fields && (
-        <Card style={{ marginTop: 16 }}>
-          <Title level={4}>Updated Information</Title>
-          <Row gutter={[24, 24]}>
-            {singleOrganizerUpdate.updated_fields?.event_name && (
-              <Col xs={24} md={8}>
-                <Text type="secondary">Event Name</Text>
-                <div>
-                  <Text strong>{singleOrganizerUpdate?.updated_fields?.event_name}</Text>
-                </div>
-              </Col>
-            )}
-            {singleOrganizerUpdate.updated_fields?.description && (
-              <Col xs={24} md={8}>
-                <Text type="secondary">Event Description</Text>
-                <div>
-                  <Text strong>{singleOrganizerUpdate.updated_fields?.description}</Text>
-                </div>
-              </Col>
-            )}
-          </Row>
-
-        </Card>
-      )}
-
-      {singleOrganizerUpdate?.updated_fields?.thumbnail_image && (
-        <Card style={{ marginTop: 16 }}>
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+      <Card style={{ marginTop: 16 }}>
+        <Title level={4}>Offer Details</Title>
+        <Row gutter={[24, 24]}>
+          <Col xs={24} md={8}>
             <Space>
-
-              <Title level={4} style={{ margin: 0 }}>
-                Updated Thumbnail
-              </Title>
+              <PercentageOutlined />
+              <Text type="secondary">Discount Type</Text>
             </Space>
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-              <Image
-                src={singleOrganizerUpdate.updated_fields.thumbnail_image}
-                alt="Updated Event Thumbnail"
-                style={{
-                  width: '100%',
-                  height: '300px',
-                  objectFit: 'cover',
-                  borderRadius: '8px'
-                }}
-                fallback="/api/placeholder/400/300"
-              />
+            <div>
+              <Text strong>
+                {singleOrganizerUpdate?.is_percentage
+                  ? "Percentage"
+                  : "Fixed Amount"}
+              </Text>
             </div>
-          </Space>
-        </Card>
-      )}
-
-      {singleOrganizerUpdate?.updated_fields?.banner_images &&
-        singleOrganizerUpdate.updated_fields.banner_images.length > 0 && (
-          <Card style={{ marginTop: 16 }}>
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              <Space>
-
-                <Title level={4} style={{ margin: 0 }}>
-                  Updated Banner Images
-                </Title>
-              </Space>
-              <Row gutter={[16, 16]}>
-                {singleOrganizerUpdate.updated_fields.banner_images.map((bannerUrl, index) => (
-                  <Col xs={12} sm={8} md={6} lg={4} key={index}>
-                    <Image
-                      src={bannerUrl}
-                      alt={`Banner Image ${index + 1}`}
-                      style={{
-                        width: '100%',
-                        height: '120px',
-                        objectFit: 'cover',
-                        borderRadius: '8px'
-                      }}
-                    />
-                  </Col>
-                ))}
-              </Row>
+          </Col>
+          <Col xs={24} md={8}>
+            <Space>
+              <PercentageOutlined />
+              <Text type="secondary">Discount Value</Text>
             </Space>
+            <div>
+              <Text strong>
+                {singleOrganizerUpdate?.discount_percentage_amount || 0}
+                {singleOrganizerUpdate?.is_percentage ? "%" : " units"}
+              </Text>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <Space>
+              <TagOutlined />
+              <Text type="secondary">Offer Type</Text>
+            </Space>
+            <div>
+              <Text strong>
+                {singleOrganizerUpdate?.is_general
+                  ? "General Offer"
+                  : "Specific Offer"}
+              </Text>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <Space>
+              <ShopOutlined />
+              <Text type="secondary">Redemption Type</Text>
+            </Space>
+            <div>
+              <Text strong>
+                {singleOrganizerUpdate?.is_offline ? "Offline" : "Online"}
+              </Text>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <Space>
+              <UserOutlined />
+              <Text type="secondary">Maximum Uses</Text>
+            </Space>
+            <div>
+              <Text strong>
+                {singleOrganizerUpdate?.max_uses || "Unlimited"}
+              </Text>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <Space>
+              <UserOutlined />
+              <Text type="secondary">Used Count</Text>
+            </Space>
+            <div>
+              <Text strong>{singleOrganizerUpdate?.used_count || 0}</Text>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <Space>
+              <CalendarOutlined />
+              <Text type="secondary">Date Required</Text>
+            </Space>
+            <div>
+              <Text strong>
+                {singleOrganizerUpdate?.date_required ? "Yes" : "No"}
+              </Text>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <Space>
+              <CalendarOutlined />
+              <Text type="secondary">Start Date</Text>
+            </Space>
+            <div>
+              <Text strong>
+                {singleOrganizerUpdate?.start_date
+                  ? formatDate(singleOrganizerUpdate.start_date)
+                  : "Not specified"}
+              </Text>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <Space>
+              <CalendarOutlined />
+              <Text type="secondary">End Date</Text>
+            </Space>
+            <div>
+              <Text strong>
+                {singleOrganizerUpdate?.end_date
+                  ? formatDate(singleOrganizerUpdate.end_date)
+                  : "Not specified"}
+              </Text>
+            </div>
+          </Col>
+        </Row>
+      </Card>
+
+      {singleOrganizerUpdate?.theatre_ids &&
+        singleOrganizerUpdate.theatre_ids.length > 0 && (
+          <Card style={{ marginTop: 16 }}>
+            <Title level={4}>Applicable Theatres</Title>
+            <Row gutter={[16, 16]}>
+              {singleOrganizerUpdate.theatre_ids.map((theatreId) => (
+                <Col key={theatreId}>
+                  <Tag color="blue">Theatre ID: {theatreId}</Tag>
+                </Col>
+              ))}
+            </Row>
           </Card>
         )}
 
+      {singleOrganizerUpdate?.key_words &&
+        singleOrganizerUpdate.key_words.length > 0 && (
+          <Card style={{ marginTop: 16 }}>
+            <Title level={4}>Keywords</Title>
+            <Row gutter={[16, 16]}>
+              {singleOrganizerUpdate.key_words.map((keyword, index) => (
+                <Col key={index}>
+                  <Tag color="cyan">{keyword}</Tag>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+        )}
 
       <Card style={{ marginTop: 16 }}>
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
           <Space>
             <CommentOutlined />
             <Title level={4} style={{ margin: 0 }}>
@@ -366,11 +481,13 @@ const DummyDataExample = () => {
         loading={loading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Comment`}
+        title={`${
+          actionType.charAt(0).toUpperCase() + actionType.slice(1)
+        } Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />
     </div>
   );
 };
 
-export default DummyDataExample;
+export default OrganizerOfferDetail;

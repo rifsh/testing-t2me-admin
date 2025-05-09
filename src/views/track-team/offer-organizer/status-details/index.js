@@ -36,6 +36,7 @@ import {
   setComment,
   toggleComments,
 } from "store/slices/EventOrganizerSlice";
+import { APPROVAL_STATUS } from "constants/AppConstants";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -67,20 +68,20 @@ const OrganizerOfferDetail = () => {
 
   const handleMakeChanges = () => {
     navigate(
-      `${APP_PREFIX_PATH}/track-team/event-organizer/update-edit/${offerId}`
+      `${APP_PREFIX_PATH}/offer/edit/${offerId}?type=movie`
     );
   };
 
   const getApprovalStatus = (action) => {
     switch (action) {
       case "approve":
-        return "approved";
+        return APPROVAL_STATUS.APPROVED;
       case "reject":
-        return "rejected";
+        return APPROVAL_STATUS.REJECTED;
       case "change request":
-        return "change request";
+        return APPROVAL_STATUS.CHANGE_REQUEST;
       default:
-        return "pending";
+        return APPROVAL_STATUS.PENDING;
     }
   };
 
@@ -174,13 +175,13 @@ const OrganizerOfferDetail = () => {
   const getStatusTagColor = (status) => {
     const statusLower = status?.toLowerCase();
     switch (statusLower) {
-      case "approved":
+      case APPROVAL_STATUS.APPROVED:
         return "green";
-      case "rejected":
+      case APPROVAL_STATUS.REJECTED:
         return "red";
-      case "change request":
+      case APPROVAL_STATUS.CHANGE_REQUEST:
         return "blue";
-      case "pending":
+      case APPROVAL_STATUS.PENDING:
         return "orange";
       default:
         return "default";
@@ -195,10 +196,10 @@ const OrganizerOfferDetail = () => {
 
   const renderActionButtons = () => {
     const approvalStatus =
-      singleOrganizerUpdate?.approval_status;
+      singleOrganizerUpdate?.approval_status?.toLowerCase();
 
     if (
-      approvalStatus === "change request" &&
+      approvalStatus === APPROVAL_STATUS.CHANGE_REQUEST &&
       currentUser.role_id === UserRoleConstants.eventOrganizerRoleId
     ) {
       return (
@@ -217,7 +218,7 @@ const OrganizerOfferDetail = () => {
     }
 
     if (
-      approvalStatus === "PENDING" &&
+      approvalStatus === APPROVAL_STATUS.PENDING &&
       currentUser.role_id === UserRoleConstants.superAdminRoleId
     ) {
       return (
@@ -261,9 +262,12 @@ const OrganizerOfferDetail = () => {
       <Card style={{ marginTop: 16 }}>
         <Title level={4}>Offer Information</Title>
         <Row gutter={[24, 24]}>
-          <Col xs={12} md={8} >
+          <Col xs={12} md={8}>
             <Image
-              src={singleOrganizerUpdate.thumbnail_image}
+              src={
+                singleOrganizerUpdate?.thumbnail_image ||
+                "/img/pexels-teddy-2263436.jpg"
+              }
               alt="Offer Thumbnail"
               style={{
                 width: "150px",
@@ -457,8 +461,6 @@ const OrganizerOfferDetail = () => {
             </Row>
           </Card>
         )}
-
-     
 
       <Card style={{ marginTop: 16 }}>
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>

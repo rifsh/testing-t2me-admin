@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Input,
   Row,
@@ -24,12 +24,9 @@ import {
   ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
-import { fetchMoviesData } from "store/slices/movieSlice";
-import { fetchAllEvent } from "store/slices/eventSlice";
-import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
-import { fetchTheaterByid, fetchTheaters } from "store/slices/theaterSlice";
 import { EventType } from "constants/AppConstants";
 import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
+import { isOrganizer } from "configs/UserAccessConfig";
 
 const { Text } = Typography;
 const rules = {
@@ -75,12 +72,7 @@ function OfferFormFields({ type }) {
   const dispatch = useDispatch();
   const { isDateRequired } = useSelector((state) => state.offers);
   const [form] = Form.useForm();
-  const { response } = useSelector((state) => state.movie);
-  // useEffect(() => {
-  //   if (type === EventType.MOVIE) {
-  //     dispatch(fetchTheaters(DEFAULT_PAGE_SIZE));
-  //   }
-  // }, [dispatch]);
+
   const handleRequiredChanges = (e) => {
     dispatch(setIsDateRequired(e.target.checked));
     // Reset dates when toggling date requirement
@@ -92,29 +84,24 @@ function OfferFormFields({ type }) {
     }
   };
 
-  // Fixed disablePastDates function to properly prevent selecting past dates
   const disablePastDates = (current) => {
-    // Disable all dates before today
     return current && current < moment().startOf("day");
   };
 
-  // Validate end date based on start date
   const disableEndDate = (current) => {
     const startDateValue = form.getFieldValue("start_date");
     if (!startDateValue) {
-      return disablePastDates(current); // Also apply past date restriction to end date
+      return disablePastDates(current);
     }
     return current && current < moment(startDateValue).startOf("day");
   };
 
   const handleStartDateChange = (date) => {
-    // Reset end date when start date changes
     form.setFieldsValue({
       end_date: null,
     });
   };
 
-  // Normalize file list to ensure it's always an array
   const normFile = (e) => {
     if (Array.isArray(e)) {
       return e;
@@ -127,32 +114,16 @@ function OfferFormFields({ type }) {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Offer Details">
-          {type === EventType.MOVIE && (
+          {type === EventType.MOVIE && isOrganizer() && (
             <TheaterListForm
               rules={[{ required: true }]}
               form={form}
-              onSelect={(theater) => {
-              }}
               mode="multiple"
               name="theatre_ids"
-              label="Theater"
               apiParams={{
                 organizer: true,
               }}
             />
-            // <Form.Item
-            //   name="theatre_ids"
-            //   label="Theatre"
-            //   rules={[{ required: true, message: "Please select a theatre" }]}
-            // >
-            //   <Select placeholder="Select offer type" mode="multiple">
-            //     {response?.items?.map((movie) => (
-            //       <Option key={movie.id} value={movie.id}>
-            //         {movie.name}
-            //       </Option>
-            //     ))}
-            //   </Select>
-            // </Form.Item>
           )}
 
           <Form.Item name="name" label="Offer Name" rules={rules.name}>

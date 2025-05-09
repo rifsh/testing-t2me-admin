@@ -3,6 +3,7 @@ import OfferForm from "../form-offer";
 import { useLocation, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOfferDetails } from "store/slices/offerSlice";
+import { isOrganizer } from "configs/UserAccessConfig";
 
 const EditOffer = () => {
   const location = useLocation();
@@ -13,7 +14,7 @@ const EditOffer = () => {
   const { offerDetails } = useSelector((state) => state.offers);
   useEffect(() => {
     if (offerId) {
-      dispatch(fetchOfferDetails(offerId));
+      dispatch(fetchOfferDetails({offer_id: offerId, isOrganizer: isOrganizer()}));
     }
   }, [dispatch, offerId]);
 

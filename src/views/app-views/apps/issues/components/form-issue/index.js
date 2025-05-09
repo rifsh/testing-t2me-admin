@@ -113,7 +113,7 @@ const IssueForm = (props) => {
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addOffer}
-        navigationPath={`${APP_PREFIX_PATH}/offer/list`}
+        navigationPath={`${APP_PREFIX_PATH}/offer/list?type=general`}
         responseMessage={responseMessage}
       />
     </>

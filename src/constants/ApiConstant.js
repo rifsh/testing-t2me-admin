@@ -65,7 +65,9 @@ export const ApiConstant = {
   ORGANIZER_COUPON_STATUS_URL:
     "/api/v1/shared/offers/secured/coupons_status/organizer",
   ORGANIZER_COUPON_DETAILS_URL:
-    "/api/v1/shared/offers/secured/coupons/detail/organizer",
+    "/api/v1/shared/offers/secured/coupons/organizer/detail",
+  ORGANIZER_COUPON_APPROVAL_URL:
+    "/api/v1/shared/offers/secured/coupons/organizer/approval",
 
   TAX_URL: "/api/v1/location/secured/taxes",
   TAX_STATUS_URL: "/api/v1/location/secured/taxes_status",

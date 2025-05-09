@@ -20,3 +20,10 @@ export const EventType = {
   MOVIE: "movie",
   SPORTS: "sports",
 };
+
+export const APPROVAL_STATUS = {
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+  CHANGE_REQUEST: "change request"
+};

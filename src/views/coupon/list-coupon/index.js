@@ -38,6 +38,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import { isOrganizer } from "configs/UserAccessConfig";
 
 const { Option } = Select;
 
@@ -65,7 +66,13 @@ const CouponList = () => {
   const [selectedCoupon, setSelectedCoupon] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchAllCoupons(DEFAULT_PAGE_SIZE));
+    dispatch(
+      fetchAllCoupons({
+        ...DEFAULT_PAGE_SIZE,
+        organizer: isOrganizer() ? false : null,
+        event_code: Utils.getEventTypeCodeWithType(type),
+      })
+    );
   }, [dispatch]);
 
   const handlePagination = (page, size) => {

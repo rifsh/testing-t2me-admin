@@ -74,6 +74,7 @@ const CouponForm = ({ mode, coupon, type }) => {
         is_single: coupon.is_single !== undefined ? coupon.is_single : true,
         is_reusable: coupon.is_reusable || false,
         key_words: formattedKeyWords,
+        theatre_ids: coupon.theatre_ids?.map((item) => item) || [],
         is_percentage:
           coupon.is_percentage !== undefined ? coupon.is_percentage : true,
         discount_percentage_amount:
@@ -159,7 +160,7 @@ const CouponForm = ({ mode, coupon, type }) => {
       if (mode === "EDIT") {
         const editData = {
           ...processedValues,
-          theatre_ids: values.theatre_ids.map((item) => item.value),
+          
           id: coupon.id,
         };
 
@@ -174,7 +175,7 @@ const CouponForm = ({ mode, coupon, type }) => {
       } else {
         const formData = {
           ...processedValues,
-          theatre_ids: values.theatre_ids.map((item) => item.value),
+        
         };
 
         dispatch(setSelectedSubmitItem(formData));
