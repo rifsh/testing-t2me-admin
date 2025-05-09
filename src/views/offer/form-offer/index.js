@@ -24,7 +24,6 @@ import { ActionType } from "utils/api/warning-submit-util";
 import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 
-const ADD = "ADD";
 // const EDIT = "EDIT";
 
 const OfferForm = ({ mode, offer, type }) => {
@@ -41,11 +40,9 @@ const OfferForm = ({ mode, offer, type }) => {
     warningPagination,
     submitPagination,
     message: warningMessage,
-    modalLoading,
   } = useSelector((state) => state.offers);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(setIsDateRequired(false));
@@ -58,7 +55,7 @@ const OfferForm = ({ mode, offer, type }) => {
     if (offer && mode === "EDIT") {
       const formData = {
         name: offer.name,
-        theatre_ids: offer.theatre_ids.map((item) => item.id),
+        theatre_ids: offer.theatre_ids?.map((item) => item) || [],
         discount_percentage_amount: offer.discount_percentage_amount,
         is_percentage: offer.is_percentage,
         max_uses: offer.max_uses,
@@ -90,6 +87,8 @@ const OfferForm = ({ mode, offer, type }) => {
 
   const onFinish = async () => {
     const values = await form.validateFields();
+    console.log("Form Values:", values);
+
     try {
       if (mode === "EDIT") {
         if (isDateRequired) {
@@ -101,7 +100,6 @@ const OfferForm = ({ mode, offer, type }) => {
 
         const editData = {
           ...values,
-          theatre_ids: values.theatre_ids.map((item) => item.id),
           id: offer.id,
         };
         console.log("Edit Data:", editData);
@@ -122,7 +120,6 @@ const OfferForm = ({ mode, offer, type }) => {
         values.date_required = values.date_required ?? isDateRequired;
         const formData = {
           ...values,
-          theatre_ids: values.theatre_ids.map((item) => item.value),
         };
         console.log("DATA IS THIS", formData);
 

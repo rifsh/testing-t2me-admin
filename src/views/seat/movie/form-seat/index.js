@@ -117,6 +117,8 @@ const SeatForm = (props) => {
 
     try {
       const formValues = await form.validateFields();
+      console.log(formValues, "FORM VALUES");
+
       setSubmitLoading(true);
 
       if (mode === EDIT) {
@@ -132,6 +134,7 @@ const SeatForm = (props) => {
         const editData = {
           ...formValues,
           id: singleSeatStructure.id,
+          theatre_id: formValues.theater_id.value,
           total_row: seats.length,
           total_column: seats[0]?.length || 0,
           total_seats: totalVisibleSeats,
@@ -147,7 +150,6 @@ const SeatForm = (props) => {
 
         if (editSeatStructure.fulfilled.match(resultAction)) {
           dispatch(setSelectedSeatStructure(editData));
-          console.log("asdfjflaf");
 
           dispatch(setSeatDialogVisible(true));
         }
@@ -167,6 +169,7 @@ const SeatForm = (props) => {
           total_column: seats[0]?.length || 0,
           total_seats: totalVisibleSeats,
           type: SEAT_STRUCTURE_TYPES.MOVIE,
+          theatre_id: formValues.theater_id.value,
           seat_data: {
             seats,
             seatTypes: usedSeatTypes,

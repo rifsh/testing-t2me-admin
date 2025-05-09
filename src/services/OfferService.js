@@ -1,9 +1,10 @@
 import fetch from "auth/FetchInterceptor";
-import { getCurrentUser, getUserRole } from "configs/UserAccessConfig";
+import { getCurrentUser, getUserRole, isOrganizer } from "configs/UserAccessConfig";
 import { ApiConstant } from "constants/ApiConstant";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
+import { utils } from "xlsx";
 
 const OfferService = {};
 
@@ -17,7 +18,7 @@ OfferService.addOffer = function (data, action) {
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_URL,
     ApiConstant.ORGANIZER_OFFER_URL,
-    data.isOrganizer
+    isOrganizer()
   );
   return fetch({
     url: `${offreUrl}?action=${encodedAction}`,
@@ -41,8 +42,13 @@ OfferService.editOffer = function (
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.OFFER_URL,
+    ApiConstant.ORGANIZER_OFFER_URL,
+    isOrganizer()
+  );
   return fetch({
-    url: `${ApiConstant.OFFER_URL}/${data.id}?action=${encodedAction}`,
+    url: `${offreUrl}/${data.id}?action=${encodedAction}`,
     method: "put",
     data: formData,
     params: Utils.filterParams(pageData),
@@ -86,16 +92,17 @@ OfferService.getAllOffer = function (pageData) {
   });
 };
 
-OfferService.fetchOfferDetails = function (offerId, isOrganizer) {
+OfferService.fetchOfferDetails = function (params) {
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_DETAIL_URL,
     ApiConstant.ORGANIZER_OFFER_DETAIL_URL,
-    isOrganizer
+    params.isOrganizer
   );
 
   return fetch({
-    url: `${offreUrl}?offer_id=${offerId}`,
+    url: `${offreUrl}`,
     method: "get",
+    params:Utils.filterParams(params),
   });
 };
 

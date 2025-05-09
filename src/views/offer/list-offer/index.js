@@ -28,6 +28,7 @@ import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import { EventCodeConstants, EventType } from "constants/AppConstants";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { isOrganizer } from "configs/UserAccessConfig";
 
 const OfferList = () => {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ const OfferList = () => {
     dispatch(
       fetchAllOffers({
         ...DEFAULT_PAGE_SIZE,
-        filters: "approved",
+        organizer: isOrganizer() ? false : null,
         event_code: Utils.getEventTypeCodeWithType(type),
       })
     );

@@ -56,9 +56,9 @@ export const validateOfferCoupon = createAsyncThunk(
 
 export const fetchOfferDetails = createAsyncThunk(
   "offer/fetchOfferDetails",
-  async (offerId, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      const response = await OfferService.fetchOfferDetails(offerId);
+      const response = await OfferService.fetchOfferDetails(params);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");

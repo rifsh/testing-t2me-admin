@@ -106,32 +106,62 @@ export const fetchSingleOrganizerUpdate = createAsyncThunk(
 );
 
 export const submitOrganizerOfferUpdate = createAsyncThunk(
-    "organizerUpdates/submitOrganizerOfferUpdate",
-    async ({ data, action ,params}, { rejectWithValue }) => {
-        try {
-            const response = await EventOrganizerService.submitOrganizerOfferUpdate(data, action,params);
-            return response.status;
-        } catch (error) {
-            return rejectWithValue(error.message || "Failed to update category");
-        }
+  "organizerUpdates/submitOrganizerOfferUpdate",
+  async ({ data, action, params }, { rejectWithValue }) => {
+    try {
+      const response = await EventOrganizerService.submitOrganizerOfferUpdate(
+        data,
+        action,
+        params
+      );
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to update category");
     }
+  }
+);
+export const submitOrganizerCouponUpdate = createAsyncThunk(
+  "organizerUpdates/submitOrganizerCouponUpdate",
+  async ({ data, action, params }, { rejectWithValue }) => {
+    try {
+      const response = await EventOrganizerService.submitOrganizerCouponUpdate(
+        data,
+        action,
+        params
+      );
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to update category");
+    }
+  }
 );
 
 export const fetchOrganizerSingleOfferUpdate = createAsyncThunk(
-    "organizerUpdates/fetchOrganizerSingleOfferUpdate",
-    async (params, { rejectWithValue }) => {
-        try {
-
-            const response = await EventOrganizerService.fetchOrganizerSingleOfferUpdate(params);
-            console.log("-----------Fetching Organizer Updates", response.data[0])
-            return response.data[0];
-
-        } catch (error) {
-            return rejectWithValue(error.message || "Failed to fetch event details");
-        }
+  "organizerUpdates/fetchOrganizerSingleOfferUpdate",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response =
+        await EventOrganizerService.fetchOrganizerSingleOfferUpdate(params);
+      console.log("-----------Fetching Organizer Updates", response.data[0]);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
     }
+  }
 );
-
+export const fetchOrganizerSingleCouponUpdate = createAsyncThunk(
+  "organizerUpdates/fetchOrganizerSingleCouponUpdate",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response =
+        await EventOrganizerService.fetchOrganizerSingleCouponUpdate(params);
+      console.log("-----------Fetching Organizer Updates", response.data[0]);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
 
 const OrganizerUpdateSlice = createSlice({
   name: "organizerUpdates",
@@ -215,15 +245,53 @@ const OrganizerUpdateSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchOrganizerSingleOfferUpdate.fulfilled, (state, { payload }) => {
+      .addCase(
+        fetchOrganizerSingleOfferUpdate.fulfilled,
+        (state, { payload }) => {
+          state.loading = false;
+          state.singleOrganizerUpdate = payload;
+          state.pagination = payload;
+        }
+      )
+      .addCase(
+        fetchOrganizerSingleOfferUpdate.rejected,
+        (state, { payload }) => {
+          state.loading = false;
+          state.error = payload;
+        }
+      )
+      .addCase(submitOrganizerCouponUpdate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitOrganizerCouponUpdate.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.singleOrganizerUpdate = payload;
         state.pagination = payload;
       })
-      .addCase(fetchOrganizerSingleOfferUpdate.rejected, (state, { payload }) => {
+      .addCase(submitOrganizerCouponUpdate.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
       })
+      .addCase(fetchOrganizerSingleCouponUpdate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchOrganizerSingleCouponUpdate.fulfilled,
+        (state, { payload }) => {
+          state.loading = false;
+          state.singleOrganizerUpdate = payload;
+          state.pagination = payload;
+        }
+      )
+      .addCase(
+        fetchOrganizerSingleCouponUpdate.rejected,
+        (state, { payload }) => {
+          state.loading = false;
+          state.error = payload;
+        }
+      )
       .addCase(submitOrganizerUpdate.pending, (state) => {
         state.loading = true;
         state.error = null;
