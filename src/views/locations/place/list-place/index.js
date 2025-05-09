@@ -27,6 +27,7 @@ import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/S
 
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const PlaceList = () => {
   const dispatch = useDispatch();
@@ -46,14 +47,12 @@ const PlaceList = () => {
     editItemId,
   } = useSelector((state) => state.locations);
   const { responseData } = useSelector((state) => state.modalSlice);
+  const handlePagination = usePaginationHook(getPlaces);
 
   useEffect(() => {
     dispatch(getPlaces(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
-  const handlePagination = (page, size) => {
-    dispatch(getPlaces({ page: page, size: size }));
-  };
 
   const handleViewDetails = async (id) => {
     await dispatch(getSinglePlace(id));

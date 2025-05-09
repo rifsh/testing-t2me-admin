@@ -9,7 +9,7 @@ import isBetween from "dayjs/plugin/isBetween";
 import { eventOrganizers, movieOrganizers } from "mock/data/reportData";
 import { exportToExcel, exportToPdf } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchReports } from "store/slices/reportSlice";
+import { fetchReports, fetchUserReports } from "store/slices/reportSlice";
 dayjs.extend(isBetween);
 
 Chart.register(...registerables);
@@ -19,14 +19,18 @@ const { Option } = Select;
 
 const SuperAdminReport = () => {
   const dispatch = useDispatch();
-  const reportData = useSelector((state) => state.report.reportData);
+  const { reportData, loading, error, userReports } = useSelector(
+    (state) => state.report
+  );
+  const userReportsData = userReports?.data?.[0]?.items || [];
+  console.log(userReportsData, "data");
 
   const reportRef = useRef(null);
   const [activeTab, setActiveTab] = useState("events");
   const [timeFilter, setTimeFilter] = useState("last-3-months");
   const [customDateRange, setCustomDateRange] = useState([]);
   const [pagination, setPagination] = useState({
-    page: 1,
+    page: 6,
     size: 5,
   });
 
@@ -46,41 +50,20 @@ const SuperAdminReport = () => {
 
     fetchData();
   }, [dispatch, activeTab]);
+  useEffect(() => {
+    dispatch(
+      fetchUserReports({
+        search: "",
+        active: true,
+        events: activeTab === "events",
+        movies: activeTab === "movies",
+        page: pagination.page,
+        size: pagination.size,
+      })
+    );
+  }, [dispatch, activeTab, pagination]);
 
-  const getStatusBadge = (status) => {
-    const baseClasses = "px-3 py-1 rounded-md text-sm font-medium";
-    switch (status) {
-      case "Active":
-        return (
-          <span className={`${baseClasses} bg-green-100 text-green-800`}>
-            Active
-          </span>
-        );
-      case "Inactive":
-        return (
-          <span className={`${baseClasses} bg-red-100 text-red-800`}>
-            Inactive
-          </span>
-        );
-      default:
-        return (
-          <span className={`${baseClasses} bg-gray-100 text-gray-800`}>
-            Unknown
-          </span>
-        );
-    }
-  };
-
-  const getTabTitle = () => {
-    switch (activeTab) {
-      case "events":
-        return "Events";
-      case "movies":
-        return "Movies";
-      default:
-        return "Total (Events + Movies)";
-    }
-  };
+  console.log(userReports, "userReports");
 
   const getDateRange = () => {
     const now = dayjs();
@@ -174,11 +157,18 @@ const SuperAdminReport = () => {
   })();
 
   const organizerPerformanceData = {
-    labels: getCurrentOrganizers().map((org) => org.name),
+    labels:
+      userReports?.data?.[0]?.items?.map((organizer) => organizer.username) ||
+      [],
     datasets: [
       {
-        label: `${getTabTitle()} Revenue Generated ($)`,
-        data: getCurrentOrganizers().map((org) => org.revenue),
+        label: `${
+          activeTab === "events" ? "Event" : "Movie"
+        } Revenue Generated ($)`,
+        data:
+          userReports?.data?.[0]?.items?.map(
+            (organizer) => organizer.total_revenue
+          ) || [],
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 2,
@@ -470,16 +460,16 @@ const SuperAdminReport = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Revenue
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Last Login
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {getCurrentOrganizers().map((organizer) => (
+              {/* {getCurrentOrganizers().map((organizer) => (
                 <tr key={organizer.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <Link
@@ -523,6 +513,59 @@ const SuperAdminReport = () => {
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {new Date(organizer.lastLogin).toLocaleDateString()}
                   </td>
+                </tr>
+              ))} */}
+
+              {userReports?.data?.[0]?.items?.map((organizer, index) => (
+                <tr key={index} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <Link
+                      to={`${APP_PREFIX_PATH}/super-admin/organizer-details/${organizer.id}`}
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      {organizer.username}
+                    </Link>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {organizer.email}
+                  </td>
+
+                  {activeTab === "total" && (
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-3 py-1 rounded-md text-sm font-medium ${
+                          organizer.event_count > 0
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-purple-100 text-purple-800"
+                        }`}
+                      >
+                        {organizer.event_count > 0 ? "Event" : "Movie"}
+                      </span>
+                    </td>
+                  )}
+
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {activeTab === "events" ||
+                    (activeTab === "total" && organizer.event_count > 0)
+                      ? organizer.event_count
+                      : organizer.movie_count ?? 0}
+                  </td>
+
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {organizer.total_attendees?.toLocaleString() ?? 0}
+                  </td>
+
+                  <td className="px-6 py-4 text-sm font-bold text-green-600">
+                    ${organizer.total_revenue?.toLocaleString() ?? 0}
+                  </td>
+
+                  {/* <td className="px-6 py-4">
+      {getStatusBadge(organizer.is_active ? "active" : "inactive")}
+    </td> */}
+
+                  {/* <td className="px-6 py-4 text-sm text-gray-500">
+      -
+    </td> */}
                 </tr>
               ))}
             </tbody>

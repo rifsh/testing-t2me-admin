@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Badge, Button, Card, Menu,  Table } from "antd";
+import { Badge, Button, Card, Menu, Table } from "antd";
 import Flex from "components/shared-components/Flex";
 import { EditOutlined, EyeOutlined, FormOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +16,7 @@ import Utils from "utils";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 
 const ScheduleList = () => {
@@ -28,23 +29,24 @@ const ScheduleList = () => {
   useEffect(() => {
     dispatch(fetchAllSchedules(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
+  const handlePagination = usePaginationHook(fetchAllSchedules);
 
-  const handlePagination = (page, size) => {
-    dispatch(fetchAllSchedules({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(fetchAllSchedules({ page: page, size: size }));
+  // };
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
   };
-   const handleViewDetails = async (id) => {
-      await dispatch(fetchSingleSchedules({id:id}));
-      navigate(`${APP_PREFIX_PATH}/schedule/${id}`);
-    };
-   const handleEditSchedule = async (id) => {
-      await dispatch(fetchSingleSchedules({id:id}));
-      navigate(`${APP_PREFIX_PATH}/schedule/edit/${id}`);
-    };
+  const handleViewDetails = async (id) => {
+    await dispatch(fetchSingleSchedules({ id: id }));
+    navigate(`${APP_PREFIX_PATH}/schedule/${id}`);
+  };
+  const handleEditSchedule = async (id) => {
+    await dispatch(fetchSingleSchedules({ id: id }));
+    navigate(`${APP_PREFIX_PATH}/schedule/edit/${id}`);
+  };
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
@@ -56,7 +58,7 @@ const ScheduleList = () => {
       <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditSchedule(row.id)}>
           <EditOutlined />
-          <span className="ml-2">Edit Event</span>    
+          <span className="ml-2">Edit Event</span>
         </Flex>
       </Menu.Item>
     </Menu>

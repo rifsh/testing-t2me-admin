@@ -36,6 +36,7 @@ import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const { Option } = Select;
 
@@ -54,13 +55,14 @@ const UserList = () => {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const handlePagination = usePaginationHook(fetchAllUsers);
 
   useEffect(() => {
     dispatch(fetchAllUsers(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
-  const handlePagination = (page, size) => {
-    dispatch(fetchAllUsers({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(fetchAllUsers({ page: page, size: size }));
+  // };
 
   const showModal = (user) => {
     setSelectedUser(user);

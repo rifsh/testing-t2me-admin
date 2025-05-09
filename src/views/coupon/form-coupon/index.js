@@ -27,7 +27,7 @@ import { ActionType } from "utils/api/warning-submit-util";
 const ADD = "ADD";
 // const EDIT = 'EDIT'
 
-const CouponForm = ({ mode, coupon ,type}) => {
+const CouponForm = ({ mode, coupon, type }) => {
   const {
     loading,
     error,
@@ -77,7 +77,8 @@ const CouponForm = ({ mode, coupon ,type}) => {
         is_percentage:
           coupon.is_percentage !== undefined ? coupon.is_percentage : true,
         discount_percentage_amount:
-          coupon.discount_percentage_amount || coupon.discount_percentage_amount,
+          coupon.discount_percentage_amount ||
+          coupon.discount_percentage_amount,
         max_uses: coupon.max_uses,
         min_purchase_amount: coupon.min_purchase_amount,
         date_required: Boolean(coupon.date_required),
@@ -158,6 +159,7 @@ const CouponForm = ({ mode, coupon ,type}) => {
       if (mode === "EDIT") {
         const editData = {
           ...processedValues,
+          theatre_ids: values.theatre_ids.map((item) => item.value),
           id: coupon.id,
         };
 
@@ -172,6 +174,7 @@ const CouponForm = ({ mode, coupon ,type}) => {
       } else {
         const formData = {
           ...processedValues,
+          theatre_ids: values.theatre_ids.map((item) => item.value),
         };
 
         dispatch(setSelectedSubmitItem(formData));

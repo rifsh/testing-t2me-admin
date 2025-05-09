@@ -308,12 +308,17 @@ export const protectedRoutes = [
   {
     key: "trackRequest.offer.status",
     path: `${APP_PREFIX_PATH}/track/offer/status/list`,
-    component: React.lazy(() => import("views/track-team/event-organizer copy/status-list")),
+    component: React.lazy(() => import("views/track-team/offer-organizer/status-list")),
+  },
+  {
+    key: "trackRequest.offer.status",
+    path: `${APP_PREFIX_PATH}/track/coupon/status/list`,
+    component: React.lazy(() => import("views/track-team/coupon-organizer/status-list")),
   },
   {
     key: "trackRequest.offer.status.details",
     path: `${APP_PREFIX_PATH}/track/offer/status/details/:offerId`,
-    component: React.lazy(() => import("views/track-team/event-organizer copy/status-details")),
+    component: React.lazy(() => import("views/track-team/offer-organizer/status-details")),
   },
   {
     key: "offer.add",

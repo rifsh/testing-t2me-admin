@@ -442,12 +442,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-        (document.cookie = cookie
-          .replace(/^ +/, "")
-          .replace(
-            /=.*/,
-            "=;expires=" + new Date(0).toUTCString() + ";path=/"
-          ))
+          (document.cookie = cookie
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date(0).toUTCString() + ";path=/"
+            ))
       );
 
     // Unregister Service Workers
@@ -1060,9 +1060,11 @@ class Utils {
       ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
       : null;
   };
-  static getUrlByUserRole(normalUrl, organizerUrl) {
+  static getUrlByUserRole(normalUrl, organizerUrl, isOrganizer) {
     const currentUser = getCurrentUser();
-    return currentUser.role_id === UserRoleConstants.eventOrganizerRoleId
+    return isOrganizer
+      ? organizerUrl
+      : currentUser.role_id === UserRoleConstants.eventOrganizerRoleId
       ? organizerUrl
       : normalUrl;
   }

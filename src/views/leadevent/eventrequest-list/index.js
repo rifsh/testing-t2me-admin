@@ -28,11 +28,13 @@ import {
 } from "store/slices/leadEventSlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 const { Option } = Select;
 const LeadEvent = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [activeStatus, setactiveStatus] = useState();
+  const handlePagination = usePaginationHook(getLeadEvents);
 
   const { filteredLeadEvents, loading, pagination, searchTerm, statusFilter } =
     useSelector((state) => state.leadEvents);
@@ -45,16 +47,16 @@ const LeadEvent = () => {
     dispatch(filterLeadEvents({ searchTerm, status: statusFilter }));
   }, [searchTerm, statusFilter, dispatch]);
 
-  const handlePagination = (page, size) => {
-    dispatch(getLeadEvents({ page: page, size: size }));
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(getLeadEvents({ page: page, size: size }));
+  // };
 
- 
+
   const handleViewDetails = async (id) => {
     await dispatch(getSingleLeadEvents(id));
     navigate(`${APP_PREFIX_PATH}/leadevent/details/${id}`);
-    };
-    // /lead-details/index
+  };
+  // /lead-details/index
 
   const dropdownMenu = (row) => (
     <Menu>
@@ -204,14 +206,14 @@ const LeadEvent = () => {
         let displayText = approval_status
           ? approval_status.charAt(0).toUpperCase() + approval_status.slice(1)
           : "N/A";
-    
+
         if (approval_status === "approved") {
           color = "green";
           displayText = "Converted"; // Change text for approved status
         } else if (approval_status === "rejected") {
           color = "red";
         }
-    
+
         return <Tag color={color}>{displayText}</Tag>;
       },
       sorter: (a, b) => {

@@ -56,8 +56,11 @@ export const ApiConstant = {
   ORGANIZER_OFFER_URL: "/api/v1/shared/offers/secured/offers/organizer",
   ORGANIZER_OFFER_STATUS_URL:
     "/api/v1/shared/offers/secured/offers_status/organizer",
+  ORGANIZER_OFFER_APPROVAL_URL:
+    "/api/v1/shared/offers/secured/offers/organizer/approval",
   ORGANIZER_OFFER_DETAIL_URL:
-    "/api/v1/shared/offers/secured/offers/detail/organizer",
+    "/api/v1/shared/offers/secured/offers/organizer/detail",
+
   ORGANIZER_COUPON_URL: "/api/v1/shared/offers/secured/coupons/organizer",
   ORGANIZER_COUPON_STATUS_URL:
     "/api/v1/shared/offers/secured/coupons_status/organizer",
@@ -232,10 +235,11 @@ export const ApiConstant = {
   // ADD_MOVIE_SCHEDULE_URL: "/api/v1/movie/schedule/secured/movie_schedules",
   MOVIE_SCHEDULE_URL: "/api/v1/movie/schedule/secured/movie_schedules",
   // MOVIE_SCHEDULE_DETAILS_URL:"/api/v1/movie/movies/secured/movie_schedules/single",
-  MOVIE_SCHEDULE_DETAILS_URL: "/api/v1/movie/schedule/secured/movie_schedules/single",
-
-
+  MOVIE_SCHEDULE_DETAILS_URL:
+    "/api/v1/movie/schedule/secured/movie_schedules/single",
 
   //report based apis
-  ADMIN_REPORT:"/api/v1/shared/report/secured/report_static"
+  ADMIN_REPORT: "/api/v1/shared/report/secured/report_static",
+  REPORT_USERS: "/api/v1/shared/report/secured/report_user",
+  REPORT_USER_DETAIL:"/api/v1/shared/report/secured/user_details_event"
 };

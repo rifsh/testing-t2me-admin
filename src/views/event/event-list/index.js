@@ -25,6 +25,8 @@ import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice";
 const { Panel } = Collapse;
 
 const { Option } = Select;
@@ -53,6 +55,7 @@ const EventsList = () => {
     page: DEFAULT_PAGE_SIZE.page,
     event_type: EVENT_TYPES.event,
   }
+  const handlePagination = usePaginationHook(fetchAllEvent);
 
   useEffect(() => {
     dispatch(fetchAllEvent(eventParams));
@@ -94,9 +97,9 @@ const EventsList = () => {
     dispatch(setStatusDialogVisible(true));
   };
 
-  const handlePagination = (page, size) => {
-    dispatch(fetchAllEvent({ page: page, size: size, event_type: EVENT_TYPES.event }));
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(fetchAllEvent({ page: page, size: size, event_type: EVENT_TYPES.event }));
+  // };
 
   const handleModalSubmit = async () => {
     dispatch(setModalLoading(true));
@@ -185,6 +188,7 @@ const EventsList = () => {
   const handleSearch = (value) => {
     if (value) {
       setSearchTerm(value);
+      dispatch(setGlobalSearchValue(value));
       dispatch(
         fetchAllEvent({
           search: value,
@@ -200,7 +204,7 @@ const EventsList = () => {
     console.log("enterd is empty search");
     if (!value) {
       console.log("is empty search");
-
+      dispatch(resetSearchValue());
       dispatch(
         fetchAllEvent({ search: null, page: 1, size: 10, active: activeStatus, event_type: EVENT_TYPES.event })
       );
@@ -266,7 +270,7 @@ const EventsList = () => {
             current: pagination.page,
             pageSize: pagination.size,
             total: pagination.total,
-            onChange: (page, pageSize) => handlePagination(page, pageSize),
+            onChange: (page, pageSize) => handlePagination(page, pageSize, EVENT_TYPES.event),
           }}
         />
       </div>
