@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Bar, Line } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { Link } from "react-router-dom";
@@ -8,6 +8,8 @@ import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { eventOrganizers, movieOrganizers } from "mock/data/reportData";
 import { exportToExcel, exportToPdf } from "utils/exportUtils";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchReports, fetchUserReports } from "store/slices/reportSlice";
 dayjs.extend(isBetween);
 
 Chart.register(...registerables);
@@ -16,49 +18,52 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const SuperAdminReport = () => {
+  const dispatch = useDispatch();
+  const { reportData, loading, error, userReports } = useSelector(
+    (state) => state.report
+  );
+  const userReportsData = userReports?.data?.[0]?.items || [];
+  console.log(userReportsData, "data");
+
   const reportRef = useRef(null);
   const [activeTab, setActiveTab] = useState("events");
   const [timeFilter, setTimeFilter] = useState("last-3-months");
   const [customDateRange, setCustomDateRange] = useState([]);
   const [pagination, setPagination] = useState({
-    page: 1,
+    page: 6,
     size: 5,
   });
 
-  const getStatusBadge = (status) => {
-    const baseClasses = "px-3 py-1 rounded-md text-sm font-medium";
-    switch (status) {
-      case "Active":
-        return (
-          <span className={`${baseClasses} bg-green-100 text-green-800`}>
-            Active
-          </span>
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await dispatch(
+          fetchReports({
+            pageData: { page: 1, size: 10 },
+            contentType: activeTab,
+          })
         );
-      case "Inactive":
-        return (
-          <span className={`${baseClasses} bg-red-100 text-red-800`}>
-            Inactive
-          </span>
-        );
-      default:
-        return (
-          <span className={`${baseClasses} bg-gray-100 text-gray-800`}>
-            Unknown
-          </span>
-        );
-    }
-  };
+      } catch (err) {
+        console.error("Failed to fetch reports:", err);
+      }
+    };
 
-  const getTabTitle = () => {
-    switch (activeTab) {
-      case "events":
-        return "Events";
-      case "movies":
-        return "Movies";
-      default:
-        return "Total (Events + Movies)";
-    }
-  };
+    fetchData();
+  }, [dispatch, activeTab]);
+  useEffect(() => {
+    dispatch(
+      fetchUserReports({
+        search: "",
+        active: true,
+        events: activeTab === "events",
+        movies: activeTab === "movies",
+        page: pagination.page,
+        size: pagination.size,
+      })
+    );
+  }, [dispatch, activeTab, pagination]);
+
+  console.log(userReports, "userReports");
 
   const getDateRange = () => {
     const now = dayjs();
@@ -139,53 +144,6 @@ const SuperAdminReport = () => {
     ...movieOrganizers.map((org) => ({ ...org, type: "movie" })),
   ]);
 
-  const platformStats = {
-    totalEventOrganizers: filteredEventOrganizers.length,
-    activeEventOrganizers: filteredEventOrganizers.filter(
-      (o) => o.status === "Active"
-    ).length,
-    totalMovieOrganizers: filteredMovieOrganizers.length,
-    activeMovieOrganizers: filteredMovieOrganizers.filter(
-      (o) => o.status === "Active"
-    ).length,
-    totalOrganizers: filteredAllOrganizers.length,
-    activeOrganizers: filteredAllOrganizers.filter((o) => o.status === "Active")
-      .length,
-
-    totalEvents: filteredEventOrganizers.reduce(
-      (sum, org) => sum + org.events,
-      0
-    ),
-    totalMovies: filteredMovieOrganizers.reduce(
-      (sum, org) => sum + org.movies,
-      0
-    ),
-
-    totalEventAttendees: filteredEventOrganizers.reduce(
-      (sum, org) => sum + org.attendees,
-      0
-    ),
-    totalMovieAttendees: filteredMovieOrganizers.reduce(
-      (sum, org) => sum + org.attendees,
-      0
-    ),
-    totalAttendees:
-      filteredEventOrganizers.reduce((sum, org) => sum + org.attendees, 0) +
-      filteredMovieOrganizers.reduce((sum, org) => sum + org.attendees, 0),
-
-    totalEventRevenue: filteredEventOrganizers.reduce(
-      (sum, org) => sum + org.revenue,
-      0
-    ),
-    totalMovieRevenue: filteredMovieOrganizers.reduce(
-      (sum, org) => sum + org.revenue,
-      0
-    ),
-    totalRevenue:
-      filteredEventOrganizers.reduce((sum, org) => sum + org.revenue, 0) +
-      filteredMovieOrganizers.reduce((sum, org) => sum + org.revenue, 0),
-  };
-
   // Update totalItems calculation
   const totalItems = (() => {
     switch (activeTab) {
@@ -199,11 +157,18 @@ const SuperAdminReport = () => {
   })();
 
   const organizerPerformanceData = {
-    labels: getCurrentOrganizers().map((org) => org.name),
+    labels:
+      userReports?.data?.[0]?.items?.map((organizer) => organizer.username) ||
+      [],
     datasets: [
       {
-        label: `${getTabTitle()} Revenue Generated ($)`,
-        data: getCurrentOrganizers().map((org) => org.revenue),
+        label: `${
+          activeTab === "events" ? "Event" : "Movie"
+        } Revenue Generated ($)`,
+        data:
+          userReports?.data?.[0]?.items?.map(
+            (organizer) => organizer.total_revenue
+          ) || [],
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 2,
@@ -361,10 +326,10 @@ const SuperAdminReport = () => {
           </h3>
           <p className="text-2xl font-bold text-gray-900">
             {activeTab === "events"
-              ? platformStats.totalEventOrganizers
+              ? reportData?.total_users_in_events
               : activeTab === "movies"
-              ? platformStats.totalMovieOrganizers
-              : platformStats.totalOrganizers}
+              ? reportData?.total_users_in_theatres
+              : null}
           </p>
         </div>
 
@@ -395,10 +360,10 @@ const SuperAdminReport = () => {
           </h3>
           <p className="text-2xl font-bold text-gray-900">
             {activeTab === "events"
-              ? platformStats.activeEventOrganizers
+              ? reportData?.active_users_in_events
               : activeTab === "movies"
-              ? platformStats.activeMovieOrganizers
-              : platformStats.activeOrganizers}
+              ? reportData?.active_users_in_theatres
+              : null}
           </p>
         </div>
 
@@ -428,10 +393,10 @@ const SuperAdminReport = () => {
           </h3>
           <p className="text-2xl font-bold text-gray-900">
             {activeTab === "events"
-              ? platformStats.totalEvents
+              ? reportData?.total_events
               : activeTab === "movies"
-              ? platformStats.totalMovies
-              : platformStats.totalEvents + platformStats.totalMovies}
+              ? reportData?.total_movies
+              : null}
           </p>
         </div>
 
@@ -456,12 +421,11 @@ const SuperAdminReport = () => {
             Total Revenue
           </h3>
           <p className="text-2xl font-bold text-gray-900">
-            $
             {activeTab === "events"
-              ? platformStats.totalEventRevenue.toLocaleString()
+              ? reportData?.total_event_revenue
               : activeTab === "movies"
-              ? platformStats.totalMovieRevenue.toLocaleString()
-              : platformStats.totalRevenue.toLocaleString()}
+              ? reportData?.total_movie_revenue || 0
+              : null}
           </p>
         </div>
       </div>
@@ -496,16 +460,16 @@ const SuperAdminReport = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Revenue
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Last Login
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {getCurrentOrganizers().map((organizer) => (
+              {/* {getCurrentOrganizers().map((organizer) => (
                 <tr key={organizer.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <Link
@@ -549,6 +513,59 @@ const SuperAdminReport = () => {
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {new Date(organizer.lastLogin).toLocaleDateString()}
                   </td>
+                </tr>
+              ))} */}
+
+              {userReports?.data?.[0]?.items?.map((organizer, index) => (
+                <tr key={index} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <Link
+                      to={`${APP_PREFIX_PATH}/super-admin/organizer-details/${organizer.id}`}
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      {organizer.username}
+                    </Link>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {organizer.email}
+                  </td>
+
+                  {activeTab === "total" && (
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-3 py-1 rounded-md text-sm font-medium ${
+                          organizer.event_count > 0
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-purple-100 text-purple-800"
+                        }`}
+                      >
+                        {organizer.event_count > 0 ? "Event" : "Movie"}
+                      </span>
+                    </td>
+                  )}
+
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {activeTab === "events" ||
+                    (activeTab === "total" && organizer.event_count > 0)
+                      ? organizer.event_count
+                      : organizer.movie_count ?? 0}
+                  </td>
+
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {organizer.total_attendees?.toLocaleString() ?? 0}
+                  </td>
+
+                  <td className="px-6 py-4 text-sm font-bold text-green-600">
+                    ${organizer.total_revenue?.toLocaleString() ?? 0}
+                  </td>
+
+                  {/* <td className="px-6 py-4">
+      {getStatusBadge(organizer.is_active ? "active" : "inactive")}
+    </td> */}
+
+                  {/* <td className="px-6 py-4 text-sm text-gray-500">
+      -
+    </td> */}
                 </tr>
               ))}
             </tbody>
@@ -691,11 +708,9 @@ const SuperAdminReport = () => {
                 <h4 className="text-sm font-medium text-gray-500 mb-2">
                   Total Events
                 </h4>
-                <p className="text-2xl font-bold">
-                  {platformStats.totalEvents}
-                </p>
+                <p className="text-2xl font-bold">{reportData?.total_events}</p>
                 <p className="text-sm text-gray-500 mt-1">
-                  {filteredEventOrganizers.length} organizers
+                  {reportData?.active_users_in_events} organizers
                 </p>
               </div>
               <div className="border-r border-gray-200 pr-6">
@@ -703,32 +718,32 @@ const SuperAdminReport = () => {
                   Total Attendance
                 </h4>
                 <p className="text-2xl font-bold text-blue-600">
-                  {platformStats.totalEventAttendees.toLocaleString()}
+                  {/* {platformStats.totalEventAttendees.toLocaleString()} */}0
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                {/* <p className="text-sm text-gray-500 mt-1">
                   Avg{" "}
                   {Math.round(
                     platformStats.totalEventAttendees /
                       platformStats.totalEvents
                   ).toLocaleString()}{" "}
                   per event
-                </p>
+                </p> */}
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-500 mb-2">
                   Event Revenue
                 </h4>
                 <p className="text-2xl font-bold text-green-600">
-                  ${platformStats.totalEventRevenue.toLocaleString()}
+                  {reportData?.total_event_revenue}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                {/* <p className="text-sm text-gray-500 mt-1">
                   $
                   {Math.round(
                     platformStats.totalEventRevenue /
                       platformStats.totalEventAttendees
                   ).toLocaleString()}{" "}
                   per attendee
-                </p>
+                </p> */}
               </div>
             </>
           )}
@@ -739,44 +754,40 @@ const SuperAdminReport = () => {
                 <h4 className="text-sm font-medium text-gray-500 mb-2">
                   Total Movies
                 </h4>
-                <p className="text-2xl font-bold">
-                  {platformStats.totalMovies}
-                </p>
+                <p className="text-2xl font-bold">{reportData?.total_movies}</p>
                 <p className="text-sm text-gray-500 mt-1">
-                  {filteredMovieOrganizers.length} organizers
+                  {reportData?.total_users_in_movies} organizers
                 </p>
               </div>
               <div className="border-r border-gray-200 pr-6">
                 <h4 className="text-sm font-medium text-gray-500 mb-2">
                   Total Attendance
                 </h4>
-                <p className="text-2xl font-bold text-blue-600">
-                  {platformStats.totalMovieAttendees.toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-2xl font-bold text-blue-600">{0}</p>
+                {/* <p className="text-sm text-gray-500 mt-1">
                   Avg{" "}
                   {Math.round(
                     platformStats.totalMovieAttendees /
                       platformStats.totalMovies
                   ).toLocaleString()}{" "}
                   per movie
-                </p>
+                </p> */}
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-500 mb-2">
                   Movie Revenue
                 </h4>
                 <p className="text-2xl font-bold text-green-600">
-                  ${platformStats.totalMovieRevenue.toLocaleString()}
+                  ${reportData?.total_event_revenue}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                {/* <p className="text-sm text-gray-500 mt-1">
                   $
                   {Math.round(
                     platformStats.totalMovieRevenue /
                       platformStats.totalMovieAttendees
                   ).toLocaleString()}{" "}
                   per attendee
-                </p>
+                </p> */}
               </div>
             </>
           )}
