@@ -30,7 +30,8 @@ import leadEvents from "./slices/leadEventSlice";
 import layout from "./slices/layoutSlice";
 import issue from "./slices/IssueSlice";
 import payment from "./slices/paymentSlice";
-import movieScheduleSlice from "./slices/movieScheduleSlice";
+import  movieScheduleSlice  from "./slices/movieScheduleSlice";
+import report from "./slices/reportSlice"; // Adjust path if needed
 import FilterSlice from "./slices/fliterSlice";
 
 const rootReducer = (asyncReducers = {}) => {
@@ -67,6 +68,7 @@ const rootReducer = (asyncReducers = {}) => {
       leadEvents,
       movieSeatSlice,
       movieScheduleSlice,
+      report,
       filter: FilterSlice,
       ...asyncReducers,
     });
