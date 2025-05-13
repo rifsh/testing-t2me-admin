@@ -452,7 +452,7 @@ const handleExportPdf = async () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Event Name</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Date</th>
+                {/* <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Date</th> */}
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Attendees</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Revenue</th>
               </tr>
@@ -470,16 +470,16 @@ const handleExportPdf = async () => {
                     </Link>
                   </td>
                   
-                  <td className="px-4 py-3 text-gray-500">
+                  {/* <td className="px-4 py-3 text-gray-500">
                     {new Date(event.created_at).toLocaleDateString()}
                   </td>
-                  
+                   */}
                   <td className="px-4 py-3">
                     {event.attendees_count?.toLocaleString()}
                   </td>
                   
                   <td className="px-4 py-3 font-bold text-green-600">
-                    ${event.event_revenue?.toLocaleString()}
+                    {event.event_revenue?.toLocaleString()}
                   </td>
                 </tr>
               ))}
