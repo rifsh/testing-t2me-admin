@@ -16,7 +16,7 @@ const ReportService = {
     });
   },
 
-  // user-specific reports
+  // user-specific reports 
   fetchUserReports: function (pageData) {
     const params = Utils.filterParams(pageData);
 
@@ -28,10 +28,21 @@ const ReportService = {
   },
 
 
-  //user-detail-report
+
+  //user-detail-report events
   fetchUserDetails: function (userId) {
     return fetch({
       url: ApiConstant.REPORT_USER_DETAIL,
+      method: "get",
+      params: { user_id: userId },
+    });
+  },
+
+
+    // user-specific reports movies
+ fetchMovieUserDetails: function (userId) {
+    return fetch({
+      url: ApiConstant.REPORT_USER_DETAIL_MOVIES,
       method: "get",
       params: { user_id: userId },
     });

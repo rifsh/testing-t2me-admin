@@ -619,4 +619,46 @@ export  const eventDetail = {
       { date: "2025-05-20", time: "11:00", title: "AI Workshop" },
       { date: "2025-05-21", time: "10:00", title: "Startup Pitch Competition" },
     ],
-  };
+  }
+
+
+
+  export const theaterData = {
+      id: 1,
+      name: "Cineplex One",
+      city: "Mumbai",
+      state: "Maharashtra",
+      total_movies: 15,
+      is_active: true,
+      total_capacity: 1200,
+      movies: [
+        { 
+          id: 1, 
+          title: "Avengers: Endgame", 
+          genre: "Action", 
+          runtime: 181, 
+          rating: 4.8,
+          showtimes: ["10:00 AM", "2:00 PM", "6:00 PM"],
+          occupancy: 85
+        },
+        { 
+          id: 2, 
+          title: "Inception", 
+          genre: "Sci-Fi", 
+          runtime: 148, 
+          rating: 4.6,
+          showtimes: ["11:30 AM", "3:30 PM", "7:30 PM"],
+          occupancy: 72
+        },
+        { 
+          id: 3, 
+          title: "The Dark Knight", 
+          genre: "Action", 
+          runtime: 152, 
+          rating: 4.9,
+          showtimes: ["9:00 AM", "1:00 PM", "5:00 PM"],
+          occupancy: 91
+        },
+      ],
+      daily_shows: [12, 15, 18, 14, 16, 20, 22], 
+    };
