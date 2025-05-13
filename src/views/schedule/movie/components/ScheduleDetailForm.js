@@ -264,7 +264,7 @@ function ScheduleDetailForm({ form, mode }) {
             </Col>
             <Col xs={24} sm={12}>
               <TheaterListForm
-              
+              name="theatre_id"
                 rules={[{ required: true }]}
                 form={form}
                 onSelect={handleTheatreSelect}
