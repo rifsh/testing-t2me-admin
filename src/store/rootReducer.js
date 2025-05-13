@@ -22,6 +22,7 @@ import modalSlice from "./slices/modalSlice";
 import seat from "./slices/seatSlice";
 import movieSeatSlice from "./slices/movieSeatSlice";
 import organizerUpdates from "./slices/EventOrganizerSlice";
+import movieOrganizerUpdates from "./slices/movieOrganizerSlice";
 import tax from "./slices/taxSlice";
 import faqs from "./slices/faqSlice";
 import appinfo from "./slices/AppInfoSlice";
@@ -30,7 +31,7 @@ import leadEvents from "./slices/leadEventSlice";
 import layout from "./slices/layoutSlice";
 import issue from "./slices/IssueSlice";
 import payment from "./slices/paymentSlice";
-import  movieScheduleSlice  from "./slices/movieScheduleSlice";
+import movieScheduleSlice from "./slices/movieScheduleSlice";
 import report from "./slices/reportSlice"; // Adjust path if needed
 import FilterSlice from "./slices/fliterSlice";
 
@@ -60,6 +61,7 @@ const rootReducer = (asyncReducers = {}) => {
       adCategory,
       advertisement,
       organizerUpdates,
+      movieOrganizerUpdates,
       payment,
       faqs,
       seat,

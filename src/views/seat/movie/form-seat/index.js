@@ -28,6 +28,8 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 import { fetchScreenData } from "store/slices/screenSlice";
 import TheaterLayout from "views/seat/components/TheaterLayout";
+import { isOrganizer } from "configs/UserAccessConfig";
+import { fetchTheaterByid } from "store/slices/theaterSlice";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -39,6 +41,7 @@ const SeatForm = (props) => {
   const [form] = Form.useForm();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState("1");
+  const { selectedTheaterId, singleResponse } = useSelector((state) => state.theater);
 
   const {
     loading,
@@ -77,18 +80,18 @@ const SeatForm = (props) => {
     if (singleSeatStructure && mode === EDIT) {
       dispatch(
         getVenues({
-          place_id: singleSeatStructure.venue.place.id,
+          place_id: singleSeatStructure?.venue?.place?.id,
           is_indoor: true,
         })
       );
       dispatch(setSelectedVenue(singleSeatStructure.venue));
       const values = {
-        name: singleSeatStructure.name,
-        venue_id: singleSeatStructure.venue.id,
-        screen_id: singleSeatStructure.screen.id,
-        place_id: singleSeatStructure.venue.place.id,
-        theatre_id: singleSeatStructure.theatre.id,
-        place: `${singleSeatStructure.venue.place.name}, ${singleSeatStructure.venue.place.country.name}`,
+        name: singleSeatStructure?.name,
+        venue_id: singleSeatStructure?.venue?.id,
+        screen_id: singleSeatStructure?.screen?.id,
+        place_id: singleSeatStructure?.venue?.place?.id,
+        theatre_id: singleSeatStructure?.theatre?.id,
+        place: `${singleSeatStructure?.venue?.place?.name}, ${singleSeatStructure?.venue?.place?.country?.name}`,
       };
       form.setFieldsValue(values);
       if (
@@ -109,12 +112,23 @@ const SeatForm = (props) => {
     }
   }, [form, singleSeatStructure, mode, dispatch]);
 
+  useEffect(() => {
+    if (isOrganizer()) {
+      dispatch(fetchTheaterByid({ theatre_id: selectedTheaterId ? selectedTheaterId : singleSeatStructure?.theatre?.id }));
+    }
+  }, [selectedTheaterId, singleSeatStructure]);
+
+  useEffect(() => {
+    if (isOrganizer() && selectedTheaterId) {
+      console.log("theaterres", singleResponse);
+    }
+  }, [singleResponse]);
+
   const onFinish = async () => {
     if (activeTabKey === "1") {
       setActiveTabKey("2");
       return;
     }
-
     try {
       const formValues = await form.validateFields();
       console.log(formValues, "FORM VALUES");
@@ -143,15 +157,43 @@ const SeatForm = (props) => {
           },
         };
 
-        const resultAction = await dispatch(
-          editSeatStructure({ data: editData, action: ActionType.WARNING })
-        );
+        if (isOrganizer()) {
+          const combinedData = {
+            ...formValues,
+            id: singleSeatStructure?.id,
+            place: singleResponse?.place?.id,
+            venue_id: singleResponse?.venue?.id,
+            total_row: seats?.length,
+            total_column: seats[0]?.length || 0,
+            total_seats: totalVisibleSeats,
+            type: SEAT_STRUCTURE_TYPES.MOVIE,
+            seat_data: {
+              seats,
+              seatTypes: usedSeatTypes,
+            },
+          };
+          const resultAction = await dispatch(
+            editSeatStructure({ data: combinedData, action: ActionType.WARNING })
+          );
+          if (editSeatStructure.fulfilled.match(resultAction)) {
+            dispatch(setSelectedSeatStructure(editData));
 
-        if (editSeatStructure.fulfilled.match(resultAction)) {
-          dispatch(setSelectedSeatStructure(editData));
+            dispatch(setSeatDialogVisible(true));
+          }
+          dispatch(setSelectedSubmitItem(combinedData));
+          return;
+        } else {
+          const resultAction = await dispatch(
+            editSeatStructure({ data: editData, action: ActionType.WARNING })
+          );
 
-          dispatch(setSeatDialogVisible(true));
+          if (editSeatStructure.fulfilled.match(resultAction)) {
+            dispatch(setSelectedSeatStructure(editData));
+
+            dispatch(setSeatDialogVisible(true));
+          }
         }
+
       } else {
         let totalVisibleSeats = 0;
         seats.forEach((row) => {
@@ -161,6 +203,24 @@ const SeatForm = (props) => {
             }
           });
         });
+
+        if (isOrganizer()) {
+          const combinedData = {
+            ...formValues,
+            place: singleResponse?.place?.id,
+            venue_id: singleResponse?.venue?.id,
+            total_row: seats.length,
+            total_column: seats[0]?.length || 0,
+            total_seats: totalVisibleSeats,
+            type: SEAT_STRUCTURE_TYPES.MOVIE,
+            seat_data: {
+              seats,
+              seatTypes: usedSeatTypes,
+            },
+          };
+          dispatch(setSelectedSubmitItem(combinedData));
+          return;
+        }
 
         const combinedData = {
           ...formValues,

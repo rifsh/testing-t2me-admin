@@ -9,6 +9,7 @@ const initialState = {
     statusEditresponse: null,
     editId: null,
     selectedTheaterId: null,
+    eventOrganizerTheater: null,
     selectedTheaterScreenCapacity: null,
     editData: [],
     singleResponse: null,
@@ -39,6 +40,19 @@ export const fetchTheaters = createAsyncThunk(
             return response.data[0];
         } catch (error) {
             return rejectWithValue(error.message || "Failed to fetch screen features");
+        }
+    }
+);
+export const getOrganizerTheater = createAsyncThunk(
+    "users/getOrganizerTheater",
+    async (userId, { rejectWithValue }) => {
+        try {
+            const response = await TheaterService.getOrganaizerTheaters(userId);
+            return response.data[0];
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data || "Error fetching single users"
+            );
         }
     }
 );
@@ -135,6 +149,18 @@ const theaterSlice = createSlice({
                 state.pagination = action.payload;
             })
             .addCase(fetchTheaters.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(getOrganizerTheater.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getOrganizerTheater.fulfilled, (state, action) => {
+                state.loading = false;
+                state.eventOrganizerTheater = action.payload;
+            })
+            .addCase(getOrganizerTheater.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

@@ -76,8 +76,8 @@ const TheaterList = () => {
         theaters: value.theatre,
       }));
 
-      const formattedData = newFormattedData.flatMap((venue) =>
-        venue.theaters.map((theater, index) => ({
+      const formattedData = newFormattedData?.flatMap((venue) =>
+        venue?.theaters?.map((theater, index) => ({
           key: `${venue.venue_id}-${theater.id}`,
           venue_id: venue.venue_id,
           venue_name: venue.venue_name,
@@ -133,10 +133,6 @@ const TheaterList = () => {
       </Menu.Item>
     </Menu>
   );
-
-  // const handlePagination = (page, pageSize) => {
-  //   dispatch(fetchTheaters({ page: page, size: pageSize }));
-  // };
 
   const tableColumns = [
     {
@@ -233,7 +229,7 @@ const TheaterList = () => {
             onChange: (page, pageSize) => handlePagination(page, pageSize),
           }}
           rowClassName={(record) =>
-            record.isFirstRow ? "theater-header-row" : ""
+            record?.isFirstRow ? "theater-header-row" : ""
           }
         />
       </div>

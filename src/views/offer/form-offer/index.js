@@ -64,13 +64,13 @@ const OfferForm = ({ mode, offer, type }) => {
         thumbnail_image:
           offer.thumbnail_image && offer.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: offer.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: offer.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: offer.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: offer.thumbnail_image,
+              },
+            ]
             : [],
       };
 

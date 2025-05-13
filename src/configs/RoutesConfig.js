@@ -335,6 +335,16 @@ export const protectedRoutes = [
     ),
   },
   {
+    key: "trackRequest.movie.seats.status.list",
+    path: `${APP_PREFIX_PATH}/track/moive-seats/status/list`,
+    component: React.lazy(() => import("views/track-team/movie-organizer/seat-organizer/status-list")),
+  },
+  {
+    key: "trackRequest.movie.seats.status.details",
+    path: `${APP_PREFIX_PATH}/track/moive-seats/status/details/:seatId`,
+    component: React.lazy(() => import("views/track-team/movie-organizer/seat-organizer/status-details")),
+  },
+  {
     key: "offer.add",
     path: `${APP_PREFIX_PATH}/offer/edit/:offerId`,
     component: React.lazy(() => import("views/offer/edit-offer/index")),
