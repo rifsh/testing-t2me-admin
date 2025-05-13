@@ -28,21 +28,21 @@ MovieSeatService.editSeatStructure = function (
   const encodedAction = encodeURIComponent(handleAction(action));
   const seatUrlBase = Utils.getUrlByUserRole(
     ApiConstant.MOVIE_SEAT_EDIT_URL,                 // For admin
-    ApiConstant.MOVIE_ORGANIZER_SEAT_EDIT_URL,       // For organizer (base URL without seat_id)
+    ApiConstant.MOVIE_ORGANIZER_SEAT_EDIT_URL,       // For organizer
     isOrganizer()
   );
-
   const seatUrl = isOrganizer()
-    ? `${seatUrlBase}/${data.id}` // Append seat_id in path if organizer
-    : `${seatUrlBase}?seat_id=${data.id}`; // Else use query param
+    ? `${seatUrlBase}/${data.id}?action=${encodedAction}` // Organizer uses path param + query
+    : `${seatUrlBase}?action=${encodedAction}&seat_id=${data.id}`; // Admin uses only query params
 
   return fetch({
-    url: `${seatUrl}?action=${encodedAction}&seat_id=${data.id}`,
+    url: seatUrl,
     method: "put",
     data: data,
     params: Utils.filterParams(pageData),
   });
 };
+
 MovieSeatService.editSeatStructureStatus = function (
   data,
   action,
