@@ -241,7 +241,8 @@ export const ApiConstant = {
     "/api/v1/movie/schedule/secured/movie_schedules/single",
 
   //report based apis
-  ADMIN_REPORT: "/api/v1/shared/report/secured/report_static",
-  REPORT_USERS: "/api/v1/shared/report/secured/report_user",
-  REPORT_USER_DETAIL:"/api/v1/shared/report/secured/user_details_event"
+  ADMIN_REPORT: "/api/v1/shared/report/secured/summary_report_static",
+  REPORT_USERS: "/api/v1/shared/report/secured/report_user_list",
+  REPORT_USER_DETAIL: "/api/v1/shared/report/securedevent/report_user_details",
+  REPORT_USER_DETAIL_MOVIES:"/api/v1/shared/report/securedmovies/report_user_details",
 };
