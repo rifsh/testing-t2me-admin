@@ -15,7 +15,7 @@ const TheaterListForm = ({
   rules,
   onSelect,
   mode,
-  name = "theatre_id",
+  name = "theater_id",
   disabled,
   apiParams,
 }) => {

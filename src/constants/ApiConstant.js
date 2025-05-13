@@ -134,6 +134,7 @@ export const ApiConstant = {
   GET_THEATER_URL: "/api/v1/movie/movies/secured/theatre/by_venue",
   GET_THEATER_DROPDOWN_URL: "/api/v1/movie/movies/secured/theatre/all",
   GET_THEATERBYID_URL: "/api/v1/movie/movies/secured/theatre/single",
+  EVENT_ORGANIZER_THEATER: '/api/v1/shared/auth/secured/users/related_entries',
 
   // THEATER_COMPANY API ENDPOINTS
   ADD_THEATER_COMPANY_URL:
@@ -231,6 +232,11 @@ export const ApiConstant = {
   EVENT_SEAT_STATUS_URL:
     "/api/v1/event/seats/secured/seatstructure/edit/status",
   EVENT_SEAT_DETAILS_URL: "/api/v1/event/seats/secured/seatstructure/single",
+  MOVIE_ORGANIZER_SEAT_URL: "/api/v1/movie/seats/secured/seatstructure/organizer",
+  MOVIE_ORGANIZER_SEAT_EDIT_URL: "/api/v1/movie/seats/secured/seatstructure/organizer/update",
+  MOVIE_ORGANIZER_SEAT_STATUS_LIST_URL: "/api/v1/movie/seats/secured/seatstructure/organizer",
+  MOVIE_ORGANIZER_SEAT_STATUS_DETAILS_URL: "/api/v1/movie/seats/secured/seatstructure/organizer/details",
+  ORGANIZER_MOVIE_SEAT_APPROVAL_URL: '/api/v1/movie/seats/secured/seatstructure/organizer/approval',
 
   //movie schedule api
   // MOVIE_SCHEDULE_URL: "/api/v1/movie/movies/secured/movie_schedules",
@@ -243,5 +249,5 @@ export const ApiConstant = {
   //report based apis
   ADMIN_REPORT: "/api/v1/shared/report/secured/report_static",
   REPORT_USERS: "/api/v1/shared/report/secured/report_user",
-  REPORT_USER_DETAIL:"/api/v1/shared/report/secured/user_details_event"
+  REPORT_USER_DETAIL: "/api/v1/shared/report/secured/user_details_event"
 };

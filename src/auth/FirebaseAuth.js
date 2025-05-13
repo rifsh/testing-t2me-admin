@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app"
 import { getFirestore } from 'firebase/firestore/lite';
-import { 
-	getAuth, 
+import {
+	getAuth,
 	signInWithEmailAndPassword,
 	createUserWithEmailAndPassword,
 	signOut,
@@ -13,12 +13,13 @@ import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 
 import firebaseConfig from 'configs/FirebaseConfig';
+import { getCurrentUser } from "configs/UserAccessConfig";
 
 const firebaseApp = initializeApp(firebaseConfig);
 
 const db = getFirestore(firebaseApp);
 const auth = getAuth(firebaseApp);
-const currentUser = auth.currentUser
+const currentUser = getCurrentUser();
 const googleAuthProvider = new GoogleAuthProvider();
 const facebookAuthProvider = new FacebookAuthProvider();
 

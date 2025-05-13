@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input, Row, Col, Card, Form, DatePicker, Select, Radio } from "antd";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import VenueListForm from "components/util-components/FormItems/VenueList";
@@ -11,9 +11,12 @@ import {
   setSelectedVenueList,
 } from "store/slices/locationSlice";
 import { resetTicketSelection } from "store/slices/ticketSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setSelectedScreenData } from "store/slices/screenSlice";
 import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
+import { isOrganizer } from "configs/UserAccessConfig";
+import { getOrganizerTheater, setSeectedTheater } from "store/slices/theaterSlice";
+import GenericDropdown from "views/theater/components/GenericDropdown";
 
 const { Option } = Select;
 
@@ -23,6 +26,7 @@ function MovieSeatDetailForm({ form, mode }) {
     selectedVenue: null,
     selectedScreen: null,
   });
+  const { eventOrganizerTheater, loading } = useSelector((state) => state.theater);
 
   const handlePlaceSelect = (id) => {
     dispatch(getVenues({ place_id: id, is_indoor: true }));
@@ -35,7 +39,6 @@ function MovieSeatDetailForm({ form, mode }) {
     dispatch(setSelectedVenueList("clear"));
     form.resetFields("venue_id");
   };
-
   const handleVenueSelect = (venue) => {
     form.setFieldValue("screen_id", undefined);
     form.setFieldValue("theatre_id", undefined);
@@ -54,11 +57,18 @@ function MovieSeatDetailForm({ form, mode }) {
     // form.setFieldValue("theatre_id", theater.id);
     // setSelectedFields({ ...selectedFields, selecstedTheater: theater.id });
   };
+
+  useEffect(() => {
+    if (isOrganizer()) {
+      dispatch(getOrganizerTheater({}));
+    }
+  }, [dispatch]);
+
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Seat Details">
-          <Row gutter={16}>
+          {!isOrganizer() && <Row gutter={16}>
             <Col xs={24} sm={12}>
               <PlaceWithCountryForm
                 form={form}
@@ -78,15 +88,34 @@ function MovieSeatDetailForm({ form, mode }) {
                 onSelect={handleVenueSelect}
               />
             </Col>
-          </Row>
+          </Row>}
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <TheaterListForm
+              {!isOrganizer() && <TheaterListForm
                 name="theatre_id"
                 disabled={mode === "EDIT"}
                 form={form}
                 onSelect={handleTheaterSelect}
-              />
+              />}
+              {isOrganizer() &&
+                <GenericDropdown
+                  name="theatre_id"
+                  label="Theater"
+                  mode="single"
+                  disabled={mode === "EDIT"}
+                  rules={[{ required: true, message: 'Please select a theater!' }]}
+                  fetchOptions={getOrganizerTheater}
+                  optionsData={eventOrganizerTheater?.theatres}
+                  loading={loading}
+                  optionLabelKey="name"
+                  optionExtraLabel=""
+                  optionValueKey="id"
+                  searchParamKey="search"
+                  form={form}
+                  onChange={(value) => dispatch(setSeectedTheater(value))}
+
+                />
+              }
             </Col>
             <Col xs={24} sm={12}>
               <ScreenListForm

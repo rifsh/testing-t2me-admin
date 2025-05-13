@@ -333,15 +333,20 @@ class Utils {
   static statusColumnUtil = (
     handleUpdateStatus,
     dataIndex = "status",
-    title = "Status"
+    title = "Status",
+    isButtonDisabled = false
   ) => ({
     title: title,
     dataIndex: dataIndex,
     render: (_, record) => (
       <Tag
         color={record[dataIndex] ? "green" : "red"}
-        style={{ cursor: "pointer" }}
-        onClick={() => handleUpdateStatus(record)}
+        style={{ cursor: !isButtonDisabled ? "pointer" : '' }}
+        onClick={() => {
+          if (!isButtonDisabled) {
+            handleUpdateStatus(record)
+          }
+        }}
       >
         {record[dataIndex] ? "Active" : "Inactive"}
       </Tag>
@@ -442,12 +447,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-          (document.cookie = cookie
-            .replace(/^ +/, "")
-            .replace(
-              /=.*/,
-              "=;expires=" + new Date(0).toUTCString() + ";path=/"
-            ))
+        (document.cookie = cookie
+          .replace(/^ +/, "")
+          .replace(
+            /=.*/,
+            "=;expires=" + new Date(0).toUTCString() + ";path=/"
+          ))
       );
 
     // Unregister Service Workers
@@ -1060,7 +1065,7 @@ class Utils {
       ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
       : null;
   };
-  static getUrlByUserRole(normalUrl, organizerUrl, isOrganizer=false) {
+  static getUrlByUserRole(normalUrl, organizerUrl, isOrganizer = false) {
     return isOrganizer ? organizerUrl : normalUrl;
   }
   static getEventTypeCodeWithType(type) {

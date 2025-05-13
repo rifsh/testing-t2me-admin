@@ -315,7 +315,7 @@ export const protectedRoutes = [
     path: `${APP_PREFIX_PATH}/track/coupon/status/list`,
     component: React.lazy(() => import("views/track-team/coupon-organizer/status-list")),
   },
-  
+
   {
     key: "trackRequest.offer.status.details",
     path: `${APP_PREFIX_PATH}/track/offer/status/details/:offerId`,
@@ -325,6 +325,16 @@ export const protectedRoutes = [
     key: "trackRequest.coupon.status.details",
     path: `${APP_PREFIX_PATH}/track/coupon/status/details/:offerId`,
     component: React.lazy(() => import("views/track-team/coupon-organizer/status-details")),
+  },
+  {
+    key: "trackRequest.movie.seats.status.list",
+    path: `${APP_PREFIX_PATH}/track/moive-seats/status/list`,
+    component: React.lazy(() => import("views/track-team/movie-organizer/seat-organizer/status-list")),
+  },
+  {
+    key: "trackRequest.movie.seats.status.details",
+    path: `${APP_PREFIX_PATH}/track/moive-seats/status/details/:seatId`,
+    component: React.lazy(() => import("views/track-team/movie-organizer/seat-organizer/status-details")),
   },
   {
     key: "offer.add",

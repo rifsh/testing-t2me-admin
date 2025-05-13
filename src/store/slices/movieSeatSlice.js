@@ -18,6 +18,8 @@ export const initialState = {
   selectedSubmitItem: null,
   selectedSeatStructure: null,
   allSeats: [],
+  allTrackrequestSeats: [],
+  TrackrequestSeatsDetails: [],
   singleSeatStructure: null,
 
   seatDialogVisible: false,
@@ -110,6 +112,21 @@ export const getAllSeatStructures = createAsyncThunk(
     }
   }
 );
+
+export const getAllTrackrequestSeatStructures = createAsyncThunk(
+  "movieSeat/getAllTrackrequestSeatStructures",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.getAllTrackrequestSeatStructures(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching all seat structure"
+      );
+    }
+  }
+);
+
 export const addEventSeatStructure = createAsyncThunk(
   "eventSeat/add",
   async ({ data, action }, { rejectWithValue }) => {
@@ -170,6 +187,22 @@ export const getEventSeatStructureDetails = createAsyncThunk(
         pageData
       );
       return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching seat structure details"
+      );
+    }
+  }
+);
+
+export const getTrackrequestSeatStructuresDetails = createAsyncThunk(
+  "eventSeat/getTrackrequestSeatStructuresDetails",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.getTrackrequestSeatStructuresDetails(
+        pageData
+      );
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Error fetching seat structure details"
@@ -545,7 +578,37 @@ const movieSeatSlice = createSlice({
         state.loading = false;
         state.error =
           action.payload?.data || "Error fetching seat all structure";
-      });
+      })
+      .addCase(getAllTrackrequestSeatStructures.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getAllTrackrequestSeatStructures.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.allTrackrequestSeats = action.payload.items;
+        state.pagination = action.payload;
+      })
+      .addCase(getAllTrackrequestSeatStructures.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error fetching seat all structure";
+      })
+      .addCase(getTrackrequestSeatStructuresDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getTrackrequestSeatStructuresDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.TrackrequestSeatsDetails = action.payload;
+        state.pagination = action.payload;
+      })
+      .addCase(getTrackrequestSeatStructuresDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error fetching seat all structure";
+      })
   },
 });
 
