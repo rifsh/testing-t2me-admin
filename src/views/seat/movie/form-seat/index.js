@@ -157,41 +157,41 @@ const SeatForm = (props) => {
           },
         };
 
-        if (isOrganizer()) {
-          const combinedData = {
-            ...formValues,
-            id: singleSeatStructure?.id,
-            place: singleResponse?.place?.id,
-            venue_id: singleResponse?.venue?.id,
-            total_row: seats?.length,
-            total_column: seats[0]?.length || 0,
-            total_seats: totalVisibleSeats,
-            type: SEAT_STRUCTURE_TYPES.MOVIE,
-            seat_data: {
-              seats,
-              seatTypes: usedSeatTypes,
-            },
-          };
-          const resultAction = await dispatch(
-            editSeatStructure({ data: combinedData, action: ActionType.WARNING })
-          );
-          if (editSeatStructure.fulfilled.match(resultAction)) {
-            dispatch(setSelectedSeatStructure(editData));
+        // if (isOrganizer()) {
+        //   const combinedData = {
+        //     ...formValues,
+        //     id: singleSeatStructure?.id,
+        //     place: singleResponse?.place?.id,
+        //     venue_id: singleResponse?.venue?.id,
+        //     total_row: seats?.length,
+        //     total_column: seats[0]?.length || 0,
+        //     total_seats: totalVisibleSeats,
+        //     type: SEAT_STRUCTURE_TYPES.MOVIE,
+        //     seat_data: {
+        //       seats,
+        //       seatTypes: usedSeatTypes,
+        //     },
+        //   };
+        //   const resultAction = await dispatch(
+        //     editSeatStructure({ data: combinedData, action: ActionType.WARNING })
+        //   );
+        //   if (editSeatStructure.fulfilled.match(resultAction)) {
+        //     dispatch(setSelectedSeatStructure(editData));
 
-            dispatch(setSeatDialogVisible(true));
-          }
-          dispatch(setSelectedSubmitItem(combinedData));
-          return;
-        } else {
-          const resultAction = await dispatch(
-            editSeatStructure({ data: editData, action: ActionType.WARNING })
-          );
+        //     dispatch(setSeatDialogVisible(true));
+        //   }
+        //   dispatch(setSelectedSubmitItem(combinedData));
+        //   return;
+        // } else {
+        // }
+        const resultAction = await dispatch(
+          editSeatStructure({ data: editData, action: ActionType.WARNING })
+        );
 
-          if (editSeatStructure.fulfilled.match(resultAction)) {
-            dispatch(setSelectedSeatStructure(editData));
+        if (editSeatStructure.fulfilled.match(resultAction)) {
+          dispatch(setSelectedSeatStructure(editData));
 
-            dispatch(setSeatDialogVisible(true));
-          }
+          dispatch(setSeatDialogVisible(true));
         }
 
       } else {

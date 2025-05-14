@@ -332,29 +332,39 @@ class Utils {
    */
   static statusColumnUtil = (
     handleUpdateStatus,
+    isButtonDisabled = false,
     dataIndex = "status",
     title = "Status",
-    isButtonDisabled = false
   ) => ({
     title: title,
     dataIndex: dataIndex,
-    render: (_, record) => (
-      <Tag
-        color={record[dataIndex] ? "green" : "red"}
-        style={{ cursor: !isButtonDisabled ? "pointer" : '' }}
-        onClick={() => {
-          if (!isButtonDisabled) {
-            handleUpdateStatus(record)
-          }
-        }}
-      >
-        {record[dataIndex] ? "Active" : "Inactive"}
-      </Tag>
-    ),
-    sorter: (a, b) =>
-      a[dataIndex] === b[dataIndex] ? 0 : a[dataIndex] ? -1 : 1,
+    render: (_, record) => {
+      const status = record?.[dataIndex]; // safely get status
+
+      return (
+        <Tag
+          color={status ? "green" : "red"}
+          style={{ cursor: !isButtonDisabled ? "pointer" : "default" }}
+          onClick={() => {
+            if (!isButtonDisabled && record) {
+              handleUpdateStatus(record);
+            }
+          }}
+        >
+          {status !== undefined ? (status ? "Active" : "Inactive") : "N/A"}
+        </Tag>
+      );
+    },
+    sorter: (a, b) => {
+      const aStatus = a?.[dataIndex];
+      const bStatus = b?.[dataIndex];
+
+      if (aStatus === bStatus) return 0;
+      return aStatus ? -1 : 1;
+    },
     sortDirections: ["ascend", "descend"],
   });
+
 
   /**
    * Validates if the end date is earlier than the start date.
