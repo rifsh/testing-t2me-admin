@@ -104,10 +104,10 @@ const OrganizerOfferStatusList = () => {
           text?.toLowerCase() === "approved"
             ? "green"
             : text?.toLowerCase() === "rejected"
-            ? "red"
-            : text?.toLowerCase() === "update"
-            ? "blue"
-            : "orange";
+              ? "red"
+              : text?.toLowerCase() === "update"
+                ? "blue"
+                : "orange";
 
         return (
           <Tag color={color}>{mappedText[text?.toLowerCase()] || text}</Tag>
@@ -134,6 +134,7 @@ const OrganizerOfferStatusList = () => {
       <Row gutter={16} justify="start" align="" wrap={false}>
         <SearchBarWithStatus
           fetchFunction={fetchAllCoupons}
+          isOrganizer={true}
           isStatus={false}
           additionalParams={{
             event_code: Utils.getEventTypeCodeWithType(type),

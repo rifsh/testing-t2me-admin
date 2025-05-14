@@ -27,6 +27,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { fetchAllOffers } from "store/slices/offerSlice";
 import Utils from "utils";
 import { isOrganizer } from "configs/UserAccessConfig";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const { Option } = Select;
 
@@ -40,6 +41,7 @@ const OrganizerOfferStatusList = () => {
     (state) => state.offers
   );
   const [activeStatus, setactiveStatus] = useState();
+  const handlePagination = usePaginationHook(fetchAllOffers);
 
   useEffect(() => {
     dispatch(
@@ -52,16 +54,16 @@ const OrganizerOfferStatusList = () => {
     );
   }, [dispatch]);
 
-  const handlePagination = (page, size) => {
-    dispatch(
-      fetchAllOffers({
-        page: page,
-        size: size,
-        isOrganizer: true,
-        event_code: Utils.getEventTypeCodeWithType(type),
-      })
-    );
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(
+  //     fetchAllOffers({
+  //       page: page,
+  //       size: size,
+  //       isOrganizer: true,
+  //       event_code: Utils.getEventTypeCodeWithType(type),
+  //     })
+  //   );
+  // };
 
   const handleViewDetails = async (id) => {
     console.log(id);
@@ -120,10 +122,10 @@ const OrganizerOfferStatusList = () => {
           text?.toLowerCase() === "approved"
             ? "green"
             : text?.toLowerCase() === "rejected"
-            ? "red"
-            : text?.toLowerCase() === "update"
-            ? "blue"
-            : "orange";
+              ? "red"
+              : text?.toLowerCase() === "update"
+                ? "blue"
+                : "orange";
 
         return (
           <Tag color={color}>{mappedText[text?.toLowerCase()] || text}</Tag>
@@ -151,10 +153,13 @@ const OrganizerOfferStatusList = () => {
         <SearchBarWithStatus
           fetchFunction={fetchAllOffers}
           isStatus={false}
+          isOrganizer={true}
           additionalParams={{
-            event_code: Utils.getEventTypeCodeWithType(type),
+            event_code: Utils.getEventTypeCodeWithType(type)
           }}
+          additionalFilters={[]}
         />
+
 
         <div className="mb-3">
           <Select
