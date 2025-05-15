@@ -76,8 +76,8 @@ const TheaterList = () => {
         theaters: value.theatre,
       }));
 
-      const formattedData = newFormattedData.flatMap((venue) =>
-        venue.theaters.map((theater, index) => ({
+      const formattedData = newFormattedData?.flatMap((venue) =>
+        venue?.theaters?.map((theater, index) => ({
           key: `${venue.venue_id}-${theater.id}`,
           venue_id: venue.venue_id,
           venue_name: venue.venue_name,
@@ -91,7 +91,7 @@ const TheaterList = () => {
   }, [response]);
 
   const handleUpdateStatus = (item) => {
-    const newStatus = !item.status;
+    const newStatus = !item?.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
     dispatch(setDialogVisible(true));
@@ -134,10 +134,6 @@ const TheaterList = () => {
     </Menu>
   );
 
-  // const handlePagination = (page, pageSize) => {
-  //   dispatch(fetchTheaters({ page: page, size: pageSize }));
-  // };
-
   const tableColumns = [
     {
       title: "Venue Name",
@@ -145,7 +141,7 @@ const TheaterList = () => {
       key: "venue_name",
       render: (value, row) => ({
         children: value,
-        props: { rowSpan: row.rowSpan },
+        props: { rowSpan: row?.rowSpan },
       }),
     },
     {
@@ -179,7 +175,8 @@ const TheaterList = () => {
       key: "website",
       render: (text) => (
         <a href={text} target="_blank" rel="noopener noreferrer">
-          {text}
+          {/* {text} */}
+          {utils.truncateText(text, 10)}
         </a>
       ),
     },
@@ -233,7 +230,7 @@ const TheaterList = () => {
             onChange: (page, pageSize) => handlePagination(page, pageSize),
           }}
           rowClassName={(record) =>
-            record.isFirstRow ? "theater-header-row" : ""
+            record?.isFirstRow ? "theater-header-row" : ""
           }
         />
       </div>

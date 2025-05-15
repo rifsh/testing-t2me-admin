@@ -28,6 +28,7 @@ import {
   setSeatModalLoading,
 } from "store/slices/movieSeatSlice";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { isOrganizer } from "configs/UserAccessConfig";
 
 const MovieSeatList = () => {
   const navigate = useNavigate();
@@ -48,7 +49,10 @@ const MovieSeatList = () => {
   const handlePagination = usePaginationHook(getAllSeatStructures);
 
   useEffect(() => {
-    dispatch(getAllSeatStructures(DEFAULT_PAGE_SIZE));
+    dispatch(getAllSeatStructures({
+      ...DEFAULT_PAGE_SIZE,
+      organizer: isOrganizer() ? false : null,
+    }));
   }, [dispatch]);
 
   const handleUpdateStatus = (item) => {
@@ -60,6 +64,7 @@ const MovieSeatList = () => {
   };
 
   const handleEditSeat = (id) => {
+    console.log(id);
     dispatch(setEditSeatItemId(id));
     dispatch(setSeatDialogVisible(true));
   };
@@ -173,7 +178,7 @@ const MovieSeatList = () => {
         );
       },
     },
-    Utils.statusColumnUtil(handleUpdateStatus),
+    Utils.statusColumnUtil(handleUpdateStatus, isOrganizer() ? true : false),
     {
       title: "",
       dataIndex: "actions",
@@ -244,7 +249,12 @@ const MovieSeatList = () => {
 
       <StatusSubmitAndConfirmModal
         editFunction={editSeatStructureStatus}
-        getAllFunction={getAllSeatStructures}
+        getAllFunction={() =>
+          getAllSeatStructures({
+            ...DEFAULT_PAGE_SIZE,
+            organizer: isOrganizer() ? false : null,
+          })
+        }
         responseData={responseData}
         responseMessage={message}
         pageData={DEFAULT_PAGE_SIZE}

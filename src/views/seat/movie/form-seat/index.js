@@ -21,6 +21,7 @@ import {
   setSeatModalLoading,
   setSelectedSeatStructure,
   resetState,
+  getTrackrequestSeatStructuresDetails,
 } from "store/slices/movieSeatSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
@@ -28,17 +29,20 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 import { fetchScreenData } from "store/slices/screenSlice";
 import TheaterLayout from "views/seat/components/TheaterLayout";
+import { isOrganizer } from "configs/UserAccessConfig";
+import { fetchTheaterByid } from "store/slices/theaterSlice";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
 
 const SeatForm = (props) => {
-  const { mode = ADD, seatId } = props;
+  const { mode = ADD, seatId, pageType } = props;
   const dispatch = useDispatch();
 
   const [form] = Form.useForm();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState("1");
+  const { selectedTheaterId, singleResponse } = useSelector((state) => state.theater);
 
   const {
     loading,
@@ -61,10 +65,19 @@ const SeatForm = (props) => {
 
   useEffect(() => {
     if (seatId && mode === EDIT) {
-      dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
+      if (pageType) {
+        dispatch(getTrackrequestSeatStructuresDetails({ seat_id: seatId }));
+      } else {
+        dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
+      }
     } else {
       dispatch(resetState());
     }
+
+    return () => {
+      dispatch(resetState());
+    }
+
   }, [seatId, dispatch]);
 
   useEffect(() => {
@@ -77,18 +90,18 @@ const SeatForm = (props) => {
     if (singleSeatStructure && mode === EDIT) {
       dispatch(
         getVenues({
-          place_id: singleSeatStructure.venue.place.id,
+          place_id: singleSeatStructure?.venue?.place?.id,
           is_indoor: true,
         })
       );
       dispatch(setSelectedVenue(singleSeatStructure.venue));
       const values = {
-        name: singleSeatStructure.name,
-        venue_id: singleSeatStructure.venue.id,
-        screen_id: singleSeatStructure.screen.id,
-        place_id: singleSeatStructure.venue.place.id,
-        theatre_id: singleSeatStructure.theatre.id,
-        place: `${singleSeatStructure.venue.place.name}, ${singleSeatStructure.venue.place.country.name}`,
+        name: singleSeatStructure?.name,
+        venue_id: singleSeatStructure?.venue?.id,
+        screen_id: singleSeatStructure?.screen?.id,
+        place_id: singleSeatStructure?.venue?.place?.id,
+        theatre_id: singleSeatStructure?.theatre?.id,
+        place: `${singleSeatStructure?.venue?.place?.name}, ${singleSeatStructure?.venue?.place?.country?.name}`,
       };
       form.setFieldsValue(values);
       if (
@@ -109,12 +122,17 @@ const SeatForm = (props) => {
     }
   }, [form, singleSeatStructure, mode, dispatch]);
 
+  useEffect(() => {
+    if (isOrganizer()) {
+      dispatch(fetchTheaterByid({ theatre_id: selectedTheaterId ? selectedTheaterId : singleSeatStructure?.theatre?.id }));
+    }
+  }, [selectedTheaterId, singleSeatStructure]);
+
   const onFinish = async () => {
     if (activeTabKey === "1") {
       setActiveTabKey("2");
       return;
     }
-
     try {
       const formValues = await form.validateFields();
       console.log(formValues, "FORM VALUES");
@@ -142,7 +160,6 @@ const SeatForm = (props) => {
             seatTypes: usedSeatTypes,
           },
         };
-
         const resultAction = await dispatch(
           editSeatStructure({ data: editData, action: ActionType.WARNING })
         );
@@ -152,6 +169,7 @@ const SeatForm = (props) => {
 
           dispatch(setSeatDialogVisible(true));
         }
+
       } else {
         let totalVisibleSeats = 0;
         seats.forEach((row) => {
@@ -161,6 +179,24 @@ const SeatForm = (props) => {
             }
           });
         });
+
+        if (isOrganizer()) {
+          const combinedData = {
+            ...formValues,
+            place: singleResponse?.place?.id,
+            venue_id: singleResponse?.venue?.id,
+            total_row: seats.length,
+            total_column: seats[0]?.length || 0,
+            total_seats: totalVisibleSeats,
+            type: SEAT_STRUCTURE_TYPES.MOVIE,
+            seat_data: {
+              seats,
+              seatTypes: usedSeatTypes,
+            },
+          };
+          dispatch(setSelectedSubmitItem(combinedData));
+          return;
+        }
 
         const combinedData = {
           ...formValues,

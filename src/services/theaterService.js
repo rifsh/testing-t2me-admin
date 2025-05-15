@@ -19,6 +19,13 @@ TheaterService.createTheater = (data, action) => {
     });
 }
 
+TheaterService.getOrganaizerTheaters = function (pageData) {
+    return fetch({
+        url: `${ApiConstant.EVENT_ORGANIZER_THEATER}`,
+        method: "get",
+    });
+};
+
 TheaterService.getTheater = (pageData) => {
     return fetch({
         url: ApiConstant.GET_THEATER_URL,

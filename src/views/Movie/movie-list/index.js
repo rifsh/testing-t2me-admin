@@ -120,12 +120,16 @@ const Index = () => {
             title: "Title",
             dataIndex: "title",
             key: "title",
+            render: (text) => text?.trim() ? text : "N/A"
         },
         {
             title: "Genre",
             dataIndex: "genre",
             key: "genre",
-            render: (genres) => genres.map((genre) => <Tag key={genre}>{genre}</Tag>)
+            render: (genres) =>
+                Array.isArray(genres) && genres.length > 0
+                    ? genres.map((genre) => <Tag key={genre}>{genre}</Tag>)
+                    : <span>-</span>
         },
         {
             title: "Duration",

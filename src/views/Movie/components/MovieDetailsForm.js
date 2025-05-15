@@ -27,7 +27,7 @@ import {
     PlusOutlined
 } from "@ant-design/icons";
 import TextEditor from "components/util-components/FormItems/TextEditor";
-import { parseSizeToBytes, SupportImageFormat } from "constants/SupportFileConstants";
+import { parseSizeToBytes, SupportImageFormat, ThumbnailImageResolutions } from "constants/SupportFileConstants";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPersonalitiesData } from "store/slices/castSlice";
 import MovieFilter from "./MovieFilter";
@@ -38,6 +38,7 @@ import Utils from "utils";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { fetchMoviegenres, fetchMovieLanguages } from "store/slices/movieSlice";
 import GenericDropdown from "views/theater/components/GenericDropdown";
+import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -353,7 +354,7 @@ const MovieDetailsForm = ({ form, mode }) => {
                             style={{ marginBottom: "0px", padding: "0px" }}
                             rules={[{ required: true, message: 'Please add a poster image' }]}
                         >
-                            <Upload
+                            {/* <Upload
                                 name="thumbnail_image"
                                 listType="picture"
                                 maxCount={1}
@@ -368,7 +369,7 @@ const MovieDetailsForm = ({ form, mode }) => {
                                 accept={`.${SupportImageFormat.join(",.")}`}
                             >
                                 <Button icon={<UploadOutlined />}>Click to upload</Button>
-                            </Upload>
+                            </Upload> */}
                         </Form.Item>
 
                         <Form.Item
@@ -380,7 +381,7 @@ const MovieDetailsForm = ({ form, mode }) => {
                             rules={[{ required: true, message: 'Please add a Banner image' }]}
                             style={{ marginBottom: "0px", padding: "0px" }}
                         >
-                            <Upload
+                            {/* <Upload
                                 name="thumbnail_image"
                                 listType="picture"
                                 maxCount={1}
@@ -395,7 +396,11 @@ const MovieDetailsForm = ({ form, mode }) => {
                                 accept={`.${SupportImageFormat.join(",.")}`}
                             >
                                 <Button icon={<UploadOutlined />}>Click to upload</Button>
-                            </Upload>
+                            </Upload> */}
+                            <ResizedImgePicker
+                                maxCount={1}
+                                targetResolution={ThumbnailImageResolutions.MOVIE_BANNER}
+                            />
                         </Form.Item>
                     </Col>
                 </Row>
