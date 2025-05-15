@@ -38,6 +38,14 @@ const ReportService = {
     });
   },
 
+   fetchEventDetails: function (eventId) {
+    return fetch({
+      url: ApiConstant.REPORT_EVENT_DETAIL,
+      method: "get",
+      params: { event_id: eventId },
+    });
+  },
+
 
     // user-specific reports movies
  fetchMovieUserDetails: function (userId) {
@@ -47,6 +55,14 @@ const ReportService = {
       params: { user_id: userId },
     });
   },
+fetchTheaterDetails: function (theaterId) {
+    return fetch({
+      url: ApiConstant.REPORT_THEATER_DETAIL,
+      method: "get",
+      params: { theatre_id: theaterId },
+    });
+  },
+
 
 
 };
