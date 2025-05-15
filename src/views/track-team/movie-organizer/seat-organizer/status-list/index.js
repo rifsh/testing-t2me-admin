@@ -11,6 +11,7 @@ import SearchBarWithStatus from "components/util-components/Search/SearchBarWith
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import Utils from "utils";
 import { getAllTrackrequestSeatStructures } from "store/slices/movieSeatSlice";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const { Option } = Select;
 
@@ -25,6 +26,7 @@ const OrganizerMovieStatusList = () => {
         (state) => state.movieSeatSlice
     );
     const [activeStatus, setactiveStatus] = useState();
+    const handlePagination = usePaginationHook(getAllTrackrequestSeatStructures);
 
     useEffect(() => {
         dispatch(
@@ -33,15 +35,6 @@ const OrganizerMovieStatusList = () => {
             })
         );
     }, [dispatch]);
-
-    const handlePagination = (page, size) => {
-        dispatch(
-            getAllTrackrequestSeatStructures({
-                page: page,
-                size: size,
-            })
-        );
-    };
 
     const handleViewDetails = async (id) => {
         console.log(id);

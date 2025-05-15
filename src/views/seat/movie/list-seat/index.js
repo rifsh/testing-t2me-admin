@@ -178,7 +178,7 @@ const MovieSeatList = () => {
         );
       },
     },
-    Utils.statusColumnUtil(handleUpdateStatus, 'status', 'Status', isOrganizer() ? true : false),
+    Utils.statusColumnUtil(handleUpdateStatus, isOrganizer() ? true : false),
     {
       title: "",
       dataIndex: "actions",

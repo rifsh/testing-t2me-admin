@@ -91,7 +91,7 @@ const TheaterList = () => {
   }, [response]);
 
   const handleUpdateStatus = (item) => {
-    const newStatus = !item.status;
+    const newStatus = !item?.status;
     const data = { status: newStatus, id: item.id };
     dispatch(setSelectedItem(data));
     dispatch(setDialogVisible(true));
@@ -141,7 +141,7 @@ const TheaterList = () => {
       key: "venue_name",
       render: (value, row) => ({
         children: value,
-        props: { rowSpan: row.rowSpan },
+        props: { rowSpan: row?.rowSpan },
       }),
     },
     {
@@ -175,7 +175,8 @@ const TheaterList = () => {
       key: "website",
       render: (text) => (
         <a href={text} target="_blank" rel="noopener noreferrer">
-          {text}
+          {/* {text} */}
+          {utils.truncateText(text, 10)}
         </a>
       ),
     },

@@ -12,24 +12,36 @@ const SearchBarWithStatus = ({
   additionalFilters = [],
   isStatus = true,
   placeholder = 'Search',
+  isOrganizer = false,
+  additionalParams = {} // Add this to accept additional params
 }) => {
   const dispatch = useDispatch();
   const [searchValue, setSearchValue] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null);
   const [filterValues, setFilterValues] = useState({});
 
+  const buildRequestParams = (params) => {
+    return {
+      ...params,
+      page: 1,
+      size: 10,
+      ...(isStatus && { active: statusFilter }),
+      ...(isOrganizer && { organizer: true }), // Include isOrganizer if true
+      ...additionalParams, // Include any additional params
+      ...filterValues
+    };
+  };
+
   const handleSearch = (value) => {
     if (value) {
       setSearchValue(value || null);
       dispatch(setGlobalSearchValue(value));
       dispatch(
-        fetchFunction({
-          search: value || null,
-          page: 1,
-          size: 10,
-          ...(isStatus && { active: statusFilter }),
-          ...filterValues,
-        })
+        fetchFunction(
+          buildRequestParams({
+            search: value || null,
+          })
+        )
       );
     }
   };
@@ -39,13 +51,11 @@ const SearchBarWithStatus = ({
       setSearchValue(null);
       dispatch(resetSearchValue())
       dispatch(
-        fetchFunction({
-          search: null,
-          page: 1,
-          size: 10,
-          ...(isStatus && { active: statusFilter }),
-          ...filterValues,
-        })
+        fetchFunction(
+          buildRequestParams({
+            search: null,
+          })
+        )
       );
     }
   };
@@ -53,12 +63,11 @@ const SearchBarWithStatus = ({
   const handleFilterItemIsEmpty = (value) => {
     if (!value) {
       dispatch(
-        fetchFunction({
-          search: searchValue,
-          page: 1,
-          size: 10,
-          ...(isStatus && { active: statusFilter }),
-        })
+        fetchFunction(
+          buildRequestParams({
+            search: searchValue,
+          })
+        )
       );
       setFilterValues({});
     }
@@ -67,13 +76,12 @@ const SearchBarWithStatus = ({
   const handleStatusChange = (status) => {
     setStatusFilter(status);
     dispatch(
-      fetchFunction({
-        search: searchValue,
-        page: 1,
-        size: 10,
-        active: status,
-        ...filterValues,
-      })
+      fetchFunction(
+        buildRequestParams({
+          search: searchValue,
+          active: status,
+        })
+      )
     );
   };
 
@@ -85,13 +93,12 @@ const SearchBarWithStatus = ({
     setFilterValues(newFilterValues);
 
     dispatch(
-      fetchFunction({
-        search: searchValue,
-        page: 1,
-        size: 10,
-        ...(isStatus && { active: statusFilter }),
-        ...newFilterValues,
-      })
+      fetchFunction(
+        buildRequestParams({
+          search: searchValue,
+          ...newFilterValues,
+        })
+      )
     );
   };
 
@@ -120,21 +127,21 @@ const SearchBarWithStatus = ({
     }));
 
     dispatch(
-      fetchFunction({
-        search: searchValue,
-        page: 1,
-        size: 10,
-        ...(isStatus && { active: statusFilter }),
-        ...filterValues,
-        [formName]: selectedId,
-      })
+      fetchFunction(
+        buildRequestParams({
+          search: searchValue,
+          ...filterValues,
+          [formName]: selectedId,
+        })
+      )
     );
   };
 
   return (
-    <Flex className="mb-1" mobileFlex={false} >
+    <Flex className="mb-1" mobileFlex={false}>
       {/* Search Input */}
-      <div className="mr-md-3 mb-3"
+      <div
+        className="mr-md-3 mb-3"
         style={{ width: !isStatus && "100%" }}
       >
         <Search

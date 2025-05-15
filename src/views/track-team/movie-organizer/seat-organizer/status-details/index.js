@@ -14,6 +14,7 @@ import CommentShowModal from 'components/util-components/ModalItems/CommentShowM
 import { submitOrganizerMovieSeatUpdate } from 'store/slices/movieOrganizerSlice';
 import { ActionType } from 'utils/api/warning-submit-util';
 import ResponsiveSeatMap from '../components/ResponsiveSeatMap ';
+import LoadingOverlay from 'components/util-components/Loader';
 
 const { Title, Text, Paragraph } = Typography;
 const { confirm } = Modal;
@@ -185,7 +186,6 @@ export default function TheaterScreeningUI() {
         <div className=" bg-gray-50 min-h-screen">
             <Card
                 className="rounded-lg overflow-hidden border-0"
-                loading={loading}
                 title={
                     <div className="flex justify-between items-center me-10">
                         <div>
@@ -318,6 +318,7 @@ export default function TheaterScreeningUI() {
                 </div>}
             </Card>
 
+            <LoadingOverlay loading={loading} />
 
             <CommentShowModal
                 visible={isCommentModalVisible}
