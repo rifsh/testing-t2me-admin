@@ -598,11 +598,12 @@ const movieSeatSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(getTrackrequestSeatStructuresDetails.fulfilled, (state, action) => {
+      .addCase(getTrackrequestSeatStructuresDetails.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.error = null;
-        state.TrackrequestSeatsDetails = action.payload;
-        state.pagination = action.payload;
+        state.TrackrequestSeatsDetails = payload;
+        state.singleSeatStructure = payload;
+        state.pagination = payload;
       })
       .addCase(getTrackrequestSeatStructuresDetails.rejected, (state, action) => {
         state.loading = false;

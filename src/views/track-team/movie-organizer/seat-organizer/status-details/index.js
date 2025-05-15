@@ -3,10 +3,10 @@ import { Badge, Card, Typography, Tag, Divider, Descriptions, Timeline, Button, 
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getTrackrequestSeatStructuresDetails } from 'store/slices/movieSeatSlice';
-import { CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined, InfoCircleOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
-import { isOrganizer } from 'configs/UserAccessConfig';
+import { InfoCircleOutlined, } from '@ant-design/icons';
+import ChairIcon from '@mui/icons-material/Chair';
+import { getCurrentUser } from 'configs/UserAccessConfig';
 import { APPROVAL_STATUS } from 'constants/AppConstants';
-import { currentUser } from 'auth/FirebaseAuth';
 import { UserRoleConstants } from 'constants/UserRoleConstant';
 import { setActionType, setComment, setCommentModalVisibility } from 'store/slices/EventOrganizerSlice';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
@@ -27,28 +27,19 @@ export default function TheaterScreeningUI() {
         (state) => state.movieSeatSlice
     );
     const {
-        singleOrganizerUpdate,
         loading: organizerLoading,
         isCommentModalVisible,
         comment,
         actionType,
-        showAllComments,
     } = useSelector((state) => state.organizerUpdates);
-    const [viewMode, setViewMode] = useState('info'); // 'info' or 'preview'
+    const [viewMode, setViewMode] = useState('info');
+    const currentUser = getCurrentUser();
 
     useEffect(() => {
-        dispatch(getTrackrequestSeatStructuresDetails({ seat_id: seatId }))
+        if (seatId) {
+            dispatch(getTrackrequestSeatStructuresDetails({ seat_id: seatId }))
+        }
     }, [seatId, dispatch]);
-
-    if (!TrackrequestSeatsDetails) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                    <div className="text-2xl text-gray-400">Loading theater details...</div>
-                </div>
-            </div>
-        );
-    }
 
     const getStatusBadge = (status) => {
         if (status === "pending") {
@@ -68,7 +59,7 @@ export default function TheaterScreeningUI() {
 
     const handleMakeChanges = () => {
         navigate(
-            `${APP_PREFIX_PATH}/offer/edit/${seatId}?type=movie`
+            `${APP_PREFIX_PATH}/seat/movie/edit/${seatId}/organizer`
         );
     };
 
@@ -120,6 +111,8 @@ export default function TheaterScreeningUI() {
     };
 
     const renderActionButtons = () => {
+        if (loading || !TrackrequestSeatsDetails) return null;
+
         const approvalStatus =
             TrackrequestSeatsDetails?.approval_status?.toLowerCase();
 
@@ -146,6 +139,8 @@ export default function TheaterScreeningUI() {
             approvalStatus === APPROVAL_STATUS.PENDING &&
             currentUser?.role_id === UserRoleConstants.superAdminRoleId
         ) {
+            console.log("TrackrequestSeatsDetails", approvalStatus);
+
             return (
                 <Row justify="center" style={{ marginTop: 24 }} gutter={[16, 16]}>
                     <Col>
@@ -212,18 +207,18 @@ export default function TheaterScreeningUI() {
                         </Button>
                         <Button
                             type={viewMode === 'preview' ? 'primary' : 'default'}
-                            icon={<EyeOutlined />}
+                            icon={<ChairIcon />}
                             onClick={() => setViewMode('preview')}
                         >
-                            Preview
+                            Seat Preview
                         </Button>
                     </Space>
                 }
             >
                 {viewMode === 'info' ? (
                     <>
-                        <Row gutter={24}>
-                            <Col span={12}>
+                        <Row gutter={24} >
+                            <Col xs={24} sm={24} lg={12}>
                                 <Card title="Theatre Information" className="h-full" bordered={false}>
                                     <Descriptions column={1}>
                                         <Descriptions.Item label="Theatre Name">
@@ -235,7 +230,7 @@ export default function TheaterScreeningUI() {
                                     </Descriptions>
                                 </Card>
                             </Col>
-                            <Col span={12}>
+                            <Col xs={24} sm={24} lg={12} >
                                 <Card title="Venue Details" className="h-full" bordered={false}>
                                     <Descriptions column={1}>
                                         <Descriptions.Item label="Venue Name">
@@ -249,40 +244,49 @@ export default function TheaterScreeningUI() {
                             </Col>
                         </Row>
 
-                        <Card title="Screen Information" className="mt-6" bordered={false}>
-                            <Row gutter={24}>
-                                <Col span={8}>
-                                    <Descriptions column={1}>
-                                        <Descriptions.Item label="Screen Name">
-                                            <Text strong>{TrackrequestSeatsDetails.screen?.screen_name}</Text>
-                                        </Descriptions.Item>
-                                        <Descriptions.Item label="Capacity">
-                                            <Text>{TrackrequestSeatsDetails.screen?.capacity} seats</Text>
-                                        </Descriptions.Item>
-                                    </Descriptions>
-                                </Col>
-                                <Col span={8}>
-                                    <Descriptions column={1}>
-                                        <Descriptions.Item label="Total Rows">
-                                            <Text>{TrackrequestSeatsDetails.total_row}</Text>
-                                        </Descriptions.Item>
-                                        <Descriptions.Item label="Total Columns">
-                                            <Text>{TrackrequestSeatsDetails.total_column}</Text>
-                                        </Descriptions.Item>
-                                    </Descriptions>
-                                </Col>
-                                <Col span={8}>
-                                    <Descriptions column={1}>
-                                        <Descriptions.Item label="Total Seats">
-                                            <Text>{TrackrequestSeatsDetails.total_seats}</Text>
-                                        </Descriptions.Item>
-                                        <Descriptions.Item label="Creation Date">
-                                            <Text>{new Date(TrackrequestSeatsDetails.created_at).toLocaleDateString()}</Text>
-                                        </Descriptions.Item>
-                                    </Descriptions>
-                                </Col>
-                            </Row>
-                        </Card>
+                        <div className="mt-6 bg-white shadow rounded-xl p-6">
+                            <h2 className="text-lg font-semibold mb-4">Screen Information</h2>
+                            <div className="flex flex-col md:flex-row md:justify-between gap-6">
+
+                                {/* Column 1 */}
+                                <div className="flex-1 space-y-2">
+                                    <div>
+                                        <p className="text-gray-500 text-sm">Screen Name</p>
+                                        <p className="font-semibold text-black">{TrackrequestSeatsDetails.screen?.screen_name}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500 text-sm">Capacity</p>
+                                        <p className='text-black'>{TrackrequestSeatsDetails.screen?.capacity} seats</p>
+                                    </div>
+                                </div>
+
+                                {/* Column 2 */}
+                                <div className="flex-1 space-y-2">
+                                    <div>
+                                        <p className="text-gray-500 text-sm">Total Rows</p>
+                                        <p className='text-black'>{TrackrequestSeatsDetails.total_row}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500 text-sm">Total Columns</p>
+                                        <p className='text-black'>{TrackrequestSeatsDetails.total_column}</p>
+                                    </div>
+                                </div>
+
+                                {/* Column 3 */}
+                                <div className="flex-1 space-y-2">
+                                    <div>
+                                        <p className="text-gray-500 text-sm">Total Seats</p>
+                                        <p className='text-black'>{TrackrequestSeatsDetails.total_seats}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-500 text-sm">Creation Date</p>
+                                        <p className='text-black'>{new Date(TrackrequestSeatsDetails.created_at).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
 
                         <Card title="Timeline" className="mt-6" bordered={false}>
                             <Timeline>
@@ -311,11 +315,9 @@ export default function TheaterScreeningUI() {
                 <Divider />
 
                 {/* Maker-Checker Actions */}
-                {!isOrganizer() && <div className="flex justify-end mt-4">
-                    <Space>
-                        {renderActionButtons()}
-                    </Space>
-                </div>}
+                <div className='flex items-center justify-end'>
+                    {renderActionButtons()}
+                </div>
             </Card>
 
             <LoadingOverlay loading={loading} />

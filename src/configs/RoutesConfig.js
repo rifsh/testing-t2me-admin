@@ -406,7 +406,7 @@ export const protectedRoutes = [
   },
   {
     key: "seat.movie.add",
-    path: `${APP_PREFIX_PATH}/seat/movie/edit/:seatId`,
+    path: `${APP_PREFIX_PATH}/seat/movie/edit/:seatId/:pageType?`,
     component: React.lazy(() => import("views/seat/movie/edit-seat")),
   },
   {

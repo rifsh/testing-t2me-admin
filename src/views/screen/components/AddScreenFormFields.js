@@ -93,7 +93,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                 }, 0);
             }
         }
-        return () =>{
+        return () => {
             dispatch(setCleraAllData())
         }
     }, [singleResponse, form, placeSelected === false]);
@@ -293,6 +293,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                             </Col>
                             <Col span={24}>
                                 <TheaterListForm
+                                    disabled={!venueSelected}
                                     form={form}
                                     onSelect={handleTheaterSelect}
                                 />
