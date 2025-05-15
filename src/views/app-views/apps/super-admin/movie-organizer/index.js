@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link,useNavigate, useParams } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -13,6 +13,7 @@ Chart.register(...registerables);
 const MovieOrganizerDetail = () => {
   const reportRef = useRef(null);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { data, loading, error } = useSelector(
     (state) => state.report.movieUserDetails
   );
@@ -79,7 +80,6 @@ const MovieOrganizerDetail = () => {
     ],
   };
 
-  // Pie chart data - Theater Status (assuming you have is_active in theater data)
   const statusData = {
     labels: ["Active", "Inactive"],
     datasets: [
@@ -115,8 +115,19 @@ const MovieOrganizerDetail = () => {
     exportToExcel(reportRef, "MovieOrganizerTheaters.xlsx");
   };
 
+  const handleGoBack = () => {
+    navigate(-1);
+  };
   return (
     <div className="p-8" ref={reportRef}>
+      <div>
+        <button
+          onClick={handleGoBack}
+          className="text-gray-500 hover:text-gray-700 text-sm mb-2 inline-block"
+        >
+          &larr; Back to Organizers
+        </button>
+      </div>
       {/* Header with Export Buttons */}
       <div className="mb-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">
@@ -289,7 +300,7 @@ const MovieOrganizerDetail = () => {
                   </td>
                   <td className="px-4 py-3">
                     <Link
-                      to={`${APP_PREFIX_PATH}/movie-organizer/theater-details/1`}
+                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theater.id}`}
                       className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                     >
                       View Details

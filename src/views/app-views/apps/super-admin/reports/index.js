@@ -26,6 +26,8 @@ const SuperAdminReport = () => {
   const [activeTab, setActiveTab] = useState("events");
   const [timeFilter, setTimeFilter] = useState("last-3-months");
   const [customDateRange, setCustomDateRange] = useState([]);
+  const [showAllCountries, setShowAllCountries] = useState(false);
+  const [expandedRows, setExpandedRows] = useState([]);
   const [filters, setFilters] = useState({
     search: "",
     status: null,
@@ -123,7 +125,6 @@ const SuperAdminReport = () => {
     }
   };
 
-  // Table columns
   const columns = [
     {
       title: "Organizer",
@@ -149,18 +150,80 @@ const SuperAdminReport = () => {
       title: activeTab === "events" ? "Events" : "Movies",
       dataIndex: activeTab === "events" ? "event_count" : "movie_count",
     },
-    // {
-    //   title: "Attendees",
-    //   dataIndex: "total_attendees",
-    //   render: (value) => value?.toLocaleString() || "0",
-    // },
     {
       title: "Revenue",
-      dataIndex: "total_revenue",
-      render: (value) => `${value?.toLocaleString() || "0"}`,
-      className: "text-green-600 font-semibold",
+      dataIndex: "revenue_by_country",
+      render: (revenueByCountry, record) => {
+        const hasMultipleCountries = revenueByCountry?.length > 1;
+        const primaryRevenue = revenueByCountry?.[0] || {};
+        const totalRevenue = record.total_revenue || 0;
+
+        return (
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <span className="font-semibold text-green-600">
+                  {totalRevenue.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+                {primaryRevenue.currency_code && (
+                  <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">
+                    {primaryRevenue.currency_code}
+                  </span>
+                )}
+              </div>
+
+              {hasMultipleCountries && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedRows((prev) =>
+                      prev.includes(record.id)
+                        ? prev.filter((id) => id !== record.id)
+                        : [...prev, record.id]
+                    );
+                  }}
+                  className="text-blue-500 hover:text-blue-700 text-xs ml-2"
+                >
+                  {expandedRows.includes(record.id) ? "▲" : "▼"}
+                </button>
+              )}
+            </div>
+
+            {hasMultipleCountries && expandedRows.includes(record.id) && (
+              <div className="mt-2 pl-4 space-y-2 border-l-2 border-gray-100">
+                {revenueByCountry.map((country, index) => (
+                  <div key={index} className="flex justify-between">
+                    <div className="flex items-center">
+                      <span className="text-gray-600">
+                        {country.country_name}
+                      </span>
+                      <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">
+                        {country.currency_code}
+                      </span>
+                    </div>
+                    <span className="font-medium">
+                      {country.revenue.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!revenueByCountry?.length && (
+              <span className="text-gray-400">No revenue data</span>
+            )}
+          </div>
+        );
+      },
     },
   ];
+
   // Chart data
   const organizerPerformanceData = {
     labels: userReportsData.map((org) => org.username),
@@ -176,46 +239,28 @@ const SuperAdminReport = () => {
   };
 
   // Timeline data
-  const timelineData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  const chartData = {
+    labels: userReportsData.map((user) => user?.username),
     datasets: [
       {
-        label: `${activeTab === "events" ? "Events" : "Movies"} Over Time`,
-        data: Array.from({ length: 6 }, () => Math.floor(Math.random() * 100)),
-        borderColor: "#4f46e5",
-        backgroundColor: "rgba(79, 70, 229, 0.1)",
-        tension: 0.4,
+        label: "Events per User",
+        data: userReportsData.map((user) => user.event_count || 0),
+        backgroundColor: [
+          "#4f46e5",
+          "#10b981",
+          "#f59e0b",
+          "#ef4444",
+          "#8b5cf6",
+          "#ec4899",
+          "#14b8a6",
+          "#f97316",
+          "#64748b",
+          "#84cc16",
+        ],
+        borderColor: "rgba(255, 255, 255, 0.8)",
+        borderWidth: 1,
       },
     ],
-  };
-
-  // StatCard component
-  const StatCard = ({ title, value, icon, color, prefix = "" }) => {
-    const colorClasses = {
-      blue: "bg-blue-100 text-blue-600",
-      green: "bg-green-100 text-green-600",
-      purple: "bg-purple-100 text-purple-600",
-      yellow: "bg-yellow-100 text-yellow-600",
-    };
-
-    return (
-      <Card className="h-full">
-        <div className="flex items-center gap-4">
-          <div className={`${colorClasses[color]} p-3 rounded-full`}>
-            {icon}
-          </div>
-          <div>
-            <h3 className="text-gray-500 text-sm font-medium">{title}</h3>
-            <p className="text-2xl font-bold">
-              {prefix}
-              {typeof value === "number"
-                ? value.toLocaleString()
-                : value || "0"}
-            </p>
-          </div>
-        </div>
-      </Card>
-    );
   };
 
   return (
@@ -403,33 +448,74 @@ const SuperAdminReport = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-            <div className="bg-yellow-50 p-3 rounded-full inline-flex items-center justify-center mb-3">
-              <svg
-                className="w-6 h-6 text-yellow-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-yellow-50 p-3 rounded-full inline-flex items-center justify-center">
+                  <svg
+                    className="w-6 h-6 text-yellow-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
+                  </svg>
+                </div>
+                <h3 className="text-gray-500 text-sm font-medium">
+                  Revenue by Country
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowAllCountries(!showAllCountries)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
+                {showAllCountries ? "Show less" : "Show all"}
+              </button>
             </div>
-            <h3 className="text-gray-500 text-sm font-medium mb-1">
-              Total Revenue
-            </h3>
-            <p className="text-2xl font-bold text-gray-900">
-              {activeTab === "events"
-                ? reportData?.total_event_revenue
-                : activeTab === "movies"
-                ? reportData?.total_movie_revenue || 0
-                : null}
-            </p>
+
+            <div className="space-y-3">
+              {reportData?.revenue_by_country
+                ?.filter((_, index) => showAllCountries || index === 0)
+                .map((country) => (
+                  <div key={country.country_id} className="flex flex-col">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {country.country_name}
+                        </span>
+                        <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
+                          {country.currency_code}
+                        </span>
+                      </div>
+                      <span className="text-lg font-bold text-green-600">
+                        {country.revenue?.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    {showAllCountries && (
+                      <div className="mt-1 text-xs text-gray-500">
+                        {country.country_name} revenue
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+              {/* Fallback if no country data */}
+              {(!reportData?.revenue_by_country ||
+                reportData.revenue_by_country.length === 0) && (
+                <div className="text-gray-400 text-center py-2">
+                  No country revenue data available
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </Spin>
@@ -463,7 +549,8 @@ const SuperAdminReport = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Spin spinning={apiLoading.userReports} tip="Loading chart data...">
           <Card title="Revenue Distribution" className="h-full">
-            <div className="h-64">
+            <div className="h-64 w-full">
+              {" "}
               <Bar
                 data={organizerPerformanceData}
                 options={{
@@ -476,16 +563,38 @@ const SuperAdminReport = () => {
         </Spin>
 
         <Spin spinning={apiLoading.reports} tip="Loading timeline data...">
-          <Card
-            title={`${activeTab === "events" ? "Events" : "Movies"} Timeline`}
-            className="h-full"
-          >
-            <div className="h-64">
-              <Line
-                data={timelineData}
+          <Card title="User Event Distribution" className="h-full">
+            <div className="h-64 w-full">
+              {" "}
+              <Bar
+                data={chartData}
                 options={{
                   maintainAspectRatio: false,
-                  scales: { y: { beginAtZero: true } },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      title: { display: true, text: "Number of Events" },
+                    },
+                    x: {
+                      title: { display: true, text: "Users" },
+                    },
+                  },
+                  plugins: {
+                    tooltip: {
+                      callbacks: {
+                        label: (context) => {
+                          const user = userReports[context.dataIndex];
+                          return [
+                            `Username: ${user.username}`,
+                            `Events: ${user.event_count}`,
+                            `Email: ${user.email}`,
+                            `Total Revenue: ${user.total_revenue || 0}`,
+                          ];
+                        },
+                      },
+                    },
+                    legend: { display: false },
+                  },
                 }}
               />
             </div>
@@ -512,13 +621,7 @@ const SuperAdminReport = () => {
                       {reportData?.active_users_in_events} organizers
                     </p>
                   </div>
-                  {/* <div className="border-r border-gray-200 pr-6">
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Total Attendance
-                </h4>
-                <p className="text-2xl font-bold text-blue-600">
-                </p>
-              </div> */}
+                
                   <div>
                     <h4 className="text-sm font-medium text-gray-500 mb-2">
                       Event Revenue
@@ -543,12 +646,7 @@ const SuperAdminReport = () => {
                       {reportData?.total_users_in_movies} organizers
                     </p>
                   </div>
-                  {/* <div className="border-r border-gray-200 pr-6">
-                <h4 className="text-sm font-medium text-gray-500 mb-2">
-                  Total Attendance
-                </h4>
-                <p className="text-2xl font-bold text-blue-600">{0}</p>
-              </div> */}
+                 
                   <div>
                     <h4 className="text-sm font-medium text-gray-500 mb-2">
                       Movie Revenue
