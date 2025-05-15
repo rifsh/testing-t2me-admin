@@ -37,11 +37,39 @@ export const fetchUserDetails = createAsyncThunk(
   }
 );
 
+export const fetchEventDetails = createAsyncThunk(
+  "report/fetchEventDetails",
+  async (eventId, { rejectWithValue }) => {
+    try {
+      const response = await ReportService.fetchEventDetails(eventId);
+      console.log(response, "res");
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+
 export const fetchMovieUserDetails = createAsyncThunk(
   "report/fetchMovieUserDetails",
   async (userId, { rejectWithValue }) => {
     try {
       const response = await ReportService.fetchMovieUserDetails(userId);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+
+export const fetchTheaterDetails = createAsyncThunk(
+  "report/fetchTheaterDetails",
+  async (theaterId, { rejectWithValue }) => {
+    try {
+      const response = await ReportService.fetchTheaterDetails(theaterId);
+      console.log(response, "res");
+
       return response.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
@@ -72,7 +100,17 @@ const reportSlice = createSlice({
       error: null,
       pagination: { size: 10, page: 1 },
     },
+    eventDetails: {
+      data: null,
+      loading: false,
+      error: null,
+    },
     movieUserDetails: {
+      data: null,
+      loading: false,
+      error: null,
+    },
+    theaterDetails: {
       data: null,
       loading: false,
       error: null,
@@ -142,6 +180,21 @@ const reportSlice = createSlice({
         state.userDetails.error = action.payload || action.error.message;
       })
 
+      .addCase(fetchEventDetails.pending, (state) => {
+        state.eventDetails.loading = true;
+        state.eventDetails.error = null;
+      })
+      .addCase(fetchEventDetails.fulfilled, (state, action) => {
+        state.eventDetails.loading = false;
+        state.eventDetails.data = action.payload || null;
+      })
+      .addCase(fetchEventDetails.rejected, (state, action) => {
+        state.eventDetails.loading = false;
+        state.eventDetails.error = action.payload || action.error.message;
+      })
+
+      // movies-user-details
+
       .addCase(fetchMovieUserDetails.pending, (state) => {
         state.movieUserDetails.loading = true;
         state.movieUserDetails.error = null;
@@ -153,6 +206,21 @@ const reportSlice = createSlice({
       .addCase(fetchMovieUserDetails.rejected, (state, action) => {
         state.movieUserDetails.loading = false;
         state.movieUserDetails.error = action.payload || action.error.message;
+      })
+
+      //theater details
+
+      .addCase(fetchTheaterDetails.pending, (state) => {
+        state.theaterDetails.loading = true;
+        state.theaterDetails.error = null;
+      })
+      .addCase(fetchTheaterDetails.fulfilled, (state, action) => {
+        state.theaterDetails.loading = false;
+        state.theaterDetails.data = action.payload || null;
+      })
+      .addCase(fetchTheaterDetails.rejected, (state, action) => {
+        state.theaterDetails.loading = false;
+        state.theaterDetails.error = action.payload || action.error.message;
       });
   },
 });
