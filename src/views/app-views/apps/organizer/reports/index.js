@@ -8,6 +8,9 @@ import { Table, Select, DatePicker, message } from "antd";
 import { organizerEvents, organizerMovies } from "mock/data/reportData";
 import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import dayjs from "dayjs";
+import { useDispatch, useSelector } from "react-redux";
+import { getUserdata } from "store/slices/authSlice";
+import { fetchUserDetails } from "store/slices/reportSlice";
 
 Chart.register(...registerables);
 
@@ -24,6 +27,33 @@ const OrganizerReport = () => {
     pageSize: 5,
     total: 0,
   });
+
+   const dispatch = useDispatch();
+  const { userData} = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    // Fetch user data when component mounts
+    dispatch(getUserdata());
+  }, [dispatch]);
+  const organizerId = userData.id
+
+
+
+ const { 
+    data: organizer,
+    loading,
+    error,
+  } = useSelector((state) => state.report.userDetails);
+
+  const user = organizer?.[0];
+console.log(user,'user');
+
+  useEffect(() => {
+    if (organizerId) {
+      dispatch(fetchUserDetails(organizerId));
+    }
+  }, [dispatch, organizerId]);
+
 
   const baseItems = useMemo(() => {
     return activeSegment === "events" ? organizerEvents : organizerMovies;
