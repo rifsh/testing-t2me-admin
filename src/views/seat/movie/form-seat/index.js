@@ -21,6 +21,7 @@ import {
   setSeatModalLoading,
   setSelectedSeatStructure,
   resetState,
+  getTrackrequestSeatStructuresDetails,
 } from "store/slices/movieSeatSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
@@ -35,7 +36,7 @@ const ADD = "ADD";
 const EDIT = "EDIT";
 
 const SeatForm = (props) => {
-  const { mode = ADD, seatId } = props;
+  const { mode = ADD, seatId, pageType } = props;
   const dispatch = useDispatch();
 
   const [form] = Form.useForm();
@@ -64,10 +65,19 @@ const SeatForm = (props) => {
 
   useEffect(() => {
     if (seatId && mode === EDIT) {
-      dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
+      if (pageType) {
+        dispatch(getTrackrequestSeatStructuresDetails({ seat_id: seatId }));
+      } else {
+        dispatch(getMovieSeatStructureDetails({ seat_id: seatId }));
+      }
     } else {
       dispatch(resetState());
     }
+
+    return () => {
+      dispatch(resetState());
+    }
+
   }, [seatId, dispatch]);
 
   useEffect(() => {
@@ -118,12 +128,6 @@ const SeatForm = (props) => {
     }
   }, [selectedTheaterId, singleSeatStructure]);
 
-  useEffect(() => {
-    if (isOrganizer() && selectedTheaterId) {
-      console.log("theaterres", singleResponse);
-    }
-  }, [singleResponse]);
-
   const onFinish = async () => {
     if (activeTabKey === "1") {
       setActiveTabKey("2");
@@ -156,34 +160,6 @@ const SeatForm = (props) => {
             seatTypes: usedSeatTypes,
           },
         };
-
-        // if (isOrganizer()) {
-        //   const combinedData = {
-        //     ...formValues,
-        //     id: singleSeatStructure?.id,
-        //     place: singleResponse?.place?.id,
-        //     venue_id: singleResponse?.venue?.id,
-        //     total_row: seats?.length,
-        //     total_column: seats[0]?.length || 0,
-        //     total_seats: totalVisibleSeats,
-        //     type: SEAT_STRUCTURE_TYPES.MOVIE,
-        //     seat_data: {
-        //       seats,
-        //       seatTypes: usedSeatTypes,
-        //     },
-        //   };
-        //   const resultAction = await dispatch(
-        //     editSeatStructure({ data: combinedData, action: ActionType.WARNING })
-        //   );
-        //   if (editSeatStructure.fulfilled.match(resultAction)) {
-        //     dispatch(setSelectedSeatStructure(editData));
-
-        //     dispatch(setSeatDialogVisible(true));
-        //   }
-        //   dispatch(setSelectedSubmitItem(combinedData));
-        //   return;
-        // } else {
-        // }
         const resultAction = await dispatch(
           editSeatStructure({ data: editData, action: ActionType.WARNING })
         );
