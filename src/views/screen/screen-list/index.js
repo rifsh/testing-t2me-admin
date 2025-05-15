@@ -72,6 +72,7 @@ const ScreenList = () => {
           rowSpan: index === 0 ? venue.movie_screens.length : 0,
           isFirstRow: index === 0,
           name_of_venue: screen.theatre.venue.name,
+          name_of_place: screen.theatre.place.name,
           ...screen,
         }))
       );
@@ -154,17 +155,9 @@ const ScreenList = () => {
     dispatch(setDialogVisible(true));
   };
 
-  const getStatusBadge = (isActive) => {
-    return isActive ? (
-      <Badge status="success" text="Active" />
-    ) : (
-      <Badge status="error" text="Inactive" />
-    );
-  };
-
   const tableColumns = [
     {
-      title: "Theater Name",
+      title: "Theater",
       dataIndex: "venue_name",
       key: "venue_name",
       render: (value, row) => ({
@@ -173,13 +166,19 @@ const ScreenList = () => {
       }),
     },
     {
-      title: "Venue Name",
+      title: "Venue",
       dataIndex: "name_of_venue",
       key: "name_of_venue",
 
     },
     {
-      title: "Screen Name",
+      title: "Place",
+      dataIndex: "name_of_place",
+      key: "name_of_place",
+
+    },
+    {
+      title: "Screen",
       dataIndex: "screen_name",
       key: "screen_name",
 
