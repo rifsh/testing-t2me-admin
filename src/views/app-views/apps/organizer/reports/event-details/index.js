@@ -787,12 +787,12 @@ console.log(eventId,'eventId');
   if (!eventData) return <div className="p-8 text-center text-gray-500">No event data available</div>;
 
   // Format currency
-  const currencyCode = eventData.revenue_by_country?.[0]?.currency_code || "";
-  const formatCurrency = (value) => 
-    new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency: currencyCode 
-    }).format(value || 0);
+  // const currencyCode = eventData?.revenue_by_country?.[0]?.currency_code || "";
+  // const formatCurrency = (value) => 
+  //   new Intl.NumberFormat('en-US', { 
+  //     style: 'currency', 
+  //     currency: currencyCode 
+  //   })?.format(value || 0);
 
   // Chart data configurations
   const ticketRevenueData = {
@@ -866,7 +866,7 @@ console.log(eventId,'eventId');
         <div className="flex items-center gap-2">
           <FiDollarSign className="text-gray-400" />
           <span className="font-medium text-blue-600">
-            {formatCurrency(text)}
+            {/* {formatCurrency(text)} */}
           </span>
         </div>
       )
@@ -889,7 +889,7 @@ console.log(eventId,'eventId');
       title: 'Price',
       dataIndex: 'ticket_price',
       key: 'price',
-      render: (text) => formatCurrency(text)
+      // render: (text) => formatCurrency(text)
     },
     {
       title: 'Sold',
@@ -907,7 +907,7 @@ console.log(eventId,'eventId');
       key: 'revenue',
       render: (text) => (
         <span className="font-medium text-blue-600">
-          {formatCurrency(text)}
+          {/* {formatCurrency(text)} */}
         </span>
       )
     }
@@ -942,7 +942,7 @@ console.log(eventId,'eventId');
             title="Total Revenue"
             value={eventData.total_revenue}
             precision={2}
-            prefix={currencyCode}
+            // prefix={currencyCode}
             valueStyle={{ color: '#3B82F6' }}
           />
         </Card>
@@ -998,7 +998,7 @@ console.log(eventId,'eventId');
                         label: (context) => {
                           const total = context.dataset.data.reduce((a, b) => a + b, 0);
                           const percentage = Math.round((context.raw / total) * 100);
-                          return `${context.label}: ${formatCurrency(context.raw)} (${percentage}%)`;
+                          // return `${context.label}: ${formatCurrency(context.raw)} (${percentage}%)`;
                         }
                       }
                     }
@@ -1031,7 +1031,7 @@ console.log(eventId,'eventId');
                     legend: { display: false },
                     tooltip: {
                       callbacks: {
-                        label: (context) => formatCurrency(context.raw)
+                        // label: (context) => formatCurrency(context.raw)
                       }
                     }
                   },
@@ -1039,7 +1039,7 @@ console.log(eventId,'eventId');
                     y: {
                       beginAtZero: true,
                       ticks: {
-                        callback: (value) => formatCurrency(value)
+                        // callback: (value) => formatCurrency(value)
                       }
                     }
                   }
