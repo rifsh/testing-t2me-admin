@@ -185,7 +185,7 @@ const ScreenDetailView = () => {
                                         <Descriptions.Item label="Venue" span={2}>
                                             <Space>
                                                 <EnvironmentOutlined />
-                                                <Text strong>{singleResponse?.venue?.name || 'N/A'}</Text>
+                                                <Text strong>{singleResponse?.theatre?.venue?.name || 'N/A'}</Text>
                                             </Space>
                                         </Descriptions.Item>
                                         <Descriptions.Item label="Location">
