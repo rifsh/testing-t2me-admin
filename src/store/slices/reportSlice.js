@@ -77,6 +77,18 @@ export const fetchTheaterDetails = createAsyncThunk(
   }
 );
 
+export const fetchCountryList = createAsyncThunk(
+  "report/fetchCountryList",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await ReportService.fetchCountryList(pageData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+
 const reportSlice = createSlice({
   name: "report",
   initialState: {
@@ -93,6 +105,17 @@ const reportSlice = createSlice({
         pageSize: 10,
         total: 0,
       },
+    },
+    countryList: {
+      data: null,
+      loading: false,
+      error: null,
+      pagination: {
+        current: 1,
+        pageSize: 10,
+        total: 0,
+      },
+      selectedCountry: null,
     },
     userDetails: {
       data: null,
@@ -122,6 +145,9 @@ const reportSlice = createSlice({
         ...state.userReports.pagination,
         ...action.payload,
       };
+    },
+    setSelectedCountry: (state, action) => {
+      state.selectedCountry = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -221,8 +247,31 @@ const reportSlice = createSlice({
       .addCase(fetchTheaterDetails.rejected, (state, action) => {
         state.theaterDetails.loading = false;
         state.theaterDetails.error = action.payload || action.error.message;
+      })
+
+      .addCase(fetchCountryList.pending, (state) => {
+        state.countryList.loading = true;
+        state.countryList.error = null;
+      })
+      .addCase(fetchCountryList.fulfilled, (state, action) => {
+        state.countryList.loading = false;
+        state.countryList.data = action.payload || null;
+
+        if (action.payload?.[0]?.pagination) {
+          state.countryList.pagination = {
+            ...state.countryList.pagination,
+            current: action.payload[0].pagination.page,
+            pageSize: action.payload[0].pagination.size,
+            total: action.payload[0].pagination.total,
+          };
+        }
+      })
+
+      .addCase(fetchCountryList.rejected, (state, action) => {
+        state.countryList.loading = false;
+        state.countryList.error = action.payload || action.error.message;
       });
   },
 });
-
+export const { setSelectedCountry } = reportSlice.actions;
 export default reportSlice.reducer;
