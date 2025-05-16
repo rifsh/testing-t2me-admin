@@ -169,7 +169,7 @@ const theaterSlice = createSlice({
             })
             .addCase(fetchDropdownTheaters.fulfilled, (state, action) => {
                 state.loading = false;
-                // state.response = action.payload;
+                state.response = action.payload;
                 state.pagination = action.payload;
             })
             .addCase(fetchDropdownTheaters.rejected, (state, action) => {
