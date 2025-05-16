@@ -79,6 +79,7 @@ const ScreenList = () => {
       setData(processedData);
       setFilteredData(processedData);
     }
+    console.log('screenfilterdata', filteredData)
   }, [response]);
 
   const handleViewDetails = (row) => {
