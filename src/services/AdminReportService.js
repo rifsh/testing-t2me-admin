@@ -62,6 +62,16 @@ fetchTheaterDetails: function (theaterId) {
       params: { theatre_id: theaterId },
     });
   },
+  fetchCountryList: function (pageData) {
+    const params = Utils.filterParams(pageData);
+
+    return fetch({
+      url: ApiConstant.REPORT_COUNTRY_LIST,  
+      method: "get",
+      params: params,
+    });
+  },
+
 
 
 

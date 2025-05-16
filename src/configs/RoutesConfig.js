@@ -775,6 +775,12 @@ export const protectedRoutes = [
       import("views/app-views/apps/organizer/reports/event-details")
     ),
   },
+   {
+    path: `${APP_PREFIX_PATH}/organizer/reports/theater-details/:theaterId`,
+    component: React.lazy(() =>
+      import("views/app-views/apps/organizer/reports/theater-details")
+    ),
+  },
   {
     path: `${APP_PREFIX_PATH}/organizer/reports/movie-details/:movieId`,
     component: React.lazy(() =>

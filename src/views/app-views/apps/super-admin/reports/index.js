@@ -8,7 +8,12 @@ import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { exportToExcel, exportToPdf } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchReports, fetchUserReports } from "store/slices/reportSlice";
+import {
+  fetchCountryList,
+  fetchReports,
+  fetchUserReports,
+  setSelectedCountry,
+} from "store/slices/reportSlice";
 
 dayjs.extend(isBetween);
 Chart.register(...registerables);
@@ -21,13 +26,23 @@ const SuperAdminReport = () => {
   const reportRef = useRef(null);
   const { reportData, userReports } = useSelector((state) => state.report);
   const userReportsData = userReports?.data?.[0]?.items || [];
+  const { data, loading, error } = useSelector(
+    (state) => state.report.countryList
+  );
+  console.log(data, "datalist");
 
   // State management
   const [activeTab, setActiveTab] = useState("events");
   const [timeFilter, setTimeFilter] = useState("last-3-months");
   const [customDateRange, setCustomDateRange] = useState([]);
   const [showAllCountries, setShowAllCountries] = useState(false);
+
   const [expandedRows, setExpandedRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState(true);
+
+  const [page, setPage] = useState(1);
+  const size = 50;
   const [filters, setFilters] = useState({
     search: "",
     status: null,
@@ -64,6 +79,27 @@ const SuperAdminReport = () => {
 
     fetchReportData();
   }, [dispatch, activeTab]);
+  const selectedCountry = useSelector((state) => state.report.selectedCountry);
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
+
+  // Auto-select the first country when data is available
+  useEffect(() => {
+    if (data?.[0]?.items?.length > 0 && !hasAutoSelected) {
+      const firstCountryId = data[0].items[0].id;
+      dispatch(setSelectedCountry(firstCountryId));
+      setHasAutoSelected(true);
+    }
+  }, [data, dispatch, hasAutoSelected]);
+
+  const handleChange = (value) => {
+    dispatch(setSelectedCountry(value));
+  };
+
+  useEffect(() => {
+    dispatch(
+      fetchCountryList({ active: activeFilter, search: searchTerm, page, size })
+    );
+  }, [dispatch, activeFilter, searchTerm, page]);
 
   // Fetch user reports with loader
   useEffect(() => {
@@ -274,8 +310,44 @@ const SuperAdminReport = () => {
 
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-blue-600">Reports Dashboard</h2>
+        <div>
+          {["events", "movies"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              disabled={apiLoading.userReports}
+              className={`px-4 py-2 rounded-lg text-capitalize ${
+                activeTab === tab
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              } ${
+                apiLoading.userReports ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
         <div className="flex items-center gap-4">
+          {/* </div> */}
+          <Select
+            showSearch
+            placeholder="Select Country"
+            optionFilterProp="children"
+            style={{ width: 200 }}
+            value={selectedCountry}
+            onChange={handleChange}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {data?.[0]?.items?.map((country) => (
+              <Option key={country.id} value={country.id}>
+                {country.name}
+              </Option>
+            ))}
+          </Select>
+
           <Select
             value={timeFilter}
             onChange={(value) => {
@@ -325,24 +397,6 @@ const SuperAdminReport = () => {
             {apiLoading.exports ? <Spin size="small" /> : <>Export Excel</>}
           </button>
         </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="flex gap-4 mb-6">
-        {["events", "movies"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            disabled={apiLoading.userReports}
-            className={`px-4 py-2 rounded-lg text-capitalize ${
-              activeTab === tab
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            } ${apiLoading.userReports ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            {tab}
-          </button>
-        ))}
       </div>
 
       {/* Statistics Cards */}
@@ -621,7 +675,7 @@ const SuperAdminReport = () => {
                       {reportData?.active_users_in_events} organizers
                     </p>
                   </div>
-                
+
                   <div>
                     <h4 className="text-sm font-medium text-gray-500 mb-2">
                       Event Revenue
@@ -646,7 +700,7 @@ const SuperAdminReport = () => {
                       {reportData?.total_users_in_movies} organizers
                     </p>
                   </div>
-                 
+
                   <div>
                     <h4 className="text-sm font-medium text-gray-500 mb-2">
                       Movie Revenue

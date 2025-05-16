@@ -26,7 +26,7 @@ const OrganizerDetail = () => {
   console.log(user, "user");
   const [showAllCurrencies, setShowAllCurrencies] = useState(false);
   const revenueData = user?.total_revenue_by_country || [];
-  const firstCurrency = revenueData[0]; // Show only the first initially
+  const firstCurrency = revenueData[0]; 
 
   useEffect(() => {
     if (organizerId) {
