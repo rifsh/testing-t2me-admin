@@ -112,7 +112,7 @@ const theaterSlice = createSlice({
             state.editId = action.payload;
         },
         setCleraAllData(state) {
-            // state.response = null;
+            state.response = null;
             state.singleResponse = null;
             state.selectedTheaterId = null
         },

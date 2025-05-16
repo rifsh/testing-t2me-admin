@@ -21,29 +21,6 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
         screen_type: [{ required: true, message: 'Please select screen type' }],
         capacity: [
             { required: true, message: 'Please enter screen capacity' },
-            {
-                validator: (_, value) => {
-                    const currentScreens = form.getFieldValue('screens') || [];
-                    const totalScreenCapacity = currentScreens.reduce((total, screen, screenIndex) => {
-                        if (screenIndex === index) return total;
-
-                        return total + (screen?.capacity || 0);
-                    }, 0);
-                    console.log('capacitylog', totalScreenCapacity)
-
-                    const proposedTotalCapacity = totalScreenCapacity + (value || 0);
-
-                    if (value && proposedTotalCapacity > availableSeats) {
-                        return Promise.reject(`Total screen capacities (${proposedTotalCapacity}) cannot exceed venue capacity of ${availableSeats}`);
-                    }
-
-                    if (value && value > availableSeats) {
-                        return Promise.reject(`Screen capacity cannot exceed venue capacity of ${availableSeats}`);
-                    }
-
-                    return Promise.resolve();
-                }
-            }
         ],
         thumbnail_image: [{ required: true, message: 'Please choose a screen image' }],
         ticket_structure: [{ required: true, message: 'Please select a ticket structure' }],
@@ -145,12 +122,10 @@ const ScreenForm = ({ form, index, onRemove, isOnlyScreen, screenNumber, venue_i
                         name={['screens', index, 'capacity']}
                         label="Capacity"
                         rules={rules.capacity}
-                        tooltip={`Maximum available capacity: ${availableSeats}`}
                     >
                         <InputNumber
                             min={1}
-                            max={availableSeats}
-                            placeholder={`Total venue capacity: ${availableSeats}`}
+                            placeholder={`Enter Capacity`}
                             style={{ width: '100%' }}
                         />
                     </Form.Item>

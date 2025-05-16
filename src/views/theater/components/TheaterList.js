@@ -35,24 +35,23 @@ const TheaterList = () => {
     if (response && response.items) {
 
       const newFormattedData = response.items.map((value) => ({
-        venue_id: value.id,
-        venue_name: value.name,
-        theaters: value.theatre
+        venue_id: value?.id,
+        venue_name: value?.name,
+        theaters: value?.theatre
       }))
 
       const formattedData = newFormattedData.flatMap((venue) =>
-        venue.theaters.map((theater, index) => ({
-          key: `${venue.venue_id}-${theater.id}`,
-          venue_id: venue.venue_id,
-          venue_name: venue.venue_name,
-          rowSpan: index === 0 ? venue.theaters.length : 0,
+        venue?.theaters?.map((theater, index) => ({
+          key: `${venue?.venue_id}-${theater?.id}`,
+          venue_id: venue?.venue_id,
+          venue_name: venue?.venue_name,
+          rowSpan: index === 0 ? venue?.theaters?.length : 0,
           isFirstRow: index === 0,
           ...theater,
         }))
       );
       setFilteredData(formattedData);
-    }
-    console.log("filteredData", filteredData)
+    };
   }, [response]);
 
 
@@ -113,7 +112,7 @@ const TheaterList = () => {
       key: "venue_name",
       render: (value, row) => ({
         children: value,
-        props: { rowSpan: row.rowSpan },
+        props: { rowSpan: row?.rowSpan },
       }),
     },
     {
@@ -198,7 +197,7 @@ const TheaterList = () => {
             total: pagination.total,
             onChange: (page, pageSize) => handlePagination(page, pageSize),
           }}
-          rowClassName={(record) => (record.isFirstRow ? "venue-header-row" : "")}
+          rowClassName={(record) => (record?.isFirstRow ? "venue-header-row" : "")}
         />
       </div>
 
