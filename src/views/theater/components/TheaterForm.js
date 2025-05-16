@@ -305,23 +305,6 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                             </Col>
                             <Col xs={24} md={12}>
                                 <Form.Item
-                                    label="Website"
-                                    name="website"
-                                    rules={[{ required: true, message: 'Please enter your website URL' }]}
-
-                                >
-                                    <Input
-                                        prefix={<GlobalOutlined />}
-                                        placeholder="Enter theater website URL"
-                                        size="large"
-                                    />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-
-                        <Row gutter={24}>
-                            <Col xs={24} md={12}>
-                                <Form.Item
                                     label="Number of Screens"
                                     name="number_of_screens"
                                     rules={[{ required: true, message: 'Please input number of screens!' }]}
@@ -334,7 +317,24 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                                     />
                                 </Form.Item>
                             </Col>
-                            <Col xs={24} md={12}>
+                        </Row>
+
+                        <Row gutter={24}>
+                            <Col xs={24} md={24}>
+                                <Form.Item
+                                    label="Website"
+                                    name="website"
+                                    rules={[{ required: true, message: 'Please enter your website URL' }]}
+
+                                >
+                                    <Input
+                                        prefix={<GlobalOutlined />}
+                                        placeholder="Enter theater website URL"
+                                        size="large"
+                                    />
+                                </Form.Item>
+                            </Col>
+                            {/* <Col xs={24} md={12}>
                                 <Form.Item
                                     label="Total Capacity"
                                     name="capacity"
@@ -347,7 +347,7 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                                         size="large"
                                     />
                                 </Form.Item>
-                            </Col>
+                            </Col> */}
                         </Row>
                         <Row gutter={24}>
                             <Col xs={24} md={12}>
