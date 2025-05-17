@@ -5,34 +5,61 @@ import { Chart, registerables } from "chart.js";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserDetails } from "store/slices/reportSlice";
+import { fetchUserDetails, setSelectedCountry } from "store/slices/reportSlice";
+import { message, Select } from "antd";
 
 Chart.register(...registerables);
+const { Option } = Select;
 
 const OrganizerDetail = () => {
   const dispatch = useDispatch();
   const { organizerId } = useParams();
   const reportRef = useRef(null);
-    const navigate = useNavigate();
-  
+  const navigate = useNavigate();
 
   const {
     data: organizer,
     loading,
     error,
   } = useSelector((state) => state.report.userDetails);
+  const selectedCountry = useSelector((state) => state.report.selectedCountry);
+  const { data } = useSelector((state) => state.report.countryList);
 
   const user = organizer?.[0];
-  console.log(user, "user");
-  const [showAllCurrencies, setShowAllCurrencies] = useState(false);
-  const revenueData = user?.total_revenue_by_country || [];
-  const firstCurrency = revenueData[0]; 
+useEffect(() => {
+  console.log("User updated:", user);
+}, [user]);
+  // useEffect(() => {
+  //   if (organizerId) {
+  //     dispatch(fetchUserDetails(organizerId));
+  //   }
+  // }, [dispatch, organizerId]);
+
+  const handleChange = (value) => {
+    dispatch(setSelectedCountry(value));
+  };
 
   useEffect(() => {
-    if (organizerId) {
-      dispatch(fetchUserDetails(organizerId));
-    }
-  }, [dispatch, organizerId]);
+    const fetchData = async () => {
+      if (organizerId && selectedCountry) {
+        try {
+          await dispatch(
+            fetchUserDetails({
+              userId: organizerId,
+              countryId: selectedCountry,
+            })
+          );
+        } catch (error) {
+          console.error("Failed to fetch user details:", error);
+          message.error(
+            error.payload?.message || "Failed to load user details"
+          );
+        }
+      }
+    };
+
+    fetchData();
+  }, [dispatch, organizerId, selectedCountry]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -40,11 +67,11 @@ const OrganizerDetail = () => {
 
   // Chart data for events
   const eventsChartData = {
-    labels: user.events?.map((event) => event.event_name),
+    labels: user?.events?.map((event) => event.event_name),
     datasets: [
       {
         label: "Event Revenue",
-        data: user.events?.map((event) => event.event_revenue),
+        data: user?.events?.map((event) => event.event_revenue),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 2,
@@ -56,7 +83,7 @@ const OrganizerDetail = () => {
     labels: ["Active", "Inactive"],
     datasets: [
       {
-        data: [user.is_active ? 1 : 0, user.is_active ? 0 : 1],
+        data: [user?.is_active ? 1 : 0, user?.is_active ? 0 : 1],
         backgroundColor: ["#198754", "#dc3545"],
       },
     ],
@@ -69,13 +96,13 @@ const OrganizerDetail = () => {
   const handleExportCsv = () => {
     exportToExcel(reportRef, "MyReport.xlsx");
   };
-   const handleGoBack = () => {
-  navigate(-1);
-};
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
   return (
     <div className="container mx-auto px-4 py-6" ref={reportRef}>
-    <div>
+      <div>
         <button
           onClick={handleGoBack}
           className="text-gray-500 hover:text-gray-700 text-sm mb-2 inline-block"
@@ -85,6 +112,23 @@ const OrganizerDetail = () => {
       </div>
       <div className="mb-6">
         <div className="flex justify-end gap-4">
+          <Select
+            showSearch
+            placeholder="Select Country"
+            optionFilterProp="children"
+            style={{ width: 200 }}
+            value={selectedCountry}
+            onChange={handleChange}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {data?.[0]?.items?.map((country) => (
+              <Option key={country.id} value={country.id}>
+                {country.name}
+              </Option>
+            ))}
+          </Select>
           <button
             onClick={handleExportCsv}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
@@ -135,13 +179,13 @@ const OrganizerDetail = () => {
             </h1>
             <p className="text-gray-600 mt-2">{user?.email}</p>
             <p className="text-gray-600">
-              Registered: {new Date(user.created_at).toLocaleDateString()}
+              Registered: {new Date(user?.created_at).toLocaleDateString()}
             </p>
           </div>
           <div className="text-right">
             <span
               className={`px-3 py-1 rounded-md text-sm ${
-                user.is_active
+                user?.is_active
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800"
               }`}
@@ -167,69 +211,10 @@ const OrganizerDetail = () => {
               <h3 className="text-gray-500 text-sm font-medium mb-2">
                 Total Revenue
               </h3>
-              {!showAllCurrencies && firstCurrency && (
-                <p className="text-xl font-bold text-green-600">
-                  {firstCurrency.currency_code}{" "}
-                  {firstCurrency.revenue.toLocaleString()}
-                </p>
-              )}
-            </div>
+                        <p className="text-2xl font-bold">{user?.total_events}</p>
 
-            {/* Toggle Button */}
-            <button
-              onClick={() => setShowAllCurrencies((prev) => !prev)}
-              className="text-gray-500 hover:text-gray-800 transition"
-            >
-              {showAllCurrencies ? (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 15l7-7 7 7"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              )}
-            </button>
+            </div>
           </div>
-
-          {/* Expanded Section */}
-          {showAllCurrencies && (
-            <div className="mt-4 space-y-1">
-              {revenueData.map((item, index) => (
-                <div
-                  key={index}
-                  className="text-sm text-gray-700 flex justify-between border-b py-1"
-                >
-                  <span>
-                    {item.country_name} ({item.currency_code})
-                  </span>
-                  <span className="font-semibold text-green-700">
-                    {item.currency_code} {item.revenue.toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <h3 className="text-gray-500 text-sm font-medium mb-2">
@@ -295,7 +280,7 @@ const OrganizerDetail = () => {
             </thead>
 
             <tbody className="divide-y divide-gray-200">
-              {user.events?.map((event) => (
+              {user?.events?.map((event) => (
                 <tr key={event.id}>
                   <td className="px-6 py-4">
                     <Link
@@ -313,8 +298,7 @@ const OrganizerDetail = () => {
                   <td className="px-4 py-3 text-green-600 text-sm space-y-1">
                     {event?.revenue_by_country?.map((item, index) => (
                       <div key={index}>
-                        {item?.currency_code} {item?.revenue||0}
-                       
+                        {item?.currency_code} {item?.revenue || 0}
                       </div>
                     ))}
                   </td>

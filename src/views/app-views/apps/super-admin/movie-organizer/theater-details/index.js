@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -15,6 +15,7 @@ const TheaterDetail = () => {
   const { theaterId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  
   const {
     data: theater,
     loading,
@@ -63,9 +64,9 @@ const TheaterDetail = () => {
 
   if (loading) return <Spin />;
   if (error) return <Alert message={error} />;
- const handleGoBack = () => {
-  navigate(-1);
-};
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
   return (
     <div className="p-8" ref={reportRef}>
@@ -197,14 +198,19 @@ const TheaterDetail = () => {
               {theaterData?.movies?.map((movie) => (
                 <tr key={movie.id}>
                   <td className="px-4 py-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={movie.thumbnail_image}
-                        alt={movie.title}
-                        className="w-12 h-16 object-cover rounded-md"
-                      />
-                      <span className="font-medium">{movie.title}</span>
-                    </div>
+                    <Link
+                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/movie-details/${movie.id}`}
+                      className="text-blue-600 hover:text-blue-800 font-semibold"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={movie.thumbnail_image}
+                          alt={movie.title}
+                          className="w-12 h-16 object-cover rounded-md"
+                        />
+                        <span className="font-medium">{movie.title}</span>
+                      </div>
+                    </Link>
                   </td>
                   <td className="px-4 py-4">
                     <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
