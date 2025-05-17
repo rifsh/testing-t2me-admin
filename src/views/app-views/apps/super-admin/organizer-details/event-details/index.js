@@ -257,7 +257,6 @@ const EventDetailReport = () => {
     error,
   } = useSelector((state) => state.report.eventDetails);
   const eventData = event?.[0];
-  console.log(eventData, "eventData");
 
   useEffect(() => {
     if (eventId) {

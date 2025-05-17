@@ -3,9 +3,13 @@ import ReportService from "../../services/AdminReportService";
 
 export const fetchReports = createAsyncThunk(
   "report/fetchReports",
-  async ({ pageData, contentType }, { rejectWithValue }) => {
+  async ({ pageData, contentType, countryId }, { rejectWithValue }) => {
     try {
-      const response = await ReportService.fetchReports(pageData, contentType);
+      const response = await ReportService.fetchReports(
+        pageData,
+        contentType,
+        countryId
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
@@ -25,11 +29,27 @@ export const fetchUserReports = createAsyncThunk(
   }
 );
 
+// export const fetchUserDetails = createAsyncThunk(
+//   "report/fetchUserDetails",
+//   async (userId, { rejectWithValue }) => {
+//     try {
+//       const response = await ReportService.fetchUserDetails(userId);
+//       return response.data;
+//     } catch (error) {
+//       return rejectWithValue(error?.response?.data || error.message);
+//     }
+//   }
+// );
+
 export const fetchUserDetails = createAsyncThunk(
   "report/fetchUserDetails",
-  async (userId, { rejectWithValue }) => {
+  async ({ userId, countryId }, { rejectWithValue }) => {
+    // Destructure params
     try {
-      const response = await ReportService.fetchUserDetails(userId);
+      if (!userId || !countryId) {
+        throw new Error("Missing required parameters");
+      }
+      const response = await ReportService.fetchUserDetails(userId, countryId);
       return response.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
@@ -76,6 +96,19 @@ export const fetchTheaterDetails = createAsyncThunk(
     }
   }
 );
+
+export const fetchMovieDetails = createAsyncThunk(
+  "report/fetchMovieDetails",
+  async ({ movieId, theaterId }, { rejectWithValue }) => {
+    try {
+      const response = await ReportService.fetchMovieDetails(movieId, theaterId);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+
 
 export const fetchCountryList = createAsyncThunk(
   "report/fetchCountryList",
@@ -134,6 +167,11 @@ const reportSlice = createSlice({
       error: null,
     },
     theaterDetails: {
+      data: null,
+      loading: false,
+      error: null,
+    },
+    movieDetails: {
       data: null,
       loading: false,
       error: null,
@@ -248,6 +286,23 @@ const reportSlice = createSlice({
         state.theaterDetails.loading = false;
         state.theaterDetails.error = action.payload || action.error.message;
       })
+
+      //movie detail
+
+      .addCase(fetchMovieDetails.pending, (state) => {
+        state.movieDetails.loading = true;
+        state.movieDetails.error = null;
+      })
+      .addCase(fetchMovieDetails.fulfilled, (state, action) => {
+        state.movieDetails.loading = false;
+        state.movieDetails.data = action.payload || null;
+      })
+      .addCase(fetchMovieDetails.rejected, (state, action) => {
+        state.movieDetails.loading = false;
+        state.movieDetails.error = action.payload || action.error.message;
+      })
+
+      //country list
 
       .addCase(fetchCountryList.pending, (state) => {
         state.countryList.loading = true;
