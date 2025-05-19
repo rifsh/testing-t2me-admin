@@ -6,6 +6,7 @@ import { exportToExcel, exportToPdf } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMovieDetails } from "store/slices/reportSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { Spin } from "antd";
 
 Chart.register(...registerables);
 
@@ -43,7 +44,6 @@ const MovieDetail = () => {
     );
   }
 
-  if (loading) return <div className="container mx-auto px-4 py-6 text-center">Loading...</div>;
   if (error) return <div className="container mx-auto px-4 py-6 text-center text-red-600">Error: {error}</div>;
   if (!movie) return (
     <div className="container mx-auto px-4 py-6 text-center">
@@ -97,7 +97,13 @@ const MovieDetail = () => {
   // Export handlers
   const handleExportPDF = () => exportToPdf(reportRef, "MovieReport.pdf");
   const handleExportCSV = () => exportToExcel(reportRef, "MovieReport.xlsx");
-
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spin size="large" />
+      </div>
+    );
+  }
   return (
     <div className="container mx-auto px-4 py-6" id="movie-content" ref={reportRef}>
       <div className="mb-6">

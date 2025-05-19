@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
@@ -6,6 +6,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  fetchCountryList,
   fetchMovieUserDetails,
   setSelectedCountry,
 } from "store/slices/reportSlice";
@@ -18,6 +19,11 @@ const MovieOrganizerDetail = () => {
   const reportRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState(true);
+
+  const [page, setPage] = useState(1);
+  const size = 50;
   const {
     data: movieUserData,
     loading,
@@ -33,12 +39,21 @@ const MovieOrganizerDetail = () => {
   } = useSelector((state) => state.report.countryList);
   console.log(countryData, "countryList");
   const selectedCountry = useSelector((state) => state.report.selectedCountry);
-
+  useEffect(() => {
+    const storedCountry = localStorage.getItem("selectedCountry");
+    if (storedCountry) {
+      dispatch(setSelectedCountry(JSON.parse(storedCountry)));
+    }
+  }, [dispatch]);
   const handleChange = (value) => {
     dispatch(setSelectedCountry(value));
+    localStorage.setItem("selectedCountry", JSON.stringify(value)); // Save to localStorage
   };
-  console.log(organizerId, selectedCountry);
-
+  useEffect(() => {
+    dispatch(
+      fetchCountryList({ active: activeFilter, search: searchTerm, page, size })
+    );
+  }, [dispatch, activeFilter, searchTerm, page]);
   useEffect(() => {
     const fetchData = async () => {
       if (organizerId && selectedCountry) {
@@ -154,6 +169,7 @@ const MovieOrganizerDetail = () => {
   const handleGoBack = () => {
     navigate(-1);
   };
+
   return (
     <div className="p-8" ref={reportRef}>
       <div className="flex items-center">
@@ -253,6 +269,76 @@ const MovieOrganizerDetail = () => {
         </div>
       </div>
 
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
+        <div className="p-4 bg-gray-50">
+          <h3 className="text-gray-700 font-medium">Theaters List</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Theater Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Company
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Screens
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Movies
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Status
+                </th>
+                {/* <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Actions
+                </th> */}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {organizerData.theaters.map((theater) => (
+                <tr key={theater.id}>
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    <Link
+                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theater.id}`}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      {theater.name}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500">
+                    {theater.company_name}
+                  </td>
+                  <td className="px-4 py-3">{theater.screen_count}</td>
+                  <td className="px-4 py-3">{theater.movies_count}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        theater.is_active
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {theater.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  {/* <td className="px-4 py-3">
+                    <Link
+                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theater.id}`}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      View Details
+                    </Link>
+                  </td> */}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Charts - 3 columns for better layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg border border-gray-200">
@@ -298,72 +384,6 @@ const MovieOrganizerDetail = () => {
               }}
             />
           </div>
-        </div>
-      </div>
-
-      {/* Theater Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 bg-gray-50">
-          <h3 className="text-gray-700 font-medium">Theaters List</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Theater Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Company
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Screens
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Movies
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {organizerData.theaters.map((theater) => (
-                <tr key={theater.id}>
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    {theater.name}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {theater.company_name}
-                  </td>
-                  <td className="px-4 py-3">{theater.screen_count}</td>
-                  <td className="px-4 py-3">{theater.movies_count}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full ${
-                        theater.is_active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {theater.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theater.id}`}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      View Details
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
