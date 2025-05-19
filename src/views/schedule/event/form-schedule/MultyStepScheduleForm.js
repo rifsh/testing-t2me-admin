@@ -247,6 +247,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
       const submitData = {
         start_date: startDate,
         end_date: endDate,
+        available_types: values.available_types,
         max_ticket_per_booking: values.max_ticket_per_booking,
         is_multi_date: values.is_multi_date,
         booking_start_date_time: dayjs(values.booking_start_date_time).format(
