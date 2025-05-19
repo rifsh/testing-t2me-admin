@@ -1,29 +1,65 @@
 import React, { useRef, useEffect } from "react";
-import { Link,useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchMovieUserDetails } from "store/slices/reportSlice";
-import { Spin, Alert } from "antd";
+import {
+  fetchMovieUserDetails,
+  setSelectedCountry,
+} from "store/slices/reportSlice";
+import { Spin, Alert, message, Select } from "antd";
 
 Chart.register(...registerables);
+const { Option } = Select;
 
 const MovieOrganizerDetail = () => {
   const reportRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { data, loading, error } = useSelector(
-    (state) => state.report.movieUserDetails
-  );
+  const {
+    data: movieUserData,
+    loading,
+    error,
+  } = useSelector((state) => state.report.movieUserDetails);
+
   const { organizerId } = useParams();
+  const {
+    data: countryData,
+    loading: countryLoading,
+    error: countryError,
+    pagination,
+  } = useSelector((state) => state.report.countryList);
+  console.log(countryData, "countryList");
+  const selectedCountry = useSelector((state) => state.report.selectedCountry);
+
+  const handleChange = (value) => {
+    dispatch(setSelectedCountry(value));
+  };
+  console.log(organizerId, selectedCountry);
 
   useEffect(() => {
-    if (organizerId) {
-      dispatch(fetchMovieUserDetails(organizerId));
-    }
-  }, [dispatch, organizerId]);
+    const fetchData = async () => {
+      if (organizerId && selectedCountry) {
+        try {
+          await dispatch(
+            fetchMovieUserDetails({
+              userId: organizerId,
+              countryId: selectedCountry,
+            })
+          );
+        } catch (error) {
+          console.error("Failed to fetch user details:", error);
+          message.error(
+            error.payload?.message || "Failed to load user details"
+          );
+        }
+      }
+    };
+
+    fetchData();
+  }, [dispatch, organizerId, selectedCountry]);
 
   if (loading) {
     return (
@@ -41,11 +77,11 @@ const MovieOrganizerDetail = () => {
     );
   }
 
-  if (!data || !data[0]) {
+  if (!movieUserData || !movieUserData[0]) {
     return null;
   }
 
-  const organizer = data[0]; // Access the first item in the array
+  const organizer = movieUserData[0]; // Access the first item in the array
 
   // Transform API data to match your component structure
   const organizerData = {
@@ -62,7 +98,7 @@ const MovieOrganizerDetail = () => {
         company_name: theater.company_name,
         screen_count: theater.screens_count,
         movies_count: theater.movies_count,
-        is_active: theater.is_active, // Assuming this exists in your theater object
+        is_active: theater.is_active,
       })) || [],
   };
 
@@ -120,12 +156,12 @@ const MovieOrganizerDetail = () => {
   };
   return (
     <div className="p-8" ref={reportRef}>
-      <div>
+      <div className="flex items-center">
         <button
           onClick={handleGoBack}
-          className="text-gray-500 hover:text-gray-700 text-sm mb-2 inline-block"
+          className="text-gray-500 hover:text-gray-700 text-sm"
         >
-          &larr; Back to Organizers
+          &larr; Back
         </button>
       </div>
       {/* Header with Export Buttons */}
@@ -133,7 +169,25 @@ const MovieOrganizerDetail = () => {
         <h1 className="text-2xl font-bold">
           Movie Organizer: {organizerData.username}
         </h1>
+
         <div className="flex gap-4">
+          <Select
+            showSearch
+            placeholder="Select Country"
+            optionFilterProp="children"
+            style={{ width: 200 }}
+            value={selectedCountry}
+            onChange={handleChange}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {countryData?.[0]?.items?.map((country) => (
+              <Option key={country.id} value={country.id}>
+                {country.name}
+              </Option>
+            ))}
+          </Select>
           <button
             onClick={handleExportCsv}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"

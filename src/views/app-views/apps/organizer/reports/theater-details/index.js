@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from "react";
-import {  useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchTheaterDetails } from "store/slices/reportSlice";
 import { Alert, Spin } from "antd";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 
 Chart.register(...registerables);
 
@@ -20,7 +21,7 @@ const TheaterDetail = () => {
     error,
   } = useSelector((state) => state.report.theaterDetails);
   const theaterData = theater?.[0];
-console.log(theaterId,'data........');
+  console.log(theaterId, "data........");
 
   useEffect(() => {
     if (theaterId) {
@@ -63,9 +64,9 @@ console.log(theaterId,'data........');
 
   if (loading) return <Spin />;
   if (error) return <Alert message={error} />;
- const handleGoBack = () => {
-  navigate(-1);
-};
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
   return (
     <div className="p-8" ref={reportRef}>
@@ -196,7 +197,7 @@ console.log(theaterId,'data........');
             <tbody className="divide-y divide-gray-200">
               {theaterData?.movies?.map((movie) => (
                 <tr key={movie.id}>
-                  <td className="px-4 py-4">
+                  {/* <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
                       <img
                         src={movie.thumbnail_image}
@@ -205,6 +206,24 @@ console.log(theaterId,'data........');
                       />
                       <span className="font-medium">{movie.title}</span>
                     </div>
+
+                    
+                  </td> */}
+
+                  <td className="px-4 py-4">
+                    <Link
+                      to={`${APP_PREFIX_PATH}/organizer/reports/theater-details/${theaterId}/movie-details/${movie.id}`}
+                      className="text-blue-600 hover:text-blue-800 font-semibold"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={movie.thumbnail_image}
+                          alt={movie.title}
+                          className="w-12 h-16 object-cover rounded-md"
+                        />
+                        <span className="font-medium">{movie.title}</span>
+                      </div>
+                    </Link>
                   </td>
                   <td className="px-4 py-4">
                     <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">

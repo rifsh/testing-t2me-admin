@@ -243,8 +243,14 @@ import { Pie, Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchEventDetails } from "store/slices/reportSlice";
+import {
+  fetchEventDetails,
+  setSelectedCountry,
+} from "store/slices/reportSlice";
+import { message, Select } from "antd";
 Chart.register(...registerables);
+
+const { Option } = Select;
 
 const EventDetailReport = () => {
   const { eventId } = useParams();
@@ -257,12 +263,34 @@ const EventDetailReport = () => {
     error,
   } = useSelector((state) => state.report.eventDetails);
   const eventData = event?.[0];
+  const selectedCountry = useSelector((state) => state.report.selectedCountry);
+  const { data } = useSelector((state) => state.report.countryList);
+
+  const handleChange = (value) => {
+    dispatch(setSelectedCountry(value));
+  };
 
   useEffect(() => {
-    if (eventId) {
-      dispatch(fetchEventDetails(eventId));
-    }
-  }, [dispatch, eventId]);
+    const fetchData = async () => {
+      if (eventId && selectedCountry) {
+        try {
+          await dispatch(
+            fetchEventDetails({
+              eventId,
+              countryId: selectedCountry,
+            })
+          );
+        } catch (error) {
+          console.error("Failed to fetch user details:", error);
+          message.error(
+            error.payload?.message || "Failed to load user details"
+          );
+        }
+      }
+    };
+
+    fetchData();
+  }, [dispatch, eventId, selectedCountry]);
 
   const handleGoBack = () => navigate(-1);
 
@@ -303,15 +331,34 @@ const EventDetailReport = () => {
   return (
     <div className="mx-auto p-4 space-y-6">
       {/* Back Button */}
-      <div>
+      <div className="flex items-center">
         <button
           onClick={handleGoBack}
-          className="text-gray-500 hover:text-gray-700 text-sm mb-2 inline-block"
+          className="text-gray-500 hover:text-gray-700 text-sm"
         >
           &larr; Back
         </button>
-      </div>
 
+        <div className="ml-auto">
+          <Select
+            showSearch
+            placeholder="Select Country"
+            optionFilterProp="children"
+            style={{ width: 200 }}
+            value={selectedCountry}
+            onChange={handleChange}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {data?.[0]?.items?.map((country) => (
+              <Option key={country.id} value={country.id}>
+                {country.name}
+              </Option>
+            ))}
+          </Select>
+        </div>
+      </div>
       {/* Event Header */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-2xl font-bold text-gray-800 border-b pb-2 mb-4">

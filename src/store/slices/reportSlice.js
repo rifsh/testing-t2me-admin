@@ -46,7 +46,7 @@ export const fetchUserDetails = createAsyncThunk(
   async ({ userId, countryId }, { rejectWithValue }) => {
     // Destructure params
     try {
-      if (!userId || !countryId) {
+      if (!userId ) {
         throw new Error("Missing required parameters");
       }
       const response = await ReportService.fetchUserDetails(userId, countryId);
@@ -59,9 +59,12 @@ export const fetchUserDetails = createAsyncThunk(
 
 export const fetchEventDetails = createAsyncThunk(
   "report/fetchEventDetails",
-  async (eventId, { rejectWithValue }) => {
+  async ({ eventId, countryId }, { rejectWithValue }) => {
     try {
-      const response = await ReportService.fetchEventDetails(eventId);
+      const response = await ReportService.fetchEventDetails(
+        eventId,
+        countryId
+      );
       console.log(response, "res");
 
       return response.data;
@@ -73,9 +76,9 @@ export const fetchEventDetails = createAsyncThunk(
 
 export const fetchMovieUserDetails = createAsyncThunk(
   "report/fetchMovieUserDetails",
-  async (userId, { rejectWithValue }) => {
+  async ({ userId, countryId }, { rejectWithValue }) => {
     try {
-      const response = await ReportService.fetchMovieUserDetails(userId);
+      const response = await ReportService.fetchMovieUserDetails(userId, countryId);
       return response.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
@@ -101,14 +104,16 @@ export const fetchMovieDetails = createAsyncThunk(
   "report/fetchMovieDetails",
   async ({ movieId, theaterId }, { rejectWithValue }) => {
     try {
-      const response = await ReportService.fetchMovieDetails(movieId, theaterId);
+      const response = await ReportService.fetchMovieDetails(
+        movieId,
+        theaterId
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
     }
   }
 );
-
 
 export const fetchCountryList = createAsyncThunk(
   "report/fetchCountryList",

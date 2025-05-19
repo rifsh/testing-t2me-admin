@@ -6,7 +6,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserDetails, setSelectedCountry } from "store/slices/reportSlice";
-import { message, Select } from "antd";
+import { message, Select, Spin } from "antd";
 
 Chart.register(...registerables);
 const { Option } = Select;
@@ -26,9 +26,9 @@ const OrganizerDetail = () => {
   const { data } = useSelector((state) => state.report.countryList);
 
   const user = organizer?.[0];
-useEffect(() => {
-  console.log("User updated:", user);
-}, [user]);
+  useEffect(() => {
+    console.log("User updated:", user);
+  }, [user]);
   // useEffect(() => {
   //   if (organizerId) {
   //     dispatch(fetchUserDetails(organizerId));
@@ -101,6 +101,9 @@ useEffect(() => {
   };
 
   return (
+    <Spin  spinning={loading} 
+    tip="Loading organizer details..."
+    delay={300}>
     <div className="container mx-auto px-4 py-6" ref={reportRef}>
       <div>
         <button
@@ -211,8 +214,10 @@ useEffect(() => {
               <h3 className="text-gray-500 text-sm font-medium mb-2">
                 Total Revenue
               </h3>
-                        <p className="text-2xl font-bold">{user?.total_events}</p>
-
+              <p className="text-2xl font-bold">
+                {user?.total_revenue_by_country?.[0]?.currency_code}{" "}
+                {user?.total_revenue}
+              </p>
             </div>
           </div>
         </div>
@@ -309,6 +314,7 @@ useEffect(() => {
         </div>
       </div>
     </div>
+    </Spin>
   );
 };
 

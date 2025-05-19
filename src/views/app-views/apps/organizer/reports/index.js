@@ -10,8 +10,10 @@ import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { getUserdata } from "store/slices/authSlice";
 import {
+  fetchCountryList,
   fetchMovieUserDetails,
   fetchUserDetails,
+  setSelectedCountry,
 } from "store/slices/reportSlice";
 
 Chart.register(...registerables);
@@ -23,14 +25,20 @@ const OrganizerReport = () => {
   const [activeSegment, setActiveSegment] = useState("events");
   const [timeFilter, setTimeFilter] = useState("option");
   const [customDateRange, setCustomDateRange] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState(true);
+
+  const [page, setPage] = useState(1);
+  const size = 50;
+
   const reportRef = useRef(null);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 5,
     total: 0,
   });
-
   const dispatch = useDispatch();
+
   const { userData } = useSelector((state) => state.auth);
 
   useEffect(() => {
@@ -40,19 +48,46 @@ const OrganizerReport = () => {
   const organizerId = userData?.id;
 
   const { data: organizer } = useSelector((state) => state.report.userDetails);
-
+  const selectedCountry = useSelector((state) => state.report.selectedCountry);
+  const {
+    data: countryData,
+    loading: countryLoading,
+    error: countryError,
+    // pagination,
+  } = useSelector((state) => state.report.countryList);
+  console.log(countryData, "countryList");
   const eventOrganizer = organizer?.[0];
-  console.log(eventOrganizer, "user");
-
+  console.log(activeSegment, "segment");
+  const handleChange = (value) => {
+    dispatch(setSelectedCountry(value));
+  };
   useEffect(() => {
     if (!organizerId) return;
 
     if (activeSegment === "events") {
-      dispatch(fetchUserDetails(organizerId));
+      console.log("Calling fetchUserDetails...");
+      dispatch(
+        fetchUserDetails({
+          userId: organizerId,
+          countryId: selectedCountry,
+        })
+      );
     } else {
-      dispatch(fetchMovieUserDetails(organizerId));
+      console.log("Calling fetchMovieUserDetails...");
+      dispatch(
+        fetchMovieUserDetails({
+          userId: organizerId,
+          countryId: selectedCountry,
+        })
+      );
     }
-  }, [dispatch, organizerId, activeSegment]);
+  }, [dispatch, organizerId, activeSegment, selectedCountry]);
+
+  useEffect(() => {
+    dispatch(
+      fetchCountryList({ active: activeFilter, search: searchTerm, page, size })
+    );
+  }, [dispatch, activeFilter, searchTerm, page]);
 
   const { data: userDetailsData, loading: userDetailsLoading } = useSelector(
     (state) => state.report.userDetails
@@ -64,7 +99,6 @@ const OrganizerReport = () => {
   // Then use them conditionally in your component
   const data =
     activeSegment === "events" ? userDetailsData : movieUserDetailsData;
-  console.log(data, "data");
 
   const baseItems = useMemo(() => {
     if (activeSegment === "events") {
@@ -228,6 +262,7 @@ const OrganizerReport = () => {
       },
     ],
   };
+  console.log(data?.[0], "data");
 
   return (
     <div className="container mx-auto px-4 py-6" ref={reportRef}>
@@ -274,8 +309,24 @@ const OrganizerReport = () => {
                 {segment}
               </button>
             ))}
-          </div>
-
+          </div>{" "}
+          <Select
+            showSearch
+            placeholder="Select Country"
+            optionFilterProp="children"
+            style={{ width: 200 }}
+            value={selectedCountry}
+            onChange={handleChange}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {countryData?.[0]?.items?.map((country) => (
+              <Option key={country.id} value={country.id}>
+                {country.name}
+              </Option>
+            ))}
+          </Select>
           <div className="flex gap-2">
             <Select
               defaultValue="last-month"
@@ -530,10 +581,10 @@ const OrganizerReport = () => {
                     </tr>
                   ))
                 : data?.[0]?.theaters?.map((theater) => (
-                    <tr key={theater.id}>
+                    <tr key={theater.theater_id}>
                       <td className="px-6 py-4">
                         <Link
-                          to={`${APP_PREFIX_PATH}/organizer/reports/movie-details/102`}
+                          to={`${APP_PREFIX_PATH}/organizer/reports/theater-details/${theater.theater_id}`}
                           className="text-blue-600 hover:text-blue-800 font-semibold"
                         >
                           {theater?.theater_name}

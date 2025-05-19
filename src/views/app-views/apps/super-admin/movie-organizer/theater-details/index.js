@@ -199,7 +199,7 @@ const TheaterDetail = () => {
                 <tr key={movie.id}>
                   <td className="px-4 py-4">
                     <Link
-                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/movie-details/${movie.id}`}
+                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theaterId}/movie-details/${movie.id}`}
                       className="text-blue-600 hover:text-blue-800 font-semibold"
                     >
                       <div className="flex items-center gap-3">

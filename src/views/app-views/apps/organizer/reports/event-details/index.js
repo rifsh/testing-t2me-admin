@@ -749,7 +749,7 @@ import { Pie, Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchEventDetails } from "store/slices/reportSlice";
+import { fetchEventDetails, setSelectedCountry } from "store/slices/reportSlice";
 import { 
   FiArrowLeft, 
   FiDollarSign, 
@@ -760,8 +760,9 @@ import {
   FiPieChart,
   FiGlobe
 } from "react-icons/fi";
-import { Card, Statistic, Divider, Table, Tag, Empty, Spin } from "antd";
+import { Card, Statistic, Divider, Table, Tag, Empty, Spin, message, Select } from "antd";
 Chart.register(...registerables);
+const { Option } = Select;
 
 const EventDetailReport = () => {
   const { eventId } = useParams();
@@ -773,12 +774,43 @@ console.log(eventId,'eventId');
     (state) => state.report.eventDetails
   );
   const eventData = event?.[0];
+ const selectedCountry = useSelector((state) => state.report.selectedCountry);
+  const { data } = useSelector((state) => state.report.countryList);
+console.log(data, 'data');
 
-  useEffect(() => {
-    if (eventId) {
-      dispatch(fetchEventDetails(eventId));
-    }
-  }, [dispatch, eventId]);
+  const handleChange = (value) => {
+    dispatch(setSelectedCountry(value));
+  };
+  // useEffect(() => {
+  //   if (eventId) {
+  //     dispatch(fetchEventDetails(eventId));
+  //   }
+  // }, [dispatch, eventId]);
+
+
+
+
+ useEffect(() => {
+    const fetchData = async () => {
+      if (eventId ) {
+        try {
+          await dispatch(
+            fetchEventDetails({
+              eventId,
+              countryId: selectedCountry,
+            })
+          );
+        } catch (error) {
+          console.error("Failed to fetch user details:", error);
+          message.error(
+            error.payload?.message || "Failed to load user details"
+          );
+        }
+      }
+    };
+
+    fetchData();
+  }, [dispatch, eventId, selectedCountry]);
 
   const handleGoBack = () => navigate(-1);
 
@@ -915,24 +947,38 @@ console.log(eventId,'eventId');
 
   return (
     <div className="mx-auto p-4  space-y-6">
-      {/* Header Section */}
+      <button
+        onClick={handleGoBack}
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+      >
+        <FiArrowLeft className="w-5 h-5" />
+        <span className="font-medium">Back to Reports</span>
+      </button>
       <div className="flex items-center justify-between">
-        <button
-          onClick={handleGoBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
-        >
-          <FiArrowLeft className="w-5 h-5" />
-          <span className="font-medium">Back to Reports</span>
-        </button>
-        
         <h1 className="text-2xl font-bold text-gray-900">
           {eventData.event_name}
           <p className="text-sm font-normal text-gray-500 mt-1">
             {eventData.category_name}
           </p>
         </h1>
-        
-        <div className="w-24"></div> {/* Spacer */}
+
+        <Select
+          showSearch
+          placeholder="Select Country"
+          optionFilterProp="children"
+          style={{ width: 200 }}
+          value={selectedCountry}
+          onChange={handleChange}
+          filterOption={(input, option) =>
+            option.children.toLowerCase().includes(input.toLowerCase())
+          }
+        >
+          {data?.[0]?.items?.map((country) => (
+            <Option key={country.id} value={country.id}>
+              {country.name}
+            </Option>
+          ))}
+        </Select>
       </div>
 
       {/* Key Metrics */}
