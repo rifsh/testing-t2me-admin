@@ -84,13 +84,13 @@ export const addTicket = createAsyncThunk(
 
 export const getAvailableTicketsType = createAsyncThunk(
   "ticket/fetchAvailableTicketsType",
-  async (_, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
       if (GET_TICKET_TYPE_MOCK_API && ENABLE_MOCK_API) {
         const response = TicketMockData.getAvailableTicketTyps;
         return response.data;
       } else {
-        const response = await TicketsService.getAvailableTicketsType();
+        const response = await TicketsService.getAvailableTicketsType(pageData);
         return response.data;
       }
     } catch (error) {

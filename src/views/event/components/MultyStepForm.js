@@ -1,4 +1,4 @@
-import { Button, Form } from "antd";
+import { Button, Form, message } from "antd";
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
@@ -86,7 +86,9 @@ const MultyStepEventForm = ({ eventId, mode }) => {
   );
   const dispatch = useDispatch();
   const [form] = Form.useForm();
-  const { message } = useSelector((state) => state.organizerUpdates);
+  const { message: apiResponseMessage } = useSelector(
+    (state) => state.organizerUpdates
+  );
   const { selectedTax } = useSelector((state) => state.tax);
   const { selectedVenue, selectedVenueList } = useSelector(
     (state) => state.locations
@@ -403,9 +405,47 @@ const MultyStepEventForm = ({ eventId, mode }) => {
   };
 
   const nextStep = async () => {
-    dispatch(setSubmitLoading(false));
+    dispatch(setSubmitLoading(true));
     try {
       const values = await form.validateFields();
+
+      if (selectedVenue && currentStep === 5) {
+        // Check if we have ticket types at all
+        if (!ticketTypes || ticketTypes.length <= 0) {
+          if (availableSeats.length <= 0) {
+            message.error("Please select ticket structure or seat structure");
+            return;
+          }
+        } else {
+          // Check that each ticket type has at least one ticket set
+          const hasEmptyTicketType = ticketTypes.some(
+            (ticketType) =>
+              !ticketType.ticket_types ||
+              ticketType.ticket_types.length === 0 ||
+              !ticketType.ticket_types.some((ticket) => ticket.ticket_set)
+          );
+
+          if (hasEmptyTicketType) {
+            message.error("Each ticket type must have at least one ticket set");
+            return;
+          }
+
+          // Get all ticket sets as before
+          const tickets = ticketTypes.reduce((acc, ticketType) => {
+            const structureItems = ticketType.ticket_types.map((ticket) => ({
+              id: ticket.ticketStructureId,
+              ticket_set: ticket.ticket_set,
+            }));
+            return [...acc, ...structureItems];
+          }, []);
+
+          // Additional check if we have no available seats and no ticket sets
+          if (availableSeats.length <= 0 && tickets.length <= 0) {
+            message.error("Please select ticket structure or seat structure");
+            return;
+          }
+        }
+      }
 
       // const isValid = await validateCurrentStep(values);
       // if (!isValid) {
@@ -424,14 +464,20 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           */
         }
       } else {
+        // Handle the error properly by checking for null/undefined
         const errorMessage =
-          resultAction.payload || "Event validation failed. Please try again.";
+          resultAction && resultAction.payload
+            ? resultAction.payload
+            : "Event validation failed. Please try again.";
         message.error(errorMessage);
       }
     } catch (error) {
-      message.error(
-        error.message || "Please ensure all required fields are filled."
-      );
+      // Make sure error is not null before accessing error.message
+      const errorMessage =
+        error && error.message
+          ? error.message
+          : "Please ensure all required fields are filled.";
+      message.error(errorMessage);
     } finally {
       dispatch(setSubmitLoading(false));
     }
@@ -532,7 +578,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
       }
     } catch (error) {
       console.error("Submission Error:", error);
-      message.error("An error occurred during submission.");
+      apiResponseMessage.error("An error occurred during submission.");
     } finally {
       dispatch(setSubmitLoading(false));
     }
