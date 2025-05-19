@@ -18,7 +18,7 @@ import { setavailableSeats } from "store/slices/eventSlice";
 const { Option } = Select;
 const TicketField = ({ form }) => {
   const dispatch = useDispatch();
-  const { selectedVenueList } = useSelector((state) => state.locations);
+  const { selectedVenueList,selectedVenue } = useSelector((state) => state.locations);
   const {
     message,
     validationStatus,
@@ -28,16 +28,16 @@ const TicketField = ({ form }) => {
   } = useSelector((state) => state.tickets);
   const { allSeats, loading } = useSelector((state) => state.movieSeatSlice);
   const { availableSeats } = useSelector((state) => state.event);
-  const [selectedVenue, setSelectedVenue] = useState();
+  // const [selectedVenue, setSelectedVenue] = useState();
   const [selectedBookingType, setSelectedBookingType] = useState();
-  useEffect(() => {
-    // if (!selectedVenue || !selectedVenue?.id) {
-    //   console.warn("No selected venue.");
-    //   return;
-    // }
+  // useEffect(() => {
+  //   // if (!selectedVenue || !selectedVenue?.id) {
+  //   //   console.warn("No selected venue.");
+  //   //   return;
+  //   // }
 
-    dispatch(getAvailableTicketsType());
-  }, [form, dispatch]);
+  //   dispatch(getAvailableTicketsType());
+  // }, [form, dispatch]);
 
   const handleRemoveSeat = (seatId) => {
     const updatedSeats = availableSeats.filter((seat) => seat.id !== seatId);
@@ -72,7 +72,7 @@ const TicketField = ({ form }) => {
   };
   const handleVenueClick = async (value) => {
     const venue = selectedVenueList.find((venue) => venue.id === value);
-    setSelectedVenue(venue);
+    dispatch(setSelectedVenue(venue));
 
     if (value) {
       form.setFieldsValue({
@@ -80,16 +80,16 @@ const TicketField = ({ form }) => {
         ticket_set: null,
       });
 
-      if (selectedBookingType === 1) {
-        dispatch(getEventAllSeatStructures({ venue_id: value }));
+      // if (selectedBookingType === 1) {
+      dispatch(getEventAllSeatStructures({ venue_id: value }));
 
-        form.setFieldsValue({
-          available_seats: [],
-        });
-      } else {
-        dispatch(resetAvailableTicketSets());
-        dispatch(fetchAllTickets({ venue_id: value }));
-      }
+      form.setFieldsValue({
+        available_seats: [],
+      });
+      // } else {
+      dispatch(resetAvailableTicketSets());
+      dispatch(fetchAllTickets({ venue_id: value }));
+      // }
     }
 
     if (venue?.capacity) {
@@ -102,18 +102,18 @@ const TicketField = ({ form }) => {
     dispatch(setTicketValidationDialogVisible(false));
   };
 
-  const handleSetTicketType = (value) => {
-    form.setFieldsValue({
-      seat_structure_id: null,
-      ticket_structure_id: null,
-      ticket_set: null,
-    });
-    dispatch(setSelectedTicketType(value));
-    setSelectedBookingType(value);
-    if (value === 1) {
-      dispatch(getEventAllSeatStructures({ venue_id: selectedVenue.id }));
-    }
-  };
+  // const handleSetTicketType = (value) => {
+  //   form.setFieldsValue({
+  //     seat_structure_id: null,
+  //     ticket_structure_id: null,
+  //     ticket_set: null,
+  //   });
+  //   dispatch(setSelectedTicketType(value));
+  //   setSelectedBookingType(value);
+  //   if (value === 1) {
+  //     dispatch(getEventAllSeatStructures({ venue_id: selectedVenue.id }));
+  //   }
+  // };
 
   return (
     <Row gutter={16}>
@@ -150,19 +150,14 @@ const TicketField = ({ form }) => {
             <Input placeholder="Enter Max Ticket" type="number" />
           </Form.Item> */}
 
-          <TicketTypeSelector
+          {/* <TicketTypeSelector
             form={form}
             handleSetTicketType={handleSetTicketType}
-          />
+          /> */}
 
-          {selectedTicketType && selectedTicketType === 1 ? (
-            <Form.Item
-              name="available_seats"
-              label="Available Seats"
-              rules={[
-                { required: true, message: "Please select at least one seat." },
-              ]}
-            >
+          {/* {selectedTicketType && selectedTicketType === 1 ? ( */}
+          {selectedVenue && (
+            <Form.Item name="available_seats" label="Available Seats">
               <Select
                 className="w-100"
                 placeholder="Choose seats"
@@ -180,9 +175,10 @@ const TicketField = ({ form }) => {
                 ))}
               </Select>
             </Form.Item>
-          ) : (
-            <TicketStructureSelector form={form} />
           )}
+          {/* ) : ( */}
+          {selectedVenue && <TicketStructureSelector form={form} />}
+          {/* )} */}
         </Card>
       </Col>
 

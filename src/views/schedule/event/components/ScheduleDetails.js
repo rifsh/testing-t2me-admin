@@ -9,6 +9,10 @@ import {
 import { setSelectedVenue } from "store/slices/locationSlice";
 import { EVENT_TYPES } from "constants/PageConstants";
 import { debounce } from "lodash";
+import {
+  getAvailableTicketsType,
+  setSelectedTicketType,
+} from "store/slices/ticketSlice";
 
 const { Option } = Select;
 
@@ -19,7 +23,7 @@ export function ScheduleDetails({ form }) {
     loading,
     selectedEvent,
   } = useSelector((state) => state.event);
-
+  const { availableTicketTyps } = useSelector((state) => state.tickets);
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -35,11 +39,13 @@ export function ScheduleDetails({ form }) {
 
   const handleSelectEvent = (id) => {
     if (!id) {
+      
       dispatch(setSelectedEvent(null));
       form.resetFields(["event_id", "venue_id"]);
       dispatch(resetSchedule());
       return;
     }
+    dispatch(getAvailableTicketsType({ event_id: id }));
 
     const event = filteredEvents.find((event) => event.id === id);
     if (!event) return;
@@ -142,33 +148,64 @@ export function ScheduleDetails({ form }) {
         </Col>
 
         {selectedEvent?.venues?.length > 0 && (
-          <Col sm={24} xl={24}>
-            <Form.Item
-              name="venue_id"
-              label="Venue"
-              rules={[{ required: true, message: "Please select a venue" }]}
-            >
-              <Select
-                loading={loading}
-                className="w-100"
-                placeholder="Select a venue"
-                allowClear
-                showSearch
-                filterOption={(input, option) =>
-                  option?.label?.toLowerCase()?.includes(input.toLowerCase())
-                }
-                onChange={(value) => {
-                  handleSelectVenue(value);
-                }}
+          <>
+            <Col sm={24} xl={24}>
+              <Form.Item
+                name="venue_id"
+                label="Venue"
+                rules={[{ required: true, message: "Please select a venue" }]}
               >
-                {selectedEvent?.venues?.map((venue) => (
-                  <Option key={venue.id} value={venue.id} label={venue.name}>
-                    {venue.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
+                <Select
+                  loading={loading}
+                  className="w-100"
+                  placeholder="Select a venue"
+                  allowClear
+                  showSearch
+                  filterOption={(input, option) =>
+                    option?.label?.toLowerCase()?.includes(input.toLowerCase())
+                  }
+                  onChange={(value) => {
+                    handleSelectVenue(value);
+                  }}
+                >
+                  {selectedEvent?.venues?.map((venue) => (
+                    <Option key={venue.id} value={venue.id} label={venue.name}>
+                      {venue.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col sm={24} xl={24}>
+              <Form.Item
+                name="available_types"
+                label="Booking Type"
+                rules={[
+                  { required: true, message: "Please select a booking type" },
+                ]}
+              >
+                <Select
+                  loading={loading}
+                  className="w-100"
+                  placeholder="Select a venue"
+                  allowClear
+                  showSearch
+                  // filterOption={(input, option) =>
+                  //   option?.label?.toLowerCase()?.includes(input.toLowerCase())
+                  // }
+                  onChange={(value) => {
+                    dispatch(setSelectedTicketType(value));
+                  }}
+                >
+                  {availableTicketTyps?.available_types?.map((venue) => (
+                    <Option key={venue.id} value={venue.id} label={venue.name}>
+                      {venue.name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </>
         )}
         <Col sm={12} xl={24}>
           <Form.Item
