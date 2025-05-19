@@ -412,6 +412,14 @@ const superAdminDashBoardNavTree = [
         isGroupTitle: false,
         submenu: [
           {
+            key: "trackRequest.movie.seats.status.list",
+            path: `${APP_PREFIX_PATH}/track/moive-seats/status/list`,
+            title: "sidenav.seat",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
             key: "trackRequest.movie.offer.status.list",
             path: `${APP_PREFIX_PATH}/track/offer/status/list?type=movie`,
             title: "sidenav.offer",
@@ -927,14 +935,6 @@ const eventOrganaizerDashBoardNavTree = [
     isGroupTitle: false,
     submenu: [
       {
-        key: "movie.movie.list",
-        path: `${APP_PREFIX_PATH}/movie/list`,
-        title: "sidenav.movie",
-        icon: OrderedListOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
         key: "movie.theater",
         path: `${APP_PREFIX_PATH}/movie-theater/list`,
         title: "sidenav.theater",
@@ -973,6 +973,14 @@ const eventOrganaizerDashBoardNavTree = [
         icon: OrderedListOutlined,
         breadcrumb: false,
         submenu: [],
+      },
+      {
+        key: "movie.schedule",
+        path: `${APP_PREFIX_PATH}/movie-schedule/list`,
+        title: "sidenav.movie.schedule",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        isGroupTitle: false,
       },
     ],
   },
@@ -1027,6 +1035,14 @@ const eventOrganaizerDashBoardNavTree = [
         isGroupTitle: false,
         submenu: [
           {
+            key: "trackRequest.movie.seats.status.list",
+            path: `${APP_PREFIX_PATH}/track/moive-seats/status/list`,
+            title: "sidenav.seat",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
             key: "trackRequest.movie.offer.status.list",
             path: `${APP_PREFIX_PATH}/track/offer/status/list?type=movie`,
             title: "sidenav.offer",
@@ -1038,6 +1054,14 @@ const eventOrganaizerDashBoardNavTree = [
             key: "trackRequest.movie.coupon.status.list",
             path: `${APP_PREFIX_PATH}/track/coupon/status/list?type=movie`,
             title: "sidenav.coupon",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "trackRequest.movie.schedule.status.list",
+            path: `${APP_PREFIX_PATH}/track/coupon/status/list?type=movie`,
+            title: "sidenav.movie.schedule",
             icon: OrderedListOutlined,
             breadcrumb: false,
             submenu: [],

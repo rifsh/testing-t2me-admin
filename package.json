@@ -18,6 +18,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "@use-gesture/react": "^10.3.1",
     "@visx/pattern": "2.10.0",
     "antd": "^5.3.0",
     "apexcharts": "^4.5.0",

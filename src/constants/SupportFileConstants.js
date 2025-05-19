@@ -55,6 +55,8 @@ export const ThumbnailImageResolutions = {
   PLACE: { width: 1080, height: 720 },
   VENUE: { width: 1080, height: 720 },
   EVENT_BANNER: { width: 2000, height: 720 },
+  MOVIE_BANNER: { width: 1920, height: 1080 },
+  MOVIE_POSTER: { width: 1000, height: 1500 },
   LANDING_PAGE_BANNER: { width: 2000, height: 1280 },
   EVENT: { width: 1080, height: 720 },
   CATEGORY: { width: 1080, height: 720 },

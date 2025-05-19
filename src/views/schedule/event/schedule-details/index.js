@@ -76,6 +76,9 @@ const ScheduleDetails = () => {
               <Descriptions.Item label="Schedule ID">
                 {processedScheduleDetails.id || "N/A"}
               </Descriptions.Item>
+              <Descriptions.Item label="Multiple Dates Available">
+                {processedScheduleDetails?.is_multi_date ? 'Available' : 'Not Available'}
+              </Descriptions.Item>
             </Descriptions>
           </Col>
 
@@ -83,6 +86,9 @@ const ScheduleDetails = () => {
             <Descriptions bordered column={1} layout="vertical">
               <Descriptions.Item label="Event Name">
                 {processedScheduleDetails.event?.event_name || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Available Tickets">
+                {processedScheduleDetails?.max_ticket_per_booking || "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Event ID">
                 {processedScheduleDetails.event?.id || "N/A"}

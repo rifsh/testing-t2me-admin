@@ -27,7 +27,7 @@ import {
     PlusOutlined
 } from "@ant-design/icons";
 import TextEditor from "components/util-components/FormItems/TextEditor";
-import { parseSizeToBytes, SupportImageFormat } from "constants/SupportFileConstants";
+import { parseSizeToBytes, SupportImageFormat, ThumbnailImageResolutions } from "constants/SupportFileConstants";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPersonalitiesData } from "store/slices/castSlice";
 import MovieFilter from "./MovieFilter";
@@ -38,6 +38,7 @@ import Utils from "utils";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { fetchMoviegenres, fetchMovieLanguages } from "store/slices/movieSlice";
 import GenericDropdown from "views/theater/components/GenericDropdown";
+import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -396,6 +397,10 @@ const MovieDetailsForm = ({ form, mode }) => {
                             >
                                 <Button icon={<UploadOutlined />}>Click to upload</Button>
                             </Upload>
+                            {/* <ResizedImgePicker
+                                maxCount={1}
+                                targetResolution={ThumbnailImageResolutions.MOVIE_BANNER}
+                            /> */}
                         </Form.Item>
                     </Col>
                 </Row>

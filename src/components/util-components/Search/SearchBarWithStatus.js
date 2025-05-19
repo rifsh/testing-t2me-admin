@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AutoComplete, Input, Select } from "antd";
 import { useDispatch } from "react-redux";
 import Flex from "components/shared-components/Flex";
-import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice";
+import { resetSearchValue, resetStatusValue, setGlobalSearchValue, setGlobalStatusValue } from "store/slices/fliterSlice";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -17,6 +17,10 @@ const SearchBarWithStatus = ({
   const [searchValue, setSearchValue] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null);
   const [filterValues, setFilterValues] = useState({});
+
+  useEffect(() => {
+    dispatch(resetStatusValue())
+  }, []);
 
   const handleSearch = (value) => {
     if (value) {
@@ -66,6 +70,7 @@ const SearchBarWithStatus = ({
 
   const handleStatusChange = (status) => {
     setStatusFilter(status);
+    dispatch(setGlobalStatusValue(status))
     dispatch(
       fetchFunction({
         search: searchValue,

@@ -34,14 +34,14 @@ const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
                                         )) || "N/A",
                                     icon: "📍"
                                 },
-                                {
-                                    label: "Available Tickets",
-                                    value:
-                                        eventDetails?.schedules && eventDetails.schedules.length > 0
-                                            ? eventDetails.schedules[0].max_ticket_per_booking ?? "N/A"
-                                            : "N/A",
-                                    icon: "🎟️"
-                                },
+                                // {
+                                //     label: "Available Tickets",
+                                //     value:
+                                //         eventDetails?.schedules && eventDetails.schedules.length > 0
+                                //             ? eventDetails.schedules[0].max_ticket_per_booking ?? "N/A"
+                                //             : "N/A",
+                                //     icon: "🎟️"
+                                // },
                                 {
                                     label: "Category",
                                     value: eventDetails.category?.name ?? "N/A",
@@ -52,19 +52,19 @@ const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
                                     value: eventDetails.sub_category?.name ?? "N/A",
                                     icon: "🔖"
                                 },
-                                {
-                                    label: "Multiple Dates Available",
-                                    value: (
-                                        eventDetails?.schedules?.[0]?.is_multi_date === true ? (
-                                            <Badge status="success" text="Yes" />
-                                        ) : eventDetails?.schedules?.[0]?.is_multi_date === false ? (
-                                            <Badge status="default" text="No" />
-                                        ) : (
-                                            <Badge status="warning" text="N/A" />
-                                        )
-                                    ),
-                                    icon: "📅"
-                                }
+                                // {
+                                //     label: "Multiple Dates Available",
+                                //     value: (
+                                //         eventDetails?.schedules?.[0]?.is_multi_date === true ? (
+                                //             <Badge status="success" text="Yes" />
+                                //         ) : eventDetails?.schedules?.[0]?.is_multi_date === false ? (
+                                //             <Badge status="default" text="No" />
+                                //         ) : (
+                                //             <Badge status="warning" text="N/A" />
+                                //         )
+                                //     ),
+                                //     icon: "📅"
+                                // }
 
 
                             ].map((item, index) => (

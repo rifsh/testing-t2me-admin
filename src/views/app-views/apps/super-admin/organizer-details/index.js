@@ -1,50 +1,77 @@
-import React, { useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { eventOrganizers, movieOrganizers } from "mock/data/reportData";
 import { exportToPdf, exportToExcel } from "utils/exportUtils";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserDetails, setSelectedCountry } from "store/slices/reportSlice";
+import { message, Select } from "antd";
 
 Chart.register(...registerables);
+const { Option } = Select;
 
 const OrganizerDetail = () => {
+  const dispatch = useDispatch();
   const { organizerId } = useParams();
   const reportRef = useRef(null);
+  const navigate = useNavigate();
 
-  const organizer = [...eventOrganizers, ...movieOrganizers].find(
-    (org) => org.id === parseInt(organizerId)
-  );
+  const {
+    data: organizer,
+    loading,
+    error,
+  } = useSelector((state) => state.report.userDetails);
+  const selectedCountry = useSelector((state) => state.report.selectedCountry);
+  const { data } = useSelector((state) => state.report.countryList);
 
-  if (!organizer) {
-    return (
-      <div className="container mx-auto px-4 py-6 text-center">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">
-          Organizer not found
-        </h2>
-        <Link
-          to="/super-admin/reports"
-          className="text-blue-600 hover:underline"
-        >
-          Back to Reports
-        </Link>
-      </div>
-    );
-  }
+  const user = organizer?.[0];
+useEffect(() => {
+  console.log("User updated:", user);
+}, [user]);
+  // useEffect(() => {
+  //   if (organizerId) {
+  //     dispatch(fetchUserDetails(organizerId));
+  //   }
+  // }, [dispatch, organizerId]);
 
-  // Chart data - handles both event and movie organizers
-  const itemsChartData = {
-    labels:
-      organizer.type === "event"
-        ? organizer.eventsList?.map((event) => event.name)
-        : organizer.moviesList?.map((movie) => movie.name),
+  const handleChange = (value) => {
+    dispatch(setSelectedCountry(value));
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (organizerId && selectedCountry) {
+        try {
+          await dispatch(
+            fetchUserDetails({
+              userId: organizerId,
+              countryId: selectedCountry,
+            })
+          );
+        } catch (error) {
+          console.error("Failed to fetch user details:", error);
+          message.error(
+            error.payload?.message || "Failed to load user details"
+          );
+        }
+      }
+    };
+
+    fetchData();
+  }, [dispatch, organizerId, selectedCountry]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!user) return <div>Organizer not found</div>;
+
+  // Chart data for events
+  const eventsChartData = {
+    labels: user?.events?.map((event) => event.event_name),
     datasets: [
       {
-        label: organizer.type === "event" ? "Event Revenue" : "Movie Revenue",
-        data:
-          organizer.type === "event"
-            ? organizer.eventsList?.map((event) => event.revenue)
-            : organizer.moviesList?.map((movie) => movie.revenue),
+        label: "Event Revenue",
+        data: user?.events?.map((event) => event.event_revenue),
         backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 2,
@@ -56,77 +83,115 @@ const OrganizerDetail = () => {
     labels: ["Active", "Inactive"],
     datasets: [
       {
-        data: [
-          organizer.status === "Active" ? 1 : 0,
-          organizer.status === "Inactive" ? 1 : 0,
-        ],
+        data: [user?.is_active ? 1 : 0, user?.is_active ? 0 : 1],
         backgroundColor: ["#198754", "#dc3545"],
       },
     ],
   };
 
-  // Export handlers
-  const handleExportPDF = async () => {
+  const handleExportPdf = async () => {
     exportToPdf(reportRef, "MyReport.pdf");
   };
 
-  const handleExportCSV = () => {
+  const handleExportCsv = () => {
     exportToExcel(reportRef, "MyReport.xlsx");
+  };
+  const handleGoBack = () => {
+    navigate(-1);
   };
 
   return (
-    <div
-      className="container mx-auto px-4 py-6"
-      id="organizer-content"
-      ref={reportRef}
-    >
+    <div className="container mx-auto px-4 py-6" ref={reportRef}>
+      <div>
+        <button
+          onClick={handleGoBack}
+          className="text-gray-500 hover:text-gray-700 text-sm mb-2 inline-block"
+        >
+          &larr; Back
+        </button>
+      </div>
       <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <Link
-            to="/super-admin/reports"
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+        <div className="flex justify-end gap-4">
+          <Select
+            showSearch
+            placeholder="Select Country"
+            optionFilterProp="children"
+            style={{ width: 200 }}
+            value={selectedCountry}
+            onChange={handleChange}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().includes(input.toLowerCase())
+            }
           >
-            &larr; Back to Organizers
-          </Link>
-
-          <div className="flex gap-2 ml-auto">
-            {" "}
-            <button
-              onClick={handleExportCSV}
-              className="px-3 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700"
+            {data?.[0]?.items?.map((country) => (
+              <Option key={country.id} value={country.id}>
+                {country.name}
+              </Option>
+            ))}
+          </Select>
+          <button
+            onClick={handleExportCsv}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+          >
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              Export CSV
-            </button>
-            <button
-              onClick={handleExportPDF}
-              className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            Export CSV
+          </button>
+          <button
+            onClick={handleExportPdf}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
+          >
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              Export PDF
-            </button>
-          </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            Export PDF
+          </button>
         </div>
       </div>
-      {/* Organizer Header */}
+
+      {/* Header Section */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+        <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              {organizer.name}
+              {user?.username}
             </h1>
-            <p className="text-gray-600 mt-2">{organizer.email}</p>
-            <p className="text-gray-600">Phone: {organizer.phone}</p>
-            <p className="text-gray-600 capitalize">
-              Type: {organizer.type} Organizer
+            <p className="text-gray-600 mt-2">{user?.email}</p>
+            <p className="text-gray-600">
+              Registered: {new Date(user?.created_at).toLocaleDateString()}
             </p>
           </div>
-          <div className="space-y-2">
-            <p className="text-sm text-gray-600">
-              Registered:{" "}
-              {new Date(organizer.registrationDate).toLocaleDateString()}
-            </p>
-            <p className="text-sm text-gray-600">
-              Last Login: {new Date(organizer.lastLogin).toLocaleDateString()}
-            </p>
+          <div className="text-right">
+            <span
+              className={`px-3 py-1 rounded-md text-sm ${
+                user?.is_active
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {user?.is_active ? "Active" : "Inactive"}
+            </span>
           </div>
         </div>
       </div>
@@ -135,33 +200,29 @@ const OrganizerDetail = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <h3 className="text-gray-500 text-sm font-medium mb-2">
-            Total {organizer.type === "event" ? "Events" : "Movies"}
+            Total Events
           </h3>
-          <p className="text-2xl font-bold">
-            {organizer.type === "event" ? organizer.events : organizer.movies}
-          </p>
+          <p className="text-2xl font-bold">{user?.total_events}</p>
         </div>
 
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-gray-500 text-sm font-medium mb-2">
+                Total Revenue
+              </h3>
+                        <p className="text-2xl font-bold">{user?.total_events}</p>
+
+            </div>
+          </div>
+        </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <h3 className="text-gray-500 text-sm font-medium mb-2">
-            Total Revenue
+            Total Attendees
           </h3>
-          <p className="text-2xl font-bold text-green-600">
-            ${organizer.revenue.toLocaleString()}
+          <p className="text-2xl font-bold">
+            {user?.total_attendees?.toLocaleString()}
           </p>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-gray-500 text-sm font-medium mb-2">Status</h3>
-          {organizer.status === "Active" ? (
-            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-              Active
-            </span>
-          ) : (
-            <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-              Inactive
-            </span>
-          )}
         </div>
       </div>
 
@@ -169,11 +230,11 @@ const OrganizerDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <h3 className="text-gray-500 text-sm font-medium mb-4">
-            {organizer.type === "event" ? "Event" : "Movie"} Revenue
+            Event Revenue
           </h3>
           <div className="h-64">
             <Bar
-              data={itemsChartData}
+              data={eventsChartData}
               options={{
                 maintainAspectRatio: false,
                 scales: { y: { beginAtZero: true } },
@@ -183,9 +244,7 @@ const OrganizerDetail = () => {
         </div>
 
         <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-gray-500 text-sm font-medium mb-4">
-            Status Distribution
-          </h3>
+          <h3 className="text-gray-500 text-sm font-medium mb-4">Status</h3>
           <div className="h-64">
             <Pie
               data={statusData}
@@ -198,22 +257,18 @@ const OrganizerDetail = () => {
         </div>
       </div>
 
-      {/* Items Table */}
+      {/* Events Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="flex justify-between items-center p-4 bg-gray-50">
-          <h3 className="text-gray-700 font-medium">
-            {organizer.type === "event" ? "Events" : "Movies"} List
-          </h3>
+        <div className="p-4 bg-gray-50">
+          <h3 className="text-gray-700 font-medium">Events List</h3>
         </div>
+
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  {organizer.type === "event" ? "Event" : "Movie"} Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  {organizer.type === "event" ? "Date" : "Release Date"}
+                  Event Name
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
                   Attendees
@@ -221,46 +276,32 @@ const OrganizerDetail = () => {
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
                   Revenue
                 </th>
-                {organizer?.type === "movie" && (
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                    Showtimes
-                  </th>
-                )}
               </tr>
             </thead>
+
             <tbody className="divide-y divide-gray-200">
-              {(organizer?.type === "event"
-                ? organizer?.eventsList
-                : organizer?.moviesList
-              ).map((item, index) => (
-                <tr key={index}>
+              {user?.events?.map((event) => (
+                <tr key={event.id}>
                   <td className="px-6 py-4">
                     <Link
-                      to={
-                        organizer.type === "movie"
-                          ? `${APP_PREFIX_PATH}/super-admin/organizer-details/movie-details/${item.id}`
-                          : `${APP_PREFIX_PATH}/super-admin/organizer-details/event-details/${item.id}`
-                      }
-                      className="text-blue-600 hover:text-blue-800"
+                      to={`${APP_PREFIX_PATH}/super-admin/organizer-details/event-details/${event.id}`}
+                      className="text-blue-600 hover:text-blue-800 font-semibold"
                     >
-                      {item.name}
+                      {event?.event_name}
                     </Link>
                   </td>
 
-                  <td className="px-4 py-3 text-gray-500">
-                    {new Date(
-                      organizer.type === "event" ? item.date : item.releaseDate
-                    ).toLocaleDateString()}
+                  <td className="px-4 py-3">
+                    {event?.attendees_count?.toLocaleString()}
                   </td>
-                  <td className="px-4 py-3">{item.attendees}</td>
-                  <td className="px-4 py-3 font-bold text-green-600">
-                    ${item.revenue.toLocaleString()}
+
+                  <td className="px-4 py-3 text-green-600 text-sm space-y-1">
+                    {event?.revenue_by_country?.map((item, index) => (
+                      <div key={index}>
+                        {item?.currency_code} {item?.revenue || 0}
+                      </div>
+                    ))}
                   </td>
-                  {organizer.type === "movie" && (
-                    <td className="px-4 py-3 text-gray-500">
-                      {item.showtimes.join(", ")}
-                    </td>
-                  )}
                 </tr>
               ))}
             </tbody>

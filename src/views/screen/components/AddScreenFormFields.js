@@ -93,13 +93,14 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                 }, 0);
             }
         }
-        return () =>{
-            dispatch(setCleraAllData())
-        }
+        // return () => {
+        //     dispatch(setCleraAllData())
+        // }
     }, [singleResponse, form, placeSelected === false]);
 
     useEffect(() => {
         if (singleTheaterResponse) {
+            console.log("singleTheaterResponse", singleTheaterResponse);
             setCapacity(singleTheaterResponse?.capacity);
             dispatch(setScreenCapacity(singleTheaterResponse?.number_of_screens));
         }
@@ -293,6 +294,7 @@ const AddScreenFormFields = ({ mode, screenId }) => {
                             </Col>
                             <Col span={24}>
                                 <TheaterListForm
+                                    disabled={!venueSelected}
                                     form={form}
                                     onSelect={handleTheaterSelect}
                                 />

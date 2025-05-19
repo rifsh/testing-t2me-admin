@@ -20,7 +20,8 @@ const GenericDropdown = ({
   searchParamKey = "search",
   isInfoVisible = false,
   maxTagCount = 5,
-  hasFeedback = false
+  hasFeedback = false,
+  onChange = () => { },
 }) => {
   const dispatch = useDispatch();
 
@@ -80,6 +81,7 @@ const GenericDropdown = ({
         loading={loading}
         options={options}
         optionLabelProp='displayValue'
+        onChange={onChange}
         filterOption={(input, option) =>
           option?.label?.toLowerCase()?.includes(input.toLowerCase())
         }

@@ -144,7 +144,9 @@ const OfferList = () => {
       dataIndex: "max_uses",
       sorter: (a, b) => a.max_uses - b.max_uses,
     },
-    Utils.statusColumnUtil(handleUpdateStatus),
+    // Utils.statusColumnUtil(handleUpdateStatus),
+    Utils.statusColumnUtil(handleUpdateStatus, isOrganizer() ? true : false),
+
     {
       title: "",
       dataIndex: "actions",
@@ -224,7 +226,7 @@ const OfferList = () => {
             {selectedOffer.description || "No description available"}
             </Descriptions.Item> */}
             {selectedOffer.thumbnail_image &&
-            selectedOffer.thumbnail_image !== "images" ? (
+              selectedOffer.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">
                 <img
                   src={selectedOffer.thumbnail_image}
