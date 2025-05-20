@@ -31,6 +31,7 @@ import { fetchScreenData } from "store/slices/screenSlice";
 import TheaterLayout from "views/seat/components/TheaterLayout";
 import { isOrganizer } from "configs/UserAccessConfig";
 import { fetchTheaterByid } from "store/slices/theaterSlice";
+import { nestedToFlat } from "utils/seatUtils";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -42,7 +43,9 @@ const SeatForm = (props) => {
   const [form] = Form.useForm();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState("1");
-  const { selectedTheaterId, singleResponse } = useSelector((state) => state.theater);
+  const { selectedTheaterId, singleResponse } = useSelector(
+    (state) => state.theater
+  );
 
   const {
     loading,
@@ -76,8 +79,7 @@ const SeatForm = (props) => {
 
     return () => {
       dispatch(resetState());
-    }
-
+    };
   }, [seatId, dispatch]);
 
   useEffect(() => {
@@ -124,7 +126,13 @@ const SeatForm = (props) => {
 
   useEffect(() => {
     if (isOrganizer()) {
-      dispatch(fetchTheaterByid({ theatre_id: selectedTheaterId ? selectedTheaterId : singleSeatStructure?.theatre?.id }));
+      dispatch(
+        fetchTheaterByid({
+          theatre_id: selectedTheaterId
+            ? selectedTheaterId
+            : singleSeatStructure?.theatre?.id,
+        })
+      );
     }
   }, [selectedTheaterId, singleSeatStructure]);
 
@@ -156,7 +164,7 @@ const SeatForm = (props) => {
           total_column: seats[0]?.length || 0,
           total_seats: totalVisibleSeats,
           seat_data: {
-            seats,
+           seats: nestedToFlat(seats),
             seatTypes: usedSeatTypes,
           },
         };
@@ -169,7 +177,6 @@ const SeatForm = (props) => {
 
           dispatch(setSeatDialogVisible(true));
         }
-
       } else {
         let totalVisibleSeats = 0;
         seats.forEach((row) => {
@@ -190,7 +197,7 @@ const SeatForm = (props) => {
             total_seats: totalVisibleSeats,
             type: SEAT_STRUCTURE_TYPES.MOVIE,
             seat_data: {
-              seats,
+              seats: nestedToFlat(seats),
               seatTypes: usedSeatTypes,
             },
           };
@@ -205,7 +212,7 @@ const SeatForm = (props) => {
           total_seats: totalVisibleSeats,
           type: SEAT_STRUCTURE_TYPES.MOVIE,
           seat_data: {
-            seats,
+            seats: nestedToFlat(seats),
             seatTypes: usedSeatTypes,
           },
         };

@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { DEFAULT_SEAT_TYPES } from "constants/SeatTypes";
 import MovieSeatService from "services/MovieSeatService";
 import Utils from "utils";
+import { flatToNested } from "utils/seatUtils";
 export const initialState = {
   loading: false,
   error: null,
@@ -117,7 +118,9 @@ export const getAllTrackrequestSeatStructures = createAsyncThunk(
   "movieSeat/getAllTrackrequestSeatStructures",
   async (pageData, { rejectWithValue }) => {
     try {
-      const response = await MovieSeatService.getAllTrackrequestSeatStructures(pageData);
+      const response = await MovieSeatService.getAllTrackrequestSeatStructures(
+        pageData
+      );
       return response.data[0];
     } catch (error) {
       return rejectWithValue(
@@ -199,9 +202,8 @@ export const getTrackrequestSeatStructuresDetails = createAsyncThunk(
   "eventSeat/getTrackrequestSeatStructuresDetails",
   async (pageData, { rejectWithValue }) => {
     try {
-      const response = await MovieSeatService.getTrackrequestSeatStructuresDetails(
-        pageData
-      );
+      const response =
+        await MovieSeatService.getTrackrequestSeatStructuresDetails(pageData);
       return response.data[0];
     } catch (error) {
       return rejectWithValue(
@@ -467,7 +469,16 @@ const movieSeatSlice = createSlice({
       .addCase(getMovieSeatStructureDetails.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.singleSeatStructure = action.payload[0];
+        const data = action.payload[0];
+        const restructuredData = {
+          ...data,
+          seat_data: {
+            seats: flatToNested(data.seat_data.seats),
+            seatTypes: data.seat_data.seatTypes,
+          },
+        };
+        console.log(restructuredData, "restructuredData");
+        state.singleSeatStructure = restructuredData;
       })
       .addCase(getMovieSeatStructureDetails.rejected, (state, action) => {
         state.loading = false;
@@ -557,7 +568,16 @@ const movieSeatSlice = createSlice({
       .addCase(getEventSeatStructureDetails.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.singleSeatStructure = action.payload[0];
+        const data = action.payload[0];
+        const restructuredData = {
+          ...data,
+          seat_data: {
+            seats: flatToNested(data.seat_data.seats),
+            seatTypes: data.seat_data.seatTypes,
+          },
+        };
+        console.log(restructuredData, "restructuredData");
+        state.singleSeatStructure = restructuredData;
       })
       .addCase(getEventSeatStructureDetails.rejected, (state, action) => {
         state.loading = false;
@@ -598,18 +618,24 @@ const movieSeatSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(getTrackrequestSeatStructuresDetails.fulfilled, (state, { payload }) => {
-        state.loading = false;
-        state.error = null;
-        state.TrackrequestSeatsDetails = payload;
-        state.singleSeatStructure = payload;
-        state.pagination = payload;
-      })
-      .addCase(getTrackrequestSeatStructuresDetails.rejected, (state, action) => {
-        state.loading = false;
-        state.error =
-          action.payload?.data || "Error fetching seat all structure";
-      })
+      .addCase(
+        getTrackrequestSeatStructuresDetails.fulfilled,
+        (state, { payload }) => {
+          state.loading = false;
+          state.error = null;
+          state.TrackrequestSeatsDetails = payload;
+          state.singleSeatStructure = payload;
+          state.pagination = payload;
+        }
+      )
+      .addCase(
+        getTrackrequestSeatStructuresDetails.rejected,
+        (state, action) => {
+          state.loading = false;
+          state.error =
+            action.payload?.data || "Error fetching seat all structure";
+        }
+      );
   },
 });
 
