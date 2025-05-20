@@ -1020,7 +1020,40 @@ console.log(data, 'data');
       </div>
 
       {/* Data Visualization Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+     
+
+      {/* Schedule Details */}
+      <Card
+        title="Schedule Details"
+        className="hover:shadow-md transition-shadow"
+      >
+        <Table
+          columns={scheduleColumns}
+          dataSource={eventData.schedule_revenue_details || []}
+          rowKey="schedule_name"
+          pagination={false}
+          locale={{
+            emptyText: <Empty description="No schedule data available" />
+          }}
+        />
+      </Card>
+
+      {/* Ticket Type Details */}
+      <Card
+        title="Ticket Type Status"
+        className="hover:shadow-md transition-shadow"
+      >
+        <Table
+          columns={ticketColumns}
+          dataSource={eventData.revenue_by_ticket_type || []}
+          rowKey="ticket_type_name"
+          pagination={false}
+          locale={{
+            emptyText: <Empty description="No ticket type data available" />
+          }}
+        />
+      </Card>
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue by Ticket Type */}
         <Card 
           title={
@@ -1097,38 +1130,6 @@ console.log(data, 'data');
           )}
         </Card>
       </div>
-
-      {/* Schedule Details */}
-      <Card
-        title="Schedule Details"
-        className="hover:shadow-md transition-shadow"
-      >
-        <Table
-          columns={scheduleColumns}
-          dataSource={eventData.schedule_revenue_details || []}
-          rowKey="schedule_name"
-          pagination={false}
-          locale={{
-            emptyText: <Empty description="No schedule data available" />
-          }}
-        />
-      </Card>
-
-      {/* Ticket Type Details */}
-      <Card
-        title="Ticket Type Status"
-        className="hover:shadow-md transition-shadow"
-      >
-        <Table
-          columns={ticketColumns}
-          dataSource={eventData.revenue_by_ticket_type || []}
-          rowKey="ticket_type_name"
-          pagination={false}
-          locale={{
-            emptyText: <Empty description="No ticket type data available" />
-          }}
-        />
-      </Card>
     </div>
   );
 };

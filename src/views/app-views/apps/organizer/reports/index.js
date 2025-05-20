@@ -495,35 +495,9 @@ const OrganizerReport = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-gray-500 text-sm font-medium mb-4">Revenue</h3>
-          <div className="h-64">
-            <Bar
-              data={chartData}
-              options={{
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } },
-              }}
-            />
-          </div>
-        </div>
+      
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-gray-500 text-sm font-medium mb-4">Status</h3>
-          <div className="h-64">
-            <Pie
-              data={statusData}
-              options={{
-                maintainAspectRatio: false,
-                plugins: { legend: { position: "bottom" } },
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
         <div className="p-4 bg-gray-50">
           <h3 className="text-gray-700 font-medium">
             {activeSegment === "events" ? "Events List" : "Theaters List"}
@@ -606,6 +580,34 @@ const OrganizerReport = () => {
                   ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <h3 className="text-gray-500 text-sm font-medium mb-4">Revenue</h3>
+          <div className="h-64">
+            <Bar
+              data={chartData}
+              options={{
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } },
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <h3 className="text-gray-500 text-sm font-medium mb-4">Status</h3>
+          <div className="h-64">
+            <Pie
+              data={statusData}
+              options={{
+                maintainAspectRatio: false,
+                plugins: { legend: { position: "bottom" } },
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

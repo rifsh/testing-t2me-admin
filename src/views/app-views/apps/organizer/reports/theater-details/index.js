@@ -142,33 +142,7 @@ const TheaterDetail = () => {
         </div>
       </div>
 
-      {/* Genre Distribution Chart */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
-        <h3 className="text-lg font-semibold mb-4">Movie Genre Distribution</h3>
-        <div className="h-96">
-          <Bar
-            data={chartData}
-            options={{
-              maintainAspectRatio: false,
-              responsive: true,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: {
-                    precision: 0,
-                  },
-                },
-              },
-              plugins: {
-                legend: {
-                  position: "top",
-                },
-              },
-            }}
-          />
-        </div>
-      </div>
-
+    
       {/* Movies Section */}
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="p-4 border-b border-gray-200">
@@ -240,6 +214,36 @@ const TheaterDetail = () => {
           </table>
         </div>
       </div>
+
+
+
+
+        <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
+        <h3 className="text-lg font-semibold mb-4">Movie Genre Distribution</h3>
+        <div className="h-96">
+          <Bar
+            data={chartData}
+            options={{
+              maintainAspectRatio: false,
+              responsive: true,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    precision: 0,
+                  },
+                },
+              },
+              plugins: {
+                legend: {
+                  position: "top",
+                },
+              },
+            }}
+          />
+        </div>
+      </div>
+
     </div>
   );
 };
