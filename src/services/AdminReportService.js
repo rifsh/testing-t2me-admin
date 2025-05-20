@@ -50,20 +50,20 @@ const ReportService = {
   });
 },
 
-  fetchEventDetails: function (eventId) {
+  fetchEventDetails: function (eventId, countryId) {
     return fetch({
       url: ApiConstant.REPORT_EVENT_DETAIL,
       method: "get",
-      params: { event_id: eventId },
+      params: { event_id: eventId, country_id: countryId },
     });
   },
 
   // user-specific reports movies
-  fetchMovieUserDetails: function (userId) {
+  fetchMovieUserDetails: function (userId, countryId) {
     return fetch({
       url: ApiConstant.REPORT_USER_DETAIL_MOVIES,
       method: "get",
-      params: { user_id: userId },
+      params: { user_id: userId, country_id: countryId },
     });
   },
   fetchTheaterDetails: function (theaterId) {
@@ -82,7 +82,7 @@ fetchMovieDetails: function (movieId, theaterId) {
     method: "get",
     params: {
       movie_id: movieId,
-      theater_id: theaterId,
+     theatre_id: theaterId,
     },
   });
 },

@@ -782,9 +782,9 @@ export const protectedRoutes = [
     ),
   },
   {
-    path: `${APP_PREFIX_PATH}/organizer/reports/movie-details/:movieId`,
+    path: `${APP_PREFIX_PATH}/organizer/reports/theater-details/:theaterId/movie-details/:movieId`,
     component: React.lazy(() =>
-      import("views/app-views/apps/organizer/reports/movie-details")
+      import("views/app-views/apps/organizer/reports/theater-details/movie-details")
     ),
   },
 
@@ -821,11 +821,11 @@ export const protectedRoutes = [
     ),
   },
   {
-    path: `${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/movie-details/:movieId`,
-    component: React.lazy(() =>
-      import(
-        "views/app-views/apps/super-admin/movie-organizer/theater-details/movie-details"
-      )
-    ),
-  },
+  path: `${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/:theaterId/movie-details/:movieId`,
+  component: React.lazy(() =>
+    import(
+      "views/app-views/apps/super-admin/movie-organizer/theater-details/movie-details"
+    )
+  ),
+},
 ];

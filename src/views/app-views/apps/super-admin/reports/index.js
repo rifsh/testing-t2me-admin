@@ -62,17 +62,21 @@ const SuperAdminReport = () => {
 
   // 1. Auto-select first country when data loads
   useEffect(() => {
-    if (data?.[0]?.items?.length > 0 && !hasAutoSelected) {
-      const firstCountryId = data[0].items[0].id;
-      dispatch(setSelectedCountry(firstCountryId));
-      setHasAutoSelected(true);
-      setIsInitialized(true); // Mark initialization complete
-    }
-  }, [data, dispatch, hasAutoSelected]);
+  if (data?.[0]?.items?.length > 0 && !hasAutoSelected) {
+    const firstCountryId = data[0].items[0].id;
+    dispatch(setSelectedCountry(firstCountryId));
+    localStorage.setItem("selectedCountry", JSON.stringify(firstCountryId)); // Save to localStorage
+    setHasAutoSelected(true);
+    setIsInitialized(true); // Mark initialization complete
+  }
+}, [data, dispatch, hasAutoSelected]);
 
-  const handleChange = (value) => {
-    dispatch(setSelectedCountry(value));
-  };
+
+const handleChange = (value) => {
+  dispatch(setSelectedCountry(value));
+  localStorage.setItem("selectedCountry", JSON.stringify(value)); // Save to localStorage
+};
+
 
   useEffect(() => {
     dispatch(
