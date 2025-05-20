@@ -162,7 +162,7 @@ function convertFlatToNested(flatSeats) {
 
   // Process each seat in the flat structure
   Object.entries(flatSeats).forEach(([id, seat]) => {
-    if (!seat.isVisible) return;
+    // if (!seat.isVisible) return;
 
     // Create row array if it doesn't exist
     if (!seatsByRow[seat.rowIndex]) {
