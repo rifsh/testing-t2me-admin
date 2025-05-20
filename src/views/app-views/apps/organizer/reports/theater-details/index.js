@@ -70,7 +70,12 @@ const TheaterDetail = () => {
 
   return (
     <div className="p-8" ref={reportRef}>
-      {/* Header Section */}
+      <Spin 
+      spinning={loading}
+      tip="Loading report data..."
+      size="large"
+      className="pt-8"
+    >
       <div className="mb-6 flex justify-between items-center">
         <div>
           <button
@@ -94,7 +99,7 @@ const TheaterDetail = () => {
             </div>
           </div>
         </div>
-        <div className="flex gap-4">
+        <div className="hidden sm:flex gap-4">
           <button
             onClick={handleExportExcel}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
@@ -142,7 +147,6 @@ const TheaterDetail = () => {
         </div>
       </div>
 
-    
       {/* Movies Section */}
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="p-4 border-b border-gray-200">
@@ -215,10 +219,7 @@ const TheaterDetail = () => {
         </div>
       </div>
 
-
-
-
-        <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
+      <div className="bg-white p-6 rounded-lg border border-gray-200 mb-8">
         <h3 className="text-lg font-semibold mb-4">Movie Genre Distribution</h3>
         <div className="h-96">
           <Bar
@@ -243,7 +244,7 @@ const TheaterDetail = () => {
           />
         </div>
       </div>
-
+      </Spin>
     </div>
   );
 };

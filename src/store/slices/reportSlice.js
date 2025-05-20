@@ -138,11 +138,11 @@ const reportSlice = createSlice({
       data: null,
       loading: false,
       error: null,
-      pagination: {
-        current: 1,
-        pageSize: 10,
-        total: 0,
-      },
+      // pagination: {
+      //   current: 1,
+      //   pageSize: 10,
+      //   total: 0,
+      // },
     },
     countryList: {
       data: null,
@@ -181,6 +181,8 @@ const reportSlice = createSlice({
       loading: false,
       error: null,
     },
+      pagination: { size: 10, page: 1 },
+
   },
   reducers: {
     setUserReportsPagination: (state, action) => {
