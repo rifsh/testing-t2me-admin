@@ -15,7 +15,7 @@ const ResponsiveSeatMap = ({ TrackrequestSeatsDetails }) => {
     });
 
     // Handle window resize
-    useEffect(() => {
+    useEffect(() => {   
         const handleResize = () => {
             setWindowSize({
                 width: window.innerWidth,

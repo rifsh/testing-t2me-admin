@@ -22,7 +22,7 @@ import {
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import { updateTimeSlot } from "store/slices/scheduleSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import TimeSlotValidator from "../utils/TimeSloteValidator";
 import dayjs from "dayjs";
 
@@ -44,6 +44,7 @@ const TimeSlots = ({
 }) => {
   const { Option } = Select;
   const dispatch = useDispatch();
+  const { selectedTicketType } = useSelector((state) => state.tickets);
   const getDateCoverage = (timeSlots = {}, dateStr) => {
     if (!dateStr) {
       return {
@@ -179,7 +180,8 @@ const TimeSlots = ({
               "end_time",
               "is_midnight_passed",
               "show_end_date",
-              "ticketType","seat_structure_id"
+              "ticketType",
+              "seat_structure_id",
             ]);
           });
 
@@ -283,7 +285,7 @@ const TimeSlots = ({
                   "is_midnight_passed",
                   "show_end_date",
                   "ticketType",
-                  "seat_structure_id"
+                  "seat_structure_id",
                 ]);
               });
             }
@@ -581,7 +583,7 @@ const TimeSlots = ({
                 </Col>
               )}
               <Col span={5}>
-                {eventDetails.available_types === "SEAT STRUCTURE" ? (
+                {selectedTicketType === 1 ? (
                   <Form.Item
                     label="Seat Structure"
                     name={["timeSlots", dateStr, index, "seat_structure_id"]}

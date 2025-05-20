@@ -1,29 +1,80 @@
-import React, { useRef, useEffect } from "react";
-import { Link,useNavigate, useParams } from "react-router-dom";
+import React, { useRef, useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchMovieUserDetails } from "store/slices/reportSlice";
-import { Spin, Alert } from "antd";
+import {
+  fetchCountryList,
+  fetchMovieUserDetails,
+  setSelectedCountry,
+} from "store/slices/reportSlice";
+import { Spin, Alert, message, Select } from "antd";
 
 Chart.register(...registerables);
+const { Option } = Select;
 
 const MovieOrganizerDetail = () => {
   const reportRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { data, loading, error } = useSelector(
-    (state) => state.report.movieUserDetails
-  );
-  const { organizerId } = useParams();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState(true);
 
+  const [page, setPage] = useState(1);
+  const size = 50;
+  const {
+    data: movieUserData,
+    loading,
+    error,
+  } = useSelector((state) => state.report.movieUserDetails);
+
+  const { organizerId } = useParams();
+  const {
+    data: countryData,
+    loading: countryLoading,
+    error: countryError,
+    pagination,
+  } = useSelector((state) => state.report.countryList);
+  console.log(countryData, "countryList");
+  const selectedCountry = useSelector((state) => state.report.selectedCountry);
   useEffect(() => {
-    if (organizerId) {
-      dispatch(fetchMovieUserDetails(organizerId));
+    const storedCountry = localStorage.getItem("selectedCountry");
+    if (storedCountry) {
+      dispatch(setSelectedCountry(JSON.parse(storedCountry)));
     }
-  }, [dispatch, organizerId]);
+  }, [dispatch]);
+  const handleChange = (value) => {
+    dispatch(setSelectedCountry(value));
+    localStorage.setItem("selectedCountry", JSON.stringify(value)); // Save to localStorage
+  };
+  useEffect(() => {
+    dispatch(
+      fetchCountryList({ active: activeFilter, search: searchTerm, page, size })
+    );
+  }, [dispatch, activeFilter, searchTerm, page]);
+  useEffect(() => {
+    const fetchData = async () => {
+      if (organizerId && selectedCountry) {
+        try {
+          await dispatch(
+            fetchMovieUserDetails({
+              userId: organizerId,
+              countryId: selectedCountry,
+            })
+          );
+        } catch (error) {
+          console.error("Failed to fetch user details:", error);
+          message.error(
+            error.payload?.message || "Failed to load user details"
+          );
+        }
+      }
+    };
+
+    fetchData();
+  }, [dispatch, organizerId, selectedCountry]);
 
   if (loading) {
     return (
@@ -41,11 +92,11 @@ const MovieOrganizerDetail = () => {
     );
   }
 
-  if (!data || !data[0]) {
+  if (!movieUserData || !movieUserData[0]) {
     return null;
   }
 
-  const organizer = data[0]; // Access the first item in the array
+  const organizer = movieUserData[0]; // Access the first item in the array
 
   // Transform API data to match your component structure
   const organizerData = {
@@ -62,7 +113,7 @@ const MovieOrganizerDetail = () => {
         company_name: theater.company_name,
         screen_count: theater.screens_count,
         movies_count: theater.movies_count,
-        is_active: theater.is_active, // Assuming this exists in your theater object
+        is_active: theater.is_active,
       })) || [],
   };
 
@@ -118,14 +169,15 @@ const MovieOrganizerDetail = () => {
   const handleGoBack = () => {
     navigate(-1);
   };
+
   return (
     <div className="p-8" ref={reportRef}>
-      <div>
+      <div className="flex items-center">
         <button
           onClick={handleGoBack}
-          className="text-gray-500 hover:text-gray-700 text-sm mb-2 inline-block"
+          className="text-gray-500 hover:text-gray-700 text-sm"
         >
-          &larr; Back to Organizers
+          &larr; Back
         </button>
       </div>
       {/* Header with Export Buttons */}
@@ -133,7 +185,25 @@ const MovieOrganizerDetail = () => {
         <h1 className="text-2xl font-bold">
           Movie Organizer: {organizerData.username}
         </h1>
+
         <div className="flex gap-4">
+          <Select
+            showSearch
+            placeholder="Select Country"
+            optionFilterProp="children"
+            style={{ width: 200 }}
+            value={selectedCountry}
+            onChange={handleChange}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {countryData?.[0]?.items?.map((country) => (
+              <Option key={country.id} value={country.id}>
+                {country.name}
+              </Option>
+            ))}
+          </Select>
           <button
             onClick={handleExportCsv}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
@@ -199,6 +269,76 @@ const MovieOrganizerDetail = () => {
         </div>
       </div>
 
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
+        <div className="p-4 bg-gray-50">
+          <h3 className="text-gray-700 font-medium">Theaters List</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Theater Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Company
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Screens
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Movies
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Status
+                </th>
+                {/* <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Actions
+                </th> */}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {organizerData.theaters.map((theater) => (
+                <tr key={theater.id}>
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    <Link
+                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theater.id}`}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      {theater.name}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500">
+                    {theater.company_name}
+                  </td>
+                  <td className="px-4 py-3">{theater.screen_count}</td>
+                  <td className="px-4 py-3">{theater.movies_count}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        theater.is_active
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {theater.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  {/* <td className="px-4 py-3">
+                    <Link
+                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theater.id}`}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      View Details
+                    </Link>
+                  </td> */}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Charts - 3 columns for better layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg border border-gray-200">
@@ -244,72 +384,6 @@ const MovieOrganizerDetail = () => {
               }}
             />
           </div>
-        </div>
-      </div>
-
-      {/* Theater Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 bg-gray-50">
-          <h3 className="text-gray-700 font-medium">Theaters List</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Theater Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Company
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Screens
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Movies
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {organizerData.theaters.map((theater) => (
-                <tr key={theater.id}>
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    {theater.name}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {theater.company_name}
-                  </td>
-                  <td className="px-4 py-3">{theater.screen_count}</td>
-                  <td className="px-4 py-3">{theater.movies_count}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full ${
-                        theater.is_active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {theater.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theater.id}`}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      View Details
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>

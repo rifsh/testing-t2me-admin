@@ -8,7 +8,12 @@ import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { exportToExcel, exportToPdf } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchReports, fetchUserReports } from "store/slices/reportSlice";
+import {
+  fetchCountryList,
+  fetchReports,
+  fetchUserReports,
+  setSelectedCountry,
+} from "store/slices/reportSlice";
 
 dayjs.extend(isBetween);
 Chart.register(...registerables);
@@ -21,13 +26,21 @@ const SuperAdminReport = () => {
   const reportRef = useRef(null);
   const { reportData, userReports } = useSelector((state) => state.report);
   const userReportsData = userReports?.data?.[0]?.items || [];
+  const { data, loading, error } = useSelector(
+    (state) => state.report.countryList
+  );
 
   // State management
   const [activeTab, setActiveTab] = useState("events");
   const [timeFilter, setTimeFilter] = useState("last-3-months");
   const [customDateRange, setCustomDateRange] = useState([]);
-  const [showAllCountries, setShowAllCountries] = useState(false);
+
   const [expandedRows, setExpandedRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState(true);
+
+  const [page, setPage] = useState(1);
+  const size = 50;
   const [filters, setFilters] = useState({
     search: "",
     status: null,
@@ -43,27 +56,59 @@ const SuperAdminReport = () => {
     exports: false,
   });
 
-  // Fetch reports data with loader
-  useEffect(() => {
-    const fetchReportData = async () => {
-      try {
-        setApiLoading((prev) => ({ ...prev, reports: true }));
-        await dispatch(
-          fetchReports({
-            pageData: { page: 1, size: 10 },
-            contentType: activeTab,
-          })
-        );
-      } catch (err) {
-        console.error("Failed to fetch reports:", err);
-        message.error("Failed to load report statistics");
-      } finally {
-        setApiLoading((prev) => ({ ...prev, reports: false }));
-      }
-    };
+  const selectedCountry = useSelector((state) => state.report.selectedCountry);
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-    fetchReportData();
-  }, [dispatch, activeTab]);
+  // 1. Auto-select first country when data loads
+  useEffect(() => {
+  if (data?.[0]?.items?.length > 0 && !hasAutoSelected) {
+    const firstCountryId = data[0].items[0].id;
+    dispatch(setSelectedCountry(firstCountryId));
+    localStorage.setItem("selectedCountry", JSON.stringify(firstCountryId)); // Save to localStorage
+    setHasAutoSelected(true);
+    setIsInitialized(true); // Mark initialization complete
+  }
+}, [data, dispatch, hasAutoSelected]);
+
+
+const handleChange = (value) => {
+  dispatch(setSelectedCountry(value));
+  localStorage.setItem("selectedCountry", JSON.stringify(value)); // Save to localStorage
+};
+
+
+  useEffect(() => {
+    dispatch(
+      fetchCountryList({ active: activeFilter, search: searchTerm, page, size })
+    );
+  }, [dispatch, activeFilter, searchTerm, page]);
+
+  // Fetch reports data with loader
+ useEffect(() => {
+  const fetchReportData = async () => {
+    // Only fetch if country is selected and component is initialized
+    if (!selectedCountry || !isInitialized) return;
+
+    try {
+      setApiLoading((prev) => ({ ...prev, reports: true }));
+      await dispatch(
+        fetchReports({
+          pageData: { page: 1, size: 10 },
+          contentType: activeTab,
+          countryId: selectedCountry,
+        })
+      );
+    } catch (err) {
+      console.error("Failed to fetch reports:", err);
+      message.error("Failed to load report statistics");
+    } finally {
+      setApiLoading((prev) => ({ ...prev, reports: false }));
+    }
+  };
+
+  fetchReportData();
+}, [dispatch, activeTab, selectedCountry, isInitialized]); 
 
   // Fetch user reports with loader
   useEffect(() => {
@@ -75,8 +120,10 @@ const SuperAdminReport = () => {
           active: filters.status,
           page: pagination.current,
           size: pagination.pageSize,
+
           ...(activeTab === "events" && { events: true }),
           ...(activeTab === "movies" && { movies: true }),
+          country_id: selectedCountry,
         };
 
         const response = await dispatch(fetchUserReports(query));
@@ -96,7 +143,14 @@ const SuperAdminReport = () => {
     };
 
     fetchUserReportData();
-  }, [dispatch, activeTab, pagination.current, pagination.pageSize, filters]);
+  }, [
+    dispatch,
+    activeTab,
+    pagination.current,
+    pagination.pageSize,
+    filters,
+    selectedCountry,
+  ]);
 
   // Export handlers with loaders
   const handleExportPdf = async () => {
@@ -274,8 +328,44 @@ const SuperAdminReport = () => {
 
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-blue-600">Reports Dashboard</h2>
+        <div>
+          {["events", "movies"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              disabled={apiLoading.userReports}
+              className={`px-4 py-2 rounded-lg text-capitalize ${
+                activeTab === tab
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              } ${
+                apiLoading.userReports ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
         <div className="flex items-center gap-4">
+          {/* </div> */}
+          <Select
+            showSearch
+            placeholder="Select Country"
+            optionFilterProp="children"
+            style={{ width: 200 }}
+            value={selectedCountry}
+            onChange={handleChange}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {data?.[0]?.items?.map((country) => (
+              <Option key={country.id} value={country.id}>
+                {country.name}
+              </Option>
+            ))}
+          </Select>
+
           <Select
             value={timeFilter}
             onChange={(value) => {
@@ -325,24 +415,6 @@ const SuperAdminReport = () => {
             {apiLoading.exports ? <Spin size="small" /> : <>Export Excel</>}
           </button>
         </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="flex gap-4 mb-6">
-        {["events", "movies"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            disabled={apiLoading.userReports}
-            className={`px-4 py-2 rounded-lg text-capitalize ${
-              activeTab === tab
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            } ${apiLoading.userReports ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            {tab}
-          </button>
-        ))}
       </div>
 
       {/* Statistics Cards */}
@@ -448,73 +520,38 @@ const SuperAdminReport = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="bg-yellow-50 p-3 rounded-full inline-flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-yellow-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                </div>
-                <h3 className="text-gray-500 text-sm font-medium">
-                  Revenue by Country
-                </h3>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col items-center justify-center h-48">
+            <div className="flex flex-col items-center gap-2">
+              <div className="bg-yellow-50 p-3 rounded-full inline-flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-yellow-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
               </div>
-              <button
-                onClick={() => setShowAllCountries(!showAllCountries)}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                {showAllCountries ? "Show less" : "Show all"}
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {reportData?.revenue_by_country
-                ?.filter((_, index) => showAllCountries || index === 0)
-                .map((country) => (
-                  <div key={country.country_id} className="flex flex-col">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {country.country_name}
-                        </span>
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
-                          {country.currency_code}
-                        </span>
-                      </div>
-                      <span className="text-lg font-bold text-green-600">
-                        {country.revenue?.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                    </div>
-                    {showAllCountries && (
-                      <div className="mt-1 text-xs text-gray-500">
-                        {country.country_name} revenue
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-              {/* Fallback if no country data */}
-              {(!reportData?.revenue_by_country ||
-                reportData.revenue_by_country.length === 0) && (
-                <div className="text-gray-400 text-center py-2">
-                  No country revenue data available
-                </div>
-              )}
+              <h3 className="text-gray-500 text-sm font-medium text-center">
+                {activeTab === "events"
+                  ? "Events Revenue"
+                  : activeTab === "movies"
+                  ? "Movies Revenue"
+                  : "Total Items"}
+              </h3>
+              <p className="text-2xl font-bold text-gray-900 text-center">
+                {activeTab === "events"
+                  ? reportData?.total_event_revenue
+                  : activeTab === "movies"
+                  ? reportData?.total_movie_revenue || 0
+                  : null}
+              </p>
             </div>
           </div>
         </div>
@@ -583,12 +620,12 @@ const SuperAdminReport = () => {
                     tooltip: {
                       callbacks: {
                         label: (context) => {
-                          const user = userReports[context.dataIndex];
+                          const user = userReports[context?.dataIndex];
                           return [
-                            `Username: ${user.username}`,
-                            `Events: ${user.event_count}`,
-                            `Email: ${user.email}`,
-                            `Total Revenue: ${user.total_revenue || 0}`,
+                            `Username: ${user?.username}`,
+                            `Events: ${user?.event_count}`,
+                            `Email: ${user?.email}`,
+                            `Total Revenue: ${user?.total_revenue || 0}`,
                           ];
                         },
                       },
@@ -621,7 +658,7 @@ const SuperAdminReport = () => {
                       {reportData?.active_users_in_events} organizers
                     </p>
                   </div>
-                
+
                   <div>
                     <h4 className="text-sm font-medium text-gray-500 mb-2">
                       Event Revenue
@@ -646,7 +683,7 @@ const SuperAdminReport = () => {
                       {reportData?.total_users_in_movies} organizers
                     </p>
                   </div>
-                 
+
                   <div>
                     <h4 className="text-sm font-medium text-gray-500 mb-2">
                       Movie Revenue

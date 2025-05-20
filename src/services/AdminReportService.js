@@ -3,59 +3,70 @@ import { ApiConstant } from "constants/ApiConstant";
 import Utils from "utils";
 
 const ReportService = {
-  fetchReports: function (pageData, contentType = null) {
+  fetchReports: function (pageData, contentType = null, countryId = null) {
     const params = {
       ...Utils.filterParams(pageData),
       ...(contentType && { content_type: contentType }),
+      ...(countryId && { country_id: countryId }),
     };
 
     return fetch({
-      url: ApiConstant.ADMIN_REPORT,  
+      url: ApiConstant.ADMIN_REPORT,
       method: "get",
       params: params,
     });
   },
 
-  // user-specific reports 
+  // user-specific reports
   fetchUserReports: function (pageData) {
     const params = Utils.filterParams(pageData);
 
     return fetch({
-      url: ApiConstant.REPORT_USERS,  
+      url: ApiConstant.REPORT_USERS,
       method: "get",
       params: params,
     });
   },
 
-
-
   //user-detail-report events
-  fetchUserDetails: function (userId) {
-    return fetch({
-      url: ApiConstant.REPORT_USER_DETAIL,
-      method: "get",
-      params: { user_id: userId },
-    });
-  },
+  // fetchUserDetails: function (userId) {
+  //   return fetch({
+  //     url: ApiConstant.REPORT_USER_DETAIL,
+  //     method: "get",
+  //     params: { user_id: userId },
+  //   });
+  // },
 
-   fetchEventDetails: function (eventId) {
+
+
+  fetchUserDetails: function (userId, countryId) {
+  return fetch({
+    url: ApiConstant.REPORT_USER_DETAIL,
+    method: "get",
+    params: { 
+      user_id: userId,
+      country_id: countryId // Add country parameter
+    },
+  });
+},
+
+  fetchEventDetails: function (eventId, countryId) {
     return fetch({
       url: ApiConstant.REPORT_EVENT_DETAIL,
       method: "get",
-      params: { event_id: eventId },
+      params: { event_id: eventId, country_id: countryId },
     });
   },
 
-
-    // user-specific reports movies
- fetchMovieUserDetails: function (userId) {
+  // user-specific reports movies
+  fetchMovieUserDetails: function (userId, countryId) {
     return fetch({
       url: ApiConstant.REPORT_USER_DETAIL_MOVIES,
       method: "get",
-      params: { user_id: userId },
+      params: { user_id: userId, country_id: countryId },
     });
   },
-fetchTheaterDetails: function (theaterId) {
+  fetchTheaterDetails: function (theaterId) {
     return fetch({
       url: ApiConstant.REPORT_THEATER_DETAIL,
       method: "get",
@@ -64,7 +75,28 @@ fetchTheaterDetails: function (theaterId) {
   },
 
 
+// Ensure your service function matches parameters
+fetchMovieDetails: function (movieId, theaterId) {
+  return fetch({
+    url: ApiConstant.REPORT_MOVIE_DETAIL,
+    method: "get",
+    params: {
+      movie_id: movieId,
+     theatre_id: theaterId,
+    },
+  });
+},
 
+
+  fetchCountryList: function (pageData) {
+    const params = Utils.filterParams(pageData);
+
+    return fetch({
+      url: ApiConstant.REPORT_COUNTRY_LIST,
+      method: "get",
+      params: params,
+    });
+  },
 };
 
 export default ReportService;

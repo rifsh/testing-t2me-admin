@@ -3,9 +3,13 @@ import ReportService from "../../services/AdminReportService";
 
 export const fetchReports = createAsyncThunk(
   "report/fetchReports",
-  async ({ pageData, contentType }, { rejectWithValue }) => {
+  async ({ pageData, contentType, countryId }, { rejectWithValue }) => {
     try {
-      const response = await ReportService.fetchReports(pageData, contentType);
+      const response = await ReportService.fetchReports(
+        pageData,
+        contentType,
+        countryId
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
@@ -25,11 +29,27 @@ export const fetchUserReports = createAsyncThunk(
   }
 );
 
+// export const fetchUserDetails = createAsyncThunk(
+//   "report/fetchUserDetails",
+//   async (userId, { rejectWithValue }) => {
+//     try {
+//       const response = await ReportService.fetchUserDetails(userId);
+//       return response.data;
+//     } catch (error) {
+//       return rejectWithValue(error?.response?.data || error.message);
+//     }
+//   }
+// );
+
 export const fetchUserDetails = createAsyncThunk(
   "report/fetchUserDetails",
-  async (userId, { rejectWithValue }) => {
+  async ({ userId, countryId }, { rejectWithValue }) => {
+    // Destructure params
     try {
-      const response = await ReportService.fetchUserDetails(userId);
+      if (!userId ) {
+        throw new Error("Missing required parameters");
+      }
+      const response = await ReportService.fetchUserDetails(userId, countryId);
       return response.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
@@ -39,9 +59,12 @@ export const fetchUserDetails = createAsyncThunk(
 
 export const fetchEventDetails = createAsyncThunk(
   "report/fetchEventDetails",
-  async (eventId, { rejectWithValue }) => {
+  async ({ eventId, countryId }, { rejectWithValue }) => {
     try {
-      const response = await ReportService.fetchEventDetails(eventId);
+      const response = await ReportService.fetchEventDetails(
+        eventId,
+        countryId
+      );
       console.log(response, "res");
 
       return response.data;
@@ -53,9 +76,9 @@ export const fetchEventDetails = createAsyncThunk(
 
 export const fetchMovieUserDetails = createAsyncThunk(
   "report/fetchMovieUserDetails",
-  async (userId, { rejectWithValue }) => {
+  async ({ userId, countryId }, { rejectWithValue }) => {
     try {
-      const response = await ReportService.fetchMovieUserDetails(userId);
+      const response = await ReportService.fetchMovieUserDetails(userId, countryId);
       return response.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
@@ -70,6 +93,33 @@ export const fetchTheaterDetails = createAsyncThunk(
       const response = await ReportService.fetchTheaterDetails(theaterId);
       console.log(response, "res");
 
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+
+export const fetchMovieDetails = createAsyncThunk(
+  "report/fetchMovieDetails",
+  async ({ movieId, theaterId }, { rejectWithValue }) => {
+    try {
+      const response = await ReportService.fetchMovieDetails(
+        movieId,
+        theaterId
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+
+export const fetchCountryList = createAsyncThunk(
+  "report/fetchCountryList",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await ReportService.fetchCountryList(pageData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
@@ -94,6 +144,17 @@ const reportSlice = createSlice({
         total: 0,
       },
     },
+    countryList: {
+      data: null,
+      loading: false,
+      error: null,
+      pagination: {
+        current: 1,
+        pageSize: 10,
+        total: 0,
+      },
+      selectedCountry: null,
+    },
     userDetails: {
       data: null,
       loading: false,
@@ -115,6 +176,11 @@ const reportSlice = createSlice({
       loading: false,
       error: null,
     },
+    movieDetails: {
+      data: null,
+      loading: false,
+      error: null,
+    },
   },
   reducers: {
     setUserReportsPagination: (state, action) => {
@@ -122,6 +188,9 @@ const reportSlice = createSlice({
         ...state.userReports.pagination,
         ...action.payload,
       };
+    },
+    setSelectedCountry: (state, action) => {
+      state.selectedCountry = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -221,8 +290,48 @@ const reportSlice = createSlice({
       .addCase(fetchTheaterDetails.rejected, (state, action) => {
         state.theaterDetails.loading = false;
         state.theaterDetails.error = action.payload || action.error.message;
+      })
+
+      //movie detail
+
+      .addCase(fetchMovieDetails.pending, (state) => {
+        state.movieDetails.loading = true;
+        state.movieDetails.error = null;
+      })
+      .addCase(fetchMovieDetails.fulfilled, (state, action) => {
+        state.movieDetails.loading = false;
+        state.movieDetails.data = action.payload || null;
+      })
+      .addCase(fetchMovieDetails.rejected, (state, action) => {
+        state.movieDetails.loading = false;
+        state.movieDetails.error = action.payload || action.error.message;
+      })
+
+      //country list
+
+      .addCase(fetchCountryList.pending, (state) => {
+        state.countryList.loading = true;
+        state.countryList.error = null;
+      })
+      .addCase(fetchCountryList.fulfilled, (state, action) => {
+        state.countryList.loading = false;
+        state.countryList.data = action.payload || null;
+
+        if (action.payload?.[0]?.pagination) {
+          state.countryList.pagination = {
+            ...state.countryList.pagination,
+            current: action.payload[0].pagination.page,
+            pageSize: action.payload[0].pagination.size,
+            total: action.payload[0].pagination.total,
+          };
+        }
+      })
+
+      .addCase(fetchCountryList.rejected, (state, action) => {
+        state.countryList.loading = false;
+        state.countryList.error = action.payload || action.error.message;
       });
   },
 });
-
+export const { setSelectedCountry } = reportSlice.actions;
 export default reportSlice.reducer;

@@ -47,9 +47,10 @@ TicketsService.validateTicket = function (ticketId) {
 
 export default TicketsService;
 
-TicketsService.getAvailableTicketsType = function () {
+TicketsService.getAvailableTicketsType = function (pageData) {
   return fetch({
     url: ApiConstant.AVAILABLE_TICKET_TYPE_URL,
     method: "get",
+    params: Utils.filterParams(pageData),
   });
 };

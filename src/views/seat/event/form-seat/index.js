@@ -28,6 +28,7 @@ import { ActionType } from "utils/api/warning-submit-util";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 import { fetchScreenData } from "store/slices/screenSlice";
+import { nestedToFlat } from "utils/seatUtils";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -135,7 +136,7 @@ const SeatForm = (props) => {
           total_column: seats[0]?.length || 0,
           total_seats: totalVisibleSeats,
           seat_data: {
-            seats,
+            seats: nestedToFlat(seats),
             seatTypes: usedSeatTypes,
           },
         };
@@ -167,7 +168,7 @@ const SeatForm = (props) => {
           total_seats: totalVisibleSeats,
           type: SEAT_STRUCTURE_TYPES.MOVIE,
           seat_data: {
-            seats,
+            seats: nestedToFlat(seats),
             seatTypes: usedSeatTypes,
           },
         };

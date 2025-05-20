@@ -11,18 +11,13 @@ const { Option } = Select;
 
 export const TicketStructureSelector = ({ form }) => {
   const dispatch = useDispatch();
-  const {
-    filteredTickets,
-    loading,
-    selectedTicketType,
-    availableTicketSets,
-    ticketTypes,
-  } = useSelector((state) => state.tickets);
+  const { filteredTickets, loading, availableTicketSets, ticketTypes } =
+    useSelector((state) => state.tickets);
 
   const handleSelectTicketSet = (setName) => {
     const formValues = form.getFieldsValue();
     const selectedStructure = filteredTickets.find(
-      (ticket) => ticket.id === formValues[`${getFieldPrefix()}_structure_id`]
+      (ticket) => ticket.id === formValues[`ticket_structure_id`]
     );
     const selectedSet = availableTicketSets.find(
       (set) => set.ticket_set === setName
@@ -70,101 +65,62 @@ export const TicketStructureSelector = ({ form }) => {
     }
   };
 
-  const getFieldPrefix = () => {
-    switch (selectedTicketType) {
-      case 2:
-        return "ticket";
-      case 1:
-        return "seat";
-      case 3:
-        return "stadium_seat";
-      default:
-        return "ticket";
-    }
-  };
-
-  const renderStructureField = () => {
-    const structureNames = {
-      2: "Ticket Type",
-      1: "Seat Type",
-      3: "Stadium Seat Type",
-    };
-
-    const fieldNames = {
-      2: "ticket_structure_id",
-      1: "seat_structure_id",
-      3: "Stadium_seat_structure_id",
-    };
-
-    return (
-      <div>
+  return (
+    <div>
+      <Form.Item name={"ticket_structure_id"} label="Ticket Type">
+        <Select
+          className="w-100"
+          placeholder={`Choose a Ticket Type`}
+          loading={loading}
+          onChange={handleSelectTicketStructure}
+        >
+          {filteredTickets.map((ticket) => (
+            <Option key={ticket.id} value={ticket.id}>
+              {ticket.name}
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
+      {availableTicketSets.length > 0 && (
         <Form.Item
-          name={fieldNames[selectedTicketType]}
-          label={structureNames[selectedTicketType]}
-          rules={[
-            {
-              required: true,
-              message: `Please select a ${structureNames[
-                selectedTicketType
-              ].toLowerCase()}.`,
-            },
-          ]}
+          name="ticket_set"
+          label="Sub Type"
+          
         >
           <Select
             className="w-100"
-            placeholder={`Choose a ${structureNames[selectedTicketType]}`}
+            placeholder="Choose a Ticket Set"
             loading={loading}
-            onChange={handleSelectTicketStructure}
+            onChange={handleSelectTicketSet}
           >
-            {filteredTickets.map((ticket) => (
-              <Option key={ticket.id} value={ticket.id}>
-                {ticket.name}
-              </Option>
-            ))}
+            {availableTicketSets.map((ticketSet) => {
+              const isDisabled = ticketTypes.some((type) =>
+                type.ticket_types?.some(
+                  (set) =>
+                    set.ticket_set === ticketSet.ticket_set &&
+                    type.name ===
+                      filteredTickets.find(
+                        (t) =>
+                          t.id === form.getFieldValue(`ticket_structure_id`)
+                      )?.name
+                )
+              );
+
+              return (
+                <Option
+                  key={ticketSet.ticket_set}
+                  value={ticketSet.ticket_set}
+                  disabled={isDisabled}
+                >
+                  {ticketSet.ticket_set} {isDisabled ? "(Already Added)" : ""}
+                </Option>
+              );
+            })}
           </Select>
         </Form.Item>
-        {selectedTicketType && availableTicketSets.length > 0 && (
-          <Form.Item name="ticket_set" label="Sub Type">
-            <Select
-              className="w-100"
-              placeholder="Choose a Ticket Set"
-              loading={loading}
-              onChange={handleSelectTicketSet}
-            >
-              {availableTicketSets.map((ticketSet) => {
-                const isDisabled = ticketTypes.some((type) =>
-                  type.ticket_types?.some(
-                    (set) =>
-                      set.ticket_set === ticketSet.ticket_set &&
-                      type.name ===
-                        filteredTickets.find(
-                          (t) =>
-                            t.id ===
-                            form.getFieldValue(
-                              `${getFieldPrefix()}_structure_id`
-                            )
-                        )?.name
-                  )
-                );
-
-                return (
-                  <Option
-                    key={ticketSet.ticket_set}
-                    value={ticketSet.ticket_set}
-                    disabled={isDisabled}
-                  >
-                    {ticketSet.ticket_set} {isDisabled ? "(Already Added)" : ""}
-                  </Option>
-                );
-              })}
-            </Select>
-          </Form.Item>
-        )}
-      </div>
-    );
-  };
-
-  return selectedTicketType ? renderStructureField() : null;
+      )}
+    </div>
+  );
 };
 
 export default TicketStructureSelector;

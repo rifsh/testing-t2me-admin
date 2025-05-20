@@ -73,7 +73,7 @@ export const ApiConstant = {
   TAX_STATUS_URL: "/api/v1/location/secured/taxes_status",
   AVAILABLE_TAX_CATEGORY_URL: "/api/v1/location/secured/available_tax_category",
   TICKET_URL: "/api/v1/event/tickets/secured/ticketstructure",
-  AVAILABLE_TICKET_TYPE_URL: "/api/v1/event/events/secured/available_types",
+  AVAILABLE_TICKET_TYPE_URL: "/api/v1/event/schedule/secured/available_types",
   SCHEDULE_URL: "/api/v1/event/schedule/secured/schedules",
   SINGLE_SCHEDULE_URL: "/api/v1/event/schedule/secured/schedules/details",
   STATICS_EVENT_LIST: "/api/v1/shared/statics/secured/events",
@@ -253,5 +253,7 @@ export const ApiConstant = {
   REPORT_EVENT_DETAIL:"/api/v1/shared/report/secured/event_report_details",
   REPORT_USER_DETAIL_MOVIES:"/api/v1/shared/report/secured/movies/report_user_details",
   REPORT_THEATER_DETAIL: "/api/v1/shared/report/secured/movie/theatre_details",
+  REPORT_COUNTRY_LIST:"/api/v1/shared/report/secured/report_country/list",
+  REPORT_MOVIE_DETAIL:"/api/v1/shared/report/secured/movie/movie_details_by_theatre"
 
 };

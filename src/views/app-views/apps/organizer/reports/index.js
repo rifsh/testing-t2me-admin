@@ -4,10 +4,17 @@ import { Chart, registerables } from "chart.js";
 import "jspdf-autotable";
 import { Link } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { Table, Select, DatePicker, message } from "antd";
-import { organizerEvents, organizerMovies } from "mock/data/reportData";
+import { Select, DatePicker, message } from "antd";
 import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import dayjs from "dayjs";
+import { useDispatch, useSelector } from "react-redux";
+import { getUserdata } from "store/slices/authSlice";
+import {
+  fetchCountryList,
+  fetchMovieUserDetails,
+  fetchUserDetails,
+  setSelectedCountry,
+} from "store/slices/reportSlice";
 
 Chart.register(...registerables);
 
@@ -18,16 +25,113 @@ const OrganizerReport = () => {
   const [activeSegment, setActiveSegment] = useState("events");
   const [timeFilter, setTimeFilter] = useState("option");
   const [customDateRange, setCustomDateRange] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState(true);
+
+  const [page, setPage] = useState(1);
+  const size = 50;
+
   const reportRef = useRef(null);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 5,
     total: 0,
   });
+  const dispatch = useDispatch();
+
+  const { userData } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    // Fetch user data when component mounts
+    dispatch(getUserdata());
+  }, [dispatch]);
+  const organizerId = userData?.id;
+
+  const { data: organizer } = useSelector((state) => state.report.userDetails);
+  const selectedCountry = useSelector((state) => state.report.selectedCountry);
+  const {
+    data: countryData,
+    loading: countryLoading,
+    error: countryError,
+    // pagination,
+  } = useSelector((state) => state.report.countryList);
+  console.log(countryData, "countryList");
+  const eventOrganizer = organizer?.[0];
+  console.log(activeSegment, "segment");
+  const handleChange = (value) => {
+    dispatch(setSelectedCountry(value));
+  };
+  useEffect(() => {
+    if (!organizerId) return;
+
+    if (activeSegment === "events") {
+      console.log("Calling fetchUserDetails...");
+      dispatch(
+        fetchUserDetails({
+          userId: organizerId,
+          countryId: selectedCountry,
+        })
+      );
+    } else {
+      console.log("Calling fetchMovieUserDetails...");
+      dispatch(
+        fetchMovieUserDetails({
+          userId: organizerId,
+          countryId: selectedCountry,
+        })
+      );
+    }
+  }, [dispatch, organizerId, activeSegment, selectedCountry]);
+
+  useEffect(() => {
+    dispatch(
+      fetchCountryList({ active: activeFilter, search: searchTerm, page, size })
+    );
+  }, [dispatch, activeFilter, searchTerm, page]);
+
+  const { data: userDetailsData, loading: userDetailsLoading } = useSelector(
+    (state) => state.report.userDetails
+  );
+
+  const { data: movieUserDetailsData, loading: movieUserDetailsLoading } =
+    useSelector((state) => state.report.movieUserDetails);
+
+  // Then use them conditionally in your component
+  const data =
+    activeSegment === "events" ? userDetailsData : movieUserDetailsData;
 
   const baseItems = useMemo(() => {
-    return activeSegment === "events" ? organizerEvents : organizerMovies;
-  }, [activeSegment, organizerEvents, organizerMovies]);
+    if (activeSegment === "events") {
+      return (
+        data?.map((event) => ({
+          id: event.id,
+          title: event.event_name,
+          type: "event",
+          startDate: event.created_at,
+          endDate: event.updated_at,
+          revenue: event.event_revenue,
+          attendees: event.attendees_count,
+          capacity: 100,
+          status: "Upcoming",
+          image: "default-event.jpg",
+        })) || []
+      );
+    } else {
+      return (
+        data?.theaters?.map((theater) => ({
+          id: theater.theater_id,
+          title: theater.theater_name,
+          type: "movie",
+          releaseDate: theater.created_at, // Use actual date field if available
+          revenue: theater.theatre_revenue || 0,
+          ticketsSold: theater.screens_count,
+          totalSeats: 100, // Replace with actual seats if available
+          status: "Released", // Update with actual status logic
+          image: "default-movie.jpg", // Add image URL if available in API
+        })) || []
+      );
+    }
+  }, [activeSegment, eventOrganizer, data]);
 
   const filteredItems = useMemo(() => {
     const now = dayjs();
@@ -95,12 +199,6 @@ const OrganizerReport = () => {
     }
   };
 
-  // Calculate paginated data
-  const paginatedItems = useMemo(() => {
-    const startIndex = (pagination.current - 1) * pagination.pageSize;
-    return filteredItems.slice(startIndex, startIndex + pagination.pageSize);
-  }, [filteredItems, pagination.current, pagination.pageSize]);
-
   useEffect(() => {
     setPagination((prev) => ({
       ...prev,
@@ -109,107 +207,10 @@ const OrganizerReport = () => {
     }));
   }, [filteredItems]);
 
-  // Handle pagination change
-  const handlePagination = (page, pageSize) => {
-    setPagination({
-      current: page,
-      pageSize: pageSize,
-      total: filteredItems.length,
-    });
-  };
-
-  // Statistics calculations based on filtered items
-  const totalStats = {
-    totalItems: filteredItems.length,
-    totalRevenue: filteredItems.reduce((sum, item) => sum + item.revenue, 0),
-    upcoming: filteredItems.filter((i) => i.status === "Upcoming").length,
-    completed: filteredItems.filter((i) => i.status === "Completed").length,
-    released: filteredItems.filter((i) => i.status === "Released").length,
-    cancelled: filteredItems.filter((i) => i.status === "Cancelled").length,
-    totalAttendees: filteredItems.reduce(
-      (sum, item) => (item.type === "event" ? sum + item.attendees : sum),
-      0
-    ),
-    totalTickets: filteredItems.reduce(
-      (sum, item) => (item.type === "movie" ? sum + item.ticketsSold : sum),
-      0
-    ),
-  };
-
   // Enhanced formatting functions
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
-  const formatCurrency = (amount) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-
-  // Enhanced chart configurations based on filtered items
-  const statusChartData = {
-    labels: ["Upcoming", "Completed", "Released", "Cancelled"],
-    datasets: [
-      {
-        data: [
-          totalStats.upcoming,
-          totalStats.completed,
-          totalStats.released,
-          totalStats.cancelled,
-        ],
-        backgroundColor: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"],
-        borderWidth: 0,
-      },
-    ],
-  };
-
-  const revenueChartData = {
-    labels: filteredItems.map((i) => i.title),
-    datasets: [
-      {
-        label: "Revenue",
-        data: filteredItems.map((i) => i.revenue),
-        backgroundColor: filteredItems.map((i) =>
-          i.type === "event" ? "#3b82f6" : "#10b981"
-        ),
-        borderRadius: 4,
-      },
-    ],
-  };
-
-  // Enhanced status badges
-  const getStatusBadge = (status) => {
-    const baseClasses = "px-3 py-1 rounded-full text-xs font-medium";
-    switch (status) {
-      case "Upcoming":
-        return (
-          <span className={`${baseClasses} bg-blue-100 text-blue-800`}>
-            {status}
-          </span>
-        );
-      case "Completed":
-        return (
-          <span className={`${baseClasses} bg-green-100 text-green-800`}>
-            {status}
-          </span>
-        );
-      case "Released":
-        return (
-          <span className={`${baseClasses} bg-orange-100 text-orange-800`}>
-            {status}
-          </span>
-        );
-      default:
-        return (
-          <span className={`${baseClasses} bg-red-100 text-red-800`}>
-            {status}
-          </span>
-        );
-    }
   };
 
   const handleExportPDF = async () => {
@@ -220,117 +221,60 @@ const OrganizerReport = () => {
     exportToExcel(reportRef, "MyReport.xlsx");
   };
 
-  // Table columns configuration
-  const tableColumns = [
-    {
-      title: "Title",
-      dataIndex: "title",
-      key: "title",
-      render: (text, record) => (
-        <Link
-          to={
-            record.type === "event"
-              ? `${APP_PREFIX_PATH}/organizer/reports/event-details/${record.id}`
-              : `${APP_PREFIX_PATH}/organizer/reports/movie-details/${record.id}`
-          }
-          className="flex items-center gap-4 hover:text-blue-600 transition-colors"
-        >
-          <img
-            src={record.image}
-            alt={record.title}
-            className="w-12 h-12 rounded-lg object-cover border border-gray-200"
-          />
-          {record.title}
-        </Link>
-      ),
-    },
-    ...(activeSegment === "all"
-      ? [
-          {
-            title: "Type",
-            dataIndex: "type",
-            key: "type",
-            render: (type) => (
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  type === "event"
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-green-100 text-green-800"
-                }`}
-              >
-                {type}
-              </span>
-            ),
-          },
-        ]
-      : []),
-    {
-      title: "Dates",
-      dataIndex: "dates",
-      key: "dates",
-      render: (_, record) =>
-        record.type === "event"
-          ? `${formatDate(record.startDate)} - ${formatDate(record.endDate)}`
-          : formatDate(record.releaseDate),
-    },
-    {
-      title: "Metrics",
-      dataIndex: "metrics",
-      key: "metrics",
-      render: (_, record) => (
-        <div className="flex items-center gap-4">
-          <div className="w-24 bg-gray-200 rounded-full h-2">
-            <div
-              className={`h-2 rounded-full ${
-                record.type === "event" ? "bg-blue-500" : "bg-green-500"
-              }`}
-              style={{
-                width: `${Math.round(
-                  record.type === "event"
-                    ? (record.attendees / record.capacity) * 100
-                    : (record.ticketsSold / record.totalSeats) * 100
-                )}%`,
-              }}
-            />
-          </div>
-          <span className="text-sm text-gray-600">
-            {record.type === "event"
-              ? `${record.attendees}/${record.capacity}`
-              : `${Math.round(
-                  (record.ticketsSold / record.totalSeats) * 100
-                )}%`}
-          </span>
-        </div>
-      ),
-    },
-    {
-      title: "Revenue",
-      dataIndex: "revenue",
-      key: "revenue",
-      render: (revenue) => (
-        <span className="font-semibold text-blue-600">
-          {formatCurrency(revenue)}
-        </span>
-      ),
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => getStatusBadge(status),
-    },
-  ];
+  const chartData =
+    activeSegment === "events"
+      ? {
+          labels: data?.[0]?.events?.map((event) => event?.event_name) || [],
+          datasets: [
+            {
+              label: "Event Revenue",
+              data:
+                data?.[0]?.events?.map((event) => event?.event_revenue) || [],
+              backgroundColor: "rgba(75, 192, 192, 0.6)",
+              borderColor: "rgba(75, 192, 192, 1)",
+              borderWidth: 2,
+            },
+          ],
+        }
+      : {
+          labels:
+            data?.[0]?.theaters?.map((theater) => theater?.theater_name) || [],
+          datasets: [
+            {
+              label: "Theater Revenue",
+              data:
+                data?.[0]?.theaters?.map(
+                  (theater) => theater?.theater_revenue
+                ) || [],
+              backgroundColor: "rgba(255, 159, 64, 0.6)",
+              borderColor: "rgba(255, 159, 64, 1)",
+              borderWidth: 2,
+            },
+          ],
+        };
+
+  const statusData = {
+    labels: ["Active", "Inactive"],
+    datasets: [
+      {
+        data: [data?.[0]?.is_active ? 1 : 0, data?.[0]?.is_active ? 0 : 1],
+        backgroundColor: ["#198754", "#dc3545"],
+      },
+    ],
+  };
+  console.log(data?.[0], "data");
 
   return (
     <div className="container mx-auto px-4 py-6" ref={reportRef}>
       {/* Enhanced Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Organizer Report</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {data?.[0]?.username}
+          </h2>
           <p className="text-gray-500 text-sm mt-1">
             Comprehensive overview of all {activeSegment} activities
             <span className="ml-2">
-              (
               {timeFilter === "custom" && customDateRange.length === 2
                 ? `Custom range: ${formatDate(
                     customDateRange[0]
@@ -342,7 +286,6 @@ const OrganizerReport = () => {
                 : timeFilter === "last-year"
                 ? "Last year"
                 : ""}
-              )
             </span>
           </p>
         </div>
@@ -366,8 +309,24 @@ const OrganizerReport = () => {
                 {segment}
               </button>
             ))}
-          </div>
-
+          </div>{" "}
+          <Select
+            showSearch
+            placeholder="Select Country"
+            optionFilterProp="children"
+            style={{ width: 200 }}
+            value={selectedCountry}
+            onChange={handleChange}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {countryData?.[0]?.items?.map((country) => (
+              <Option key={country.id} value={country.id}>
+                {country.name}
+              </Option>
+            ))}
+          </Select>
           <div className="flex gap-2">
             <Select
               defaultValue="last-month"
@@ -434,7 +393,7 @@ const OrganizerReport = () => {
       </div>
 
       {/* Enhanced Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {/* Total Items Card */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center gap-4">
@@ -454,9 +413,13 @@ const OrganizerReport = () => {
               </svg>
             </div>
             <div>
-              <h3 className="text-gray-500 text-sm mb-1">Total Items</h3>
+              <h3 className="text-gray-500 text-sm mb-1">
+                {activeSegment === "events" ? "Total events" : "Total theaters"}
+              </h3>
               <p className="text-2xl font-bold text-gray-900">
-                {totalStats.totalItems}
+                {activeSegment === "events"
+                  ? data?.[0]?.total_events
+                  : data?.[0]?.total_theaters}
               </p>
               <p className="text-xs text-gray-400">Currently managing</p>
             </div>
@@ -484,7 +447,7 @@ const OrganizerReport = () => {
             <div>
               <h3 className="text-gray-500 text-sm mb-1">Total Revenue</h3>
               <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(totalStats.totalRevenue)}
+                {data?.[0]?.total_revenue}
               </p>
               <p className="text-xs text-gray-400">All items combined</p>
             </div>
@@ -518,13 +481,7 @@ const OrganizerReport = () => {
                   : "Total Participation"}
               </h3>
               <p className="text-2xl font-bold text-gray-900">
-                {activeSegment === "movies"
-                  ? totalStats.totalTickets.toLocaleString()
-                  : activeSegment === "events"
-                  ? totalStats.totalAttendees.toLocaleString()
-                  : (
-                      totalStats.totalAttendees + totalStats.totalTickets
-                    ).toLocaleString()}
+                {data?.[0]?.total_attendees}
               </p>
               <p className="text-xs text-gray-400">
                 {activeSegment === "movies"
@@ -536,112 +493,122 @@ const OrganizerReport = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Active Items Card */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-orange-50 rounded-lg">
-              <svg
-                className="w-6 h-6 text-orange-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-gray-500 text-sm mb-1">Active Items</h3>
-              <p className="text-2xl font-bold text-gray-900">
-                {totalStats.upcoming + totalStats.released}
-              </p>
-              <p className="text-xs text-gray-400">
-                {totalStats.upcoming} upcoming, {totalStats.released} released
-              </p>
-            </div>
-          </div>
+      
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
+        <div className="p-4 bg-gray-50">
+          <h3 className="text-gray-700 font-medium">
+            {activeSegment === "events" ? "Events List" : "Theaters List"}
+          </h3>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  {activeSegment === "events" ? "Event Name" : "Theater Name"}
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  {activeSegment === "events"
+                    ? "Attendees"
+                    : "Number of Screens"}
+                </th>
+                {activeSegment !== "events" && (
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                    Number of Movies
+                  </th>
+                )}
+
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Revenue
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-200">
+              {activeSegment === "events"
+                ? data?.[0]?.events?.map((event) => (
+                    <tr key={event?.id}>
+                      <td className="px-6 py-4">
+                        <Link
+                          to={`${APP_PREFIX_PATH}/organizer/reports/event-details/${event.id}`}
+                          className="text-blue-600 hover:text-blue-800 font-semibold"
+                        >
+                          {event?.event_name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        {event?.attendees_count?.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-green-600 text-sm space-y-1">
+                        {/* {event?.revenue_by_country?.map((item, index) => (
+                          <div key={index}>
+                            {item?.currency_code} {item?.event_revenue || 0}
+                          </div>
+                        ))} */}
+
+                        {event?.event_revenue}
+                      </td>
+                    </tr>
+                  ))
+                : data?.[0]?.theaters?.map((theater) => (
+                    <tr key={theater.theater_id}>
+                      <td className="px-6 py-4">
+                        <Link
+                          to={`${APP_PREFIX_PATH}/organizer/reports/theater-details/${theater.theater_id}`}
+                          className="text-blue-600 hover:text-blue-800 font-semibold"
+                        >
+                          {theater?.theater_name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">{theater?.screens_count}</td>
+                      <td className="px-4 py-3">{theater?.movies_count}</td>
+
+                      <td className="px-4 py-3 text-green-600 text-sm space-y-1">
+                        {/* {theater?.revenue_by_country?.map((item, index) => (
+                          <div key={index}>
+                            {item?.currency_code} {item?.revenue || 0}
+                          </div>
+                        ))} */}
+
+                        {theater?.theatre_revenue || 0}
+                      </td>
+                    </tr>
+                  ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Enhanced Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-gray-700 font-medium">Status Distribution</h3>
-            <div className="flex gap-2">
-              {statusChartData.labels.map((label, index) => (
-                <div key={label} className="flex items-center gap-2 text-xs">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{
-                      backgroundColor:
-                        statusChartData.datasets[0].backgroundColor[index],
-                    }}
-                  />
-                  {label}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="h-64">
-            <Pie
-              data={statusChartData}
-              options={{
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Enhanced Revenue Chart */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <h3 className="text-gray-700 font-medium mb-6">Revenue Breakdown</h3>
+        <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <h3 className="text-gray-500 text-sm font-medium mb-4">Revenue</h3>
           <div className="h-64">
             <Bar
-              data={revenueChartData}
+              data={chartData}
               options={{
                 maintainAspectRatio: false,
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    grid: { color: "#f3f4f6" },
-                    ticks: { callback: (value) => formatCurrency(value) },
-                  },
-                  x: { grid: { display: false } },
-                },
-                plugins: {
-                  legend: { display: false },
-                  tooltip: {
-                    callbacks: {
-                      label: (context) => formatCurrency(context.parsed.y),
-                    },
-                  },
-                },
+                scales: { y: { beginAtZero: true } },
               }}
             />
           </div>
         </div>
-      </div>
 
-      {/* Enhanced Data Table with Ant Design Pagination */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <Table
-          columns={tableColumns}
-          dataSource={paginatedItems}
-          rowKey="id"
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: filteredItems.length,
-            onChange: handlePagination,
-          }}
-        />
+        <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <h3 className="text-gray-500 text-sm font-medium mb-4">Status</h3>
+          <div className="h-64">
+            <Pie
+              data={statusData}
+              options={{
+                maintainAspectRatio: false,
+                plugins: { legend: { position: "bottom" } },
+              }}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
