@@ -150,3 +150,76 @@ export const validateMultiDragPositions = (
   // If there are overlaps, don't apply the changes
   return !hasOverlap ? newPositions : null;
 };
+
+/**
+ * Converts a flat JSON object of seats to a nested array structure
+ * @param {Object} flatSeats - Object with seat IDs as keys and seat data as values
+ * @returns {Array} - Nested array of seats organized by rows with IDs as separate property
+ */
+function convertFlatToNested(flatSeats) {
+  // Group seats by rowIndex
+  const seatsByRow = {};
+
+  // Process each seat in the flat structure
+  Object.entries(flatSeats).forEach(([id, seat]) => {
+    // if (!seat.isVisible) return;
+
+    // Create row array if it doesn't exist
+    if (!seatsByRow[seat.rowIndex]) {
+      seatsByRow[seat.rowIndex] = [];
+    }
+
+    // Create a copy of the seat with ID as a separate property
+    const seatCopy = { ...seat };
+    delete seatCopy.id; // Remove id from the seat object itself
+
+    // Add seat to the appropriate row with ID as a separate property
+    seatsByRow[seat.rowIndex].push({
+      id: parseInt(id),
+      ...seatCopy,
+    });
+  });
+
+  // Sort rows by rowIndex and sort seats within each row by colIndex
+  const sortedRows = Object.keys(seatsByRow)
+    .sort((a, b) => parseInt(a) - parseInt(b))
+    .map((rowIndex) => {
+      return seatsByRow[rowIndex].sort((a, b) => a.colIndex - b.colIndex);
+    });
+
+  return sortedRows;
+}
+
+/**
+ * Converts a nested array structure of seats to a flat JSON object
+ * @param {Array} nestedSeats - Nested array of seats organized by rows
+ * @returns {Object} - Flat object with seat IDs as keys
+ */
+function convertNestedToFlat(nestedSeats) {
+  const flatSeats = {};
+
+  // Process each row in the nested structure
+  nestedSeats.forEach((row, rowIndex) => {
+    // Process each seat in the row
+    row.forEach((seat) => {
+      // Use the seat's ID as the key in the flat structure
+      flatSeats[seat.id] = {
+        ...seat,
+        rowIndex: seat.rowIndex !== undefined ? seat.rowIndex : rowIndex,
+      };
+    });
+  });
+
+  return flatSeats;
+}
+
+// Convert flat JSON object to nested array structure
+export const flatToNested = (data) => {
+ 
+  return convertFlatToNested(data);
+};
+
+// Convert nested array structure to flat JSON object
+export const nestedToFlat = (data) => {
+  return convertNestedToFlat(data);
+};
