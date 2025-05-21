@@ -127,64 +127,70 @@ const OrganizerDetail = () => {
           </button>
         </div>
         <div className="mb-6">
-          <div className="flex justify-end gap-4">
-            <Select
-              showSearch
-              placeholder="Select Country"
-              optionFilterProp="children"
-              style={{ width: 200 }}
-              value={selectedCountry}
-              onChange={handleChange}
-              filterOption={(input, option) =>
-                option.children.toLowerCase().includes(input.toLowerCase())
-              }
-            >
-              {data?.[0]?.items?.map((country) => (
-                <Option key={country.id} value={country.id}>
-                  {country.name}
-                </Option>
-              ))}
-            </Select>
-            <button
-              onClick={handleExportCsv}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
-            >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              Export CSV
-            </button>
-            <button
-              onClick={handleExportPdf}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
-            >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              Export PDF
-            </button>
-          </div>
-        </div>
+  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:justify-end">
+    {/* Country Selector - Full width on mobile, fixed width on desktop */}
+    <Select
+      showSearch
+      placeholder="Select Country"
+      optionFilterProp="children"
+      className="w-full sm:w-48"
+      value={selectedCountry}
+      onChange={handleChange}
+      filterOption={(input, option) =>
+        option.children.toLowerCase().includes(input.toLowerCase())
+      }
+    >
+      {data?.[0]?.items?.map((country) => (
+        <Option key={country.id} value={country.id}>
+          <span className="text-xs sm:text-sm">{country.name}</span>
+        </Option>
+      ))}
+    </Select>
+
+    {/* Export Buttons - Stacked on mobile, inline on desktop */}
+    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+      <button
+        onClick={handleExportCsv}
+        className="px-3 py-2 sm:px-4 sm:py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center justify-center text-sm sm:text-base"
+      >
+        <svg
+          className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <span className="hidden sm:inline">Export</span> CSV
+      </button>
+
+      <button
+        onClick={handleExportPdf}
+        className="px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center text-sm sm:text-base"
+      >
+        <svg
+          className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <span className="hidden sm:inline">Export</span> PDF
+      </button>
+    </div>
+  </div>
+</div>
 
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">

@@ -1,275 +1,3 @@
-// import React, { useEffect } from "react";
-// import { Link, useParams } from "react-router-dom";
-// import { Bar, Pie } from "react-chartjs-2";
-// import { Chart, registerables } from "chart.js";
-// import { APP_PREFIX_PATH } from "configs/AppConfig";
-// import { movieDetail } from "mock/data/reportData";
-// import { useDispatch, useSelector } from "react-redux";
-// import { fetchMovieDetails } from "store/slices/reportSlice";
-
-// Chart.register(...registerables);
-
-// const MovieDetail = () => {
-
-//   const { movieId, theaterId } = useParams();
-
-
-
-//    const { data, loading, error } = useSelector((state) => state.report.movieDetails);
-//     const movieData = data?.[0];
-//     // const movie = movieData?.movie;
-//     // const theatre = movieData?.theatre;
-//     const dispatch = useDispatch();
-  
-//     useEffect(() => {
-//       if (movieId && theaterId) {
-//         dispatch(fetchMovieDetails({ movieId, theaterId }));
-//       }
-//     }, [dispatch, movieId, theaterId]);
-//   const getStatusBadge = (status) => {
-//     const baseClasses = "px-3 py-1 rounded-md text-sm font-medium";
-//     switch (status) {
-//       case "Released":
-//         return (
-//           <span className={`${baseClasses} bg-green-100 text-green-800`}>
-//             Released
-//           </span>
-//         );
-//       case "Upcoming":
-//         return (
-//           <span className={`${baseClasses} bg-blue-100 text-blue-800`}>
-//             Upcoming
-//           </span>
-//         );
-//       case "Cancelled":
-//         return (
-//           <span className={`${baseClasses} bg-red-100 text-red-800`}>
-//             Cancelled
-//           </span>
-//         );
-//       default:
-//         return (
-//           <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>
-//             Unknown
-//           </span>
-//         );
-//     }
-//   };
-
-//   const formatDate = (dateString) => {
-//     const options = { year: "numeric", month: "long", day: "numeric" };
-//     return new Date(dateString).toLocaleDateString(undefined, options);
-//   };
-
-//   // Chart data
-//   const ticketSalesData = {
-//     labels: movieDetail.ticketTypes.map((t) => t.name),
-//     datasets: [
-//       {
-//         data: movieDetail.ticketTypes.map((t) => t.sold),
-//         backgroundColor: ["#0dcaf0", "#198754", "#dc3545"],
-//         borderWidth: 1,
-//       },
-//     ],
-//   };
-
-//   const revenueData = {
-//     labels: movieDetail.ticketTypes.map((t) => t.name),
-//     datasets: [
-//       {
-//         label: "Revenue ($)",
-//         data: movieDetail.ticketTypes.map((t) => t.price * t.sold),
-//         backgroundColor: "rgba(75, 192, 192, 0.6)",
-//         borderColor: "rgba(75, 192, 192, 1)",
-//         borderWidth: 2,
-//       },
-//     ],
-//   };
-
-//   return (
-//     <div className="container mx-auto px-4 py-6">
-//       <div className="mb-6">
-//         <Link
-//           to={`${APP_PREFIX_PATH}/organizer/reports`}
-//           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-//         >
-//           &larr; Back to Movies
-//         </Link>
-//       </div>
-
-//       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-//         {/* Movie Header */}
-//         <div className="flex flex-col md:flex-row gap-6 mb-8">
-//           <img
-//             src={movieDetail.image}
-//             alt={movieDetail.title}
-//             className="w-full md:w-2/5 h-64 object-cover rounded-lg"
-//           />
-//           <div className="flex-1">
-//             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-//               {movieDetail.title}
-//             </h1>
-//             <p className="text-gray-600 mb-4">{movieDetail.description}</p>
-
-//             <div className="grid grid-cols-2 gap-4 mb-4">
-//               <div>
-//                 <div className="text-sm text-gray-500">Director</div>
-//                 <div className="font-medium">{movieDetail.director}</div>
-//               </div>
-//               <div>
-//                 <div className="text-sm text-gray-500">Status</div>
-//                 <div>{getStatusBadge(movieDetail.status)}</div>
-//               </div>
-//               <div>
-//                 <div className="text-sm text-gray-500">Release Date</div>
-//                 <div className="font-medium">
-//                   {formatDate(movieDetail.releaseDate)}
-//                 </div>
-//               </div>
-//               <div>
-//                 <div className="text-sm text-gray-500">Genre</div>
-//                 <div className="font-medium">{movieDetail.genre}</div>
-//               </div>
-//               <div>
-//                 <div className="text-sm text-gray-500">Duration</div>
-//                 <div className="font-medium">{movieDetail.duration}</div>
-//               </div>
-//               <div>
-//                 <div className="text-sm text-gray-500">Rating</div>
-//                 <div className="font-medium">{movieDetail.rating}</div>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Stats Cards */}
-//         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-//           <div className="bg-blue-50 p-4 rounded-lg">
-//             <div className="text-sm text-gray-600 mb-1">Ticket Sales</div>
-//             <div className="text-2xl font-bold">
-//               {movieDetail.ticketsSold.toLocaleString()}/
-//               {movieDetail.totalSeats.toLocaleString()}
-//             </div>
-//             <div className="text-sm text-gray-600">
-//               (
-//               {Math.round(
-//                 (movieDetail.ticketsSold / movieDetail.totalSeats) * 100
-//               )}
-//               % sold)
-//             </div>
-//           </div>
-
-//           <div className="bg-green-50 p-4 rounded-lg">
-//             <div className="text-sm text-gray-600 mb-1">Total Revenue</div>
-//             <div className="text-2xl font-bold text-green-600">
-//               ${movieDetail.revenue.toLocaleString()}
-//             </div>
-//           </div>
-
-//           <div className="bg-purple-50 p-4 rounded-lg">
-//             <div className="text-sm text-gray-600 mb-1">Ticket Types</div>
-//             <div className="text-2xl font-bold">
-//               {movieDetail.ticketTypes.length}
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Charts */}
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-//           <div className="bg-white p-4 rounded-lg border border-gray-200">
-//             <h3 className="text-lg font-medium mb-4">
-//               Ticket Sales Distribution
-//             </h3>
-//             <div className="h-64">
-//               <Pie
-//                 data={ticketSalesData}
-//                 options={{
-//                   maintainAspectRatio: false,
-//                   plugins: { legend: { position: "bottom" } },
-//                 }}
-//               />
-//             </div>
-//           </div>
-
-//           <div className="bg-white p-4 rounded-lg border border-gray-200">
-//             <h3 className="text-lg font-medium mb-4">Revenue by Ticket Type</h3>
-//             <div className="h-64">
-//               <Bar
-//                 data={revenueData}
-//                 options={{
-//                   maintainAspectRatio: false,
-//                   scales: { y: { beginAtZero: true } },
-//                 }}
-//               />
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Show Times */}
-//         <div className="bg-white p-4 rounded-lg border border-gray-200">
-//           <h3 className="text-lg font-medium mb-4">Show Times</h3>
-//           <div className="overflow-x-auto">
-//             <table className="min-w-full divide-y divide-gray-200">
-//               <thead className="bg-gray-50">
-//                 <tr>
-//                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                     Theater
-//                   </th>
-//                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                     Time
-//                   </th>
-//                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                     Seats Available
-//                   </th>
-//                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-//                     Status
-//                   </th>
-//                 </tr>
-//               </thead>
-//               <tbody className="bg-white divide-y divide-gray-200">
-//                 {movieDetail.showTimes.map((show, index) => (
-//                   <tr key={index}>
-//                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-//                       {show.theater}
-//                     </td>
-//                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-//                       {show.time}
-//                     </td>
-//                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-//                       {show.seatsAvailable}
-//                     </td>
-//                     <td className="px-6 py-4 whitespace-nowrap">
-//                       <span
-//                         className={`px-2 py-1 text-xs rounded-full ${
-//                           show.seatsAvailable > 20
-//                             ? "bg-green-100 text-green-800"
-//                             : show.seatsAvailable > 0
-//                             ? "bg-yellow-100 text-yellow-800"
-//                             : "bg-red-100 text-red-800"
-//                         }`}
-//                       >
-//                         {show.seatsAvailable > 20
-//                           ? "Available"
-//                           : show.seatsAvailable > 0
-//                           ? "Limited"
-//                           : "Sold Out"}
-//                       </span>
-//                     </td>
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default MovieDetail;
-
-
-
 import React, { useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Bar, Pie } from "react-chartjs-2";
@@ -278,6 +6,7 @@ import { exportToExcel, exportToPdf } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMovieDetails } from "store/slices/reportSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { Spin } from "antd";
 
 Chart.register(...registerables);
 
@@ -287,7 +16,9 @@ const MovieDetail = () => {
   const reportRef = useRef(null);
   const dispatch = useDispatch();
 
-  const { data, loading, error } = useSelector((state) => state.report.movieDetails);
+  const { data, loading, error } = useSelector(
+    (state) => state.report.movieDetails
+  );
   const movieData = data?.[0];
   const movie = movieData?.movie;
   const theatre = movieData?.theatre;
@@ -315,19 +46,26 @@ const MovieDetail = () => {
     );
   }
 
-  if (loading) return <div className="container mx-auto px-4 py-6 text-center">Loading...</div>;
-  if (error) return <div className="container mx-auto px-4 py-6 text-center text-red-600">Error: {error}</div>;
-  if (!movie) return (
-    <div className="container mx-auto px-4 py-6 text-center">
-      <h2 className="text-2xl font-bold text-red-600 mb-4">Movie not found</h2>
-      <Link 
-        to={`${APP_PREFIX_PATH}/super-admin/movie-organizer`} 
-        className="text-blue-600 hover:underline"
-      >
-        Back to Movies
-      </Link>
-    </div>
-  );
+  if (error)
+    return (
+      <div className="container mx-auto px-4 py-6 text-center text-red-600">
+        Error: {error}
+      </div>
+    );
+  if (!movie)
+    return (
+      <div className="container mx-auto px-4 py-6 text-center">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">
+          Movie not found
+        </h2>
+        <Link
+          to={`${APP_PREFIX_PATH}/super-admin/movie-organizer`}
+          className="text-blue-600 hover:underline"
+        >
+          Back to Movies
+        </Link>
+      </div>
+    );
 
   // Helper functions
   const formatDuration = (minutes) => {
@@ -336,42 +74,77 @@ const MovieDetail = () => {
     return `${hours}h ${remaining}m`;
   };
 
-  // Direct data access for rendering (no unnecessary calculated values)
-  const schedules = movie.schedules || [];
+  const formatShowtime = (startTime, endTime, movieDate) => {
+    const options = { hour: "numeric", minute: "2-digit", hour12: true };
+    const start = new Date(`${movieDate}T${startTime}`).toLocaleTimeString(
+      "en-US",
+      options
+    );
+    const end = new Date(`${movieDate}T${endTime}`).toLocaleTimeString(
+      "en-US",
+      options
+    );
+    return `${start} - ${end}`;
+  };
 
-  // Since schedules is empty, create placeholders for the UI
-  const noSchedulesMessage = "No showtime data available";
-  
-  // Placeholder data for when schedules are empty
+  // Calculate statistics
+  const calculateStats = () => {
+    return movie.schedules.reduce(
+      (acc, schedule) => ({
+        totalAttendees: (acc.totalAttendees || 0) + schedule.seats_sold,
+        totalCapacity: (acc.totalCapacity || 0) + schedule.total_seats,
+        totalRevenue:
+          (acc.totalRevenue || 0) + schedule.seats_sold * schedule.price,
+        totalShows: (acc.totalShows || 0) + 1,
+      }),
+      {}
+    );
+  };
+
+  const stats = calculateStats();
+  const occupancyRate =
+    stats.totalCapacity > 0
+      ? Math.round((stats.totalAttendees / stats.totalCapacity) * 100)
+      : 0;
+
+  // Chart data
   const showtimeSalesData = {
-    labels: ["No Data"],
-    datasets: [{
-      data: [1],
-      backgroundColor: ["#e5e7eb"]
-    }]
+    labels: movie.schedules.map((_, index) => `Show ${index + 1}`),
+    datasets: [
+      {
+        data: movie.schedules.map((s) => s.seats_sold),
+        backgroundColor: ["#6366f1", "#10b981", "#3b82f6"],
+        hoverOffset: 4,
+      },
+    ],
   };
 
   const revenueData = {
-    labels: ["No Data"],
-    datasets: [{
-      label: "Revenue per Showtime Type",
-      data: [0],
-      backgroundColor: "#e5e7eb"
-    }]
+    labels: movie.schedules.map((_, index) => `Show ${index + 1}`),
+    datasets: [
+      {
+        label: "Revenue (₹)",
+        data: movie.schedules.map((s) => s.seats_sold * s.price),
+        backgroundColor: "#3b82f6",
+        borderWidth: 1,
+      },
+    ],
   };
 
-  // Stats for display (with safe defaults)
-  const totalAttendees = 0;
-  const totalCapacity = 0;
-  const occupancyRate = 0;
-  const totalRevenue = 0;
-
-  // Export handlers
-  const handleExportPDF = () => exportToPdf(reportRef, "MovieReport.pdf");
-  const handleExportCSV = () => exportToExcel(reportRef, "MovieReport.xlsx");
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-6" id="movie-content" ref={reportRef}>
+    <div
+      className="container mx-auto px-4 py-6"
+      id="movie-content"
+      ref={reportRef}
+    >
       <div className="mb-6">
         <span
           onClick={() => navigate(-1)}
@@ -385,16 +158,19 @@ const MovieDetail = () => {
       <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
         <div className="flex flex-col md:flex-row gap-8">
           <img
-            src={movie.thumbnail_image}
-            alt={movie.title}
+            src={movie?.thumbnail_image}
+            alt={movie?.title}
             className="w-full md:w-1/2 h-64 object-cover rounded-lg"
+            onError={(e) => (e.target.src = "/fallback-image.jpg")}
           />
           <div className="w-full md:w-1/2">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{movie.title}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              {movie?.title}
+            </h1>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <p className="text-sm text-gray-600">Runtime</p>
-                <p className="font-medium">{formatDuration(movie.runtime)}</p>
+                <p className="font-medium">{formatDuration(movie?.runtime)}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Theater</p>
@@ -402,7 +178,13 @@ const MovieDetail = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Shows</p>
-                <p className="font-medium">{schedules.length}</p>
+                <p className="font-medium">{stats?.totalShows}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Total Revenue</p>
+                <p className="font-medium text-green-600">
+                  {stats?.totalRevenue || 0}
+                </p>
               </div>
             </div>
           </div>
@@ -414,7 +196,9 @@ const MovieDetail = () => {
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <h3 className="text-gray-500 text-sm font-medium mb-2">Attendance</h3>
           <div className="flex items-center justify-between">
-            <p className="text-2xl font-bold">{totalAttendees}/{totalCapacity}</p>
+            <p className="text-2xl font-bold">
+              {stats?.totalAttendees || 0}/{stats?.totalCapacity || 0}
+            </p>
             <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
               {occupancyRate}%
             </span>
@@ -422,17 +206,20 @@ const MovieDetail = () => {
         </div>
 
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-gray-500 text-sm font-medium mb-2">Total Revenue</h3>
-          <p className="text-2xl font-bold text-green-600">
-            ${totalRevenue.toLocaleString()}
+          <h3 className="text-gray-500 text-sm font-medium mb-2">
+            Average Price
+          </h3>
+          <p className="text-2xl font-bold text-purple-600">
+            {movie?.schedules?.reduce((sum, s) => sum + s.price, 0) /
+              movie?.schedules?.length || 0}
           </p>
         </div>
 
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-gray-500 text-sm font-medium mb-2">Status</h3>
-          <div className="flex justify-center items-center h-full">
-            <p className="text-gray-500 italic">{noSchedulesMessage}</p>
-          </div>
+          <h3 className="text-gray-500 text-sm font-medium mb-2">Screens</h3>
+          <p className="text-2xl font-bold">
+            {new Set(movie?.schedules.map((s) => s.screen_number)).size}
+          </p>
         </div>
       </div>
 
@@ -440,26 +227,41 @@ const MovieDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <h3 className="text-gray-500 text-sm font-medium mb-4">
-            Showtime Sales Distribution
+            Seats Sold per Show
           </h3>
           <div className="h-64">
             <Pie
               data={showtimeSalesData}
-              options={{ maintainAspectRatio: false }}
+              options={{
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { position: "bottom" },
+                },
+              }}
             />
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <h3 className="text-gray-500 text-sm font-medium mb-4">
-            Revenue Breakdown
+            Revenue per Show (₹)
           </h3>
           <div className="h-64">
             <Bar
               data={revenueData}
               options={{
                 maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: (value) => `₹${value.toLocaleString()}`,
+                    },
+                  },
+                },
+                plugins: {
+                  legend: { display: false },
+                },
               }}
             />
           </div>
@@ -472,52 +274,79 @@ const MovieDetail = () => {
           <h3 className="text-gray-700 font-medium">Showtime Details</h3>
           <div className="flex gap-2">
             <button
-              onClick={handleExportCSV}
-              className="px-3 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 disabled:opacity-50"
-              disabled={schedules.length === 0}
+              onClick={() =>
+                exportToExcel(reportRef, `${movie?.title}_Report.xlsx`)
+              }
+              className="px-3 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700"
             >
-              Export CSV
+              Export Excel
             </button>
             <button
-              onClick={handleExportPDF}
-              className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
-              disabled={schedules.length === 0}
+              onClick={() =>
+                exportToPdf(reportRef, `${movie?.title}_Report.pdf`)
+              }
+              className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
             >
               Export PDF
             </button>
           </div>
         </div>
         <div className="overflow-x-auto">
-          {schedules.length > 0 ? (
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Time</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Type</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Price</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Sold</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Capacity</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {schedules.map((schedule, index) => (
+          <table className="min-w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Date
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Time
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Screen
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Price (₹)
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Sold
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Capacity
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                  Revenue (₹)
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {movie.schedules.map((schedule, index) => {
+                const revenue = schedule.seats_sold * (schedule.price || 0);
+                return (
                   <tr key={index}>
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {new Date(schedule.start_time).toLocaleTimeString()}
+                    <td className="px-4 py-3">
+                      {new Date(schedule.movie_date).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3">{schedule.type}</td>
-                    <td className="px-4 py-3">${schedule.price}</td>
+                    <td className="px-4 py-3">
+                      {formatShowtime(
+                        schedule.start_time,
+                        schedule.end_time,
+                        schedule.movie_date
+                      )}
+                    </td>
+                    <td className="px-4 py-3">{schedule.screen_name}</td>
+                    <td className="px-4 py-3">
+                      {schedule.price ? `₹${schedule.price.toFixed(2)}` : "N/A"}
+                    </td>
                     <td className="px-4 py-3">{schedule.seats_sold}</td>
                     <td className="px-4 py-3">{schedule.total_seats}</td>
+                    <td className="px-4 py-3 font-medium text-green-600">
+                      ₹{(revenue || 0).toLocaleString()}
+                    </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="p-8 text-center text-gray-500 italic">
-              No showtime data available for this movie. Schedules may need to be created.
-            </div>
-          )}
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
