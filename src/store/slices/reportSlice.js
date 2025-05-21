@@ -29,24 +29,12 @@ export const fetchUserReports = createAsyncThunk(
   }
 );
 
-// export const fetchUserDetails = createAsyncThunk(
-//   "report/fetchUserDetails",
-//   async (userId, { rejectWithValue }) => {
-//     try {
-//       const response = await ReportService.fetchUserDetails(userId);
-//       return response.data;
-//     } catch (error) {
-//       return rejectWithValue(error?.response?.data || error.message);
-//     }
-//   }
-// );
-
 export const fetchUserDetails = createAsyncThunk(
   "report/fetchUserDetails",
   async ({ userId, countryId }, { rejectWithValue }) => {
     // Destructure params
     try {
-      if (!userId ) {
+      if (!userId) {
         throw new Error("Missing required parameters");
       }
       const response = await ReportService.fetchUserDetails(userId, countryId);
@@ -78,7 +66,10 @@ export const fetchMovieUserDetails = createAsyncThunk(
   "report/fetchMovieUserDetails",
   async ({ userId, countryId }, { rejectWithValue }) => {
     try {
-      const response = await ReportService.fetchMovieUserDetails(userId, countryId);
+      const response = await ReportService.fetchMovieUserDetails(
+        userId,
+        countryId
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
@@ -133,16 +124,10 @@ const reportSlice = createSlice({
     reportData: null,
     loading: false,
     error: null,
-    pagination: { size: 20, page: 1 },
     userReports: {
       data: null,
       loading: false,
       error: null,
-      // pagination: {
-      //   current: 1,
-      //   pageSize: 10,
-      //   total: 0,
-      // },
     },
     countryList: {
       data: null,
@@ -159,7 +144,6 @@ const reportSlice = createSlice({
       data: null,
       loading: false,
       error: null,
-      pagination: { size: 10, page: 1 },
     },
     eventDetails: {
       data: null,
@@ -181,16 +165,9 @@ const reportSlice = createSlice({
       loading: false,
       error: null,
     },
-      pagination: { size: 10, page: 1 },
-
+    pagination: { size: 10, page: 1 },
   },
   reducers: {
-    setUserReportsPagination: (state, action) => {
-      state.userReports.pagination = {
-        ...state.userReports.pagination,
-        ...action.payload,
-      };
-    },
     setSelectedCountry: (state, action) => {
       state.selectedCountry = action.payload;
     },
@@ -220,15 +197,7 @@ const reportSlice = createSlice({
       .addCase(fetchUserReports.fulfilled, (state, action) => {
         state.userReports.loading = false;
         state.userReports.data = action.payload || null;
-
-        if (action.payload?.[0]?.pagination) {
-          state.userReports.pagination = {
-            ...state.userReports.pagination,
-            current: action.payload[0].pagination.page,
-            pageSize: action.payload[0].pagination.size,
-            total: action.payload[0].pagination.total,
-          };
-        }
+        state.pagination = action.payload;
       })
 
       .addCase(fetchUserReports.rejected, (state, action) => {
