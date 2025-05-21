@@ -22,7 +22,7 @@ export const fetchUserReports = createAsyncThunk(
   async (pageData, { rejectWithValue }) => {
     try {
       const response = await ReportService.fetchUserReports(pageData);
-      return response.data;
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
     }
@@ -70,7 +70,7 @@ export const fetchMovieUserDetails = createAsyncThunk(
         userId,
         countryId
       );
-      return response.data;
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
     }
@@ -84,7 +84,7 @@ export const fetchTheaterDetails = createAsyncThunk(
       const response = await ReportService.fetchTheaterDetails(theaterId);
       console.log(response, "res");
 
-      return response.data;
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
     }
@@ -128,22 +128,20 @@ const reportSlice = createSlice({
       data: null,
       loading: false,
       error: null,
+      pagination: { size: 10, page: 1 },
     },
     countryList: {
       data: null,
       loading: false,
       error: null,
-      pagination: {
-        current: 1,
-        pageSize: 10,
-        total: 0,
-      },
+
       selectedCountry: null,
     },
     userDetails: {
       data: null,
       loading: false,
       error: null,
+      pagination: { size: 10, page: 1 },
     },
     eventDetails: {
       data: null,
@@ -159,13 +157,13 @@ const reportSlice = createSlice({
       data: null,
       loading: false,
       error: null,
+      pagination: { size: 10, page: 1 },
     },
     movieDetails: {
       data: null,
       loading: false,
       error: null,
     },
-    pagination: { size: 10, page: 1 },
   },
   reducers: {
     setSelectedCountry: (state, action) => {
@@ -197,7 +195,8 @@ const reportSlice = createSlice({
       .addCase(fetchUserReports.fulfilled, (state, action) => {
         state.userReports.loading = false;
         state.userReports.data = action.payload || null;
-        state.pagination = action.payload;
+        console.log("action.payload", action.payload);
+        state.userReports.pagination = action.payload;
       })
 
       .addCase(fetchUserReports.rejected, (state, action) => {
@@ -242,6 +241,7 @@ const reportSlice = createSlice({
       .addCase(fetchMovieUserDetails.fulfilled, (state, action) => {
         state.movieUserDetails.loading = false;
         state.movieUserDetails.data = action.payload || null;
+        state.movieUserDetails.pagination = action.payload;
       })
       .addCase(fetchMovieUserDetails.rejected, (state, action) => {
         state.movieUserDetails.loading = false;
@@ -257,6 +257,7 @@ const reportSlice = createSlice({
       .addCase(fetchTheaterDetails.fulfilled, (state, action) => {
         state.theaterDetails.loading = false;
         state.theaterDetails.data = action.payload || null;
+        state.theaterDetails.pagination = action.payload;
       })
       .addCase(fetchTheaterDetails.rejected, (state, action) => {
         state.theaterDetails.loading = false;
@@ -288,14 +289,14 @@ const reportSlice = createSlice({
         state.countryList.loading = false;
         state.countryList.data = action.payload || null;
 
-        if (action.payload?.[0]?.pagination) {
-          state.countryList.pagination = {
-            ...state.countryList.pagination,
-            current: action.payload[0].pagination.page,
-            pageSize: action.payload[0].pagination.size,
-            total: action.payload[0].pagination.total,
-          };
-        }
+        // if (action.payload?.[0]?.pagination) {
+        //   state.countryList.pagination = {
+        //     ...state.countryList.pagination,
+        //     current: action.payload[0].pagination.page,
+        //     pageSize: action.payload[0].pagination.size,
+        //     total: action.payload[0].pagination.total,
+        //   };
+        // }
       })
 
       .addCase(fetchCountryList.rejected, (state, action) => {

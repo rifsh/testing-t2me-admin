@@ -7,6 +7,7 @@ import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchTheaterDetails } from "store/slices/reportSlice";
 import { Alert, Spin } from "antd";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 Chart.register(...registerables);
 
@@ -16,6 +17,10 @@ const TheaterDetail = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+
+  const { pagination } = useSelector((state) => state.report.theaterDetails);
+  
+    const handlePagination = usePaginationHook(fetchTheaterDetails);
   const {
     data: theater,
     loading,

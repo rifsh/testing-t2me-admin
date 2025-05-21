@@ -49,6 +49,8 @@ const EventsList = () => {
     editItemId,
     responseImpactData,
   } = useSelector((state) => state.event);
+  console.log(pagination,'pag');
+  
   const { responseData } = useSelector((state) => state.modalSlice);
   const eventParams = {
     size: DEFAULT_PAGE_SIZE.size,
