@@ -134,7 +134,7 @@ export const ApiConstant = {
   GET_THEATER_URL: "/api/v1/movie/movies/secured/theatre/by_venue",
   GET_THEATER_DROPDOWN_URL: "/api/v1/movie/movies/secured/theatre/all",
   GET_THEATERBYID_URL: "/api/v1/movie/movies/secured/theatre/single",
-  EVENT_ORGANIZER_THEATER: '/api/v1/shared/auth/secured/users/related_entries',
+  EVENT_ORGANIZER_THEATER: "/api/v1/shared/auth/secured/users/related_entries",
 
   // THEATER_COMPANY API ENDPOINTS
   ADD_THEATER_COMPANY_URL:
@@ -232,11 +232,16 @@ export const ApiConstant = {
   EVENT_SEAT_STATUS_URL:
     "/api/v1/event/seats/secured/seatstructure/edit/status",
   EVENT_SEAT_DETAILS_URL: "/api/v1/event/seats/secured/seatstructure/single",
-  MOVIE_ORGANIZER_SEAT_URL: "/api/v1/movie/seats/secured/seatstructure/organizer",
-  MOVIE_ORGANIZER_SEAT_EDIT_URL: "/api/v1/movie/seats/secured/seatstructure/organizer/update",
-  MOVIE_ORGANIZER_SEAT_STATUS_LIST_URL: "/api/v1/movie/seats/secured/seatstructure/organizer",
-  MOVIE_ORGANIZER_SEAT_STATUS_DETAILS_URL: "/api/v1/movie/seats/secured/seatstructure/organizer/details",
-  ORGANIZER_MOVIE_SEAT_APPROVAL_URL: '/api/v1/movie/seats/secured/seatstructure/organizer/approval',
+  MOVIE_ORGANIZER_SEAT_URL:
+    "/api/v1/movie/seats/secured/seatstructure/organizer",
+  MOVIE_ORGANIZER_SEAT_EDIT_URL:
+    "/api/v1/movie/seats/secured/seatstructure/organizer/update",
+  MOVIE_ORGANIZER_SEAT_STATUS_LIST_URL:
+    "/api/v1/movie/seats/secured/seatstructure/organizer",
+  MOVIE_ORGANIZER_SEAT_STATUS_DETAILS_URL:
+    "/api/v1/movie/seats/secured/seatstructure/organizer/details",
+  ORGANIZER_MOVIE_SEAT_APPROVAL_URL:
+    "/api/v1/movie/seats/secured/seatstructure/organizer/approval",
 
   //movie schedule api
   // MOVIE_SCHEDULE_URL: "/api/v1/movie/movies/secured/movie_schedules",
@@ -250,10 +255,15 @@ export const ApiConstant = {
   ADMIN_REPORT: "/api/v1/shared/report/secured/summary_report_static",
   REPORT_USERS: "/api/v1/shared/report/secured/report_user_list",
   REPORT_USER_DETAIL: "/api/v1/shared/report/secured/event/report_user_details",
-  REPORT_EVENT_DETAIL:"/api/v1/shared/report/secured/event_report_details",
-  REPORT_USER_DETAIL_MOVIES:"/api/v1/shared/report/secured/movies/report_user_details",
+  REPORT_EVENT_DETAIL: "/api/v1/shared/report/secured/event_report_details",
+  REPORT_USER_DETAIL_MOVIES:
+    "/api/v1/shared/report/secured/movies/report_user_details",
   REPORT_THEATER_DETAIL: "/api/v1/shared/report/secured/movie/theatre_details",
-  REPORT_COUNTRY_LIST:"/api/v1/shared/report/secured/report_country/list",
-  REPORT_MOVIE_DETAIL:"/api/v1/shared/report/secured/movie/movie_details_by_theatre"
-
+  REPORT_COUNTRY_LIST: "/api/v1/shared/report/secured/report_country/list",
+  REPORT_MOVIE_DETAIL:
+    "/api/v1/shared/report/secured/movie/movie_details_by_theatre",
+  REPORT_USER_THEATERS: "/api/v1/shared/report/secured/report/users_theaters",
+  REPORT_EVENT_LISTING: "/api/v1/shared/report/securedreport/users_events",
+  REPORT_EXPORTS: "/api/v1/shared/report/secured/stats/position-5/monthly",
+  REPORT_MOVIE_LISTING: "/api/v1/shared/report/secured/report/theatre_movies"
 };

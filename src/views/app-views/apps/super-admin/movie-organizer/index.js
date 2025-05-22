@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchCountryList,
   fetchMovieUserDetails,
+  fetchUserTheaters,
   setSelectedCountry,
 } from "store/slices/reportSlice";
 import { Spin, Alert, message, Select, Table } from "antd";
@@ -24,8 +25,6 @@ const MovieOrganizerDetail = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState(true);
 
-  const [page, setPage] = useState(1);
-  const size = 50;
   const {
     data: movieUserData,
     loading,
@@ -33,7 +32,13 @@ const MovieOrganizerDetail = () => {
     pagination: moviePagination,
   } = useSelector((state) => state.report.movieUserDetails);
 
-  const { pagination } = useSelector((state) => state.report.movieUserDetails);
+  const { data: userTheaters } = useSelector(
+    (state) => state.report.userTheaters
+  );
+
+  console.log(userTheaters, "theaters");
+
+  const { pagination } = useSelector((state) => state.report.userTheaters);
 
   const handlePagination = usePaginationHook(fetchMovieUserDetails);
   const { organizerId } = useParams();
@@ -55,16 +60,37 @@ const MovieOrganizerDetail = () => {
     localStorage.setItem("selectedCountry", JSON.stringify(value)); // Save to localStorage
   };
   useEffect(() => {
-    dispatch(
-      fetchCountryList({ active: activeFilter, search: searchTerm, page, size })
-    );
-  }, [dispatch, activeFilter, searchTerm, page]);
+    dispatch(fetchCountryList({ active: activeFilter, search: searchTerm }));
+  }, [dispatch, activeFilter, searchTerm]);
   useEffect(() => {
     const fetchData = async () => {
       if (organizerId && selectedCountry) {
         try {
           await dispatch(
             fetchMovieUserDetails({
+              pageData: DEFAULT_PAGE_SIZE,
+              userId: organizerId,
+              countryId: selectedCountry,
+            })
+          );
+        } catch (error) {
+          console.error("Failed to fetch user details:", error);
+          message.error(
+            error.payload?.message || "Failed to load user details"
+          );
+        }
+      }
+    };
+
+    fetchData();
+  }, [dispatch, organizerId, selectedCountry]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (organizerId && selectedCountry) {
+        try {
+          await dispatch(
+            fetchUserTheaters({
               pageData: DEFAULT_PAGE_SIZE,
               userId: organizerId,
               countryId: selectedCountry,
@@ -98,12 +124,9 @@ const MovieOrganizerDetail = () => {
     );
   }
 
-  // if (!movieUserData || !movieUserData[0]) {
-  //   return null;
-  // }
 
-  const organizer = movieUserData; // Access the first item in the array
-
+  const organizer = movieUserData;
+  const theaters = userTheaters?.items;
   // Transform API data to match your component structure
   const organizerData = {
     username: organizer?.username || "N/A",
@@ -113,7 +136,7 @@ const MovieOrganizerDetail = () => {
     total_movies: organizer?.total_movies || 0,
     total_revenue: organizer?.total_revenue || 0,
     theaters:
-      organizer?.theaters?.map((theater) => ({
+      theaters?.map((theater) => ({
         id: theater?.theater_id,
         name: theater?.theater_name,
         company_name: theater?.company_name,
@@ -210,22 +233,6 @@ const MovieOrganizerDetail = () => {
       dataIndex: "movies_count",
       key: "movies",
       width: 120,
-    },
-    {
-      title: "Status",
-      key: "status",
-      width: 120,
-      render: (_, record) => (
-        <span
-          className={`px-2 py-1 text-xs rounded-full ${
-            record.is_active
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {record.is_active ? "Active" : "Inactive"}
-        </span>
-      ),
     },
   ];
 
