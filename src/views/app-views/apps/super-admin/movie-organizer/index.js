@@ -374,17 +374,6 @@ const MovieOrganizerDetail = () => {
             className="force-visible-columns"
             style={{ minWidth: "800px" }}
           />
-          <style>{`
-      @media (max-width: 768px) {
-        .force-visible-columns .ant-table-cell {
-          white-space: nowrap;
-          padding: 8px 12px !important;
-        }
-        .force-visible-columns .ant-table-thead .ant-table-cell {
-          font-size: 12px;
-        }
-      }
-    `}</style>
         </div>
       </div>
 
