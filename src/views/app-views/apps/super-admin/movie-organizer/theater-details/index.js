@@ -6,7 +6,8 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchTheaterDetails } from "store/slices/reportSlice";
-import { Alert, Spin } from "antd";
+import { Alert, Spin, Table } from "antd";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 Chart.register(...registerables);
 
@@ -16,12 +17,15 @@ const TheaterDetail = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const { pagination } = useSelector((state) => state.report.theaterDetails);
+
+  const handlePagination = usePaginationHook(fetchTheaterDetails);
   const {
     data: theater,
     loading,
     error,
   } = useSelector((state) => state.report.theaterDetails);
-  const theaterData = theater?.[0];
+  const theaterData = theater;
 
   useEffect(() => {
     if (theaterId) {
@@ -76,6 +80,92 @@ const TheaterDetail = () => {
 
   if (error) return <Alert message={error} />;
   console.log(theaterData, "data...");
+
+  const movieColumns = [
+    {
+      title: "Movie",
+      dataIndex: "title",
+      key: "movie",
+      fixed: "left",
+      width: 300,
+      render: (text, record) => (
+        <Link
+          to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theaterId}/movie-details/${record.id}`}
+          className="group flex items-center gap-2 md:gap-4"
+        >
+          <div className="relative w-12 h-16 md:w-16 md:h-20 rounded-lg overflow-hidden shadow-sm md:shadow-md group-hover:shadow-md md:group-hover:shadow-lg transition-shadow">
+            <img
+              src={record.thumbnail_image}
+              alt={record.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          <span className="text-sm md:text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+            {text}
+          </span>
+        </Link>
+      ),
+    },
+    {
+      title: "Genre",
+      dataIndex: "genre",
+      key: "genre",
+      width: 150,
+      render: (text) => (
+        <span className="px-2 py-1 md:px-3 md:py-1 bg-gray-100 text-gray-800 rounded-full text-xs md:text-sm font-medium">
+          {text}
+        </span>
+      ),
+    },
+    {
+      title: "Runtime",
+      dataIndex: "runtime",
+      key: "runtime",
+      width: 150,
+      render: (text) => (
+        <div className="flex items-center text-gray-700 text-sm md:text-base">
+          <svg
+            className="w-3 h-3 md:w-4 md:h-4 text-gray-500 mr-1 md:mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          {text} mins
+        </div>
+      ),
+    },
+    {
+      title: "Revenue",
+      dataIndex: "total_revenue",
+      key: "revenue",
+      width: 200,
+      render: (text) => (
+        <div className="flex items-center font-semibold text-gray-900 text-sm md:text-base">
+          <svg
+            className="w-3 h-3 md:w-4 md:h-4 text-green-500 mr-1 md:mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          ₹{(text || 0).toLocaleString()}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen" ref={reportRef}>
@@ -338,92 +428,26 @@ const TheaterDetail = () => {
             </h3>
           </div>
         </div>
+
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Movie
-                </th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Genre
-                </th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Runtime
-                </th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Revenue
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {theaterData?.movies?.map((movie) => (
-                <tr
-                  key={movie.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-4 py-3 md:px-6 md:py-4">
-                    <Link
-                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theaterId}/movie-details/${movie.id}`}
-                      className="group flex items-center gap-2 md:gap-4"
-                    >
-                      <div className="relative w-12 h-16 md:w-16 md:h-20 rounded-lg overflow-hidden shadow-sm md:shadow-md group-hover:shadow-md md:group-hover:shadow-lg transition-shadow">
-                        <img
-                          src={movie.thumbnail_image}
-                          alt={movie.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <span className="text-sm md:text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {movie.title}
-                      </span>
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 md:px-6 md:py-4">
-                    <span className="px-2 py-1 md:px-3 md:py-1 bg-gray-100 text-gray-800 rounded-full text-xs md:text-sm font-medium">
-                      {movie.genre}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 md:px-6 md:py-4 text-gray-700 text-sm md:text-base">
-                    <div className="flex items-center">
-                      <svg
-                        className="w-3 h-3 md:w-4 md:h-4 text-gray-500 mr-1 md:mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      {movie.runtime} mins
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 md:px-6 md:py-4 font-semibold text-gray-900 text-sm md:text-base">
-                    <div className="flex items-center">
-                      <svg
-                        className="w-3 h-3 md:w-4 md:h-4 text-green-500 mr-1 md:mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      ₹{(movie.total_revenue || 0).toLocaleString()}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table
+            columns={movieColumns}
+            dataSource={theaterData?.movies}
+            rowKey="id"
+            pagination={{
+              current: pagination?.current,
+              pageSize: pagination?.pageSize,
+              total: pagination?.total,
+              onChange: (page, pageSize) => handlePagination(page, pageSize),
+            }}
+            scroll={{ x: 800 }}
+            className="force-visible-columns"
+            style={{ minWidth: "800px" }}
+            onRow={(record) => ({
+              className: "hover:bg-gray-50 transition-colors",
+            })}
+          />
+        
         </div>
       </div>
 

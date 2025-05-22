@@ -27,8 +27,9 @@ const SuperAdminReport = () => {
   const dispatch = useDispatch();
   const reportRef = useRef(null);
   const { reportData, userReports } = useSelector((state) => state.report);
-  const userReportsData = userReports?.data?.[0]?.items || [];
+  const userReportsData = userReports?.data?.items || [];
   const { data } = useSelector((state) => state.report.countryList);
+  console.log(userReportsData, "users");
 
   // State management
   const [activeTab, setActiveTab] = useState("events");
@@ -42,9 +43,9 @@ const SuperAdminReport = () => {
     status: null,
   });
 
-  const { pagination } = useSelector((state) => state.report);
-  const handlePagination = usePaginationHook(fetchUserReports);
+  const { pagination } = useSelector((state) => state.report.userReports);
 
+  const handlePagination = usePaginationHook(fetchUserReports);
   const [apiLoading, setApiLoading] = useState({
     reports: false,
     userReports: false,
@@ -60,10 +61,17 @@ const SuperAdminReport = () => {
     apiLoading.reports || apiLoading.userReports || apiLoading.exports;
 
   useEffect(() => {
-    if (data?.[0]?.items?.length > 0 && !hasAutoSelected) {
+    const savedCountry = localStorage.getItem("selectedCountry");
+
+    if (data?.[0]?.items?.length > 0 && !hasAutoSelected && !savedCountry) {
       const firstCountryId = data[0].items[0].id;
       dispatch(setSelectedCountry(firstCountryId));
       localStorage.setItem("selectedCountry", JSON.stringify(firstCountryId));
+      setHasAutoSelected(true);
+      setIsInitialized(true);
+    } else if (savedCountry && !hasAutoSelected) {
+      // Restore from localStorage if available
+      dispatch(setSelectedCountry(JSON.parse(savedCountry)));
       setHasAutoSelected(true);
       setIsInitialized(true);
     }
@@ -93,7 +101,6 @@ const SuperAdminReport = () => {
     };
     fetchReportData();
   }, [dispatch, activeTab, selectedCountry, isInitialized]);
-  console.log(DEFAULT_PAGE_SIZE, "page");
 
   useEffect(() => {
     const fetchUserReportData = async () => {
@@ -103,8 +110,8 @@ const SuperAdminReport = () => {
         const query = {
           search: filters.search,
           active: filters.status,
-          page: pagination.page, // <-- include this
-          size: pagination.size, // <-- and this
+          size: DEFAULT_PAGE_SIZE.size,
+          page: DEFAULT_PAGE_SIZE.page,
           ...(activeTab === "events" && { events: true }),
           ...(activeTab === "movies" && { movies: true }),
           country_id: selectedCountry,
@@ -117,8 +124,11 @@ const SuperAdminReport = () => {
         setApiLoading((prev) => ({ ...prev, reports: false }));
       }
     };
-    fetchUserReportData();
-  }, [dispatch, activeTab, filters, selectedCountry]);
+
+    if (isInitialized && selectedCountry) {
+      fetchUserReportData();
+    }
+  }, [dispatch, activeTab, filters, selectedCountry, isInitialized]);
 
   const handleExportPdf = async () => {
     try {
@@ -429,11 +439,11 @@ const SuperAdminReport = () => {
           dataSource={userReportsData}
           rowKey="id"
           pagination={{
-            current: pagination.page,
-            pageSize: pagination.size,
+            current: pagination.current,
+            pageSize: pagination.pageSize,
             total: pagination.total,
             onChange: (page, pageSize) =>
-              handlePagination(page, pageSize,"", activeTab),
+              handlePagination(page, pageSize, "", activeTab),
           }}
           scroll={{ x: 800, y: 400 }}
           size="small"
