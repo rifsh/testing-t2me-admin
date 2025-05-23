@@ -263,7 +263,7 @@ export const ApiConstant = {
   REPORT_MOVIE_DETAIL:
     "/api/v1/shared/report/secured/movie/movie_details_by_theatre",
   REPORT_USER_THEATERS: "/api/v1/shared/report/secured/report/users_theaters",
-  REPORT_EVENT_LISTING: "/api/v1/shared/report/securedreport/users_events",
+  REPORT_EVENT_LISTING: "/api/v1/shared/report/secured/report/users_events",
   REPORT_EXPORTS: "/api/v1/shared/report/secured/stats/position-5/monthly",
-  REPORT_MOVIE_LISTING: "/api/v1/shared/report/secured/report/theatre_movies"
+  REPORT_MOVIE_LISTING: "/api/v1/shared/report/secured/report/theatre_movies",
 };
