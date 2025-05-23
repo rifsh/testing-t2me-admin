@@ -1,5 +1,6 @@
 import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
+import { fetchMovieList } from "store/slices/reportSlice";
 import Utils from "utils";
 
 const ReportService = {
@@ -28,27 +29,80 @@ const ReportService = {
     });
   },
 
-  //user-detail-report events
-  // fetchUserDetails: function (userId) {
+  fetchUserDetails: function (userId, countryId) {
+    return fetch({
+      url: ApiConstant.REPORT_USER_DETAIL,
+      method: "get",
+      params: {
+        user_id: userId,
+        country_id: countryId,
+      },
+    });
+  },
+
+  fetchUserTheaters: function (userId, countryId) {
+    return fetch({
+      url: ApiConstant.REPORT_USER_THEATERS,
+      method: "get",
+      params: {
+        user_id: userId,
+        country_id: countryId,
+      },
+    });
+  },
+
+  // fetchEventList: function (userId, countryId) {
   //   return fetch({
-  //     url: ApiConstant.REPORT_USER_DETAIL,
+  //     url: ApiConstant.REPORT_EVENT_LISTING,
   //     method: "get",
-  //     params: { user_id: userId },
+  //     params: {
+  //       user_id: userId,
+  //       country_id: countryId,
+  //     },
+  //   });
+  // },
+
+    fetchEventList: function (pageData) {
+    const params = Utils.filterParams(pageData);
+
+    return fetch({
+      url: ApiConstant.REPORT_EVENT_LISTING,
+      method: "get",
+      params: params,
+    });
+  },
+
+  // fetchMovieList: function (theaterId) {
+  //   return fetch({
+  //     url: ApiConstant.REPORT_MOVIE_LISTING,
+  //     method: "get",
+  //     params: {
+  //       theatre_id: theaterId,
+  //     },
   //   });
   // },
 
 
+    fetchMovieList: function (pageData) {
+    const params = Utils.filterParams(pageData);
 
-  fetchUserDetails: function (userId, countryId) {
-  return fetch({
-    url: ApiConstant.REPORT_USER_DETAIL,
-    method: "get",
-    params: { 
-      user_id: userId,
-      country_id: countryId // Add country parameter
-    },
-  });
-},
+    return fetch({
+      url: ApiConstant.REPORT_MOVIE_LISTING,
+      method: "get",
+      params: params,
+    });
+  },
+
+  //exports
+  fetchReportExport: function (pageData) {
+    const params = Utils.filterParams(pageData);
+
+    return fetch({
+      url: ApiConstant.REPORT_EXPORTS,
+      method: "get",
+      params: params,
+    });
+  },
 
   fetchEventDetails: function (eventId, countryId) {
     return fetch({
@@ -74,19 +128,17 @@ const ReportService = {
     });
   },
 
-
-// Ensure your service function matches parameters
-fetchMovieDetails: function (movieId, theaterId) {
-  return fetch({
-    url: ApiConstant.REPORT_MOVIE_DETAIL,
-    method: "get",
-    params: {
-      movie_id: movieId,
-     theatre_id: theaterId,
-    },
-  });
-},
-
+  // Ensure your service function matches parameters
+  fetchMovieDetails: function (movieId, theaterId) {
+    return fetch({
+      url: ApiConstant.REPORT_MOVIE_DETAIL,
+      method: "get",
+      params: {
+        movie_id: movieId,
+        theatre_id: theaterId,
+      },
+    });
+  },
 
   fetchCountryList: function (pageData) {
     const params = Utils.filterParams(pageData);

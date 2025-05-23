@@ -403,8 +403,12 @@ const SuperAdminReport = () => {
             title: `${activeTab === "events" ? "Events" : "Movies"} Revenue`,
             value:
               activeTab === "events"
-                ? reportData?.total_event_revenue
-                : reportData?.total_movie_revenue || 0,
+                ? `${reportData?.total_event_revenue ?? 0} ${
+                    reportData?.revenue_by_country?.[0]?.currency_code ?? ""
+                  }`
+                : `${reportData?.total_movie_revenue ?? 0} ${
+                    reportData?.revenue_by_country?.[0]?.currency_code ?? ""
+                  }`,
             icon: "💰",
             color: "yellow",
           },
@@ -561,8 +565,12 @@ const SuperAdminReport = () => {
             </h4>
             <p className="text-lg font-semibold text-green-600">
               {activeTab === "events"
-                ? reportData?.total_event_revenue?.toLocaleString()
-                : reportData?.total_movie_revenue?.toLocaleString()}
+                ? `${reportData?.total_event_revenue?.toLocaleString() ?? 0} ${
+                    reportData?.revenue_by_country?.[0]?.currency_code ?? ""
+                  }`
+                : `${reportData?.total_movie_revenue?.toLocaleString() ?? 0} ${
+                    reportData?.revenue_by_country?.[0]?.currency_code ?? ""
+                  }`}
             </p>
           </div>
         </div>

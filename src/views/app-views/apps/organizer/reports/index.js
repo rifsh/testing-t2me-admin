@@ -4,7 +4,7 @@ import { Chart, registerables } from "chart.js";
 import "jspdf-autotable";
 import { Link } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { Select, DatePicker, message, Button, Spin } from "antd";
+import { Select, DatePicker, message, Button, Spin, Table } from "antd";
 import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import dayjs from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,8 +15,11 @@ import {
   fetchCountryList,
   fetchMovieUserDetails,
   fetchUserDetails,
+  fetchUserTheaters,
   setSelectedCountry,
 } from "store/slices/reportSlice";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 Chart.register(...registerables);
 
@@ -31,36 +34,31 @@ const OrganizerReport = () => {
   const [activeFilter, setActiveFilter] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const [page, setPage] = useState(1);
-  const size = 50;
-
   const reportRef = useRef(null);
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 5,
-    total: 0,
-  });
+
   const dispatch = useDispatch();
 
   const { userData } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    // Fetch user data when component mounts
     dispatch(getUserdata());
   }, [dispatch]);
   const organizerId = userData?.id;
 
+  const { data: userTheaters } = useSelector(
+    (state) => state.report.userTheaters
+  );
+
   const { data: organizer } = useSelector((state) => state.report.userDetails);
   const selectedCountry = useSelector((state) => state.report.selectedCountry);
-  const {
-    data: countryData,
-    loading: countryLoading,
-    error: countryError,
-    // pagination,
-  } = useSelector((state) => state.report.countryList);
-  console.log(countryData, "countryList");
-  const eventOrganizer = organizer?.[0];
-  console.log(activeSegment, "segment");
+
+  const { pagination } = useSelector((state) => state.report.userTheaters);
+
+  const handlePagination = usePaginationHook(fetchMovieUserDetails);
+  const { data: countryData } = useSelector(
+    (state) => state.report.countryList
+  );
+  const eventOrganizer = organizer;
   const handleChange = (value) => {
     dispatch(setSelectedCountry(value));
   };
@@ -76,7 +74,6 @@ const OrganizerReport = () => {
         })
       );
     } else {
-      console.log("Calling fetchMovieUserDetails...");
       dispatch(
         fetchMovieUserDetails({
           userId: organizerId,
@@ -87,10 +84,31 @@ const OrganizerReport = () => {
   }, [dispatch, organizerId, activeSegment, selectedCountry]);
 
   useEffect(() => {
-    dispatch(
-      fetchCountryList({ active: activeFilter, search: searchTerm, page, size })
-    );
-  }, [dispatch, activeFilter, searchTerm, page]);
+    const fetchData = async () => {
+      if (organizerId && selectedCountry) {
+        try {
+          await dispatch(
+            fetchUserTheaters({
+              pageData: DEFAULT_PAGE_SIZE,
+              userId: organizerId,
+              countryId: selectedCountry,
+            })
+          );
+        } catch (error) {
+          console.error("Failed to fetch user details:", error);
+          message.error(
+            error.payload?.message || "Failed to load user details"
+          );
+        }
+      }
+    };
+
+    fetchData();
+  }, [dispatch, organizerId, selectedCountry]);
+
+  useEffect(() => {
+    dispatch(fetchCountryList({ active: activeFilter, search: searchTerm }));
+  }, [dispatch, activeFilter, searchTerm]);
 
   const { data: userDetailsData, loading: userDetailsLoading } = useSelector(
     (state) => state.report.userDetails
@@ -99,7 +117,8 @@ const OrganizerReport = () => {
   const { data: movieUserDetailsData, loading: movieUserDetailsLoading } =
     useSelector((state) => state.report.movieUserDetails);
 
-  // Then use them conditionally in your component
+  const userTheaterList = userTheaters?.items;
+
   const data =
     activeSegment === "events" ? userDetailsData : movieUserDetailsData;
 
@@ -202,14 +221,6 @@ const OrganizerReport = () => {
     }
   };
 
-  useEffect(() => {
-    setPagination((prev) => ({
-      ...prev,
-      current: 1,
-      total: filteredItems.length,
-    }));
-  }, [filteredItems]);
-
   // Enhanced formatting functions
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
@@ -266,6 +277,61 @@ const OrganizerReport = () => {
     ],
   };
   console.log(data?.[0], "data");
+  console.log(userTheaters, "theaters");
+
+  const getColumns = (activeSegment) => [
+    {
+      title: activeSegment === "events" ? "Event Name" : "Theater Name",
+      dataIndex: activeSegment === "events" ? "event_name" : "theater_name",
+      key: "name",
+      fixed: "left",
+      width: 200,
+      render: (text, record) => (
+        <Link
+          to={`${APP_PREFIX_PATH}/organizer/reports/${
+            activeSegment === "events" ? "event-details" : "theater-details"
+          }/${activeSegment === "events" ? record.id : record.theater_id}`}
+          className="text-blue-600 hover:text-blue-800 font-semibold"
+        >
+          {text}
+        </Link>
+      ),
+      className: "px-6 py-4",
+    },
+    {
+      title: activeSegment === "events" ? "Attendees" : "Number of Screens",
+      dataIndex:
+        activeSegment === "events" ? "attendees_count" : "screens_count",
+      key: "count",
+      width: 150,
+      render: (text) => text?.toLocaleString(),
+      className: "px-4 py-3",
+    },
+    ...(activeSegment !== "events"
+      ? [
+          {
+            title: "Number of Movies",
+            dataIndex: "movies_count",
+            key: "movies",
+            width: 150,
+            className: "px-4 py-3",
+          },
+        ]
+      : []),
+    {
+      title: "Revenue",
+      key: "revenue",
+      width: 200,
+      render: (_, record) => (
+        <div className="text-green-600 text-sm space-y-1">
+          {activeSegment === "events"
+            ? record.event_revenue
+            : record.theatre_revenue || 0}
+        </div>
+      ),
+      className: "px-4 py-3",
+    },
+  ];
 
   return (
     <div className="container mx-auto px-4 py-6" ref={reportRef}>
@@ -275,13 +341,28 @@ const OrganizerReport = () => {
         size="large"
         className="pt-8"
       >
+      
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+         <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl">
+                {["events", "movies"].map((segment) => (
+                  <button
+                    key={segment}
+                    onClick={() => {
+                      setActiveSegment(segment);
+                      // setPagination((prev) => ({ ...prev, current: 1 }));
+                    }}
+                    className={`px-4 py-1 rounded-2xl text-sm capitalize transition-colors ${
+                      activeSegment === segment
+                        ? "bg-green-400 text-white shadow-sm"
+                        : "bg-gray-50 text-gray-600"
+                    }`}
+                  >
+                    {segment}
+                  </button>
+                ))}
+              </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">
-              {data?.[0]?.username}
-            </h2>
             <p className="text-gray-500 text-sm mt-1">
-              Comprehensive overview of all {activeSegment} activities
               <span className="ml-2">
                 {timeFilter === "custom" && customDateRange.length === 2
                   ? `Custom range: ${formatDate(
@@ -319,24 +400,7 @@ const OrganizerReport = () => {
               } sm:flex flex-col sm:flex-row gap-3  sm:w-auto`}
             >
               {/* Segment Selector */}
-              <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl">
-                {["events", "movies"].map((segment) => (
-                  <button
-                    key={segment}
-                    onClick={() => {
-                      setActiveSegment(segment);
-                      setPagination((prev) => ({ ...prev, current: 1 }));
-                    }}
-                    className={`px-4 py-1 rounded-2xl text-sm capitalize transition-colors ${
-                      activeSegment === segment
-                        ? "bg-green-400 text-white shadow-sm"
-                        : "bg-gray-50 text-gray-600"
-                    }`}
-                  >
-                    {segment}
-                  </button>
-                ))}
-              </div>
+             
 
               {/* Country Select */}
               <Select
@@ -404,6 +468,31 @@ const OrganizerReport = () => {
           </div>
         </div>
 
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {data?.[0]?.username || data?.username}
+              </h1>
+              <p className="text-gray-600 mt-2">{data?.[0]?.email}</p>
+              <p className="text-gray-600">
+                Registered: {new Date(data?.[0]?.created_at).toLocaleDateString()||"01/01/01"}
+              </p>
+            </div>
+            <div className="text-right">
+              <span
+                className={`px-3 py-1 rounded-md text-sm ${
+                  data?.[0]?.is_active
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {data?.[0]?.is_active ? "Active" : "Inactive"}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Enhanced Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {/* Total Items Card */}
@@ -433,7 +522,7 @@ const OrganizerReport = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {activeSegment === "events"
                     ? data?.[0]?.total_events
-                    : data?.[0]?.total_theaters}
+                    : data?.total_theaters}
                 </p>
                 <p className="text-xs text-gray-400">Currently managing</p>
               </div>
@@ -508,8 +597,8 @@ const OrganizerReport = () => {
             </div>
           </div>
         </div>
-
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
+          {/* <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
           <div className="p-4 bg-gray-50">
             <h3 className="text-gray-700 font-medium">
               {activeSegment === "events" ? "Events List" : "Theaters List"}
@@ -556,17 +645,13 @@ const OrganizerReport = () => {
                           {event?.attendees_count?.toLocaleString()}
                         </td>
                         <td className="px-4 py-3 text-green-600 text-sm space-y-1">
-                          {/* {event?.revenue_by_country?.map((item, index) => (
-                          <div key={index}>
-                            {item?.currency_code} {item?.event_revenue || 0}
-                          </div>
-                        ))} */}
+                       
 
                           {event?.event_revenue}
                         </td>
                       </tr>
                     ))
-                  : data?.[0]?.theaters?.map((theater) => (
+                  : data?.theaters?.map((theater) => (
                       <tr key={theater.theater_id}>
                         <td className="px-6 py-4">
                           <Link
@@ -580,11 +665,7 @@ const OrganizerReport = () => {
                         <td className="px-4 py-3">{theater?.movies_count}</td>
 
                         <td className="px-4 py-3 text-green-600 text-sm space-y-1">
-                          {/* {theater?.revenue_by_country?.map((item, index) => (
-                          <div key={index}>
-                            {item?.currency_code} {item?.revenue || 0}
-                          </div>
-                        ))} */}
+                        
 
                           {theater?.theatre_revenue || 0}
                         </td>
@@ -593,8 +674,29 @@ const OrganizerReport = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </div> */}
 
+          <div className="overflow-x-auto mb-8">
+            <Table
+              columns={getColumns(activeSegment)}
+              dataSource={
+                activeSegment === "events" ? data?.[0]?.events : userTheaterList
+              }
+              rowKey={(record) =>
+                activeSegment === "events" ? record.id : record.theater_id
+              }
+              pagination={{
+                current: pagination?.current,
+                pageSize: pagination?.pageSize,
+                total: pagination?.total,
+                onChange: (page, pageSize) => handlePagination(page, pageSize),
+              }}
+              scroll={{ x: 800 }}
+              className="force-visible-columns"
+              style={{ minWidth: "800px" }}
+            />
+          </div>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <h3 className="text-gray-500 text-sm font-medium mb-4">Revenue</h3>

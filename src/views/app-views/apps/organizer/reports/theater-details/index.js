@@ -3,10 +3,11 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { exportToPdf, exportToExcel } from "utils/exportUtils";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchTheaterDetails } from "store/slices/reportSlice";
-import { Alert, Spin } from "antd";
+import { fetchMovieList, fetchTheaterDetails } from "store/slices/reportSlice";
+import { Alert, Spin, Table } from "antd";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 Chart.register(...registerables);
 
@@ -16,12 +17,29 @@ const TheaterDetail = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const { pagination } = useSelector((state) => state.report.movieList);
+
+  const handlePagination = usePaginationHook(fetchMovieList);
   const {
     data: theater,
     loading,
     error,
   } = useSelector((state) => state.report.theaterDetails);
-  const theaterData = theater?.[0];
+
+  const { data: movieList } = useSelector((state) => state.report.movieList);
+  const theaterData = theater;
+
+  useEffect(() => {
+    if (theaterId) {
+      dispatch(
+        fetchMovieList({
+          theatre_id: theaterId,
+          size: DEFAULT_PAGE_SIZE.size,
+          page: DEFAULT_PAGE_SIZE.page,
+        })
+      );
+    }
+  }, [dispatch, theaterId]);
 
   useEffect(() => {
     if (theaterId) {
@@ -38,36 +56,54 @@ const TheaterDetail = () => {
   }
 
   // Generate genre distribution data for chart
-  const genreDistribution = theaterData?.movies?.reduce((acc, movie) => {
-    acc[movie.genre] = (acc[movie.genre] || 0) + 1;
-    return acc;
-  }, {});
+  const processGenreData = (movies) => {
+    const genreCount = {};
+
+    movies?.forEach((movie) => {
+      // Remove duplicate genres first
+      const uniqueGenres = [
+        ...new Map(movie.genres.map((genre) => [genre.id, genre])).values(),
+      ];
+
+      uniqueGenres.forEach((genre) => {
+        genreCount[genre.name] = (genreCount[genre.name] || 0) + 1;
+      });
+    });
+
+    return genreCount;
+  };
+
+  // Usage:
+  const genreDistribution = processGenreData(theaterData?.movies);
 
   // Chart data configuration
   const chartData = {
-    labels: genreDistribution ? Object.keys(genreDistribution) : [],
+    labels: genreDistribution
+      ? Object.entries(genreDistribution)
+          .sort((a, b) => b[1] - a[1]) // Sort by count descending
+          .map(([name]) => name)
+      : [],
     datasets: [
       {
         label: "Movies by Genre",
-        data: genreDistribution ? Object.values(genreDistribution) : [],
+        data: genreDistribution
+          ? Object.entries(genreDistribution)
+              .sort((a, b) => b[1] - a[1])
+              .map(([, count]) => count)
+          : [],
         backgroundColor: [
           "#6366f1",
           "#10b981",
           "#3b82f6",
           "#f59e0b",
           "#ef4444",
+          "#8b5cf6",
+          "#ec4899",
+          "#14b8a6",
         ],
         borderWidth: 1,
       },
     ],
-  };
-
-  const handleExportPdf = () => {
-    exportToPdf(reportRef, `Theater_${theaterData?.name}.pdf`);
-  };
-
-  const handleExportExcel = () => {
-    exportToExcel(reportRef, `Theater_${theaterData?.name}.xlsx`);
   };
 
   const handleGoBack = () => {
@@ -75,7 +111,120 @@ const TheaterDetail = () => {
   };
 
   if (error) return <Alert message={error} />;
-  console.log(theaterData, "data...");
+
+  const movieColumns = [
+    {
+      title: "Movie",
+      dataIndex: "title",
+      key: "movie",
+      fixed: "left",
+      width: 300,
+      render: (text, record) => (
+        <Link
+          to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theaterId}/movie-details/${record.id}`}
+          className="group flex items-center gap-2 md:gap-4"
+        >
+          <div className="relative w-12 h-16 md:w-16 md:h-20 rounded-lg overflow-hidden shadow-sm md:shadow-md group-hover:shadow-md md:group-hover:shadow-lg transition-shadow">
+            <img
+              src={record.thumbnail_image || "/placeholder-movie.jpg"}
+              alt={record.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              onError={(e) => {
+                e.target.src = "/placeholder-movie.jpg";
+              }}
+            />
+          </div>
+          <span className="text-sm md:text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+            {text}
+          </span>
+        </Link>
+      ),
+    },
+    {
+      title: "Genres",
+      dataIndex: "genres",
+      key: "genres",
+      width: 250,
+      render: (genres) => {
+        if (!genres || !genres.length) return "-";
+
+        // Get unique genres (some movies have duplicate genres in the array)
+        const uniqueGenres = [
+          ...new Map(genres.map((genre) => [genre.id, genre])),
+        ].map(([_, genre]) => genre);
+
+        // Display first 2 genres + count of remaining
+        const visibleGenres = uniqueGenres.slice(0, 2);
+        const remainingCount = uniqueGenres.length - 2;
+
+        return (
+          <div className="flex flex-wrap items-center gap-1">
+            {visibleGenres.map((genre) => (
+              <span
+                key={genre.id}
+                className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium whitespace-nowrap"
+              >
+                {genre.name}
+              </span>
+            ))}
+            {remainingCount > 0 && (
+              <span className="text-xs text-gray-500 ml-1">
+                +{remainingCount} more
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Runtime",
+      dataIndex: "runtime",
+      key: "runtime",
+      width: 150,
+      render: (runtime) => (
+        <div className="flex items-center text-gray-700 text-sm md:text-base">
+          <svg
+            className="w-3 h-3 md:w-4 md:h-4 text-gray-500 mr-1 md:mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          {runtime ? `${runtime} mins` : "N/A"}
+        </div>
+      ),
+    },
+    {
+      title: "Revenue",
+      dataIndex: "total_revenue",
+      key: "revenue",
+      width: 200,
+      render: (revenue) => (
+        <div className="flex items-center font-semibold text-gray-900 text-sm md:text-base">
+          <svg
+            className="w-3 h-3 md:w-4 md:h-4 text-green-500 mr-1 md:mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          {revenue ? `₹${revenue.toLocaleString()}` : "N/A"}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen" ref={reportRef}>
@@ -338,92 +487,21 @@ const TheaterDetail = () => {
             </h3>
           </div>
         </div>
+
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Movie
-                </th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Genre
-                </th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Runtime
-                </th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                  Revenue
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {theaterData?.movies?.map((movie) => (
-                <tr
-                  key={movie.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-4 py-3 md:px-6 md:py-4">
-                    <Link
-                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theaterId}/movie-details/${movie.id}`}
-                      className="group flex items-center gap-2 md:gap-4"
-                    >
-                      <div className="relative w-12 h-16 md:w-16 md:h-20 rounded-lg overflow-hidden shadow-sm md:shadow-md group-hover:shadow-md md:group-hover:shadow-lg transition-shadow">
-                        <img
-                          src={movie.thumbnail_image}
-                          alt={movie.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <span className="text-sm md:text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {movie.title}
-                      </span>
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 md:px-6 md:py-4">
-                    <span className="px-2 py-1 md:px-3 md:py-1 bg-gray-100 text-gray-800 rounded-full text-xs md:text-sm font-medium">
-                      {movie.genre}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 md:px-6 md:py-4 text-gray-700 text-sm md:text-base">
-                    <div className="flex items-center">
-                      <svg
-                        className="w-3 h-3 md:w-4 md:h-4 text-gray-500 mr-1 md:mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      {movie.runtime} mins
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 md:px-6 md:py-4 font-semibold text-gray-900 text-sm md:text-base">
-                    <div className="flex items-center">
-                      <svg
-                        className="w-3 h-3 md:w-4 md:h-4 text-green-500 mr-1 md:mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      ₹{(movie.total_revenue || 0).toLocaleString()}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table
+            columns={movieColumns}
+            dataSource={movieList?.items || []}
+            rowKey="id"
+            pagination={{
+              current: pagination?.current,
+              pageSize: pagination?.pageSize,
+              total: pagination?.total,
+              onChange: (page, pageSize) => handlePagination(page, pageSize),
+            }}
+            scroll={{ x: true }}
+            loading={loading}
+          />
         </div>
       </div>
 
@@ -449,14 +527,6 @@ const TheaterDetail = () => {
             <h3 className="text-lg md:text-xl font-bold text-gray-800">
               Movie Genre Distribution
             </h3>
-          </div>
-          <div className="flex">
-            <button className="px-2 py-1 md:px-3 md:py-1 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors font-medium mr-2 text-xs md:text-sm">
-              Monthly
-            </button>
-            <button className="px-2 py-1 md:px-3 md:py-1 bg-indigo-100 text-indigo-700 rounded-lg font-medium text-xs md:text-sm">
-              All Time
-            </button>
           </div>
         </div>
         <div className="h-64 sm:h-80 md:h-96">
