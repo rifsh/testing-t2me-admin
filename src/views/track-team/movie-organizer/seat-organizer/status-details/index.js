@@ -15,6 +15,7 @@ import { submitOrganizerMovieSeatUpdate } from 'store/slices/movieOrganizerSlice
 import { ActionType } from 'utils/api/warning-submit-util';
 import ResponsiveSeatMap from '../components/ResponsiveSeatMap ';
 import LoadingOverlay from 'components/util-components/Loader';
+import StatusTimelineCard from 'components/layout-components/Cards/StatusTimelineCard ';
 
 const { Title, Text, Paragraph } = Typography;
 const { confirm } = Modal;
@@ -286,23 +287,11 @@ export default function TheaterScreeningUI() {
 
                             </div>
                         </div>
-
-
-                        <Card title="Timeline" className="mt-6" bordered={false}>
-                            <Timeline>
-                                <Timeline.Item color="blue">
-                                    Created on {new Date(TrackrequestSeatsDetails.created_at).toLocaleString()}
-                                </Timeline.Item>
-                                <Timeline.Item color="orange">
-                                    Last updated on {new Date(TrackrequestSeatsDetails.updated_at).toLocaleString()}
-                                </Timeline.Item>
-                                <Timeline.Item color={TrackrequestSeatsDetails.approval_status === "change request" ? "gray" :
-                                    TrackrequestSeatsDetails.approval_status === "approved" ? "green" : "red"}>
-                                    {TrackrequestSeatsDetails.approval_status === "change request" ? "change request" :
-                                        TrackrequestSeatsDetails.approval_status === "approved" ? "Approved" : "Rejected"}
-                                </Timeline.Item>
-                            </Timeline>
-                        </Card>
+                        <StatusTimelineCard
+                            createdAt={TrackrequestSeatsDetails.created_at}
+                            updatedAt={TrackrequestSeatsDetails.updated_at}
+                            status={TrackrequestSeatsDetails.approval_status}
+                        />
                     </>
                 ) : (
                     <div>

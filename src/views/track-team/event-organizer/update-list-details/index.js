@@ -1,4 +1,4 @@
-import React, {  useEffect } from "react";
+import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import {
@@ -19,6 +19,7 @@ import {
   setComment,
   toggleComments
 } from "store/slices/EventOrganizerSlice";
+import StatusTimelineCard from "components/layout-components/Cards/StatusTimelineCard ";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -35,7 +36,7 @@ const DummyDataExample = () => {
     isCommentModalVisible,
     comment,
     actionType,
-    showAllComments 
+    showAllComments
   } = useSelector((state) => state.organizerUpdates);
 
   useEffect(() => {
@@ -108,7 +109,7 @@ const DummyDataExample = () => {
 
   const renderCommentList = () => {
     const comments = singleOrganizerUpdate?.related_comments || [];
-    
+
     if (comments.length === 0) {
       return <Text type="secondary">No comments yet</Text>;
     }
@@ -359,6 +360,7 @@ const DummyDataExample = () => {
         </Space>
       </Card>
 
+
       <CommentShowModal
         visible={isCommentModalVisible}
         onSubmit={handleSubmit}
@@ -368,6 +370,12 @@ const DummyDataExample = () => {
         setComment={(value) => dispatch(setComment(value))}
         title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Comment`}
         warningMessage={`Please provide a reason for the update.`}
+      />
+
+      <StatusTimelineCard
+        createdAt={singleOrganizerUpdate.created_at}
+        updatedAt={singleOrganizerUpdate.updated_at}
+        status={singleOrganizerUpdate.approval_status}
       />
     </div>
   );
