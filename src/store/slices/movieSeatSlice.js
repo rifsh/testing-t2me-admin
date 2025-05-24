@@ -249,6 +249,7 @@ const movieSeatSlice = createSlice({
     initializeSeats: (state, action) => {
       const { rows, columns } = action.payload;
       state.seats = Utils.generateInitialSeats(rows, columns, state.seatTypes);
+      state.usedSeatTypes = [state.seatTypes[1]];
     },
     loadSeatData: (state, action) => {
       const { seats, seatTypes } = action.payload;

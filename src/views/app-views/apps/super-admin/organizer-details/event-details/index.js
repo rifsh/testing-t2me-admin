@@ -17,7 +17,7 @@ const EventDetailReport = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState(true);
 
   const [page, setPage] = useState(1);
@@ -30,23 +30,22 @@ const [searchTerm, setSearchTerm] = useState("");
   const eventData = event?.[0];
   const selectedCountry = useSelector((state) => state.report.selectedCountry);
   const { data } = useSelector((state) => state.report.countryList);
-useEffect(() => {
+  useEffect(() => {
     const storedCountry = localStorage.getItem("selectedCountry");
     if (storedCountry) {
       dispatch(setSelectedCountry(JSON.parse(storedCountry)));
     }
   }, [dispatch]);
   const handleChange = (value) => {
-     dispatch(setSelectedCountry(value));
-     localStorage.setItem("selectedCountry", JSON.stringify(value)); // Save to localStorage
-   };
+    dispatch(setSelectedCountry(value));
+    localStorage.setItem("selectedCountry", JSON.stringify(value)); // Save to localStorage
+  };
 
-
-      useEffect(() => {
-      dispatch(
-        fetchCountryList({ active: activeFilter, search: searchTerm, page, size })
-      );
-    }, [dispatch, activeFilter, searchTerm, page]);
+  useEffect(() => {
+    dispatch(
+      fetchCountryList({ active: activeFilter, search: searchTerm, page, size })
+    );
+  }, [dispatch, activeFilter, searchTerm, page]);
   useEffect(() => {
     const fetchData = async () => {
       if (eventId && selectedCountry) {
@@ -91,14 +90,22 @@ useEffect(() => {
       },
     ],
   };
+  console.log(eventData, "even");
 
-  const countryRevenueData = {
-    labels: eventData.revenue_by_country?.map((c) => c.country_name) || [],
+  const scheduleRevenueData = {
+    labels:
+      eventData.schedule_revenue_details?.map(
+        (schedule) => schedule.schedule_name
+      ) || [],
     datasets: [
       {
-        label: "Revenue",
-        data: eventData.revenue_by_country?.map((c) => c.revenue) || [],
+        label: "Total Revenue",
+        data:
+          eventData.schedule_revenue_details?.map(
+            (schedule) => schedule.total_revenue
+          ) || [],
         backgroundColor: "#4BC0C0",
+        borderRadius: 4,
       },
     ],
   };
@@ -333,17 +340,50 @@ useEffect(() => {
 
         <div className="bg-white rounded-lg shadow p-4">
           <h3 className="text-lg font-semibold text-center mb-4">
-            Revenue by Country
+            Revenue by Schedule
           </h3>
           <div className="h-64">
             <Bar
-              data={countryRevenueData}
+              data={scheduleRevenueData}
               options={{
                 maintainAspectRatio: false,
+                responsive: true,
                 scales: {
                   y: {
                     beginAtZero: true,
-                    title: { display: true, text: "Revenue" },
+                    title: {
+                      display: true,
+                      text: "Revenue (₹)",
+                      font: {
+                        weight: "bold",
+                      },
+                    },
+                    ticks: {
+                      callback: function (value) {
+                        return "₹" + value.toLocaleString();
+                      },
+                    },
+                  },
+                  x: {
+                    title: {
+                      display: true,
+                      text: "Schedule Name",
+                      font: {
+                        weight: "bold",
+                      },
+                    },
+                  },
+                },
+                plugins: {
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        return `Revenue: ₹${context.parsed.y.toLocaleString()}`;
+                      },
+                    },
+                  },
+                  legend: {
+                    display: false, // Hide legend since we only have one dataset
                   },
                 },
               }}

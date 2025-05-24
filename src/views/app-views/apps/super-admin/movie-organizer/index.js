@@ -8,9 +8,12 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchCountryList,
   fetchMovieUserDetails,
+  fetchUserTheaters,
   setSelectedCountry,
 } from "store/slices/reportSlice";
-import { Spin, Alert, message, Select } from "antd";
+import { Spin, Alert, message, Select, Table } from "antd";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 
 Chart.register(...registerables);
 const { Option } = Select;
@@ -22,20 +25,27 @@ const MovieOrganizerDetail = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState(true);
 
-  const [page, setPage] = useState(1);
-  const size = 50;
   const {
     data: movieUserData,
     loading,
     error,
+    pagination: moviePagination,
   } = useSelector((state) => state.report.movieUserDetails);
 
+  const { data: userTheaters } = useSelector(
+    (state) => state.report.userTheaters
+  );
+
+  console.log(userTheaters, "theaters");
+
+  const { pagination } = useSelector((state) => state.report.userTheaters);
+
+  const handlePagination = usePaginationHook(fetchMovieUserDetails);
   const { organizerId } = useParams();
   const {
     data: countryData,
     loading: countryLoading,
     error: countryError,
-    pagination,
   } = useSelector((state) => state.report.countryList);
   console.log(countryData, "countryList");
   const selectedCountry = useSelector((state) => state.report.selectedCountry);
@@ -50,16 +60,38 @@ const MovieOrganizerDetail = () => {
     localStorage.setItem("selectedCountry", JSON.stringify(value)); // Save to localStorage
   };
   useEffect(() => {
-    dispatch(
-      fetchCountryList({ active: activeFilter, search: searchTerm, page, size })
-    );
-  }, [dispatch, activeFilter, searchTerm, page]);
+    dispatch(fetchCountryList({ active: activeFilter, search: searchTerm }));
+  }, [dispatch, activeFilter, searchTerm]);
   useEffect(() => {
     const fetchData = async () => {
       if (organizerId && selectedCountry) {
         try {
           await dispatch(
             fetchMovieUserDetails({
+              pageData: DEFAULT_PAGE_SIZE,
+              userId: organizerId,
+              countryId: selectedCountry,
+            })
+          );
+        } catch (error) {
+          console.error("Failed to fetch user details:", error);
+          message.error(
+            error.payload?.message || "Failed to load user details"
+          );
+        }
+      }
+    };
+
+    fetchData();
+  }, [dispatch, organizerId, selectedCountry]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (organizerId && selectedCountry) {
+        try {
+          await dispatch(
+            fetchUserTheaters({
+              pageData: DEFAULT_PAGE_SIZE,
               userId: organizerId,
               countryId: selectedCountry,
             })
@@ -92,38 +124,35 @@ const MovieOrganizerDetail = () => {
     );
   }
 
-  if (!movieUserData || !movieUserData[0]) {
-    return null;
-  }
 
-  const organizer = movieUserData[0]; // Access the first item in the array
-
+  const organizer = movieUserData;
+  const theaters = userTheaters?.items;
   // Transform API data to match your component structure
   const organizerData = {
-    username: organizer.username || "N/A",
-    email: organizer.email || "N/A",
-    is_active: organizer.is_active || false,
-    total_theaters: organizer.total_theaters || 0,
-    total_movies: organizer.total_movies || 0,
-    total_revenue: organizer.total_revenue || 0,
+    username: organizer?.username || "N/A",
+    email: organizer?.email || "N/A",
+    is_active: organizer?.is_active || false,
+    total_theaters: organizer?.total_theaters || 0,
+    total_movies: organizer?.total_movies || 0,
+    total_revenue: organizer?.total_revenue || 0,
     theaters:
-      organizer.theaters?.map((theater) => ({
-        id: theater.theater_id,
-        name: theater.theater_name,
-        company_name: theater.company_name,
-        screen_count: theater.screens_count,
-        movies_count: theater.movies_count,
-        is_active: theater.is_active,
+      theaters?.map((theater) => ({
+        id: theater?.theater_id,
+        name: theater?.theater_name,
+        company_name: theater?.company_name,
+        screen_count: theater?.screens_count,
+        movies_count: theater?.movies_count,
+        is_active: theater?.is_active,
       })) || [],
   };
 
   // Bar chart data - Screens per Theater
   const theatersChartData = {
-    labels: organizerData.theaters.map((theater) => theater.name),
+    labels: organizerData?.theaters.map((theater) => theater?.name),
     datasets: [
       {
         label: "Screen Count",
-        data: organizerData.theaters.map((theater) => theater.screen_count),
+        data: organizerData?.theaters?.map((theater) => theater?.screen_count),
         backgroundColor: "rgba(79, 70, 229, 0.6)",
         borderColor: "rgba(79, 70, 229, 1)",
         borderWidth: 2,
@@ -170,6 +199,43 @@ const MovieOrganizerDetail = () => {
     navigate(-1);
   };
 
+  const theaterColumns = [
+    {
+      title: "Theater Name",
+      dataIndex: "name",
+      key: "name",
+      fixed: "left",
+      width: 150,
+      render: (text, record) => (
+        <Link
+          to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${record.id}`}
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+        >
+          {text}
+        </Link>
+      ),
+    },
+    {
+      title: "Company",
+      dataIndex: "company_name",
+      key: "company",
+      width: 200,
+      render: (text) => <span className="text-gray-500">{text}</span>,
+    },
+    {
+      title: "Screens",
+      dataIndex: "screen_count",
+      key: "screens",
+      width: 120,
+    },
+    {
+      title: "Movies",
+      dataIndex: "movies_count",
+      key: "movies",
+      width: 120,
+    },
+  ];
+
   return (
     <div className="p-8" ref={reportRef}>
       <div className="flex items-center">
@@ -182,9 +248,7 @@ const MovieOrganizerDetail = () => {
       </div>
       {/* Header with Export Buttons */}
       <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">
-          Movie Organizer: {organizerData.username}
-        </h1>
+        <h1 className="text-2xl font-bold">{organizerData.username}</h1>
 
         <div className="flex gap-4">
           <Select
@@ -204,18 +268,47 @@ const MovieOrganizerDetail = () => {
               </Option>
             ))}
           </Select>
-          <button
-            onClick={handleExportCsv}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-          >
-            Export CSV
-          </button>
-          <button
-            onClick={handleExportPdf}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Export PDF
-          </button>
+          <div className="hidden sm:flex flex-col sm:flex-row gap-2 sm:gap-4">
+            <button
+              onClick={handleExportCsv}
+              className="px-3 py-2 sm:px-4 sm:py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center justify-center text-sm sm:text-base"
+            >
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span className="hidden sm:inline">Export</span> CSV
+            </button>
+
+            <button
+              onClick={handleExportPdf}
+              className="px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center text-sm sm:text-base"
+            >
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span className="hidden sm:inline">Export</span> PDF
+            </button>
+          </div>
         </div>
       </div>
 
@@ -224,13 +317,13 @@ const MovieOrganizerDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <h3 className="text-gray-500 text-sm font-medium">Email</h3>
-            <p>{organizerData.email}</p>
+            <p>{organizerData?.email}</p>
           </div>
           <div>
             <h3 className="text-gray-500 text-sm font-medium">Status</h3>
             <span
               className={`px-3 py-1 rounded-md text-sm ${
-                organizerData.is_active
+                organizerData?.is_active
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800"
               }`}
@@ -240,7 +333,7 @@ const MovieOrganizerDetail = () => {
           </div>
           <div>
             <h3 className="text-gray-500 text-sm font-medium">Total Revenue</h3>
-            <p>${organizerData.total_revenue || 0}</p>
+            <p>${organizerData?.total_revenue || 0}</p>
           </div>
         </div>
       </div>
@@ -251,20 +344,20 @@ const MovieOrganizerDetail = () => {
           <h3 className="text-gray-500 text-sm font-medium mb-2">
             Total Theaters
           </h3>
-          <p className="text-2xl font-bold">{organizerData.total_theaters}</p>
+          <p className="text-2xl font-bold">{organizerData?.total_theaters}</p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <h3 className="text-gray-500 text-sm font-medium mb-2">
             Total Movies
           </h3>
-          <p className="text-2xl font-bold">{organizerData.total_movies}</p>
+          <p className="text-2xl font-bold">{organizerData?.total_movies}</p>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <h3 className="text-gray-500 text-sm font-medium mb-2">
             Active Theaters
           </h3>
           <p className="text-2xl font-bold text-green-600">
-            {organizerData.theaters.filter((t) => t.is_active).length}
+            {organizerData?.theaters.filter((t) => t.is_active).length}
           </p>
         </div>
       </div>
@@ -274,68 +367,20 @@ const MovieOrganizerDetail = () => {
           <h3 className="text-gray-700 font-medium">Theaters List</h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Theater Name
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Company
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Screens
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Movies
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Status
-                </th>
-                {/* <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
-                  Actions
-                </th> */}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {organizerData.theaters.map((theater) => (
-                <tr key={theater.id}>
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    <Link
-                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theater.id}`}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      {theater.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {theater.company_name}
-                  </td>
-                  <td className="px-4 py-3">{theater.screen_count}</td>
-                  <td className="px-4 py-3">{theater.movies_count}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full ${
-                        theater.is_active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {theater.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  {/* <td className="px-4 py-3">
-                    <Link
-                      to={`${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/${theater.id}`}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      View Details
-                    </Link>
-                  </td> */}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <Table
+            columns={theaterColumns}
+            dataSource={organizerData?.theaters}
+            rowKey="id"
+            pagination={{
+              current: pagination?.current,
+              pageSize: pagination?.pageSize,
+              total: pagination?.total,
+              onChange: (page, pageSize) => handlePagination(page, pageSize),
+            }}
+            scroll={{ x: 800 }}
+            className="force-visible-columns"
+            style={{ minWidth: "800px" }}
+          />
         </div>
       </div>
 

@@ -22,6 +22,22 @@ export const fetchUserReports = createAsyncThunk(
   async (pageData, { rejectWithValue }) => {
     try {
       const response = await ReportService.fetchUserReports(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+
+export const fetchUserDetails = createAsyncThunk(
+  "report/fetchUserDetails",
+  async ({ userId, countryId }, { rejectWithValue }) => {
+    // Destructure params
+    try {
+      if (!userId) {
+        throw new Error("Missing required parameters");
+      }
+      const response = await ReportService.fetchUserDetails(userId, countryId);
       return response.data;
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
@@ -29,28 +45,32 @@ export const fetchUserReports = createAsyncThunk(
   }
 );
 
-// export const fetchUserDetails = createAsyncThunk(
-//   "report/fetchUserDetails",
-//   async (userId, { rejectWithValue }) => {
-//     try {
-//       const response = await ReportService.fetchUserDetails(userId);
-//       return response.data;
-//     } catch (error) {
-//       return rejectWithValue(error?.response?.data || error.message);
-//     }
-//   }
-// );
+export const fetchEventListing = createAsyncThunk(
+  "report/fetchEventListing",
+  async (pageData, { rejectWithValue }) => {
+    // Destructure params
+    try {
+      if (!pageData) {
+        throw new Error("Missing required parameters");
+      }
+      const response = await ReportService.fetchEventList(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
 
-export const fetchUserDetails = createAsyncThunk(
-  "report/fetchUserDetails",
+export const fetchUserTheaters = createAsyncThunk(
+  "report/fetchUserTheaters",
   async ({ userId, countryId }, { rejectWithValue }) => {
     // Destructure params
     try {
-      if (!userId ) {
+      if (!userId) {
         throw new Error("Missing required parameters");
       }
-      const response = await ReportService.fetchUserDetails(userId, countryId);
-      return response.data;
+      const response = await ReportService.fetchUserTheaters(userId, countryId);
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
     }
@@ -78,8 +98,11 @@ export const fetchMovieUserDetails = createAsyncThunk(
   "report/fetchMovieUserDetails",
   async ({ userId, countryId }, { rejectWithValue }) => {
     try {
-      const response = await ReportService.fetchMovieUserDetails(userId, countryId);
-      return response.data;
+      const response = await ReportService.fetchMovieUserDetails(
+        userId,
+        countryId
+      );
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
     }
@@ -93,7 +116,21 @@ export const fetchTheaterDetails = createAsyncThunk(
       const response = await ReportService.fetchTheaterDetails(theaterId);
       console.log(response, "res");
 
-      return response.data;
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+
+export const fetchMovieList = createAsyncThunk(
+  "report/fetchMovieList",
+  async (pageData ,{ rejectWithValue }) => {
+    try {
+      const response = await ReportService.fetchMovieList(pageData);
+      console.log(response, "res");
+
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(error?.response?.data || error.message);
     }
@@ -127,35 +164,53 @@ export const fetchCountryList = createAsyncThunk(
   }
 );
 
+//export
+
+export const fetchReportsExport = createAsyncThunk(
+  "report/fetchReporExport",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await ReportService.fetchUserReports(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+
 const reportSlice = createSlice({
   name: "report",
   initialState: {
     reportData: null,
     loading: false,
     error: null,
-    pagination: { size: 20, page: 1 },
     userReports: {
       data: null,
       loading: false,
       error: null,
-      pagination: {
-        current: 1,
-        pageSize: 10,
-        total: 0,
-      },
+      pagination: { size: 10, page: 1 },
     },
     countryList: {
       data: null,
       loading: false,
       error: null,
-      pagination: {
-        current: 1,
-        pageSize: 10,
-        total: 0,
-      },
+
       selectedCountry: null,
     },
     userDetails: {
+      data: null,
+      loading: false,
+      error: null,
+      pagination: { size: 10, page: 1 },
+    },
+    userTheaters: {
+      data: null,
+      loading: false,
+      error: null,
+      pagination: { size: 10, page: 1 },
+    },
+
+    eventListing: {
       data: null,
       loading: false,
       error: null,
@@ -175,7 +230,15 @@ const reportSlice = createSlice({
       data: null,
       loading: false,
       error: null,
+      pagination: { size: 10, page: 1 },
     },
+    movieList: {
+      data: null,
+      loading: false,
+      error: null,
+      pagination: { size: 5, page: 1 },
+    },
+
     movieDetails: {
       data: null,
       loading: false,
@@ -183,12 +246,6 @@ const reportSlice = createSlice({
     },
   },
   reducers: {
-    setUserReportsPagination: (state, action) => {
-      state.userReports.pagination = {
-        ...state.userReports.pagination,
-        ...action.payload,
-      };
-    },
     setSelectedCountry: (state, action) => {
       state.selectedCountry = action.payload;
     },
@@ -218,15 +275,8 @@ const reportSlice = createSlice({
       .addCase(fetchUserReports.fulfilled, (state, action) => {
         state.userReports.loading = false;
         state.userReports.data = action.payload || null;
-
-        if (action.payload?.[0]?.pagination) {
-          state.userReports.pagination = {
-            ...state.userReports.pagination,
-            current: action.payload[0].pagination.page,
-            pageSize: action.payload[0].pagination.size,
-            total: action.payload[0].pagination.total,
-          };
-        }
+        console.log("action.payload", action.payload);
+        state.userReports.pagination = action.payload;
       })
 
       .addCase(fetchUserReports.rejected, (state, action) => {
@@ -248,6 +298,40 @@ const reportSlice = createSlice({
         state.userDetails.loading = false;
         state.userDetails.error = action.payload || action.error.message;
       })
+
+      .addCase(fetchEventListing.pending, (state) => {
+        state.eventListing.loading = true;
+        state.eventListing.error = null;
+      })
+      .addCase(fetchEventListing.fulfilled, (state, action) => {
+        state.eventListing.loading = false;
+        state.eventListing.data = action.payload || null;
+        state.eventListing.pagination = action.payload;
+      })
+      .addCase(fetchEventListing.rejected, (state, action) => {
+        state.eventListing.loading = false;
+        state.eventListing.error = action.payload || action.error.message;
+      })
+
+      //user theaters
+
+      .addCase(fetchUserTheaters.pending, (state) => {
+        state.userTheaters.loading = true;
+        state.userTheaters.error = null;
+      })
+      .addCase(fetchUserTheaters.fulfilled, (state, action) => {
+        state.userTheaters.loading = false;
+        state.userTheaters.data = action.payload || null;
+        console.log("action.payload", action.payload);
+
+        state.userTheaters.pagination = action.payload;
+      })
+      .addCase(fetchUserTheaters.rejected, (state, action) => {
+        state.userTheaters.loading = false;
+        state.userTheaters.error = action.payload || action.error.message;
+      })
+
+      //event details
 
       .addCase(fetchEventDetails.pending, (state) => {
         state.eventDetails.loading = true;
@@ -271,6 +355,7 @@ const reportSlice = createSlice({
       .addCase(fetchMovieUserDetails.fulfilled, (state, action) => {
         state.movieUserDetails.loading = false;
         state.movieUserDetails.data = action.payload || null;
+        state.movieUserDetails.pagination = action.payload;
       })
       .addCase(fetchMovieUserDetails.rejected, (state, action) => {
         state.movieUserDetails.loading = false;
@@ -286,10 +371,25 @@ const reportSlice = createSlice({
       .addCase(fetchTheaterDetails.fulfilled, (state, action) => {
         state.theaterDetails.loading = false;
         state.theaterDetails.data = action.payload || null;
+        state.theaterDetails.pagination = action.payload;
       })
       .addCase(fetchTheaterDetails.rejected, (state, action) => {
         state.theaterDetails.loading = false;
         state.theaterDetails.error = action.payload || action.error.message;
+      })
+
+      .addCase(fetchMovieList.pending, (state) => {
+        state.movieList.loading = true;
+        state.movieList.error = null;
+      })
+      .addCase(fetchMovieList.fulfilled, (state, action) => {
+        state.movieList.loading = false;
+        state.movieList.data = action.payload || null;
+        state.movieList.pagination = action.payload;
+      })
+      .addCase(fetchMovieList.rejected, (state, action) => {
+        state.movieList.loading = false;
+        state.movieList.error = action.payload || action.error.message;
       })
 
       //movie detail
@@ -317,14 +417,14 @@ const reportSlice = createSlice({
         state.countryList.loading = false;
         state.countryList.data = action.payload || null;
 
-        if (action.payload?.[0]?.pagination) {
-          state.countryList.pagination = {
-            ...state.countryList.pagination,
-            current: action.payload[0].pagination.page,
-            pageSize: action.payload[0].pagination.size,
-            total: action.payload[0].pagination.total,
-          };
-        }
+        // if (action.payload?.[0]?.pagination) {
+        //   state.countryList.pagination = {
+        //     ...state.countryList.pagination,
+        //     current: action.payload[0].pagination.page,
+        //     pageSize: action.payload[0].pagination.size,
+        //     total: action.payload[0].pagination.total,
+        //   };
+        // }
       })
 
       .addCase(fetchCountryList.rejected, (state, action) => {
