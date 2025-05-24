@@ -350,6 +350,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/track-team/movie-organizer/Schedule-organizer/status-list")),
   },
   {
+    key: "trackRequest.movie.schedule.status.detail",
+    path: `${APP_PREFIX_PATH}/track/moive-schedule/status/detail/:scheduleId`,
+    component: React.lazy(() => import("views/track-team/movie-organizer/Schedule-organizer/status-detail")),
+  },
+  {
     key: "offer.add",
     path: `${APP_PREFIX_PATH}/offer/edit/:offerId`,
     component: React.lazy(() => import("views/offer/edit-offer/index")),

@@ -1059,7 +1059,7 @@ const eventOrganaizerDashBoardNavTree = [
             submenu: [],
           },
           {
-            key: "movie.schedule",
+            key: "trackRequest.movie.schedule.status.list",
             path: `${APP_PREFIX_PATH}/track/moive-schedule/status/list/movie`,
             title: "sidenav.movie.schedule",
             icon: OrderedListOutlined,
