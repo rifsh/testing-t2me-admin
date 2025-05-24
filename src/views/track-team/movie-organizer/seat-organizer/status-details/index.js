@@ -296,9 +296,9 @@ export default function TheaterScreeningUI() {
                                 <Timeline.Item color="orange">
                                     Last updated on {new Date(TrackrequestSeatsDetails.updated_at).toLocaleString()}
                                 </Timeline.Item>
-                                <Timeline.Item color={TrackrequestSeatsDetails.approval_status === "pending" ? "gray" :
+                                <Timeline.Item color={TrackrequestSeatsDetails.approval_status === "change request" ? "gray" :
                                     TrackrequestSeatsDetails.approval_status === "approved" ? "green" : "red"}>
-                                    {TrackrequestSeatsDetails.approval_status === "pending" ? "Awaiting approval" :
+                                    {TrackrequestSeatsDetails.approval_status === "change request" ? "change request" :
                                         TrackrequestSeatsDetails.approval_status === "approved" ? "Approved" : "Rejected"}
                                 </Timeline.Item>
                             </Timeline>
