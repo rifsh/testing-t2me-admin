@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Badge, Card, Typography, Tag, Divider, Descriptions, Timeline, Button, Space, Row, Col, Tooltip, Modal, message } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -312,19 +312,22 @@ export default function TheaterScreeningUI() {
             </Card>
 
             {TrackrequestSeatsDetails?.organizer_theatre_seat_structure_comment &&
-                (Array.isArray(TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment)
-                    ? TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment.map((comment, index) => (
-                        <Box className="">
-                            <Typography variant="h6" className="mb-4 font-bold text-gray-700">
-                                Review Comments
-                            </Typography>
-                            <Divider className="mb-4" />
-                            <CommentListRender key={index} comment={comment} />
-                        </Box>
-                    ))
-                    : <CommentListRender comment={TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment} />
-                )
-            }
+                (Array.isArray(TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment) ? (
+                    <Box className="">
+                        <Typography variant="h6" className="mb-4 font-bold text-gray-700">
+                            Review Comments
+                        </Typography>
+                        {TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment.map((comment, index) => (
+                            <React.Fragment key={index}>
+                                <Divider className="mb-4" />
+                                <CommentListRender comment={comment} />
+                            </React.Fragment>
+                        ))}
+                    </Box>
+                ) : (
+                    <CommentListRender comment={TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment} />
+                ))}
+
 
             <LoadingOverlay loading={loading} />
 
