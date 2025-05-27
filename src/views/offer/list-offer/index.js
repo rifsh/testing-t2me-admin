@@ -7,7 +7,7 @@ import {
   EditOutlined,
 } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   editOffer,
@@ -35,7 +35,7 @@ const OfferList = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const type = params.get("type");
+  const { type } = useParams();
   const {
     filteredOffers,
     pagination,
