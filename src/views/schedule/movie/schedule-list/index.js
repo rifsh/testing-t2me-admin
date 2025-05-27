@@ -15,16 +15,18 @@ import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { getAllMovieSchedule } from "store/slices/movieScheduleSlice";
 import dayjs from "dayjs";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { isOrganizer } from "configs/UserAccessConfig";
 
 const ScheduleList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const { allSchedule, message, pagination, editable_status, loading } =
     useSelector((state) => state.movieScheduleSlice);
   const handlePagination = usePaginationHook(getAllMovieSchedule);
 
   useEffect(() => {
-    dispatch(getAllMovieSchedule(DEFAULT_PAGE_SIZE));
+    dispatch(getAllMovieSchedule({ size: 10, page: 1, organizer: isOrganizer() ? false : null }));
   }, [dispatch]);
 
   // const handlePagination = (page, size) => {

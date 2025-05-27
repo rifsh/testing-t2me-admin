@@ -42,6 +42,20 @@ MovieSeatService.editSeatStructure = function (
     params: Utils.filterParams(pageData),
   });
 };
+MovieSeatService.makeEditSeatStructure = function (
+  data,
+  action,
+  pageData = { page: 1, size: 10 }
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+
+  return fetch({
+    url: `${ApiConstant.MOVIE_SEAT_MAKE_EDIT_URL}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+    params: Utils.filterParams(pageData),
+  });
+};
 
 MovieSeatService.editSeatStructureStatus = function (
   data,

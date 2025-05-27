@@ -68,6 +68,20 @@ export const editSeatStructure = createAsyncThunk(
   }
 );
 
+export const makeEditSeatStructure = createAsyncThunk(
+  "movieSeat/makeEditSeatStructure",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await MovieSeatService.makeEditSeatStructure(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error updating seat structure"
+      );
+    }
+  }
+);
+
 export const editSeatStructureStatus = createAsyncThunk(
   "movieSeat/editStatus",
   async ({ data, action, pageData }, { rejectWithValue }) => {
@@ -435,6 +449,26 @@ const movieSeatSlice = createSlice({
         }
       })
       .addCase(editSeatStructure.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.data || "Error updating seat structure";
+      })
+      .addCase(makeEditSeatStructure.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(makeEditSeatStructure.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.error = null;
+        state.responseData = payload.data;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseMessage = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(makeEditSeatStructure.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.data || "Error updating seat structure";
       })

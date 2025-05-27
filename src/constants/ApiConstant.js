@@ -224,6 +224,7 @@ export const ApiConstant = {
   //seat api
   MOVIE_SEAT_URL: "/api/v1/movie/seats/secured/seatstructure",
   MOVIE_SEAT_EDIT_URL: "/api/v1/movie/seats/secured/seatstructure/edit",
+  MOVIE_SEAT_MAKE_EDIT_URL: "/api/v1/movie/seats/secured/seatstructure/organizer/make_changes",
   MOVIE_SEAT_STATUS_URL:
     "/api/v1/movie/seats/secured/seatstructure/edit/status",
   MOVIE_SEAT_DETAILS_URL: "/api/v1/movie/seats/secured/seatstructure/single",
@@ -247,6 +248,9 @@ export const ApiConstant = {
   // MOVIE_SCHEDULE_URL: "/api/v1/movie/movies/secured/movie_schedules",
   // ADD_MOVIE_SCHEDULE_URL: "/api/v1/movie/schedule/secured/movie_schedules",
   MOVIE_SCHEDULE_URL: "/api/v1/movie/schedule/secured/movie_schedules",
+  MOVIE_ORGANIZER_SCHEDULE_URL: "/api/v1/movie/schedule/secured/schedules/organizer",
+  MOVIE_ORGANIZER_SCHEDULE_DETAIL_URL: "/api/v1/movie/schedule/secured/schedules/organizer/details",
+  ORGANIZER_MOVIE_SCHEDULE_APPROVAL_URL: "/api/v1/movie/schedule/secured/schedules/organizer/approval",
   // MOVIE_SCHEDULE_DETAILS_URL:"/api/v1/movie/movies/secured/movie_schedules/single",
   MOVIE_SCHEDULE_DETAILS_URL:
     "/api/v1/movie/schedule/secured/movie_schedules/single",

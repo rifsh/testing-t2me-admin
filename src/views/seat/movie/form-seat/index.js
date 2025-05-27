@@ -22,6 +22,7 @@ import {
   setSelectedSeatStructure,
   resetState,
   getTrackrequestSeatStructuresDetails,
+  makeEditSeatStructure,
 } from "store/slices/movieSeatSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
@@ -164,18 +165,37 @@ const SeatForm = (props) => {
           total_column: seats[0]?.length || 0,
           total_seats: totalVisibleSeats,
           seat_data: {
-           seats: nestedToFlat(seats),
+            seats: nestedToFlat(seats),
             seatTypes: usedSeatTypes,
           },
         };
-        const resultAction = await dispatch(
-          editSeatStructure({ data: editData, action: ActionType.WARNING })
-        );
 
-        if (editSeatStructure.fulfilled.match(resultAction)) {
-          dispatch(setSelectedSeatStructure(editData));
+        if (pageType) {
+          try {
+            const resultAction = await dispatch(
+              makeEditSeatStructure({ data: editData, action: ActionType.WARNING })
+            );
 
-          dispatch(setSeatDialogVisible(true));
+            if (makeEditSeatStructure.fulfilled.match(resultAction)) {
+              dispatch(setSelectedSeatStructure(editData));
+              dispatch(setSeatDialogVisible(true));
+            }
+          } catch (error) {
+            console.error('Error in makeEditSeatStructure:', error);
+          }
+        } else {
+          try {
+            const resultAction = await dispatch(
+              editSeatStructure({ data: editData, action: ActionType.WARNING })
+            );
+
+            if (editSeatStructure.fulfilled.match(resultAction)) {
+              dispatch(setSelectedSeatStructure(editData));
+              dispatch(setSeatDialogVisible(true));
+            }
+          } catch (error) {
+            console.error('Error in editSeatStructure:', error);
+          }
         }
       } else {
         let totalVisibleSeats = 0;
@@ -333,8 +353,11 @@ const SeatForm = (props) => {
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={mode === EDIT ? editSeatStructure : addSeatStructure}
-        navigationPath={`${APP_PREFIX_PATH}/seat/movie/list`}
+        addFunction={
+          mode === EDIT
+            ? (pageType ? makeEditSeatStructure : editSeatStructure)
+            : addSeatStructure
+        } navigationPath={`${APP_PREFIX_PATH}/seat/movie/list`}
         responseMessage={responseMessage}
         pagination={submitPagination}
       />
