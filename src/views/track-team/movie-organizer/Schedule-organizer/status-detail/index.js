@@ -23,6 +23,9 @@ import { Button, Col, message, Row } from "antd";
 import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
 import OrganizerlUtils from "utils/organizerUtils";
 import { ActionType } from "utils/api/warning-submit-util";
+import { CommentListRender } from "components/shared-components/Organizer/CommentListRender";
+import LoadingOverlay from "components/util-components/Loader";
+import { Box, Divider, Typography } from "@mui/material";
 
 const ScheduleDetails = () => {
     const { scheduleId } = useParams();
@@ -45,7 +48,7 @@ const ScheduleDetails = () => {
     }, [dispatch]);
 
     useEffect(() => {
-        console.log("singleOrganizerSchedule", singleOrganizerSchedule)
+        console.log("singleOrganizerSchedule", singleOrganizerSchedule?.organizer_movie_schedule_comment)
     }, [singleOrganizerSchedule]);
 
     if (loading) {
@@ -100,7 +103,7 @@ const ScheduleDetails = () => {
 
     const handleMakeChanges = () => {
         navigate(
-            `${APP_PREFIX_PATH}/seat/movie/edit/${scheduleId}/organizer`
+            `${APP_PREFIX_PATH}/schedule/edit/${scheduleId}`
         );
     };
 
@@ -203,108 +206,154 @@ const ScheduleDetails = () => {
         return null;
     };
 
+    const comments = [
+        {
+            created_at: "2025-05-27T13:05:33.645274",
+            updated_at: "2025-05-27T13:05:33.645285",
+            comment: "Approved",
+            user: {
+                username: "shamil707",
+                role: { name: "Super Admin" }
+            }
+        },
+        {
+            created_at: "2025-05-27T14:30:15.123456",
+            updated_at: "2025-05-27T14:35:22.789012",
+            comment: "Rejected",
+            user: {
+                username: "reviewer1",
+                role: { name: "Content Moderator" }
+            }
+        },
+        {
+            created_at: "2025-05-27T10:15:45.000000",
+            comment: "Please adjust the timing for the evening show",
+            user: {
+                username: "editor22",
+                role: { name: "Editor" }
+            }
+        }
+    ];
+
     return (
-        <div className="max-w-7xl mx-auto">
-            {/* Maker-Checker Actions */}
-            <div className='flex items-center justify-end py-6'>
-                {renderActionButtons()}
-            </div>
-            {/* Header */}
-            <div className="bg-gray-800 text-white p-5 rounded-lg shadow-md mb-6">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                    <div>
-                        <h1 className="text-2xl text-white font-bold mb-2">{singleOrganizerSchedule?.name}</h1>
-                        <div className="flex flex-wrap items-center gap-3 text-sm">
-                            <span className="flex items-center gap-1">
-                                <FaCalendarAlt /> {formatDate(singleOrganizerSchedule.start_date)} to{" "}
-                                {formatDate(singleOrganizerSchedule.end_date)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <FaTheaterMasks /> {singleOrganizerSchedule.theatre?.name}
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <FaMapMarkerAlt /> {singleOrganizerSchedule.venue?.name},{" "}
-                                {singleOrganizerSchedule.theatre.place?.name}
-                            </span>
+        <>
+            <div className="max-w-7xl mx-auto">
+                {/* Maker-Checker Actions */}
+                <div className='flex items-center justify-end py-6'>
+                    {renderActionButtons()}
+                </div>
+                {/* Header */}
+                <div className="bg-gray-800 text-white p-5 rounded-lg shadow-md mb-6">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                        <div>
+                            <h1 className="text-2xl text-white font-bold mb-2">{singleOrganizerSchedule?.name}</h1>
+                            <div className="flex flex-wrap items-center gap-3 text-sm">
+                                <span className="flex items-center gap-1">
+                                    <FaCalendarAlt /> {formatDate(singleOrganizerSchedule.start_date)} to{" "}
+                                    {formatDate(singleOrganizerSchedule.end_date)}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <FaTheaterMasks /> {singleOrganizerSchedule.theatre?.name}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <FaMapMarkerAlt /> {singleOrganizerSchedule.venue?.name},{" "}
+                                    {singleOrganizerSchedule.theatre.place?.name}
+                                </span>
+                            </div>
                         </div>
+                        <span className="inline-block bg-green-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                            {singleOrganizerSchedule.approval_status}
+                        </span>
                     </div>
-                    <span className="inline-block bg-green-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                        {singleOrganizerSchedule.approval_status}
-                    </span>
-                </div>
-            </div>
-
-            {/* Date selector */}
-            <div className="bg-white rounded-lg shadow-md mb-6">
-                <div className="p-4 flex justify-between items-center border-b">
-                    <h2 className="text-lg font-semibold">Movie Shows</h2>
                 </div>
 
-                {uniqueDates.length > 0 && (
-                    <div className="p-4 overflow-x-auto">
-                        <div className="flex gap-2">
-                            <button
-                                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${!selectedDate ? "bg-gray-800 text-white" : "bg-gray-200"
-                                    }`}
-                                onClick={() => setSelectedDate(null)}
-                            >
-                                All Shows
-                            </button>
-                            {uniqueDates.map((date) => (
+                {/* Date selector */}
+                <div className="bg-white rounded-lg shadow-md mb-6">
+                    <div className="p-4 flex justify-between items-center border-b">
+                        <h2 className="text-lg font-semibold">Movie Shows</h2>
+                    </div>
+
+                    {uniqueDates.length > 0 && (
+                        <div className="p-4 overflow-x-auto">
+                            <div className="flex gap-2">
                                 <button
-                                    key={date}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${selectedDate === date
-                                        ? "bg-gray-800 text-white"
-                                        : "bg-gray-200"
+                                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${!selectedDate ? "bg-gray-800 text-white" : "bg-gray-200"
                                         }`}
-                                    onClick={() => handleDateClick(date)}
+                                    onClick={() => setSelectedDate(null)}
                                 >
-                                    {formatDateShort(date)}
+                                    All Shows
                                 </button>
+                                {uniqueDates.map((date) => (
+                                    <button
+                                        key={date}
+                                        className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${selectedDate === date
+                                            ? "bg-gray-800 text-white"
+                                            : "bg-gray-200"
+                                            }`}
+                                        onClick={() => handleDateClick(date)}
+                                    >
+                                        {formatDateShort(date)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Shows Container - Grid View */}
+                <div className="mb-6">
+                    {filteredShows.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500 bg-white rounded-lg shadow-md">
+                            No shows available for the selected date.
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {filteredShows.map((show) => (
+                                <ShowCard
+                                    key={show.id}
+                                    show={show}
+                                    formatTime={formatTime}
+                                    formatDate={formatDate}
+                                    isOvernight={isOvernight}
+                                />
                             ))}
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
+                <StatusTimelineCard
+                    createdAt={singleOrganizerSchedule.created_at}
+                    updatedAt={singleOrganizerSchedule.updated_at}
+                    status={singleOrganizerSchedule.approval_status}
+                />
+                < LoadingOverlay loading={loading} />
+                <CommentShowModal
+                    visible={isCommentModalVisible}
+                    onSubmit={handleSubmit}
+                    onCancel={() => dispatch(setCommentModalVisibility(false))}
+                    loading={organizerLoading}
+                    comment={comment}
+                    setComment={(value) => dispatch(setComment(value))}
+                    title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)
+                        } Comment`}
+                    warningMessage={`Please provide a reason for the update.`}
+                />
             </div>
+            {singleOrganizerSchedule?.organizer_movie_schedule_comment &&
+                (Array.isArray(singleOrganizerSchedule.organizer_movie_schedule_comment)
+                    ? singleOrganizerSchedule.organizer_movie_schedule_comment.map((comment, index) => (
+                        <Box className="p-4">
+                            <Typography variant="h6" className="mb-4 font-bold text-gray-700">
+                                Review Comments
+                            </Typography>
+                            <Divider className="mb-4" />
+                            <CommentListRender key={index} comment={comment} />
+                        </Box>
+                    ))
+                    : <CommentListRender comment={singleOrganizerSchedule.organizer_movie_schedule_comment} />
+                )
+            }
 
-            {/* Shows Container - Grid View */}
-            <div className="mb-6">
-                {filteredShows.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500 bg-white rounded-lg shadow-md">
-                        No shows available for the selected date.
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {filteredShows.map((show) => (
-                            <ShowCard
-                                key={show.id}
-                                show={show}
-                                formatTime={formatTime}
-                                formatDate={formatDate}
-                                isOvernight={isOvernight}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
-            <StatusTimelineCard
-                createdAt={singleOrganizerSchedule.created_at}
-                updatedAt={singleOrganizerSchedule.updated_at}
-                status={singleOrganizerSchedule.approval_status}
-            />
-
-            <CommentShowModal
-                visible={isCommentModalVisible}
-                onSubmit={handleSubmit}
-                onCancel={() => dispatch(setCommentModalVisibility(false))}
-                loading={organizerLoading}
-                comment={comment}
-                setComment={(value) => dispatch(setComment(value))}
-                title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)
-                    } Comment`}
-                warningMessage={`Please provide a reason for the update.`}
-            />
-        </div>
+        </>
     );
 };
 

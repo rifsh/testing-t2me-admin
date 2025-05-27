@@ -302,19 +302,19 @@ export const protectedRoutes = [
   },
   {
     key: "offer.list",
-    path: `${APP_PREFIX_PATH}/offer/list`,
+    path: `${APP_PREFIX_PATH}/offer/list/:type`,
     component: React.lazy(() => import("views/offer/list-offer")),
   },
   {
     key: "trackRequest.offer.status",
-    path: `${APP_PREFIX_PATH}/track/offer/status/list`,
+    path: `${APP_PREFIX_PATH}/track/offer/status/list/:type`,
     component: React.lazy(() =>
       import("views/track-team/offer-organizer/status-list")
     ),
   },
   {
     key: "trackRequest.coupon.status",
-    path: `${APP_PREFIX_PATH}/track/coupon/status/list`,
+    path: `${APP_PREFIX_PATH}/track/coupon/status/list/:type`,
     component: React.lazy(() =>
       import("views/track-team/coupon-organizer/status-list")
     ),
@@ -366,7 +366,7 @@ export const protectedRoutes = [
   },
   {
     key: "coupon.list",
-    path: `${APP_PREFIX_PATH}/coupon/list`,
+    path: `${APP_PREFIX_PATH}/coupon/list/:type`,
     component: React.lazy(() => import("views/coupon/list-coupon")),
   },
   {

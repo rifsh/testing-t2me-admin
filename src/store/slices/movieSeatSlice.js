@@ -218,7 +218,7 @@ export const getTrackrequestSeatStructuresDetails = createAsyncThunk(
     try {
       const response =
         await MovieSeatService.getTrackrequestSeatStructuresDetails(pageData);
-      return response.data[0];
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Error fetching seat structure details"
@@ -658,8 +658,17 @@ const movieSeatSlice = createSlice({
         (state, { payload }) => {
           state.loading = false;
           state.error = null;
-          state.TrackrequestSeatsDetails = payload;
-          state.singleSeatStructure = payload;
+          const data = payload[0];
+          console.log("seatdatas", data)
+          const restructuredData = {
+            ...data,
+            seat_data: {
+              seats: flatToNested(data?.seat_data?.seats),
+              seatTypes: data?.seat_data?.seatTypes,
+            },
+          };
+          state.TrackrequestSeatsDetails = restructuredData;
+          state.singleSeatStructure = restructuredData;
           state.pagination = payload;
         }
       )

@@ -16,6 +16,8 @@ import { ActionType } from 'utils/api/warning-submit-util';
 import ResponsiveSeatMap from '../components/ResponsiveSeatMap ';
 import LoadingOverlay from 'components/util-components/Loader';
 import StatusTimelineCard from 'components/layout-components/Cards/StatusTimelineCard ';
+import { CommentListRender } from 'components/shared-components/Organizer/CommentListRender';
+import { Box } from '@mui/material';
 
 const { Title, Text, Paragraph } = Typography;
 const { confirm } = Modal;
@@ -308,6 +310,21 @@ export default function TheaterScreeningUI() {
                     {renderActionButtons()}
                 </div>
             </Card>
+
+            {TrackrequestSeatsDetails?.organizer_theatre_seat_structure_comment &&
+                (Array.isArray(TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment)
+                    ? TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment.map((comment, index) => (
+                        <Box className="">
+                            <Typography variant="h6" className="mb-4 font-bold text-gray-700">
+                                Review Comments
+                            </Typography>
+                            <Divider className="mb-4" />
+                            <CommentListRender key={index} comment={comment} />
+                        </Box>
+                    ))
+                    : <CommentListRender comment={TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment} />
+                )
+            }
 
             <LoadingOverlay loading={loading} />
 

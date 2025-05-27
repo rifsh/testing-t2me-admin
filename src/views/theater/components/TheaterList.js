@@ -49,6 +49,7 @@ const TheaterList = () => {
     dispatch(
       fetchTheaters({
         ...DEFAULT_PAGE_SIZE,
+        organizer: isOrganizer() ? false : true
       })
     );
   }, [dispatch]);
