@@ -37,6 +37,7 @@ import {
   toggleComments,
 } from "store/slices/EventOrganizerSlice";
 import { APPROVAL_STATUS } from "constants/AppConstants";
+import StatusTimelineCard from "components/layout-components/Cards/StatusTimelineCard ";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -481,10 +482,15 @@ const OrganizerOfferDetail = () => {
         loading={loading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${
-          actionType.charAt(0).toUpperCase() + actionType.slice(1)
-        } Comment`}
+        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)
+          } Comment`}
         warningMessage={`Please provide a reason for the update.`}
+      />
+
+      <StatusTimelineCard
+        createdAt={singleOrganizerUpdate.created_at}
+        updatedAt={singleOrganizerUpdate.updated_at}
+        status={singleOrganizerUpdate.approval_status}
       />
     </div>
   );

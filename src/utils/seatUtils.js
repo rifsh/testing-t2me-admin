@@ -117,7 +117,7 @@ export const validateMultiDragPositions = (
     for (const newPos of newPositions) {
       const distance = Math.sqrt(
         Math.pow(unselectedSeat.x - newPos.x, 2) +
-          Math.pow(unselectedSeat.y - newPos.y, 2)
+        Math.pow(unselectedSeat.y - newPos.y, 2)
       );
 
       if (distance < MIN_SEAT_DISTANCE) {
@@ -135,7 +135,7 @@ export const validateMultiDragPositions = (
       for (let j = i + 1; j < newPositions.length; j++) {
         const distance = Math.sqrt(
           Math.pow(newPositions[i].x - newPositions[j].x, 2) +
-            Math.pow(newPositions[i].y - newPositions[j].y, 2)
+          Math.pow(newPositions[i].y - newPositions[j].y, 2)
         );
 
         if (distance < MIN_SEAT_DISTANCE) {
@@ -215,7 +215,8 @@ function convertNestedToFlat(nestedSeats) {
 
 // Convert flat JSON object to nested array structure
 export const flatToNested = (data) => {
- 
+  console.log('seatdatas', data)
+
   return convertFlatToNested(data);
 };
 

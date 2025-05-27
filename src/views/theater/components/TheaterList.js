@@ -49,6 +49,7 @@ const TheaterList = () => {
     dispatch(
       fetchTheaters({
         ...DEFAULT_PAGE_SIZE,
+        // organizer: isOrganizer() ? false : true
       })
     );
   }, [dispatch]);
@@ -156,12 +157,12 @@ const TheaterList = () => {
       render: (name) => <span>{name || "N/A"}</span>,
       sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["place", "name"]),
     },
-    {
-      title: "Capacity",
-      dataIndex: "capacity",
-      render: (address) => <span>{address || "N/A"}</span>,
-      sorter: (a, b) => utils.antdTableSorter(a, b, "address"),
-    },
+    // {
+    //   title: "Capacity",
+    //   dataIndex: "capacity",
+    //   render: (address) => <span>{address || "N/A"}</span>,
+    //   sorter: (a, b) => utils.antdTableSorter(a, b, "address"),
+    // },
     {
       title: "Phone",
       dataIndex: "phone_number",

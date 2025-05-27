@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Badge, Card, Typography, Tag, Divider, Descriptions, Timeline, Button, Space, Row, Col, Tooltip, Modal, message } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,6 +15,9 @@ import { submitOrganizerMovieSeatUpdate } from 'store/slices/movieOrganizerSlice
 import { ActionType } from 'utils/api/warning-submit-util';
 import ResponsiveSeatMap from '../components/ResponsiveSeatMap ';
 import LoadingOverlay from 'components/util-components/Loader';
+import StatusTimelineCard from 'components/layout-components/Cards/StatusTimelineCard ';
+import { CommentListRender } from 'components/shared-components/Organizer/CommentListRender';
+import { Box } from '@mui/material';
 
 const { Title, Text, Paragraph } = Typography;
 const { confirm } = Modal;
@@ -286,23 +289,11 @@ export default function TheaterScreeningUI() {
 
                             </div>
                         </div>
-
-
-                        <Card title="Timeline" className="mt-6" bordered={false}>
-                            <Timeline>
-                                <Timeline.Item color="blue">
-                                    Created on {new Date(TrackrequestSeatsDetails.created_at).toLocaleString()}
-                                </Timeline.Item>
-                                <Timeline.Item color="orange">
-                                    Last updated on {new Date(TrackrequestSeatsDetails.updated_at).toLocaleString()}
-                                </Timeline.Item>
-                                <Timeline.Item color={TrackrequestSeatsDetails.approval_status === "pending" ? "gray" :
-                                    TrackrequestSeatsDetails.approval_status === "approved" ? "green" : "red"}>
-                                    {TrackrequestSeatsDetails.approval_status === "pending" ? "Awaiting approval" :
-                                        TrackrequestSeatsDetails.approval_status === "approved" ? "Approved" : "Rejected"}
-                                </Timeline.Item>
-                            </Timeline>
-                        </Card>
+                        <StatusTimelineCard
+                            createdAt={TrackrequestSeatsDetails.created_at}
+                            updatedAt={TrackrequestSeatsDetails.updated_at}
+                            status={TrackrequestSeatsDetails.approval_status}
+                        />
                     </>
                 ) : (
                     <div>
@@ -319,6 +310,24 @@ export default function TheaterScreeningUI() {
                     {renderActionButtons()}
                 </div>
             </Card>
+
+            {TrackrequestSeatsDetails?.organizer_theatre_seat_structure_comment &&
+                (Array.isArray(TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment) ? (
+                    <Box className="">
+                        <Typography variant="h6" className="mb-4 font-bold text-gray-700">
+                            Review Comments
+                        </Typography>
+                        {TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment.map((comment, index) => (
+                            <React.Fragment key={index}>
+                                <Divider className="mb-4" />
+                                <CommentListRender comment={comment} />
+                            </React.Fragment>
+                        ))}
+                    </Box>
+                ) : (
+                    <CommentListRender comment={TrackrequestSeatsDetails.organizer_theatre_seat_structure_comment} />
+                ))}
+
 
             <LoadingOverlay loading={loading} />
 

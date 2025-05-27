@@ -21,7 +21,9 @@ const initialState = {
 
   //api state
   allSchedule: [],
+  allOrganizerSchedule: null,
   singleSchedule: null,
+  singleOrganizerSchedule: null,
   //common api state
   loading: false,
   error: null,
@@ -113,6 +115,50 @@ export const getAllMovieSchedule = createAsyncThunk(
       return rejectWithValue(
         error.response?.data || "Error fetching all seat structure"
       );
+    }
+  }
+);
+
+export const getAllOrganizerMovieSchedule = createAsyncThunk(
+  "movieSchedule/getAllOrganizerMovieSchedule",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await MovieScheduleService.getAllOrganizerMovieSchedule(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching all seat structure"
+      );
+    }
+  }
+);
+
+export const getOrganizerMovieScheduleDetail = createAsyncThunk(
+  "movieSchedule/getOrganizerMovieScheduleDetail",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await MovieScheduleService.getOrganizerMovieScheduleDetails(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching all seat structure"
+      );
+    }
+  }
+);
+
+export const submitOrganizerMovieScheduleUpdate = createAsyncThunk(
+  "organizerUpdates/submitOrganizerMovieScheduleUpdate",
+  async ({ data, action, params }, { rejectWithValue }) => {
+    try {
+      const response = await MovieScheduleService.submitOrganizerMovieUpdate(
+        data,
+        action,
+        params
+      );
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to update category");
     }
   }
 );
@@ -363,6 +409,51 @@ const movieScheduleSlice = createSlice({
         state.loading = false;
         state.error =
           action.payload?.data || "Error fetching seat all structure";
+      })
+      .addCase(getAllOrganizerMovieSchedule.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getAllOrganizerMovieSchedule.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.allOrganizerSchedule = action.payload.items;
+        state.pagination = action.payload;
+      })
+      .addCase(getAllOrganizerMovieSchedule.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error fetching seat all structure";
+      })
+      .addCase(getOrganizerMovieScheduleDetail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getOrganizerMovieScheduleDetail.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.singleOrganizerSchedule = action.payload;
+        state.pagination = action.payload;
+      })
+      .addCase(getOrganizerMovieScheduleDetail.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload?.data || "Error fetching seat all structure";
+      })
+      .addCase(submitOrganizerMovieScheduleUpdate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitOrganizerMovieScheduleUpdate.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+          state.editable_status = payload.editable_status;
+        }
+      })
+      .addCase(submitOrganizerMovieScheduleUpdate.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Faileds";
       });
   },
 });

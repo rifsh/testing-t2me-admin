@@ -302,19 +302,19 @@ export const protectedRoutes = [
   },
   {
     key: "offer.list",
-    path: `${APP_PREFIX_PATH}/offer/list`,
+    path: `${APP_PREFIX_PATH}/offer/list/:type`,
     component: React.lazy(() => import("views/offer/list-offer")),
   },
   {
     key: "trackRequest.offer.status",
-    path: `${APP_PREFIX_PATH}/track/offer/status/list`,
+    path: `${APP_PREFIX_PATH}/track/offer/status/list/:type`,
     component: React.lazy(() =>
       import("views/track-team/offer-organizer/status-list")
     ),
   },
   {
     key: "trackRequest.coupon.status",
-    path: `${APP_PREFIX_PATH}/track/coupon/status/list`,
+    path: `${APP_PREFIX_PATH}/track/coupon/status/list/:type`,
     component: React.lazy(() =>
       import("views/track-team/coupon-organizer/status-list")
     ),
@@ -345,6 +345,16 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/track-team/movie-organizer/seat-organizer/status-details")),
   },
   {
+    key: "trackRequest.movie.schedule.status.list",
+    path: `${APP_PREFIX_PATH}/track/moive-schedule/status/list/:type`,
+    component: React.lazy(() => import("views/track-team/movie-organizer/Schedule-organizer/status-list")),
+  },
+  {
+    key: "trackRequest.movie.schedule.status.detail",
+    path: `${APP_PREFIX_PATH}/track/moive-schedule/status/detail/:scheduleId`,
+    component: React.lazy(() => import("views/track-team/movie-organizer/Schedule-organizer/status-detail")),
+  },
+  {
     key: "offer.add",
     path: `${APP_PREFIX_PATH}/offer/edit/:offerId`,
     component: React.lazy(() => import("views/offer/edit-offer/index")),
@@ -356,7 +366,7 @@ export const protectedRoutes = [
   },
   {
     key: "coupon.list",
-    path: `${APP_PREFIX_PATH}/coupon/list`,
+    path: `${APP_PREFIX_PATH}/coupon/list/:type`,
     component: React.lazy(() => import("views/coupon/list-coupon")),
   },
   {
@@ -775,7 +785,7 @@ export const protectedRoutes = [
       import("views/app-views/apps/organizer/reports/event-details")
     ),
   },
-   {
+  {
     path: `${APP_PREFIX_PATH}/organizer/reports/theater-details/:theaterId`,
     component: React.lazy(() =>
       import("views/app-views/apps/organizer/reports/theater-details")
@@ -821,11 +831,11 @@ export const protectedRoutes = [
     ),
   },
   {
-  path: `${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/:theaterId/movie-details/:movieId`,
-  component: React.lazy(() =>
-    import(
-      "views/app-views/apps/super-admin/movie-organizer/theater-details/movie-details"
-    )
-  ),
-},
+    path: `${APP_PREFIX_PATH}/super-admin/movie-organizer/theater-details/:theaterId/movie-details/:movieId`,
+    component: React.lazy(() =>
+      import(
+        "views/app-views/apps/super-admin/movie-organizer/theater-details/movie-details"
+      )
+    ),
+  },
 ];

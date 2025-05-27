@@ -22,6 +22,7 @@ import {
   setSelectedSeatStructure,
   resetState,
   getTrackrequestSeatStructuresDetails,
+  makeEditSeatStructure,
 } from "store/slices/movieSeatSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
@@ -29,9 +30,12 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 import { fetchScreenData } from "store/slices/screenSlice";
 import TheaterLayout from "views/seat/components/TheaterLayout";
-import { isOrganizer } from "configs/UserAccessConfig";
+import { getCurrentUser, isOrganizer } from "configs/UserAccessConfig";
 import { fetchTheaterByid } from "store/slices/theaterSlice";
 import { nestedToFlat } from "utils/seatUtils";
+import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
+import { setComment, setCommentModalVisibility } from "store/slices/EventOrganizerSlice";
+import { UserRoleConstants } from "constants/UserRoleConstant";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -39,14 +43,20 @@ const EDIT = "EDIT";
 const SeatForm = (props) => {
   const { mode = ADD, seatId, pageType } = props;
   const dispatch = useDispatch();
-
+  const currentUser = getCurrentUser();
   const [form] = Form.useForm();
   const [submitLoading, setSubmitLoading] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState("1");
   const { selectedTheaterId, singleResponse } = useSelector(
     (state) => state.theater
   );
-
+  const {
+    singleOrganizerUpdate,
+    loading: organizerLoading,
+    isCommentModalVisible,
+    comment,
+    actionType,
+    responseDataEvent, responseMessageEvent } = useSelector((state) => state.organizerUpdates);
   const {
     loading,
     error,
@@ -56,7 +66,6 @@ const SeatForm = (props) => {
     seats,
     singleSeatStructure,
     usedSeatTypes,
-
     selectedSeatStructure,
     responseImpactData,
     warningPagination,
@@ -148,6 +157,10 @@ const SeatForm = (props) => {
       setSubmitLoading(true);
 
       if (mode === EDIT) {
+        if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId && pageType) {
+          dispatch(setCommentModalVisibility(true));
+          return;
+        }
         let totalVisibleSeats = 0;
         seats.forEach((row) => {
           row.forEach((seat) => {
@@ -164,18 +177,37 @@ const SeatForm = (props) => {
           total_column: seats[0]?.length || 0,
           total_seats: totalVisibleSeats,
           seat_data: {
-           seats: nestedToFlat(seats),
+            seats: nestedToFlat(seats),
             seatTypes: usedSeatTypes,
           },
         };
-        const resultAction = await dispatch(
-          editSeatStructure({ data: editData, action: ActionType.WARNING })
-        );
 
-        if (editSeatStructure.fulfilled.match(resultAction)) {
-          dispatch(setSelectedSeatStructure(editData));
+        if (pageType) {
+          try {
+            const resultAction = await dispatch(
+              makeEditSeatStructure({ data: editData, action: ActionType.WARNING })
+            );
 
-          dispatch(setSeatDialogVisible(true));
+            if (makeEditSeatStructure.fulfilled.match(resultAction)) {
+              dispatch(setSelectedSeatStructure(editData));
+              dispatch(setSeatDialogVisible(true));
+            }
+          } catch (error) {
+            console.error('Error in makeEditSeatStructure:', error);
+          }
+        } else {
+          try {
+            const resultAction = await dispatch(
+              editSeatStructure({ data: editData, action: ActionType.WARNING })
+            );
+
+            if (editSeatStructure.fulfilled.match(resultAction)) {
+              dispatch(setSelectedSeatStructure(editData));
+              dispatch(setSeatDialogVisible(true));
+            }
+          } catch (error) {
+            console.error('Error in editSeatStructure:', error);
+          }
         }
       } else {
         let totalVisibleSeats = 0;
@@ -225,6 +257,59 @@ const SeatForm = (props) => {
     } finally {
       setSubmitLoading(false);
     }
+  };
+
+  const handleSubmit = async () => {
+    if (comment.trim().length === 0) {
+      message.error("Please add a comment!");
+      return;
+    }
+    const formValues = await form.validateFields();
+
+    try {
+      let totalVisibleSeats = 0;
+      seats.forEach((row) => {
+        row.forEach((seat) => {
+          if (seat.isVisible) {
+            totalVisibleSeats++;
+          }
+        });
+      });
+      const combinedData = {
+        ...formValues,
+        id: singleSeatStructure.id,
+        comment: comment,
+        place: singleResponse?.place?.id,
+        venue_id: singleResponse?.venue?.id,
+        total_row: seats.length,
+        total_column: seats[0]?.length || 0,
+        total_seats: totalVisibleSeats,
+        type: SEAT_STRUCTURE_TYPES.MOVIE,
+        seat_data: {
+          seats: nestedToFlat(seats),
+          seatTypes: usedSeatTypes,
+        },
+      };
+      console.log("...............", combinedData);
+      const resultAction = await dispatch(
+        makeEditSeatStructure({ data: combinedData, action: ActionType.SUBMIT })
+      );
+
+      if (makeEditSeatStructure.fulfilled.match(resultAction)) {
+        console.log("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEssss");
+        dispatch(setComment(""));
+        dispatch(setCommentModalVisibility(false));
+        dispatch(setSelectedSubmitItem(combinedData));
+        message.success(`Update ${actionType}ed successfully`);
+        // navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`);
+      }
+      dispatch(setSelectedSubmitItem(combinedData));
+    } catch (error) {
+      message.error(`Failed to ${actionType} the update`);
+    }
+
+    dispatch(setComment(""));
+    dispatch(setCommentModalVisibility(false));
   };
 
   const handleTabChange = (key) => {
@@ -333,10 +418,24 @@ const SeatForm = (props) => {
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={mode === EDIT ? editSeatStructure : addSeatStructure}
-        navigationPath={`${APP_PREFIX_PATH}/seat/movie/list`}
+        addFunction={
+          mode === EDIT
+            ? (pageType ? makeEditSeatStructure : editSeatStructure)
+            : addSeatStructure
+        } navigationPath={`${APP_PREFIX_PATH}/seat/movie/list`}
         responseMessage={responseMessage}
         pagination={submitPagination}
+      />
+
+      <CommentShowModal
+        visible={isCommentModalVisible}
+        onSubmit={handleSubmit}
+        onCancel={() => dispatch(setCommentModalVisibility(false))}
+        loading={organizerLoading}
+        comment={comment}
+        setComment={(value) => dispatch(setComment(value))}
+        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Comment`}
+        warningMessage={`Please provide a reason for the update.`}
       />
     </>
   );

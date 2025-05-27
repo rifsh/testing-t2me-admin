@@ -171,7 +171,7 @@ const superAdminDashBoardNavTree = [
               },
               {
                 key: "offer.list",
-                path: `${APP_PREFIX_PATH}/offer/list?type=general`,
+                path: `${APP_PREFIX_PATH}/offer/list/general`,
                 title: "sidenav.offer",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
@@ -179,7 +179,7 @@ const superAdminDashBoardNavTree = [
               },
               {
                 key: "coupon.list",
-                path: `${APP_PREFIX_PATH}/coupon/list?type=general`,
+                path: `${APP_PREFIX_PATH}/coupon/list/general`,
                 title: "sidenav.coupon",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
@@ -434,6 +434,14 @@ const superAdminDashBoardNavTree = [
             icon: OrderedListOutlined,
             breadcrumb: false,
             submenu: [],
+          },
+          {
+            key: "trackRequest.movie.schedule.status.list",
+            path: `${APP_PREFIX_PATH}/track/moive-schedule/status/list/movie`,
+            title: "sidenav.movie.schedule",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            isGroupTitle: false,
           },
         ],
       },
@@ -960,7 +968,7 @@ const eventOrganaizerDashBoardNavTree = [
       },
       {
         key: "offer.movie.list",
-        path: `${APP_PREFIX_PATH}/offer/list?type=movie`,
+        path: `${APP_PREFIX_PATH}/offer/list/movie`,
         title: "sidenav.offer",
         icon: OrderedListOutlined,
         breadcrumb: false,
@@ -968,7 +976,7 @@ const eventOrganaizerDashBoardNavTree = [
       },
       {
         key: "coupon.movie.list",
-        path: `${APP_PREFIX_PATH}/coupon/list?type=movie`,
+        path: `${APP_PREFIX_PATH}/coupon/list/movie`,
         title: "sidenav.coupon",
         icon: OrderedListOutlined,
         breadcrumb: false,
@@ -1044,7 +1052,7 @@ const eventOrganaizerDashBoardNavTree = [
           },
           {
             key: "trackRequest.movie.offer.status.list",
-            path: `${APP_PREFIX_PATH}/track/offer/status/list?type=movie`,
+            path: `${APP_PREFIX_PATH}/track/offer/status/list/movie`,
             title: "sidenav.offer",
             icon: OrderedListOutlined,
             breadcrumb: false,
@@ -1052,7 +1060,7 @@ const eventOrganaizerDashBoardNavTree = [
           },
           {
             key: "trackRequest.movie.coupon.status.list",
-            path: `${APP_PREFIX_PATH}/track/coupon/status/list?type=movie`,
+            path: `${APP_PREFIX_PATH}/track/coupon/status/list/movie`,
             title: "sidenav.coupon",
             icon: OrderedListOutlined,
             breadcrumb: false,
@@ -1060,11 +1068,11 @@ const eventOrganaizerDashBoardNavTree = [
           },
           {
             key: "trackRequest.movie.schedule.status.list",
-            path: `${APP_PREFIX_PATH}/track/coupon/status/list?type=movie`,
+            path: `${APP_PREFIX_PATH}/track/moive-schedule/status/list/movie`,
             title: "sidenav.movie.schedule",
             icon: OrderedListOutlined,
             breadcrumb: false,
-            submenu: [],
+            isGroupTitle: false,
           },
         ],
       },
