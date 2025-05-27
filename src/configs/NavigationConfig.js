@@ -421,7 +421,7 @@ const superAdminDashBoardNavTree = [
           },
           {
             key: "trackRequest.movie.offer.status.list",
-            path: `${APP_PREFIX_PATH}/track/offer/status/list?type=movie`,
+            path: `${APP_PREFIX_PATH}/track/offer/status/list/movie`,
             title: "sidenav.offer",
             icon: OrderedListOutlined,
             breadcrumb: false,
@@ -429,7 +429,7 @@ const superAdminDashBoardNavTree = [
           },
           {
             key: "trackRequest.movie.coupon.status.list",
-            path: `${APP_PREFIX_PATH}/track/coupon/status/list?type=movie`,
+            path: `${APP_PREFIX_PATH}/track/coupon/status/list/movie`,
             title: "sidenav.coupon",
             icon: OrderedListOutlined,
             breadcrumb: false,

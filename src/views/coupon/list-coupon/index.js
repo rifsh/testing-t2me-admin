@@ -18,7 +18,7 @@ import {
   EditOutlined,
 } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   editCoupon,
@@ -47,7 +47,7 @@ const CouponList = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const type = params.get("type");
+  const { type } = useParams();
   const {
     filteredCoupons,
     pagination,
@@ -241,7 +241,7 @@ const CouponList = () => {
               {selectedCoupon.description || "No description available"}
             </Descriptions.Item> */}
             {selectedCoupon.thumbnail_image &&
-            selectedCoupon.thumbnail_image !== "images" ? (
+              selectedCoupon.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">
                 <img
                   src={selectedCoupon.thumbnail_image}
