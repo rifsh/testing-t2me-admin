@@ -55,18 +55,26 @@ TheaterService.editTheater = (data, action) => {
         skipEmpty: true,
     });
     return fetch({
-        url: `${ApiConstant.EDIT_THEATER_URL}?theatre_id=${data.id}&action=${encodedAction}`,
+        url: ApiConstant.EDIT_THEATER_URL,
         method: "put",
-        data: formData
+        data: formData,
+    params: {
+      theatre_id: data.id,
+      action: encodedAction,
+    },
     });
 }
 
 TheaterService.editTheaterStatus = (data, action) => {
     const encodedAction = encodeURIComponent(handleAction(action));
     return fetch({
-        url: `${ApiConstant.EDIT_THEATER_STATUS_URL}?theatre_id=${data.id}&action=${encodedAction}`,
+        url: ApiConstant.EDIT_THEATER_STATUS_URL,
         method: "put",
-        data: data
+        data: data,
+        params: {
+        theatre_id: data.id,
+        action: encodedAction,
+        },
     });
 }
 

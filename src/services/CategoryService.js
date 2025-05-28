@@ -6,29 +6,28 @@ import { handleAction } from "utils/api/warning-submit-util";
 const CategoryService = {};
 
 CategoryService.addCategory = function (data, action) {
-  const encodedAction = encodeURIComponent(handleAction(action));
-
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
 
   return fetch({
-    url: `${ApiConstant.CATEGORY_URL}?action=${encodedAction}`,
+    url: ApiConstant.CATEGORY_URL,
     method: "POST",
     data: formData,
     headers: {
       "Content-Type": "multipart/form-data",
     },
+    params: { action: handleAction(action) },
   });
 };
 
 CategoryService.updateCategory = function (data, action) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.CATEGORY_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.CATEGORY_URL}/${data.id}`,
     method: "put",
     data: data,
+    params: { action: handleAction(action) },
   });
 };
 
@@ -39,18 +38,23 @@ CategoryService.fetchCategory = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+
 CategoryService.getSingleCateory = function (category_id) {
   return fetch({
-    url: `${ApiConstant.SINGLE_CATEGORY_URL}?category_id=${category_id}`,
+    url: ApiConstant.SINGLE_CATEGORY_URL,
     method: "get",
+    params: { category_id },
   });
 };
+
 CategoryService.getSingleSubCateory = function (subcategory_id) {
   return fetch({
-    url: `${ApiConstant.SUB_SINGLE_CATEGORY_URL}?subcategory_id=${subcategory_id}`,
+    url: ApiConstant.SUB_SINGLE_CATEGORY_URL,
     method: "get",
+    params: { subcategory_id },
   });
 };
+
 CategoryService.fetchSubCategory = function (pageData) {
   return fetch({
     url: ApiConstant.SUB_CATEGORY_URL,
@@ -59,27 +63,22 @@ CategoryService.fetchSubCategory = function (pageData) {
   });
 };
 
-// CategoryService.addSubCategory = function (data, action) {
-//   const encodedAction = encodeURIComponent(handleAction(action));
-//   return fetch({
-//     url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${data.category_id}&action=${encodedAction}`,
-//     method: "post",
-//     data: data,
-//   });
-// };
 CategoryService.addSubCategory = function (data, action) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
 
   return fetch({
-    url: `${ApiConstant.SUB_CATEGORY_URL}?category_id=${data.category_id}&action=${encodedAction}`,
+    url: ApiConstant.SUB_CATEGORY_URL,
     method: "POST",
     data: formData,
     headers: {
       "Content-Type": "multipart/form-data",
+    },
+    params: {
+      category_id: data.category_id,
+      action: handleAction(action),
     },
   });
 };
@@ -89,18 +88,20 @@ CategoryService.editCategory = function (
   action,
   pageData = { page: 1, size: 10 }
 ) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
   return fetch({
-    url: `${ApiConstant.CATEGORY_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.CATEGORY_URL}/${data.id}`,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
     headers: {
       "Content-Type": "multipart/form-data",
+    },
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(pageData),
     },
   });
 };
@@ -110,18 +111,20 @@ CategoryService.editSubCategory = function (
   action,
   pageData = { page: 1, size: 10 }
 ) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
   return fetch({
-    url: `${ApiConstant.SUB_CATEGORY_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.SUB_CATEGORY_URL}/${data.id}`,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
     headers: {
       "Content-Type": "multipart/form-data",
+    },
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(pageData),
     },
   });
 };
@@ -131,39 +134,46 @@ CategoryService.editCatStatus = function (
   action,
   pageData = { page: 1, size: 10 }
 ) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.CATEGORY_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.CATEGORY_STATUS_URL}/${data.id}`,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(pageData),
+    },
   });
 };
+
 CategoryService.editSubCatStatus = function (
   data,
   action,
   pageData = { page: 1, size: 10 }
 ) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.SUB_CATEGORY_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.SUB_CATEGORY_STATUS_URL}/${data.id}`,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(pageData),
+    },
   });
 };
 
 CategoryService.validateCategory = function (categoryId) {
   return fetch({
-    url: `${ApiConstant.CATEGORY_VALIDATE_URL}?category_id=${categoryId}`,
+    url: ApiConstant.CATEGORY_VALIDATE_URL,
     method: "get",
+    params: { category_id: categoryId },
   });
 };
 
 CategoryService.validateSubCategory = function (subCategoryId) {
   return fetch({
-    url: `${ApiConstant.SUB_CATEGORY_VALIDATE_URL}?subcategory_id=${subCategoryId}`,
+    url: ApiConstant.SUB_CATEGORY_VALIDATE_URL,
     method: "get",
+    params: { subcategory_id: subCategoryId },
   });
 };
 

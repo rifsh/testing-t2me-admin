@@ -6,7 +6,14 @@ import { notification } from "antd";
 import store from "../store";
 import Utils from "utils";
 import { delay } from "lodash";
-
+import { encryptAES, decryptAES, encryptParams, decryptParams } from "utils/aesDecrypt";
+import { env } from "configs/EnvironmentConfig";
+const {
+  AES_KEY,
+  NEED_ENCRYPT_DECRYPT,
+  ENCRYPT_PARAMS,
+  SKIP_ENCRYPTION_PATHS
+} = env;
 const unauthorizedCode = [401, 403];
 let isLoggingOut = false; // Flag to prevent logout loop
 
@@ -19,15 +26,63 @@ const service = axios.create({
   // }
 });
 
+// Helper function to check if path should skip parameter encryption
+const shouldSkipEncryption = (url) => {
+  return SKIP_ENCRYPTION_PATHS.some(path => url.includes(path));
+};
+
 // Config
 service.interceptors.request.use(
-  (config) => {
+  async (config) => {
     const TOKEN_PAYLOAD_KEY = "Authorization";
     const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
 
     if (jwtToken) {
       config.headers[TOKEN_PAYLOAD_KEY] = `Bearer ${jwtToken}`;
     }
+
+    // ( enc started)
+    // Encrypt URL parameters for GET requests
+    if (NEED_ENCRYPT_DECRYPT && ENCRYPT_PARAMS && 
+        config.params && 
+        Object.keys(config.params).length > 0 && 
+        !shouldSkipEncryption(config.url)) {
+      try {
+        console.log("[REQUEST] Original Params:", config.params);
+        const encryptedParams = await encryptParams(config.params, AES_KEY);
+        config.params = encryptedParams;
+        console.log("[REQUEST] Params encrypted for transmission");
+      } catch (error) {
+        console.error("[REQUEST PARAMS ENCRYPTION ERROR]", error);
+        // Continue with original params if encryption fails
+      }
+    }
+
+    // Encrypt request body for POST/PUT requests
+    if (NEED_ENCRYPT_DECRYPT && 
+        (config.method === 'post' || config.method === 'put') && 
+        config.data && 
+        !shouldSkipEncryption(config.url)) {
+      try {
+        // Skip encryption for FormData (file uploads)
+        if (config.data instanceof FormData) {
+          console.log("[REQUEST] Skipping encryption for FormData");
+        } else {
+          // Only encrypt if content-type is application/json (or not specified, defaulting to JSON)
+          const contentType = config.headers['Content-Type'] || config.headers['content-type'];
+          if (!contentType || contentType.includes('application/json')) {
+            console.log("[REQUEST] Original Data:", config.data);
+            const encryptedData = await encryptAES(config.data, AES_KEY);
+            config.data = { encrypted: encryptedData };
+            console.log("[REQUEST] Data encrypted for transmission");
+          }
+        }
+      } catch (error) {
+        console.error("[REQUEST ENCRYPTION ERROR]", error);
+        // Continue with original data if encryption fails
+      }
+    }
+    // ( enc ended)
 
     // Log the outgoing request details
     console.log(
@@ -67,16 +122,32 @@ service.interceptors.request.use(
 
 // Response Interceptor
 service.interceptors.response.use(
-  (response) => {
+  async (response) => {
     console.log(
       `%c[RESPONSE] URL: ${response.config.baseURL + response.config.url}`,
       "color: #2dce89; font-weight: bold;"
     );
-    console.log("[RESPONSE] Data:", response.data);
+    console.log("[RESPONSE] Raw Data:", response.data);
     const newToken = response.headers["new-token"];
     if (newToken) {
       localStorage.setItem("auth_token", newToken);
     }
+
+    // ( enc  for response started)
+    // Decrypt response if it's encrypted
+    if (NEED_ENCRYPT_DECRYPT && response.data?.encrypted) {
+      try {
+        const decrypted = await decryptAES(response.data.encrypted, AES_KEY);
+        console.log("[RESPONSE] Decrypted Data:", decrypted);
+        return decrypted;
+      } catch (e) {
+        console.error("[DECRYPTION ERROR]", e);
+        // Continue with original response if decryption fails
+        console.warn("[DECRYPTION FALLBACK] Returning original response");
+      }
+    }
+    // ( enc  for response ended)
+
     return response.data;
   },
   async (error) => {

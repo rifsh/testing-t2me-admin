@@ -29,9 +29,13 @@ TicketsService.addTicket = function (data, action) {
   });
 
   return fetch({
-    url: `${ApiConstant.TICKET_URL}?venue_id=${data.venue_id}&action=${encodedAction}`,
+    url: ApiConstant.TICKET_URL,
     method: "post",
     data: formData,
+    params: {
+      venue_id: data.venue_id,
+      action: encodedAction,
+    },
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -40,8 +44,11 @@ TicketsService.addTicket = function (data, action) {
 
 TicketsService.validateTicket = function (ticketId) {
   return fetch({
-    url: `${ApiConstant.TICKET_VALIDATE_URL}?ticket_id=${ticketId}`,
+    url: ApiConstant.TICKET_VALIDATE_URL,
     method: "get",
+    params: {
+      ticket_id: ticketId,
+    },
   });
 };
 

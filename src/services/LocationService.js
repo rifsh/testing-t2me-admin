@@ -44,9 +44,13 @@ LocationService.addPlace = function (data, action) {
   // }
 
   return fetch({
-    url: `${ApiConstant.PLACE_URL}?country_id=${data.country_id}&action=${encodedAction}`,
+    url: ApiConstant.PLACE_URL,
     method: "POST",
     data: formData,
+    params: {
+      country_id: data.country_id,
+      action: encodedAction,
+    },
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -66,10 +70,13 @@ LocationService.editPlace = function (
   });
 
   return fetch({
-    url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}`,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
+    params: {
+      ...Utils.filterParams(pageData),
+      action: encodedAction,
+    },
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -83,10 +90,13 @@ LocationService.editPlaceStatus = function (
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.EDIT_PLACE_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.EDIT_PLACE_STATUS_URL}/${data.id}`,
     method: "put",
-    params: Utils.filterParams(pageData),
     data: data,
+    params: {
+      ...Utils.filterParams(pageData),
+      action: encodedAction,
+    },
   });
 };
 
@@ -97,10 +107,13 @@ LocationService.editVenueStatus = function (
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.EDIT_VENUE_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.EDIT_VENUE_STATUS_URL}/${data.id}`,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: {
+      ...Utils.filterParams(pageData),
+      action: encodedAction,
+    },
   });
 };
 
@@ -117,10 +130,13 @@ LocationService.editVenue = function (
   });
 
   return fetch({
-    url: `${ApiConstant.EDIT_VENUE_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.EDIT_VENUE_URL}/${data.id}`,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
+    params: {
+      ...Utils.filterParams(pageData),
+      action: encodedAction,
+    },
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -167,9 +183,13 @@ LocationService.addVenue = function (data, action) {
   // }
 
   return fetch({
-    url: `${ApiConstant.VENUE_URL}?place_id=${data.place_id}&action=${encodedAction}`,
+    url: ApiConstant.VENUE_URL,
     method: "POST",
     data: formData,
+    params: {
+      place_id: data.place_id,
+      action: encodedAction,
+    },
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -178,8 +198,9 @@ LocationService.addVenue = function (data, action) {
 
 LocationService.placeWithCountry = function (place) {
   return fetch({
-    url: `${ApiConstant.PLACE_WITH_COUNTRY_URL}?place=${place}`,
+    url: ApiConstant.PLACE_WITH_COUNTRY_URL,
     method: "get",
+    params: { place }
   });
 };
 LocationService.getVenues = function (pageData) {
@@ -189,18 +210,23 @@ LocationService.getVenues = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+
 LocationService.getSingleVenues = function (venue_id) {
   return fetch({
-    url: `${ApiConstant.SINGLE_VENUE_URL}?venue_id=${venue_id}`,
+    url: ApiConstant.SINGLE_VENUE_URL,
     method: "get",
+    params: { venue_id },
   });
 };
+
 LocationService.getSinglePlace = function (place_id) {
   return fetch({
-    url: `${ApiConstant.SINGLE_PLACE_URL}?place_id=${place_id}`,
+    url: ApiConstant.SINGLE_PLACE_URL,
     method: "get",
+    params: { place_id },
   });
 };
+
 LocationService.getPlaces = function (pageData) {
   return fetch({
     url: ApiConstant.PLACE_URL,
@@ -208,6 +234,7 @@ LocationService.getPlaces = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+
 LocationService.getCoutryDetails = function () {
   return fetch({
     url: ApiConstant.COUNTRY_DETAILS_URL,
@@ -219,22 +246,25 @@ LocationService.getCoutryDetails = function () {
 
 LocationService.validatePlace = function (placeId) {
   return fetch({
-    url: `${ApiConstant.PLACE_VALIDATE_URL}?place_id=${placeId}`,
+    url: ApiConstant.PLACE_VALIDATE_URL,
     method: "get",
+    params: { place_id: placeId },
   });
 };
 
 LocationService.validateVenue = function (venueId) {
   return fetch({
-    url: `${ApiConstant.VENUE_VALIDATE_URL}?venue_id=${venueId}`,
+    url: ApiConstant.VENUE_VALIDATE_URL,
     method: "get",
+    params: { venue_id: venueId },
   });
 };
 
 LocationService.validateCountry = function (countryId) {
   return fetch({
-    url: `${ApiConstant.COUNTRY_VALIDATE_URL}?country_id=${countryId}`,
+    url: ApiConstant.COUNTRY_VALIDATE_URL,
     method: "get",
+    params: { country_id: countryId },
   });
 };
 

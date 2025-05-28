@@ -38,26 +38,56 @@ OfferService.editOffer = function (
   console.log(data, "DATA IN SERVICE");
 
   const encodedAction = encodeURIComponent(handleAction(action));
+
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
+
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_URL,
     ApiConstant.ORGANIZER_OFFER_URL,
     isOrganizer()
   );
+
+  const params = {
+    action: encodedAction,
+    ...Utils.filterParams(pageData),
+  };
+
   return fetch({
-    url: `${offreUrl}/${data.id}?action=${encodedAction}`,
+    url: `${offreUrl}/${data.id}`,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
+    params: params,
     headers: {
       "Content-Type": "multipart/form-data",
     },
   });
 };
 
+
+// OfferService.editOfferStatus = function (
+//   data,
+//   action,
+//   pageData = { page: 1, size: 10 }
+// ) {
+//   const encodedAction = encodeURIComponent(handleAction(action));
+
+//   const offreUrl = Utils.getUrlByUserRole(
+//     ApiConstant.OFFER_STATUS_URL,
+//     ApiConstant.ORGANIZER_OFFER_STATUS_URL,
+//     data.isOrganizer
+//   );
+//   return fetch({
+//     url: `${offreUrl}/${data.id}?action=${encodedAction}`,
+//     method: "put",
+//     params: Utils.filterParams(pageData),
+//     data: data,
+//   });
+// };
+
+//  new
 OfferService.editOfferStatus = function (
   data,
   action,
@@ -65,15 +95,21 @@ OfferService.editOfferStatus = function (
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const offreUrl = Utils.getUrlByUserRole(
+  const offerUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_STATUS_URL,
     ApiConstant.ORGANIZER_OFFER_STATUS_URL,
     data.isOrganizer
   );
+
+  const params = {
+    action: encodedAction,
+    ...Utils.filterParams(pageData),
+  };
+
   return fetch({
-    url: `${offreUrl}/${data.id}?action=${encodedAction}`,
+    url: `${offerUrl}/${data.id}`,
     method: "put",
-    params: Utils.filterParams(pageData),
+    params: params,
     data: data,
   });
 };
@@ -107,11 +143,18 @@ OfferService.fetchOfferDetails = function (params) {
 };
 
 OfferService.validateOfferCoupon = function (offers, coupons) {
-  const offerIds = offers.map((offer) => `offer_id=${offer.id}`).join("&");
-  const couponIds = coupons.map((coupon) => `coupon_id=${coupon.id}`).join("&");
+  const offerIds = offers.map((offer) => offer.id);
+  const couponIds = coupons.map((coupon) => coupon.id);
+
+  const params = {
+    offer_id: offerIds,
+    coupon_id: couponIds,
+  };
+
   return fetch({
-    url: `${ApiConstant.OFFER_COUPON_VALIDATE_URL}?${offerIds}&${couponIds}`,
+    url: ApiConstant.OFFER_COUPON_VALIDATE_URL,
     method: "get",
+    params: params,
   });
 };
 

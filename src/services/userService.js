@@ -30,8 +30,11 @@ UserService.getSingleUser = function (userId) {
   console.log(userId, "USERID IN SERVICE");
 
   return fetch({
-    url: `${ApiConstant.SINGLE_USER_URL}?user_id=${userId}`,
+    url: ApiConstant.SINGLE_USER_URL,
     method: "get",
+    params: {
+      user_id: userId,
+    },
   });
 };
 

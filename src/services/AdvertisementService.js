@@ -7,8 +7,9 @@ const AdvertisementService = {};
 
 AdvertisementService.getSingleSchedule = function (scheduleId) {
   return fetch({
-    url: `${ApiConstant.ADVERTISEMENT_SINGLE_SCHEDULE_URL}?ad_schedule_id=${scheduleId}`,
+    url: ApiConstant.ADVERTISEMENT_SINGLE_SCHEDULE_URL,
     method: "get",
+    params: Utils.filterParams({ ad_schedule_id: scheduleId }),
   });
 };
 
@@ -19,9 +20,13 @@ AdvertisementService.editSchedule = function (data, action) {
     skipEmpty: true,
   });
   return fetch({
-    url: `${ApiConstant.ADVERTISEMENT_SCHEDULE_UPDATE_URL}?ad_schedule_id=${data.id}&action=${encodedAction}`,
+    url: ApiConstant.ADVERTISEMENT_SCHEDULE_UPDATE_URL,
     method: "put",
     data: formData,
+    params: Utils.filterParams({
+      ad_schedule_id: data.id,
+      action: encodedAction,
+    }),
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -35,10 +40,14 @@ AdvertisementService.editScheduleStatus = function (
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.ADVERTISEMENT_SCHEDULE_STATUS_URL}?ad_schedule_id=${data.id}&action=${encodedAction}`,
+    url: ApiConstant.ADVERTISEMENT_SCHEDULE_STATUS_URL,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: Utils.filterParams({
+      ...pageData,
+      ad_schedule_id: data.id,
+      action: encodedAction,
+    }),
   });
 };
 
@@ -76,9 +85,10 @@ AdvertisementService.addAdSchedule = function (data, action) {
 
   console.log("----------------", formData);
   return fetch({
-    url: `${ApiConstant.ADVERTISEMENT_SCHEDULE_URL}?action=${encodedAction}`,
+    url: ApiConstant.ADVERTISEMENT_SCHEDULE_URL,
     method: "POST",
     data: formData,
+    params: Utils.filterParams({ action: encodedAction }),
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -98,12 +108,11 @@ AdvertisementService.addAdBanner = function (data, action) {
     });
   }
 
-  console.log("----------------", formData);
-
   return fetch({
-    url: `${ApiConstant.ADVERTISEMENT_BANNER_URL}?action=${encodedAction}`,
+    url: ApiConstant.ADVERTISEMENT_BANNER_URL,
     method: "POST",
     data: formData,
+    params: Utils.filterParams({ action: encodedAction }),
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -130,10 +139,14 @@ AdvertisementService.updateAdBanner = function (
   }
 
   return fetch({
-    url: `${ApiConstant.ADVERTISEMENT_BANNER_UPDATE_URL}?advertisement_id=${data.id}&action=${encodedAction}`,
+    url: ApiConstant.ADVERTISEMENT_BANNER_UPDATE_URL,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
+    params: Utils.filterParams({
+      ...pageData,
+      advertisement_id: data.id,
+      action: encodedAction,
+    }),
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -147,10 +160,14 @@ AdvertisementService.updateBannerStatus = function (
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.ADVERTISEMENT_BANNER_STATUS_UPDATE_URL}?advertisement_id=${data.id}&action=${encodedAction}`,
+    url: ApiConstant.ADVERTISEMENT_BANNER_STATUS_UPDATE_URL,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: Utils.filterParams({
+      ...pageData,
+      advertisement_id: data.id,
+      action: encodedAction,
+    }),
   });
 };
 
