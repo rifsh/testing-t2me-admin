@@ -7,49 +7,56 @@ import { handleAction } from "utils/api/warning-submit-util";
 const CouponService = {};
 
 CouponService.addCoupon = function (data, action) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
+
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
     ApiConstant.ORGANIZER_COUPON_URL,
     isOrganizer()
   );
+
   return fetch({
-    url: `${offreUrl}?action=${encodedAction}`,
+    url: offreUrl,
     method: "post",
     data: formData,
     headers: {
       "Content-Type": "multipart/form-data",
     },
+    params: {
+      action: handleAction(action),
+    },
   });
 };
+
 CouponService.editCoupon = function (
   data,
   action,
   pageData = { page: 1, size: 10 }
 ) {
-  console.log(data, "DATA IN SERVICE");
-
-  const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
+
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
     ApiConstant.ORGANIZER_COUPON_UPDATE_URL,
     isOrganizer()
   );
+
   return fetch({
-    url: `${offreUrl}/${data.id}?action=${encodedAction}`,
+    url: `${offreUrl}/${data.id}`,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
     headers: {
       "Content-Type": "multipart/form-data",
+    },
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(pageData),
     },
   });
 };
@@ -64,12 +71,15 @@ CouponService.makeChangeCoupon = function (
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
-  const offreUrl = ApiConstant.ORGANIZER_COUPON_URL
+  const offreUrl = ApiConstant.ORGANIZER_COUPON_MAKE_CHANGES_URL
   return fetch({
-    url: `${offreUrl}?action=${encodedAction}`,
+    url: `${offreUrl}`,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(pageData),
+    },
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -81,24 +91,32 @@ CouponService.editCouponStatus = function (
   action,
   pageData = { page: 1, size: 10 }
 ) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_STATUS_URL,
     ApiConstant.ORGANIZER_COUPON_STATUS_URL,
     pageData.isOrganizer
   );
+
   return fetch({
-    url: `${offreUrl}/${data.id}?action=${encodedAction}`,
+    url: `${offreUrl}/${data.id}`,
     method: "put",
-    params: Utils.filterParams(pageData),
     data: data,
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(pageData),
+    },
   });
 };
 
 CouponService.getAllCoupon = function (pageData) {
-  const couponUrl = ApiConstant.COUPON_URL;
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.COUPON_URL,
+    ApiConstant.ORGANIZER_COUPON_URL,
+    pageData.isOrganizer
+  );
+
   return fetch({
-    url: couponUrl,
+    url: offreUrl,
     method: "get",
     params: Utils.filterParams(pageData),
   });
@@ -118,9 +136,12 @@ CouponService.fetchCouponDetails = function (couponId) {
     ApiConstant.ORGANIZER_COUPON_DETAILS_URL,
     isOrganizer()
   );
+
   return fetch({
-    url: `${offreUrl}?coupon_id=${couponId}`,
+    url: offreUrl,
     method: "get",
+    params: { coupon_id: couponId },
   });
 };
+
 export default CouponService;

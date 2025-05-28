@@ -25,31 +25,39 @@ MovieScheduleService.editSeatStructure = function (
   action,
   pageData = { page: 1, size: 10 }
 ) {
-  const encodedAction = encodeURIComponent(handleAction(action));
+
   return fetch({
-    url: `${ApiConstant.MOVIE_SEAT_EDIT_URL}?action=${encodedAction}&seat_id=${data.id}`,
+    url: ApiConstant.MOVIE_SEAT_EDIT_URL,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: {
+      action: handleAction(action),
+      seat_id: data.id,
+      ...Utils.filterParams(pageData),
+    },
   });
 };
+
 MovieScheduleService.editSeatStructureStatus = function (
   data,
   action,
   pageData = { page: 1, size: 10 }
 ) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.MOVIE_SEAT_STATUS_URL}?action=${encodedAction}&seat_id=${data.id}`,
+    url: ApiConstant.MOVIE_SEAT_STATUS_URL,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: {
+      action: handleAction(action),
+      seat_id: data.id,
+      ...Utils.filterParams(pageData),
+    },
   });
 };
 
 MovieScheduleService.getScheduleDetails = function (pageData) {
   return fetch({
-    url: `${ApiConstant.MOVIE_SCHEDULE_DETAILS_URL}`,
+    url: ApiConstant.MOVIE_SCHEDULE_DETAILS_URL,
     method: "get",
     params: Utils.filterParams(pageData),
   });

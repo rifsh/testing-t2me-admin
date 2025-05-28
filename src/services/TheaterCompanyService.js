@@ -41,18 +41,26 @@ TheaterCompanyService.editTheaterCompany = (data, action) => {
         skipEmpty: true,
     });
     return fetch({
-        url: `${ApiConstant.EDIT_THEATER_COMPANY_URL}?company_id=${data.id}&action=${encodedAction}`,
+        url: ApiConstant.EDIT_THEATER_COMPANY_URL,
         method: "put",
-        data: formData
+        data: formData,
+        params: {
+        company_id: data.id,
+        action: encodedAction,
+        },
     });
 }
 
 TheaterCompanyService.editCompanyTheaterStatus = (data, action) => {
     const encodedAction = encodeURIComponent(handleAction(action));
     return fetch({
-        url: `${ApiConstant.EDIT_THEATER_COMPANY_STATUS_URL}?company_id=${data.id}&action=${encodedAction}`,
+        url: ApiConstant.EDIT_THEATER_COMPANY_STATUS_URL,
         method: "put",
-        data: data
+        data: data,
+        params: {
+        company_id: data.id,
+        action: encodedAction,
+        },
     });
 }
 

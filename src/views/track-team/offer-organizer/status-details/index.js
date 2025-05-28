@@ -69,7 +69,7 @@ const OrganizerOfferDetail = () => {
 
   const handleMakeChanges = () => {
     navigate(
-      `${APP_PREFIX_PATH}/offer/edit/${offerId}?type=movie`
+      `${APP_PREFIX_PATH}/offer/edit/${offerId}?type=movie&isMakeChange=${true}`
     );
   };
 

@@ -54,6 +54,7 @@ export const ApiConstant = {
   COUPON_STATUS_URL: "/api/v1/shared/offers/secured/coupons_status",
   COUPON_DETAILS_URL: "/api/v1/shared/offers/secured/coupons/detail",
   ORGANIZER_OFFER_URL: "/api/v1/shared/offers/secured/offers/organizer",
+  ORGANIZER_OFFER_MAKE_CHANGES_URL: "/api/v1/shared/offers/secured/offers/organizer/make_changes",
   ORGANIZER_OFFER_STATUS_URL:
     "/api/v1/shared/offers/secured/offers_status/organizer",
   ORGANIZER_OFFER_APPROVAL_URL:
@@ -62,6 +63,7 @@ export const ApiConstant = {
     "/api/v1/shared/offers/secured/offers/organizer/detail",
 
   ORGANIZER_COUPON_URL: "/api/v1/shared/offers/secured/coupons/organizer",
+  ORGANIZER_COUPON_MAKE_CHANGES_URL: "/api/v1/shared/offers/secured/coupons/organizer/make_changes",
   ORGANIZER_COUPON_UPDATE_URL: "/api/v1/shared/offers/secured/coupons/organizer/update",
   ORGANIZER_COUPON_STATUS_URL:
     "/api/v1/shared/offers/secured/coupons_status/organizer",
@@ -152,6 +154,7 @@ export const ApiConstant = {
   EDIT_SCREEN_URL: "/api/v1/movie/movies/secured/screens/edit",
   EDIT_SCREEN_STATUS_URL: "/api/v1/movie/movies/secured/screens/edit_status",
   GET_ALL_SCREEN_URL: "/api/v1/movie/movies/secured/screens",
+  GET_ALL_SCREEN_TRACK_REQUEST_URL: "/api/v1/movie/movies/secured/screens",
   GET_SCREEN_ById_URL: "/api/v1/movie/movies/secured/screens/single",
   FETCH_SCREEN_TECH_URL: "/api/v1/movie/movies/secured/screens/tech",
   FETCH_SCREEN_AUDIO_URL: "/api/v1/movie/movies/secured/screens/audio",

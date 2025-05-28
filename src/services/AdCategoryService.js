@@ -23,11 +23,16 @@ AdCategoryService.updateAdCategory = function (
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
+
   return fetch({
-    url: `${ApiConstant.ADVERTISEMENT_CATEGORY_UPDATE_URL}?ad_category_id=${data.id}&action=${encodedAction}`,
+    url: ApiConstant.ADVERTISEMENT_CATEGORY_UPDATE_URL,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
+    params: Utils.filterParams({ 
+      ...pageData, 
+      ad_category_id: data.id,
+      action: encodedAction 
+    }),
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -40,11 +45,16 @@ AdCategoryService.updateAdStatus = function (
   pageData = { page: 1, size: 10 }
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
+
   return fetch({
-    url: `${ApiConstant.ADVERTISEMENT_CATEGORY_STATUS_UPDATE_URL}?ad_category_id=${data.id}&action=${encodedAction}`,
+    url: ApiConstant.ADVERTISEMENT_CATEGORY_STATUS_UPDATE_URL,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: Utils.filterParams({ 
+      ...pageData, 
+      ad_category_id: data.id,
+      action: encodedAction 
+    }),
   });
 };
 
@@ -57,9 +67,10 @@ AdCategoryService.addAdCategory = function (data, action) {
   });
 
   return fetch({
-    url: `${ApiConstant.ADVERTISEMENT_CATEGORY_URL}?action=${encodedAction}`,
+    url: ApiConstant.ADVERTISEMENT_CATEGORY_URL,
     method: "POST",
     data: formData,
+    params: Utils.filterParams({ action: encodedAction }),
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -68,8 +79,9 @@ AdCategoryService.addAdCategory = function (data, action) {
 
 AdCategoryService.validateAdCategory = function (adCategoryId) {
   return fetch({
-    url: `${ApiConstant.ADCATEGORY_VALIDATE_URL}?ad_category_id=${adCategoryId}`,
+    url: ApiConstant.ADCATEGORY_VALIDATE_URL,
     method: "get",
+    params: Utils.filterParams({ ad_category_id: adCategoryId }),
   });
 };
 

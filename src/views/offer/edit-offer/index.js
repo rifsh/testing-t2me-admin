@@ -9,6 +9,7 @@ const EditOffer = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const type = params.get("type");
+  const isMakeChange = params.get("isMakeChange");
   const dispatch = useDispatch();
   const { offerId } = useParams();
   const { offerDetails } = useSelector((state) => state.offers);
@@ -18,7 +19,7 @@ const EditOffer = () => {
     }
   }, [dispatch, offerId]);
 
-  return <OfferForm mode="EDIT" offer={offerDetails} type={type} />;
+  return <OfferForm mode="EDIT" offer={offerDetails} type={type} isMakeChange={isMakeChange} />;
 };
 
 export default EditOffer;

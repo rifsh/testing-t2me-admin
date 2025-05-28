@@ -91,6 +91,19 @@ export const editOffer = createAsyncThunk(
   }
 );
 
+export const makeChangeOffer = createAsyncThunk(
+  "offer/makeChangeOffer",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      console.log(data, "DATA IN SERVICE");
+      const response = await OfferService.makeChangeOffer(data, action, pageData);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+
 export const editOfferStatus = createAsyncThunk(
   "offer/editStatus",
   async ({ data, action, pageData }, { rejectWithValue }) => {
@@ -195,6 +208,27 @@ const offerSlice = createSlice({
         }
       })
       .addCase(editOffer.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(makeChangeOffer.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(makeChangeOffer.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+        if (payload.data?.list_of_updated_Schedules) {
+          state.submitPagination = payload.data?.list_of_updated_Schedules;
+        }
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseMessage = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(makeChangeOffer.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
