@@ -37,6 +37,17 @@ export const fetchAllCoupons = createAsyncThunk(
     }
   }
 );
+// export const fetchAllTrackRequestCoupons = createAsyncThunk(
+//   "coupons/fetchAllTrackRequestCoupons",
+//   async (pageData, { rejectWithValue }) => {
+//     try {
+//       const response = await CouponService.getAllTrackCoupon(pageData);
+//       return response.data[0];
+//     } catch (error) {
+//       return rejectWithValue(error.response?.data || "Error fetching coupons");
+//     }
+//   }
+// );
 
 export const fetchCouponDetails = createAsyncThunk(
   "coupon/fetchCouponDetails",
@@ -202,6 +213,24 @@ const couponSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      .addCase(addCoupon.pending, (state) => {
+        state.createPlaceLoading = true;
+        state.error = null;
+      })
+      // .addCase(fetchAllTrackRequestCoupons.pending, (state) => {
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+      // .addCase(fetchAllTrackRequestCoupons.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.coupons = action.payload.items;
+      //   state.filteredCoupons = action.payload.items;
+      //   state.pagination = action.payload;
+      // })
+      // .addCase(fetchAllTrackRequestCoupons.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.payload;
+      // })
       .addCase(addCoupon.pending, (state) => {
         state.createPlaceLoading = true;
         state.error = null;

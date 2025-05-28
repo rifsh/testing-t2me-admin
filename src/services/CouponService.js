@@ -1,4 +1,5 @@
 import fetch from "auth/FetchInterceptor";
+import { isOrganizer } from "configs/UserAccessConfig";
 import { ApiConstant } from "constants/ApiConstant";
 import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
@@ -14,7 +15,7 @@ CouponService.addCoupon = function (data, action) {
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
     ApiConstant.ORGANIZER_COUPON_URL,
-    data.isOrganizer
+    isOrganizer()
   );
   return fetch({
     url: `${offreUrl}?action=${encodedAction}`,
@@ -73,13 +74,17 @@ CouponService.editCouponStatus = function (
 };
 
 CouponService.getAllCoupon = function (pageData) {
-  const offreUrl = Utils.getUrlByUserRole(
-    ApiConstant.COUPON_URL,
-    ApiConstant.ORGANIZER_COUPON_URL,
-    pageData.isOrganizer
-  );
+  const couponUrl = ApiConstant.COUPON_URL;
   return fetch({
-    url: offreUrl,
+    url: couponUrl,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
+CouponService.getAllTrackCoupon = function (pageData) {
+  const couponUrl = ApiConstant.ORGANIZER_COUPON_URL;
+  return fetch({
+    url: couponUrl,
     method: "get",
     params: Utils.filterParams(pageData),
   });

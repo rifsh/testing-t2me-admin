@@ -290,7 +290,7 @@ const CouponForm = ({ mode, coupon, type }) => {
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? editCoupon : addCoupon}
-        navigationPath={`${APP_PREFIX_PATH}/coupon/list?type=${type}`}
+        navigationPath={`${APP_PREFIX_PATH}/coupon/list/${type}`}
         responseMessage={responseMessage}
         pagination={submitPagination}
       />
