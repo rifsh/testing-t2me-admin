@@ -56,12 +56,19 @@ movieService.editMovie = function (
         fileKeys: ["thumbnail_image"],
         skipEmpty: true,
     });
+
     const encodedAction = encodeURIComponent(handleAction(action));
 
+    const params = {
+        movie_id: updatedPersonality.id,
+        action: encodedAction,
+    };
+
     return fetch({
-        url: `${ApiConstant.EDIT_MOVIE_URL}?movie_id=${updatedPersonality.id}&action=${encodedAction}`,
+        url: ApiConstant.EDIT_MOVIE_URL,
         method: "put",
-        data: formData
+        data: formData,
+        params: params,
     });
 };
 movieService.getMovieData = function (pageData) {
@@ -83,10 +90,17 @@ movieService.editStatus = function (
     action,
 ) {
     const encodedAction = encodeURIComponent(handleAction(action));
+
+    const params = {
+        movie_id: updatedPersonality.id,
+        action: encodedAction,
+    };
+
     return fetch({
-        url: `${ApiConstant.EDIT_MOVIE_STATUS_URL}?movie_id=${updatedPersonality.id}&action=${encodedAction}`,
+        url: ApiConstant.EDIT_MOVIE_STATUS_URL,
         method: "put",
-        data: updatedPersonality
+        data: updatedPersonality,
+        params: params,
     });
 };
 export default movieService;

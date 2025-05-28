@@ -8,16 +8,19 @@ IssuesService.IssueReasignComment = function (IssueId, data) {
 //   const encodedAction = encodeURIComponent(handleAction(action));
 console.warn(IssueId,data)
   return fetch({
-    url: `${ApiConstant.ISSUE_REASSIGN_COMMENT_URL}?issue_id=${IssueId}`,
+    url: ApiConstant.ISSUE_REASSIGN_COMMENT_URL,
     method: "post",
     data: data,
+    params: {
+      issue_id: IssueId,
+    },
   });
 };
 
 IssuesService.AddNewIssue = function ( data) {
 //   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.ISSUE_CREATION_URL}`,
+    url: ApiConstant.ISSUE_CREATION_URL,
     method: "post",
     data: data,
   });
@@ -46,16 +49,24 @@ IssuesService.checkValidation = function () {
 };
 IssuesService.fetchIssueDetails = function (IssueId) {
   return fetch({
-    url: `${ApiConstant.ISSUE_DETAILS_URL}?issue_id=${IssueId}`,
+    url: ApiConstant.ISSUE_DETAILS_URL,
     method: "get",
+    params: {
+      issue_id: IssueId,
+    },
   });
 };
+
 IssuesService.FetchAssignmentDetails = function (IssueId) {
   return fetch({
-    url: `${ApiConstant.TICKET_ASSIGN_DETAILS_URL}?issue_id=${IssueId}`,
+    url: ApiConstant.TICKET_ASSIGN_DETAILS_URL,
     method: "get",
+    params: {
+      issue_id: IssueId,
+    },
   });
 };
+
 IssuesService.fetchCommentDetails = function (pageData) {
   return fetch({
     url: ApiConstant.ISSUE_REASSIGN_COMMENT_URL,
@@ -63,37 +74,49 @@ IssuesService.fetchCommentDetails = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+
 IssuesService.AdminCommenting = function (pageData) {
   return fetch({
     url: ApiConstant.ADMIN_COMMENT_URL,
     method: "post",
-    data:pageData.data,
-    params:Utils.filterParams(pageData.params),
+    data: pageData.data,
+    params: Utils.filterParams(pageData.params),
   });
 };
-IssuesService.IssueStatusUpdate = function (IssueId, data ) {
-//   const encodedAction = encodeURIComponent(handleAction(action));
+
+IssuesService.IssueStatusUpdate = function (IssueId, data) {
   return fetch({
-    url: `${ApiConstant.ISSUE_STATUS_UPDATE_URL}?issue_id=${IssueId}`,
+    url: ApiConstant.ISSUE_STATUS_UPDATE_URL,
     method: "put",
     data: data,
+    params: {
+      issue_id: IssueId,
+    },
   });
 };
-IssuesService.IssueCloseUpdate = function (IssueId, data ) {
-//   const encodedAction = encodeURIComponent(handleAction(action));
+
+IssuesService.IssueCloseUpdate = function (IssueId, data) {
   return fetch({
-    url: `${ApiConstant.ISSUE_CLOSE_URL}?issue_id=${IssueId}`,
+    url: ApiConstant.ISSUE_CLOSE_URL,
     method: "put",
     data: data,
+    params: {
+      issue_id: IssueId,
+    },
   });
 };
 IssuesService.IssueReasignUpdate = function (IssueId, CommentId,UserId, data ) {
 //   const encodedAction = encodeURIComponent(handleAction(action));
 console.log(IssueId, CommentId, data)
   return fetch({
-    url: `${ApiConstant.ISSUE_REASSIGN_URL}?issue_id=${IssueId}&comment_id=${parseInt(CommentId)}&user_id=${UserId}`,
+    url: ApiConstant.ISSUE_REASSIGN_URL,
     method: "put",
     data: data,
+    params: {
+      issue_id: IssueId,
+      comment_id: parseInt(CommentId),
+      user_id: UserId,
+    },
   });
 };
 

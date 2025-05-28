@@ -14,9 +14,10 @@ EventsService.addEvent = function (data, action) {
   });
 
   return fetch({
-    url: `${ApiConstant.EVENT_URL}?action=${encodedAction}`,
+    url: `${ApiConstant.EVENT_URL}`,
     method: "POST",
     data: formData,
+    params: Utils.filterParams({ action: encodedAction }),
   });
 };
 EventsService.addEventType = function (data, action) {
@@ -27,9 +28,10 @@ EventsService.addEventType = function (data, action) {
   // });
 
   return fetch({
-    url: `${ApiConstant.EVENT_TYPE_URL}?action=${encodedAction}`,
+    url: `${ApiConstant.EVENT_TYPE_URL}`,
     method: "POST",
     data: data,
+    params: Utils.filterParams({ action: encodedAction }),
   });
 };
 
@@ -66,41 +68,49 @@ EventsService.checkValidation = function () {
 };
 EventsService.fetchEventDetails = function (eventId) {
   return fetch({
-    url: `${ApiConstant.EVENT_DETAILS_URL}?event_id=${eventId}`,
+    url: ApiConstant.EVENT_DETAILS_URL,
     method: "get",
+    params: Utils.filterParams({ event_id: eventId }),
   });
 };
+
 EventsService.fetchEventTypeDetails = function (typeId) {
   return fetch({
-    url: `${ApiConstant.EVENT_TYPE_DETAILS_URL}?event_type_id=${typeId}`,
+    url: ApiConstant.EVENT_TYPE_DETAILS_URL,
     method: "get",
+    params: Utils.filterParams({ event_type_id: typeId }),
   });
 };
 EventsService.fetchEventTypeOption = function () {
   return fetch({
-    url: `${ApiConstant.EVENT_TYPE_OPTION_URL}`,
+    url: ApiConstant.EVENT_TYPE_OPTION_URL,
     method: "get",
   });
 };
 EventsService.fetchEventsOnPlace = function (placeId) {
   return fetch({
-    url: `${ApiConstant.PLACE_EVENTS_URL}?place_id=${placeId}`,
+    url: ApiConstant.PLACE_EVENTS_URL,
     method: "get",
+    params: Utils.filterParams({ place_id: placeId }),
   });
 };
 
-EventsService.fetchOrganizerEvents = function (eventId) {
+EventsService.fetchOrganizerEvents = function (userId) {
   return fetch({
-    url: `${ApiConstant.ORGANIZER_EVENTS_URL}?user_id=${eventId}`,
+    url: ApiConstant.ORGANIZER_EVENTS_URL,
     method: "get",
+    params: Utils.filterParams({ user_id: userId }),
   });
 };
-EventsService.fetchEventSupportAvailable = function (userId) {
+
+EventsService.fetchEventSupportAvailable = function (eventId) {
   return fetch({
-    url: `${ApiConstant.EVENT_SUPPORT_AVAILABLE}?event_id=${userId}`,
+    url: ApiConstant.EVENT_SUPPORT_AVAILABLE,
     method: "get",
+    params: Utils.filterParams({ event_id: eventId }),
   });
 };
+
 EventsService.updateEvent = function (
   data,
   action,
@@ -111,16 +121,18 @@ EventsService.updateEvent = function (
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
+
   return fetch({
-    url: `${ApiConstant.EDIT_EVENT_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.EDIT_EVENT_URL}/${data.id}`,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
+    params: Utils.filterParams({ ...pageData, action: encodedAction }),
     headers: {
       "Content-Type": "multipart/form-data",
     },
   });
 };
+// tested
 EventsService.updateEventType = function (
   data,
   action,
@@ -129,44 +141,60 @@ EventsService.updateEventType = function (
   const encodedAction = encodeURIComponent(handleAction(action));
 
   return fetch({
-    url: `${ApiConstant.EVENT_TYPE_DETAILS_URL}?event_type_id=${data.id}&action=${encodedAction}`,
-    params: Utils.filterParams(pageData),
+    url: ApiConstant.EVENT_TYPE_DETAILS_URL,
     method: "put",
     data: data,
+    params: Utils.filterParams({
+      ...pageData,
+      event_type_id: data.id,
+      action: encodedAction,
+    }),
   });
 };
+
+// tested
 EventsService.editEventStatus = function (
   data,
   action,
   pageData = { page: 1, size: 10 }
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
+
   return fetch({
-    url: `${ApiConstant.EDIT_EVENT_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.EDIT_EVENT_STATUS_URL}/${data.id}`,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: Utils.filterParams({ ...pageData, action: encodedAction }),
   });
 };
+
+
+// tested
 EventsService.editEventTypeStatus = function (
   data,
   action,
   pageData = { page: 1, size: 10 }
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
+
   return fetch({
-    url: `${ApiConstant.EVENT_TYPE_STATUS_URL}?event_type_id=${data.id}&action=${encodedAction}`,
+    url: ApiConstant.EVENT_TYPE_STATUS_URL,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: Utils.filterParams({
+      ...pageData,
+      event_type_id: data.id,
+      action: encodedAction,
+    }),
   });
 };
 
+// tested
 EventsService.validateMultiEvent = function (eventIds) {
-  const queryString = eventIds.map((id) => `event_ids=${id}`).join("&");
   return fetch({
-    url: `${ApiConstant.MULT_EVENT_VALIDATE_URL}?${queryString}`,
+    url: ApiConstant.MULT_EVENT_VALIDATE_URL,
     method: "get",
+    params: Utils.filterParams({ event_ids: eventIds }),
   });
 };
 

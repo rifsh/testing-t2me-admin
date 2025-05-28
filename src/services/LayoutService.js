@@ -8,15 +8,19 @@ const LayoutService = {};
 
 
 LayoutService.addFooter = function (data, action) {
-  const encodedAction = encodeURIComponent(handleAction(action));
+  const encodedAction = handleAction(action);
   const formData = Utils.createFormData(data, {
     fileKeys: ['thumbnail_image'],
     skipEmpty: true
-  }); 
+  });
+
   return fetch({
-    url: `${ApiConstant.OFFER_URL}?action=${encodedAction}`,
+    url: ApiConstant.OFFER_URL,
     method: "post",
     data: formData,
+    params: {
+      action: encodedAction,
+    },
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -24,13 +28,18 @@ LayoutService.addFooter = function (data, action) {
 };
 
 LayoutService.editOffer = function (data, action) {
-  const encodedAction = encodeURIComponent(handleAction(action));
+  const encodedAction = handleAction(action);
+
   return fetch({
-    url: `${ApiConstant.OFFER_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.OFFER_URL}/${data.id}`,
     method: "put",
     data: data,
+    params: {
+      action: encodedAction,
+    },
   });
 };
+
 LayoutService.getAllFooter = function (pageData) {
   return fetch({
     url: ApiConstant.OFFER_URL,
@@ -38,4 +47,5 @@ LayoutService.getAllFooter = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+
 export default LayoutService;

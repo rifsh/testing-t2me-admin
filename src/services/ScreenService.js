@@ -18,26 +18,32 @@ ScreenService.editScreen = function (
     updatedScreen,
     action,
 ) {
-    const encodedAction = encodeURIComponent(handleAction(action));
-
     return fetch({
-        url: `${ApiConstant.EDIT_SCREEN_URL}?screen_id=${updatedScreen.id}&action=${encodedAction}`,
+        url: ApiConstant.EDIT_SCREEN_URL,
         method: "put",
-        data: updatedScreen
+        data: updatedScreen,
+        params: {
+        screen_id: updatedScreen.id,
+        action: handleAction(action),
+        },
     });
 };
+
 ScreenService.editScreenStatus = function (
     updatedScreen,
     action,
 ) {
-    const encodedAction = encodeURIComponent(handleAction(action));
-
     return fetch({
-        url: `${ApiConstant.EDIT_SCREEN_STATUS_URL}?screen_id=${updatedScreen.id}&action=${encodedAction}`,
+        url: ApiConstant.EDIT_SCREEN_STATUS_URL,
         method: "put",
-        data: updatedScreen
-    });
+        data: updatedScreen,
+        params: {
+        screen_id: updatedScreen.id,
+        action: handleAction(action),
+        },
+  });
 };
+
 ScreenService.getScreens = function (pageData) {
     return fetch({
         url: ApiConstant.GET_ALL_SCREEN_URL,

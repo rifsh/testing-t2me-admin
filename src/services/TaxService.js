@@ -6,24 +6,30 @@ import { handleAction } from "utils/api/warning-submit-util";
 const TaxService = {};
 
 TaxService.addTax = function (data, action) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.TAX_URL}?action=${encodedAction}&country_id=${data.country_id}`,
+    url: ApiConstant.TAX_URL,
     method: "post",
     data: data,
+    params: {
+      action: handleAction(action),
+      country_id: data.country_id,
+    },
   });
 };
 TaxService.editTax = function (data, action, pageData = { page: 1, size: 10 }) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
+
   return fetch({
-    url: `${ApiConstant.TAX_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.TAX_URL}/${data.id}`,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(pageData),
+    },
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -35,14 +41,17 @@ TaxService.editTaxStatus = function (
   action,
   pageData = { page: 1, size: 10 }
 ) {
-  const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.TAX_STATUS_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.TAX_STATUS_URL}/${data.id}`,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(pageData),
+    },
   });
 };
+
 
 TaxService.fetchAvailableTaxCategory = function () {
   return fetch({
@@ -59,10 +68,11 @@ TaxService.fetchAllTax = function (pageData) {
 };
 
 TaxService.validateTax = function (taxIds) {
-  const queryString = taxIds.map((id) => `Tax_id=${id.id}`).join("&");
+  const params = taxIds.map((idObj) => idObj.id).map((id) => ['Tax_id', id]);
   return fetch({
-    url: `${ApiConstant.TAX_VALIDATE_URL}?${queryString}`,
+    url: ApiConstant.TAX_VALIDATE_URL,
     method: "get",
+    params: Object.fromEntries(params),
   });
 };
 

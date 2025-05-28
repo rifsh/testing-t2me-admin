@@ -13,33 +13,34 @@ LeadEventService.getleadEvent = function (pageData) {
   });
 };
 
-
-
 LeadEventService.getSingleleadEvent = function (eventId) {
   return fetch({
-    url: `${ApiConstant.SINGLE_CUSTOMER_LEAD_EVENT}?lead_event_id=${eventId}`,
+    url: ApiConstant.SINGLE_CUSTOMER_LEAD_EVENT,
     method: "get",
+    params: {
+      lead_event_id: eventId,
+    },
   });
 };
 
-
 LeadEventService.addLeadEvent = function (data, action) {
-  console.log(data, "lead event dataaaaaa=======================");
-  const encodedAction = encodeURIComponent(handleAction(action));
+  const encodedAction = handleAction(action);
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
 
   return fetch({
-    url: `${ApiConstant.LEAD_EVENT_URL}?action=${encodedAction}`,
-    method: "POST",
+    url: ApiConstant.LEAD_EVENT_URL,
+    method: "post",
     data: formData,
+    params: {
+      action: encodedAction,
+    },
   });
 };
 
 LeadEventService.fetchAllLeadEvent = function (pageData) {
-
   return fetch({
     url: ApiConstant.LEAD_EVENT_URL,
     method: "get",
@@ -49,41 +50,47 @@ LeadEventService.fetchAllLeadEvent = function (pageData) {
 
 LeadEventService.fetchLeadEventDetails = function (eventId) {
   return fetch({
-    url: `${ApiConstant.LEAD_EVENT_DETAILS_URL}?event_id=${eventId}`,
+    url: ApiConstant.LEAD_EVENT_DETAILS_URL,
     method: "get",
+    params: {
+      event_id: eventId,
+    },
   });
 };
 
 LeadEventService.fetchLeadEventMessage = function (eventId) {
   return fetch({
-    url: `${ApiConstant.LEAD_EVENT_MESSAGE_URL}?lead_id=${eventId}`,
+    url: ApiConstant.LEAD_EVENT_MESSAGE_URL,
     method: "get",
+    params: {
+      lead_id: eventId,
+    },
   });
 };
 
 LeadEventService.sendLeadEventMessage = function (data) {
   return fetch({
-    url: `${ApiConstant.LEAD_EVENT_MESSAGE_URL}`,
-    method: "POST",
-    data: data
+    url: ApiConstant.LEAD_EVENT_MESSAGE_URL,
+    method: "post",
+    data: data,
   });
 };
 
-LeadEventService.updateEvent = function (
-  data,
-  action,
-  pageData = { page: 1, size: 10 }
-) {
-  const encodedAction = encodeURIComponent(handleAction(action));
+LeadEventService.updateEvent = function (data, action, pageData = { page: 1, size: 10 }) {
+  const encodedAction = handleAction(action);
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
+
   return fetch({
-    url: `${ApiConstant.EDIT_LEAD_EVENT_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.EDIT_LEAD_EVENT_URL}/${data.id}`,
     method: "put",
     data: formData,
-    params: Utils.filterParams(pageData),
+    params: {
+      ...Utils.filterParams(pageData),
+      action: encodedAction,
+    },
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -96,17 +103,21 @@ LeadEventService.EnrollUser = function (data) {
     method: "put",
     data: data,
     headers: {
-      "Content-Type": "application/json", 
+      "Content-Type": "application/json",
     },
   });
 };
+
 LeadEventService.leadstatus = function (data) {
   return fetch({
-    url: `${ApiConstant.LEAD_EVENT_STATUS}?lead_event_id=${data.event_id}`,
+    url: ApiConstant.LEAD_EVENT_STATUS,
     method: "put",
     data: data,
+    params: {
+      lead_event_id: data.event_id,
+    },
     headers: {
-      "Content-Type": "application/json", 
+      "Content-Type": "application/json",
     },
   });
 };
