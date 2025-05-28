@@ -62,6 +62,7 @@ export const ApiConstant = {
     "/api/v1/shared/offers/secured/offers/organizer/detail",
 
   ORGANIZER_COUPON_URL: "/api/v1/shared/offers/secured/coupons/organizer",
+  ORGANIZER_COUPON_UPDATE_URL: "/api/v1/shared/offers/secured/coupons/organizer/update",
   ORGANIZER_COUPON_STATUS_URL:
     "/api/v1/shared/offers/secured/coupons_status/organizer",
   ORGANIZER_COUPON_DETAILS_URL:

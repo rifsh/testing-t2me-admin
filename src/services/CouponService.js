@@ -40,11 +40,33 @@ CouponService.editCoupon = function (
   });
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
-    ApiConstant.ORGANIZER_COUPON_URL,
-    pageData.isOrganizer
+    ApiConstant.ORGANIZER_COUPON_UPDATE_URL,
+    isOrganizer()
   );
   return fetch({
     url: `${offreUrl}/${data.id}?action=${encodedAction}`,
+    method: "put",
+    data: formData,
+    params: Utils.filterParams(pageData),
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+CouponService.makeChangeCoupon = function (
+  data,
+  action,
+  pageData
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
+  });
+  const offreUrl = ApiConstant.ORGANIZER_COUPON_URL
+  return fetch({
+    url: `${offreUrl}?action=${encodedAction}`,
     method: "put",
     data: formData,
     params: Utils.filterParams(pageData),
@@ -93,7 +115,8 @@ CouponService.getAllTrackCoupon = function (pageData) {
 CouponService.fetchCouponDetails = function (couponId) {
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_DETAILS_URL,
-    ApiConstant.ORGANIZER_COUPON_DETAILS_URL
+    ApiConstant.ORGANIZER_COUPON_DETAILS_URL,
+    isOrganizer()
   );
   return fetch({
     url: `${offreUrl}?coupon_id=${couponId}`,

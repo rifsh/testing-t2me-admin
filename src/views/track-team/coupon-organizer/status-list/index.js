@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import Utils from "utils";
-import { fetchAllCoupons } from "store/slices/couponSlice";
+import { fetchAllCoupons, fetchAllTrackCoupons } from "store/slices/couponSlice";
 
 const { Option } = Select;
 
@@ -27,10 +27,8 @@ const OrganizerOfferStatusList = () => {
 
   useEffect(() => {
     dispatch(
-      fetchAllCoupons({
+      fetchAllTrackCoupons({
         ...DEFAULT_PAGE_SIZE,
-        organizer: true,
-        isOrganizer: true,
         event_code: Utils.getEventTypeCodeWithType(type),
       })
     );

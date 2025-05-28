@@ -102,9 +102,12 @@ const OfferForm = ({ mode, offer, type }) => {
           ...values,
           id: offer.id,
         };
+        const pageData = {
+          offer_id: offer.id,
+        };
         console.log("Edit Data:", editData);
         const resultAction = await dispatch(
-          editOffer({ data: editData, action: ActionType.WARNING })
+          editOffer({ data: editData, action: ActionType.WARNING, pageData })
         );
 
         if (editOffer.fulfilled.match(resultAction)) {
@@ -235,7 +238,7 @@ const OfferForm = ({ mode, offer, type }) => {
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? editOffer : addOffer}
-        navigationPath={`${APP_PREFIX_PATH}/offer/list?type=${type}`}
+        navigationPath={`${APP_PREFIX_PATH}/offer/list/${type}`}
         responseMessage={responseMessage}
         pagination={submitPagination}
       />

@@ -14,7 +14,7 @@ const EditOffer = () => {
   const { offerDetails } = useSelector((state) => state.offers);
   useEffect(() => {
     if (offerId) {
-      dispatch(fetchOfferDetails({offer_id: offerId, isOrganizer: isOrganizer()}));
+      dispatch(fetchOfferDetails({ offer_id: offerId }));
     }
   }, [dispatch, offerId]);
 

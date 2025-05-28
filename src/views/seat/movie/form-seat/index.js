@@ -422,7 +422,8 @@ const SeatForm = (props) => {
           mode === EDIT
             ? (pageType ? makeEditSeatStructure : editSeatStructure)
             : addSeatStructure
-        } navigationPath={`${APP_PREFIX_PATH}/seat/movie/list`}
+        } 
+        navigationPath={`${APP_PREFIX_PATH}/seat/movie/list`}
         responseMessage={responseMessage}
         pagination={submitPagination}
       />

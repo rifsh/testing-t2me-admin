@@ -33,7 +33,7 @@ OfferService.addOffer = function (data, action) {
 OfferService.editOffer = function (
   data,
   action,
-  pageData = { page: 1, size: 10 }
+  pageData,
 ) {
   console.log(data, "DATA IN SERVICE");
 
@@ -42,13 +42,17 @@ OfferService.editOffer = function (
     fileKeys: ["thumbnail_image"],
     skipEmpty: true,
   });
-  const offreUrl = Utils.getUrlByUserRole(
+  const offerUrlBase = Utils.getUrlByUserRole(
     ApiConstant.OFFER_URL,
     ApiConstant.ORGANIZER_OFFER_URL,
     isOrganizer()
   );
+  const offerUrl = isOrganizer()
+    ? `${offerUrlBase}?action=${encodedAction}`
+    : `${offerUrlBase}/${data.id}?action=${encodedAction}&seat_id=${data.id}`;
+
   return fetch({
-    url: `${offreUrl}/${data.id}?action=${encodedAction}`,
+    url: `${offerUrl}`,
     method: "put",
     data: formData,
     params: Utils.filterParams(pageData),
@@ -96,13 +100,13 @@ OfferService.fetchOfferDetails = function (params) {
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_DETAIL_URL,
     ApiConstant.ORGANIZER_OFFER_DETAIL_URL,
-    params.isOrganizer
+    isOrganizer()
   );
 
   return fetch({
     url: `${offreUrl}`,
     method: "get",
-    params:Utils.filterParams(params),
+    params: Utils.filterParams(params),
   });
 };
 

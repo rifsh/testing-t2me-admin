@@ -8,6 +8,7 @@ const EditEvent = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const type = params.get("type");
+  const isMakeChanges = params.get("isMakeChanges");
   const dispatch = useDispatch();
   const { couponId } = useParams();
   const { couponDetails } = useSelector((state) => state.coupons);
@@ -17,7 +18,7 @@ const EditEvent = () => {
     }
   }, [dispatch, couponId]);
 
-  return <CouponForm mode={"EDIT"} coupon={couponDetails} type={type} />;
+  return <CouponForm mode={"EDIT"} coupon={couponDetails} type={type} isMakeChanges={isMakeChanges ? true : null} />;
 };
 
 export default EditEvent;

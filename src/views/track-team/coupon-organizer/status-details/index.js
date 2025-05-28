@@ -69,7 +69,7 @@ const OrganizerOfferDetail = () => {
 
   const handleMakeChanges = () => {
     navigate(
-      `${APP_PREFIX_PATH}/coupon/edit/${offerId}?type=movie`
+      `${APP_PREFIX_PATH}/coupon/edit/${offerId}?type=movie&isMakeChanges=${true}`
     );
   };
 
@@ -94,7 +94,7 @@ const OrganizerOfferDetail = () => {
 
     try {
       const data = {
-        offer_id: offerId,
+        coupon_id: offerId,
         status: getApprovalStatus(actionType),
         comment: comment,
       };
@@ -102,15 +102,15 @@ const OrganizerOfferDetail = () => {
       const resultAction = await dispatch(
         submitOrganizerCouponUpdate({
           data: data,
-          params: { offer_id: offerId },
+          params: { coupon_id: offerId },
           action: ActionType.WARNING,
         })
       );
 
       if (submitOrganizerCouponUpdate.fulfilled.match(resultAction)) {
         message.success(`Update ${actionType}ed successfully`);
-        dispatch(fetchOrganizerSingleCouponUpdate({ offer_id: offerId }));
-        navigate(`${APP_PREFIX_PATH}/track/offer/status/list?type=movie`);
+        dispatch(fetchOrganizerSingleCouponUpdate({ coupon_id: offerId }));
+        navigate(`${APP_PREFIX_PATH}/track/coupon/status/list/movie`);
       }
     } catch (error) {
       message.error(`Failed to ${actionType} the update`);
@@ -261,7 +261,7 @@ const OrganizerOfferDetail = () => {
   return (
     <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "24px" }}>
       <Card style={{ marginTop: 16 }}>
-        <Title level={4}>Offer Information</Title>
+        <Title level={4}>Coupon Information</Title>
         <Row gutter={[24, 24]}>
           <Col xs={12} md={8}>
             <Image
@@ -280,7 +280,7 @@ const OrganizerOfferDetail = () => {
             />
           </Col>
           <Col xs={24} md={8}>
-            <Text type="secondary">Offer Name</Text>
+            <Text type="secondary">Coupon Name</Text>
             <div>
               <Text strong>{singleOrganizerUpdate?.name || "N/A"}</Text>
             </div>
@@ -324,7 +324,7 @@ const OrganizerOfferDetail = () => {
         </Row>
       </Card>
       <Card style={{ marginTop: 16 }}>
-        <Title level={4}>Offer Details</Title>
+        <Title level={4}>Coupon Details</Title>
         <Row gutter={[24, 24]}>
           <Col xs={24} md={8}>
             <Space>
@@ -354,13 +354,13 @@ const OrganizerOfferDetail = () => {
           <Col xs={24} md={8}>
             <Space>
               <TagOutlined />
-              <Text type="secondary">Offer Type</Text>
+              <Text type="secondary">Coupon Type</Text>
             </Space>
             <div>
               <Text strong>
                 {singleOrganizerUpdate?.is_general
-                  ? "General Offer"
-                  : "Specific Offer"}
+                  ? "General Coupon"
+                  : "Specific Coupon"}
               </Text>
             </div>
           </Col>
