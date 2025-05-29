@@ -13,8 +13,8 @@ const dev = {
 const uat = {
   API_ENDPOINT_URL: "https://uat-tickets2me.mitetechnology.in",
   AES_KEY: "your_32_byte_encryption_key_here", // 32 characters
-  NEED_ENCRYPT_DECRYPT: true, 
-  ENCRYPT_PARAMS: true,
+  NEED_ENCRYPT_DECRYPT: false, 
+  ENCRYPT_PARAMS: false,
   SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS
 };
 const demo = {
