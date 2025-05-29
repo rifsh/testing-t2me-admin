@@ -30,4 +30,5 @@ export const PERMISSIONS = {
     EDIT_TAX: 'edit_tax',
     EDIT_TICKET: 'edit_ticket',
     EDIT_OFFER: 'edit_offer',
+    USER_STATUS_UPDATE: 'edit_offer',
 };

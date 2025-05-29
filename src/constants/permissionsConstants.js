@@ -2,9 +2,6 @@ import { PERMISSIONS, ROLES } from './RolesPermissionConstants';
 
 export const ROLE_PERMISSIONS = {
     [ROLES.SUPER_ADMIN]: Object.values(PERMISSIONS),
-    // [ROLES.SUPER_ADMIN]: [
-    //     // PERMISSIONS.ADD_EVENT_TYPE,
-    // ],
     [ROLES.TECH_ADMIN]: [
         
     ],

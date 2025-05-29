@@ -37,6 +37,8 @@ import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { hasPermission } from "utils/accessControl";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Option } = Select;
 
@@ -56,13 +58,21 @@ const UserList = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const handlePagination = usePaginationHook(fetchAllUsers);
+  const currentUser = getCurrentUser();
 
   useEffect(() => {
-    dispatch(fetchAllUsers(DEFAULT_PAGE_SIZE));
+    dispatch(fetchAllUsers({
+      ...DEFAULT_PAGE_SIZE,
+      // role_id: currentUser.role_id
+    }));
   }, [dispatch]);
   // const handlePagination = (page, size) => {
   //   dispatch(fetchAllUsers({ page: page, size: size }));
   // };
+
+  useEffect(() => {
+    console.log("filteredUsers", filteredUsers)
+  }, [filteredUsers])
 
   const showModal = (user) => {
     setSelectedUser(user);
@@ -87,6 +97,10 @@ const UserList = () => {
   const handleEditUser = async (userId) => {
     navigate(`${APP_PREFIX_PATH}/user/edit/${userId}`);
   };
+
+  useEffect(() => {
+    console.log("CurrentUser", currentUser)
+  }, [currentUser])
 
   const getDropdownMenu = (row) => [
     {
@@ -127,7 +141,7 @@ const UserList = () => {
       dataIndex: ["role", "name"],
       sorter: (a, b) => Utils.antdTableSorter(a, b, ["role", "name"]),
     },
-    Utils.statusColumnUtil(handleUpdateStatus, "is_active"),
+    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.USER_STATUS_UPDATE), "is_active"),
     {
       title: "",
       dataIndex: "actions",

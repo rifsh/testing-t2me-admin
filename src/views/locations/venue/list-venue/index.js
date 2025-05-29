@@ -47,7 +47,7 @@ const VenueList = () => {
     filteredVenues,
     pagination,
     loading,
-    filteredPlaces,
+    places,
     editable_status,
     message,
     dialogVisible,
@@ -61,6 +61,7 @@ const VenueList = () => {
 
   useEffect(() => {
     dispatch(getVenues(DEFAULT_PAGE_SIZE));
+    dispatch(getPlaces({}));
     return () => {
       dispatch(resetSearchValue());
     }
@@ -169,13 +170,13 @@ const VenueList = () => {
           fetchFunction={getVenues}
           additionalFilters={[
             {
-              options: filteredPlaces,
-              placeholder: "Please choose a Place",
+              options: places,
+              placeholder: "Please choose a Placeasdasd",
               formName: "place_id",
               isAutoComplete: true,
-              onClick: () => {
-                getPlaces({});
-              },
+              // onClick: () => {
+              //   dispatch(getPlaces({}));
+              // },
             },
           ]}
         />
