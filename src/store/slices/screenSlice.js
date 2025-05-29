@@ -102,6 +102,17 @@ export const fetchScreenData = createAsyncThunk(
         }
     }
 );
+export const fetchScreenTrackRequestData = createAsyncThunk(
+    "screen/fetchScreenTrackRequestData",
+    async (pageData, { rejectWithValue }) => {
+        try {
+            const response = await ScreenService.getScreensTrackRequest(pageData);
+            return response.data[0];
+        } catch (error) {
+            return rejectWithValue(error.message || "Failed to fetch screen features");
+        }
+    }
+);
 export const fetchScreenById = createAsyncThunk(
     "screen/fetchScreenById",
     async (screen_id, { rejectWithValue }) => {
@@ -218,6 +229,18 @@ const screenSlice = createSlice({
                 state.pagination = action.payload;
             })
             .addCase(fetchScreenData.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(fetchScreenTrackRequestData.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchScreenTrackRequestData.fulfilled, (state, action) => {
+                state.loading = false;
+                state.response = action.payload;
+                state.pagination = action.payload;
+            })
+            .addCase(fetchScreenTrackRequestData.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

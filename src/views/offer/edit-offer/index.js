@@ -9,16 +9,17 @@ const EditOffer = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const type = params.get("type");
+  const isMakeChange = params.get("isMakeChange");
   const dispatch = useDispatch();
   const { offerId } = useParams();
   const { offerDetails } = useSelector((state) => state.offers);
   useEffect(() => {
     if (offerId) {
-      dispatch(fetchOfferDetails({offer_id: offerId, isOrganizer: isOrganizer()}));
+      dispatch(fetchOfferDetails({ offer_id: offerId }));
     }
   }, [dispatch, offerId]);
 
-  return <OfferForm mode="EDIT" offer={offerDetails} type={type} />;
+  return <OfferForm mode="EDIT" offer={offerDetails} type={type} isMakeChange={isMakeChange} />;
 };
 
 export default EditOffer;

@@ -1,4 +1,5 @@
 import fetch from "auth/FetchInterceptor";
+import { isOrganizer } from "configs/UserAccessConfig";
 import { ApiConstant } from "constants/ApiConstant";
 import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
@@ -14,7 +15,7 @@ CouponService.addCoupon = function (data, action) {
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
     ApiConstant.ORGANIZER_COUPON_URL,
-    data.isOrganizer
+    isOrganizer()
   );
 
   return fetch({
@@ -42,8 +43,8 @@ CouponService.editCoupon = function (
 
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
-    ApiConstant.ORGANIZER_COUPON_URL,
-    pageData.isOrganizer
+    ApiConstant.ORGANIZER_COUPON_UPDATE_URL,
+    isOrganizer()
   );
 
   return fetch({
@@ -56,6 +57,31 @@ CouponService.editCoupon = function (
     params: {
       action: handleAction(action),
       ...Utils.filterParams(pageData),
+    },
+  });
+};
+
+CouponService.makeChangeCoupon = function (
+  data,
+  action,
+  pageData
+) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(data, {
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
+  });
+  const offreUrl = ApiConstant.ORGANIZER_COUPON_MAKE_CHANGES_URL
+  return fetch({
+    url: `${offreUrl}`,
+    method: "put",
+    data: formData,
+    params: {
+      action: handleAction(encodedAction),
+      coupon_id: formData.get('id'),
+    },
+    headers: {
+      "Content-Type": "multipart/form-data",
     },
   });
 };
@@ -95,11 +121,20 @@ CouponService.getAllCoupon = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+CouponService.getAllTrackCoupon = function (pageData) {
+  const couponUrl = ApiConstant.ORGANIZER_COUPON_URL;
+  return fetch({
+    url: couponUrl,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
 
 CouponService.fetchCouponDetails = function (couponId) {
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_DETAILS_URL,
-    ApiConstant.ORGANIZER_COUPON_DETAILS_URL
+    ApiConstant.ORGANIZER_COUPON_DETAILS_URL,
+    isOrganizer()
   );
 
   return fetch({

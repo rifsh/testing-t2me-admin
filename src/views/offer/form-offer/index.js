@@ -11,6 +11,7 @@ import {
   setSelectedOffer,
   setOfferDialogVisible,
   setOfferModalLoading,
+  makeChangeOffer,
 } from "store/slices/offerSlice";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
@@ -23,10 +24,13 @@ import Utils from "utils";
 import { ActionType } from "utils/api/warning-submit-util";
 import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
+import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
+import { setComment, setCommentModalVisibility } from "store/slices/EventOrganizerSlice";
+import { isOrganizer } from "configs/UserAccessConfig";
 
 // const EDIT = "EDIT";
 
-const OfferForm = ({ mode, offer, type }) => {
+const OfferForm = ({ mode, offer, type, isMakeChange }) => {
   const {
     loading,
     error,
@@ -41,6 +45,14 @@ const OfferForm = ({ mode, offer, type }) => {
     submitPagination,
     message: warningMessage,
   } = useSelector((state) => state.offers);
+  const {
+    singleOrganizerUpdate,
+    loading: organizerLoading,
+    isCommentModalVisible,
+    comment,
+    actionType,
+    responseDataEvent, responseMessageEvent } = useSelector((state) => state.organizerUpdates);
+
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
@@ -98,13 +110,21 @@ const OfferForm = ({ mode, offer, type }) => {
         values.key_words = values.key_words ?? [];
         values.date_required = values.date_required ?? isDateRequired;
 
+        if (isOrganizer() && isMakeChange) {
+          dispatch(setCommentModalVisibility(true));
+          return;
+        }
+
         const editData = {
           ...values,
           id: offer.id,
         };
+        const pageData = {
+          offer_id: offer.id,
+        };
         console.log("Edit Data:", editData);
         const resultAction = await dispatch(
-          editOffer({ data: editData, action: ActionType.WARNING })
+          editOffer({ data: editData, action: ActionType.WARNING, pageData })
         );
 
         if (editOffer.fulfilled.match(resultAction)) {
@@ -158,6 +178,43 @@ const OfferForm = ({ mode, offer, type }) => {
 
   const handleModalCancel = () => {
     dispatch(setOfferDialogVisible(false));
+  };
+
+  const handleSubmit = async () => {
+    if (comment.trim().length === 0) {
+      message.error("Please add a comment!");
+      return;
+    }
+    const values = await form.validateFields();
+    try {
+      const editData = {
+        ...values,
+        id: offer.id,
+      };
+      const pageData = {
+        offer_id: offer.id,
+      };
+
+      console.log("editData", editData)
+      const resultAction = await dispatch(
+        makeChangeOffer({ data: editData, action: ActionType.SUBMIT, pageData })
+      );
+
+      if (makeChangeOffer.fulfilled.match(resultAction)) {
+        console.log("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEssss");
+        dispatch(setComment(""));
+        dispatch(setCommentModalVisibility(false));
+        dispatch(setSelectedSubmitItem(editData));
+        message.success(`Update ${actionType}ed successfully`);
+        // navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`);
+      }
+      dispatch(setSelectedSubmitItem(editData));
+    } catch (error) {
+      message.error(`Failed to ${actionType} the update`);
+    }
+
+    dispatch(setComment(""));
+    dispatch(setCommentModalVisibility(false));
   };
 
   return (
@@ -234,10 +291,25 @@ const OfferForm = ({ mode, offer, type }) => {
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={mode === "EDIT" ? editOffer : addOffer}
-        navigationPath={`${APP_PREFIX_PATH}/offer/list?type=${type}`}
+        // addFunction={mode === "EDIT" ? editOffer : addOffer}
+        addFunction={
+          mode === 'EDIT'
+            ? (isMakeChange ? makeChangeOffer : editOffer)
+            : addOffer
+        }
+        navigationPath={`${APP_PREFIX_PATH}/offer/list/${type}`}
         responseMessage={responseMessage}
         pagination={submitPagination}
+      />
+      <CommentShowModal
+        visible={isCommentModalVisible}
+        onSubmit={handleSubmit}
+        onCancel={() => dispatch(setCommentModalVisibility(false))}
+        loading={organizerLoading}
+        comment={comment}
+        setComment={(value) => dispatch(setComment(value))}
+        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Comment`}
+        warningMessage={`Please provide a reason for the update.`}
       />
     </>
   );

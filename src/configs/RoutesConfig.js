@@ -335,6 +335,11 @@ export const protectedRoutes = [
     ),
   },
   {
+    key: "trackRequest.movie.screen.status.list",
+    path: `${APP_PREFIX_PATH}/track/moive-screens/status/list`,
+    component: React.lazy(() => import("views/track-team/movie-organizer/screen-organizer/status-list")),
+  },
+  {
     key: "trackRequest.movie.seats.status.list",
     path: `${APP_PREFIX_PATH}/track/moive-seats/status/list`,
     component: React.lazy(() => import("views/track-team/movie-organizer/seat-organizer/status-list")),

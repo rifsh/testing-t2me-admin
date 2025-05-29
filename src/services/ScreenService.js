@@ -23,8 +23,8 @@ ScreenService.editScreen = function (
         method: "put",
         data: updatedScreen,
         params: {
-        screen_id: updatedScreen.id,
-        action: handleAction(action),
+            screen_id: updatedScreen.id,
+            action: handleAction(action),
         },
     });
 };
@@ -38,15 +38,22 @@ ScreenService.editScreenStatus = function (
         method: "put",
         data: updatedScreen,
         params: {
-        screen_id: updatedScreen.id,
-        action: handleAction(action),
+            screen_id: updatedScreen.id,
+            action: handleAction(action),
         },
-  });
+    });
 };
 
 ScreenService.getScreens = function (pageData) {
     return fetch({
         url: ApiConstant.GET_ALL_SCREEN_URL,
+        method: "get",
+        params: Utils.filterParams(pageData),
+    });
+};
+ScreenService.getScreensTrackRequest = function (pageData) {
+    return fetch({
+        url: ApiConstant.GET_ALL_SCREEN_TRACK_REQUEST_URL,
         method: "get",
         params: Utils.filterParams(pageData),
     });

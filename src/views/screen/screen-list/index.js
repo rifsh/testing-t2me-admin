@@ -31,6 +31,7 @@ import { TextConstants } from "constants/TextConstant";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { isOrganizer } from "configs/UserAccessConfig";
 
 const ScreenList = () => {
   const navigate = useNavigate();
@@ -53,7 +54,10 @@ const ScreenList = () => {
   const handlePagination = usePaginationHook(fetchScreenData);
 
   useEffect(() => {
-    dispatch(fetchScreenData(DEFAULT_PAGE_SIZE));
+    dispatch(fetchScreenData({
+      ...DEFAULT_PAGE_SIZE,
+      organizer: isOrganizer() ? false : null,
+    }));
   }, [dispatch]);
 
   useEffect(() => {

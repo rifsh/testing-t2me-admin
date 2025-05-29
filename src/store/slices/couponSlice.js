@@ -37,6 +37,22 @@ export const fetchAllCoupons = createAsyncThunk(
     }
   }
 );
+export const fetchAllTrackCoupons = createAsyncThunk(
+  "coupon/fetchAllTrackCoupons",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      if (ALL_COUPONS_MOCK_API && ENABLE_MOCK_API) {
+        const response = CouponMockData.fetchAllCoupons;
+        return response.data;
+      } else {
+        const response = await CouponService.getAllTrackCoupon(pageData);
+        return response.data[0];
+      }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Error fetching coupons");
+    }
+  }
+);
 
 export const fetchCouponDetails = createAsyncThunk(
   "coupon/fetchCouponDetails",
@@ -68,6 +84,18 @@ export const editCoupon = createAsyncThunk(
     try {
       console.log(data, "DATA IN SERVICE");
       const response = await CouponService.editCoupon(data, action, pageData);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+export const makeChangesCoupon = createAsyncThunk(
+  "coupon/makeChangesCoupon",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      console.log(pageData, "DATA IN SERVICE");
+      const response = await CouponService.makeChangeCoupon(data, action, pageData);
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -147,7 +175,6 @@ const couponSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
       .addCase(editCoupon.pending, (state) => {
         state.loading = true;
       })
@@ -167,6 +194,27 @@ const couponSlice = createSlice({
       .addCase(editCoupon.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(makeChangesCoupon.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(makeChangesCoupon.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+        if (payload.data?.list_of_updated_Schedules) {
+          state.submitPagination = payload.data?.list_of_updated_Schedules;
+        }
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(makeChangesCoupon.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        console.log("action.payload", action.payload)
       })
       .addCase(editCouponStatus.pending, (state) => {
         state.loading = true;
@@ -199,6 +247,20 @@ const couponSlice = createSlice({
         state.pagination = action.payload;
       })
       .addCase(fetchAllCoupons.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchAllTrackCoupons.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllTrackCoupons.fulfilled, (state, action) => {
+        state.loading = false;
+        state.coupons = action.payload.items;
+        state.filteredCoupons = action.payload.items;
+        state.pagination = action.payload;
+      })
+      .addCase(fetchAllTrackCoupons.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

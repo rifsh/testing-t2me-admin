@@ -158,10 +158,14 @@ export const validateMultiDragPositions = (
  */
 function convertFlatToNested(flatSeats) {
   // Group seats by rowIndex
+  if (!flatSeats) {
+    console.warn("Seat data is empty");
+    return;
+  }
   const seatsByRow = {};
 
   // Process each seat in the flat structure
-  Object.entries(flatSeats).forEach(([id, seat]) => {
+  Object.entries(flatSeats)?.forEach(([id, seat]) => {
     // if (!seat.isVisible) return;
 
     // Create row array if it doesn't exist

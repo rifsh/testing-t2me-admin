@@ -33,7 +33,44 @@ OfferService.addOffer = function (data, action) {
 OfferService.editOffer = function (
   data,
   action,
-  pageData = { page: 1, size: 10 }
+  pageData,
+) {
+  console.log(data, "DATA IN SERVICE");
+
+  const encodedAction = encodeURIComponent(handleAction(action));
+
+  const formData = Utils.createFormData(data, {
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
+  });
+  const offerUrlBase = Utils.getUrlByUserRole(
+    ApiConstant.OFFER_URL,
+    ApiConstant.ORGANIZER_OFFER_URL,
+    isOrganizer()
+  );
+  const offerUrl = isOrganizer()
+    ? `${offerUrlBase}?action=${encodedAction}`
+    : `${offerUrlBase}/${data.id}?action=${encodedAction}&seat_id=${data.id}`;
+  const params = {
+    action: encodedAction,
+    ...Utils.filterParams(pageData),
+  };
+
+  return fetch({
+    url: `${offerUrl}/${data.id}`,
+    method: "put",
+    data: formData,
+    params: params,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+OfferService.makeChangeOffer = function (
+  data,
+  action,
+  pageData,
 ) {
   console.log(data, "DATA IN SERVICE");
 
@@ -44,19 +81,14 @@ OfferService.editOffer = function (
     skipEmpty: true,
   });
 
-  const offreUrl = Utils.getUrlByUserRole(
-    ApiConstant.OFFER_URL,
-    ApiConstant.ORGANIZER_OFFER_URL,
-    isOrganizer()
-  );
-
+  const offerUrl = ApiConstant.ORGANIZER_OFFER_MAKE_CHANGES_URL;
   const params = {
     action: encodedAction,
     ...Utils.filterParams(pageData),
   };
 
   return fetch({
-    url: `${offreUrl}/${data.id}`,
+    url: `${offerUrl}`,
     method: "put",
     data: formData,
     params: params,
@@ -132,13 +164,13 @@ OfferService.fetchOfferDetails = function (params) {
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_DETAIL_URL,
     ApiConstant.ORGANIZER_OFFER_DETAIL_URL,
-    params.isOrganizer
+    isOrganizer()
   );
 
   return fetch({
     url: `${offreUrl}`,
     method: "get",
-    params:Utils.filterParams(params),
+    params: Utils.filterParams(params),
   });
 };
 
