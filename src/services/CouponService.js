@@ -77,8 +77,8 @@ CouponService.makeChangeCoupon = function (
     method: "put",
     data: formData,
     params: {
-      action: handleAction(action),
-      ...Utils.filterParams(pageData),
+      action: handleAction(encodedAction),
+      coupon_id: formData.get('id'),
     },
     headers: {
       "Content-Type": "multipart/form-data",

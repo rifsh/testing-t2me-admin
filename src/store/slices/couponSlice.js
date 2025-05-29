@@ -214,6 +214,7 @@ const couponSlice = createSlice({
       .addCase(makeChangesCoupon.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        console.log("action.payload", action.payload)
       })
       .addCase(editCouponStatus.pending, (state) => {
         state.loading = true;

@@ -248,6 +248,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
       if (makeChangesCoupon.fulfilled.match(resultAction)) {
         console.log("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEssss");
         dispatch(setComment(""));
+        dispatch(setSelectedCoupon(editData));
         dispatch(setCommentModalVisibility(false));
         dispatch(setSelectedSubmitItem(editData));
         message.success(`Update ${actionType}ed successfully`);
