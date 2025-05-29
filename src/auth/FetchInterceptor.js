@@ -8,13 +8,16 @@ import Utils from "utils";
 import { delay } from "lodash";
 import { encryptAES, decryptAES, encryptParams, decryptParams } from "utils/aesDecrypt";
 import { env } from "configs/EnvironmentConfig";
+
 const {
   AES_KEY,
   NEED_ENCRYPT_DECRYPT,
   ENCRYPT_PARAMS,
   SKIP_ENCRYPTION_PATHS
 } = env;
+
 const unauthorizedCode = [401, 403];
+const E2E_ERROR_CODE = 424
 let isLoggingOut = false; // Flag to prevent logout loop
 
 const service = axios.create({
@@ -175,15 +178,27 @@ service.interceptors.response.use(
       // Handle unauthorized errors only if we're not already logging out
       // and this is not a logout request
       if (
-        unauthorizedCode.includes(status) &&
+        (unauthorizedCode.includes(status) || status === E2E_ERROR_CODE) &&
         !isLoggingOut &&
         !isLogoutRequest
       ) {
         try {
-          isLoggingOut = true; // Set the flag before starting logout process
-          notificationParam.message = "Session Expired";
-          notificationParam.description =
-            "Your session has expired. Please log in again.";
+          isLoggingOut = true;
+
+          if (status === E2E_ERROR_CODE) {
+            const apiMessage =
+              (data && data.message) ||
+              (data && data.status && data.status.message) ||
+              "E2E Failure";
+
+            notificationParam.message =
+              (data && data.status && data.status.status_code) || "Error 424";
+            notificationParam.description = apiMessage;
+          } else {
+            notificationParam.message = "Session Expired";
+            notificationParam.description =
+              "Your session has expired. Please log in again.";
+          }
 
           await store.dispatch(signOut());
 
