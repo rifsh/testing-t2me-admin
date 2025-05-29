@@ -263,6 +263,10 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
     dispatch(setCommentModalVisibility(false));
   };
 
+  useEffect(() => {
+    console.log('isMakeChanges', isMakeChanges)
+  }, [isMakeChanges])
+
   return (
     <>
       <Form
