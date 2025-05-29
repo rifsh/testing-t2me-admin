@@ -39,6 +39,8 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import { getCurrentUser } from "configs/UserAccessConfig";
+import { hasPermission } from "utils/accessControl";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Option } = Select;
 
@@ -168,13 +170,22 @@ const EventTypeList = () => {
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={fetchEventType} />
-        <Button
+        {/* <Button
           type="primary"
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/event/type/add`)}
         >
           Add Event Type
-        </Button>
+        </Button> */}
+        {hasPermission(PERMISSIONS.ADD_EVENT_TYPE) && (
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/event/type/add`)}
+          >
+            Add Event Type
+          </Button>
+        )}
       </Flex>
 
       <Table

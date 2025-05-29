@@ -27,6 +27,8 @@ import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice";
+import { hasPermission } from "utils/accessControl";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 const { Panel } = Collapse;
 
 const { Option } = Select;
@@ -49,8 +51,8 @@ const EventsList = () => {
     editItemId,
     responseImpactData,
   } = useSelector((state) => state.event);
-  console.log(pagination,'pag');
-  
+  console.log(pagination, 'pag');
+
   const { responseData } = useSelector((state) => state.modalSlice);
   const eventParams = {
     size: DEFAULT_PAGE_SIZE.size,
@@ -249,18 +251,16 @@ const EventsList = () => {
             </Select>
           </div>
         </Flex>
-        {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
-          <div>
-            <Button
-              type="primary"
-              icon={<FormOutlined />}
-              block
-              onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
-            >
-              Add Event
-            </Button>
-          </div>
-        )}
+        <div>
+          {hasPermission(PERMISSIONS.ADD_EVENT) && <Button
+            type="primary"
+            icon={<FormOutlined />}
+            block
+            onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
+          >
+            Add Event
+          </Button>}
+        </div>
       </Flex>
       <div className="table-responsive">
         <Table

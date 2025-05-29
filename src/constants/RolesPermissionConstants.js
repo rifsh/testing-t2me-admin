@@ -16,6 +16,8 @@ export const ROLE_NAMES = {
 };
 
 export const PERMISSIONS = {
+    ADD_EVENT_TYPE: 'add_event_type',
+    ADD_EVENT: 'add_event',
     VIEW_EVENT_DETAILS: 'view_event_details',
     VIEW_CATEGORY: 'view_category',
     VIEW_LOCATION: 'view_location',
