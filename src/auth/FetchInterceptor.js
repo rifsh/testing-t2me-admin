@@ -16,8 +16,19 @@ const {
   SKIP_ENCRYPTION_PATHS
 } = env;
 
+/* ──────────────────────────────────────────────
+   NOTE: These HTTP-code constants are left in
+   place but are no longer used for logout.
+   ────────────────────────────────────────────── */
 const unauthorizedCode = [401, 403];
-const E2E_ERROR_CODE = 424
+const E2E_ERROR_CODE   = 424;
+
+/* ──────────────────────────────────────────────
+   NEW – custom codes that DO trigger logout
+   ────────────────────────────────────────────── */
+const SESSION_EXPIRE_CODE   = "00101";
+const E2E_ERROR_CUSTOM_CODE = "00102";
+
 let isLoggingOut = false; // Flag to prevent logout loop
 
 const service = axios.create({
@@ -175,33 +186,38 @@ service.interceptors.response.use(
       );
       console.log("[ERROR] Response Data:", data);
 
-      // Handle unauthorized errors only if we're not already logging out
-      // and this is not a logout request
-      if (
-        (unauthorizedCode.includes(status) || status === E2E_ERROR_CODE) &&
+      /* ────────────────────────────────────────
+         Extract custom_code (if any)
+         ──────────────────────────────────────── */
+      const customCode =
+        data?.custom_code ||
+        (data?.status && data.status.custom_code);
+
+      /* ────────────────────────────────────────
+         Logout only if custom_code is 00101/00102
+         ──────────────────────────────────────── */
+      const shouldLogout =
         !isLoggingOut &&
-        !isLogoutRequest
-      ) {
+        !isLogoutRequest &&
+        (customCode === SESSION_EXPIRE_CODE || customCode === E2E_ERROR_CUSTOM_CODE);
+
+      if (shouldLogout) {
         try {
           isLoggingOut = true;
 
-          if (status === E2E_ERROR_CODE) {
-            const apiMessage =
-              (data && data.message) ||
-              (data && data.status && data.status.message) ||
-              "E2E Failure";
-
-            notificationParam.message =
-              (data && data.status && data.status.status_code) || "Error 424";
-            notificationParam.description = apiMessage;
-          } else {
+          if (customCode === SESSION_EXPIRE_CODE) {
             notificationParam.message = "Session Expired";
             notificationParam.description =
               "Your session has expired. Please log in again.";
+          } else if (customCode === E2E_ERROR_CUSTOM_CODE) {
+            // Message = status.message, Description = status.status_code
+            notificationParam.message =
+              data?.status?.message || "E2E Failure";
+            notificationParam.description =
+              data?.status?.status_code || "E2E encryption error";
           }
 
           await store.dispatch(signOut());
-
           await Utils.clearAllBrowserData();
           store.dispatch(signOutSuccess());
 
