@@ -37,6 +37,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
   const { currentStep, eventDetails, submitLoading } = useSelector(
     (state) => state.event
   );
+   const { availableTicketTyps } = useSelector((state) => state.tickets);
   const { selectedVenue } = useSelector((state) => state.locations);
   const { selectedSubmitItem } = useSelector((state) => state.modalSlice);
   const dispatch = useDispatch();
@@ -339,7 +340,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
             }
             if (
               eventDetails.available_types ===
-              AvailableBookingType.SEAT_STRUCTURE
+              availableTicketTyps.SEAT_STRUCTURE
             ) {
               if (!slot.seat_structure_id) {
                 message.error(
