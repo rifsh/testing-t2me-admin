@@ -42,6 +42,7 @@
   "advertisement.schedule": "Schedule",
   "sidenav.ticket": "Ticket",
   "sidenav.user": "User",
+  "sidenav.accessControl": "System Permissions",
   "sidenav.tax": "Tax",
   "sidenav.apps": "Apps",
   "sidenav.apps.mail": "Mail",

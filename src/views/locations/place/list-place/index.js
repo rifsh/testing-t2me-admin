@@ -24,10 +24,11 @@ import {
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
-
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { hasPermission } from "utils/accessControl";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const PlaceList = () => {
   const dispatch = useDispatch();
@@ -90,12 +91,12 @@ const PlaceList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       </Menu.Item>
-      <Menu.Item>
+      {hasPermission(PERMISSIONS.EDIT_PLACE) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditPlace(row.id)}>
           <EditOutlined />
           <span className="ml-2">Edit Place</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item>}
     </Menu>
   );
 
@@ -113,7 +114,7 @@ const PlaceList = () => {
       ),
       sorter: (a, b) => utils.antdTableSorter(a, b, "created_at"),
     },
-    utils.statusColumnUtil(handleUpdateStatus),
+    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.EDIT_PLACE_STATUS)),
     {
       title: "",
       dataIndex: "actions",

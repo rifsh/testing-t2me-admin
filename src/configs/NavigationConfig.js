@@ -534,13 +534,31 @@ const superAdminDashBoardNavTree = [
     ],
   },
   {
-    key: "user.list",
-    path: `${APP_PREFIX_PATH}/user/list`,
+    key: "user",
     title: "sidenav.user",
     icon: DashboardOutlined,
     breadcrumb: false,
-    submenu: [],
+    isGroupTitle: false,
+    submenu: [
+      {
+        key: "user.list",
+        path: `${APP_PREFIX_PATH}/user/list`,
+        title: "sidenav.user",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+      {
+        key: "accessControl.list",
+        path: `${APP_PREFIX_PATH}/access-control/list`,
+        title: "sidenav.accessControl",
+        icon: OrderedListOutlined,
+        breadcrumb: false,
+        submenu: [],
+      },
+    ]
   },
+
   // {
   //   key: "super-admin.reports",
   //   path: `${APP_PREFIX_PATH}/super-admin/reports`,
@@ -1105,6 +1123,7 @@ const eventOrganaizerDashBoardNavTree = [
     ],
   },
 ];
+
 const techSupportingTeamDashBoardNavTree = [
   {
     key: "Issue",

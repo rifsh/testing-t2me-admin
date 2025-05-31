@@ -12,6 +12,7 @@ const SearchBarWithStatus = ({
   additionalFilters = [],
   isStatus = true,
   placeholder = 'Search',
+  displayName = ''
 }) => {
   const dispatch = useDispatch();
   const [searchValue, setSearchValue] = useState(null);
@@ -33,6 +34,7 @@ const SearchBarWithStatus = ({
           size: 10,
           ...(isStatus && { active: statusFilter }),
           ...filterValues,
+          filter_by_display_name: displayName
         })
       );
     }
@@ -49,6 +51,7 @@ const SearchBarWithStatus = ({
           size: 10,
           ...(isStatus && { active: statusFilter }),
           ...filterValues,
+          filter_by_display_name: displayName
         })
       );
     }

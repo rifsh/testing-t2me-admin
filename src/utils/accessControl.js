@@ -8,6 +8,7 @@ export const hasPermission = (permission) => {
 
     const allowedPermissions = ROLE_PERMISSIONS[user.role_id] || [];
     return allowedPermissions.includes(permission);
+
 };
 
 export const getFormSteps = () => {

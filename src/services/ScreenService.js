@@ -23,8 +23,8 @@ ScreenService.editScreen = function (
         method: "put",
         data: updatedScreen,
         params: {
-        screen_id: updatedScreen.id,
-        action: handleAction(action),
+            screen_id: updatedScreen.id,
+            action: handleAction(action),
         },
     });
 };
@@ -38,10 +38,10 @@ ScreenService.editScreenStatus = function (
         method: "put",
         data: updatedScreen,
         params: {
-        screen_id: updatedScreen.id,
-        action: handleAction(action),
+            screen_id: updatedScreen.id,
+            action: handleAction(action),
         },
-  });
+    });
 };
 
 ScreenService.getScreens = function (pageData) {

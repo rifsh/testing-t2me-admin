@@ -252,14 +252,15 @@ const EventsList = () => {
           </div>
         </Flex>
         <div>
-          {hasPermission(PERMISSIONS.ADD_EVENT) && <Button
-            type="primary"
-            icon={<FormOutlined />}
-            block
-            onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
-          >
-            Add Event
-          </Button>}
+          {hasPermission(PERMISSIONS.ADD_EVENT) &&
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              block
+              onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
+            >
+              Add Event
+            </Button>}
         </div>
       </Flex>
       <div className="table-responsive">

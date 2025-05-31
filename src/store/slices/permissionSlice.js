@@ -1,23 +1,49 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { AUTH_TOKEN } from 'constants/AuthConstant';
-import { jwtDecode } from 'jwt-decode';
+import permissionService from 'services/PermissionService';
 
 const initialState = {
-    response: null,
+    response: [],
+    addResponse: [],
+    displayNames: [],
+    selectedDisplayIndex: 0,
+    selectedDisplayName: 'TheaterCompany',
+    selectedRole: [],
     permissions: [],
     message: null,
     loading: false,
-    error: null
+    error: null,
+    pagination: { size: 10, page: 1 },
+    displayNamePagination: { size: 10, page: 1 }
 };
 
 export const fetchPermissions = createAsyncThunk(
     "permissions/fetchPermissions",
-    async (_, { rejectWithValue }) => {
+    async (pageData, { rejectWithValue }) => {
         try {
-            const response = localStorage.getItem(AUTH_TOKEN)
-                ? jwtDecode(localStorage.getItem(AUTH_TOKEN))
-                : null;
-            return response;
+            const response = await permissionService.getPermissionData(pageData);
+            return response.data[0];
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Error");
+        }
+    }
+);
+export const fetchPermissionsDisplayNames = createAsyncThunk(
+    "permissions/fetchPermissionsDisplayNames",
+    async (pageData, { rejectWithValue }) => {
+        try {
+            const response = await permissionService.getPermissionDisplayNames(pageData);
+            return response.data[0];
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Error");
+        }
+    }
+);
+export const addhPermissionsAccess = createAsyncThunk(
+    "permissions/addhPermissionsAccess",
+    async (data, { rejectWithValue }) => {
+        try {
+            const response = await permissionService.addPermissionAccess(data);
+            return response.data;
         } catch (err) {
             return rejectWithValue(err.response?.data?.message || "Error");
         }
@@ -28,7 +54,15 @@ const permissionSlice = createSlice({
     name: 'permissions',
     initialState,
     reducers: {
-
+        setSelectedDisplayIndex(state, action) {
+            state.selectedDisplayIndex = action.payload
+        },
+        setSelectedDisplayName(state, action) {
+            state.selectedDisplayName = action.payload
+        },
+        setSelectedRole(state, action) {
+            state.selectedRole = action.payload
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -37,9 +71,33 @@ const permissionSlice = createSlice({
             })
             .addCase(fetchPermissions.fulfilled, (state, action) => {
                 state.loading = false;
-                state.permissions = action.payload;
+                state.response = action.payload?.items;
+                state.pagination = action.payload;
             })
             .addCase(fetchPermissions.rejected, (state, action) => {
+                state.message = action.payload;
+                state.loading = false;
+            })
+            .addCase(fetchPermissionsDisplayNames.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchPermissionsDisplayNames.fulfilled, (state, action) => {
+                state.loading = false;
+                state.displayNames = action.payload?.items;
+                state.displayNamePagination = action.payload;
+            })
+            .addCase(fetchPermissionsDisplayNames.rejected, (state, action) => {
+                state.message = action.payload;
+                state.loading = false;
+            })
+            .addCase(addhPermissionsAccess.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(addhPermissionsAccess.fulfilled, (state, action) => {
+                state.loading = false;
+                state.addResponse = action.payload?.items;
+            })
+            .addCase(addhPermissionsAccess.rejected, (state, action) => {
                 state.message = action.payload;
                 state.loading = false;
             })
@@ -47,7 +105,9 @@ const permissionSlice = createSlice({
 });
 
 export const {
-
+    setSelectedDisplayIndex,
+    setSelectedDisplayName,
+    setSelectedRole,
 } = permissionSlice.actions;
 
 export default permissionSlice.reducer;

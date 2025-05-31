@@ -36,6 +36,8 @@ import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import { resetSearchValue } from "store/slices/fliterSlice";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
+import { hasPermission } from "utils/accessControl";
 
 const { Option } = Select;
 
@@ -104,12 +106,12 @@ const VenueList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       </Menu.Item>
-      <Menu.Item>
+      {hasPermission(PERMISSIONS.EDIT_VENUE) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditVenue(row.id)}>
           <EditOutlined />
           <span className="ml-2">Edit Venue</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item>}
     </Menu>
   );
 
@@ -144,7 +146,7 @@ const VenueList = () => {
       render: (capacity) => <span>{capacity || "0"}</span>,
       sorter: (a, b) => utils.antdTableSorter(a, b, "capacity"),
     },
-    utils.statusColumnUtil(handleUpdateStatus),
+    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.EDIT_VENUE_STATUS)),
     {
       title: "",
       dataIndex: "actions",
