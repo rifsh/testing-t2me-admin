@@ -304,11 +304,6 @@ export default function TheaterScreeningUI() {
                 )}
 
                 <Divider />
-
-                {/* Maker-Checker Actions */}
-                <div className='flex items-center justify-end'>
-                    {renderActionButtons()}
-                </div>
             </Card>
 
             {TrackrequestSeatsDetails?.organizer_theatre_seat_structure_comment &&
@@ -342,6 +337,10 @@ export default function TheaterScreeningUI() {
                     } Comment`}
                 warningMessage={`Please provide a reason for the update.`}
             />
+            {/* Maker-Checker Actions */}
+            <div className='flex items-center justify-end'>
+                {renderActionButtons()}
+            </div>
         </div>
     );
 }

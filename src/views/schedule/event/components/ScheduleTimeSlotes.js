@@ -40,7 +40,7 @@ import TimezoneClock from "components/util-components/timezone/TimeZoneClock";
 
 import TimeSlots from "./TimeSlote";
 import { ScheduleTimeValidator } from "../utils/ScheduleTimeValidator";
-import { AvailableBookingType } from "constants/AppConstants";
+
 
 const { Title } = Typography;
 
@@ -57,6 +57,7 @@ export function ScheduleTimeSlots({ form }) {
   const timeZone = dayjs.tz.guess();
   const currentDateInTimeZone = useMemo(() => dayjs().tz(timeZone), [timeZone]);
   const dispatch = useDispatch();
+   const { availableTicketTyps } = useSelector((state) => state.tickets);
   useEffect(() => {
     // const eventId = 7;
 
@@ -362,7 +363,7 @@ export function ScheduleTimeSlots({ form }) {
       return;
     }
 
-    if (eventDetails.available_types === AvailableBookingType.SEAT_STRUCTURE) {
+    if (eventDetails.available_types === availableTicketTyps.SEAT_STRUCTURE) {
       if (!sourceSlot?.seat_structure_id) {
         message.warning("Please select a Seat Structure first");
         return;

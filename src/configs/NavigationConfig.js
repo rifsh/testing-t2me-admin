@@ -1061,6 +1061,14 @@ const eventOrganaizerDashBoardNavTree = [
         isGroupTitle: false,
         submenu: [
           {
+            key: "trackRequest.movie.screen.status.list",
+            path: `${APP_PREFIX_PATH}/track/moive-screens/status/list`,
+            title: "sidenav.screen",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
             key: "trackRequest.movie.seats.status.list",
             path: `${APP_PREFIX_PATH}/track/moive-seats/status/list`,
             title: "sidenav.seat",

@@ -28,13 +28,13 @@ export const SubmitAndConfirmModal = ({
 
   useEffect(() => {
     if (selectedSubmitItem) {
-      console.log(selectedSubmitItem);
       dispatch(
         addFunction({ data: selectedSubmitItem, action: ActionType.SUBMIT })
       ).then((result) => {
         if (addFunction.fulfilled?.match(result)) {
           dispatch(setResponseDialogVisible(true));
         } else {
+          console.log("selectedSubmitItem", result);
           dispatch(resetStatusModalState());
           message.error(TextConstants.ErrorSubmittingItem);
         }

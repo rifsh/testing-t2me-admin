@@ -14,9 +14,12 @@ MovieSeatService.addSeatStructure = function (data, action) {
     isOrganizer()
   );
   return fetch({
-    url: `${seatUrl}?action=${encodedAction}`,
+    url: `${seatUrl}`,
     method: "post",
     data: data,
+    params: {
+      action: encodedAction,
+    },
   });
 };
 
@@ -81,10 +84,13 @@ MovieSeatService.makeEditSeatStructure = function (
   const encodedAction = encodeURIComponent(handleAction(action));
 
   return fetch({
-    url: `${ApiConstant.MOVIE_SEAT_MAKE_EDIT_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.MOVIE_SEAT_MAKE_EDIT_URL}/${data.id}`,
     method: "put",
     data: data,
-    params: Utils.filterParams(pageData),
+    params: {
+      action: encodedAction,
+      ...Utils.filterParams(pageData)
+    },
   });
 };
 
@@ -171,7 +177,7 @@ MovieSeatService.editEventSeatStructureStatus = function (
   pageData = { page: 1, size: 10 }
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  
+
   // Combine all params into one object
   const params = {
     action: encodedAction,

@@ -51,6 +51,13 @@ ScreenService.getScreens = function (pageData) {
         params: Utils.filterParams(pageData),
     });
 };
+ScreenService.getScreensTrackRequest = function (pageData) {
+    return fetch({
+        url: ApiConstant.GET_ALL_SCREEN_TRACK_REQUEST_URL,
+        method: "get",
+        params: Utils.filterParams(pageData),
+    });
+};
 ScreenService.getScreenById = function (screen_id) {
     return fetch({
         url: ApiConstant.GET_SCREEN_ById_URL,
