@@ -28,6 +28,7 @@ const SearchBarWithStatus = ({
 
   const handleSearch = (value) => {
     if (isPermission && value) {
+      dispatch(setGlobalSearchValue(value));
       dispatch(
         fetchFunction({
           search: value || null,

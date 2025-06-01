@@ -57,6 +57,7 @@ const AccessControlDashboard = () => {
     });
     const handlePagination = usePaginationHook(fetchPermissionsDisplayNames);
     const { loading, displayNamePagination, response: apiPermissions, displayNames, selectedDisplayName, selectedDisplayIndex, pagination } = useSelector((state) => state.permissions);
+    const { searchValue } = useSelector((state) => state.filter);
 
     useEffect(() => {
         if (selectedDisplayName) {
@@ -231,13 +232,13 @@ const AccessControlDashboard = () => {
     };
 
     const handlePermissionsPagination = (page, pageSize) => {
-        console.log(page, pageSize);
         dispatch(fetchPermissions({
             filter_by_display_name: selectedDisplayName,
             filter_by_method: SelectedMethod,
             role_id: selectedRole,
             page: page,
             size: pageSize,
+            search: searchValue,
             status: true
         }));
     }
