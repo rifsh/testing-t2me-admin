@@ -24,10 +24,12 @@ import {
     Tag,
     Space,
     Alert,
+    message,
+    Divider,
 } from "antd";
-import { ROLE_NAMES_ARRAY } from "constants/RolesPermissionConstants";
+import { ROLE_METHODS, ROLE_NAMES_ARRAY } from "constants/RolesPermissionConstants";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchPermissions, fetchPermissionsDisplayNames, setSelectedDisplayIndex, setSelectedDisplayName } from "store/slices/permissionSlice";
+import { addhPermissionsAccess, fetchPermissions, fetchPermissionsDisplayNames, setSelectedDisplayIndex, setSelectedDisplayName } from "store/slices/permissionSlice";
 import LoadingOverlay from "components/util-components/Loader";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { Pagination } from "@mui/material";
@@ -42,22 +44,44 @@ const { Panel } = Collapse;
 const { Search } = Input;
 
 const AccessControlDashboard = () => {
-    const [selectedRole, setSelectedRole] = useState("admin");
+    const [selectedRole, setSelectedRole] = useState(2);
+    const [SelectedMethod, setSelectedMethod] = useState('');
     const [searchText, setSearchText] = useState("");
     const [activeTab, setActiveTab] = useState("modules");
     const [expandedModules, setExpandedModules] = useState([]);
     const dispatch = useDispatch();
     const [permissions, setPermissions] = useState({});
+    const [rolePermissions, setRolePermissions] = useState({
+        role_position_id: selectedRole, // Initialize with default role ID
+        permissions: []     // Empty array for permissions
+    });
     const handlePagination = usePaginationHook(fetchPermissionsDisplayNames);
-    const handlePermissionsPagination = usePaginationHook(fetchPermissions);
     const { loading, displayNamePagination, response: apiPermissions, displayNames, selectedDisplayName, selectedDisplayIndex, pagination } = useSelector((state) => state.permissions);
 
     useEffect(() => {
-        dispatch(fetchPermissions({ filter_by_display_name: selectedDisplayName }));
-    }, [dispatch, selectedDisplayName]);
+        if (selectedDisplayName) {
+            dispatch(fetchPermissions({
+                filter_by_display_name: selectedDisplayName,
+                filter_by_method: SelectedMethod,
+                role_id: selectedRole,
+                status: true
+            }));
+        }
+    }, [dispatch, selectedDisplayName, selectedRole, SelectedMethod]);
+
+    const getPermissionsDisplayNames = async () => {
+        try {
+            const actionResult = await dispatch(fetchPermissionsDisplayNames(DEFAULT_PAGE_SIZE)).unwrap();
+            console.log("displatnameresponse", actionResult.items[3].display_name);
+            dispatch(setSelectedDisplayName(actionResult.items[3].display_name))
+        } catch (error) {
+
+        }
+    }
 
     useEffect(() => {
-        dispatch(fetchPermissionsDisplayNames(DEFAULT_PAGE_SIZE));
+        // dispatch(fetchPermissionsDisplayNames(DEFAULT_PAGE_SIZE));
+        getPermissionsDisplayNames()
     }, [dispatch]);
 
     useEffect(() => {
@@ -72,6 +96,7 @@ const AccessControlDashboard = () => {
                 }
 
                 permissionsMap[perm.module].methods[perm.codename] = {
+                    id: perm.id,
                     url: perm.url,
                     method: perm.method,
                     enabled: perm.status ? true : false
@@ -82,7 +107,48 @@ const AccessControlDashboard = () => {
         }
     }, [apiPermissions]);
 
-    const handlePermissionChange = (module, codename, enabled) => {
+    useEffect(() => {
+        if (apiPermissions) {
+            const permissionsMap = {};
+            const apiPermissionsList = [];
+
+            apiPermissions?.forEach(perm => {
+                // 1. Build UI permissions structure
+                if (!permissionsMap[perm.module]) {
+                    permissionsMap[perm.module] = {
+                        displayName: perm.display_name,
+                        methods: {}
+                    };
+                }
+
+                permissionsMap[perm.module].methods[perm.codename] = {
+                    id: perm.id,
+                    url: perm.url,
+                    method: perm.method,
+                    enabled: perm.status ? true : false
+                };
+
+                // 2. Build API permissions structure simultaneously
+                apiPermissionsList.push({
+                    method: perm.method,
+                    permission_id: perm.id,
+                    action: perm.status ? "add" : ""
+                });
+            });
+            setRolePermissions(prev => ({
+                ...prev,
+                permissions: apiPermissionsList
+            }));
+            console.log("UI permissions structure:", permissionsMap);
+            console.log("API-ready permissions:", {
+                role_position_id: selectedRole,
+                permissions: apiPermissionsList
+            });
+        }
+    }, [apiPermissions, selectedRole]);
+
+
+    const handlePermissionChange = (module, codename, method, permissionId, enabled) => {
         setPermissions(prev => ({
             ...prev,
             [module]: {
@@ -96,6 +162,23 @@ const AccessControlDashboard = () => {
                 }
             }
         }));
+        setRolePermissions(prev => {
+            const filteredPermissions = prev.permissions.filter(
+                perm => perm.permission_id !== permissionId
+            );
+
+            return {
+                role_position_id: selectedRole,
+                permissions: [
+                    ...filteredPermissions,
+                    {
+                        method,
+                        permission_id: permissionId,
+                        action: enabled ? "add" : "remove"
+                    }
+                ]
+            };
+        });
     };
 
     const filteredModules = useMemo(() => {
@@ -115,15 +198,36 @@ const AccessControlDashboard = () => {
         });
     }, [permissions, searchText]);
 
-    const savePermissions = () => {
-        // Transform permissions back to API format and save
-        console.log("Saving permissions:", selectedRole);
-        // Add your save logic here
+    const savePermissions = async () => {
+        message.loading('Saving permissions...', 0);
+
+        try {
+            await dispatch(addhPermissionsAccess(rolePermissions));
+            console.log("Permission data", rolePermissions);
+            message.destroy();
+            message.success('Permissions saved successfully!', 3);
+        } catch (error) {
+            console.error('Error saving permissions:', error);
+            message.destroy();
+            message.error(error.message || 'Failed to save permissions', 3);
+        }
     };
 
     const handleChange = (event, page) => {
         handlePagination(page, 10)
     };
+
+    const handlePermissionsPagination = (page, pageSize) => {
+        console.log(page, pageSize);
+        dispatch(fetchPermissions({
+            filter_by_display_name: selectedDisplayName,
+            filter_by_method: SelectedMethod,
+            role_id: selectedRole,
+            page: page,
+            size: pageSize,
+            status: true
+        }));
+    }
 
     return (
         <Layout className="min-h-screen">
@@ -155,26 +259,32 @@ const AccessControlDashboard = () => {
                 <div className="flex flex-col justify-between h-[calc(100%-110px)]">
                     <Menu
                         mode="inline"
-                        defaultSelectedKeys={["0"]}
-                        selectedKeys={[selectedDisplayIndex?.toString()]}
+                        selectedKeys={selectedDisplayName}
                         onClick={({ key }) => {
-                            dispatch(setSelectedDisplayIndex(parseInt(key)));
-                            const selectedModule = displayNames[parseInt(key)];
-                            dispatch(setSelectedDisplayName(selectedModule.display_name));
-                            console.log("Selected module:", selectedModule.display_name);
+                            const selectedModule = displayNames.find(
+                                (module) => module.display_name === key
+                            );
+                            if (selectedModule) {
+                                const selectedIndex = displayNames.findIndex(
+                                    (module) => module.display_name === key
+                                );
+
+                                dispatch(setSelectedDisplayIndex(selectedIndex));
+                                dispatch(setSelectedDisplayName(selectedModule.display_name));
+                            }
                         }}
                         style={{ borderRight: 0 }}
                     >
-                        {displayNames?.map((names, index) => (
+                        {displayNames?.map((names) => (
                             <Menu.Item
-                                key={index.toString()}
+                                key={names.display_name}
                                 icon={<SafetyOutlined />}
                             >
                                 {names.display_name}
                             </Menu.Item>
                         ))}
                     </Menu>
-                    <div className="p-2 flex justify-center border-t border-gray-200"> {/* Added border */}
+                    <div className="p-2 flex justify-center border-t border-gray-200">
                         <Pagination
                             count={displayNamePagination.pages}
                             page={displayNamePagination.page}
@@ -205,128 +315,171 @@ const AccessControlDashboard = () => {
                                     <div className="mb-4">
                                         <div className="p-[6px]">
                                             <SearchBarWithStatus
-                                                placeholder="Search with Venue or Screen name"
+                                                placeholder="Search..."
                                                 fetchFunction={fetchPermissions}
                                                 isStatus={false}
+                                                isPermission={true}
                                                 displayName={selectedDisplayName}
+                                                roleId={selectedRole}
+                                                method={SelectedMethod}
                                             />
                                         </div>
 
                                         <div className="flex items-center gap-4 my-3">
                                             <Text strong>Select Role to give access:</Text>
                                             <Select
-                                                defaultValue={ROLE_NAMES_ARRAY[1].name}
+                                                defaultValue={ROLE_NAMES_ARRAY[1].id}
                                                 style={{ width: 200 }}
-                                                onChange={setSelectedRole}
+                                                onChange={(selectedId) => {
+                                                    setSelectedRole(selectedId);
+                                                }}
                                             >
                                                 {ROLE_NAMES_ARRAY.filter(role => role.id !== 1).map((role) => (
                                                     <Option
                                                         key={role.id}
-                                                        value={role.name}
-
+                                                        value={role.id}
                                                     >
-                                                        {role.label}
+                                                        {role.name}
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                            <Text strong>Filter by Method: </Text>
+                                            <Select
+                                                defaultValue={ROLE_METHODS[0].value}
+                                                style={{ width: 200 }}
+                                                onChange={(selectedValue) => {
+                                                    setSelectedMethod(selectedValue);
+                                                }}
+                                            >
+                                                {ROLE_METHODS.map((method) => (
+                                                    <Option
+                                                        key={method.id}
+                                                        value={method.value}
+                                                    >
+                                                        <Tag color={
+                                                            method.name === 'GET' ? 'green' :
+                                                                method.name === 'POST' ? 'blue' :
+                                                                    method.name === 'PUT' ? 'orange' :
+                                                                        method.name === 'DELETE' ? 'red' : 'default'
+                                                        }>
+                                                            {method.name}
+                                                        </Tag>
                                                     </Option>
                                                 ))}
                                             </Select>
                                         </div>
+                                        <Divider />
 
-                                        <Collapse
-                                            activeKey={expandedModules}
-                                            onChange={setExpandedModules}
-                                            ghost
-                                        >
-                                            {filteredModules.map(([module, moduleData]) => (
-                                                <Panel
-                                                    key={module}
-                                                    header={
-                                                        <div className="flex justify-between items-center">
-                                                            <Space>
-                                                                <Text strong>{moduleData.displayName}</Text>
-                                                                <Tag color="blue">{module}</Tag>
-                                                            </Space>
-                                                        </div>
-                                                    }
-                                                >
-                                                    <Table
-                                                        dataSource={Object.entries(moduleData.methods).map(([codename, methodData]) => ({
-                                                            key: codename,
-                                                            codename,
-                                                            ...methodData
-                                                        }))}
-                                                        pagination={{
-                                                            current: pagination.current,
-                                                            pageSize: pagination.pageSize,
-                                                            total: pagination.total,
-                                                            onChange: (page, pageSize) => handlePermissionsPagination(page, pageSize),
-                                                            position: ['bottomRight']
-                                                        }}
-                                                        showHeader={false}
-                                                        size="small"
-                                                        className="permission-methods-table"
-                                                        columns={[
-                                                            {
-                                                                dataIndex: "codename",
-                                                                render: (codename) => (
-                                                                    <div className="flex items-center gap-2">
-                                                                        <ApiOutlined />
-                                                                        <Text code>{codename}</Text>
-                                                                    </div>
-                                                                ),
-                                                                width: '30%'
-                                                            },
-                                                            {
-                                                                dataIndex: "method",
-                                                                render: (method) => (
-                                                                    <Tag color={
-                                                                        method === 'GET' ? 'green' :
-                                                                            method === 'POST' ? 'blue' :
-                                                                                method === 'PUT' ? 'orange' :
-                                                                                    method === 'DELETE' ? 'red' : 'default'
-                                                                    }>
-                                                                        {method}
-                                                                    </Tag>
-                                                                ),
-                                                                width: '15%'
-                                                            },
-                                                            {
-                                                                dataIndex: "url",
-                                                                render: (url) => <Text type="secondary">{url}</Text>,
-                                                                width: '40%'
-                                                            },
-                                                            {
-                                                                dataIndex: "enabled",
-                                                                render: (_, record) => (
-                                                                    <Switch
-                                                                        checked={record.enabled}
-                                                                        onChange={(checked) =>
-                                                                            handlePermissionChange(module, record.codename, checked)
-                                                                        }
-                                                                    />
-                                                                ),
-                                                                width: '15%',
-                                                                align: 'right'
-                                                            }
-                                                        ]}
-                                                    />
-                                                </Panel>
-                                            ))}
-                                        </Collapse>
+                                        {filteredModules.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center py-12">
+                                                <FolderOutlined style={{ fontSize: '48px', color: '#bfbfbf', marginBottom: '16px' }} />
+                                                <Title level={4} type="secondary">No Permissions Found</Title>
+                                                <Text type="secondary">
+                                                    {searchText ?
+                                                        "No permissions match your search criteria" :
+                                                        "No permissions available for the selected filters"}
+                                                </Text>
+                                            </div>
+                                        ) : (
+                                            <Collapse
+                                                activeKey={expandedModules}
+                                                onChange={setExpandedModules}
+                                                ghost
+                                            >
+                                                {filteredModules.map(([module, moduleData]) => (
+                                                    <Panel
+                                                        key={module}
+                                                        header={
+                                                            <div className="flex justify-between items-center">
+                                                                <Space>
+                                                                    <Text strong>{moduleData.displayName}</Text>
+                                                                    <Tag color="blue">{module}</Tag>
+                                                                </Space>
+                                                            </div>
+                                                        }
+                                                    >
+                                                        <Table
+                                                            dataSource={Object.entries(moduleData.methods).map(([codename, methodData]) => ({
+                                                                key: codename,
+                                                                codename,
+                                                                ...methodData
+                                                            }))}
+                                                            pagination={{
+                                                                current: pagination.current,
+                                                                pageSize: pagination.pageSize,
+                                                                total: pagination.total,
+                                                                onChange: (page, pageSize) => handlePermissionsPagination(page, pageSize),
+                                                                position: ['bottomRight']
+                                                            }}
+                                                            showHeader={false}
+                                                            size="small"
+                                                            className="permission-methods-table"
+                                                            columns={[
+                                                                {
+                                                                    dataIndex: "codename",
+                                                                    render: (codename) => (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <ApiOutlined />
+                                                                            <Text code>{codename}</Text>
+                                                                        </div>
+                                                                    ),
+                                                                    width: '30%'
+                                                                },
+                                                                {
+                                                                    dataIndex: "method",
+                                                                    render: (method) => (
+                                                                        <Tag color={
+                                                                            method === 'GET' ? 'green' :
+                                                                                method === 'POST' ? 'blue' :
+                                                                                    method === 'PUT' ? 'orange' :
+                                                                                        method === 'DELETE' ? 'red' : 'default'
+                                                                        }>
+                                                                            {method}
+                                                                        </Tag>
+                                                                    ),
+                                                                    width: '15%'
+                                                                },
+                                                                {
+                                                                    dataIndex: "url",
+                                                                    render: (url) => <Text type="secondary">{url}</Text>,
+                                                                    width: '40%'
+                                                                },
+                                                                {
+                                                                    dataIndex: "enabled",
+                                                                    render: (_, record) => (
+                                                                        <Switch
+                                                                            checked={record.enabled}
+                                                                            onChange={(checked) =>
+                                                                                handlePermissionChange(module, record.codename, record.method, record.id, checked)
+                                                                            }
+                                                                        />
+                                                                    ),
+                                                                    width: '15%',
+                                                                    align: 'right'
+                                                                }
+                                                            ]}
+                                                        />
+                                                    </Panel>
+                                                ))}
+                                            </Collapse>
+                                        )}
                                     </div>
                                 </TabPane>
                             </Tabs>
                         </div>
 
-                        <div className="flex justify-end mt-6">
-                            <Button
-                                type="primary"
-                                icon={<AppstoreOutlined />}
-                                onClick={savePermissions}
-                                size="large"
-                            >
-                                Save Permissions
-                            </Button>
-                        </div>
+                        {filteredModules.length > 0 && (
+                            <div className="flex justify-end mt-6">
+                                <Button
+                                    type="primary"
+                                    icon={<AppstoreOutlined />}
+                                    onClick={savePermissions}
+                                    size="large"
+                                >
+                                    Save Permissions
+                                </Button>
+                            </div>
+                        )}
                     </Card>
                 </Content>
             </Layout>

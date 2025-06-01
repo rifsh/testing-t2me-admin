@@ -3,6 +3,7 @@ import { AUTH_TOKEN } from "constants/AuthConstant";
 import FirebaseService from "services/FirebaseService";
 import AuthService from "services/AuthService";
 import { jwtDecode } from "jwt-decode";
+import UserService from "services/userService";
 
 export const initialState = {
   loading: false,
@@ -10,6 +11,7 @@ export const initialState = {
   showMessage: false,
   redirect: "",
   userData: null,
+  allowedAccess: [],
   token: localStorage.getItem(AUTH_TOKEN) || null,
   termsConditionData: null,
   termsLoading: false,
@@ -26,7 +28,7 @@ export const signIn = createAsyncThunk(
 
       if (token) {
         localStorage.setItem(AUTH_TOKEN, token);
-        return token;
+        return response;
       } else {
         return rejectWithValue("Authentication failed, no token received.");
       }
@@ -141,8 +143,6 @@ export const TermsCondition = createAsyncThunk(
     }
   }
 );
-
-
 export const PostTermsCondition = createAsyncThunk(
   "auth/PosttermsCondition",
   async (data, { rejectWithValue }) => {
@@ -153,6 +153,19 @@ export const PostTermsCondition = createAsyncThunk(
       return response;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
+    }
+  }
+);
+export const fetchSingleUsers = createAsyncThunk(
+  "users/fetchsingleuser",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await UserService.getSingleUsers(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching single users"
+      );
     }
   }
 );
@@ -196,7 +209,8 @@ export const authSlice = createSlice({
       .addCase(signIn.fulfilled, (state, action) => {
         state.loading = false;
         state.redirect = "/";
-        state.token = action.payload;
+        state.token = action.payload.data.access_token;
+        state.allowedAccess = action.payload.data.access_matrix;
       })
       .addCase(signIn.rejected, (state, action) => {
         state.message = action.payload;
@@ -315,6 +329,21 @@ export const authSlice = createSlice({
         state.responseMessage = action.payload.status.message;
       })
       .addCase(PostTermsCondition.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchSingleUsers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchSingleUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleUser = action.payload;
+        if (action.payload.access_matrix) {
+          state.allowedAccess = action.payload.access_matrix;
+        }
+      })
+      .addCase(fetchSingleUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

@@ -1,30 +1,5 @@
 import { PERMISSIONS, ROLES } from './RolesPermissionConstants';
 
-export const ROLE_PERMISSIONS = {
-    [ROLES.SUPER_ADMIN]: Object.values(PERMISSIONS),
-    [ROLES.TECH_ADMIN]: [
-        //event
-        PERMISSIONS.ADD_EVENT,
-        //venue
-        PERMISSIONS.EDIT_VENUE,
-    ],
-    [ROLES.TECH_SUPPORT_TEAM]: [
-        // PERMISSIONS.VIEW_EVENT_DETAILS,
-        // PERMISSIONS.VIEW_CATEGORY,
-        PERMISSIONS.VIEW_LOCATION,
-        PERMISSIONS.VIEW_TAX,
-        PERMISSIONS.VIEW_TICKET,
-        PERMISSIONS.VIEW_OFFER,
-    ],
-    [ROLES.EVENT_ORGANIZER]: [
-        PERMISSIONS.VIEW_EVENT_DETAILS,
-        PERMISSIONS.EDIT_EVENT_DETAILS,
-    ],
-    [ROLES.EVENT_SUPPORT_TEAM]: [
-        PERMISSIONS.VIEW_EVENT_DETAILS,
-    ],
-};
-
 export const FORM_STEPS = {
     [ROLES.SUPER_ADMIN]: ["Event Details", "Category", "Location", "Tax", "Ticket", "Offers"],
     [ROLES.TECH_ADMIN]: ["Event Details", "Category", "Location", "Tax", "Ticket", "Offers"],

@@ -37,8 +37,6 @@ import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
-import { hasPermission } from "utils/accessControl";
-import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Option } = Select;
 
@@ -141,7 +139,7 @@ const UserList = () => {
       dataIndex: ["role", "name"],
       sorter: (a, b) => Utils.antdTableSorter(a, b, ["role", "name"]),
     },
-    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.USER_STATUS_UPDATE), "is_active"),
+    Utils.statusColumnUtil(handleUpdateStatus, "is_active"),
     {
       title: "",
       dataIndex: "actions",

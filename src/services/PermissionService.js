@@ -22,7 +22,7 @@ permissionService.getPermissionDisplayNames = function (pageData) {
 permissionService.addPermissionAccess = function (data) {
     return fetch({
         url: `${ApiConstant.ADD_PERSMISSIONS_ACCESS}`,
-        method: "post",
+        method: "put",
         data: data,
     });
 };

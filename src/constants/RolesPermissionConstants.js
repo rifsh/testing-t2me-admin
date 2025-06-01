@@ -17,11 +17,20 @@ export const ROLE_NAMES = {
 };
 
 export const ROLE_NAMES_ARRAY = [
-    { id: ROLES.SUPER_ADMIN, name: 'Super Admin' },
-    { id: ROLES.TECH_ADMIN, name: 'Tech Admin' },
-    { id: ROLES.TECH_SUPPORT_TEAM, name: 'Tech Support Team' },
-    { id: ROLES.EVENT_ORGANIZER, name: 'Event Organizer' },
-    { id: ROLES.EVENT_SUPPORT_TEAM, name: 'Event Support Team' }
+    { id: 1, name: 'Super Admin' },
+    { id: 2, name: 'Tech Admin' },
+    { id: 3, name: 'Tech Support Team' },
+    { id: 4, name: 'Event Support Team' },
+    { id: 5, name: 'Event Organizer' },
+    // { id: 6, name: 'End User' },
+];
+
+export const ROLE_METHODS = [
+    { id: 1, value: '', name: 'All' },
+    { id: 2, value: 'get', name: 'GET' },
+    { id: 3, value: 'post', name: 'POST' },
+    { id: 4, value: 'delete', name: 'DELETE' },
+    { id: 5, value: 'put', name: 'PUT' },
 ];
 
 export const PERMISSIONS = {
@@ -47,20 +56,20 @@ export const PERMISSIONS = {
                 UPDATE_EVENT_TYPE_STATUS: 'update_event_type_status',
             },
             PLACE: {
-                GET_COUNTRY_DETAILS: 'get_country_details',
-                GET_PLACE_WITH_COUNTRY: 'get_place_with_country',
-                GET_SINGLE_PLACE: 'get_single_place',
                 ADD_PLACE: 'add_place',
                 GET_PLACE: 'get_place',
                 EDIT_PLACE: 'edit_place',
                 EDIT_PLACE_STATUS: 'edit_place_status',
+                GET_SINGLE_PLACE: 'get_single_place',
+                GET_COUNTRY_DETAILS: 'get_country_details',
+                GET_PLACE_WITH_COUNTRY: 'get_place_with_country',
             },
             VENUE: {
-                EDIT_VENUE: 'edit_venue',
-                EDIT_VENUE_STATUS: 'edit_venue_status',
-                ADD_VENUE: 'add_venue',
                 GET_VENUE: 'get_venue',
+                ADD_VENUE: 'add_venue',
+                EDIT_VENUE: 'edit_venue',
                 GET_SINGLE_VENUE: 'get_single_venue',
+                EDIT_VENUE_STATUS: 'edit_venue_status',
             },
             TAX: {
                 GET_TAXES: 'get_taxes',

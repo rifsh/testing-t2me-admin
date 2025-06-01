@@ -6,7 +6,7 @@ const initialState = {
     addResponse: [],
     displayNames: [],
     selectedDisplayIndex: 0,
-    selectedDisplayName: 'TheaterCompany',
+    selectedDisplayName: null,
     selectedRole: [],
     permissions: [],
     message: null,

@@ -27,8 +27,8 @@ import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice";
-import { hasPermission } from "utils/accessControl";
 import { PERMISSIONS } from "constants/RolesPermissionConstants";
+import usePermissions from "utils/hooks/usePermissions";
 const { Panel } = Collapse;
 
 const { Option } = Select;
@@ -60,6 +60,7 @@ const EventsList = () => {
     event_type: EVENT_TYPES.event,
   }
   const handlePagination = usePaginationHook(fetchAllEvent);
+  const { hasPermission } = usePermissions();
 
   useEffect(() => {
     dispatch(fetchAllEvent(eventParams));
@@ -252,7 +253,7 @@ const EventsList = () => {
           </div>
         </Flex>
         <div>
-          {hasPermission(PERMISSIONS.ADD_EVENT) &&
+          {hasPermission(PERMISSIONS.SERVICES.EVENT.ADD_EVENT) &&
             <Button
               type="primary"
               icon={<FormOutlined />}
