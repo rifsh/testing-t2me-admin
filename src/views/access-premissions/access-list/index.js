@@ -71,16 +71,29 @@ const AccessControlDashboard = () => {
 
     const getPermissionsDisplayNames = async () => {
         try {
-            const actionResult = await dispatch(fetchPermissionsDisplayNames(DEFAULT_PAGE_SIZE)).unwrap();
-            console.log("displatnameresponse", actionResult.items[3].display_name);
-            dispatch(setSelectedDisplayName(actionResult.items[3].display_name))
-        } catch (error) {
+            const actionResult = await dispatch(
+                fetchPermissionsDisplayNames(DEFAULT_PAGE_SIZE)
+            ).unwrap();
+            if (!actionResult?.items || actionResult.items.length === 0) {
+                console.error("No display names found in the response");
+                dispatch(setSelectedDisplayName(""));
+                return;
+            }
+            const firstDisplayName = actionResult.items[0]?.display_name;
+            if (!firstDisplayName) {
+                console.error("First item has no display_name");
+                dispatch(setSelectedDisplayName(""));
+                return;
+            }
+            dispatch(setSelectedDisplayName(firstDisplayName));
 
+        } catch (error) {
+            console.error("Failed to fetch display names:", error);
+            dispatch(setSelectedDisplayName(""));
         }
-    }
+    };
 
     useEffect(() => {
-        // dispatch(fetchPermissionsDisplayNames(DEFAULT_PAGE_SIZE));
         getPermissionsDisplayNames()
     }, [dispatch]);
 
