@@ -18,7 +18,8 @@ import {
   MinusCircleOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { SERVICE_TYPE } from "constants/PaymentConstants";
+import { fetchAllPaymentService } from "store/slices/paymentSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -28,12 +29,18 @@ const AddOnServicesForm = ({ form }) => {
   const [activeKey, setActiveKey] = useState("0");
   const [hasServices, setHasServices] = useState(true);
   const [tabKey, setTabKey] = useState(0); // Added to force re-render
+  const dispatch = useDispatch();
+  const { paymentServices, loading, error } = useSelector(
+    (state) => state.payment
+  );
 
   useEffect(() => {
     const add_on_services = form.getFieldValue("add_on_services") || [];
     setHasServices(add_on_services.length > 0);
   }, [form]);
-
+  useEffect(() => {
+    dispatch(fetchAllPaymentService({}));
+  }, [dispatch]);
   const addTab = () => {
     const add_on_services = form.getFieldValue("add_on_services") || [];
     const newServices = [...add_on_services, {}];
@@ -119,8 +126,8 @@ const AddOnServicesForm = ({ form }) => {
               placeholder="Select service type"
               onChange={(value) => handleServiceTypeChange(name, value)}
             >
-              {SERVICE_TYPE.map((type) => (
-                <Option key={type.value} value={type.value}>
+              {paymentServices.map((type) => (
+                <Option key={type.name} value={type.name}>
                   {type.name}
                 </Option>
               ))}

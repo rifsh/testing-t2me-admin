@@ -5,9 +5,9 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const PaymentService = {};
 
-PaymentService.getAllPayment = function (pageData) {
+PaymentService.getAllPaymentServices = function (pageData) {
   return fetch({
-    url: ApiConstant.PAYMENT_URL,
+    url: ApiConstant.PAYMENT_SERVICE,
     method: "get",
     params: Utils.filterParams(pageData),
   });

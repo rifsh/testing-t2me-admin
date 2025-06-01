@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Form,
   Card,
-  Button,
   Input,
   Select,
   Row,
@@ -10,7 +9,6 @@ import {
   Tabs,
   message,
   Radio,
-  InputNumber,
 } from "antd";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import PaymentMethodFields from "./PaymentMethodFields";
@@ -21,7 +19,6 @@ const { Option } = Select;
 
 const PaymentMethodTabs = ({ form }) => {
   const [activeKey, setActiveKey] = useState("0");
-  // Force re-render when payment type changes
   const [, forceUpdate] = useState({});
 
   const dispatch = useDispatch();
@@ -43,7 +40,6 @@ const PaymentMethodTabs = ({ form }) => {
   }, [error]);
 
   useEffect(() => {
-    // Initialize with one empty payment method if none exists
     const payment_methods = form.getFieldValue("payment_methods");
     if (!payment_methods || payment_methods.length === 0) {
       form.setFieldsValue({ payment_methods: [{}] });
@@ -129,6 +125,9 @@ const PaymentMethodTabs = ({ form }) => {
     const newValues = {
       ...currentValues,
       payment_type: value,
+      ...(currentValues.payment_charge !== undefined && {
+        payment_charge: String(currentValues.payment_charge),
+      }),
     };
 
     const updatedPaymentMethods = [...payment_methods];
@@ -172,7 +171,7 @@ const PaymentMethodTabs = ({ form }) => {
               </Option>
             ) : paymentMethods?.length > 0 ? (
               paymentMethods.map((method) => (
-                <Option key={method.id} value={method.id}>
+                <Option key={method.name} value={method.name}>
                   {method.name}
                 </Option>
               ))
@@ -199,100 +198,49 @@ const PaymentMethodTabs = ({ form }) => {
           </Col>
           <Col xs={24} md={6}>
             <Form.Item
-              noStyle
-              shouldUpdate={(prevValues, currentValues) => {
-                return (
-                  prevValues.payment_methods?.[index]?.is_percentage !==
-                  currentValues.payment_methods?.[index]?.is_percentage
-                );
-              }}
+              name={["payment_methods", index, "payment_charge"]}
+              label={`Service Charge`}
+              rules={[
+                {
+                  required: true,
+                  message: "Please enter Service Charge",
+                },
+                {
+                  validator: async (_, value) => {
+                    if (value === null || value === undefined || value === "") {
+                      return Promise.reject(
+                        new Error("Please enter Service Charge amount")
+                      );
+                    }
+
+                    // Convert to number and check if it's a valid positive number
+                    const numValue = Number(value);
+                    if (isNaN(numValue) || numValue < 0) {
+                      return Promise.reject(
+                        new Error(
+                          "Service Charge must be a non-negative number"
+                        )
+                      );
+                    }
+
+                    return Promise.resolve();
+                  },
+                },
+              ]}
             >
-              {({ getFieldValue }) => {
-                const isPercentage = getFieldValue([
-                  "payment_methods",
-                  index,
-                  "is_percentage",
-                ]);
-
-                if (isPercentage === true) {
-                  return (
-                    <Form.Item
-                      name={["payment_methods", index, "payment_charge"]}
-                      label="Service Charge Percentage"
-                      rules={[
-                        {
-                          required: true,
-                          message: "Please enter Service Charge percentage",
-                        },
-                        {
-                          type: "number",
-                          min: 0,
-                          max: 100,
-                          message: "Discount must be between 0 and 100",
-                        },
-                      ]}
-                    >
-                      <InputNumber
-                        placeholder="Enter Service Charge percentage"
-                        min={0}
-                        max={100}
-                        style={{ width: "100%" }}
-                        formatter={(value) => `${value}`}
-                        parser={(value) => value.replace("", "")}
-                      />
-                    </Form.Item>
-                  );
-                }
-
-                return (
-                  <Form.Item
-                    name={["payment_methods", index, "payment_charge"]}
-                    label="Service Charge Amount"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please enter Service Charge amount",
-                      },
-                      {
-                        validator: async (_, value) => {
-                          if (
-                            value === null ||
-                            value === undefined ||
-                            value === ""
-                          ) {
-                            return Promise.reject(
-                              new Error("Please enter Service Charge amount")
-                            );
-                          }
-
-                          // Convert to number and check if it's a valid positive number
-                          const numValue = Number(value);
-                          if (isNaN(numValue) || numValue < 0) {
-                            return Promise.reject(
-                              new Error(
-                                "Service Charge must be a non-negative number"
-                              )
-                            );
-                          }
-
-                          return Promise.resolve();
-                        },
-                      },
-                    ]}
-                  >
-                    <Input
-                      style={{ width: "100%" }}
-                      placeholder="Enter Service Charge amount"
-                    />
-                  </Form.Item>
-                );
-              }}
+              <Input
+                style={{ width: "100%" }}
+                placeholder="Enter Service Charge "
+              />
             </Form.Item>
           </Col>
           <Col span={10}>
             <Form.Item
               name={["payment_methods", index, "authorized_url"]}
               label="Authorized URL"
+              rules={[
+                { required: true, message: "Please enter authorized URL" },
+              ]}
             >
               <Input placeholder="Enter authorized URL" />
             </Form.Item>

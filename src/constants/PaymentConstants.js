@@ -1,9 +1,8 @@
-export const PAYMENT_METHODS = [
-  // { value: "upi", label: "UPI" },
-  // { value: "card", label: "Card Payment" },
-  { value: "n-genius", label: "N-Genius Online" },
-  
-];
+export const PAYMENT_METHODS = {
+  NGenius: "N-Genius Online",
+  UPI: "UPI",
+  CardPayment: "Card Payment",
+};
 
 // UPI providers
 export const UPI_PROVIDERS = [

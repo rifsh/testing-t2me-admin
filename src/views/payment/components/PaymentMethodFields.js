@@ -1,7 +1,11 @@
 import React from "react";
 import { Form, Input, Select, Upload, Button } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-import { CARD_TYPES, UPI_PROVIDERS } from "constants/PaymentConstants";
+import {
+  CARD_TYPES,
+  PAYMENT_METHODS,
+  UPI_PROVIDERS,
+} from "constants/PaymentConstants";
 import {
   ResolutionByServices,
   SupportImageFormat,
@@ -22,7 +26,7 @@ const PaymentMethodFields = ({ name, payment_type, form }) => {
 
   // Render fields based on payment type
   switch (payment_type) {
-    case "upi":
+    case PAYMENT_METHODS.UPI:
       return (
         <div className="payment-method-fields-upi">
           <Form.Item
@@ -61,7 +65,7 @@ const PaymentMethodFields = ({ name, payment_type, form }) => {
           </Form.Item>
         </div>
       );
-    case "card":
+    case PAYMENT_METHODS.CardPayment:
       return (
         <div className="payment-method-fields-card">
           <Form.Item
@@ -89,7 +93,7 @@ const PaymentMethodFields = ({ name, payment_type, form }) => {
           </Form.Item>
         </div>
       );
-    case "n-genius":
+    case PAYMENT_METHODS.NGenius:
       return (
         <div className="payment-method-fields-n-genius">
           <Form.Item
@@ -107,7 +111,7 @@ const PaymentMethodFields = ({ name, payment_type, form }) => {
             <Input.Password placeholder="Enter N-Genius API key" />
           </Form.Item>
           <Form.Item
-            name={getFieldName("outlet_reference")}
+            name={getFieldName("outlet_ref")}
             label="Outlet Reference"
             rules={[
               { required: true, message: "Please enter outlet reference" },
