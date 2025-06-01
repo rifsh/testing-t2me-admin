@@ -44,7 +44,6 @@ export const PERMISSIONS = {
         GET_ROLES: 'get_roles',
         GET_USER_RELATED_ENTRIES: 'get_user_related_entries',
     },
-
     SERVICES: {
         GENERAL: {
             EVENT_TYPES: {
