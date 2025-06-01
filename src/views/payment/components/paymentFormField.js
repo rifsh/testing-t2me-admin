@@ -1,25 +1,12 @@
 import React, { useEffect, useState } from "react";
-import {
-  Form,
-  Card,
-  Button,
-  Input,
-  Space,
-  message,
-  Select,
-  Modal,
-  Row,
-  Col,
-} from "antd";
+import { Form, Card, Button, Input, message, Select, Row, Col } from "antd";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import { getVenues } from "store/slices/locationSlice";
 import { addPayment } from "store/slices/paymentSlice";
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { processPaymentMethods } from "utils/PaymentUtils";
 import AddOnServicesForm from "./AddOnServicesForm";
 import PaymentMethodTabs from "./PaymentMethodTabs";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
@@ -29,17 +16,14 @@ import { EVENT_TYPES } from "constants/PageConstants";
 
 const { Option } = Select;
 
-const PaymentFormFields = ({ mode, id }) => {
+const PaymentFormFields = ({ mode }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const { filteredEvents = [], loading } = useSelector((state) => state.event);
   const { responseMessage, responseData } = useSelector(
     (state) => state.payment
   );
-
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [placeId, setPlaceId] = useState();
-  const [formValues, setFormValues] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {

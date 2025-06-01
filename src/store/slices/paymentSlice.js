@@ -10,6 +10,7 @@ export const initialState = {
   error: null,
   // message: null,
   responseData: null,
+  paymentServices: [],
   responseMessage: null,
   editable_status: null,
   pagination: { size: 10, page: 1 },
@@ -27,6 +28,19 @@ export const fetchAllPayment = createAsyncThunk(
         const response = await PaymentService.getAllPayment(pageData);
         return response.data[0];
       }
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Error Fetching Payments");
+    }
+  }
+);
+export const fetchAllPaymentService = createAsyncThunk(
+  "payment/fetchAllPaymentService",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      
+        const response = await PaymentService.getAllPaymentServices(pageData);
+        return response.data;
+    
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error Fetching Payments");
     }
@@ -69,7 +83,7 @@ export const getSinglePayment = createAsyncThunk(
 //payments methods
 
 export const fetchAllPaymentMethod = createAsyncThunk(
-  "paymentMethod/fetchAll",
+  "paymentMethod/fetchAllPaymentMethod",
   async (_, { rejectWithValue }) => {  
     try {
       const response = await PaymentService.getPaymentsMethod();
@@ -118,6 +132,20 @@ const paymentSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchAllPayment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchAllPaymentService.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllPaymentService.fulfilled, (state, action) => {
+        state.loading = false;
+        state.paymentServices = action.payload;
+       
+        state.error = null;
+      })
+      .addCase(fetchAllPaymentService.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
