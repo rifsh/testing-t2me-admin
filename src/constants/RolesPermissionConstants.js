@@ -44,128 +44,102 @@ export const PERMISSIONS = {
         GET_ROLES: 'get_roles',
         GET_USER_RELATED_ENTRIES: 'get_user_related_entries',
     },
-    COMMON: {
-        SERVICES: {
-            GENERAL: {
-                EVENT_TYPES: {
-                    GET_EVENT_TYPE_OPTIONS: 'get_event_type_options',
-                    GET_EVENT_TYPE: 'get_event_type',
-                    ADD_EVENT_TYPE: 'add_event_type',
-                    GET_EVENT_TYPE_DETAIL: 'get_event_type_detail',
-                    EDIT_EVENT_TYPE_DETAIL: 'edit_event_type_detail',
-                    UPDATE_EVENT_TYPE_STATUS: 'update_event_type_status',
-                },
-                PLACE: {
-                    ADD_PLACE: 'add_place',
-                    GET_PLACE: 'get_place',
-                    EDIT_PLACE: 'edit_place',
-                    EDIT_PLACE_STATUS: 'edit_place_status',
-                    GET_SINGLE_PLACE: 'get_single_place',
-                    GET_COUNTRY_DETAILS: 'get_country_details',
-                    GET_PLACE_WITH_COUNTRY: 'get_place_with_country',
-                },
-                VENUE: {
-                    GET_VENUE: 'get_venue',
-                    ADD_VENUE: 'add_venue',
-                    EDIT_VENUE: 'edit_venue',
-                    GET_SINGLE_VENUE: 'get_single_venue',
-                    EDIT_VENUE_STATUS: 'edit_venue_status',
-                },
-                TAX: {
-                    GET_TAXES: 'get_taxes',
-                    ADD_TAXES: 'add_taxes',
-                    EDIT_TAXES: 'edit_taxes',
-                    UPDATE_TAX_STATUS: 'update_tax_status',
-                    GET_AVAILABLE_TAX_CATEGORY: 'get_available_tax_category',
-                },
-                CATEGORY: {
-                    ADD_CATEGORY: 'add_category',
-                    GET_CATEGORY: 'get_category',
-                    UPDATE_CATEGORY_STATUS: 'update_category_status',
-                    UPDATE_SUBCATEGORY_STATUS: 'update_subcategory_status',
-                    GET_SINGLE_CATEGORY: 'get_single_category',
-                    ADD_SUBCATEGORY: 'add_subcategory',
-                    GET_SUBCATEGORY: 'get_subcategory',
-                    GET_SINGLE_SUBCATEGORY: 'get_single_subcategory',
-                },
-                OFFER: {
-                    GET_OFFERS: 'get_offers',
-                    ADD_OFFERS: 'add_offers',
-                    UPDATE_OFFER_STATUS: 'update_offer_status',
-                    GET_OFFER_DETAIL: 'get_offer_detail',
-                },
-                COUPON: {
-                    ADD_COUPONS: 'add_coupons',
-                    GET_COUPONS: 'get_coupons',
-                    UPDATE_COUPON_STATUS: 'update_coupon_status',
-                    GET_COUPON_DETAIL: 'get_coupon_detail',
-                },
-                TICKET: {
-                    GET_TICKET_STRUCTURE: 'get_ticket_structure',
-                    ADD_TICKET_STRUCTURE: 'add_ticket_structure',
-                    EDIT_TICKET_STRUCTURE: 'edit_ticket_structure',
-                    VALIDATE_TICKET: 'validate_ticket'
-                },
-                SEAT: {
 
-                },
-                PAYMENT: {
-
-                }
+    SERVICES: {
+        GENERAL: {
+            EVENT_TYPES: {
+                GET_EVENT_TYPE_OPTIONS: 'get_event_type_options',
+                GET_EVENT_TYPE: 'get_event_type',
+                ADD_EVENT_TYPE: 'add_event_type',
+                GET_EVENT_TYPE_DETAIL: 'get_event_type_detail',
+                EDIT_EVENT_TYPE_DETAIL: 'edit_event_type_detail',
+                UPDATE_EVENT_TYPE_STATUS: 'update_event_type_status',
             },
-            EVENT: {
-                ADD_EVENT: 'add_event',
-                GET_EVENT: 'get_event',
-                LEAD_EVENT_CREATION: 'lead_event_creation',
-                GET_LEAD_EVENTS: 'get_lead_events',
-                VALIDATE_EVENT: 'validate_event',
-                GET_EVENT_DETAIL: 'get_event_detail',
-                GET_SINGLE_LEAD_EVENT: 'get_single_lead_event',
-                GET_LEAD_EVENT_COMMENT: 'get_lead_event_comment',
-                ADD_LEAD_EVENT_COMMENT: 'add_lead_event_comment',
-                GET_EVENT_ORGANIZER: 'get_event_organizer',
-                GET_EVENT_SUPPORT: 'get_event_support',
-                EDIT_EVENT: 'edit_event',
-                EDIT_LEAD_EVENT: 'edit_lead_event',
-                ENROLL_USER_LEAD_EVENT: 'enroll_user_lead_event',
-                EDIT_LEAD_EVENT_STATUS: 'edit_lead_event_status',
-                EDIT_EVENT_STATUS: 'edit_event_status',
-                GET_NEW_EVENT_UPDATES: 'get_new_event_updates',
-                GET_SINGLE_EVENT_UPDATE: 'get_single_event_update',
-                SUPER_ADMIN_APPROVAL: 'super_admin_approval',
-
-                GET_CUSTOMER_EVENT: 'get_customer_event',
-                ADD_CUSTOMER_EVENT: 'add_customer_event',
-                GET_SINGLE_CUSTOMER_EVENT: 'get_single_customer_event',
+            PLACE: {
+                ADD_PLACE: 'add_place',
+                GET_PLACE: 'get_place',
+                EDIT_PLACE: 'edit_place',
+                EDIT_PLACE_STATUS: 'edit_place_status',
+                GET_SINGLE_PLACE: 'get_single_place',
+                GET_COUNTRY_DETAILS: 'get_country_details',
+                GET_PLACE_WITH_COUNTRY: 'get_place_with_country',
             },
-            MOVIE: {
+            VENUE: {
+                GET_VENUE: 'get_venue',
+                ADD_VENUE: 'add_venue',
+                EDIT_VENUE: 'edit_venue',
+                GET_SINGLE_VENUE: 'get_single_venue',
+                EDIT_VENUE_STATUS: 'edit_venue_status',
+            },
+            TAX: {
+                GET_TAXES: 'get_taxes',
+                ADD_TAXES: 'add_taxes',
+                EDIT_TAXES: 'edit_taxes',
+                UPDATE_TAX_STATUS: 'update_tax_status',
+                GET_AVAILABLE_TAX_CATEGORY: 'get_available_tax_category',
+            },
+            CATEGORY: {
+                ADD_CATEGORY: 'add_category',
+                GET_CATEGORY: 'get_category',
+                UPDATE_CATEGORY_STATUS: 'update_category_status',
+                UPDATE_SUBCATEGORY_STATUS: 'update_subcategory_status',
+                GET_SINGLE_CATEGORY: 'get_single_category',
+                ADD_SUBCATEGORY: 'add_subcategory',
+                GET_SUBCATEGORY: 'get_subcategory',
+                GET_SINGLE_SUBCATEGORY: 'get_single_subcategory',
+            },
+            OFFER: {
+                GET_OFFERS: 'get_offers',
+                ADD_OFFERS: 'add_offers',
+                UPDATE_OFFER_STATUS: 'update_offer_status',
+                GET_OFFER_DETAIL: 'get_offer_detail',
+            },
+            COUPON: {
+                ADD_COUPONS: 'add_coupons',
+                GET_COUPONS: 'get_coupons',
+                UPDATE_COUPON_STATUS: 'update_coupon_status',
+                GET_COUPON_DETAIL: 'get_coupon_detail',
+            },
+            TICKET: {
 
             },
+            SEAT: {
+
+            },
+            PAYMENT: {
+
+            }
         },
-    },
-
-    EVENT_ORGANIZER: {
         EVENT: {
+            ADD_EVENT: 'add_event',
+            GET_EVENT: 'get_event',
+            LEAD_EVENT_CREATION: 'lead_event_creation',
+            GET_LEAD_EVENTS: 'get_lead_events',
+            VALIDATE_EVENT: 'validate_event',
+            GET_EVENT_DETAIL: 'get_event_detail',
+            GET_SINGLE_LEAD_EVENT: 'get_single_lead_event',
+            GET_LEAD_EVENT_COMMENT: 'get_lead_event_comment',
+            ADD_LEAD_EVENT_COMMENT: 'add_lead_event_comment',
             GET_EVENT_ORGANIZER: 'get_event_organizer',
+            GET_EVENT_SUPPORT: 'get_event_support',
+            EDIT_EVENT: 'edit_event',
+            EDIT_LEAD_EVENT: 'edit_lead_event',
+            ENROLL_USER_LEAD_EVENT: 'enroll_user_lead_event',
+            EDIT_LEAD_EVENT_STATUS: 'edit_lead_event_status',
+            EDIT_EVENT_STATUS: 'edit_event_status',
+            GET_NEW_EVENT_UPDATES: 'get_new_event_updates',
+            GET_SINGLE_EVENT_UPDATE: 'get_single_event_update',
+            SUPER_ADMIN_APPROVAL: 'super_admin_approval',
             ORGANIZER_EVENT_UPDATE: 'organizer_event_update',
             ORGANIZER_EVENT_SECONDARY_UPDATE: 'organizer_event_secondary_update',
+            GET_CUSTOMER_EVENT: 'get_customer_event',
+            ADD_CUSTOMER_EVENT: 'add_customer_event',
+            GET_SINGLE_CUSTOMER_EVENT: 'get_single_customer_event',
         },
         MOVIE: {
 
         },
-        TRACK_REQUEST: {
-            EVENT: {
-
-            },
-            MOVIE: {
-
-            }
-        },
-        ISSUE: {
-
-        }
     },
-
     ISSUES: {
 
     },
