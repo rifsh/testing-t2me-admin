@@ -11,7 +11,11 @@ const SearchBarWithStatus = ({
   fetchFunction,
   additionalFilters = [],
   isStatus = true,
+  isPermission = false,
   placeholder = 'Search',
+  displayName = '',
+  roleId = '',
+  method = ''
 }) => {
   const dispatch = useDispatch();
   const [searchValue, setSearchValue] = useState(null);
@@ -23,6 +27,22 @@ const SearchBarWithStatus = ({
   }, []);
 
   const handleSearch = (value) => {
+    if (isPermission && value) {
+      dispatch(
+        fetchFunction({
+          search: value || null,
+          page: 1,
+          size: 10,
+          ...(isStatus && { active: statusFilter }),
+          ...filterValues,
+          filter_by_display_name: displayName,
+          order_id: roleId,
+          filter_by_method: method
+        })
+      );
+      return;
+    }
+
     if (value) {
       setSearchValue(value || null);
       dispatch(setGlobalSearchValue(value));
@@ -49,6 +69,7 @@ const SearchBarWithStatus = ({
           size: 10,
           ...(isStatus && { active: statusFilter }),
           ...filterValues,
+          filter_by_display_name: displayName
         })
       );
     }

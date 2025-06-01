@@ -36,6 +36,8 @@ import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import { resetSearchValue } from "store/slices/fliterSlice";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Option } = Select;
 
@@ -47,7 +49,7 @@ const VenueList = () => {
     filteredVenues,
     pagination,
     loading,
-    filteredPlaces,
+    places,
     editable_status,
     message,
     dialogVisible,
@@ -58,9 +60,10 @@ const VenueList = () => {
   } = useSelector((state) => state.locations);
   const [form] = Form.useForm();
   const handlePagination = usePaginationHook(getVenues);
-
+  const { hasPermission } = usePermissions();
   useEffect(() => {
     dispatch(getVenues(DEFAULT_PAGE_SIZE));
+    dispatch(getPlaces({}));
     return () => {
       dispatch(resetSearchValue());
     }
@@ -143,7 +146,7 @@ const VenueList = () => {
       render: (capacity) => <span>{capacity || "0"}</span>,
       sorter: (a, b) => utils.antdTableSorter(a, b, "capacity"),
     },
-    utils.statusColumnUtil(handleUpdateStatus),
+    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.SERVICES.GENERAL.VENUE.EDIT_VENUE_STATUS)),
     {
       title: "",
       dataIndex: "actions",
@@ -169,13 +172,13 @@ const VenueList = () => {
           fetchFunction={getVenues}
           additionalFilters={[
             {
-              options: filteredPlaces,
-              placeholder: "Please choose a Place",
+              options: places,
+              placeholder: "Please choose a Placeasdasd",
               formName: "place_id",
               isAutoComplete: true,
-              onClick: () => {
-                getPlaces({});
-              },
+              // onClick: () => {
+              //   dispatch(getPlaces({}));
+              // },
             },
           ]}
         />

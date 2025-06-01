@@ -13,7 +13,7 @@ const EditUser = () => {
   useEffect(() => {
     if (userId) {
       console.log("fetching single User--------");
-      dispatch(getSingleUser(userId.userId));
+      // dispatch(getSingleUser(userId.userId));
     }
   }, [dispatch, userId]);
 

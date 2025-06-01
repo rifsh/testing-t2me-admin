@@ -65,11 +65,11 @@ PersonalityService.editStatus = function (
         method: "put",
         data: updatedPersonality,
         params: {
-        person_id: updatedPersonality.id,
-        action: handleAction(action),
+            person_id: updatedPersonality.id,
+            action: handleAction(action),
         },
     });
-    };
+};
 
 
 export default PersonalityService;

@@ -38,6 +38,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import { getCurrentUser } from "configs/UserAccessConfig";
 
 const { Option } = Select;
 
@@ -57,6 +58,7 @@ const EventTypeList = () => {
     responseImpactData,
   } = useSelector((state) => state.event);
   const { responseData } = useSelector((state) => state.modalSlice);
+  const currentUser = getCurrentUser();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedEventType, setSelectedEventType] = useState(null);
@@ -64,6 +66,10 @@ const EventTypeList = () => {
   useEffect(() => {
     dispatch(fetchEventType(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
+
+  useEffect(() => {
+    console.log("currentUser", currentUser);
+  }, [currentUser]);
 
   const handlePagination = (page, size) => {
     dispatch(fetchEventType({ page: page, size: size }));
@@ -162,6 +168,13 @@ const EventTypeList = () => {
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={fetchEventType} />
+        {/* <Button
+          type="primary"
+          icon={<FormOutlined />}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/event/type/add`)}
+        >
+          Add Event Type
+        </Button> */}
         <Button
           type="primary"
           icon={<FormOutlined />}
