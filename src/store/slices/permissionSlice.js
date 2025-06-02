@@ -11,6 +11,7 @@ const initialState = {
     permissions: [],
     message: null,
     loading: false,
+    permissionLoading: false,
     error: null,
     pagination: { size: 10, page: 1 },
     displayNamePagination: { size: 10, page: 1 }
@@ -67,16 +68,16 @@ const permissionSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchPermissions.pending, (state) => {
-                state.loading = true;
+                state.permissionLoading = true;
             })
             .addCase(fetchPermissions.fulfilled, (state, action) => {
-                state.loading = false;
+                state.permissionLoading = false;
                 state.response = action.payload?.items;
                 state.pagination = action.payload;
             })
             .addCase(fetchPermissions.rejected, (state, action) => {
                 state.message = action.payload;
-                state.loading = false;
+                state.permissionLoading = false;
             })
             .addCase(fetchPermissionsDisplayNames.pending, (state) => {
                 state.loading = true;

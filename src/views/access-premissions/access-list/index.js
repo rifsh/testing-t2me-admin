@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
     LockOutlined,
     UserOutlined,
@@ -7,8 +7,10 @@ import {
     SafetyOutlined,
     SearchOutlined,
     FolderOutlined,
-    ApiOutlined
+    ApiOutlined,
+    FolderOpenOutlined
 } from "@ant-design/icons";
+import '../access.css';
 import {
     Layout,
     Menu,
@@ -35,6 +37,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { Pagination } from "@mui/material";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { Resizable } from "react-resizable";
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -44,6 +47,8 @@ const { Panel } = Collapse;
 const { Search } = Input;
 
 const AccessControlDashboard = () => {
+    const [siderWidth, setSiderWidth] = useState(250); // Initial width
+    const [isResizing, setIsResizing] = useState(false);
     const [selectedRole, setSelectedRole] = useState(2);
     const [SelectedMethod, setSelectedMethod] = useState('');
     const [searchText, setSearchText] = useState("");
@@ -56,7 +61,7 @@ const AccessControlDashboard = () => {
         permissions: []     // Empty array for permissions
     });
     const handlePagination = usePaginationHook(fetchPermissionsDisplayNames);
-    const { loading, displayNamePagination, response: apiPermissions, displayNames, selectedDisplayName, selectedDisplayIndex, pagination } = useSelector((state) => state.permissions);
+    const { loading, permissionLoading, displayNamePagination, response: apiPermissions, displayNames, selectedDisplayName, selectedDisplayIndex, pagination } = useSelector((state) => state.permissions);
     const { searchValue } = useSelector((state) => state.filter);
 
     useEffect(() => {
@@ -243,81 +248,145 @@ const AccessControlDashboard = () => {
         }));
     }
 
+    const handleResizeStart = useCallback(() => {
+        setIsResizing(true);
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    }, []);
+
+    const handleResizeEnd = useCallback(() => {
+        setIsResizing(false);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    }, []);
+
+    const handleResize = useCallback((e, { size }) => {
+        setSiderWidth(size.width);
+    }, []);
+
+
     return (
         <Layout className="min-h-screen">
-            <Sider
-                width={250}
-                theme="light"
-                className="shadow-md h-full" // Changed to h-full to match parent height
-                style={{
-                    overflow: 'auto',
-                    height: '70%',
-                    position: 'sticky',
-                    top: '80px',
-                    left: 0
-                }}
-            >
-                <div className="p-4">
-                    <Title level={4} className="flex items-center gap-2">
-                        <FolderOutlined />
-                        Modules
-                    </Title>
-                </div>
-                <div className="p-[6px]">
-                    <SearchBarWithStatus
-                        placeholder="Search with Venue or Screen name"
-                        fetchFunction={fetchPermissionsDisplayNames}
-                        isStatus={false}
-                    />
-                </div>
-                <div className="flex flex-col justify-between h-[calc(100%-110px)]">
-                    <Menu
-                        mode="inline"
-                        selectedKeys={selectedDisplayName}
-                        onClick={({ key }) => {
-                            const selectedModule = displayNames.find(
-                                (module) => module.display_name === key
-                            );
-                            if (selectedModule) {
-                                const selectedIndex = displayNames.findIndex(
-                                    (module) => module.display_name === key
-                                );
-
-                                dispatch(setSelectedDisplayIndex(selectedIndex));
-                                dispatch(setSelectedDisplayName(selectedModule.display_name));
+            <Resizable
+                width={siderWidth}
+                height={0}
+                onResize={handleResize}
+                onResizeStart={handleResizeStart}
+                onResizeStop={handleResizeEnd}
+                resizeHandles={['e']}
+                minConstraints={[200, 0]}
+                maxConstraints={[500, 0]}
+                handle={
+                    <span
+                        className="react-resizable-handle"
+                        style={{
+                            position: 'absolute',
+                            width: '10px',
+                            height: '100%',
+                            bottom: 0,
+                            right: '-5px',
+                            cursor: 'col-resize',
+                            zIndex: 1,
+                            background: 'transparent',
+                            transition: 'background 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(24, 144, 255, 0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!isResizing) {
+                                e.currentTarget.style.background = 'transparent';
                             }
                         }}
-                        style={{ borderRight: 0 }}
-                    >
-                        {displayNames?.map((names) => (
-                            <Menu.Item
-                                key={names.display_name}
-                                icon={<SafetyOutlined />}
-                            >
-                                {names.display_name}
-                            </Menu.Item>
-                        ))}
-                    </Menu>
-                    <div className="p-2 flex justify-center border-t border-gray-200">
-                        <Pagination
-                            count={displayNamePagination.pages}
-                            page={displayNamePagination.page}
-                            onChange={handleChange}
-                            color="primary"
-                            variant="outlined"
-                            shape="rounded"
-                            size="small"
-                            showFirstButton
-                            showLastButton
-                            siblingCount={1}
-                            boundaryCount={1}
+                    />
+                }
+            >
+                <Sider
+                    width={siderWidth}
+                    theme="light"
+                    className={`shadow-md h-full transition-all duration-100 ${isResizing ? 'select-none' : ''}`}
+                    style={{
+                        overflow: 'hidden',
+                        height: '70%',
+                        position: 'sticky',
+                        top: '80px',
+                        left: 0,
+                        transition: isResizing ? 'none' : 'width 2s ease-in-out',
+                    }}
+                >
+                    <div className="p-4">
+                        <Title level={4} className="flex items-center gap-2">
+                            <FolderOutlined />
+                            Modules
+                        </Title>
+                    </div>
+                    <div className="p-[6px]">
+                        <SearchBarWithStatus
+                            placeholder="Search..."
+                            fetchFunction={fetchPermissionsDisplayNames}
+                            isStatus={false}
                         />
                     </div>
-                </div>
-            </Sider>
+                    <div className="flex flex-col justify-between h-[calc(100%-110px)]">
+                        {displayNames.length > 0 ? (
+                            <>
+                                <Menu
+                                    mode="inline"
+                                    selectedKeys={selectedDisplayName}
+                                    onClick={({ key }) => {
+                                        const selectedModule = displayNames.find(
+                                            (module) => module.display_name === key
+                                        );
+                                        if (selectedModule) {
+                                            const selectedIndex = displayNames.findIndex(
+                                                (module) => module.display_name === key
+                                            );
 
+                                            dispatch(setSelectedDisplayIndex(selectedIndex));
+                                            dispatch(setSelectedDisplayName(selectedModule.display_name));
+                                        }
+                                    }}
+                                    style={{ borderRight: 0 }}
+                                >
+                                    {displayNames?.map((names) => (
+                                        <Menu.Item
+                                            key={names.display_name}
+                                            icon={<SafetyOutlined />}
+                                        >
+                                            {names.display_name}
+                                        </Menu.Item>
+                                    ))}
+                                </Menu>
+                                <div className="p-2 flex justify-center border-t border-gray-200">
+                                    <Pagination
+                                        count={displayNamePagination.pages}
+                                        page={displayNamePagination.page}
+                                        onChange={handleChange}
+                                        color="primary"
+                                        variant="outlined"
+                                        shape="rounded"
+                                        size="small"
+                                        showFirstButton
+                                        showLastButton
+                                        siblingCount={1}
+                                        boundaryCount={1}
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center p-8 text-center">
+                                <FolderOpenOutlined className="text-4xl text-gray-400 mb-4" />
+                                <h3 className="text-lg font-medium text-gray-600">No modules available</h3>
+                                <p className="text-gray-500 mt-1">
+                                    There are no modules to display at this time.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </Sider>
+            </Resizable>
             <Layout className="bg-white">
-                <Content className="p-6">
+                <Content className="ps-1">
                     <Card className="shadow-sm">
                         <div className="flex justify-between items-center mb-6">
                             <Tabs
@@ -384,7 +453,7 @@ const AccessControlDashboard = () => {
                                         </div>
                                         <Divider />
 
-                                        {filteredModules.length === 0 ? (
+                                        {(filteredModules.length && !permissionLoading) === 0 ? (
                                             <div className="flex flex-col items-center justify-center py-12">
                                                 <FolderOutlined style={{ fontSize: '48px', color: '#bfbfbf', marginBottom: '16px' }} />
                                                 <Title level={4} type="secondary">No Permissions Found</Title>
@@ -418,6 +487,7 @@ const AccessControlDashboard = () => {
                                                                 codename,
                                                                 ...methodData
                                                             }))}
+                                                            loading={permissionLoading}
                                                             pagination={{
                                                                 current: pagination.current,
                                                                 pageSize: pagination.pageSize,
