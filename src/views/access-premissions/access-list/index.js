@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
     LockOutlined,
     UserOutlined,
@@ -247,35 +247,55 @@ const AccessControlDashboard = () => {
         }));
     }
 
+    const handleResizeStart = useCallback(() => {
+        setIsResizing(true);
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    }, []);
+
+    const handleResizeEnd = useCallback(() => {
+        setIsResizing(false);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    }, []);
+
+    const handleResize = useCallback((e, { size }) => {
+        setSiderWidth(size.width);
+    }, []);
+
+
     return (
         <Layout className="min-h-screen">
             <Resizable
                 width={siderWidth}
                 height={0}
-                onResize={(e, { size }) => setSiderWidth(size.width)}
+                onResize={handleResize}
+                onResizeStart={handleResizeStart}
+                onResizeStop={handleResizeEnd}
                 resizeHandles={['e']}
                 minConstraints={[200, 0]}
                 maxConstraints={[500, 0]}
-                transformScale={1}
                 handle={
                     <span
                         className="react-resizable-handle"
                         style={{
                             position: 'absolute',
-                            width: '6px',
+                            width: '10px',
                             height: '100%',
                             bottom: 0,
-                            right: '-3px',
+                            right: '-5px',
                             cursor: 'col-resize',
                             zIndex: 1,
-                            background: 'rgba(0, 0, 0, 0.1)',
+                            background: 'transparent',
                             transition: 'background 0.2s',
                         }}
                         onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#1890ff';
+                            e.currentTarget.style.background = 'rgba(24, 144, 255, 0.1)';
                         }}
                         onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.1)';
+                            if (!isResizing) {
+                                e.currentTarget.style.background = 'transparent';
+                            }
                         }}
                     />
                 }
@@ -283,13 +303,14 @@ const AccessControlDashboard = () => {
                 <Sider
                     width={siderWidth}
                     theme="light"
-                    className="shadow-md h-full"
+                    className={`shadow-md h-full transition-all duration-100 ${isResizing ? 'select-none' : ''}`}
                     style={{
                         overflow: 'hidden',
                         height: '70%',
                         position: 'sticky',
                         top: '80px',
-                        left: 0
+                        left: 0,
+                        transition: isResizing ? 'none' : 'width 2s ease-in-out',
                     }}
                 >
                     <div className="p-4">
