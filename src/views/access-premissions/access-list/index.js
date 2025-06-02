@@ -7,9 +7,10 @@ import {
     SafetyOutlined,
     SearchOutlined,
     FolderOutlined,
-    ApiOutlined
+    ApiOutlined,
+    FolderOpenOutlined
 } from "@ant-design/icons";
-import '../style.css';
+import '../access.css';
 import {
     Layout,
     Menu,
@@ -60,7 +61,7 @@ const AccessControlDashboard = () => {
         permissions: []     // Empty array for permissions
     });
     const handlePagination = usePaginationHook(fetchPermissionsDisplayNames);
-    const { loading, displayNamePagination, response: apiPermissions, displayNames, selectedDisplayName, selectedDisplayIndex, pagination } = useSelector((state) => state.permissions);
+    const { loading, permissionLoading, displayNamePagination, response: apiPermissions, displayNames, selectedDisplayName, selectedDisplayIndex, pagination } = useSelector((state) => state.permissions);
     const { searchValue } = useSelector((state) => state.filter);
 
     useEffect(() => {
@@ -321,54 +322,66 @@ const AccessControlDashboard = () => {
                     </div>
                     <div className="p-[6px]">
                         <SearchBarWithStatus
-                            placeholder="Search with Venue or Screen name"
+                            placeholder="Search..."
                             fetchFunction={fetchPermissionsDisplayNames}
                             isStatus={false}
                         />
                     </div>
                     <div className="flex flex-col justify-between h-[calc(100%-110px)]">
-                        <Menu
-                            mode="inline"
-                            selectedKeys={selectedDisplayName}
-                            onClick={({ key }) => {
-                                const selectedModule = displayNames.find(
-                                    (module) => module.display_name === key
-                                );
-                                if (selectedModule) {
-                                    const selectedIndex = displayNames.findIndex(
-                                        (module) => module.display_name === key
-                                    );
+                        {displayNames.length > 0 ? (
+                            <>
+                                <Menu
+                                    mode="inline"
+                                    selectedKeys={selectedDisplayName}
+                                    onClick={({ key }) => {
+                                        const selectedModule = displayNames.find(
+                                            (module) => module.display_name === key
+                                        );
+                                        if (selectedModule) {
+                                            const selectedIndex = displayNames.findIndex(
+                                                (module) => module.display_name === key
+                                            );
 
-                                    dispatch(setSelectedDisplayIndex(selectedIndex));
-                                    dispatch(setSelectedDisplayName(selectedModule.display_name));
-                                }
-                            }}
-                            style={{ borderRight: 0 }}
-                        >
-                            {displayNames?.map((names) => (
-                                <Menu.Item
-                                    key={names.display_name}
-                                    icon={<SafetyOutlined />}
+                                            dispatch(setSelectedDisplayIndex(selectedIndex));
+                                            dispatch(setSelectedDisplayName(selectedModule.display_name));
+                                        }
+                                    }}
+                                    style={{ borderRight: 0 }}
                                 >
-                                    {names.display_name}
-                                </Menu.Item>
-                            ))}
-                        </Menu>
-                        <div className="p-2 flex justify-center border-t border-gray-200">
-                            <Pagination
-                                count={displayNamePagination.pages}
-                                page={displayNamePagination.page}
-                                onChange={handleChange}
-                                color="primary"
-                                variant="outlined"
-                                shape="rounded"
-                                size="small"
-                                showFirstButton
-                                showLastButton
-                                siblingCount={1}
-                                boundaryCount={1}
-                            />
-                        </div>
+                                    {displayNames?.map((names) => (
+                                        <Menu.Item
+                                            key={names.display_name}
+                                            icon={<SafetyOutlined />}
+                                        >
+                                            {names.display_name}
+                                        </Menu.Item>
+                                    ))}
+                                </Menu>
+                                <div className="p-2 flex justify-center border-t border-gray-200">
+                                    <Pagination
+                                        count={displayNamePagination.pages}
+                                        page={displayNamePagination.page}
+                                        onChange={handleChange}
+                                        color="primary"
+                                        variant="outlined"
+                                        shape="rounded"
+                                        size="small"
+                                        showFirstButton
+                                        showLastButton
+                                        siblingCount={1}
+                                        boundaryCount={1}
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center p-8 text-center">
+                                <FolderOpenOutlined className="text-4xl text-gray-400 mb-4" />
+                                <h3 className="text-lg font-medium text-gray-600">No modules available</h3>
+                                <p className="text-gray-500 mt-1">
+                                    There are no modules to display at this time.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </Sider>
             </Resizable>
@@ -440,7 +453,7 @@ const AccessControlDashboard = () => {
                                         </div>
                                         <Divider />
 
-                                        {filteredModules.length === 0 ? (
+                                        {(filteredModules.length && !permissionLoading) === 0 ? (
                                             <div className="flex flex-col items-center justify-center py-12">
                                                 <FolderOutlined style={{ fontSize: '48px', color: '#bfbfbf', marginBottom: '16px' }} />
                                                 <Title level={4} type="secondary">No Permissions Found</Title>
@@ -474,6 +487,7 @@ const AccessControlDashboard = () => {
                                                                 codename,
                                                                 ...methodData
                                                             }))}
+                                                            loading={permissionLoading}
                                                             pagination={{
                                                                 current: pagination.current,
                                                                 pageSize: pagination.pageSize,
