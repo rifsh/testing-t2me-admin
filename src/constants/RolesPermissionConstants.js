@@ -56,7 +56,7 @@ export const PERMISSIONS = {
                     UPDATE_EVENT_TYPE_STATUS: 'update_event_type_status',
                 },
                 PLACE: {
-                    TITLE:'Place',
+                    TITLE: 'Place',
                     ADD_PLACE: 'add_place',
                     GET_PLACE: 'get_place',
                     EDIT_PLACE: 'edit_place',
@@ -109,6 +109,7 @@ export const PERMISSIONS = {
                 },
                 PAYMENT: {
                     GET_PAYMENT: 'get_payment',
+                    GET_PAYMENT_DETAILS: 'get_single_payment',
                     ADD_PAYMENT: 'add_payment',
                     EDIT_PAYMENT: 'edit_payment',
                     GET_PAYMENT_METHODS: 'get_payment_method'
@@ -190,6 +191,9 @@ export const PERMISSIONS = {
                     GET_SCREEN_TECH: 'get_screen_audio',
                     ADD_SCREEN_FEATURES: 'add_screen_feature',
                     GET_SCREEN_FEATURES: 'get_screen_feature',
+                },
+                SEAT: {
+
                 },
                 PERSONALITY_PROFILE: {
                     GET_PERSONALITY: 'get_movie_personality',

@@ -16,6 +16,8 @@ import { getAllMovieSchedule } from "store/slices/movieScheduleSlice";
 import dayjs from "dayjs";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import { isOrganizer } from "configs/UserAccessConfig";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const ScheduleList = () => {
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ const ScheduleList = () => {
   const { allSchedule, message, pagination, editable_status, loading } =
     useSelector((state) => state.movieScheduleSlice);
   const handlePagination = usePaginationHook(getAllMovieSchedule);
-
+  const { hasPermission, hasAnyPermission } = usePermissions()
   useEffect(() => {
     dispatch(getAllMovieSchedule({ size: 10, page: 1, organizer: isOrganizer() ? false : null }));
   }, [dispatch]);
@@ -130,9 +132,11 @@ const ScheduleList = () => {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SCHEDULE]) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(elm)} />
+          </div>
+        ) : null
       ),
     },
   ];
@@ -141,13 +145,13 @@ const ScheduleList = () => {
     <Card>
       <Flex alignItems="center" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={getAllMovieSchedule} />
-        <Button
+        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SCHEDULE.ADD_MOVIE_SCHEDULES) && <Button
           type="primary"
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/movie-schedule/add`)}
         >
           Add Schedule
-        </Button>
+        </Button>}
       </Flex>
       <div>
         <Table

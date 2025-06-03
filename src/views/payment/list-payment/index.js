@@ -25,6 +25,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import Utils from "utils";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 const { Panel } = Collapse;
 
 const PaymentList = () => {
@@ -36,6 +38,7 @@ const PaymentList = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const handlePagination = usePaginationHook(fetchAllPayment);
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
     dispatch(fetchAllPayment(DEFAULT_PAGE_SIZE));
@@ -59,20 +62,24 @@ const PaymentList = () => {
     {
       key: "view",
       label: (
-        <Flex alignItems="center">
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.GET_PAYMENT_DETAILS) ? (
+          < Flex alignItems="center" >
+            <EyeOutlined />
+            <span className="ml-2">View Details</span>
+          </Flex >
+        ) : null
       ),
       onClick: () => showModal(row),
     },
     {
       key: "remark",
       label: (
-        <Flex alignItems="center">
-          <EditOutlined />
-          <span className="ml-2">Edit Payment</span>
-        </Flex>
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.EDIT_PAYMENT) ? (
+          < Flex alignItems="center" >
+            <EditOutlined />
+            <span className="ml-2">Edit Payment</span>
+          </Flex >
+        ) : null
       ),
       onClick: () => navigate(`${APP_PREFIX_PATH}/payment/edit/${row.id}`),
     },
@@ -131,9 +138,11 @@ const PaymentList = () => {
       title: "Actions",
       dataIndex: "actions",
       render: (_, row) => (
-        <Dropdown menu={{ items: dropdownMenu(row) }} trigger={["click"]}>
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.EDIT_PAYMENT, PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.GET_PAYMENT_DETAILS]) ? (
+          < Dropdown menu={{ items: dropdownMenu(row) }} trigger={["click"]} >
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown >
+        ) : null
       ),
     },
   ];
@@ -142,13 +151,13 @@ const PaymentList = () => {
     <Card>
       <Flex alignItems="center" justifyContent="space-between" className="mb-4">
         <SearchBarWithStatus fetchFunction={fetchAllPayment} />
-        <Button
+        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.ADD_PAYMENT) && <Button
           type="primary"
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/payment/add`)}
         >
           Add Payment
-        </Button>
+        </Button>}
       </Flex>
       <div className="table-responsive">
         <Table

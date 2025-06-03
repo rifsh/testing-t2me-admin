@@ -60,7 +60,7 @@ const EventsList = () => {
     event_type: EVENT_TYPES.event,
   }
   const handlePagination = usePaginationHook(fetchAllEvent);
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
     dispatch(fetchAllEvent(eventParams));
@@ -118,18 +118,18 @@ const EventsList = () => {
   };
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item>
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.GET_EVENT_DETAIL) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
-      <Menu.Item>
+      </Menu.Item>}
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT) &&<Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditEvent(row.id)}>
           <EditOutlined />
           <span className="ml-2">Edit Event</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item>}
     </Menu>
   );
 
@@ -177,14 +177,16 @@ const EventsList = () => {
         </Collapse>
       ),
     },
-    utils.statusColumnUtil(handleUpdateStatus),
+    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT, PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.GET_EVENT_DETAIL]) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(elm)} />
+          </div>
+        ) : null
       ),
     },
   ];

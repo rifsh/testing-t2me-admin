@@ -32,6 +32,8 @@ import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import { isOrganizer } from "configs/UserAccessConfig";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const ScreenList = () => {
   const navigate = useNavigate();
@@ -52,6 +54,7 @@ const ScreenList = () => {
     (state) => state.locations
   );
   const handlePagination = usePaginationHook(fetchScreenData);
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
     dispatch(fetchScreenData({
@@ -116,20 +119,24 @@ const ScreenList = () => {
     {
       key: "edit",
       label: (
-        <Flex alignItems="center">
-          <EditOutlined />
-          <span className="ml-2">Edit</span>
-        </Flex>
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SCREEN.EDIT_SCREEN) ? (
+          <Flex alignItems="center">
+            <EditOutlined />
+            <span className="ml-2">Edit</span>
+          </Flex>
+        ) : null
       ),
       onClick: () => handleEditScreen(row),
     },
     {
       key: "view",
       label: (
-        <Flex alignItems="center">
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SCREEN.GET_SCREEN_DETAILS) ? (
+          <Flex alignItems="center">
+            <EyeOutlined />
+            <span className="ml-2">View Details</span>
+          </Flex>
+        ) : null
       ),
       onClick: () => handleViewDetails(row),
     },
@@ -221,14 +228,16 @@ const ScreenList = () => {
       render: (type) => getScreenTypeTag(type.name ? type.name : 'N/A')
 
     },
-    Utils.statusColumnUtil(handleUpdateStatus),
+    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SCREEN.EDIT_SCREEN_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, row) => (
-        <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SCREEN.EDIT_SCREEN, PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SCREEN.GET_SCREEN_DETAILS]) ? (
+          <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>
+        ) : null
       ),
     },
   ];
@@ -246,7 +255,7 @@ const ScreenList = () => {
             placeholder="Search with Venue or Screen name"
             fetchFunction={fetchScreenData}
           />
-          <Space>
+          {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SCREEN.ADD_SCREEN) && <Space>
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -254,7 +263,7 @@ const ScreenList = () => {
             >
               Add Screen
             </Button>
-          </Space>
+          </Space>}
         </Flex>
         <div className="table-responsive">
           <Table

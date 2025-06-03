@@ -29,6 +29,7 @@ import {
 } from "store/slices/movieSeatSlice";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import { isOrganizer } from "configs/UserAccessConfig";
+import usePermissions from "utils/hooks/usePermissions";
 
 const MovieSeatList = () => {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ const MovieSeatList = () => {
   } = useSelector((state) => state.movieSeatSlice);
   const { responseData } = useSelector((state) => state.modalSlice);
   const handlePagination = usePaginationHook(getAllSeatStructures);
-
+  const { hasPermission, hasAnyPermission } = usePermissions()
   useEffect(() => {
     dispatch(getAllSeatStructures({
       ...DEFAULT_PAGE_SIZE,
