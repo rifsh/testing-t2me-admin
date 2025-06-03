@@ -186,14 +186,6 @@ const superAdminDashBoardNavTree = [
                 submenu: [],
               },
               {
-                key: "ticket.list",
-                path: `${APP_PREFIX_PATH}/ticket/list`,
-                title: "sidenav.ticket",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
                 key: "seat.list",
                 path: `${APP_PREFIX_PATH}/seat/list`,
                 title: "sidenav.seat",
@@ -221,6 +213,22 @@ const superAdminDashBoardNavTree = [
             isGroupTitle: false,
             submenu: [
               {
+                key: "ticket.list",
+                path: `${APP_PREFIX_PATH}/ticket/list`,
+                title: "sidenav.ticket",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
+              },
+              {
+                key: "seat.list",
+                path: `${APP_PREFIX_PATH}/seat/event/list`,
+                title: "sidenav.seat",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
+              },
+              {
                 key: "event.list",
                 path: `${APP_PREFIX_PATH}/event/list`,
                 title: "sidenav.event.list",
@@ -232,14 +240,6 @@ const superAdminDashBoardNavTree = [
                 key: "schedule.list",
                 path: `${APP_PREFIX_PATH}/schedule/list`,
                 title: "sidenav.schedule",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
-                key: "seat.list",
-                path: `${APP_PREFIX_PATH}/seat/event/list`,
-                title: "sidenav.seat",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 submenu: [],
@@ -716,7 +716,7 @@ const techAdminDashBoardNavTree = [
           },
           {
             key: "offer.list",
-            path: `${APP_PREFIX_PATH}/offer/list?type=general`,
+            path: `${APP_PREFIX_PATH}/offer/list/general`,
             title: "sidenav.offer",
             icon: OrderedListOutlined,
             breadcrumb: false,

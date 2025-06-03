@@ -253,7 +253,7 @@ const EventsList = () => {
           </div>
         </Flex>
         <div>
-          {hasPermission(PERMISSIONS.SERVICES.EVENT.ADD_EVENT) &&
+          {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.ADD_EVENT) &&
             <Button
               type="primary"
               icon={<FormOutlined />}

@@ -37,6 +37,8 @@ import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/S
 
 import { TextConstants } from "constants/TextConstant";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Option } = Select;
 
@@ -64,7 +66,7 @@ const TaxList = () => {
     detailedCountryList,
   } = locationState;
   const handlePagination = usePaginationHook(fetchAllTax);
-
+  const { hasPermission } = usePermissions();
   useEffect(() => {
     dispatch(fetchAllTax(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
@@ -138,14 +140,16 @@ const TaxList = () => {
       render: (date) => <span>{new Date(date).toLocaleDateString()}</span>,
       sorter: (a, b) => utils.antdTableSorter(a, b, "created_at"),
     },
-    Utils.statusColumnUtil(handleUpdateStatus),
+    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.TAX.UPDATE_TAX_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.TAX.EDIT_TAXES) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(elm)} />
+          </div>
+        ) : null
       ),
     },
   ];
@@ -176,7 +180,7 @@ const TaxList = () => {
             },
           ]}
         />
-        <Col style={{ textAlign: "right" }}>
+        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.TAX.ADD_TAXES) && <Col style={{ textAlign: "right" }}>
           <Button
             type="primary"
             icon={<FormOutlined />}
@@ -184,7 +188,7 @@ const TaxList = () => {
           >
             Add Tax
           </Button>
-        </Col>
+        </Col>}
       </Row>
 
       <div className="table-responsive">
