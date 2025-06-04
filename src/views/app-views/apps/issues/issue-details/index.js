@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Row,Collapse, Col, Typography, Space, List, Avatar, Button, Spin, Alert, Select, Input, message, Image } from 'antd';
+import { Card, Row, Collapse, Col, Typography, Space, List, Avatar, Button, Spin, Alert, Select, Input, message, Image } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchAllUsers, resetRoleState, resetUserstate } from 'store/slices/userSlice';
@@ -27,6 +27,7 @@ import moment from 'moment';
 import { fetchAllRoles } from 'store/slices/userSlice';
 import { UserRoleConstants } from 'constants/UserRoleConstant';
 import { TextConstants } from 'constants/TextConstant';
+import { PERMISSIONS } from 'constants/RolesPermissionConstants';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -45,7 +46,7 @@ const IssueDetails = () => {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [selectedRoleId, setSelectedRoleId] = useState(null);
   const [adminCommentText, setAdminCommentText] = useState("");
-  
+
   const { IssueDetails, loading, error, CommentDetails, AssignmentDetails } = useSelector((state) => state.issue);
   const { roles, list } = useSelector((state) => state.users);
   const currentUser = getCurrentUser();
@@ -68,19 +69,19 @@ const IssueDetails = () => {
     }
   }, [isCommentModalVisible, inputForFetchingRole]);
 
-  const handleAdminCommentSubmit = async ()=>{
+  const handleAdminCommentSubmit = async () => {
 
-   try {
-    const resultAction = await  dispatch(AdminCommenting({"data":{"comment":adminCommentText}, "params":{"issue_id":issueId}}))
-    console.warn(resultAction)
-    if (AdminCommenting.fulfilled.match(resultAction)) {
-      message.success(`commented`);
-      setAdminCommentText("")
-      dispatch(fetchCommentDetails({ size: 5, page: 1, issue_id: issueId }))
+    try {
+      const resultAction = await dispatch(AdminCommenting({ "data": { "comment": adminCommentText }, "params": { "issue_id": issueId } }))
+      console.warn(resultAction)
+      if (AdminCommenting.fulfilled.match(resultAction)) {
+        message.success(`commented`);
+        setAdminCommentText("")
+        dispatch(fetchCommentDetails({ size: 5, page: 1, issue_id: issueId }))
+      }
+    } catch (error) {
+      message.error("Failed to add comment");
     }
-  } catch (error) {
-    message.error("Failed to add comment");
-  }
   }
   const handleChange = async (newStatus) => {
     try {
@@ -134,7 +135,7 @@ const IssueDetails = () => {
     setSelectedRoleId(roleId);
     setSelectedUserId(null);
     dispatch(resetUserstate());
-    
+
     try {
       if (roleId === UserRoleConstants.eventSupportingTeamRoleId && IssueDetails.event) {
         await dispatch(fetchAllUsers({
@@ -142,7 +143,7 @@ const IssueDetails = () => {
           "event_id": IssueDetails.event.id
         }));
       } else {
-        await dispatch(fetchAllUsers({"role_id": roleId}));
+        await dispatch(fetchAllUsers({ "role_id": roleId }));
       }
     } catch (error) {
       message.error("Failed to fetch users");
@@ -176,7 +177,7 @@ const IssueDetails = () => {
     try {
       const formData = new FormData();
       formData.append("comment", comment);
-      
+
       if (uploadingFiles) {
         uploadingFiles.forEach((file) => {
           formData.append("files", file.originFileObj);
@@ -251,35 +252,35 @@ const IssueDetails = () => {
 
   const renderAssignmentTimeline = () => {
     if (!AssignmentDetails?.length) return null;
-  
+
     return (
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
-  {AssignmentDetails.map((assignment, index) => (
-    <div
-      key={index}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        flex: '1 1 250px',
-        maxWidth: '300px',
-        minWidth: '250px',
-      }}
-    >
-      <Card style={{ width: '100%' }} className="assignment-card">
-        <Space direction="vertical">
-          <Text strong>{assignment.assigned_user.email}</Text>
-          <Text type="secondary">{assignment.assigned_role.name}</Text>
-          <Text type="secondary">
-            {moment(assignment.created_at).format('MMM DD, YYYY HH:mm')}
-          </Text>
-        </Space>
-      </Card>
-      {index < AssignmentDetails.length - 1 && (
-        <RightOutlined style={{ color: '#999', marginLeft: 8 }} />
-      )}
-    </div>
-  ))}
-</div>
+        {AssignmentDetails.map((assignment, index) => (
+          <div
+            key={index}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              flex: '1 1 250px',
+              maxWidth: '300px',
+              minWidth: '250px',
+            }}
+          >
+            <Card style={{ width: '100%' }} className="assignment-card">
+              <Space direction="vertical">
+                <Text strong>{assignment.assigned_user.email}</Text>
+                <Text type="secondary">{assignment.assigned_role.name}</Text>
+                <Text type="secondary">
+                  {moment(assignment.created_at).format('MMM DD, YYYY HH:mm')}
+                </Text>
+              </Space>
+            </Card>
+            {index < AssignmentDetails.length - 1 && (
+              <RightOutlined style={{ color: '#999', marginLeft: 8 }} />
+            )}
+          </div>
+        ))}
+      </div>
 
     );
   };
@@ -292,67 +293,67 @@ const IssueDetails = () => {
     const isMoreCommentsAvailable = CommentDetails.size < CommentDetails.total;
 
     return (
-<div>
-      <List
-        itemLayout="horizontal"
-        dataSource={CommentDetails.items}
-        renderItem={(item) => (
-          <List.Item>
-            <List.Item.Meta
-              avatar={<Avatar icon={<UserOutlined />} />}
-              title={
-                <Space>
-                  <Text strong>{item.users.username}</Text>
-                </Space>
-              }
-              description={
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <p>{item.comment}</p>
-                    <Text type="secondary">{moment(item.created_at).fromNow()}</Text>
-                  </div>
-                  {item.issue_comment_file?.length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginLeft: "10px" }}>
-                      {item.issue_comment_file.map((files, index) => (
-                        <Image
-                          key={index}
-                          src={files.file}
-                          alt={`Comment attachment ${index + 1}`}
-                          style={{ width: "50px", height: "50px", objectFit: "cover" }}
-                          preview={true}
-                        />
-                      ))}
+      <div>
+        <List
+          itemLayout="horizontal"
+          dataSource={CommentDetails.items}
+          renderItem={(item) => (
+            <List.Item>
+              <List.Item.Meta
+                avatar={<Avatar icon={<UserOutlined />} />}
+                title={
+                  <Space>
+                    <Text strong>{item.users.username}</Text>
+                  </Space>
+                }
+                description={
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <p>{item.comment}</p>
+                      <Text type="secondary">{moment(item.created_at).fromNow()}</Text>
                     </div>
-                  )}
-                </div>
-              }
-            />
-          </List.Item>
+                    {item.issue_comment_file?.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginLeft: "10px" }}>
+                        {item.issue_comment_file.map((files, index) => (
+                          <Image
+                            key={index}
+                            src={files.file}
+                            alt={`Comment attachment ${index + 1}`}
+                            style={{ width: "50px", height: "50px", objectFit: "cover" }}
+                            preview={true}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                }
+              />
+            </List.Item>
+          )}
+        />
+
+        {isMoreCommentsAvailable && (
+          <Button
+            style={{ marginTop: "16px" }}
+            onClick={() => {
+              dispatch(
+                fetchCommentDetails({
+                  size: CommentDetails.size + 5,
+                  page: 1,
+                  issue_id: issueId,
+                })
+              );
+            }}
+          >
+            More Comments
+          </Button>
         )}
-      />
 
-      {isMoreCommentsAvailable && (
-        <Button
-          style={{ marginTop: "16px" }}
-          onClick={() => {
-            dispatch(
-              fetchCommentDetails({
-                size: CommentDetails.size + 5,
-                page: 1,
-                issue_id: issueId,
-              })
-            );
-          }}
-        >
-          More Comments
-        </Button>
-      )}
+        {/* Comment Input Section */}
 
-      {/* Comment Input Section */}
-     
-    </div>
-  );
-};
+      </div>
+    );
+  };
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -372,7 +373,7 @@ const IssueDetails = () => {
           type="warning"
           showIcon
           closable
-          style={{padding:"20px"}}
+          style={{ padding: "20px" }}
         />
       )}
 
@@ -383,8 +384,8 @@ const IssueDetails = () => {
             <Col>
               <Title level={3} style={{ margin: 0 }}>{IssueDetails.subject}</Title>
             </Col>
-            <Col>
-              {(IssueDetails.status_changable && !IssueDetails.ticket_status)  && (
+            {PERMISSIONS.APPLICATIONS.ISSUES.ISSUE.UPDATE_ISSUE_STATUS && <Col>
+              {(IssueDetails.status_changable && !IssueDetails.ticket_status) && (
                 <Select
                   value={IssueDetails?.issue_status}
                   onChange={handleChange}
@@ -397,14 +398,14 @@ const IssueDetails = () => {
                   ))}
                 </Select>
               )}
-            </Col>
+            </Col>}
           </Row>
 
           <Space size="large" wrap>
             <Space>
               <ClockCircleOutlined />
               <Text type="secondary">
-                Created {moment(IssueDetails?.created_at).format('MMM DD, YYYY')} 
+                Created {moment(IssueDetails?.created_at).format('MMM DD, YYYY')}
               </Text>
             </Space>
 
@@ -477,7 +478,7 @@ const IssueDetails = () => {
             <Col xs={24} md={8}>
               <Text type="secondary">Assigned Role</Text>
               <div>
-              <Text strong>{IssueDetails?.role?.name}</Text>
+                <Text strong>{IssueDetails?.role?.name}</Text>
               </div>
             </Col>
           </Row>
@@ -487,12 +488,12 @@ const IssueDetails = () => {
       {/* Assignment Timeline Card */}
       {AssignmentDetails?.length > 0 && (
         <Card style={{ marginTop: 16 }}>
-           <Collapse ghost>
-           <Panel header={<Title level={4}>Assignment History</Title>} key="1">
-          <Title level={4}>Assignment History</Title>
-          {renderAssignmentTimeline()}
-          </Panel>
-        </Collapse>
+          <Collapse ghost>
+            <Panel header={<Title level={4}>Assignment History</Title>} key="1">
+              <Title level={4}>Assignment History</Title>
+              {renderAssignmentTimeline()}
+            </Panel>
+          </Collapse>
         </Card>
       )}
 
@@ -501,18 +502,18 @@ const IssueDetails = () => {
       <Row justify="center" style={{ marginTop: 24 }} gutter={[16, 16]}>
         {!IssueDetails.ticket_status && (
           <>
-            {(IssueDetails.assignable || IssueDetails.role_assignable_for_admin)&& (
+            {(IssueDetails.assignable || IssueDetails.role_assignable_for_admin) && (
               <Col>
                 <Button
                   size="large"
                   type="primary"
-                  onClick={!inputForFetchingRole  ? handlefetchRoleDetails : handleCancelReassignAdmin}
+                  onClick={!inputForFetchingRole ? handlefetchRoleDetails : handleCancelReassignAdmin}
                 >
-                  {!inputForFetchingRole  ? "Reassign" : "Cancel"}
+                  {!inputForFetchingRole ? "Reassign" : "Cancel"}
                 </Button>
               </Col>
             )}
-            {IssueDetails.ticket_closable&& (
+            {IssueDetails.ticket_closable && (
               <Col>
                 <Button
                   size="large"
@@ -528,7 +529,7 @@ const IssueDetails = () => {
       </Row>
 
       {/* Selection inputs */}
-      
+
       {inputForFetchingRole && IssueDetails.issue_status == TextConstants.Pending && (
         <Row justify="center" style={{ marginTop: 16 }}>
           <Col span={20}>
@@ -557,7 +558,7 @@ const IssueDetails = () => {
                   onChange={handleUserSelect}
                 >
                   {list?.map((user) => (
-                   (currentUser.id !== user.id && IssueDetails?.ticket_assigned?.id !== user.id) && (
+                    (currentUser.id !== user.id && IssueDetails?.ticket_assigned?.id !== user.id) && (
                       <Option key={user.id} value={user.id}>
                         {user.email}
                       </Option>
@@ -571,7 +572,7 @@ const IssueDetails = () => {
       )}
 
       {/* Comments Card */}
-      <Card style={{ marginTop: 16 }}>
+      {PERMISSIONS.APPLICATIONS.ISSUES.ISSUE.ADD_ISSUE_COMMENT && <Card style={{ marginTop: 16 }}>
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           <Space>
             <CommentOutlined />
@@ -579,7 +580,7 @@ const IssueDetails = () => {
           </Space>
           {renderCommentList()}
         </Space>
-      </Card>
+      </Card>}
       {IssueDetails.superadmin_access && <div style={{ marginTop: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
         <TextArea
           rows={3}
@@ -587,8 +588,8 @@ const IssueDetails = () => {
           onChange={(e) => setAdminCommentText(e.target.value)}
           placeholder="Write a comment..."
         />
-        <Button type="primary" 
-        onClick={handleAdminCommentSubmit} disabled={!adminCommentText.trim()}
+        <Button type="primary"
+          onClick={handleAdminCommentSubmit} disabled={!adminCommentText.trim()}
         >
           Comment
         </Button>
@@ -622,7 +623,7 @@ const IssueDetails = () => {
       `}</style>
     </div>
   );
-  
+
 };
 
 export default IssueDetails;

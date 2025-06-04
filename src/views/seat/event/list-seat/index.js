@@ -27,6 +27,8 @@ import {
   getEventAllSeatStructures,
 } from "store/slices/movieSeatSlice";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const MovieSeatList = () => {
   const navigate = useNavigate();
@@ -44,6 +46,7 @@ const MovieSeatList = () => {
     responseImpactData,
   } = useSelector((state) => state.movieSeatSlice);
   const { responseData } = useSelector((state) => state.modalSlice);
+  const { hasPermission, hasAnyPermission } = usePermissions();
   const handlePagination = usePaginationHook(getEventAllSeatStructures);
   useEffect(() => {
     dispatch(getEventAllSeatStructures(DEFAULT_PAGE_SIZE));
@@ -77,20 +80,24 @@ const MovieSeatList = () => {
     {
       key: "view",
       label: (
-        <Flex alignItems="center">
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SEAT.GET_EVENT_SINGLE_SEAT_STRUCTURE) ? (
+          <Flex alignItems="center">
+            <EyeOutlined />
+            <span className="ml-2">View Details</span>
+          </Flex>
+        ) : null
       ),
       onClick: () => navigate(`${APP_PREFIX_PATH}/seat/event/${row.id}`),
     },
     {
       key: "edit",
       label: (
-        <Flex alignItems="center">
-          <EditOutlined />
-          <span className="ml-2">Edit Seat Structure</span>
-        </Flex>
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SEAT.EDIT_EVENT_SEAT_STRUCTURE) ? (
+          <Flex alignItems="center">
+            <EditOutlined />
+            <span className="ml-2">Edit Seat Structure</span>
+          </Flex>
+        ) : null
       ),
       onClick: () => handleEditSeat(row.id),
     },
@@ -167,14 +174,16 @@ const MovieSeatList = () => {
         );
       },
     },
-    Utils.statusColumnUtil(handleUpdateStatus),
+    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SEAT.EDIT_EVENT_SEAT_STRUCTURE_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, row) => (
-        <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SEAT.EDIT_EVENT_SEAT_STRUCTURE, PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SEAT.GET_EVENT_SINGLE_SEAT_STRUCTURE]) ? (
+          <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>
+        ) : null
       ),
     },
   ];
@@ -187,13 +196,13 @@ const MovieSeatList = () => {
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={getEventAllSeatStructures} />
-        <Button
+        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SEAT.ADD_EVENT_SEAT_STRUCTURE) && <Button
           type="primary"
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/seat/event/add`)}
         >
           Add Seat Structure
-        </Button>
+        </Button>}
       </Flex>
       <Table
         columns={tableColumns}

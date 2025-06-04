@@ -27,6 +27,8 @@ import { getCurrentUser, getUserRole } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Option } = Select;
 
@@ -35,6 +37,7 @@ const scheduleStatusList = ["All", "Scheduled", "Ongoing", "Expired"];
 const IssueList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions()
   const { pagination, editable_status, issues, message, loading } =
     useSelector((state) => state.issue);
   useEffect(() => {
@@ -160,11 +163,13 @@ const IssueList = () => {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown
-            menu={dropdownMenu(elm)}
-          />
-        </div>
+        hasPermission(PERMISSIONS.APPLICATIONS.ISSUES.ISSUE_ALERT.GET_ISSUE_ALERTS) ? (
+          <div className="text-right">
+            <EllipsisDropdown
+              menu={dropdownMenu(elm)}
+            />
+          </div>
+        ) : null
       ),
     },
   ];

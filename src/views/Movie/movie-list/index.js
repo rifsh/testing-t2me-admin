@@ -15,6 +15,8 @@ import Utils from 'utils';
 import StatusSubmitAndConfirmModal from 'components/util-components/ModalItems/StatusSubmitModal';
 import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatusModal';
 import usePaginationHook from 'utils/hooks/usePaginationHandler';
+import usePermissions from 'utils/hooks/usePermissions';
+import { PERMISSIONS } from 'constants/RolesPermissionConstants';
 
 const Index = () => {
     const navigate = useNavigate();
@@ -26,6 +28,7 @@ const Index = () => {
         modalLoading,
     } = useSelector((state) => state.locations);
     const handlePagination = usePaginationHook(fetchMoviesData);
+    const { hasPermission, hasAnyPermission } = usePermissions();
 
     useEffect(() => {
         dispatch(fetchMoviesData(DEFAULT_PAGE_SIZE))
@@ -85,20 +88,24 @@ const Index = () => {
         {
             key: "edit",
             label: (
-                <Space>
-                    <EditOutlined />
-                    <span>Edit</span>
-                </Space>
+                hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.MOVIE.EDIT_MOVIE) ? (
+                    <Space>
+                        <EditOutlined />
+                        <span>Edit</span>
+                    </Space>
+                ) : null
             ),
             onClick: () => handleEditMovie(movie),
         },
         {
             key: "view",
             label: (
-                <Space>
-                    <EyeOutlined />
-                    <span>View Details</span>
-                </Space>
+                hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.MOVIE.GET_MOVIE_DETAILS) ? (
+                    <Space>
+                        <EyeOutlined />
+                        <span>View Details</span>
+                    </Space>
+                ) : null
             ),
             onClick: () => handleViewDetails(movie),
         },
@@ -155,14 +162,16 @@ const Index = () => {
             key: "rating",
             render: (rating) => <Tag color={rating > 7 ? "green" : "red"}>{rating}/10</Tag>
         },
-        Utils.statusColumnUtil(handleUpdateStatus),
+        Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.MOVIE.EDIT_MOVIE_STATUS)),
         {
             title: "Actions",
             dataIndex: "actions",
             render: (_, movie) => (
-                <Dropdown menu={{ items: getDropdownMenu(movie) }} trigger={["click"]}>
-                    <Button type="text" icon={<MoreOutlined />} />
-                </Dropdown>
+                hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.MOVIE.GET_MOVIE_DETAILS, PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.MOVIE.EDIT_MOVIE]) ? (
+                    <Dropdown menu={{ items: getDropdownMenu(movie) }} trigger={["click"]}>
+                        <Button type="text" icon={<MoreOutlined />} />
+                    </Dropdown>
+                ) : null
             ),
         },
     ];
@@ -171,9 +180,9 @@ const Index = () => {
         <Card>
             <Space style={{ width: "100%", justifyContent: "space-between", marginBottom: "10px" }}>
                 <SearchBarWithStatus placeholder="Search by title" fetchFunction={fetchMoviesData} />
-                <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`${APP_PREFIX_PATH}/movie/add`)}>
+                {hasPermission(hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.MOVIE.ADD_MOVIE)) && <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`${APP_PREFIX_PATH}/movie/add`)}>
                     Add Movie
-                </Button>
+                </Button>}
             </Space>
 
             <Table

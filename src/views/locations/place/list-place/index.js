@@ -48,7 +48,7 @@ const PlaceList = () => {
   } = useSelector((state) => state.locations);
   const { responseData } = useSelector((state) => state.modalSlice);
   const handlePagination = usePaginationHook(getPlaces);
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
     dispatch(getPlaces(DEFAULT_PAGE_SIZE));
@@ -85,13 +85,13 @@ const PlaceList = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item>
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PLACE.GET_SINGLE_PLACE) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
-      {hasPermission(PERMISSIONS.SERVICES.GENERAL.PLACE.EDIT_PLACE) && <Menu.Item>
+      </Menu.Item>}
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PLACE.EDIT_PLACE) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditPlace(row.id)}>
           <EditOutlined />
           <span className="ml-2">Edit Place</span>
@@ -114,16 +114,21 @@ const PlaceList = () => {
       ),
       sorter: (a, b) => utils.antdTableSorter(a, b, "created_at"),
     },
-    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.SERVICES.GENERAL.PLACE.EDIT_PLACE_STATUS)),
+    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PLACE.EDIT_PLACE_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
-      ),
-    },
+        hasAnyPermission([
+          PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PLACE.GET_SINGLE_PLACE,
+          PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PLACE.EDIT_PLACE
+        ]) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(elm)} />
+          </div>
+        ) : null
+      )
+    }
   ];
 
   const [form] = Form.useForm();
@@ -147,13 +152,13 @@ const PlaceList = () => {
         />
 
         <Col xs={24} sm={8} style={{ textAlign: "right" }}>
-          <Button
+          {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PLACE.ADD_PLACE) && <Button
             type="primary"
             icon={<FormOutlined />}
             onClick={() => navigate(`${APP_PREFIX_PATH}/place/add`)}
           >
             Add Place
-          </Button>
+          </Button>}
         </Col>
       </Row>
 

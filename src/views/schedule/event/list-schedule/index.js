@@ -17,6 +17,8 @@ import SearchBarWithStatus from "components/util-components/Search/SearchBarWith
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 
 const ScheduleList = () => {
@@ -25,7 +27,7 @@ const ScheduleList = () => {
   const { filteredSchedules, message, pagination, editable_status, loading } =
     useSelector((state) => state.schedules);
   // const [form] = Form.useForm();
-
+  const { hasPermission, hasAnyPermission } = usePermissions()
   useEffect(() => {
     dispatch(fetchAllSchedules(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
@@ -49,12 +51,12 @@ const ScheduleList = () => {
   };
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item>
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.GET_EVENT_SCHEDULE_DETAILS) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item>}
       <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditSchedule(row.id)}>
           <EditOutlined />
@@ -120,9 +122,11 @@ const ScheduleList = () => {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.GET_EVENT_SCHEDULE_DETAILS]) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(elm)} />
+          </div>
+        ) : null
       ),
     },
   ];
@@ -131,13 +135,13 @@ const ScheduleList = () => {
     <Card>
       <Flex alignItems="center" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={fetchAllSchedules} />
-        <Button
+        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.ADD_EVENT_SCHEDULES) && <Button
           type="primary"
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/schedule/add`)}
         >
           Add Schedule
-        </Button>
+        </Button>}
       </Flex>
       <div>
         <Table

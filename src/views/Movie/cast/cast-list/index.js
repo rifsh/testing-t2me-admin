@@ -16,6 +16,8 @@ import { setDialogVisible, setSelectedItem } from 'store/slices/modalSlice';
 import UpdateStatusModal from 'components/util-components/ModalItems/UpdateStatusModal';
 import StatusSubmitAndConfirmModal from 'components/util-components/ModalItems/StatusSubmitModal';
 import usePaginationHook from 'utils/hooks/usePaginationHandler';
+import usePermissions from 'utils/hooks/usePermissions';
+import { PERMISSIONS } from 'constants/RolesPermissionConstants';
 
 const { Text } = Typography;
 
@@ -38,6 +40,7 @@ const Index = () => {
         }
     }, [response]);
     const handlePagination = usePaginationHook(fetchPersonalitiesData);
+    const { hasPermission, hasAnyPermission } = usePermissions();
 
     const calculateAge = (birthDate) => {
         if (!birthDate) return '-';
@@ -75,20 +78,24 @@ const Index = () => {
         {
             key: "view",
             label: (
-                <Space>
-                    <EyeOutlined />
-                    <span>View Details</span>
-                </Space>
+                hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.PERSONALITY_PROFILE.GET_PERSONALITY_DETAILS) ? (
+                    <Space>
+                        <EyeOutlined />
+                        <span>View Details</span>
+                    </Space>
+                ) : null
             ),
             onClick: () => handleViewDetails(actor),
         },
         {
             key: "edit",
             label: (
-                <Space>
-                    <EditOutlined />
-                    <span>Edit</span>
-                </Space>
+                hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.PERSONALITY_PROFILE.EDIT_PERSONALITY) ? (
+                    <Space>
+                        <EditOutlined />
+                        <span>Edit</span>
+                    </Space>
+                ) : null
             ),
             onClick: () => handleEditActor(actor),
         }
@@ -175,15 +182,17 @@ const Index = () => {
             key: "nationality",
             render: (nationality) => nationality || '-',
         },
-        Utils.statusColumnUtil(handleUpdateStatus),
+        Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.PERSONALITY_PROFILE.EDIT_PERSONALITY_STATUS)),
 
         {
             title: "Actions",
             dataIndex: "actions",
             render: (_, actor) => (
-                <Dropdown menu={{ items: getDropdownMenu(actor) }} trigger={["click"]}>
-                    <Button type="text" icon={<MoreOutlined />} />
-                </Dropdown>
+                hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.PERSONALITY_PROFILE.GET_PERSONALITY_DETAILS, PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.PERSONALITY_PROFILE.EDIT_PERSONALITY]) ? (
+                    <Dropdown menu={{ items: getDropdownMenu(actor) }} trigger={["click"]}>
+                        <Button type="text" icon={<MoreOutlined />} />
+                    </Dropdown>
+                ) : null
             ),
         },
     ];
@@ -197,13 +206,13 @@ const Index = () => {
                         placeholder="Search by name or nationality"
                         fetchFunction={fetchPersonalitiesData}
                     />
-                    <Button
+                    {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.PERSONALITY_PROFILE.ADD_PERSONALITY) && <Button
                         type="primary"
                         icon={<UserAddOutlined />}
                         onClick={() => navigate(`${APP_PREFIX_PATH}/personality/add`)}
                     >
                         Add
-                    </Button>
+                    </Button>}
                 </Space>
 
                 <Table

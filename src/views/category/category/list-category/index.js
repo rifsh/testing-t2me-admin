@@ -36,6 +36,8 @@ import SearchBarWithStatus from "components/util-components/Search/SearchBarWith
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -47,7 +49,7 @@ const CategoryList = () => {
   const [modalType, setModalType] = useState("category");
   const handleCategoryPagination = usePaginationHook(fetchCategories);
   const handlesubCategorSPagination = usePaginationHook(fetchSubcategories);
-
+  const { hasPermission, hasAnyPermission } = usePermissions()
   const {
     filteredCategories,
     filteredSubCategories,
@@ -137,29 +139,47 @@ const CategoryList = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
-      {activeTab === "categories" ? (
-        <Menu.Item>
-          <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
-            <EyeOutlined />
-            <span className="ml-2">View Details</span>
-          </Flex>
-        </Menu.Item>
-      ) : (
-        <Menu.Item>
-          <Flex alignItems="center" onClick={() => handleViewDetailsub(row.id)}>
-            <EyeOutlined />
-            <span className="ml-2">View subDetails</span>
-          </Flex>
-        </Menu.Item>
-      )}
-      <Menu.Item>
+      {
+        activeTab === "categories"
+          ? hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.GET_SINGLE_CATEGORY) && (
+            <Menu.Item>
+              <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+                <EyeOutlined />
+                <span className="ml-2">View Details</span>
+              </Flex>
+            </Menu.Item>
+          )
+          : hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.GET_SINGLE_SUBCATEGORY) && (
+            <Menu.Item>
+              <Flex alignItems="center" onClick={() => handleViewDetailsub(row.id)}>
+                <EyeOutlined />
+                <span className="ml-2">View subDetails</span>
+              </Flex>
+            </Menu.Item>
+          )
+      }
+      {hasPermission(
+        activeTab === "categories"
+          ? PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.UPDATE_CATEGORY_STATUS
+          : PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.UPDATE_SUBCATEGORY_STATUS
+      ) && (
+          <Menu.Item>
+            <Flex alignItems="center" onClick={() => handleEditCategory(row.id)}>
+              <EditOutlined />
+              <span className="ml-2">
+                {activeTab === "categories" ? "Edit Category" : "Edit Subcategory"}
+              </span>
+            </Flex>
+          </Menu.Item>
+        )}
+      {/* <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditCategory(row.id)}>
           <EditOutlined />
           <span className="ml-2">
             {activeTab === "categories" ? "Edit Category" : "Edit Subcategory"}
           </span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item> */}
     </Menu>
   );
 
@@ -179,14 +199,17 @@ const CategoryList = () => {
       sorter: (a, b) =>
         (a.description || "").localeCompare(b.description || ""),
     },
-    Utils.statusColumnUtil(handleUpdateStatus),
+    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.UPDATE_CATEGORY_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, record) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(record)} />
-        </div>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.GET_SINGLE_CATEGORY, PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.UPDATE_CATEGORY_STATUS]) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(record)} />
+          </div>
+
+        ) : null
       ),
     },
   ];
@@ -203,14 +226,17 @@ const CategoryList = () => {
       dataIndex: ["category", "name"],
       sorter: (a, b) => Utils.antdTableSorter(a, b, ["category", "name"]),
     },
-    Utils.statusColumnUtil(handleUpdateSubStatus),
+    Utils.statusColumnUtil(handleUpdateSubStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.UPDATE_SUBCATEGORY_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, record) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(record)} />
-        </div>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.GET_SINGLE_SUBCATEGORY, PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.UPDATE_SUBCATEGORY_STATUS]) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(record)} />
+          </div >
+
+        ) : null
       ),
     },
   ];
@@ -254,7 +280,7 @@ const CategoryList = () => {
         <TabPane tab="Categories" key="categories">
           <Flex alignItems="center" justifyContent="space-between">
             <SearchBarWithStatus fetchFunction={fetchCategories} />
-            <div>
+            {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.ADD_CATEGORY) && <div>
               <Button
                 type="primary"
                 icon={<FormOutlined />}
@@ -264,7 +290,7 @@ const CategoryList = () => {
               >
                 Add Category
               </Button>
-            </div>
+            </div>}
           </Flex>
           <Table
             columns={categoryColumns}
@@ -295,7 +321,7 @@ const CategoryList = () => {
                 },
               ]}
             />
-            <div>
+            {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.CATEGORY.ADD_SUBCATEGORY) && <div>
               <Button
                 type="primary"
                 icon={<FormOutlined />}
@@ -305,7 +331,7 @@ const CategoryList = () => {
               >
                 Add Sub Category
               </Button>
-            </div>
+            </div>}
           </Flex>
           <Table
             columns={subCategoryColumns}

@@ -304,7 +304,7 @@ const AccessControlDashboard = () => {
                 <Sider
                     width={siderWidth}
                     theme="light"
-                    className={`shadow-md h-full transition-all duration-100 ${isResizing ? 'select-none' : ''}`}
+                    className={`shadow-md h-screen transition-all duration-100 ${isResizing ? 'select-none' : ''}`}
                     style={{
                         overflow: 'hidden',
                         height: '70%',

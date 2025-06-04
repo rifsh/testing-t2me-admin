@@ -25,6 +25,8 @@ import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/S
 import { getCurrentUser, isOrganizer } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const TheaterList = () => {
   const dispatch = useDispatch();
@@ -44,6 +46,7 @@ const TheaterList = () => {
     (state) => state.locations
   );
   const handlePagination = usePaginationHook(fetchTheaters);
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
     dispatch(
@@ -120,18 +123,18 @@ const TheaterList = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item>
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER.GET_THEATER_DETAILS) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
           <EyeOutlined role="button" />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
-      <Menu.Item>
+      </Menu.Item>}
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER.EDIT_THEATER) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleViewEdit(row.id)}>
           <EditOutlined role="button" />
           <span className="ml-2">Edit</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item>}
     </Menu>
   );
 
@@ -181,16 +184,18 @@ const TheaterList = () => {
         </a>
       ),
     },
-    utils.statusColumnUtil(handleUpdateStatus),
+    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER.EDIT_THEATER_STATUS)),
     {
       title: "Actions",
       dataIndex: "actions",
       fixed: "right",
       width: 100,
       render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER.GET_THEATER_DETAILS, PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER.EDIT_THEATER]) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(elm)} />
+          </div>
+        ) : null
       ),
     },
   ];
@@ -202,20 +207,19 @@ const TheaterList = () => {
           fetchFunction={fetchTheaters}
         />
 
-        {getCurrentUser().role_id !==
-          UserRoleConstants.eventOrganizerRoleId && (
-            <Col xs={24} sm={8} style={{ textAlign: "right" }}>
-              <Button
-                type="primary"
-                icon={<FormOutlined />}
-                onClick={() => {
-                  navigate(`${APP_PREFIX_PATH}/movie-theater/add`);
-                }}
-              >
-                Add Theater
-              </Button>
-            </Col>
-          )}
+        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER.ADD_THEATER) && (
+          <Col xs={24} sm={8} style={{ textAlign: "right" }}>
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              onClick={() => {
+                navigate(`${APP_PREFIX_PATH}/movie-theater/add`);
+              }}
+            >
+              Add Theater
+            </Button>
+          </Col>
+        )}
       </Row>
       <div className="table-responsive">
         <Table

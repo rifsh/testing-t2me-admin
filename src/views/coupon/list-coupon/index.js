@@ -39,6 +39,8 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import { isOrganizer } from "configs/UserAccessConfig";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Option } = Select;
 
@@ -61,7 +63,7 @@ const CouponList = () => {
     responseImpactData,
   } = useSelector((state) => state.coupons);
   const { responseData } = useSelector((state) => state.modalSlice);
-
+  const { hasPermission, hasAnyPermission } = usePermissions();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
 
@@ -114,20 +116,25 @@ const CouponList = () => {
     {
       key: "view",
       label: (
-        <Flex alignItems="center">
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.COUPON.GET_COUPON_DETAIL) ? (
+          < Flex alignItems="center" >
+            <EyeOutlined />
+            <span className="ml-2">View Details</span>
+          </Flex >
+
+        ) : null
       ),
       onClick: () => showModal(row),
     },
     {
       key: "remark",
       label: (
-        <Flex alignItems="center">
-          <EditOutlined />
-          <span className="ml-2">Edit Coupon</span>
-        </Flex>
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.COUPON.UPDATE_COUPON_STATUS) ? (
+          < Flex alignItems="center" >
+            <EditOutlined />
+            <span className="ml-2">Edit Coupon</span>
+          </Flex >
+        ) : null
       ),
       onClick: () => handleEditTax(row.id),
     },
@@ -163,14 +170,17 @@ const CouponList = () => {
       dataIndex: "max_uses",
       sorter: (a, b) => a.max_uses - b.max_uses,
     },
-    Utils.statusColumnUtil(handleUpdateStatus),
+    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.COUPON.UPDATE_COUPON_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, row) => (
-        <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.COUPON.GET_COUPON_DETAIL, PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.COUPON.UPDATE_COUPON_STATUS]) ? (
+          < Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]} >
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown >
+
+        ) : null
       ),
     },
   ];
@@ -179,13 +189,13 @@ const CouponList = () => {
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={fetchAllCoupons} />
-        <Button
+        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.COUPON.ADD_COUPONS) && <Button
           type="primary"
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/coupon/add?type=${type}`)}
         >
           Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Coupon
-        </Button>
+        </Button>}
       </Flex>
 
       <Table

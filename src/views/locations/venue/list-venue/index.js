@@ -2,8 +2,6 @@ import React, { useEffect } from "react";
 import { Card, Table, Select, Input, Button, Menu, Row, Col } from "antd";
 import {
   EyeOutlined,
-  PlusCircleOutlined,
-  SearchOutlined,
   FormOutlined,
   EditOutlined,
 } from "@ant-design/icons";
@@ -60,7 +58,7 @@ const VenueList = () => {
   } = useSelector((state) => state.locations);
   const [form] = Form.useForm();
   const handlePagination = usePaginationHook(getVenues);
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasAnyPermission } = usePermissions();
   useEffect(() => {
     dispatch(getVenues(DEFAULT_PAGE_SIZE));
     dispatch(getPlaces({}));
@@ -106,12 +104,12 @@ const VenueList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       </Menu.Item>
-      <Menu.Item>
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.VENUE.EDIT_VENUE) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditVenue(row.id)}>
           <EditOutlined />
           <span className="ml-2">Edit Venue</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item>}
     </Menu>
   );
 
@@ -146,15 +144,20 @@ const VenueList = () => {
       render: (capacity) => <span>{capacity || "0"}</span>,
       sorter: (a, b) => utils.antdTableSorter(a, b, "capacity"),
     },
-    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.SERVICES.GENERAL.VENUE.EDIT_VENUE_STATUS)),
+    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.VENUE.EDIT_VENUE_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
-      ),
+        hasAnyPermission([
+          PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.VENUE.GET_SINGLE_VENUE,
+          PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.VENUE.EDIT_VENUE
+        ]) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(elm)} />
+          </div>
+        ) : null
+      )
     },
   ];
 
