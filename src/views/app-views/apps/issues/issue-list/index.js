@@ -28,6 +28,8 @@ import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Option } = Select;
 
@@ -41,6 +43,7 @@ const IssueList = () => {
   const [userFilter, setUserFilter] = useState();
   const CurrentUser = getCurrentUser();
   const handlePagination = usePaginationHook(fetchAllissues);
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
     dispatch(fetchAllissues({ ...DEFAULT_PAGE_SIZE }));
@@ -252,114 +255,116 @@ const IssueList = () => {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
+      hasPermission(PERMISSIONS.APPLICATIONS.ISSUES.ISSUE.GET_ISSUE_DETAILS) ? (
         <div className="text-right" style={{ color: '#000000' }}>
           <EllipsisDropdown
             menu={dropdownMenu(elm)}
             menuStyle={{ color: '#000000' }}
           />
         </div>
+      ) : null
       ),
     },
   ];
 
-  const { Search } = Input;
+const { Search } = Input;
 
-  return (
-    <Card>
-      <Flex
-        alignItems="center"
-        justifyContent="space-between"
-        mobileFlex={false}
-      >
-        <Flex className="mb-1" mobileFlex={false}>
-          <div className="mr-md-3 mb-3">
-            <Search
-              placeholder="Search Issues"
-              onChange={(e) => handleSearchIsEmpty(e.target.value)}
-              onSearch={(value) => handleSearch(value)}
-              style={{ width: 200 }}
-            />
-          </div>
+return (
+  <Card>
+    <Flex
+      alignItems="center"
+      justifyContent="space-between"
+      mobileFlex={false}
+    >
+      <Flex className="mb-1" mobileFlex={false}>
+        <div className="mr-md-3 mb-3">
+          <Search
+            placeholder="Search Issues"
+            onChange={(e) => handleSearchIsEmpty(e.target.value)}
+            onSearch={(value) => handleSearch(value)}
+            style={{ width: 200 }}
+          />
+        </div>
+        <div className="mb-3">
+          <Select
+            defaultValue="All"
+            onChange={handleShowStatus}
+            className="mr-2"
+          >
+            <Option value={null}>All</Option>
+            <Option value={true}>Closed</Option>
+            <Option value={false}>Open</Option>
+          </Select>
+        </div>
+        {CurrentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
           <div className="mb-3">
             <Select
               defaultValue="All"
-              onChange={handleShowStatus}
+              onChange={handleUserFilterStatus}
               className="mr-2"
+              style={{ width: 150 }}
             >
               <Option value={null}>All</Option>
-              <Option value={true}>Closed</Option>
-              <Option value={false}>Open</Option>
+              <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
+              {(CurrentUser.role_id === UserRoleConstants.superAdminRoleId ||
+                CurrentUser.role_id === UserRoleConstants.techAdminRoleId) && (
+                  <>
+                    <Option value={UserRoleConstants.techAdminRoleId}>
+                      Tech Admin
+                    </Option>
+                    <Option value={UserRoleConstants.techSupportingTeamRoleId}>
+                      Super Supporting Team
+                    </Option>
+                    <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
+                      Event Supporting Team
+                    </Option>
+                  </>
+                )}
             </Select>
-          </div>
-          {CurrentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
-            <div className="mb-3">
-              <Select
-                defaultValue="All"
-                onChange={handleUserFilterStatus}
-                className="mr-2"
-                style={{ width: 150 }}
-              >
-                <Option value={null}>All</Option>
-                <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
-                {(CurrentUser.role_id === UserRoleConstants.superAdminRoleId ||
-                  CurrentUser.role_id === UserRoleConstants.techAdminRoleId) && (
-                    <>
-                      <Option value={UserRoleConstants.techAdminRoleId}>
-                        Tech Admin
-                      </Option>
-                      <Option value={UserRoleConstants.techSupportingTeamRoleId}>
-                        Super Supporting Team
-                      </Option>
-                      <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
-                        Event Supporting Team
-                      </Option>
-                    </>
-                  )}
-              </Select>
-            </div>
-          )}
-        </Flex>
-        {CurrentUser.role_id === UserRoleConstants.eventOrganizerRoleId && (
-          <div>
-            <Button
-              type="primary"
-              icon={<FormOutlined />}
-              block
-              onClick={() => navigate(`${APP_PREFIX_PATH}/issue/add`)}
-            >
-              Add Issue
-            </Button>
           </div>
         )}
       </Flex>
-      <div className="table-responsive">
-        <Table
-          columns={tableColumns}
-          dataSource={issues}
-          rowKey="id"
-          loading={loading}
-          onRow={(record) => ({
-            style: getRowStyle(record),
-            // onClick: () => handleViewDetails(record.id)
-          })}
-          pagination={{
-            current: pagination.page,
-            pageSize: pagination.size,
-            total: pagination.total,
-            onChange: (page, pageSize) => handlePagination(page, pageSize),
-          }}
-        />
-      </div>
-
-      <UpdateStatusModal
-        responseMessage={message}
-        editFunction={editEvent}
-        editable_status={editable_status}
-        getAllFunction={(pageData) => fetchAllEvent(pageData)}
-        pageData={{ page: 1, size: 10 }}
+      {hasPermission(PERMISSIONS.APPLICATIONS.ISSUES.ISSUE.ADD_ISSUES) && (
+        <div>
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            block
+            onClick={() => navigate(`${APP_PREFIX_PATH}/issue/add`)}
+          >
+            Add Issue
+          </Button>
+        </div>
+      )}
+    </Flex>
+    <div className="table-responsive">
+      <Table
+        columns={tableColumns}
+        dataSource={issues}
+        rowKey="id"
+        loading={loading}
+        onRow={(record) => ({
+          style: getRowStyle(record),
+          // onClick: () => handleViewDetails(record.id)
+        })}
+        pagination={{
+          current: pagination.page,
+          pageSize: pagination.size,
+          total: pagination.total,
+          onChange: (page, pageSize) => handlePagination(page, pageSize),
+        }}
       />
-    </Card>
-  );
+    </div>
+
+    <UpdateStatusModal
+      responseMessage={message}
+      editFunction={editEvent}
+      editable_status={editable_status}
+      getAllFunction={(pageData) => fetchAllEvent(pageData)}
+      pageData={{ page: 1, size: 10 }}
+    />
+  </Card>
+);
 };
 
 export default IssueList;

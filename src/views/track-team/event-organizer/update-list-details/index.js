@@ -20,6 +20,8 @@ import {
   toggleComments
 } from "store/slices/EventOrganizerSlice";
 import StatusTimelineCard from "components/layout-components/Cards/StatusTimelineCard ";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -28,8 +30,7 @@ const DummyDataExample = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
-
-
+  const { hasPermission, hasAnyPermission } = usePermissions();
   const {
     singleOrganizerUpdate,
     loading,
@@ -174,7 +175,7 @@ const DummyDataExample = () => {
 
     if (
       approvalStatus === 'UPDATES' &&
-      currentUser.role_id === UserRoleConstants.eventOrganizerRoleId
+      hasPermission(PERMISSIONS.APPLICATIONS.TRACK_REQUEST.EVENT.ORGANIZER_MAKE_CHANGES)
     ) {
       return (
         <Row justify="center" style={{ marginTop: 24 }} gutter={[16, 16]}>
@@ -197,7 +198,7 @@ const DummyDataExample = () => {
     ) {
       return (
         <Row justify="center" style={{ marginTop: 24 }} gutter={[16, 16]}>
-          <Col>
+          {hasPermission(PERMISSIONS.APPLICATIONS.TRACK_REQUEST.EVENT.SUPER_ADMIN_REJECT) && <Col>
             <Button
               size="large"
               className="text-primary"
@@ -205,8 +206,8 @@ const DummyDataExample = () => {
             >
               Reject
             </Button>
-          </Col>
-          <Col>
+          </Col>}
+          {hasPermission(PERMISSIONS.APPLICATIONS.TRACK_REQUEST.EVENT.SUPER_ADMIN_UPDATE) && <Col>
             <Button
               className="text-primary"
               size="large"
@@ -214,8 +215,8 @@ const DummyDataExample = () => {
             >
               Update
             </Button>
-          </Col>
-          <Col>
+          </Col>}
+          {hasPermission(PERMISSIONS.APPLICATIONS.TRACK_REQUEST.EVENT.SUPER_ADMIN_APPROVAL) && <Col>
             <Button
               className="text-primary"
               size="large"
@@ -223,7 +224,7 @@ const DummyDataExample = () => {
             >
               Approve
             </Button>
-          </Col>
+          </Col>}
         </Row>
       );
     }

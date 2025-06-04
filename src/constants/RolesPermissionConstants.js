@@ -223,6 +223,7 @@ export const PERMISSIONS = {
         },
         ISSUES: {
             ISSUE: {
+                ADD_ISSUES: 'add_issues',
                 GET_ISSUES: 'get_issues',
                 GET_ISSUE_ASSIGN_DETAILS: 'get_issue_assign_details',
                 GET_ISSUE_DETAILS: 'get_issue_details',
@@ -236,11 +237,16 @@ export const PERMISSIONS = {
             },
             ISSUE_ALERT: {
                 GET_ISSUE_ALERTS: 'get_issue_alerts',
+                GET_ISSUE_ALERTS_DETAILS: 'get_single_issue_alerts',
             }
         },
         TRACK_REQUEST: {
             EVENT: {
-                SUPER_ADMIN_APPROVAL: 'super_admin_approval'
+                GET_SINGLE_EVENT_UPDATE: 'get_single_event_update',
+                SUPER_ADMIN_APPROVAL: 'super_admin_approval',
+                SUPER_ADMIN_UPDATE: 'super_admin_update',
+                SUPER_ADMIN_REJECT: 'super_admin_reject',
+                ORGANIZER_MAKE_CHANGES: 'organizer_make_changes',
             },
             MOVIE: {
                 SEAT: {
