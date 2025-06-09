@@ -264,6 +264,7 @@ const AccessControlDashboard = () => {
         setSiderWidth(size.width);
     }, []);
 
+    console.log('encodedUrlsssss', encodeURIComponent('Applications/Advertisement/Banners'));
 
     return (
         <Layout className="min-h-screen">

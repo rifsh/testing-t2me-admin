@@ -7,17 +7,16 @@ import { useParams } from "react-router-dom";
 const EditUser = () => {
   const dispatch = useDispatch();
   const userId = useParams();
-  const { singleUser } = useSelector((state) => state.users);
-  console.log(userId.userId, "USERID");
+  const { editSingleUser } = useSelector((state) => state.users);
 
   useEffect(() => {
     if (userId) {
       console.log("fetching single User--------");
-      // dispatch(getSingleUser(userId.userId));
+      dispatch(getSingleUser(userId.userId));
     }
-  }, [dispatch, userId]);
+  }, [dispatch]);
 
-  return <UserForm mode="EDIT" user={singleUser} />;
+  return <UserForm mode="EDIT" user={editSingleUser} />;
 };
 
 export default EditUser;

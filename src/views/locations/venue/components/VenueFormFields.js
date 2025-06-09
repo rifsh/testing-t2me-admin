@@ -292,13 +292,6 @@ const VenueFormFields = ({ mode, venue }) => {
         indoor: values.indoor !== undefined ? values.indoor : false,
         address: values.address,
         description: values.description,
-        audios: Array.isArray(values.audios) ? values.audios : [],
-        screen_tech: Array.isArray(values.screen_tech)
-          ? values.screen_tech
-          : [],
-        accessbility_feature: Array.isArray(values.accessbility_feature)
-          ? values.accessbility_feature
-          : [],
         venue_add_on_services: cleanedAddOnServices,
       };
 
