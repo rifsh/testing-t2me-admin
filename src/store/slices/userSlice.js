@@ -18,6 +18,7 @@ export const initialState = {
   responseMessage: null,
   editItemId: null,
   singleUser: null,
+  editSingleUser: null,
   responseImpactData: null,
   pagination: { size: 10, page: 1 },
 };
@@ -208,6 +209,7 @@ const userSlice = createSlice({
       .addCase(getSingleUser.fulfilled, (state, action) => {
         state.loading = false;
         state.singleUser = action.payload;
+        state.editSingleUser = action.payload;
       })
       .addCase(getSingleUser.rejected, (state, action) => {
         state.loading = false;

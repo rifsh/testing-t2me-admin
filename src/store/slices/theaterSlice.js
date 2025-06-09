@@ -13,6 +13,7 @@ const initialState = {
     selectedTheaterScreenCapacity: null,
     editData: [],
     singleResponse: null,
+    isEntrollUserModal: false,
     submitMessage: null,
     formType: null,
     editable_status: null,
@@ -125,6 +126,9 @@ const theaterSlice = createSlice({
         setScreenCapacity: (state, action) => {
             state.selectedTheaterScreenCapacity = action.payload;
         },
+        setEntrollUserModalState: (state, action) => {
+            state.isEntrollUserModal = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -219,6 +223,6 @@ const theaterSlice = createSlice({
     },
 });
 
-export const { setTheaterEditData, setTheaterEditId, setCleraAllData, setActiveTab, setSeectedTheater, setScreenCapacity } = theaterSlice.actions;
+export const { setEntrollUserModalState, setTheaterEditData, setTheaterEditId, setCleraAllData, setActiveTab, setSeectedTheater, setScreenCapacity } = theaterSlice.actions;
 
 export default theaterSlice.reducer;

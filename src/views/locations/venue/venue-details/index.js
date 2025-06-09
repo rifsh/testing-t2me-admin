@@ -92,7 +92,7 @@ const VenueDetails = () => {
               <Text strong>Longitude:</Text> {singleVenues.longitude || "Not Available"}
             </Col>
             <Col span={12}>
-              <Text strong>Description:</Text> {singleVenues.description || "Not Available"}
+              <Text strong>Description:</Text> <div dangerouslySetInnerHTML={{ __html: singleVenues.description || "Not Available" }} />
             </Col>
           </Row>
         </Card>

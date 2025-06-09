@@ -1,7 +1,71 @@
 import React from 'react'
-import { Card, Row, Col, Image, Carousel, Badge } from "antd";
+import { Card, Row, Col, Image, Carousel, Badge, Typography, Collapse, Tag } from "antd";
+import { UserAddOutlined, CalendarOutlined, EnvironmentOutlined, TagOutlined, InfoCircleOutlined } from "@ant-design/icons";
+const { Title, Text } = Typography;
+const { Panel } = Collapse;
 
 const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
+
+    const renderVenueDetails = () => {
+        return eventDetails.venue_events?.map((venueEvent, index) => (
+            <Card key={index} className="mb-4">
+                <Title level={4} className="flex items-center">
+                    <EnvironmentOutlined className="mr-2" /> {venueEvent.venue.name}
+                </Title>
+                <div
+                    className="prose max-w-none"
+                    dangerouslySetInnerHTML={{ __html: venueEvent.venue.description }}
+                />
+
+                {venueEvent.event_seatstructures && (
+                    <div className="mt-4">
+                        <Title level={5}>Seat Structure</Title>
+                        <Row gutter={16}>
+                            <Col span={8}>
+                                <Text strong>Name:</Text> {venueEvent.event_seatstructures.name}
+                            </Col>
+                            <Col span={8}>
+                                <Text strong>Total Rows:</Text> {venueEvent.event_seatstructures.total_row}
+                            </Col>
+                            <Col span={8}>
+                                <Text strong>Total Columns:</Text> {venueEvent.event_seatstructures.total_column}
+                            </Col>
+                            <Col span={8}>
+                                <Text strong>Total Seats:</Text> {venueEvent.event_seatstructures.total_seats}
+                            </Col>
+                        </Row>
+                    </div>
+                )}
+            </Card>
+        ));
+    };
+
+    const renderTicketStructures = () => {
+        return eventDetails.venue_ticket_structures?.map((structure, index) => (
+            <Card key={index} className="mb-4" >
+                <Title level={4} className="flex items-center" >
+                    <TagOutlined className="mr-2" /> {structure.venue.name} - Ticket Structures
+                </Title>
+
+                {
+                    structure.ticket_structures.map((ticket, idx) => (
+                        <div key={idx} className="mb-4" >
+                            <Text strong > {ticket.ticket_structure_name} </Text>
+                            < div className="mt-2" >
+                                {
+                                    ticket.ticket_sets.map((set, i) => (
+                                        <Tag key={i} color="blue" className="m-1" >
+                                            {set}
+                                        </Tag>
+                                    ))
+                                }
+                            </div>
+                        </div>
+                    ))
+                }
+            </Card>
+        ));
+    };
 
     return (
         <div style={{ padding: "24px" }}>
@@ -34,14 +98,6 @@ const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
                                         )) || "N/A",
                                     icon: "📍"
                                 },
-                                // {
-                                //     label: "Available Tickets",
-                                //     value:
-                                //         eventDetails?.schedules && eventDetails.schedules.length > 0
-                                //             ? eventDetails.schedules[0].max_ticket_per_booking ?? "N/A"
-                                //             : "N/A",
-                                //     icon: "🎟️"
-                                // },
                                 {
                                     label: "Category",
                                     value: eventDetails.category?.name ?? "N/A",
@@ -52,21 +108,6 @@ const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
                                     value: eventDetails.sub_category?.name ?? "N/A",
                                     icon: "🔖"
                                 },
-                                // {
-                                //     label: "Multiple Dates Available",
-                                //     value: (
-                                //         eventDetails?.schedules?.[0]?.is_multi_date === true ? (
-                                //             <Badge status="success" text="Yes" />
-                                //         ) : eventDetails?.schedules?.[0]?.is_multi_date === false ? (
-                                //             <Badge status="default" text="No" />
-                                //         ) : (
-                                //             <Badge status="warning" text="N/A" />
-                                //         )
-                                //     ),
-                                //     icon: "📅"
-                                // }
-
-
                             ].map((item, index) => (
                                 <Col xs={24} sm={12} key={index}>
                                     <div style={{ display: "flex", alignItems: "center" }}>
@@ -99,7 +140,6 @@ const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
                         </Row>
                     </Card>
                 </Col>
-
                 <Col xs={24} md={12}>
                     {!isNoImage ? (
                         <Card
@@ -170,6 +210,14 @@ const EventOverviewTab = ({ mediaImages, eventDetails, isNoImage }) => {
                         </Card>
                     )}
                 </Col>
+                <Collapse defaultActiveKey={['1', '2', '3']} ghost>
+                    <Panel header="Venue Details" key="1" >
+                        {renderVenueDetails()}
+                    </Panel>
+                    < Panel header="Ticket Structures" key="2" >
+                        {renderTicketStructures()}
+                    </Panel>
+                </Collapse>
             </Row>
         </div>
     )
