@@ -37,6 +37,7 @@ import { useParams } from "react-router-dom";
 import Loading from "components/shared-components/Loading";
 import ShowTimesDetails from "../components/ShowTimesDetails";
 import OfferDetailsTable from "../components/OfferDetailsTable";
+import CouponDetailsTable from "../components/CouponDetailsTable";
 
 const { Panel } = Collapse;
 const { TabPane } = Tabs;
@@ -275,7 +276,7 @@ const ScheduleDetails = () => {
 
         {/* Coupons Tab */}
         <TabPane tab="Coupons" key="4">
-          <Card className="mt-4">
+          {/* <Card className="mt-4">
             {coupon_schedule?.length > 0 ? (
               <List
                 grid={{ gutter: 16, xs: 1, sm: 2, md: 3 }}
@@ -306,7 +307,8 @@ const ScheduleDetails = () => {
             ) : (
               <Empty description="No coupons available for this event" />
             )}
-          </Card>
+          </Card> */}
+          <CouponDetailsTable coupon_schedule={coupon_schedule} />
         </TabPane>
       </Tabs>
 
