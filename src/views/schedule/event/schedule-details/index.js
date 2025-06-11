@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   Descriptions,
@@ -47,7 +47,8 @@ const ScheduleDetails = () => {
   const { scheduleId } = useParams();
   const dispatch = useDispatch();
   const { scheduleDetails, loading } = useSelector((state) => state.schedules);
-
+  const [rows, setRows] = useState(2);
+  const [expanded, setExpanded] = useState(false);
   useEffect(() => {
     if (scheduleId) {
       dispatch(fetchSingleSchedules({ id: scheduleId }));
@@ -255,6 +256,22 @@ const ScheduleDetails = () => {
                       className="prose max-w-none text-gray-700"
                       dangerouslySetInnerHTML={{ __html: venue.description }}
                     />
+                    {/* <div className="ant-typography">
+                      <Typography.Paragraph
+                        ellipsis={{
+                          rows,
+                          expandable: 'collapsible',
+                          expanded,
+                          onExpand: (_, info) => setExpanded(info.expanded),
+                        }}
+                        copyable
+                      >
+                        <div
+                          className="prose max-w-none text-gray-700"
+                          dangerouslySetInnerHTML={{ __html: venue.description }}
+                        />
+                      </Typography.Paragraph>
+                    </div> */}
                   </>
                 ) : (
                   <Empty description="No venue information available" />
