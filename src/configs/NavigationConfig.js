@@ -105,7 +105,7 @@ const superAdminDashBoardNavTree = [
   },
 
   {
-    key: "Applications",
+    key: "Applicationsssss",
     path: `${APP_PREFIX_PATH}/apps`,
     title: "sidenav.applications",
     icon: DashboardOutlined,
