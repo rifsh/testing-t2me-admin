@@ -408,7 +408,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     dispatch(setSubmitLoading(true));
     try {
       const values = await form.validateFields();
-
+      console.log("Form Values:", values);
       if (selectedVenue && currentStep === 5) {
         // Check if we have ticket types at all
         if (!ticketTypes || ticketTypes.length <= 0) {
@@ -485,6 +485,8 @@ const MultyStepEventForm = ({ eventId, mode }) => {
 
   const onFinish = async () => {
     try {
+      const values = await form.validateFields();
+      console.log("Form Values:", values);
       console.log(submitData, "asdfghj");
       if (mode === "EDIT") {
         const offers = {
