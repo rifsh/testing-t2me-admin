@@ -1,7 +1,7 @@
 export const PAYMENT_METHODS = {
-  NGenius: "N-Genius Online",
+  N_GENIUS: "N-Genius Online",
   UPI: "UPI",
-  CardPayment: "Card Payment",
+  CARD_PAYMENT: "Card Payment",
 };
 
 // UPI providers

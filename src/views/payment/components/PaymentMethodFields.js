@@ -65,7 +65,7 @@ const PaymentMethodFields = ({ name, payment_type, form }) => {
           </Form.Item>
         </div>
       );
-    case PAYMENT_METHODS.CardPayment:
+    case PAYMENT_METHODS.CARD_PAYMENT:
       return (
         <div className="payment-method-fields-card">
           <Form.Item
@@ -93,7 +93,7 @@ const PaymentMethodFields = ({ name, payment_type, form }) => {
           </Form.Item>
         </div>
       );
-    case PAYMENT_METHODS.NGenius:
+    case PAYMENT_METHODS.N_GENIUS:
       return (
         <div className="payment-method-fields-n-genius">
           <Form.Item
