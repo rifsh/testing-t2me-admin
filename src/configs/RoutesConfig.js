@@ -390,6 +390,11 @@ export const protectedRoutes = [
     component: React.lazy(() => import("views/user/list-user")),
   },
   {
+    key: "accessControl.list",
+    path: `${APP_PREFIX_PATH}/access-control/list`,
+    component: React.lazy(() => import("views/access-premissions/access-list")),
+  },
+  {
     key: "user.add",
     path: `${APP_PREFIX_PATH}/user/add`,
     component: React.lazy(() => import("views/user/add-user")),

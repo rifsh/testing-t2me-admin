@@ -27,6 +27,8 @@ import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
+import usePermissions from "utils/hooks/usePermissions";
 const { Panel } = Collapse;
 
 const { Option } = Select;
@@ -49,8 +51,8 @@ const EventsList = () => {
     editItemId,
     responseImpactData,
   } = useSelector((state) => state.event);
-  console.log(pagination,'pag');
-  
+  console.log(pagination, 'pag');
+
   const { responseData } = useSelector((state) => state.modalSlice);
   const eventParams = {
     size: DEFAULT_PAGE_SIZE.size,
@@ -58,6 +60,7 @@ const EventsList = () => {
     event_type: EVENT_TYPES.event,
   }
   const handlePagination = usePaginationHook(fetchAllEvent);
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
     dispatch(fetchAllEvent(eventParams));
@@ -115,18 +118,18 @@ const EventsList = () => {
   };
   const dropdownMenu = (row) => (
     <Menu>
-      <Menu.Item>
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.GET_EVENT_DETAIL) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
           <EyeOutlined />
           <span className="ml-2">View Details</span>
         </Flex>
-      </Menu.Item>
-      <Menu.Item>
+      </Menu.Item>}
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT) &&<Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditEvent(row.id)}>
           <EditOutlined />
           <span className="ml-2">Edit Event</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item>}
     </Menu>
   );
 
@@ -174,14 +177,16 @@ const EventsList = () => {
         </Collapse>
       ),
     },
-    utils.statusColumnUtil(handleUpdateStatus),
+    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT, PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.GET_EVENT_DETAIL]) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(elm)} />
+          </div>
+        ) : null
       ),
     },
   ];
@@ -249,8 +254,8 @@ const EventsList = () => {
             </Select>
           </div>
         </Flex>
-        {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
-          <div>
+        <div>
+          {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.ADD_EVENT) &&
             <Button
               type="primary"
               icon={<FormOutlined />}
@@ -258,9 +263,8 @@ const EventsList = () => {
               onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
             >
               Add Event
-            </Button>
-          </div>
-        )}
+            </Button>}
+        </div>
       </Flex>
       <div className="table-responsive">
         <Table

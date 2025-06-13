@@ -7,6 +7,7 @@ import screen from "./slices/screenSlice";
 import cast from "./slices/castSlice";
 import movie from "./slices/movieSlice";
 import auth from "./slices/authSlice";
+import permissions from "./slices/permissionSlice";
 import category from "./slices/categorySlice";
 import adCategory from "./slices/adCategorySlice";
 import advertisement from "./slices/advertisementSlice";
@@ -45,6 +46,7 @@ const rootReducer = (asyncReducers = {}) => {
       cast,
       movie,
       auth,
+      permissions,
       category,
       users,
       locations,

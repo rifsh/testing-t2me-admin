@@ -20,12 +20,15 @@ import WarningModal from 'components/util-components/ModalItems/WarningModal';
 import TheaterCompanyDetailModal from './TheaterCompanyDetailModal ';
 import LoadingOverlay from 'components/util-components/Loader';
 import usePaginationHook from 'utils/hooks/usePaginationHandler';
+import usePermissions from 'utils/hooks/usePermissions';
+import { PERMISSIONS } from 'constants/RolesPermissionConstants';
 
 const TheaterCompaniesList = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { response, editLoading, singleLoading, loading, editable_status, statusEditresponse, pagination, message: theaterCompanyMessage, editId, isDetailModal, singleResponse } = useSelector((state) => state.theaterCompany);
     const { dialogVisible, modalLoading, } = useSelector((state) => state.locations);
+    const { hasAnyPermission, hasPermission } = usePermissions()
     const handlePagination = usePaginationHook(fetchTheaterCompanies);
 
     useEffect(() => {
@@ -56,18 +59,18 @@ const TheaterCompaniesList = () => {
 
     const dropdownMenu = (row) => (
         <Menu>
-            <Menu.Item>
+            {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER_COMPANY.GET_THEATER_COMPANY_DETAILS) && <Menu.Item>
                 <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
                     <EyeOutlined role='button' />
                     <span className="ml-2">View Details</span>
                 </Flex>
-            </Menu.Item>
-            <Menu.Item>
+            </Menu.Item>}
+            {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER_COMPANY.EDIT_THEATER_COMPANY) && <Menu.Item>
                 <Flex alignItems="center" onClick={() => handleViewEdit(row.id)}>
                     <EditOutlined role='button' />
                     <span className="ml-2">Edit</span>
                 </Flex>
-            </Menu.Item>
+            </Menu.Item>}
         </Menu>
     );
 
@@ -124,16 +127,18 @@ const TheaterCompaniesList = () => {
                 </a>
             ),
         },
-        Utils.statusColumnUtil(handleUpdateStatus),
+        Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER_COMPANY.EDIT_THEATER_COMPANY_STATUS)),
         {
             title: "Actions",
             fixed: "right",
             width: 100,
             dataIndex: "actions",
             render: (_, elm) => (
-                <div className="text-right">
-                    <EllipsisDropdown menu={dropdownMenu(elm)} />
-                </div>
+                hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER_COMPANY.GET_THEATER_COMPANY_DETAILS, PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER_COMPANY.EDIT_THEATER_COMPANY]) ? (
+                    <div className="text-right">
+                        <EllipsisDropdown menu={dropdownMenu(elm)} />
+                    </div>
+                ) : null
             ),
         },
     ];
@@ -147,18 +152,19 @@ const TheaterCompaniesList = () => {
                         fetchFunction={fetchTheaterCompanies}
                     />
 
-                    <Col xs={24} sm={8} style={{ textAlign: "right" }}>
-                        <Button
-                            type="primary"
-                            icon={<FormOutlined />}
-                            onClick={() => {
-                                navigate(`${APP_PREFIX_PATH}/movie-theater-company/add`);
-                            }
-                            }
-                        >
-                            Add Company
-                        </Button>
-                    </Col>
+                    {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.THEATER_MODULE.THEATER_COMPANY.ADD_THEATER_COMPANY) &&
+                        <Col xs={24} sm={8} style={{ textAlign: "right" }}>
+                            <Button
+                                type="primary"
+                                icon={<FormOutlined />}
+                                onClick={() => {
+                                    navigate(`${APP_PREFIX_PATH}/movie-theater-company/add`);
+                                }
+                                }
+                            >
+                                Add Company
+                            </Button>
+                        </Col>}
                 </Row>
                 <Table
                     columns={columns}

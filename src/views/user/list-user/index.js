@@ -56,13 +56,21 @@ const UserList = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const handlePagination = usePaginationHook(fetchAllUsers);
+  const currentUser = getCurrentUser();
 
   useEffect(() => {
-    dispatch(fetchAllUsers(DEFAULT_PAGE_SIZE));
+    dispatch(fetchAllUsers({
+      ...DEFAULT_PAGE_SIZE,
+      // role_id: currentUser.role_id
+    }));
   }, [dispatch]);
   // const handlePagination = (page, size) => {
   //   dispatch(fetchAllUsers({ page: page, size: size }));
   // };
+
+  useEffect(() => {
+    console.log("filteredUsers", filteredUsers)
+  }, [filteredUsers])
 
   const showModal = (user) => {
     setSelectedUser(user);
@@ -87,6 +95,10 @@ const UserList = () => {
   const handleEditUser = async (userId) => {
     navigate(`${APP_PREFIX_PATH}/user/edit/${userId}`);
   };
+
+  useEffect(() => {
+    console.log("CurrentUser", currentUser)
+  }, [currentUser])
 
   const getDropdownMenu = (row) => [
     {

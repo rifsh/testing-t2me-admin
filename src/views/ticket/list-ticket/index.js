@@ -38,6 +38,8 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { TextConstants } from "constants/TextConstant";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 const { Panel } = Collapse;
 
 const TicketList = () => {
@@ -52,6 +54,7 @@ const TicketList = () => {
     modalLoading,
   } = useSelector((state) => state.tickets);
   const handlePagination = usePaginationHook(fetchAllTickets);
+  const { hasAnyPermission, hasPermission } = usePermissions();
 
   useEffect(() => {
     dispatch(resetTicketSets());
@@ -119,13 +122,13 @@ const TicketList = () => {
         }}
       >
         <SearchBarWithStatus fetchFunction={fetchAllTickets} />
-        <Button
+        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.TICKET.ADD_TICKET) && <Button
           type="primary"
           icon={<PlusCircleOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/ticket/add`)}
         >
           Add Ticket
-        </Button>
+        </Button>}
       </div>
 
       <Table
@@ -232,14 +235,16 @@ const TicketList = () => {
             title: "Actions",
             dataIndex: "actions",
             render: (_, elm) => (
-              <div className="text-right">
-                <EllipsisDropdown menu={dropdownMenu(elm)} />
-              </div>
+              hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.TICKET.EDIT_TICKET_STRUCTURE) ? (
+                < div className="text-right" >
+                  <EllipsisDropdown menu={dropdownMenu(elm)} />
+                </div>
+              ) : null
             ),
           },
         ]}
       />
-      <WarningModal
+      < WarningModal
         mode={"itemmodal"}
         visible={dialogVisible}
         title="Edit Ticket"
@@ -312,7 +317,7 @@ const TicketList = () => {
           </div>
         )}
       </Modal>
-    </Card>
+    </Card >
   );
 };
 

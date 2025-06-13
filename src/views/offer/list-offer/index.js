@@ -29,6 +29,8 @@ import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/S
 import { EventCodeConstants, EventType } from "constants/AppConstants";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import { isOrganizer } from "configs/UserAccessConfig";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const OfferList = () => {
   const navigate = useNavigate();
@@ -52,6 +54,7 @@ const OfferList = () => {
   const handlePagination = usePaginationHook(fetchAllOffers);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
     dispatch(
@@ -97,20 +100,25 @@ const OfferList = () => {
     {
       key: "view",
       label: (
-        <Flex alignItems="center">
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.GET_OFFER_DETAIL) ? (
+          <Flex alignItems="center">
+            <EyeOutlined />
+            <span className="ml-2">View Details</span>
+          </Flex >
+
+        ) : null
       ),
       onClick: () => showModal(row),
     },
     {
       key: "remark",
       label: (
-        <Flex alignItems="center">
-          <EditOutlined />
-          <span className="ml-2">Edit Offer</span>
-        </Flex>
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.EDIT_OFFERS) ? (
+          <Flex alignItems="center">
+            <EditOutlined />
+            <span className="ml-2">Edit Offer</span>
+          </Flex >
+        ) : null
       ),
       onClick: () => handleEditTax(row.id),
     },
@@ -145,33 +153,32 @@ const OfferList = () => {
       sorter: (a, b) => a.max_uses - b.max_uses,
     },
     // Utils.statusColumnUtil(handleUpdateStatus),
-    Utils.statusColumnUtil(handleUpdateStatus, isOrganizer() ? true : false),
+    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.UPDATE_OFFER_STATUS)),
 
     {
       title: "",
       dataIndex: "actions",
       render: (_, row) => (
-        <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
+        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.GET_OFFER_DETAIL, PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.EDIT_OFFERS]) ? (
+          <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>
+        ) : null
       ),
     },
   ];
-  // const handlePagination = (page, size) => {
-  //   dispatch(fetchAllOffers({ page: page, size: size }));
-  // };
 
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={fetchAllOffers} />
-        <Button
+        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS) && <Button
           type="primary"
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)}
         >
           Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
-        </Button>
+        </Button>}
       </Flex>
       <Table
         columns={tableColumns}

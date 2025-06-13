@@ -35,6 +35,8 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import UserForm from "views/user/form-user";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Option } = Select;
 
@@ -50,7 +52,7 @@ const EventOrganiseUpdateList = () => {
     searchTerm,
   } = useSelector((state) => state.organizerUpdates);
   const [activeStatus, setactiveStatus] = useState();
-
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
     // dispatch(fetchOrgUpdates());
@@ -138,9 +140,11 @@ const EventOrganiseUpdateList = () => {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
+        hasPermission(PERMISSIONS.APPLICATIONS.TRACK_REQUEST.EVENT.GET_SINGLE_EVENT_UPDATE) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(elm)} />
+          </div>
+        ) : null
       ),
     },
   ];
@@ -159,7 +163,7 @@ const EventOrganiseUpdateList = () => {
           <Select
             defaultValue="All"
             onChange={handleShowStatus}
-             className="mr-2 wide-select"
+            className="mr-2 wide-select"
           >
             <Option value={null}>All</Option>
             <Option value="REJECTED">Rejected</Option>

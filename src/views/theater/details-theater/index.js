@@ -8,7 +8,9 @@ import {
     Tabs,
     Collapse,
     Modal,
-    Col
+    Col,
+    Empty,
+    Form
 } from 'antd';
 import {
     EnvironmentOutlined,
@@ -21,79 +23,33 @@ import {
     InfoCircleOutlined,
     PictureOutlined,
     LayoutOutlined,
-    MailOutlined
+    MailOutlined,
+    UserAddOutlined
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchTheaterByid, setCleraAllData } from 'store/slices/theaterSlice';
+import { fetchTheaterByid, setCleraAllData, setEntrollUserModalState } from 'store/slices/theaterSlice';
 import { useParams } from 'react-router-dom';
 import LoadingOverlay from 'components/util-components/Loader';
 import Technology from 'components/shared-components/Theater/Technology';
 import TheaterScreens from '../components/TheaterScreens';
 import TheaterOffers from '../components/TheaterOffers';
+import { getCurrentUser } from 'configs/UserAccessConfig';
+import { UserRoleConstants } from 'constants/UserRoleConstant';
+import EntrollUserModal from '../components/EntrollUserModal';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
 const { Panel } = Collapse;
 
-// Mock data for the component
-const mockTheater = {
-    id: '1',
-    name: 'Cinemark Lincoln Square',
-    type: 'Multiplex',
-    rating: 4.5,
-    reviewCount: 235,
-    description: 'A premier movie theater featuring the latest blockbusters in a comfortable setting with state-of-the-art sound and projection technology. Enjoy an immersive cinema experience with reclining seats and in-theater dining options.',
-    address: {
-        line1: '700 Bellevue Way NE',
-        line2: 'Suite 310',
-        city: 'Bellevue',
-        state: 'WA',
-        zipCode: '98004',
-        country: 'USA',
-    },
-    contact: {
-        phone: '(425) 555-1234',
-        email: 'contact@cinemarklincolnsquare.com',
-        website: 'www.cinemarklincolnsquare.com',
-    },
-    hours: 'Mon-Thu: 11:00 AM - 11:00 PM\nFri-Sat: 10:00 AM - 1:00 AM\nSun: 10:00 AM - 11:00 PM',
-    capacity: {
-        screens: 12,
-        totalSeats: 1500,
-        premiumScreens: 3,
-    },
-    amenities: [
-        { name: 'Parking', icon: <CarOutlined /> },
-        { name: 'Free Wi-Fi', icon: <WifiOutlined /> },
-        { name: 'Concession Stand', icon: <CoffeeOutlined /> },
-        { name: 'Reclining Seats', icon: <StarOutlined /> },
-        { name: 'Wheelchair Accessible', icon: <InfoCircleOutlined /> },
-    ],
-    images: [
-        'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1498330177096-689e3fb901ca?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-        'https://images.unsplash.com/photo-1595769816263-9b910be24d5f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-    ],
-    nowPlaying: [
-        { id: 1, title: 'Dune: Part Two', duration: '166 min', rating: 'PG-13', showTimes: ['10:30 AM', '1:45 PM', '5:00 PM', '8:15 PM'] },
-        { id: 2, title: 'Kung Fu Panda 4', duration: '94 min', rating: 'PG', showTimes: ['11:00 AM', '1:15 PM', '3:30 PM', '5:45 PM', '8:00 PM'] },
-        { id: 3, title: 'Godzilla x Kong', duration: '115 min', rating: 'PG-13', showTimes: ['10:45 AM', '1:30 PM', '4:15 PM', '7:00 PM', '9:45 PM'] },
-    ],
-    screenTypes: ['IMAX', 'Dolby Digital', '3D', 'RPX'],
-};
-
 const Index = () => {
-    const theater = mockTheater;
     const { theaterId } = useParams();
+    const [form] = Form.useForm();
     const dispatch = useDispatch();
-    const [favorite, setFavorite] = useState(false);
     const [photoIndex, setPhotoIndex] = useState(0);
     const [showGallery, setShowGallery] = useState(false);
     const { singleResponse, loading } = useSelector((state) => state.theater)
-    const toggleFavorite = () => {
-        setFavorite(!favorite);
-    };
+    const currentUser = getCurrentUser();
+
 
     const openGallery = (index) => {
         setPhotoIndex(index);
@@ -107,6 +63,29 @@ const Index = () => {
         };
 
     }, [dispatch, theaterId]);
+
+    const handleEnrollUser = () => {
+        dispatch(setEntrollUserModalState(true));
+    };
+
+    const handleEnrollSubmit = async () => {
+        try {
+            const values = await form.validateFields();
+            const data = {
+                theatre_id: singleResponse?.id,
+                email: values.email,
+            };
+            console.log(data)
+            // const response = await dispatch(EnrollUser(data)).unwrap();
+            // message.success(
+            //     response.status?.message || "User enrolled successfully!"
+            // );
+            // setEnrollModalVisible(false);
+            form.resetFields();
+        } catch (error) {
+            console.error("Enrollment failed:", error);
+        }
+    };
 
     return (
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -201,6 +180,39 @@ const Index = () => {
 
                         <TabPane tab="Offers & Coupons" key="2" >
                             <TheaterOffers theaterData={singleResponse} />
+                        </TabPane>
+
+                        <TabPane tab="Entroll user" key="3" >
+                            <div style={{ padding: "24px 24px 0" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                                    <Typography.Title level={4} style={{ margin: 0 }}>
+                                        Theater Users
+                                    </Typography.Title>
+                                    {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
+                                        <Button
+                                            type="primary"
+                                            icon={<UserAddOutlined />}
+                                            onClick={handleEnrollUser}
+                                        >
+                                            Add User
+                                        </Button>
+                                    )}
+                                </div>
+
+                                {/* {eventDetails.users?.length > 0 ? (
+                                    <Row gutter={[24, 24]} justify="start">
+                                        {eventDetails?.users.map((user, index) => (
+                                            <EventUsersTab key={index} user={user} />
+                                        ))}
+                                    </Row>
+                                ) : (
+                                    <Empty
+                                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                        description="No Event Users associated with this event yet"
+                                        style={{ margin: "40px 0" }}
+                                    />
+                                )} */}
+                            </div>
                         </TabPane>
                     </Tabs>
                 </div>
@@ -335,6 +347,8 @@ const Index = () => {
                 </div>
             </Modal>
 
+            {/* Entroll user modal */}
+            <EntrollUserModal form={form} handleEnrollSubmit={handleEnrollSubmit} />
             <LoadingOverlay loading={loading} />
         </div>
     );

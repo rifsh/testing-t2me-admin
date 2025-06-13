@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
 import NavItem from "./NavItem";
 import Flex from "components/shared-components/Flex";
-import { getUserdata, signOut } from "store/slices/authSlice";
+import { fetchSingleUsers, getUserdata, signOut } from "store/slices/authSlice";
 import styled from "@emotion/styled";
 import {
   FONT_WEIGHT,
@@ -14,7 +14,6 @@ import {
 } from "constants/ThemeConstant";
 import { getUserRole } from "configs/UserAccessConfig";
 import Utils from "utils";
-import { fetchSingleUsers } from "store/slices/userSlice";
 import { useLocation } from "react-router-dom";
 
 const Icon = styled.div(() => ({
@@ -80,7 +79,7 @@ const items = [
 
 export const NavProfile = ({ mode }) => {
   const dispatch = useDispatch();
-  const { userData } = useSelector((state) => state.auth);
+  const { userData, allowedAccess } = useSelector((state) => state.auth);
   const { singleUser } = useSelector((state) => state.users);
   const [userRole, setUserRole] = useState("");
 
@@ -89,7 +88,7 @@ export const NavProfile = ({ mode }) => {
       dispatch(getUserdata());
 
     } else {
-      dispatch(fetchSingleUsers({ "user_id": userData.id }));
+      dispatch(fetchSingleUsers({ "user_id": userData.id, permission: !allowedAccess?.length ? true : false }));
       //  console.log(userData,'fghjkhghjkjh');
       console.log(singleUser, 'fghjkhghjkjh');
       const role = getUserRole(userData);

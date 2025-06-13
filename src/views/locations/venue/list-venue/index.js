@@ -2,8 +2,6 @@ import React, { useEffect } from "react";
 import { Card, Table, Select, Input, Button, Menu, Row, Col } from "antd";
 import {
   EyeOutlined,
-  PlusCircleOutlined,
-  SearchOutlined,
   FormOutlined,
   EditOutlined,
 } from "@ant-design/icons";
@@ -36,6 +34,8 @@ import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import { resetSearchValue } from "store/slices/fliterSlice";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Option } = Select;
 
@@ -47,7 +47,7 @@ const VenueList = () => {
     filteredVenues,
     pagination,
     loading,
-    filteredPlaces,
+    places,
     editable_status,
     message,
     dialogVisible,
@@ -58,9 +58,10 @@ const VenueList = () => {
   } = useSelector((state) => state.locations);
   const [form] = Form.useForm();
   const handlePagination = usePaginationHook(getVenues);
-
+  const { hasPermission, hasAnyPermission } = usePermissions();
   useEffect(() => {
     dispatch(getVenues(DEFAULT_PAGE_SIZE));
+    dispatch(getPlaces({}));
     return () => {
       dispatch(resetSearchValue());
     }
@@ -103,12 +104,12 @@ const VenueList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       </Menu.Item>
-      <Menu.Item>
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.VENUE.EDIT_VENUE) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditVenue(row.id)}>
           <EditOutlined />
           <span className="ml-2">Edit Venue</span>
         </Flex>
-      </Menu.Item>
+      </Menu.Item>}
     </Menu>
   );
 
@@ -143,15 +144,20 @@ const VenueList = () => {
       render: (capacity) => <span>{capacity || "0"}</span>,
       sorter: (a, b) => utils.antdTableSorter(a, b, "capacity"),
     },
-    utils.statusColumnUtil(handleUpdateStatus),
+    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.VENUE.EDIT_VENUE_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
-      ),
+        hasAnyPermission([
+          PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.VENUE.GET_SINGLE_VENUE,
+          PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.VENUE.EDIT_VENUE
+        ]) ? (
+          <div className="text-right">
+            <EllipsisDropdown menu={dropdownMenu(elm)} />
+          </div>
+        ) : null
+      )
     },
   ];
 
@@ -169,13 +175,13 @@ const VenueList = () => {
           fetchFunction={getVenues}
           additionalFilters={[
             {
-              options: filteredPlaces,
-              placeholder: "Please choose a Place",
+              options: places,
+              placeholder: "Please choose a Placeasdasd",
               formName: "place_id",
               isAutoComplete: true,
-              onClick: () => {
-                getPlaces({});
-              },
+              // onClick: () => {
+              //   dispatch(getPlaces({}));
+              // },
             },
           ]}
         />

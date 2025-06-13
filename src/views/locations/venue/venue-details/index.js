@@ -92,14 +92,14 @@ const VenueDetails = () => {
               <Text strong>Longitude:</Text> {singleVenues.longitude || "Not Available"}
             </Col>
             <Col span={12}>
-              <Text strong>Description:</Text> {singleVenues.description || "Not Available"}
+              <Text strong>Description:</Text> <div dangerouslySetInnerHTML={{ __html: singleVenues.description || "Not Available" }} />
             </Col>
           </Row>
         </Card>
       </Col>
       <Col span={24}>
         {/* Event Add on Services Section */}
-        <Card title={<span style={{ color: "#1890ff" }}>Event Add on Services</span>} bordered={false}>
+        <Card title={<span style={{ color: "#1890ff" }}>Venue Add on Services</span>} bordered={false}>
           <Row gutter={[24, 24]} justify="left">
             {singleVenues.venue_add_on_services?.length > 0 ? (
               singleVenues.venue_add_on_services.map((service, index) => (
