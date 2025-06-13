@@ -58,6 +58,7 @@ import { getEventFormSteps } from "configs/UserAccessConfig";
 import getEventFormItems from "configs/UserAccessConfig";
 import { getSingleLeadEvents, addLeadEvent } from "store/slices/leadEventSlice";
 import { EVENT_TYPES } from "constants/PageConstants";
+import { add } from "lodash";
 
 const MultyStepEventForm = ({ eventId, mode }) => {
   const {
@@ -549,6 +550,8 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           ...ticket_structure,
           ...offers,
           lead_id: eventId,
+          additional_booking_info: values.additional_booking_info || [],
+          additional_booking_notes: values.additional_booking_notes || "",
           event_add_on_services: !submitData.event_add_on_services
             ? []
             : submitData.event_add_on_services,

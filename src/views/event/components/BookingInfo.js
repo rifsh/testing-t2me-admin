@@ -202,8 +202,7 @@ const EventBookingInfo = ({ form }) => {
             }}
           </Form.List>
 
-          {/* Additional Comments */}
-          <Form.Item name="additional_notes" label="Additional Notes">
+          <Form.Item name="additional_booking_notes" label="Additional Notes">
             <Input.TextArea
               rows={4}
               placeholder="Enter any additional comments or special notes"
