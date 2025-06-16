@@ -550,8 +550,10 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           ...ticket_structure,
           ...offers,
           lead_id: eventId,
-          additional_booking_info: values.additional_booking_info || [],
-          additional_booking_notes: values.additional_booking_notes || "",
+          // additional_booking_info: {
+          additional_booking_details: values.additional_booking_info || [],
+          additional_notes: values.additional_booking_notes || "",
+          // },
           event_add_on_services: !submitData.event_add_on_services
             ? []
             : submitData.event_add_on_services,
