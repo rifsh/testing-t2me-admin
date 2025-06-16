@@ -1,36 +1,36 @@
-import { COMMON_SKIP_ENCRYPTION_PATHS } from 'configs/encryptionConfigs '
+import { COMMON_SKIP_ENCRYPTION_PATHS } from "configs/encryptionConfigs ";
 
 const dev = {
-  // API_ENDPOINT_URL: "http://192.168.29.221:8000" // "http://192.168.29.8:8000/", //"http://192.168.29.221:8000",
+  // API_ENDPOINT_URL: "http://192.168.29.7:8000", // "http://192.168.29.8:8000/", //"http://192.168.29.221:8000",
   API_ENDPOINT_URL: "https://uat-tickets2me.mitetechnology.in",
   //  API_ENDPOINT_URL: "http://127.0.0.1:8000",
   AES_KEY: "your_32_byte_encryption_key_here", // 32 characters
-  NEED_ENCRYPT_DECRYPT: false, 
+  NEED_ENCRYPT_DECRYPT: false,
   ENCRYPT_PARAMS: false,
-  SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS
+  SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS,
 };
 
 const uat = {
   API_ENDPOINT_URL: "https://uat-tickets2me.mitetechnology.in",
   AES_KEY: "your_32_byte_encryption_key_here", // 32 characters
-  NEED_ENCRYPT_DECRYPT: false, 
+  NEED_ENCRYPT_DECRYPT: false,
   ENCRYPT_PARAMS: false,
-  SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS
+  SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS,
 };
 const demo = {
   API_ENDPOINT_URL: "https://demo-tickets2me.mitetechnology.in",
   AES_KEY: "your_32_byte_encryption_key_here", // 32 characters
-  NEED_ENCRYPT_DECRYPT: false, 
+  NEED_ENCRYPT_DECRYPT: false,
   ENCRYPT_PARAMS: false,
-  SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS
+  SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS,
 };
 // temp
 const prod = {
   API_ENDPOINT_URL: "https://service.tickets2me.com",
   AES_KEY: "your_32_byte_encryption_key_here", // 32 characters
-  NEED_ENCRYPT_DECRYPT: false, 
+  NEED_ENCRYPT_DECRYPT: false,
   ENCRYPT_PARAMS: false,
-  SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS
+  SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS,
 };
 
 const test = {
