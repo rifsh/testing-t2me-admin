@@ -1131,41 +1131,6 @@ const eventOrganaizerDashBoardNavTree = [
         isGroupTitle: false,
         submenu: [
           {
-            key: "general",
-            path: `${APP_PREFIX_PATH}/services/submenu1`,
-            title: "sidenav.general",
-            icon: DashboardOutlined,
-            breadcrumb: false,
-            isGroupTitle: false,
-            submenu: [
-              {
-                key: "offer.list",
-                path: `${APP_PREFIX_PATH}/offer/list/general`,
-                title: "sidenav.offer",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
-                key: "coupon.list",
-                path: `${APP_PREFIX_PATH}/coupon/list/general`,
-                title: "sidenav.coupon",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
-                key: "seat.list",
-                path: `${APP_PREFIX_PATH}/seat/list`,
-                title: "sidenav.seat",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-            ],
-          },
-
-          {
             key: "event",
             path: `${APP_PREFIX_PATH}/services/submenu2`,
             title: "sidenav.event",
@@ -1174,33 +1139,9 @@ const eventOrganaizerDashBoardNavTree = [
             isGroupTitle: false,
             submenu: [
               {
-                key: "ticket.list",
-                path: `${APP_PREFIX_PATH}/ticket/list`,
-                title: "sidenav.ticket",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
-                key: "seat.list",
-                path: `${APP_PREFIX_PATH}/seat/event/list`,
-                title: "sidenav.seat",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
                 key: "event.list",
                 path: `${APP_PREFIX_PATH}/event/list`,
                 title: "sidenav.event.list",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
-                key: "schedule.list",
-                path: `${APP_PREFIX_PATH}/schedule/list`,
-                title: "sidenav.schedule",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 submenu: [],
@@ -1214,7 +1155,23 @@ const eventOrganaizerDashBoardNavTree = [
             icon: DashboardOutlined,
             breadcrumb: false,
             isGroupTitle: false,
-            submenu: [
+            submenu: [   
+              {
+                key: "offer.list",
+                path: `${APP_PREFIX_PATH}/offer/list/movie`,
+                title: "sidenav.offer",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
+              },
+              {
+                key: "coupon.list",
+                path: `${APP_PREFIX_PATH}/coupon/list/movie`,
+                title: "sidenav.coupon",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
+              },
               {
                 key: "movie.screen",
                 path: `${APP_PREFIX_PATH}/screen/list`,
@@ -1333,22 +1290,6 @@ const eventOrganaizerDashBoardNavTree = [
         isGroupTitle: false,
         submenu: [
           {
-            key: "trackRequest.movie.screen.status.list",
-            path: `${APP_PREFIX_PATH}/track/moive-screens/status/list`,
-            title: "sidenav.screen",
-            icon: OrderedListOutlined,
-            breadcrumb: false,
-            submenu: [],
-          },
-          {
-            key: "trackRequest.movie.seats.status.list",
-            path: `${APP_PREFIX_PATH}/track/moive-seats/status/list`,
-            title: "sidenav.seat",
-            icon: OrderedListOutlined,
-            breadcrumb: false,
-            submenu: [],
-          },
-          {
             key: "trackRequest.movie.offer.status.list",
             path: `${APP_PREFIX_PATH}/track/offer/status/list/movie`,
             title: "sidenav.offer",
@@ -1360,6 +1301,22 @@ const eventOrganaizerDashBoardNavTree = [
             key: "trackRequest.movie.coupon.status.list",
             path: `${APP_PREFIX_PATH}/track/coupon/status/list/movie`,
             title: "sidenav.coupon",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "trackRequest.movie.screen.status.list",
+            path: `${APP_PREFIX_PATH}/track/moive-screens/status/list`,
+            title: "sidenav.screen",
+            icon: OrderedListOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "trackRequest.movie.seats.status.list",
+            path: `${APP_PREFIX_PATH}/track/moive-seats/status/list`,
+            title: "sidenav.seat",
             icon: OrderedListOutlined,
             breadcrumb: false,
             submenu: [],
@@ -1802,41 +1759,6 @@ const EventSupportingTeamDashBoardNavTree = [
         isGroupTitle: false,
         submenu: [
           {
-            key: "general",
-            path: `${APP_PREFIX_PATH}/services/submenu1`,
-            title: "sidenav.general",
-            icon: DashboardOutlined,
-            breadcrumb: false,
-            isGroupTitle: false,
-            submenu: [
-              {
-                key: "offer.list",
-                path: `${APP_PREFIX_PATH}/offer/list/general`,
-                title: "sidenav.offer",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
-                key: "coupon.list",
-                path: `${APP_PREFIX_PATH}/coupon/list/general`,
-                title: "sidenav.coupon",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
-                key: "seat.list",
-                path: `${APP_PREFIX_PATH}/seat/list`,
-                title: "sidenav.seat",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-            ],
-          },
-
-          {
             key: "event",
             path: `${APP_PREFIX_PATH}/services/submenu2`,
             title: "sidenav.event",
@@ -1845,33 +1767,9 @@ const EventSupportingTeamDashBoardNavTree = [
             isGroupTitle: false,
             submenu: [
               {
-                key: "ticket.list",
-                path: `${APP_PREFIX_PATH}/ticket/list`,
-                title: "sidenav.ticket",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
-                key: "seat.list",
-                path: `${APP_PREFIX_PATH}/seat/event/list`,
-                title: "sidenav.seat",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
                 key: "event.list",
                 path: `${APP_PREFIX_PATH}/event/list`,
                 title: "sidenav.event.list",
-                icon: OrderedListOutlined,
-                breadcrumb: false,
-                submenu: [],
-              },
-              {
-                key: "schedule.list",
-                path: `${APP_PREFIX_PATH}/schedule/list`,
-                title: "sidenav.schedule",
                 icon: OrderedListOutlined,
                 breadcrumb: false,
                 submenu: [],
@@ -1886,6 +1784,22 @@ const EventSupportingTeamDashBoardNavTree = [
             breadcrumb: false,
             isGroupTitle: false,
             submenu: [
+              {
+                key: "offer.list",
+                path: `${APP_PREFIX_PATH}/offer/list/movie`,
+                title: "sidenav.offer",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
+              },
+              {
+                key: "coupon.list",
+                path: `${APP_PREFIX_PATH}/coupon/list/movie`,
+                title: "sidenav.coupon",
+                icon: OrderedListOutlined,
+                breadcrumb: false,
+                submenu: [],
+              },
               {
                 key: "movie.screen",
                 path: `${APP_PREFIX_PATH}/screen/list`,

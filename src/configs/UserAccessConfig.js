@@ -177,7 +177,7 @@ export const AUTHENTICATED_ENTRY = () => {
     case UserRoleConstants.eventOrganizerRoleId:
       return `${APP_PREFIX_PATH}/organizer/reports`;
     case UserRoleConstants.eventSupportingTeamRoleId:
-      return `${APP_PREFIX_PATH}/offer/list/:type`;
+      return `${APP_PREFIX_PATH}/event/list`;
     case UserRoleConstants.techSupportingTeamRoleId:
       return `${APP_PREFIX_PATH}/category/list`;
     default:
