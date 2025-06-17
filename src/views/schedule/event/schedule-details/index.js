@@ -15,7 +15,7 @@ import {
   Image,
   Tabs,
   Table,
-  List
+  List,
 } from "antd";
 import dayjs from "dayjs";
 import {
@@ -29,7 +29,7 @@ import {
   FaChair,
   FaCalendarDay,
   FaPercent,
-  FaRupeeSign
+  FaRupeeSign,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSingleSchedules } from "store/slices/scheduleSlice";
@@ -90,25 +90,50 @@ const ScheduleDetails = () => {
     ad_start_date_time,
     booking_start_date_time,
     available_types,
-    venue_id
+    show_dates,
+    venue_id,
   } = processedScheduleDetails;
 
   // Group show times by date for better organization
-  const groupedShows = show_seat_details?.reduce((acc, show) => {
-    const date = show.start_date;
-    if (!acc[date]) {
-      acc[date] = [];
+  const groupedShows = (() => {
+    if (available_types === "seat_structure" && show_seat_details?.length > 0) {
+      return show_seat_details.reduce((acc, show) => {
+        const date = show.start_date;
+        if (!acc[date]) {
+          acc[date] = [];
+        }
+        acc[date].push(show);
+        return acc;
+      }, {});
+    } else if (
+      available_types === "ticket_structure" &&
+      show_dates?.length > 0
+    ) {
+      return show_dates.reduce((acc, showDate) => {
+        const date = showDate.start_date;
+        if (!acc[date]) {
+          acc[date] = [];
+        }
+        if (showDate.show_times?.length > 0) {
+          showDate.show_times.forEach((showTime) => {
+            acc[date].push({
+              ...showTime,
+              start_date: date,
+              end_date: showDate.end_date,
+            });
+          });
+        }
+        return acc;
+      }, {});
     }
-    acc[date].push(show);
-    return acc;
-  }, {});
+    return {};
+  })();
 
-  // Columns for offers table
   const offerColumns = [
     {
-      title: 'Offer',
-      dataIndex: ['offer', 'name'],
-      key: 'name',
+      title: "Offer",
+      dataIndex: ["offer", "name"],
+      key: "name",
       render: (text, record) => (
         <div className="flex items-center">
           {record.offer.thumbnail_image && (
@@ -122,38 +147,39 @@ const ScheduleDetails = () => {
           )}
           <Text strong>{text}</Text>
         </div>
-      )
+      ),
     },
     {
-      title: 'Discount',
-      dataIndex: ['offer', 'discount_percentage_amount'],
-      key: 'discount',
+      title: "Discount",
+      dataIndex: ["offer", "discount_percentage_amount"],
+      key: "discount",
       render: (text, record) => (
-        <Tag color="green" >
-          {text}{record.offer.is_percentage ? '%' : ''}
+        <Tag color="green">
+          {text}
+          {record.offer.is_percentage ? "%" : ""}
         </Tag>
-      )
+      ),
     },
     {
-      title: 'Validity',
-      dataIndex: 'valid_from',
-      key: 'validity',
+      title: "Validity",
+      dataIndex: "valid_from",
+      key: "validity",
       render: (_, record) => (
         <Text>
           {formatDate(record.valid_from)} - {formatDate(record.valid_to)}
         </Text>
-      )
+      ),
     },
     {
-      title: 'Status',
-      dataIndex: ['offer', 'status'],
-      key: 'status',
+      title: "Status",
+      dataIndex: ["offer", "status"],
+      key: "status",
       render: (status, record) => (
-        <Tag color={status ? 'green' : 'red'}>
-          {status ? 'Active' : 'Inactive'}
+        <Tag color={status ? "green" : "red"}>
+          {status ? "Active" : "Inactive"}
         </Tag>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -165,10 +191,18 @@ const ScheduleDetails = () => {
           {name || "Event Schedule Details"}
         </Title>
         <div className="flex items-center gap-4 mt-2">
-          <Tag className="flex items-center justify-center" color={is_multi_date ? "green" : "orange"} icon={<FaCalendarDay className="me-1" />}>
+          <Tag
+            className="flex items-center justify-center"
+            color={is_multi_date ? "green" : "orange"}
+            icon={<FaCalendarDay className="me-1" />}
+          >
             {is_multi_date ? "Multi-date Event" : "Single Date Event"}
           </Tag>
-          <Tag className="flex items-center justify-center" color="purple" icon={<FaTicketAlt className="me-1" />}>
+          <Tag
+            className="flex items-center justify-center"
+            color="purple"
+            icon={<FaTicketAlt className="me-1" />}
+          >
             Max {max_ticket_per_booking} tickets/booking
           </Tag>
         </div>
@@ -242,12 +276,15 @@ const ScheduleDetails = () => {
                         />
                       )}
                       <div className="ms-4">
-                        <Title level={5} className="mb-1">{venue.name}</Title>
+                        <Title level={5} className="mb-1">
+                          {venue.name}
+                        </Title>
                         <Text className="block text-gray-600">
                           {venue.place?.name}, {venue.place?.country?.name}
                         </Text>
                         <Text className="block text-gray-500">
-                          {venue.place?.country?.currency_code} • {venue.place?.country?.time_zone}
+                          {venue.place?.country?.currency_code} •{" "}
+                          {venue.place?.country?.time_zone}
                         </Text>
                       </div>
                     </div>
@@ -271,7 +308,10 @@ const ScheduleDetails = () => {
 
         {/* Offers Tab */}
         <TabPane tab="Offers" key="3">
-          <OfferDetailsTable offerColumns={offerColumns} offer_schedule={offer_schedule} />
+          <OfferDetailsTable
+            offerColumns={offerColumns}
+            offer_schedule={offer_schedule}
+          />
         </TabPane>
 
         {/* Coupons Tab */}
@@ -317,38 +357,49 @@ const ScheduleDetails = () => {
         <Row className="flex items-center justify-center">
           <Col xs={24} sm={12} md={6}>
             <div className="text-center">
-              <Text strong className="block text-gray-600">Total Shows</Text>
-              <Title level={3} className="m-0">{show_seat_details?.length || 0}</Title>
-            </div>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <div className="text-center">
-              <Text strong className="block text-gray-600">Event Days</Text>
+              <Text strong className="block text-gray-600">
+                Total Shows
+              </Text>
               <Title level={3} className="m-0">
-                {dayjs(end_date).diff(dayjs(start_date), 'day') + 1}
+                {available_types === "seat_structure"
+                  ? show_seat_details?.length || 0
+                  : show_dates?.reduce(
+                      (total, date) => total + (date.show_times?.length || 0),
+                      0
+                    ) || 0}
               </Title>
             </div>
           </Col>
           <Col xs={24} sm={12} md={6}>
             <div className="text-center">
-              <Text strong className="block text-gray-600">Available Offers</Text>
-              <Title level={3} className="m-0">{offer_schedule?.length || 0}</Title>
+              <Text strong className="block text-gray-600">
+                Event Days
+              </Text>
+              <Title level={3} className="m-0">
+                {dayjs(end_date).diff(dayjs(start_date), "day") + 1}
+              </Title>
             </div>
           </Col>
           <Col xs={24} sm={12} md={6}>
             <div className="text-center">
-              <Text strong className="block text-gray-600">Available Coupons</Text>
-              <Title level={3} className="m-0">{coupon_schedule?.length || 0}</Title>
-            </div>
-          </Col>
-          {/* <Col xs={24} sm={12} md={6}>
-            <div className="text-center">
-              <Text strong className="block text-gray-600">Venue Capacity</Text>
+              <Text strong className="block text-gray-600">
+                Available Offers
+              </Text>
               <Title level={3} className="m-0">
-                {show_seat_details[0]?.event_seats?.event_seatstructures?.total_seats || "N/A"}
+                {offer_schedule?.length || 0}
               </Title>
             </div>
-          </Col> */}
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <div className="text-center">
+              <Text strong className="block text-gray-600">
+                Available Coupons
+              </Text>
+              <Title level={3} className="m-0">
+                {coupon_schedule?.length || 0}
+              </Title>
+            </div>
+          </Col>
         </Row>
       </div>
     </div>

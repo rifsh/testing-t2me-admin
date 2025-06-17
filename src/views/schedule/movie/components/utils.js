@@ -36,17 +36,17 @@ export const validateScheduleTimeWithTimezone = (
     selectedDate = dayjs().add(tabIndex, "day");
   }
 
-  // Create a datetime object for the scheduled time
-  const scheduledDateTime = selectedDate
-    .hour(scheduledHour)
-    .minute(scheduledMinute)
-    .tz(venueTimezone);
+  const scheduledDateTime = dayjs.tz(
+    `${selectedDate.format("YYYY-MM-DD")} ${scheduledHour
+      .toString()
+      .padStart(2, "0")}:${scheduledMinute.toString().padStart(2, "0")}`,
+    "YYYY-MM-DD HH:mm",
+    venueTimezone
+  );
 
-  // Check if it's today's schedule
   const isToday =
-    currentVenueTime.format("YYYY-MM-DD") === selectedDate.format("YYYY-MM-DD");
-
-  // Only apply time zone restriction for today's schedule
+    currentVenueTime.format("YYYY-MM-DD") ===
+    scheduledDateTime.format("YYYY-MM-DD");
   if (isToday && scheduledDateTime.isBefore(currentVenueTime)) {
     return {
       isValid: false,
