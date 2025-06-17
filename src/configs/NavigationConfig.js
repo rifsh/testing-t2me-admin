@@ -109,16 +109,16 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [
           {
-            key: "super-admin.reports.orders.event",
-            path: `${APP_PREFIX_PATH}/super-admin/reports/orders/event`,
+            key: "reports.orders.event",
+            path: `${APP_PREFIX_PATH}/reports/orders/event`,
             title: "sidenav.event",
             icon: DashboardOutlined,
             breadcrumb: false,
             submenu: [],
           },
           {
-            key: "super-admin.reports.orders.movie",
-            path: `${APP_PREFIX_PATH}/super-admin/reports/orders/movie`,
+            key: "reports.orders.movie",
+            path: `${APP_PREFIX_PATH}/reports/orders/movie`,
             title: "sidenav.movie",
             icon: DashboardOutlined,
             breadcrumb: false,

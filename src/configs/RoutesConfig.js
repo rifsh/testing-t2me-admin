@@ -337,27 +337,39 @@ export const protectedRoutes = [
   {
     key: "trackRequest.movie.screen.status.list",
     path: `${APP_PREFIX_PATH}/track/moive-screens/status/list`,
-    component: React.lazy(() => import("views/track-team/movie-organizer/screen-organizer/status-list")),
+    component: React.lazy(() =>
+      import("views/track-team/movie-organizer/screen-organizer/status-list")
+    ),
   },
   {
     key: "trackRequest.movie.seats.status.list",
     path: `${APP_PREFIX_PATH}/track/moive-seats/status/list`,
-    component: React.lazy(() => import("views/track-team/movie-organizer/seat-organizer/status-list")),
+    component: React.lazy(() =>
+      import("views/track-team/movie-organizer/seat-organizer/status-list")
+    ),
   },
   {
     key: "trackRequest.movie.seats.status.details",
     path: `${APP_PREFIX_PATH}/track/moive-seats/status/details/:seatId`,
-    component: React.lazy(() => import("views/track-team/movie-organizer/seat-organizer/status-details")),
+    component: React.lazy(() =>
+      import("views/track-team/movie-organizer/seat-organizer/status-details")
+    ),
   },
   {
     key: "trackRequest.movie.schedule.status.list",
     path: `${APP_PREFIX_PATH}/track/moive-schedule/status/list/:type`,
-    component: React.lazy(() => import("views/track-team/movie-organizer/Schedule-organizer/status-list")),
+    component: React.lazy(() =>
+      import("views/track-team/movie-organizer/Schedule-organizer/status-list")
+    ),
   },
   {
     key: "trackRequest.movie.schedule.status.detail",
     path: `${APP_PREFIX_PATH}/track/moive-schedule/status/detail/:scheduleId`,
-    component: React.lazy(() => import("views/track-team/movie-organizer/Schedule-organizer/status-detail")),
+    component: React.lazy(() =>
+      import(
+        "views/track-team/movie-organizer/Schedule-organizer/status-detail"
+      )
+    ),
   },
   {
     key: "offer.add",
@@ -804,7 +816,9 @@ export const protectedRoutes = [
   {
     path: `${APP_PREFIX_PATH}/organizer/reports/theater-details/:theaterId/movie-details/:movieId`,
     component: React.lazy(() =>
-      import("views/app-views/apps/organizer/reports/theater-details/movie-details")
+      import(
+        "views/app-views/apps/organizer/reports/theater-details/movie-details"
+      )
     ),
   },
 
@@ -816,18 +830,19 @@ export const protectedRoutes = [
     ),
   },
   {
-    key: "super-admin.reports.orders",
-    path: `${APP_PREFIX_PATH}/super-admin/reports/orders/event`,
-    component: React.lazy(() =>
-      import("views/orders/event/list")
-    ),
+    key: "reports.orders.event",
+    path: `${APP_PREFIX_PATH}/reports/orders/event`,
+    component: React.lazy(() => import("views/orders/event/list")),
   },
   {
-    key: "super-admin.reports.orders",
-    path: `${APP_PREFIX_PATH}/super-admin/reports/orders/movie`,
-    component: React.lazy(() =>
-      import("views/orders/movie/list")
-    ),
+    key: "reports.orders.event.details",
+    path: `${APP_PREFIX_PATH}/reports/orders/event/details/:eventId`,
+    component: React.lazy(() => import("views/orders/event/details")),
+  },
+  {
+    key: "reports.orders.movie",
+    path: `${APP_PREFIX_PATH}/reports/orders/movie`,
+    component: React.lazy(() => import("views/orders/movie/list")),
   },
   {
     path: `${APP_PREFIX_PATH}/super-admin/organizer-details/:organizerId`,
