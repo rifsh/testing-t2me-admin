@@ -101,6 +101,31 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
+      {
+        key: "super-admin.reports.orders",
+        path: `${APP_PREFIX_PATH}/super-admin/reports/orders`,
+        title: "sidenav.apps.admin.reports.orders",
+        icon: DashboardOutlined,
+        breadcrumb: false,
+        submenu: [
+          {
+            key: "super-admin.reports.orders.event",
+            path: `${APP_PREFIX_PATH}/super-admin/reports/orders/event`,
+            title: "sidenav.event",
+            icon: DashboardOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+          {
+            key: "super-admin.reports.orders.movie",
+            path: `${APP_PREFIX_PATH}/super-admin/reports/orders/movie`,
+            title: "sidenav.movie",
+            icon: DashboardOutlined,
+            breadcrumb: false,
+            submenu: [],
+          },
+        ],
+      },
     ],
   },
 
@@ -556,7 +581,7 @@ const superAdminDashBoardNavTree = [
         breadcrumb: false,
         submenu: [],
       },
-    ]
+    ],
   },
 
   // {
@@ -1039,8 +1064,8 @@ const techAdminDashBoardNavTree = [
         icon: OrderedListOutlined,
         breadcrumb: false,
         submenu: [],
-      }
-    ]
+      },
+    ],
   },
   {
     key: "app.management",
