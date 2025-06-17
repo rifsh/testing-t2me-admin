@@ -26,6 +26,7 @@ const { Text } = Typography;
 
 const ConfirmationPage = () => {
   const { submitedData } = useSelector((state) => state.schedules) || {};
+  const { selectedTicketType } = useSelector((state) => state.tickets) || {};
 
   const formatDateTime = (dateTimeStr) =>
     dateTimeStr ? dayjs(dateTimeStr).format("MMMM D, YYYY h:mm A") : "-";
@@ -123,7 +124,7 @@ const ConfirmationPage = () => {
                           <Text strong>
                             {formatTime(timeSlot.start_time)} -{" "}
                             {formatTime(timeSlot.end_time)}
-                            {timeSlot.is_midnight === "true" && (
+                            {timeSlot.is_midnight_passed === true && (
                               <Tooltip title="This event runs past midnight">
                                 <Tag color="blue" className="ml-2">
                                   Overnight
@@ -131,15 +132,21 @@ const ConfirmationPage = () => {
                               </Tooltip>
                             )}
                           </Text>
-                          <Space align="center">
-                            <FaTicketAlt />
+                          {selectedTicketType === 2 && (
+                            <Space align="center">
+                              <FaTicketAlt />
+                              <Text type="secondary">
+                                {timeSlot.ticket_set || "-"}
+                              </Text>
+                            </Space>
+                          )}
+                          {selectedTicketType && (
                             <Text type="secondary">
-                              {timeSlot.ticket_set || "-"}
+                              {selectedTicketType === 1
+                                ? `Seat Structure ID: ${timeSlot.seat_structure_id}`
+                                : `Ticket Structure ID: ${timeSlot.ticket_structure_id}`}{" "}
                             </Text>
-                          </Space>
-                          <Text type="secondary">
-                            Ticket Structure ID: {timeSlot.ticket_structure_id}
-                          </Text>
+                          )}
                         </Space>
                       </Card>
                     </Col>

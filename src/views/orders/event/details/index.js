@@ -90,7 +90,6 @@ const mockBookingDetails = {
   })),
 };
 
-// Event Details Page Component
 const EventDetailsPage = () => {
   const { id } = useParams();
   const location = useLocation();
@@ -100,13 +99,10 @@ const EventDetailsPage = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [event, setEvent] = useState(null);
 
-  // Get event data from location state or mock data
   useEffect(() => {
     if (location.state?.event) {
       setEvent(location.state.event);
     } else {
-      // If no event data in state, you might want to fetch from API
-      // For now, we'll use mock data based on ID
       const mockEvents = [
         {
           id: 1,
@@ -124,7 +120,6 @@ const EventDetailsPage = () => {
           image:
             "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop&crop=center",
         },
-        // Add other mock events here...
       ];
       const foundEvent = mockEvents.find((e) => e.id === parseInt(id));
       setEvent(foundEvent);
@@ -170,7 +165,7 @@ const EventDetailsPage = () => {
   };
 
   const handleBackToList = () => {
-    navigate(-1); // Go back to previous page
+    navigate(-1); 
   };
 
   const bookingColumns = [

@@ -37,7 +37,9 @@ const MultyStepScheduleForm = ({ mode, id }) => {
   const { currentStep, eventDetails, submitLoading } = useSelector(
     (state) => state.event
   );
-   const { availableTicketTyps } = useSelector((state) => state.tickets);
+  const { availableTicketTyps, selectedTicketType } = useSelector(
+    (state) => state.tickets
+  );
   const { selectedVenue } = useSelector((state) => state.locations);
   const { selectedSubmitItem } = useSelector((state) => state.modalSlice);
   const dispatch = useDispatch();
@@ -51,11 +53,6 @@ const MultyStepScheduleForm = ({ mode, id }) => {
     submitedData,
     selectedCoupons,
   } = useSelector((state) => state.schedules);
-
-  // Debug log when component mounts
-  useEffect(() => {
-    console.log("Component mounted with mode:", mode, "and id:", id);
-  }, [mode, id]);
 
   // First useEffect for fetching data
   useEffect(() => {
@@ -71,6 +68,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
     return () => {
       dispatch(resetSchedule());
       dispatch(resetState());
+      dispatch(setCurrentStep(1));
     };
   }, [dispatch, mode, id]);
 
@@ -129,24 +127,14 @@ const MultyStepScheduleForm = ({ mode, id }) => {
     setFormFields();
   }, [form, mode, scheduleDetails, dispatch]);
 
-  // Debug log for scheduleDetails changes
-  useEffect(() => {
-    console.log("scheduleDetails updated:", scheduleDetails);
-  }, [scheduleDetails]);
-
   const prevStep = () => {
     if (currentStep > 1) {
       dispatch(setCurrentStep(currentStep - 1));
     }
   };
-  const formatTimeForSubmission = (dateTime) => {
-    return dayjs(dateTime).format("HH:mm");
-  };
-  const cleanScheduleData = (data) => {
-    // Create a deep copy of the data to avoid mutating the original
-    const cleanedData = { ...data };
 
-    // Filter out show_dates with empty show_times
+  const cleanScheduleData = (data) => {
+    const cleanedData = { ...data };
     cleanedData.show_dates = data.show_dates.filter(
       (date) => Array.isArray(date.show_times) && date.show_times.length > 0
     );
@@ -161,7 +149,6 @@ const MultyStepScheduleForm = ({ mode, id }) => {
       const startDate = dayjs(values.start_date).format("YYYY-MM-DD");
       const endDate = dayjs(values.end_date).format("YYYY-MM-DD");
 
-      // Filter show_dates to only include dates within the main date range
       const show_dates = Object.entries(values.timeSlots || {})
         .filter(([date]) => {
           const currentDate = dayjs(date);
@@ -338,10 +325,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
               );
               return;
             }
-            if (
-              eventDetails.available_types ===
-              availableTicketTyps.SEAT_STRUCTURE
-            ) {
+            if (selectedTicketType === 1) {
               if (!slot.seat_structure_id) {
                 message.error(
                   `Seat Structure is required for all slots on ${date}`
