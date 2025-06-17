@@ -1,248 +1,354 @@
-import React, { useEffect } from "react";
-import { Card, Table, Select, Input, Button, Row, Col, Menu } from "antd";
+import React, { useEffect, useState } from "react";
 import {
+  Card,
+  Table,
+  Row,
+  Col,
+  Statistic,
+  Badge,
+  Button,
+  Space,
+  Avatar,
+  Tag,
+} from "antd";
+import {
+  CalendarOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CloseCircleOutlined,
   EyeOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  FormOutlined,
+  EnvironmentOutlined,
+  TeamOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
-import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
-import Flex from "components/shared-components/Flex";
-import { useDispatch, useSelector } from "react-redux";
-import { Form } from "antd";
 import { useNavigate } from "react-router-dom";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
-import utils from "utils";
-import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
-import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
-import {
-  editTax,
-  fetchAllTax,
-  filterTax,
-  setTaxDialogVisible,
-  setTaxModalLoading,
-  setEditItemId,
-  editTaxStatus,
-} from "store/slices/taxSlice";
-import {
-  fetchAllCountires,
-  getCoutryDetails,
-  getPlaces,
-} from "store/slices/locationSlice";
-import Utils from "utils";
-import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
-import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
-import WarningModal from "components/util-components/ModalItems/WarningModal";
-import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 
-import { TextConstants } from "constants/TextConstant";
-import usePaginationHook from "utils/hooks/usePaginationHandler";
-import usePermissions from "utils/hooks/usePermissions";
-import { PERMISSIONS } from "constants/RolesPermissionConstants";
+// Mock data for events
+const mockEvents = [
+  {
+    id: 1,
+    event_name: "Summer Music Festival 2024",
+    event_code: "SMF2024",
+    event_date: "2024-08-15",
+    location: "Central Park, New York",
+    total_orders: 245,
+    completed_bookings: 198,
+    pending_bookings: 32,
+    failed_bookings: 15,
+    total_revenue: 49000,
+    status: "active",
+    created_at: "2024-06-01T10:30:00Z",
+    image:
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop&crop=center",
+  },
+  {
+    id: 2,
+    event_name: "Tech Conference 2024",
+    event_code: "TECH2024",
+    event_date: "2024-09-22",
+    location: "Convention Center, San Francisco",
+    total_orders: 156,
+    completed_bookings: 134,
+    pending_bookings: 18,
+    failed_bookings: 4,
+    total_revenue: 78000,
+    status: "active",
+    created_at: "2024-05-15T14:20:00Z",
+    image:
+      "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=100&h=100&fit=crop&crop=center",
+  },
+  {
+    id: 3,
+    event_name: "Food & Wine Expo",
+    event_code: "FWE2024",
+    event_date: "2024-07-30",
+    location: "Grand Hall, Chicago",
+    total_orders: 89,
+    completed_bookings: 76,
+    pending_bookings: 8,
+    failed_bookings: 5,
+    total_revenue: 22500,
+    status: "completed",
+    created_at: "2024-04-10T09:15:00Z",
+    image:
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=100&h=100&fit=crop&crop=center",
+  },
+  {
+    id: 4,
+    event_name: "Art Gallery Opening",
+    event_code: "AGO2024",
+    event_date: "2024-10-05",
+    location: "Modern Art Museum, Los Angeles",
+    total_orders: 67,
+    completed_bookings: 45,
+    pending_bookings: 15,
+    failed_bookings: 7,
+    total_revenue: 13400,
+    status: "active",
+    created_at: "2024-06-20T16:45:00Z",
+    image:
+      "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=100&h=100&fit=crop&crop=center",
+  },
+  {
+    id: 5,
+    event_name: "Marathon 2024",
+    event_code: "MAR2024",
+    event_date: "2024-11-12",
+    location: "City Streets, Boston",
+    total_orders: 312,
+    completed_bookings: 298,
+    pending_bookings: 10,
+    failed_bookings: 4,
+    total_revenue: 15600,
+    status: "active",
+    created_at: "2024-03-25T11:00:00Z",
+    image:
+      "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=100&h=100&fit=crop&crop=center",
+  },
+];
 
-const { Option } = Select;
-
-const TaxList = () => {
+const OrdersList = () => {
+  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const {
-    filteredTax,
-    loading,
-    editable_status,
-    pagination,
-    warningPagination,
-    message,
-    dialogVisible,
-    modalLoading,
-    editItemId,
-    responseImpactData,
-  } = useSelector((state) => state.tax) || {};
-  const [form] = Form.useForm();
-  const locationState = useSelector((state) => state?.locations) || {};
-  const { responseData } = useSelector((state) => state.modalSlice);
-  const {
-    loading: locationLoading,
-    filteredPlaces,
-    detailedCountryList,
-  } = locationState;
-  const handlePagination = usePaginationHook(fetchAllTax);
-  const { hasPermission } = usePermissions();
+
   useEffect(() => {
-    dispatch(fetchAllTax(DEFAULT_PAGE_SIZE));
-  }, [dispatch]);
+    // Simulate loading
+    setLoading(true);
+    setTimeout(() => {
+      setFilteredEvents(mockEvents);
+      setLoading(false);
+    }, 500);
+  }, []);
 
-  const handleUpdateStatus = (item) => {
-    const newStatus = !item.status;
-    const data = { status: newStatus, id: item.id };
-    dispatch(setSelectedItem(data));
-    dispatch(setDialogVisible(true));
-  };
-  // const handlePagination = (page, size) => {
-  //   dispatch(fetchAllTax({ page: page, size: size }));
-  // };
-
-  const handleEditTax = (id) => {
-    dispatch(setEditItemId(id));
-    dispatch(setTaxDialogVisible(true));
-  };
-  const handleModalSubmit = async () => {
-    dispatch(setTaxModalLoading(true));
-    navigate(`${APP_PREFIX_PATH}/tax/edit/${editItemId}`);
-    console.log(editItemId, "9234239423490823498234098234908");
-    dispatch(setTaxDialogVisible(false));
-    dispatch(setTaxModalLoading(false));
+  const handleViewDetails = (event) => {
+    navigate(`/reports/orders/event/details/${event.id}`, { state: { event } });
   };
 
-  const handleModalCancel = () => {
-    dispatch(setTaxDialogVisible(false));
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "completed":
+        return "success";
+      case "pending":
+        return "warning";
+      case "failed":
+        return "error";
+      case "active":
+        return "processing";
+      default:
+        return "default";
+    }
   };
-  const dropdownMenu = (row) => (
-    <Menu>
-      <Menu.Item onClick={() => handleEditTax(row.id)}>
-        <Flex alignItems="center">
-          <EyeOutlined />
-          <span className="ml-2">Edit Tax</span>
-        </Flex>
-      </Menu.Item>
-    </Menu>
-  );
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircleOutlined />;
+      case "pending":
+        return <ClockCircleOutlined />;
+      case "failed":
+        return <CloseCircleOutlined />;
+      case "active":
+        return <CheckCircleOutlined />;
+      default:
+        return <CheckCircleOutlined />;
+    }
+  };
 
   const tableColumns = [
     {
-      title: "Tax Name",
-      dataIndex: "tax_name",
-      render: (tax_name) => <span>{tax_name || "N/A"}</span>,
-      sorter: (a, b) => utils.antdTableSorter(a, b, "tax_name"),
-    },
-    {
-      title: "Code",
-      dataIndex: "code",
-      render: (code) => <span>{code || "N/A"}</span>,
-      sorter: (a, b) => utils.antdTableSorter(a, b, "code"),
-    },
-    {
-      title: "Percentage",
-      dataIndex: "percentage",
-      render: (percentage) => <span>{percentage}%</span>,
-      sorter: (a, b) => utils.antdTableSorter(a, b, "percentage"),
-    },
-    {
-      title: "Category",
-      dataIndex: "available_category",
-      render: (category) => (
-        <span className="capitalize">{category || "N/A"}</span>
-      ),
-      sorter: (a, b) => utils.antdTableSorter(a, b, "available_category"),
-    },
-    {
-      title: "Created At",
-      dataIndex: "created_at",
-      render: (date) => <span>{new Date(date).toLocaleDateString()}</span>,
-      sorter: (a, b) => utils.antdTableSorter(a, b, "created_at"),
-    },
-    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.TAX.UPDATE_TAX_STATUS)),
-    {
-      title: "",
-      dataIndex: "actions",
-      render: (_, elm) => (
-        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.TAX.EDIT_TAXES) ? (
-          <div className="text-right">
-            <EllipsisDropdown menu={dropdownMenu(elm)} />
+      title: "Event",
+      dataIndex: "event_name",
+      key: "event_name",
+      render: (event_name, record) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Avatar
+            src={record.image}
+            size={40}
+            style={{ marginRight: 12 }}
+            icon={<CalendarOutlined />}
+          />
+          <div>
+            <div style={{ fontWeight: "bold" }}>{event_name || "N/A"}</div>
+            <div style={{ color: "#666", fontSize: "12px" }}>
+              <EnvironmentOutlined style={{ marginRight: 4 }} />
+              {record.location}
+            </div>
           </div>
-        ) : null
+        </div>
+      ),
+    },
+    {
+      title: "Event Code",
+      dataIndex: "event_code",
+      key: "event_code",
+      render: (code) => <Tag color="blue">{code || "N/A"}</Tag>,
+    },
+    {
+      title: "Event Date",
+      dataIndex: "event_date",
+      key: "event_date",
+      render: (date) => (
+        <div>
+          <CalendarOutlined style={{ marginRight: 4 }} />
+          {new Date(date).toLocaleDateString()}
+        </div>
+      ),
+    },
+    {
+      title: "Total Orders",
+      dataIndex: "total_orders",
+      key: "total_orders",
+      render: (total) => (
+        <Badge count={total} showZero style={{ backgroundColor: "#52c41a" }} />
+      ),
+    },
+    {
+      title: "Booking Status",
+      key: "booking_status",
+      render: (_, record) => (
+        <div>
+          <div style={{ marginBottom: 4 }}>
+            <span style={{ color: "#52c41a" }}>
+              <CheckCircleOutlined style={{ marginRight: 4 }} />
+              Completed: {record.completed_bookings}
+            </span>
+          </div>
+          <div style={{ marginBottom: 4 }}>
+            <span style={{ color: "#faad14" }}>
+              <ClockCircleOutlined style={{ marginRight: 4 }} />
+              Pending: {record.pending_bookings}
+            </span>
+          </div>
+          <div>
+            <span style={{ color: "#ff4d4f" }}>
+              <CloseCircleOutlined style={{ marginRight: 4 }} />
+              Failed: {record.failed_bookings}
+            </span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Revenue",
+      dataIndex: "total_revenue",
+      key: "total_revenue",
+      render: (revenue) => (
+        <div style={{ color: "#52c41a", fontWeight: "bold" }}>
+          <DollarOutlined style={{ marginRight: 4 }} />$
+          {revenue?.toLocaleString()}
+        </div>
+      ),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Tag color={getStatusColor(status)} icon={getStatusIcon(status)}>
+          {status?.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="primary"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetails(record)}
+          >
+            View Details
+          </Button>
+        </Space>
       ),
     },
   ];
 
+  // Calculate total statistics
+  const totalStats = filteredEvents.reduce(
+    (acc, event) => ({
+      totalOrders: acc.totalOrders + event.total_orders,
+      completedBookings: acc.completedBookings + event.completed_bookings,
+      pendingBookings: acc.pendingBookings + event.pending_bookings,
+      failedBookings: acc.failedBookings + event.failed_bookings,
+      totalRevenue: acc.totalRevenue + event.total_revenue,
+    }),
+    {
+      totalOrders: 0,
+      completedBookings: 0,
+      pendingBookings: 0,
+      failedBookings: 0,
+      totalRevenue: 0,
+    }
+  );
+
   return (
-    <Card>
-      <Row justify="space-between" style={{ marginBottom: 16 }}>
-        <SearchBarWithStatus
-          fetchFunction={fetchAllTax}
-          additionalFilters={[
-            {
-              options: detailedCountryList,
-              placeholder: "Please choose a country",
-              formName: "country_id",
-              isAutoComplete: true,
-              onClick: () => {
-                dispatch(getCoutryDetails());
-              },
-            },
-            {
-              options: filteredPlaces,
-              placeholder: "Please choose a Place",
-              formName: "place_id",
-              isAutoComplete: true,
-              onClick: () => {
-                dispatch(getPlaces());
-              },
-            },
-          ]}
-        />
-        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.TAX.ADD_TAXES) && <Col style={{ textAlign: "right" }}>
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            onClick={() => navigate(`${APP_PREFIX_PATH}/tax/add`)}
-          >
-            Add Tax
-          </Button>
-        </Col>}
+    <div>
+      {/* Statistics Cards */}
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="Total Orders"
+              value={totalStats.totalOrders}
+              prefix={<TeamOutlined />}
+              valueStyle={{ color: "#1890ff" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="Completed Bookings"
+              value={totalStats.completedBookings}
+              prefix={<CheckCircleOutlined />}
+              valueStyle={{ color: "#52c41a" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="Pending Bookings"
+              value={totalStats.pendingBookings}
+              prefix={<ClockCircleOutlined />}
+              valueStyle={{ color: "#faad14" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="Total Revenue"
+              value={totalStats.totalRevenue}
+              prefix={<DollarOutlined />}
+              valueStyle={{ color: "#52c41a" }}
+              formatter={(value) => `$${value.toLocaleString()}`}
+            />
+          </Card>
+        </Col>
       </Row>
 
-      <div className="table-responsive">
+      <Card title="Events & Orders Overview">
         <Table
           columns={tableColumns}
-          dataSource={filteredTax}
+          dataSource={filteredEvents}
           rowKey="id"
           loading={loading}
           pagination={{
-            current: pagination.page,
-            pageSize: pagination.size,
-            total: pagination.total,
-            onChange: (page, pageSize) => handlePagination(page, pageSize),
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} of ${total} items`,
           }}
         />
-      </div>
-      <WarningModal
-        mode={"itemmodal"}
-        visible={dialogVisible}
-        title="Edit Tax"
-        details={TextConstants.DefaultEditContent1}
-        warningMessage="Do you want to proceed to the edit page?"
-        onSubmit={handleModalSubmit}
-        onCancel={handleModalCancel}
-        confirmText="Proceed to Edit"
-        cancelText="Cancel"
-        loading={modalLoading}
-      />
-
-      <UpdateStatusModal
-        responseMessage={message}
-        editFunction={editTaxStatus}
-        getAllFunction={(pageData) => fetchAllTax(pageData)}
-        pageData={{ page: 1, size: 10 }}
-        tableConfig={{
-          title: "Active Schedules",
-          dataKey: "items",
-        }}
-        editable_status={editable_status}
-        responseData={responseImpactData}
-        pagination={warningPagination}
-        loading={loading}
-      />
-      <StatusSubmitAndConfirmModal
-        editFunction={editTaxStatus}
-        getAllFunction={fetchAllTax}
-        responseData={responseData}
-        responseMessage={message}
-        pageData={DEFAULT_PAGE_SIZE}
-        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
-        onCloseMessage={TextConstants.StatusUpdateCanceled}
-      />
-    </Card>
+      </Card>
+    </div>
   );
 };
 
-export default TaxList;
+export default OrdersList;
