@@ -58,6 +58,7 @@ import { getEventFormSteps } from "configs/UserAccessConfig";
 import getEventFormItems from "configs/UserAccessConfig";
 import { getSingleLeadEvents, addLeadEvent } from "store/slices/leadEventSlice";
 import { EVENT_TYPES } from "constants/PageConstants";
+import { add } from "lodash";
 
 const MultyStepEventForm = ({ eventId, mode }) => {
   const {
@@ -408,7 +409,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     dispatch(setSubmitLoading(true));
     try {
       const values = await form.validateFields();
-
+      console.log("Form Values:", values);
       if (selectedVenue && currentStep === 5) {
         // Check if we have ticket types at all
         if (!ticketTypes || ticketTypes.length <= 0) {
@@ -485,6 +486,8 @@ const MultyStepEventForm = ({ eventId, mode }) => {
 
   const onFinish = async () => {
     try {
+      const values = await form.validateFields();
+      console.log("Form Values:", values);
       console.log(submitData, "asdfghj");
       if (mode === "EDIT") {
         const offers = {
@@ -547,6 +550,10 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           ...ticket_structure,
           ...offers,
           lead_id: eventId,
+          // additional_booking_info: {
+          additional_booking_details: values.additional_booking_info || [],
+          additional_notes: values.additional_booking_notes || "",
+          // },
           event_add_on_services: !submitData.event_add_on_services
             ? []
             : submitData.event_add_on_services,

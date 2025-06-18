@@ -23,7 +23,7 @@ export function ScheduleDetails({ form }) {
     loading,
     selectedEvent,
   } = useSelector((state) => state.event);
-  const { availableTicketTyps } = useSelector((state) => state.tickets);
+  const { availableTicketTyps,selectedTicketType } = useSelector((state) => state.tickets);
   useEffect(() => {
     const fetchEvents = async () => {
       try {

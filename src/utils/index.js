@@ -337,7 +337,7 @@ class Utils {
     handleUpdateStatus,
     isButtonDisabled = false,
     dataIndex = "status",
-    title = "Status",
+    title = "Status"
   ) => ({
     title: title,
     dataIndex: dataIndex,
@@ -367,7 +367,6 @@ class Utils {
     },
     sortDirections: ["ascend", "descend"],
   });
-
 
   /**
    * Validates if the end date is earlier than the start date.
@@ -460,12 +459,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-        (document.cookie = cookie
-          .replace(/^ +/, "")
-          .replace(
-            /=.*/,
-            "=;expires=" + new Date(0).toUTCString() + ";path=/"
-          ))
+          (document.cookie = cookie
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date(0).toUTCString() + ";path=/"
+            ))
       );
 
     // Unregister Service Workers
@@ -784,6 +783,10 @@ class Utils {
           formData.append("ticket_structure", JSON.stringify(value));
           return;
         }
+        if (key === "additional_booking_details") {
+          formData.append("additional_booking_details", JSON.stringify(value));
+          return;
+        }
         if (key === "event_seat_structure_id") {
           formData.append("event_seat_structure_id", JSON.stringify(value));
           return;
@@ -899,7 +902,7 @@ class Utils {
       };
     });
   }
-    // ================================================================
+  // ================================================================
   // 🔒  ASL PARAM-LEVEL ENCRYPTION HELPERS
   // ================================================================
   /**
@@ -941,7 +944,6 @@ class Utils {
     }
     return encrypted;
   };
-
 
   /**
    * Handles the validation before file upload.

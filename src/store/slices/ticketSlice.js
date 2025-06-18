@@ -148,10 +148,10 @@ export const ticketSlice = createSlice({
     setTicketModalLoading(state, action) {
       state.modalLoading = action.payload;
     },
-    setSelectedTicketType(state, action) {
-      console.log("Setting selected ticket type:", action.payload);
-      state.selectedTicketType = action.payload;
-    },
+    // setSelectedTicketType(state, action) {
+    //   console.log("Setting selected ticket type:", action.payload);
+    //   state.selectedTicketType = action.payload;
+    // },
     setEditItemId: (state, action) => {
       state.editItemId = action.payload;
     },

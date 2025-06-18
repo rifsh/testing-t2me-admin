@@ -57,7 +57,7 @@ export function ScheduleTimeSlots({ form }) {
   const timeZone = dayjs.tz.guess();
   const currentDateInTimeZone = useMemo(() => dayjs().tz(timeZone), [timeZone]);
   const dispatch = useDispatch();
-   const { availableTicketTyps } = useSelector((state) => state.tickets);
+   const { availableTicketTyps,selectedTicketType } = useSelector((state) => state.tickets);
   useEffect(() => {
     // const eventId = 7;
 
@@ -363,7 +363,7 @@ export function ScheduleTimeSlots({ form }) {
       return;
     }
 
-    if (eventDetails.available_types === availableTicketTyps.SEAT_STRUCTURE) {
+    if (selectedTicketType === 1) {
       if (!sourceSlot?.seat_structure_id) {
         message.warning("Please select a Seat Structure first");
         return;

@@ -12,6 +12,7 @@ import {
   AUTH_PREFIX_PATH,
   UNAUTHENTICATED_ENTRY,
 } from "./AppConfig";
+import EventBookingInfo from "views/event/components/BookingInfo";
 
 export const isOrganizer = () => {
   const currentUser = getCurrentUser();
@@ -80,6 +81,8 @@ const getEventFormItems = (form, currentStep, mode) => {
         return <TicketField form={form} />;
       case 6:
         return <OfferField form={form} mode={mode} />;
+      case 7:
+        return <EventBookingInfo form={form} mode={mode} />;
       default:
         return null;
     }
@@ -100,6 +103,8 @@ const getEventFormItems = (form, currentStep, mode) => {
         return <TicketField form={form} />;
       case 6:
         return <OfferField form={form} mode={mode} />;
+      case 7:
+        return <EventBookingInfo form={form} mode={mode} />;
       default:
         return null;
     }
@@ -130,9 +135,25 @@ export const getEventFormSteps = () => {
   }
 
   if (currentUser.role_id === UserRoleConstants.superAdminRoleId) {
-    return ["Event Details", "Category", "Location", "Tax", "Ticket", "Offers"];
+    return [
+      "Event Details",
+      "Category",
+      "Location",
+      "Tax",
+      "Ticket",
+      "Offers",
+      "Booking Info",
+    ];
   } else if (currentUser.role_id === UserRoleConstants.techAdminRoleId) {
-    return ["Event Details", "Category", "Location", "Tax", "Ticket", "Offers"];
+    return [
+      "Event Details",
+      "Category",
+      "Location",
+      "Tax",
+      "Ticket",
+      "Offers",
+      "Booking Info",
+    ];
   } else if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
     return ["Event Details"];
   } else {
@@ -156,9 +177,9 @@ export const AUTHENTICATED_ENTRY = () => {
     case UserRoleConstants.eventOrganizerRoleId:
       return `${APP_PREFIX_PATH}/organizer/reports`;
     case UserRoleConstants.eventSupportingTeamRoleId:
-      return `${APP_PREFIX_PATH}/organizer/reports`;
+      return `${APP_PREFIX_PATH}/event/list`;
     case UserRoleConstants.techSupportingTeamRoleId:
-      return `${APP_PREFIX_PATH}/super-admin/reports`;
+      return `${APP_PREFIX_PATH}/category/list`;
     default:
       return `${APP_PREFIX_PATH}/super-admin/reports`;
   }

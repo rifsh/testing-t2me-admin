@@ -49,6 +49,7 @@
   "sidenav.apps.alerts": "Alert",
   "sidenav.apps.issue": "Issue",
   "sidenav.apps.reports": "Reports",
+  "sidenav.apps.admin.reports.orders": "Orders",
   "sidenav.apps.admin-reports": "Reports",
   "sidenav.apps.organizer-reports": "Reports",
   "sidenav.apps.issues": "Issues",
