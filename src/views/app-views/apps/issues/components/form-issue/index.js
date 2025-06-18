@@ -34,19 +34,19 @@ const IssueForm = (props) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-     
 
-    const formData = new FormData();
-    Object.keys(values).forEach((key) => {
-      if (key === "files") {
-        values.files.forEach((file) => {
-          formData.append("files", file.originFileObj);
-        });
-      } else {
-        formData.append(key, values[key]);
-      }
-    });
-  
+
+      const formData = new FormData();
+      Object.keys(values).forEach((key) => {
+        if (key === "files") {
+          values.files.forEach((file) => {
+            formData.append("files", file.originFileObj);
+          });
+        } else {
+          formData.append(key, values[key]);
+        }
+      });
+
       const resultAction = await dispatch(AddNewIssue(formData))
       if (AddNewIssue.fulfilled.match(resultAction)) {
         message.success(`Isse created succesfully`);
@@ -83,7 +83,7 @@ const IssueForm = (props) => {
                 {mode === "ADD" ? "Add Issue" : `Edit Issue`}{" "}
               </h2>
               <div className="mb-3">
-              <DiscardButton form={form} />
+                <DiscardButton form={form} />
                 <Button
                   type="primary"
                   onClick={() => onFinish()}

@@ -45,7 +45,7 @@ export const PERMISSIONS = {
         GET_USER_RELATED_ENTRIES: 'get_user_related_entries',
     },
     APPLICATIONS: {
-        title:'Application',
+        title: 'Application',
         SERVICES: {
             title: "Services",
             GENERAL: {
@@ -245,7 +245,7 @@ export const PERMISSIONS = {
             title: 'Issues',
             ISSUE: {
                 title: 'Issues',
-                ADD_ISSUES: 'add_issues',
+                ADD_ISSUES: 'add_issue',
                 GET_ISSUES: 'get_issues',
                 GET_ISSUE_ASSIGN_DETAILS: 'get_issue_assign_details',
                 GET_ISSUE_DETAILS: 'get_issue_details',
@@ -344,7 +344,10 @@ export const PERMISSIONS = {
         USER: {
             title: 'User',
             USER: {
-
+                ADD_USER: 'add_user',
+                EDIT_USER: 'edit_user',
+                EDIT_USER_STATUS: 'edit_user_status',
+                GET_USER_DETAILS: 'get_single_user',
             },
             SYSTEM_PERMISSIONS: {
                 title: 'System Permissions',
@@ -352,20 +355,20 @@ export const PERMISSIONS = {
         },
     },
     APP_MANAGEMENT: {
-        title:'App Management',
+        title: 'App Management',
         LAYOUT: {
-            title:'Layout',
-            FOOTER:{
-                title:"Footer"
+            title: 'Layout',
+            FOOTER: {
+                title: "Footer"
             },
-            FAQ:{
-                title:'FAQ'
+            FAQ: {
+                title: 'FAQ'
             },
-            APP_INFO:{
-                title:'App Info'
+            APP_INFO: {
+                title: 'App Info'
             },
-            TERMS_CONDITIONS:{
-                title:'Terms and Conditions'
+            TERMS_CONDITIONS: {
+                title: 'Terms and Conditions'
             }
         },
     },

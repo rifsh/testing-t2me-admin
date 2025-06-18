@@ -160,22 +160,25 @@ function UserFormFields({ mode, user }) {
                 </Select>
               </Form.Item>
             )}
-          <div className="my-10">
-            <GenericDropdown
-              name="theatre_ids"
-              label="Theaters"
-              mode="multiple"
-              rules={[{ required: false, message: 'Please select your theaters!' }]}
-              fetchOptions={fetchDropdownTheaters}
-              optionsData={response?.items}
-              loading={loading}
-              optionLabelKey="name"
-              optionExtraLabel=""
-              optionValueKey="id"
-              searchParamKey="search"
-              isInfoVisible={true}
-            />
-          </div>
+          {(selectedRole === UserRoleConstants.eventOrganizerRoleId ||
+            selectedRole === UserRoleConstants.eventSupportingTeamRoleId) && (
+              <div className="my-10">
+                <GenericDropdown
+                  name="theatre_ids"
+                  label="Theaters"
+                  mode="multiple"
+                  rules={[{ required: false, message: 'Please select your theaters!' }]}
+                  fetchOptions={fetchDropdownTheaters}
+                  optionsData={response?.items}
+                  loading={loading}
+                  optionLabelKey="name"
+                  optionExtraLabel=""
+                  optionValueKey="id"
+                  searchParamKey="search"
+                  isInfoVisible={true}
+                />
+              </div>
+            )}
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"

@@ -70,7 +70,8 @@ const UserForm = ({ mode, user }) => {
             ]
             : [],
       };
-      if (user.role.position_id === UserRoleConstants.eventOrganizerRoleId) {
+      if (user.role.position_id === UserRoleConstants.eventOrganizerRoleId ||
+        user.role.position_id === UserRoleConstants.eventSupportingTeamRoleId) {
         dispatch(fetchAllEvent({}));
         dispatch(fetchDropdownTheaters({}));
       }
