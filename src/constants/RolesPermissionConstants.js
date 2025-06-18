@@ -45,9 +45,13 @@ export const PERMISSIONS = {
         GET_USER_RELATED_ENTRIES: 'get_user_related_entries',
     },
     APPLICATIONS: {
+        title:'Application',
         SERVICES: {
+            title: "Services",
             GENERAL: {
+                title: "General",
                 EVENT_TYPES: {
+                    title: 'Event Type',
                     GET_EVENT_TYPE_OPTIONS: 'get_event_type_options',
                     GET_EVENT_TYPE: 'get_event_type',
                     ADD_EVENT_TYPE: 'add_event_type',
@@ -56,7 +60,7 @@ export const PERMISSIONS = {
                     UPDATE_EVENT_TYPE_STATUS: 'update_event_type_status',
                 },
                 PLACE: {
-                    TITLE: 'Place',
+                    title: 'Place',
                     ADD_PLACE: 'add_place',
                     GET_PLACE: 'get_place',
                     EDIT_PLACE: 'edit_place',
@@ -66,6 +70,7 @@ export const PERMISSIONS = {
                     GET_PLACE_WITH_COUNTRY: 'get_place_with_country',
                 },
                 VENUE: {
+                    title: 'Venue',
                     GET_VENUE: 'get_venue',
                     ADD_VENUE: 'add_venue',
                     EDIT_VENUE: 'edit_venue',
@@ -73,6 +78,7 @@ export const PERMISSIONS = {
                     EDIT_VENUE_STATUS: 'edit_venue_status',
                 },
                 TAX: {
+                    title: 'Tax',
                     GET_TAXES: 'get_taxes',
                     ADD_TAXES: 'add_taxes',
                     EDIT_TAXES: 'edit_taxes',
@@ -80,6 +86,7 @@ export const PERMISSIONS = {
                     GET_AVAILABLE_TAX_CATEGORY: 'get_available_tax_category',
                 },
                 CATEGORY: {
+                    title: 'Category',
                     ADD_CATEGORY: 'add_category',
                     EDIT_CATEGORY: 'edit_category',
                     GET_CATEGORY: 'get_category',
@@ -92,6 +99,7 @@ export const PERMISSIONS = {
                     GET_SINGLE_SUBCATEGORY: 'get_single_subcategory',
                 },
                 OFFER: {
+                    title: 'Offer',
                     GET_OFFERS: 'get_offers',
                     ADD_OFFERS: 'add_offers',
                     EDIT_OFFERS: 'edit_offers',
@@ -99,30 +107,36 @@ export const PERMISSIONS = {
                     GET_OFFER_DETAIL: 'get_offer_detail',
                 },
                 COUPON: {
+                    title: 'Coupon',
                     ADD_COUPONS: 'add_coupons',
                     GET_COUPONS: 'get_coupons',
                     UPDATE_COUPON_STATUS: 'update_coupon_status',
                     GET_COUPON_DETAIL: 'get_coupon_detail',
                 },
                 SEAT: {
-
+                    title: 'Seat',
+                    // Add seat-related here as needed
                 },
                 PAYMENT: {
+                    title: 'Payment',
                     GET_PAYMENT: 'get_payment',
                     GET_PAYMENT_DETAILS: 'get_single_payment',
                     ADD_PAYMENT: 'add_payment',
                     EDIT_PAYMENT: 'edit_payment',
-                    GET_PAYMENT_METHODS: 'get_payment_method'
+                    GET_PAYMENT_METHODS: 'get_payment_method',
                 }
             },
             EVENT: {
+                title: 'Event',
                 TICKET: {
+                    title: 'Ticket',
                     ADD_TICKET: 'add_ticket_structure',
                     GET_TICKET: 'get_ticket_structure',
                     EDIT_TICKET_STRUCTURE: 'edit_ticket_structure',
                     VALIDATE_TICKET: 'validate_ticket'
                 },
                 SEAT: {
+                    title: 'Seat',
                     GET_EVENT_SEAT_STRUCTURE: 'get_event_seat_structure',
                     GET_EVENT_SINGLE_SEAT_STRUCTURE: 'get_single_event_seat_structure',
                     ADD_EVENT_SEAT_STRUCTURE: 'add_event_seat_structure',
@@ -156,6 +170,7 @@ export const PERMISSIONS = {
                     GET_SINGLE_CUSTOMER_EVENT: 'get_single_customer_event',
                 },
                 SCHEDULE: {
+                    title: 'Schedule',
                     GET_AVAILABLE_SCHEDULE_TYPES: 'get_available_schedule_types',
                     GET_EVENT_SCHEDULES: 'get_event_schedules',
                     ADD_EVENT_SCHEDULES: 'add_event_schedules',
@@ -163,7 +178,9 @@ export const PERMISSIONS = {
                 },
             },
             MOVIE: {
+                title: 'Movie',
                 THEATER_MODULE: {
+                    title: 'Theater',
                     THEATER_COMPANY: {
                         ADD_THEATER_COMPANY: 'create_theater_company',
                         GET_THEATER_COMPANY_DETAILS: 'get_single_theater_company',
@@ -180,6 +197,7 @@ export const PERMISSIONS = {
                     }
                 },
                 SCREEN: {
+                    title: 'Screen',
                     ADD_SCREEN: 'create_screen',
                     EDIT_SCREEN: 'edit_screen',
                     EDIT_SCREEN_STATUS: 'edit_screen_status',
@@ -193,9 +211,10 @@ export const PERMISSIONS = {
                     GET_SCREEN_FEATURES: 'get_screen_feature',
                 },
                 SEAT: {
-
+                    title: 'Seat',
                 },
                 PERSONALITY_PROFILE: {
+                    title: 'Personality Profiles',
                     GET_PERSONALITY: 'get_movie_personality',
                     ADD_PERSONALITY: 'add_movie_personality',
                     EDIT_PERSONALITY: 'edit_movie_personality',
@@ -212,6 +231,7 @@ export const PERMISSIONS = {
                     GET_MOVIE_GENRES: 'get_movie_genres',
                 },
                 SCHEDULE: {
+                    title: 'Schedule',
                     GET_MOVIE_SCHEDULES: 'get_movie_schedules',
                     ADD_MOVIE_SCHEDULES: 'add_movie_schedules',
                     GET_ORGANIZER_MOVIE_SCHEDULES: 'get_organizer_movie_schedules',
@@ -222,7 +242,9 @@ export const PERMISSIONS = {
             },
         },
         ISSUES: {
+            title: 'Issues',
             ISSUE: {
+                title: 'Issues',
                 ADD_ISSUES: 'add_issues',
                 GET_ISSUES: 'get_issues',
                 GET_ISSUE_ASSIGN_DETAILS: 'get_issue_assign_details',
@@ -236,12 +258,15 @@ export const PERMISSIONS = {
 
             },
             ISSUE_ALERT: {
+                title: 'Alert',
                 GET_ISSUE_ALERTS: 'get_issue_alerts',
                 GET_ISSUE_ALERTS_DETAILS: 'get_single_issue_alerts',
             }
         },
         TRACK_REQUEST: {
+            title: 'Track Request',
             EVENT: {
+                title: 'Event Organiser updates',
                 GET_SINGLE_EVENT_UPDATE: 'get_single_event_update',
                 SUPER_ADMIN_APPROVAL: 'super_admin_approval',
                 SUPER_ADMIN_UPDATE: 'super_admin_update',
@@ -249,23 +274,38 @@ export const PERMISSIONS = {
                 ORGANIZER_MAKE_CHANGES: 'organizer_make_changes',
             },
             MOVIE: {
+                title: 'Movie',
                 SEAT: {
+                    title: 'Seat',
                     SUPER_ADMIN_APPROVAL: 'approve_organizer_movie_seats'
-
                 },
                 OFFER: {
+                    title: 'Offer',
                     SUPER_ADMIN_APPROVAL: 'approve_organizer_offer'
                 },
                 COUPEN: {
+                    title: 'Coupon',
                     SUPER_ADMIN_APPROVAL: 'approve_organizer_coupon'
                 },
                 SCHEDULE: {
+                    title: 'Schedule',
                     SUPER_ADMIN_APPROVAL: 'approve_organizer_movie_schedule'
-
                 }
             }
         },
         LEAD_EVENT_REQUEST: {
+            title: 'Lead Event Request',
+            EVENT_REQUEST_LIST: {
+                title: 'Event Request List',
+                ADD_LEAD_EVENT: 'lead_event_creation',
+                EDIT_LEAD_EVENT: 'edit_lead_event',
+                EDIT_LEAD_EVENT_STATUS: 'edit_lead_event_status',
+                ENROLL_USER_LEAD_EVENT_STATUS: 'enroll_user_lead_event',
+                GET_LEAD_EVENT: 'get_lead_events',
+                GET_SINGLE_LEAD_EVENT: 'get_single_lead_event',
+                ADD_LEAD_EVENT_COMMENT: 'add_lead_event_comment',
+                GET_LEAD_EVENT_COMMENT: 'get_lead_event_comment',
+            },
             ADD_LEAD_EVENT: 'lead_event_creation',
             EDIT_LEAD_EVENT: 'edit_lead_event',
             EDIT_LEAD_EVENT_STATUS: 'edit_lead_event_status',
@@ -276,18 +316,57 @@ export const PERMISSIONS = {
             GET_LEAD_EVENT_COMMENT: 'get_lead_event_comment',
         },
         ADVERTISEMENTS: {
+            title: 'Advertisements',
+            AD_CATEGORY: {
+                title: 'Ad Schedule',
 
+            },
+            BANNERS: {
+                title: 'Banners',
+
+            },
+            SCHEDULE: {
+                title: 'Schedule',
+
+            }
         },
         NEWS_LETTER: {
+            title: 'News Letter',
+            NEWS_LETTER: {
+                title: 'News Letter',
 
+            },
+            SUBSCRIBERS: {
+                title: 'Subsibers',
+
+            }
         },
         USER: {
+            title: 'User',
+            USER: {
 
+            },
+            SYSTEM_PERMISSIONS: {
+                title: 'System Permissions',
+            }
         },
     },
     APP_MANAGEMENT: {
+        title:'App Management',
         LAYOUT: {
-
+            title:'Layout',
+            FOOTER:{
+                title:"Footer"
+            },
+            FAQ:{
+                title:'FAQ'
+            },
+            APP_INFO:{
+                title:'App Info'
+            },
+            TERMS_CONDITIONS:{
+                title:'Terms and Conditions'
+            }
         },
     },
 };

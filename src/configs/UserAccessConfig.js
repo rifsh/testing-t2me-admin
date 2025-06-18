@@ -152,7 +152,7 @@ export const AUTHENTICATED_ENTRY = () => {
     case UserRoleConstants.superAdminRoleId:
       return `${APP_PREFIX_PATH}/super-admin/reports`;
     case UserRoleConstants.techAdminRoleId:
-      return `${APP_PREFIX_PATH}/super-admin/reports`;
+      return `${APP_PREFIX_PATH}/place/list`;
     case UserRoleConstants.eventOrganizerRoleId:
       return `${APP_PREFIX_PATH}/organizer/reports`;
     case UserRoleConstants.eventSupportingTeamRoleId:
