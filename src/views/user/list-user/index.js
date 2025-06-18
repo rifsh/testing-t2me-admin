@@ -37,6 +37,8 @@ import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import usePermissions from "utils/hooks/usePermissions";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
 const { Option } = Select;
 
@@ -57,6 +59,7 @@ const UserList = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const handlePagination = usePaginationHook(fetchAllUsers);
   const currentUser = getCurrentUser();
+  const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
     dispatch(fetchAllUsers({
@@ -64,9 +67,6 @@ const UserList = () => {
       // role_id: currentUser.role_id
     }));
   }, [dispatch]);
-  // const handlePagination = (page, size) => {
-  //   dispatch(fetchAllUsers({ page: page, size: size }));
-  // };
 
   useEffect(() => {
     console.log("filteredUsers", filteredUsers)
@@ -139,7 +139,8 @@ const UserList = () => {
       dataIndex: ["role", "name"],
       sorter: (a, b) => Utils.antdTableSorter(a, b, ["role", "name"]),
     },
-    Utils.statusColumnUtil(handleUpdateStatus, "is_active"),
+    // Utils.statusColumnUtil(handleUpdateStatus, true, "is_active"),
+    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.USER.USER.EDIT_USER_STATUS), 'is_active'),
     {
       title: "",
       dataIndex: "actions",
@@ -159,13 +160,13 @@ const UserList = () => {
         style={{ paddingBottom: "30px" }}
       >
         <SearchBarWithStatus fetchFunction={fetchAllUsers} />
-        <Button
+        {hasPermission(PERMISSIONS.APPLICATIONS.USER.USER.ADD_USER) && <Button
           type="primary"
           icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/user/add`)}
         >
           Add User
-        </Button>
+        </Button>}
       </Flex>
       <Table
         columns={tableColumns}
