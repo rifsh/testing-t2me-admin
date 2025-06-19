@@ -95,9 +95,9 @@ export const ApiConstant = {
   ADMIN_COMMENT_URL: "/api/v1/shared/issue/secured/issues/comment/admin",
 
   // Permissions
-  GET_PERSMISSIONS: "/api/v1/shared/auth/secured/permissions",
-  GET_PERSMISSIONS_DISPLAY_NAMES: "/api/v1/shared/auth/secured/permissions/names",
-  ADD_PERSMISSIONS_ACCESS: "/api/v1/shared/auth/secured/permissions/update",
+  GET_PERSMISSIONS: "/api/v1/shared/permission/secured/permissions",
+  GET_PERSMISSIONS_DISPLAY_NAMES: "/api/v1/shared/permission/secured/permissions/names",
+  ADD_PERSMISSIONS_ACCESS: "/api/v1/shared/permission/secured/permissions/update",
 
   // ADVERTISEMENT ENDPOINTS
 
