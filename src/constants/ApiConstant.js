@@ -54,7 +54,8 @@ export const ApiConstant = {
   COUPON_STATUS_URL: "/api/v1/shared/offers/secured/coupons_status",
   COUPON_DETAILS_URL: "/api/v1/shared/offers/secured/coupons/detail",
   ORGANIZER_OFFER_URL: "/api/v1/shared/offers/secured/offers/organizer",
-  ORGANIZER_OFFER_MAKE_CHANGES_URL: "/api/v1/shared/offers/secured/offers/organizer/make_changes",
+  ORGANIZER_OFFER_MAKE_CHANGES_URL:
+    "/api/v1/shared/offers/secured/offers/organizer/make_changes",
   ORGANIZER_OFFER_STATUS_URL:
     "/api/v1/shared/offers/secured/offers_status/organizer",
   ORGANIZER_OFFER_APPROVAL_URL:
@@ -63,8 +64,10 @@ export const ApiConstant = {
     "/api/v1/shared/offers/secured/offers/organizer/detail",
 
   ORGANIZER_COUPON_URL: "/api/v1/shared/offers/secured/coupons/organizer",
-  ORGANIZER_COUPON_MAKE_CHANGES_URL: "/api/v1/shared/offers/secured/coupons/organizer/make_changes",
-  ORGANIZER_COUPON_UPDATE_URL: "/api/v1/shared/offers/secured/coupons/organizer/update",
+  ORGANIZER_COUPON_MAKE_CHANGES_URL:
+    "/api/v1/shared/offers/secured/coupons/organizer/make_changes",
+  ORGANIZER_COUPON_UPDATE_URL:
+    "/api/v1/shared/offers/secured/coupons/organizer/update",
   ORGANIZER_COUPON_STATUS_URL:
     "/api/v1/shared/offers/secured/coupons_status/organizer",
   ORGANIZER_COUPON_DETAILS_URL:
@@ -96,8 +99,10 @@ export const ApiConstant = {
 
   // Permissions
   GET_PERSMISSIONS: "/api/v1/shared/permission/secured/permissions",
-  GET_PERSMISSIONS_DISPLAY_NAMES: "/api/v1/shared/permission/secured/permissions/names",
-  ADD_PERSMISSIONS_ACCESS: "/api/v1/shared/permission/secured/permissions/update",
+  GET_PERSMISSIONS_DISPLAY_NAMES:
+    "/api/v1/shared/permission/secured/permissions/names",
+  ADD_PERSMISSIONS_ACCESS:
+    "/api/v1/shared/permission/secured/permissions/update",
 
   // ADVERTISEMENT ENDPOINTS
 
@@ -234,7 +239,8 @@ export const ApiConstant = {
   //seat api
   MOVIE_SEAT_URL: "/api/v1/movie/seats/secured/seatstructure",
   MOVIE_SEAT_EDIT_URL: "/api/v1/movie/seats/secured/seatstructure/edit",
-  MOVIE_SEAT_MAKE_EDIT_URL: "/api/v1/movie/seats/secured/seatstructure/organizer/make_changes",
+  MOVIE_SEAT_MAKE_EDIT_URL:
+    "/api/v1/movie/seats/secured/seatstructure/organizer/make_changes",
   MOVIE_SEAT_STATUS_URL:
     "/api/v1/movie/seats/secured/seatstructure/edit/status",
   MOVIE_SEAT_DETAILS_URL: "/api/v1/movie/seats/secured/seatstructure/single",
@@ -258,9 +264,12 @@ export const ApiConstant = {
   // MOVIE_SCHEDULE_URL: "/api/v1/movie/movies/secured/movie_schedules",
   // ADD_MOVIE_SCHEDULE_URL: "/api/v1/movie/schedule/secured/movie_schedules",
   MOVIE_SCHEDULE_URL: "/api/v1/movie/schedule/secured/movie_schedules",
-  MOVIE_ORGANIZER_SCHEDULE_URL: "/api/v1/movie/schedule/secured/schedules/organizer",
-  MOVIE_ORGANIZER_SCHEDULE_DETAIL_URL: "/api/v1/movie/schedule/secured/schedules/organizer/details",
-  ORGANIZER_MOVIE_SCHEDULE_APPROVAL_URL: "/api/v1/movie/schedule/secured/schedules/organizer/approval",
+  MOVIE_ORGANIZER_SCHEDULE_URL:
+    "/api/v1/movie/schedule/secured/schedules/organizer",
+  MOVIE_ORGANIZER_SCHEDULE_DETAIL_URL:
+    "/api/v1/movie/schedule/secured/schedules/organizer/details",
+  ORGANIZER_MOVIE_SCHEDULE_APPROVAL_URL:
+    "/api/v1/movie/schedule/secured/schedules/organizer/approval",
   // MOVIE_SCHEDULE_DETAILS_URL:"/api/v1/movie/movies/secured/movie_schedules/single",
   MOVIE_SCHEDULE_DETAILS_URL:
     "/api/v1/movie/schedule/secured/movie_schedules/single",
@@ -280,4 +289,9 @@ export const ApiConstant = {
   REPORT_EVENT_LISTING: "/api/v1/shared/report/secured/report/users_events",
   REPORT_EXPORTS: "/api/v1/shared/report/secured/stats/position-5/monthly",
   REPORT_MOVIE_LISTING: "/api/v1/shared/report/secured/report/theatre_movies",
+
+  //Orders
+  EVENT_ORDERS_LIST: "/api/v1/event/orders/secured/schedule/list",
+  EVENT_ORDERS_DETAILS:
+    "/api/v1/event/orders/secured/schedule/show/date/details",
 };
