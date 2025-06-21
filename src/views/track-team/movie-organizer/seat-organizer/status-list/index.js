@@ -12,6 +12,8 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import Utils from "utils";
 import { getAllTrackrequestSeatStructures } from "store/slices/movieSeatSlice";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { PERMISSIONS } from "constants/RolesPermissionConstants";
+import usePermissions from "utils/hooks/usePermissions";
 
 const { Option } = Select;
 
@@ -21,6 +23,7 @@ const OrganizerMovieStatusList = () => {
     const location = useLocation();
     const params = new URLSearchParams(location.search);
     const [formattedData, setFormattedData] = useState([]);
+    const { hasPermission, hasAnyPermission } = usePermissions()
     const type = params.get("type");
     const { allTrackrequestSeats, pagination, loading } = useSelector(
         (state) => state.movieSeatSlice
@@ -64,12 +67,13 @@ const OrganizerMovieStatusList = () => {
 
     const dropdownMenu = (row) => (
         <Menu>
-            <Menu.Item>
-                <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+            {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.GET_ORGANIZER_SINGLE_MOVIE_SEAT_STRUCTURE) && <Menu.Item>
+                < Flex alignItems="center"
+                    onClick={() => handleViewDetails(row.id)}>
                     <EyeOutlined />
                     <span className="ml-2">View Details</span>
-                </Flex>
-            </Menu.Item>
+                </Flex >
+            </Menu.Item>}
         </Menu>
     );
 
@@ -125,9 +129,13 @@ const OrganizerMovieStatusList = () => {
             title: "",
             dataIndex: "actions",
             render: (_, elm) => (
-                <div className="text-right">
-                    <EllipsisDropdown menu={dropdownMenu(elm)} />
-                </div>
+                hasAnyPermission([
+                    PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.GET_ORGANIZER_SINGLE_MOVIE_SEAT_STRUCTURE
+                ]) ? (
+                    < div className="text-right" >
+                        <EllipsisDropdown menu={dropdownMenu(elm)} />
+                    </div >
+                ) : null
             ),
         },
     ];

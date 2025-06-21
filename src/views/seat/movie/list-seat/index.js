@@ -113,22 +113,37 @@ const MovieSeatList = () => {
 
   const dropdownMenu = (row) => (
     <Menu>
-      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.GET_SIGNLE_MOVIE_SEAT_STRUCTURE) && <Menu.Item>
-        < Flex alignItems="center"
-          onClick={() => navigate(`${APP_PREFIX_PATH}/seat/movie/${row.id}`)}>
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex >
-      </Menu.Item>}
-      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.EDIT_MOVIE_SEAT_STRUCTURE) && <Menu.Item>
-        < Flex alignItems="center"
-          onClick={() => handleEditSeat(row.id)}
-        >
-          <EditOutlined />
-          <span className="ml-2">Edit Seat Structure</span>
-        </Flex >
-      </Menu.Item>}
-    </Menu >
+      {/* View Details Menu Item */}
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.GET_SIGNLE_MOVIE_SEAT_STRUCTURE) && (
+        <Menu.Item key="view">
+          <Flex alignItems="center" onClick={() => navigate(`${APP_PREFIX_PATH}/seat/movie/${row.id}`)}>
+            <EyeOutlined />
+            <span className="tlw-ml-2">View Details</span>
+          </Flex>
+        </Menu.Item>
+      )}
+
+      {/* Edit Seat Structure Menu Item */}
+      {isOrganizer() ? (
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.EDIT_ORGANIZER_MOVIE_SEAT_STRUCTURE) && (
+          <Menu.Item key="edit-organizer">
+            <Flex alignItems="center" onClick={() => handleEditSeat(row.id)}>
+              <EditOutlined />
+              <span className="tlw-ml-2">Edit Seat Structure</span>
+            </Flex>
+          </Menu.Item>
+        )
+      ) : (
+        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.EDIT_MOVIE_SEAT_STRUCTURE) && (
+          <Menu.Item key="edit">
+            <Flex alignItems="center" onClick={() => handleEditSeat(row.id)}>
+              <EditOutlined />
+              <span className="tlw-ml-2">Edit Seat Structure</span>
+            </Flex>
+          </Menu.Item>
+        )
+      )}
+    </Menu>
   );
 
   const tableColumns = [
@@ -212,14 +227,26 @@ const MovieSeatList = () => {
       title: "",
       dataIndex: "actions",
       render: (_, row) => (
-        hasAnyPermission([
-          PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.EDIT_MOVIE_SEAT_STRUCTURE,
-          PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.GET_SIGNLE_MOVIE_SEAT_STRUCTURE
-        ]) ? (
-          <div className="text-right">
-            <EllipsisDropdown menu={dropdownMenu(row)} />
-          </div>
-        ) : null
+        isOrganizer() ? (
+          hasAnyPermission([
+            PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.EDIT_ORGANIZER_MOVIE_SEAT_STRUCTURE,
+            PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.GET_SIGNLE_MOVIE_SEAT_STRUCTURE
+          ]) ? (
+            <div className="text-right">
+              <EllipsisDropdown menu={dropdownMenu(row)} />
+            </div>
+          ) : null
+
+        ) : (
+          hasAnyPermission([
+            PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.EDIT_MOVIE_SEAT_STRUCTURE,
+            PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.GET_SIGNLE_MOVIE_SEAT_STRUCTURE
+          ]) ? (
+            <div className="text-right">
+              <EllipsisDropdown menu={dropdownMenu(row)} />
+            </div>
+          ) : null
+        )
 
       ),
     },
@@ -233,13 +260,27 @@ const MovieSeatList = () => {
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={getAllSeatStructures} />
-        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.ADD_SEAT_STRUCTURE) && <Button
-          type="primary"
-          icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/seat/movie/add`)}
-        >
-          Add Seat Structure
-        </Button>}
+        {isOrganizer ? (
+          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.ADD_ORGANIZER_MOVIE_SEAT_STRUCTURE) && (
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              onClick={() => navigate(`${APP_PREFIX_PATH}/seat/movie/add`)}
+            >
+              Add Seat Structure
+            </Button>
+          )
+        ) : (
+          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.ADD_SEAT_STRUCTURE) && (
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              onClick={() => navigate(`${APP_PREFIX_PATH}/seat/movie/add`)}
+            >
+              Add Seat Structure
+            </Button>
+          )
+        )}
       </Flex>
       <Table
         columns={tableColumns}

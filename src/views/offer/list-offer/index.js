@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Button, Modal, Descriptions, Dropdown } from "antd";
+import { Card, Table, Button, Modal, Descriptions, Dropdown, Menu } from "antd";
 import {
   EyeOutlined,
   FormOutlined,
@@ -124,6 +124,50 @@ const OfferList = () => {
     },
   ];
 
+  const dropdownMenu = (row) => (
+    <Menu>
+      {/* View Details Menu Item */}
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.GET_OFFER_DETAIL) && (
+        <Menu.Item key="view">
+          <Flex alignItems="center"
+            onClick={() => showModal(row)}
+          >
+            <EyeOutlined />
+            <span className="ml-2">View Details</span>
+          </Flex >
+        </Menu.Item>
+      )
+      }
+
+      {/* Edit Seat Structure Menu Item */}
+      {
+        isOrganizer() ? (
+          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.GET_OFFER_DETAIL) && (
+            <Menu.Item key="edit-organizer">
+              <Flex alignItems="center"
+                onClick={() => handleEditTax(row.id)}
+              >
+                <EditOutlined />
+                <span className="ml-2">Edit Offer</span>
+              </Flex >
+            </Menu.Item>
+          )
+        ) : (
+          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.EDIT_OFFERS) && (
+            <Menu.Item key="edit">
+              <Flex alignItems="center"
+                onClick={() => handleEditTax(row.id)}
+              >
+                <EditOutlined />
+                <span className="ml-2">Edit Offer</span>
+              </Flex >
+            </Menu.Item >
+          )
+        )
+      }
+    </Menu >
+  );
+
   const tableColumns = [
     {
       title: "Offer Name",
@@ -172,13 +216,27 @@ const OfferList = () => {
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={fetchAllOffers} />
-        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS) && <Button
-          type="primary"
-          icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)}
-        >
-          Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
-        </Button>}
+        {isOrganizer ? (
+          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_ORGANIZER_OFFERS) && (
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)}
+            >
+              Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
+            </Button>
+          )
+        ) : (
+          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS) && (
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)}
+            >
+              Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
+            </Button>
+          )
+        )}
       </Flex>
       <Table
         columns={tableColumns}
