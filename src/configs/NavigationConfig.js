@@ -96,7 +96,7 @@ const superAdminDashBoardNavTree = [
       {
         key: "super-admin.reports",
         path: `${APP_PREFIX_PATH}/super-admin/reports`,
-        title: "sidenav.apps.admin-reports",
+        title: "sidenav.dashboard",
         icon: DashboardOutlined,
         breadcrumb: false,
         submenu: [],

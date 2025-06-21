@@ -10,6 +10,8 @@ import {
   DollarOutlined,
 } from "@ant-design/icons";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { fethEventOrderDetails } from "store/slices/ordersSlice";
 
 // Mock detailed booking data
 const mockBookingDetails = {
@@ -94,10 +96,15 @@ const EventDetailsPage = () => {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("details");
   const [bookingData, setBookingData] = useState([]);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [event, setEvent] = useState(null);
+
+  useEffect(() => {
+    dispatch(fethEventOrderDetails({ schedule_id: 78 }));
+  }, [dispatch]);
 
   useEffect(() => {
     if (location.state?.event) {
@@ -165,7 +172,7 @@ const EventDetailsPage = () => {
   };
 
   const handleBackToList = () => {
-    navigate(-1); 
+    navigate(-1);
   };
 
   const bookingColumns = [
@@ -391,7 +398,7 @@ const EventDetailsPage = () => {
               pageSize: 10,
               showSizeChanger: true,
               pageSizeOptions: ["10", "20", "50"],
-            //   showQuickJumper: true,
+              //   showQuickJumper: true,
               showTotal: (total, range) =>
                 `${range[0]}-${range[1]} of ${total} bookings`,
             }}

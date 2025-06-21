@@ -2,206 +2,125 @@ import React, { useEffect, useState } from "react";
 import {
   Card,
   Table,
+  Input,
+  Button,
+  Menu,
   Row,
   Col,
   Statistic,
-  Badge,
-  Button,
-  Space,
-  Avatar,
   Tag,
+  Badge,
+  Avatar,
+  Select,
 } from "antd";
 import {
-  CalendarOutlined,
+  EyeOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
-  EyeOutlined,
-  EnvironmentOutlined,
   TeamOutlined,
-  DollarOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { fethEventOrders } from "store/slices/ordersSlice";
+import utils from "utils";
+import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
+import Flex from "components/shared-components/Flex";
+import {
+  resetSearchValue,
+  setGlobalSearchValue,
+} from "store/slices/fliterSlice";
+import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
-// Mock data for events
-const mockEvents = [
-  {
-    id: 1,
-    event_name: "Summer Music Festival 2024",
-    event_code: "SMF2024",
-    event_date: "2024-08-15",
-    location: "Central Park, New York",
-    total_orders: 245,
-    completed_bookings: 198,
-    pending_bookings: 32,
-    failed_bookings: 15,
-    total_revenue: 49000,
-    status: "active",
-    created_at: "2024-06-01T10:30:00Z",
-    image:
-      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop&crop=center",
-  },
-  {
-    id: 2,
-    event_name: "Tech Conference 2024",
-    event_code: "TECH2024",
-    event_date: "2024-09-22",
-    location: "Convention Center, San Francisco",
-    total_orders: 156,
-    completed_bookings: 134,
-    pending_bookings: 18,
-    failed_bookings: 4,
-    total_revenue: 78000,
-    status: "active",
-    created_at: "2024-05-15T14:20:00Z",
-    image:
-      "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=100&h=100&fit=crop&crop=center",
-  },
-  {
-    id: 3,
-    event_name: "Food & Wine Expo",
-    event_code: "FWE2024",
-    event_date: "2024-07-30",
-    location: "Grand Hall, Chicago",
-    total_orders: 89,
-    completed_bookings: 76,
-    pending_bookings: 8,
-    failed_bookings: 5,
-    total_revenue: 22500,
-    status: "completed",
-    created_at: "2024-04-10T09:15:00Z",
-    image:
-      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=100&h=100&fit=crop&crop=center",
-  },
-  {
-    id: 4,
-    event_name: "Art Gallery Opening",
-    event_code: "AGO2024",
-    event_date: "2024-10-05",
-    location: "Modern Art Museum, Los Angeles",
-    total_orders: 67,
-    completed_bookings: 45,
-    pending_bookings: 15,
-    failed_bookings: 7,
-    total_revenue: 13400,
-    status: "active",
-    created_at: "2024-06-20T16:45:00Z",
-    image:
-      "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=100&h=100&fit=crop&crop=center",
-  },
-  {
-    id: 5,
-    event_name: "Marathon 2024",
-    event_code: "MAR2024",
-    event_date: "2024-11-12",
-    location: "City Streets, Boston",
-    total_orders: 312,
-    completed_bookings: 298,
-    pending_bookings: 10,
-    failed_bookings: 4,
-    total_revenue: 15600,
-    status: "active",
-    created_at: "2024-03-25T11:00:00Z",
-    image:
-      "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=100&h=100&fit=crop&crop=center",
-  },
-];
+const { Search } = Input;
+const { Option } = Select;
 
 const OrdersList = () => {
-  const [filteredEvents, setFilteredEvents] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeStatus, setActiveStatus] = useState(null);
+  const {
+    eventOrdersDataList: eventOrdersData,
+
+    loading,
+    pagination,
+  } = useSelector((state) => state.orderSlice);
 
   useEffect(() => {
-    // Simulate loading
-    setLoading(true);
-    setTimeout(() => {
-      setFilteredEvents(mockEvents);
-      setLoading(false);
-    }, 500);
-  }, []);
+    dispatch(fethEventOrders(DEFAULT_PAGE_SIZE));
+  }, [dispatch]);
 
-  const handleViewDetails = (event) => {
-    navigate(`/reports/orders/event/details/${event.id}`, { state: { event } });
+  const handleViewDetails = (schedule) => {
+    navigate(`${APP_PREFIX_PATH}/reports/orders/event/details/${schedule.id}`, {
+      state: { schedule },
+    });
   };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "completed":
-        return "success";
-      case "pending":
-        return "warning";
-      case "failed":
-        return "error";
-      case "active":
-        return "processing";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircleOutlined />;
-      case "pending":
-        return <ClockCircleOutlined />;
-      case "failed":
-        return <CloseCircleOutlined />;
-      case "active":
-        return <CheckCircleOutlined />;
-      default:
-        return <CheckCircleOutlined />;
-    }
-  };
+  const handlePagination = usePaginationHook(fethEventOrders);
+  const dropdownMenu = (row) => (
+    <Menu>
+      <Menu.Item>
+        <Flex alignItems="center" onClick={() => handleViewDetails(row)}>
+          <EyeOutlined />
+          <span className="ml-2">View Details</span>
+        </Flex>
+      </Menu.Item>
+    </Menu>
+  );
 
   const tableColumns = [
     {
-      title: "Event",
-      dataIndex: "event_name",
-      key: "event_name",
-      render: (event_name, record) => (
+      title: "Schedule",
+      dataIndex: "name",
+      key: "name",
+      render: (name, record) => (
         <div style={{ display: "flex", alignItems: "center" }}>
           <Avatar
-            src={record.image}
+            src={record.event?.thumbnail_image}
             size={40}
             style={{ marginRight: 12 }}
             icon={<CalendarOutlined />}
           />
           <div>
-            <div style={{ fontWeight: "bold" }}>{event_name || "N/A"}</div>
-            <div style={{ color: "#666", fontSize: "12px" }}>
-              <EnvironmentOutlined style={{ marginRight: 4 }} />
-              {record.location}
-            </div>
+            <div style={{ fontWeight: "bold" }}>{name || "N/A"}</div>
           </div>
         </div>
       ),
+      sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
     },
     {
-      title: "Event Code",
-      dataIndex: "event_code",
-      key: "event_code",
-      render: (code) => <Tag color="blue">{code || "N/A"}</Tag>,
+      title: "Event",
+      dataIndex: ["event", "event_name"],
+      key: "event_name",
+      render: (event_name) => (
+        <div style={{ fontWeight: "bold" }}>{event_name || "N/A"}</div>
+      ),
+      sorter: (a, b) =>
+        utils.antdTableObjectSorter(a, b, ["event", "event_name"]),
     },
     {
-      title: "Event Date",
-      dataIndex: "event_date",
-      key: "event_date",
+      title: "Start Date",
+      dataIndex: "start_date",
+      key: "start_date",
       render: (date) => (
         <div>
           <CalendarOutlined style={{ marginRight: 4 }} />
           {new Date(date).toLocaleDateString()}
         </div>
       ),
+      sorter: (a, b) => new Date(a.start_date) - new Date(b.start_date),
     },
     {
-      title: "Total Orders",
-      dataIndex: "total_orders",
-      key: "total_orders",
+      title: "Total Bookings",
+      dataIndex: "total_bookings",
+      key: "total_bookings",
       render: (total) => (
         <Badge count={total} showZero style={{ backgroundColor: "#52c41a" }} />
       ),
+      sorter: (a, b) => a.total_bookings - b.total_bookings,
     },
     {
       title: "Booking Status",
@@ -211,7 +130,7 @@ const OrdersList = () => {
           <div style={{ marginBottom: 4 }}>
             <span style={{ color: "#52c41a" }}>
               <CheckCircleOutlined style={{ marginRight: 4 }} />
-              Completed: {record.completed_bookings}
+              Success: {record.success_bookings}
             </span>
           </div>
           <div style={{ marginBottom: 4 }}>
@@ -230,71 +149,131 @@ const OrdersList = () => {
       ),
     },
     {
-      title: "Revenue",
-      dataIndex: "total_revenue",
-      key: "total_revenue",
-      render: (revenue) => (
-        <div style={{ color: "#52c41a", fontWeight: "bold" }}>
-          <DollarOutlined style={{ marginRight: 4 }} />$
-          {revenue?.toLocaleString()}
+      title: "Available Types",
+      dataIndex: "available_types",
+      key: "available_types",
+      render: (types) => <Tag color="blue">{types || "N/A"}</Tag>,
+      sorter: (a, b) => utils.antdTableSorter(a, b, "available_types"),
+    },
+    {
+      title: "",
+      dataIndex: "actions",
+      render: (_, elm) => (
+        <div className="text-right">
+          <EllipsisDropdown menu={dropdownMenu(elm)} />
         </div>
-      ),
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => (
-        <Tag color={getStatusColor(status)} icon={getStatusIcon(status)}>
-          {status?.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="primary"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetails(record)}
-          >
-            View Details
-          </Button>
-        </Space>
       ),
     },
   ];
 
+  const handleSearch = (value) => {
+    if (value) {
+      setSearchTerm(value);
+      dispatch(setGlobalSearchValue(value));
+      dispatch(
+        fethEventOrders({
+          search: value,
+          page: 1,
+          size: DEFAULT_PAGE_SIZE.size,
+          status: activeStatus,
+        })
+      );
+    }
+  };
+
+  const handleSearchIsEmpty = (value) => {
+    if (!value) {
+      setSearchTerm("");
+      dispatch(resetSearchValue());
+      dispatch(
+        fethEventOrders({
+          search: null,
+          page: 1,
+          size: DEFAULT_PAGE_SIZE.size,
+          status: activeStatus,
+        })
+      );
+    }
+  };
+
+  const handleShowStatus = (status) => {
+    setActiveStatus(status);
+    dispatch(
+      fethEventOrders({
+        search: searchTerm,
+        page: 1,
+        size: DEFAULT_PAGE_SIZE.size,
+        status,
+      })
+    );
+  };
+
+  const handleTableChange = (pagination) => {
+    dispatch(
+      fethEventOrders({
+        page: pagination.current,
+        size: pagination.pageSize,
+        search: searchTerm,
+        status: activeStatus,
+      })
+    );
+  };
+
   // Calculate total statistics
-  const totalStats = filteredEvents.reduce(
-    (acc, event) => ({
-      totalOrders: acc.totalOrders + event.total_orders,
-      completedBookings: acc.completedBookings + event.completed_bookings,
-      pendingBookings: acc.pendingBookings + event.pending_bookings,
-      failedBookings: acc.failedBookings + event.failed_bookings,
-      totalRevenue: acc.totalRevenue + event.total_revenue,
+  const totalStats = eventOrdersData.reduce(
+    (acc, schedule) => ({
+      totalBookings: acc.totalBookings + (schedule.total_bookings || 0),
+      successBookings: acc.successBookings + (schedule.success_bookings || 0),
+      pendingBookings: acc.pendingBookings + (schedule.pending_bookings || 0),
+      failedBookings: acc.failedBookings + (schedule.failed_bookings || 0),
     }),
     {
-      totalOrders: 0,
-      completedBookings: 0,
+      totalBookings: 0,
+      successBookings: 0,
       pendingBookings: 0,
       failedBookings: 0,
-      totalRevenue: 0,
     }
   );
 
   return (
-    <div>
+    <Card>
+      <Flex
+        alignItems="center"
+        justifyContent="space-between"
+        mobileFlex={false}
+      >
+        <Flex className="mb-1" mobileFlex={false}>
+          <div className="mr-md-3 mb-3">
+            <Search
+              placeholder="Search Schedules"
+              onChange={(e) => handleSearchIsEmpty(e.target.value)}
+              onSearch={handleSearch}
+              style={{ width: 200 }}
+            />
+          </div>
+          <div className="mb-3">
+            <Select
+              defaultValue="All"
+              onChange={handleShowStatus}
+              className="mr-2"
+            >
+              <Option value={null}>All</Option>
+              <Option value="active">Active</Option>
+              <Option value="completed">Completed</Option>
+              <Option value="pending">Pending</Option>
+              <Option value="failed">Failed</Option>
+            </Select>
+          </div>
+        </Flex>
+      </Flex>
+
       {/* Statistics Cards */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="Total Orders"
-              value={totalStats.totalOrders}
+              title="Total Bookings"
+              value={totalStats.totalBookings}
               prefix={<TeamOutlined />}
               valueStyle={{ color: "#1890ff" }}
             />
@@ -303,8 +282,8 @@ const OrdersList = () => {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="Completed Bookings"
-              value={totalStats.completedBookings}
+              title="Success Bookings"
+              value={totalStats.successBookings}
               prefix={<CheckCircleOutlined />}
               valueStyle={{ color: "#52c41a" }}
             />
@@ -323,31 +302,31 @@ const OrdersList = () => {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="Total Revenue"
-              value={totalStats.totalRevenue}
-              prefix={<DollarOutlined />}
-              valueStyle={{ color: "#52c41a" }}
-              formatter={(value) => `$${value.toLocaleString()}`}
+              title="Failed Bookings"
+              value={totalStats.failedBookings}
+              prefix={<CloseCircleOutlined />}
+              valueStyle={{ color: "#ff4d4f" }}
             />
           </Card>
         </Col>
       </Row>
 
-      <Card title="Events & Orders Overview">
+      <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={filteredEvents}
+          dataSource={eventOrdersData}
           rowKey="id"
           loading={loading}
+          onChange={handleTableChange}
           pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} items`,
+            current: pagination.page,
+            pageSize: pagination.size,
+            total: pagination.total,
+            onChange: (page, pageSize) => handlePagination(page, pageSize),
           }}
         />
-      </Card>
-    </div>
+      </div>
+    </Card>
   );
 };
 
