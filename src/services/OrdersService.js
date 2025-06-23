@@ -4,16 +4,23 @@ import Utils from "utils";
 
 const OrderService = {};
 
-OrderService.fethEventOrders = function (pageData) {
+OrderService.getEventOrders = function (pageData) {
   return fetch({
     url: `${ApiConstant.EVENT_ORDERS_LIST}`,
     method: "get",
     params: Utils.filterParams(pageData),
   });
 };
-OrderService.fethEventOrderDetails = function (pageData) {
+OrderService.getEventOrderDetailsDate = function (pageData) {
   return fetch({
-    url: `${ApiConstant.EVENT_ORDERS_DETAILS}`,
+    url: `${ApiConstant.EVENT_ORDERS_DETAILS_DATE}`,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
+OrderService.getEventOrderDetailsTime = function (pageData) {
+  return fetch({
+    url: `${ApiConstant.EVENT_ORDERS_DETAILS_TIME}`,
     method: "get",
     params: Utils.filterParams(pageData),
   });

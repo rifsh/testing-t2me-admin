@@ -836,7 +836,7 @@ export const protectedRoutes = [
   },
   {
     key: "reports.orders.event.details",
-    path: `${APP_PREFIX_PATH}/reports/orders/event/details/:eventId`,
+    path: `${APP_PREFIX_PATH}/reports/orders/event/details/:id`,
     component: React.lazy(() => import("views/orders/event/details")),
   },
   {

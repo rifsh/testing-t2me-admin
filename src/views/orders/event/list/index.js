@@ -23,7 +23,7 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fethEventOrders } from "store/slices/ordersSlice";
+import { getEventOrders } from "store/slices/ordersSlice";
 import utils from "utils";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
@@ -45,13 +45,13 @@ const OrdersList = () => {
   const [activeStatus, setActiveStatus] = useState(null);
   const {
     eventOrdersDataList: eventOrdersData,
-
+    
     loading,
     pagination,
   } = useSelector((state) => state.orderSlice);
 
   useEffect(() => {
-    dispatch(fethEventOrders(DEFAULT_PAGE_SIZE));
+    dispatch(getEventOrders(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
   const handleViewDetails = (schedule) => {
@@ -59,7 +59,7 @@ const OrdersList = () => {
       state: { schedule },
     });
   };
-  const handlePagination = usePaginationHook(fethEventOrders);
+  const handlePagination = usePaginationHook(getEventOrders);
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
@@ -171,7 +171,7 @@ const OrdersList = () => {
       setSearchTerm(value);
       dispatch(setGlobalSearchValue(value));
       dispatch(
-        fethEventOrders({
+        getEventOrders({
           search: value,
           page: 1,
           size: DEFAULT_PAGE_SIZE.size,
@@ -186,7 +186,7 @@ const OrdersList = () => {
       setSearchTerm("");
       dispatch(resetSearchValue());
       dispatch(
-        fethEventOrders({
+        getEventOrders({
           search: null,
           page: 1,
           size: DEFAULT_PAGE_SIZE.size,
@@ -199,7 +199,7 @@ const OrdersList = () => {
   const handleShowStatus = (status) => {
     setActiveStatus(status);
     dispatch(
-      fethEventOrders({
+      getEventOrders({
         search: searchTerm,
         page: 1,
         size: DEFAULT_PAGE_SIZE.size,
@@ -210,7 +210,7 @@ const OrdersList = () => {
 
   const handleTableChange = (pagination) => {
     dispatch(
-      fethEventOrders({
+      getEventOrders({
         page: pagination.current,
         size: pagination.pageSize,
         search: searchTerm,
