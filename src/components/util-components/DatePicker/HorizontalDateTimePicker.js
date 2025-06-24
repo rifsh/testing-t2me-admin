@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Clock, Calendar } from "lucide-react";
+import { BOOKING_TYPE } from "constants/AppConstants";
 
 const HorizontalDateTimePicker = ({
   dates,
@@ -9,18 +10,23 @@ const HorizontalDateTimePicker = ({
   onDateChange,
   onTimeChange,
   loading,
+  type,
 }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
 
   useEffect(() => {
     if (dates && selectedDateId) {
-      const foundDate = dates.find((date) => date.id === selectedDateId);
+      const foundDate = dates.find(
+        (date) =>
+          (type === BOOKING_TYPE.EVENT_TICKET ? date.id : date.start_date) ===
+          selectedDateId
+      );
       if (foundDate) {
         setSelectedDate(foundDate);
       }
     }
-  }, [dates, selectedDateId]);
+  }, [dates, selectedDateId, type]);
 
   useEffect(() => {
     if (times && selectedTimeId) {
@@ -35,7 +41,9 @@ const HorizontalDateTimePicker = ({
     setSelectedDate(dateItem);
     setSelectedTime(null);
     if (onDateChange) {
-      onDateChange(dateItem.id);
+      onDateChange(
+        type === BOOKING_TYPE.EVENT_TICKET ? dateItem.id : dateItem.start_date
+      );
     }
   };
 
@@ -206,20 +214,27 @@ const HorizontalDateTimePicker = ({
               const status = getBookingStatus(dateItem);
               const statusDot = getStatusDot(status);
               const bookingSummary = getBookingSummary(dateItem);
+              
+              // Use the correct identifier based on booking type
+              const dateIdentifier = type === BOOKING_TYPE.EVENT_TICKET 
+                ? dateItem.id 
+                : dateItem.start_date;
+              
+              const isSelected = selectedDateId === dateIdentifier;
 
               return (
                 <div
                   key={dateItem.id}
                   onClick={() => handleDateSelect(dateItem)}
                   className={`flex-shrink-0 cursor-pointer transition-all duration-300 ${
-                    selectedDate?.id === dateItem.id
+                    isSelected
                       ? "transform scale-105"
                       : "hover:transform hover:scale-102"
                   }`}
                 >
                   <div
                     className={`relative w-20 h-28 rounded-xl flex flex-col items-center justify-center text-center transition-all duration-300 border-2 ${
-                      selectedDate?.id === dateItem.id
+                      isSelected
                         ? "bg-gradient-to-br from-blue-500 to-blue-800 text-white border-transparent "
                         : "bg-gradient-to-br from-slate-50 to-slate-100 text-slate-700 border-slate-200 hover:border-blue-300 hover:shadow-md"
                     }`}

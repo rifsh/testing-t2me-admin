@@ -37,6 +37,7 @@ import usePaginationHook from "utils/hooks/usePaginationHandler";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { debounce } from "lodash";
+import { BOOKING_TYPE } from "constants/AppConstants";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -61,18 +62,25 @@ const OrdersList = () => {
 
   // Initial data fetch
   useEffect(() => {
-    dispatch(
-      getEventOrders(DEFAULT_PAGE_SIZE)
-    );
+    dispatch(getEventOrders(DEFAULT_PAGE_SIZE));
     dispatch(getEventOrderSummary({}));
-    dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event,...DEFAULT_PAGE_SIZE }));
+    dispatch(
+      fetchAllEvent({ event_type: EVENT_TYPES.event, ...DEFAULT_PAGE_SIZE })
+    );
   }, [dispatch]);
 
   // Handle view details navigation
   const handleViewDetails = (schedule) => {
-    navigate(`${APP_PREFIX_PATH}/reports/orders/event/details/${schedule.id}`, {
-      state: { schedule },
-    });
+    navigate(
+      `${APP_PREFIX_PATH}/reports/orders/event/details/${schedule.id}?type=${
+        schedule.available_types === "ticket_structure"
+          ? BOOKING_TYPE.EVENT_TICKET
+          : BOOKING_TYPE.EVENT_SEAT
+      }`,
+      {
+        state: { schedule },
+      }
+    );
   };
 
   // Dropdown menu for actions
@@ -217,7 +225,7 @@ const OrdersList = () => {
         ...(selectedEventId && { event_id: selectedEventId }),
       };
 
-      setCurrentPage(1); 
+      setCurrentPage(1);
       dispatch(getEventOrders(params));
     }, 500),
     [dispatch, selectedEventId, pageSize]
@@ -228,7 +236,7 @@ const OrdersList = () => {
     setSearchTerm(value);
 
     if (!value.trim()) {
-     const params = {
+      const params = {
         page: 1,
         size: pageSize,
         ...(selectedEventId && { event_id: selectedEventId }),
@@ -395,10 +403,10 @@ const OrdersList = () => {
             current: pagination?.page || currentPage,
             pageSize: pagination?.size || pageSize,
             total: pagination?.total || 0,
-            onChange: (page, pageSize) => handlePagination(page, pageSize, ),
+            onChange: (page, pageSize) => handlePagination(page, pageSize),
             onShowSizeChange: handleTableChange,
             showSizeChanger: true,
-           
+
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} items`,
           }}

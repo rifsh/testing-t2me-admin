@@ -61,6 +61,7 @@ const orderSlice = createSlice({
     bookingTickets: null,
     bookingTicketUser: null,
     eventOrderSummary: null,
+    
   },
   reducers: {
     // Add a reset action to clear data when needed
@@ -122,23 +123,18 @@ const orderSlice = createSlice({
       })
       .addCase(getEventOrderDetailsTime.fulfilled, (state, action) => {
         state.loading = false;
-
-        // Check if response has data array
         const responseData = Array.isArray(action.payload)
           ? action.payload[0]
           : action.payload;
 
         if (responseData) {
-          // If has booking_ticket_user (user list for table)
-          if (responseData.booking_ticket_user) {
+          if (responseData.booking_ticket_user||responseData.seat_state) {
             state.bookingTicketUser = responseData;
-            state.ordersTime = [responseData]; // Also store in ordersTime for stats
+            state.ordersTime = [responseData]; 
           }
-          // If has booking_tickets (individual user's bookings)
           else if (responseData.booking_tickets) {
             state.bookingTickets = responseData;
           }
-          // Otherwise it's time slots data
           else {
             state.ordersTime = action.payload;
           }
