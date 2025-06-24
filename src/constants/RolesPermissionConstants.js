@@ -290,7 +290,8 @@ export const PERMISSIONS = {
                 title: 'Movie',
                 SEAT: {
                     title: 'Seat',
-                    SUPER_ADMIN_APPROVAL: 'approve_organizer_movie_seats'
+                    SUPER_ADMIN_APPROVAL: 'approve_organizer_movie_seats',
+                    APPROVE_ORGANIZER_MOVIE_SEAT_STRUCTURE_CHANGE:'approve_organizer_movie_seats',
                 },
                 OFFER: {
                     title: 'Offer',

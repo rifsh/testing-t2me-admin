@@ -219,8 +219,8 @@ function convertNestedToFlat(nestedSeats) {
 
 // Convert flat JSON object to nested array structure
 export const flatToNested = (data) => {
-  console.log('seatdatas', data)
 
+  console.log('seatdatas', convertFlatToNested(data))
   return convertFlatToNested(data);
 };
 
