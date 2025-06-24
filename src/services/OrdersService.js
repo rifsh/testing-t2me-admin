@@ -11,6 +11,13 @@ OrderService.getEventOrders = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+OrderService.getEventOrderSammary = function (pageData) {
+  return fetch({
+    url: `${ApiConstant.EVENT_ORDERS_SUMMARY}`,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
 OrderService.getEventOrderDetailsDate = function (pageData) {
   return fetch({
     url: `${ApiConstant.EVENT_ORDERS_DETAILS_DATE}`,

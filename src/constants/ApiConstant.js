@@ -292,6 +292,7 @@ export const ApiConstant = {
 
   //Orders
   EVENT_ORDERS_LIST: "/api/v1/event/orders/secured/schedule/list",
+  EVENT_ORDERS_SUMMARY: "/api/v1/event/orders/secured/schedule/summary/status",
   EVENT_ORDERS_DETAILS_DATE:
     "/api/v1/event/orders/secured/schedule/show/date/details",
   EVENT_ORDERS_DETAILS_TIME:

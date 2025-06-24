@@ -12,6 +12,17 @@ export const getEventOrders = createAsyncThunk(
     }
   }
 );
+export const getEventOrderSummary = createAsyncThunk(
+  "orders/getEventOrderSummary",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await OrderService.getEventOrderSammary(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 export const getEventOrderDetailsDate = createAsyncThunk(
   "orders/fetchEventOrderDetailsDate",
@@ -49,6 +60,7 @@ const orderSlice = createSlice({
     ordersTime: [],
     bookingTickets: null,
     bookingTicketUser: null,
+    eventOrderSummary: null,
   },
   reducers: {
     // Add a reset action to clear data when needed
@@ -76,6 +88,19 @@ const orderSlice = createSlice({
         state.pagination = action.payload;
       })
       .addCase(getEventOrders.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getEventOrderSummary.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getEventOrderSummary.fulfilled, (state, action) => {
+        state.loading = false;
+        state.eventOrderSummary = action.payload;
+       
+      })
+      .addCase(getEventOrderSummary.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -111,7 +136,7 @@ const orderSlice = createSlice({
           }
           // If has booking_tickets (individual user's bookings)
           else if (responseData.booking_tickets) {
-            state.bookingTickets = responseData.booking_tickets;
+            state.bookingTickets = responseData;
           }
           // Otherwise it's time slots data
           else {
