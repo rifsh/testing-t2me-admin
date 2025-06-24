@@ -58,7 +58,7 @@ const EventDetailsPage = () => {
   const isDateChanging = useRef(false);
   const isTimeChanging = useRef(false);
 
-  const { ordersDates, ordersTime, bookingTicketUser, loading } = useSelector(
+  const { ordersDates, ordersTime,allOrdersTime, bookingTicketUser, loading } = useSelector(
     (state) => state.orderSlice
   );
 
@@ -335,7 +335,7 @@ const EventDetailsPage = () => {
 
   const handleUserSelect = (userId) => {
     navigate(
-      `${APP_PREFIX_PATH}/reports/orders/event/user/details/${id}/${selectedDateId}/${selectedTimeId}/${userId}`
+      `${APP_PREFIX_PATH}/reports/orders/event/user/details/${id}/${selectedDateId}/${selectedTimeId}/${userId}?type=${type}`
     );
   };
 
@@ -509,7 +509,7 @@ const EventDetailsPage = () => {
       {ordersDates?.length > 0 && (
         <HorizontalDateTimePicker
           dates={ordersDates}
-          times={ordersTime}
+          times={allOrdersTime}
           selectedDateId={selectedDateId}
           selectedTimeId={selectedTimeId}
           onDateChange={handleDateChange}

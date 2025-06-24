@@ -23,7 +23,7 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getEventOrders, getEventOrderSummary } from "store/slices/ordersSlice";
+import { getMovieOrders, getMovieOrderSummary } from "store/slices/ordersSlice";
 import utils from "utils";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
@@ -38,6 +38,7 @@ import SearchBarWithStatus from "components/util-components/Search/SearchBarWith
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { debounce } from "lodash";
 import { BOOKING_TYPE } from "constants/AppConstants";
+import { fetchDropdownTheaters } from "store/slices/theaterSlice";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -58,24 +59,21 @@ const OrdersList = () => {
     loading,
     pagination,
   } = useSelector((state) => state.orderSlice);
-  const { filteredEvents } = useSelector((state) => state.event);
-
+  const { response } = useSelector((state) => state.theater);
   // Initial data fetch
   useEffect(() => {
-    dispatch(getEventOrders(DEFAULT_PAGE_SIZE));
-    dispatch(getEventOrderSummary({}));
-    dispatch(
-      fetchAllEvent({ event_type: EVENT_TYPES.event, ...DEFAULT_PAGE_SIZE })
-    );
+    dispatch(getMovieOrders(DEFAULT_PAGE_SIZE));
+    dispatch(getMovieOrderSummary({}));
+    dispatch(fetchDropdownTheaters(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
 
   // Handle view details navigation
   const handleViewDetails = (schedule) => {
     navigate(
-      `${APP_PREFIX_PATH}/reports/orders/event/details/${schedule.id}?type=${
+      `${APP_PREFIX_PATH}/reports/orders/movie/details/${schedule.id}?type=${
         schedule.available_types === "ticket_structure"
-          ? BOOKING_TYPE.EVENT_TICKET
-          : BOOKING_TYPE.EVENT_SEAT
+          ? BOOKING_TYPE.MOVIE_TICKET
+          : BOOKING_TYPE.MOVIE_SEAT
       }`,
       {
         state: { schedule },
@@ -117,14 +115,13 @@ const OrdersList = () => {
       sorter: (a, b) => utils.antdTableSorter(a, b, "name"),
     },
     {
-      title: "Event",
-      dataIndex: ["event", "event_name"],
-      key: "event_name",
-      render: (event_name) => (
-        <div style={{ fontWeight: "bold" }}>{event_name || "N/A"}</div>
+      title: "Theatre",
+      dataIndex: ["theatre", "name"],
+      key: "name",
+      render: (name) => (
+        <div style={{ fontWeight: "bold" }}>{name || "N/A"}</div>
       ),
-      sorter: (a, b) =>
-        utils.antdTableObjectSorter(a, b, ["event", "event_name"]),
+      sorter: (a, b) => utils.antdTableObjectSorter(a, b, ["theatre", "name"]),
     },
     {
       title: "Start Date",
@@ -192,19 +189,19 @@ const OrdersList = () => {
   ];
 
   // Handle event selection
-  const handleSelectEvent = (eventId) => {
-    setSelectedEventId(eventId);
+  const handleSelectEvent = (theatreId) => {
+    setSelectedEventId(theatreId);
     setCurrentPage(1); // Reset to first page when changing event
     setSearchTerm(""); // Clear search when changing event
 
     const params = {
       page: 1,
       size: pageSize,
-      event_id: eventId,
+      theatre_id: theatreId,
     };
 
-    dispatch(getEventOrders(params));
-    dispatch(getEventOrderSummary({ event_id: eventId }));
+    dispatch(getMovieOrders(params));
+    dispatch(getMovieOrderSummary({ theatre_id: theatreId }));
   };
 
   // Handle event selection clear
@@ -212,8 +209,8 @@ const OrdersList = () => {
     setSelectedEventId(null);
     setCurrentPage(1);
     setSearchTerm("");
-    dispatch(getEventOrders(DEFAULT_PAGE_SIZE));
-    dispatch(getEventOrderSummary({}));
+    dispatch(getMovieOrders(DEFAULT_PAGE_SIZE));
+    dispatch(getMovieOrderSummary({}));
   };
 
   const debouncedSearch = useCallback(
@@ -222,11 +219,11 @@ const OrdersList = () => {
         page: 1,
         size: pageSize,
         search: value,
-        ...(selectedEventId && { event_id: selectedEventId }),
+        ...(selectedEventId && { theatre_id: selectedEventId }),
       };
 
       setCurrentPage(1);
-      dispatch(getEventOrders(params));
+      dispatch(getMovieOrders(params));
     }, 500),
     [dispatch, selectedEventId, pageSize]
   );
@@ -239,10 +236,10 @@ const OrdersList = () => {
       const params = {
         page: 1,
         size: pageSize,
-        ...(selectedEventId && { event_id: selectedEventId }),
+        ...(selectedEventId && { theatre_id: selectedEventId }),
       };
       setCurrentPage(1);
-      dispatch(getEventOrders(params));
+      dispatch(getMovieOrders(params));
     } else {
       debouncedSearch(value);
     }
@@ -256,17 +253,16 @@ const OrdersList = () => {
       page: 1,
       size: pageSize,
       search: value,
-      ...(selectedEventId && { event_id: selectedEventId }),
+      ...(selectedEventId && { theatre_id: selectedEventId }),
     };
 
-    dispatch(getEventOrders(params));
+    dispatch(getMovieOrders(params));
   };
 
   const debouncedEventSearch = useCallback(
     debounce((value) => {
       dispatch(
-        fetchAllEvent({
-          event_type: EVENT_TYPES.event,
+        fetchDropdownTheaters({
           search: value,
         })
       );
@@ -278,7 +274,7 @@ const OrdersList = () => {
     if (value && value.trim()) {
       debouncedEventSearch(value);
     } else {
-      dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
+      dispatch(fetchDropdownTheaters(DEFAULT_PAGE_SIZE));
     }
   };
 
@@ -296,14 +292,14 @@ const OrdersList = () => {
       page: newPage,
       size: newPageSize,
       ...(searchTerm && { search: searchTerm }),
-      ...(selectedEventId && { event_id: selectedEventId }),
+      ...(selectedEventId && { theatre_id: selectedEventId }),
     };
 
-    dispatch(getEventOrders(params));
+    dispatch(getMovieOrders(params));
   };
 
   // Alternative: If you prefer to use the usePaginationHook
-  const handlePagination = usePaginationHook(getEventOrders);
+  const handlePagination = usePaginationHook(getMovieOrders);
 
   return (
     <Card>
@@ -327,7 +323,7 @@ const OrdersList = () => {
             <Select
               loading={loading}
               className="w-100"
-              placeholder="Select an event"
+              placeholder="Select an Theatre"
               value={selectedEventId}
               onChange={handleSelectEvent}
               onSearch={handleEventSearch}
@@ -338,9 +334,9 @@ const OrdersList = () => {
               filterOption={false}
               style={{ minWidth: 200 }}
             >
-              {filteredEvents.map((event) => (
-                <Option key={event.id} value={event.id}>
-                  {event.event_name}
+              {response?.items?.map((movie) => (
+                <Option key={movie.id} value={movie.id}>
+                  {movie.name}
                 </Option>
               ))}
             </Select>

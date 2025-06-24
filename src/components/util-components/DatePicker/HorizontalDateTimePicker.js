@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Clock, Calendar } from "lucide-react";
-import { BOOKING_TYPE } from "constants/AppConstants";
 
-const HorizontalDateTimePicker = ({
+const BOOKING_TYPE = {
+  EVENT_TICKET: "EVENT_TICKET",
+};
+
+export const HorizontalDateTimePicker = ({
   dates,
   times,
   selectedDateId,
@@ -57,14 +60,14 @@ const HorizontalDateTimePicker = ({
   const scrollLeft = () => {
     const container = document.getElementById("date-scroll-container");
     if (container) {
-      container.scrollBy({ left: -200, behavior: "smooth" });
+      container.scrollBy({ left: -150, behavior: "smooth" });
     }
   };
 
   const scrollRight = () => {
     const container = document.getElementById("date-scroll-container");
     if (container) {
-      container.scrollBy({ left: 200, behavior: "smooth" });
+      container.scrollBy({ left: 150, behavior: "smooth" });
     }
   };
 
@@ -138,10 +141,12 @@ const HorizontalDateTimePicker = ({
   // Show loading state
   if (loading && (!dates || !dates.length)) {
     return (
-      <div className="w-full bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200 p-8">
-        <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <div className="text-slate-600 font-medium">Loading dates...</div>
+      <div className="w-full bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 p-6">
+        <div className="flex flex-col items-center justify-center space-y-3">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+          <div className="text-slate-600 text-sm font-medium">
+            Loading dates...
+          </div>
         </div>
       </div>
     );
@@ -150,23 +155,25 @@ const HorizontalDateTimePicker = ({
   // Show error state if dates is not an array
   if (!dates || !Array.isArray(dates)) {
     return (
-      <div className="w-full bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border border-red-200 p-8">
+      <div className="w-full bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200 p-6">
         <div className="flex flex-col items-center space-y-2">
-          <Calendar className="w-8 h-8 text-red-500" />
-          <div className="text-red-700 font-medium">No dates available</div>
+          <Calendar className="w-6 h-6 text-red-500" />
+          <div className="text-red-700 text-sm font-medium">
+            No dates available
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full bg-white rounded-2xl mb-10 border border-slate-200 overflow-hidden">
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-5 py-2">
+    <div className="w-full bg-white rounded-xl mb-6 border border-slate-200 overflow-hidden">
+      {/* Compact Header Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-4 py-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Calendar className="w-6 h-6 text-white" />
-            <h2 className="text-xl font-bold text-white">
+          <div className="flex items-center space-x-2">
+            <Calendar className="w-4 h-4 text-white" />
+            <h2 className="text-lg font-bold text-white">
               {dates.length > 0
                 ? new Date(dates[0].start_date).toLocaleDateString("en-US", {
                     month: "long",
@@ -175,7 +182,7 @@ const HorizontalDateTimePicker = ({
                 : "Select Date"}
             </h2>
           </div>
-          <div className="text-blue-100 text-sm font-medium">
+          <div className="text-blue-100 text-xs font-medium">
             {selectedDate && selectedTime
               ? `${formatDate(selectedDate.start_date).day}, ${
                   formatDate(selectedDate.start_date).dayNum
@@ -185,41 +192,41 @@ const HorizontalDateTimePicker = ({
         </div>
       </div>
 
-      {/* Date Selection Section */}
-      <div className="p-6">
+      {/* Compact Date Selection Section */}
+      <div className="p-4">
         <div className="relative">
-          {/* Navigation Buttons */}
+          {/* Smaller Navigation Buttons */}
           <button
             onClick={scrollLeft}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl rounded-full p-3 hover:bg-slate-50 transition-all duration-200 border border-slate-200 hover:scale-105"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white shadow-lg rounded-full p-2 hover:bg-slate-50 transition-all duration-200 border border-slate-200 hover:scale-105"
           >
-            <ChevronLeft className="w-5 h-5 text-slate-600" />
+            <ChevronLeft className="w-4 h-4 text-slate-600" />
           </button>
 
           <button
             onClick={scrollRight}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl rounded-full p-3 hover:bg-slate-50 transition-all duration-200 border border-slate-200 hover:scale-105"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white shadow-lg rounded-full p-2 hover:bg-slate-50 transition-all duration-200 border border-slate-200 hover:scale-105"
           >
-            <ChevronRight className="w-5 h-5 text-slate-600" />
+            <ChevronRight className="w-4 h-4 text-slate-600" />
           </button>
 
-          {/* Date Cards Container */}
+          {/* Compact Date Cards Container */}
           <div
             id="date-scroll-container"
-            className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth mx-12 py-2"
+            className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth mx-8 py-1"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {dates.map((dateItem) => {
               const { day, dayNum, month } = formatDate(dateItem.start_date);
               const status = getBookingStatus(dateItem);
               const statusDot = getStatusDot(status);
-              const bookingSummary = getBookingSummary(dateItem);
-              
+
               // Use the correct identifier based on booking type
-              const dateIdentifier = type === BOOKING_TYPE.EVENT_TICKET 
-                ? dateItem.id 
-                : dateItem.start_date;
-              
+              const dateIdentifier =
+                type === BOOKING_TYPE.EVENT_TICKET
+                  ? dateItem.id
+                  : dateItem.start_date;
+
               const isSelected = selectedDateId === dateIdentifier;
 
               return (
@@ -233,24 +240,24 @@ const HorizontalDateTimePicker = ({
                   }`}
                 >
                   <div
-                    className={`relative w-20 h-28 rounded-xl flex flex-col items-center justify-center text-center transition-all duration-300 border-2 ${
+                    className={`relative w-14 h-20 rounded-lg flex flex-col items-center justify-center text-center transition-all duration-300 border-2 ${
                       isSelected
-                        ? "bg-gradient-to-br from-blue-500 to-blue-800 text-white border-transparent "
-                        : "bg-gradient-to-br from-slate-50 to-slate-100 text-slate-700 border-slate-200 hover:border-blue-300 hover:shadow-md"
+                        ? "bg-gradient-to-br from-blue-500 to-blue-800 text-white border-transparent shadow-md"
+                        : "bg-gradient-to-br from-slate-50 to-slate-100 text-slate-700 border-slate-200 hover:border-blue-300 hover:shadow-sm"
                     }`}
                   >
-                    {/* Status Dot */}
+                    {/* Smaller Status Dot */}
                     {statusDot && (
                       <div
-                        className={`absolute -top-1 -right-1 w-4 h-4 rounded-full ${statusDot} border-2 border-white shadow-sm`}
+                        className={`absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full ${statusDot} border border-white shadow-sm`}
                       ></div>
                     )}
 
                     <span className="text-xs font-medium opacity-80 uppercase tracking-wide">
                       {month}
                     </span>
-                    <span className="text-sm font-semibold">{day}</span>
-                    <span className="text-2xl font-bold">{dayNum}</span>
+                    <span className="text-xs font-semibold">{day}</span>
+                    <span className="text-lg font-bold">{dayNum}</span>
                   </div>
                 </div>
               );
@@ -259,22 +266,22 @@ const HorizontalDateTimePicker = ({
         </div>
       </div>
 
-      {/* Time Slots Section */}
+      {/* Compact Time Slots Section */}
       {selectedDate && times && Array.isArray(times) && times.length > 0 && (
-        <div className="px-6 pb-6">
-          <div className="bg-slate-50 rounded-xl p-6">
-            <div className="flex items-center mb-6">
-              <Clock className="w-6 h-6 text-blue-600 mr-3" />
-              <h3 className="text-lg font-bold text-slate-800">
+        <div className="px-4 pb-4">
+          <div className="bg-slate-50 rounded-lg p-4">
+            <div className="flex items-center mb-4">
+              <Clock className="w-5 h-5 text-blue-600 mr-2" />
+              <h3 className="text-base font-bold text-slate-800">
                 Available Times
               </h3>
-              <span className="ml-2 text-sm text-slate-500">
+              <span className="ml-2 text-xs text-slate-500">
                 for {formatDate(selectedDate.start_date).day},{" "}
                 {formatDate(selectedDate.start_date).dayNum}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-2">
               {times.map((timeItem) => {
                 const status = getBookingStatus(timeItem);
                 const statusDot = getStatusDot(status);
@@ -284,26 +291,26 @@ const HorizontalDateTimePicker = ({
                   <button
                     key={timeItem.id}
                     onClick={() => handleTimeSelect(timeItem)}
-                    className={`relative px-4 py-4 rounded-xl border-2 transition-all duration-200 font-medium group ${
+                    className={`relative px-2 py-2 rounded-lg border-2 transition-all duration-200 font-medium group ${
                       selectedTime?.id === timeItem.id
-                        ? "border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 shadow-md"
+                        ? "border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 shadow-sm"
                         : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm"
                     }`}
                   >
-                    {/* Status Dot */}
+                    {/* Smaller Status Dot */}
                     {statusDot && (
                       <div
-                        className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${statusDot} border border-white`}
+                        className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${statusDot} border border-white`}
                       ></div>
                     )}
 
                     <div className="flex flex-col items-center space-y-1">
-                      <span className="text-sm font-semibold">
+                      <span className="text-xs font-semibold leading-tight">
                         {formatTime(timeItem)}
                       </span>
                       {bookingSummary && (
-                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                          {bookingSummary.total} bookings
+                        <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-full leading-none">
+                          {bookingSummary.total}
                         </span>
                       )}
                     </div>
@@ -315,13 +322,13 @@ const HorizontalDateTimePicker = ({
         </div>
       )}
 
-      {/* Loading state for times */}
+      {/* Compact Loading state for times */}
       {selectedDate && loading && (
-        <div className="px-6 pb-6">
-          <div className="bg-slate-50 rounded-xl p-8">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <div className="text-slate-600 font-medium">
+        <div className="px-4 pb-4">
+          <div className="bg-slate-50 rounded-lg p-6">
+            <div className="flex flex-col items-center space-y-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              <div className="text-slate-600 text-sm font-medium">
                 Loading time slots...
               </div>
             </div>
@@ -329,19 +336,19 @@ const HorizontalDateTimePicker = ({
         </div>
       )}
 
-      {/* Status Legend */}
-      <div className="bg-slate-50 px-6 py-4 border-t border-slate-200">
-        <div className="flex items-center justify-center gap-8 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-emerald-500 rounded-full shadow-sm"></div>
+      {/* Compact Status Legend */}
+      <div className="bg-slate-50 px-4 py-3 border-t border-slate-200">
+        <div className="flex items-center justify-center gap-6 text-xs">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-sm"></div>
             <span className="text-slate-600 font-medium">Successful</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-amber-500 rounded-full shadow-sm"></div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 bg-amber-500 rounded-full shadow-sm"></div>
             <span className="text-slate-600 font-medium">Pending</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full shadow-sm"></div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-sm"></div>
             <span className="text-slate-600 font-medium">Failed</span>
           </div>
         </div>
@@ -355,5 +362,4 @@ const HorizontalDateTimePicker = ({
     </div>
   );
 };
-
 export default HorizontalDateTimePicker;
