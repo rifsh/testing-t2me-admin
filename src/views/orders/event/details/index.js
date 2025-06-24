@@ -1,410 +1,542 @@
-import React, { useEffect, useState } from "react";
-import { Card, Table, Row, Col, Statistic, Button, Avatar, Tag } from "antd";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
-  CalendarOutlined,
+  Card,
+  Table,
+  Row,
+  Col,
+  Statistic,
+  Button,
+  Avatar,
+  Tag,
+  Typography,
+  Badge,
+  Menu,
+  Dropdown,
+  message,
+} from "antd";
+import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
-  EnvironmentOutlined,
   TeamOutlined,
   DollarOutlined,
+  UserOutlined,
+  ArrowLeftOutlined,
+  MoreOutlined,
 } from "@ant-design/icons";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { fethEventOrderDetails } from "store/slices/ordersSlice";
+import { useParams, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  getEventOrderDetailsDate,
+  getEventOrderDetailsTime,
+} from "store/slices/ordersSlice";
+import HorizontalDateTimePicker from "components/util-components/DatePicker/HorizontalDateTimePicker";
+import EventInformation from "../components/EventInformation";
+import { IoTicketOutline } from "react-icons/io5";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 
-// Mock detailed booking data
-const mockBookingDetails = {
-  1: Array.from({ length: 25 }, (_, i) => ({
-    id: 101 + i,
-    customer_name: `Customer ${i + 1}`,
-    customer_email: `customer${i + 1}@email.com`,
-    ticket_type:
-      i % 3 === 0 ? "VIP" : i % 2 === 0 ? "Premium" : "General Admission",
-    quantity: Math.floor(Math.random() * 4) + 1,
-    total_amount: Math.floor(Math.random() * 500) + 50,
-    booking_status:
-      i % 4 === 0 ? "failed" : i % 3 === 0 ? "pending" : "completed",
-    booking_date: `2024-06-${String(
-      Math.floor(Math.random() * 28) + 1
-    ).padStart(2, "0")}T${String(Math.floor(Math.random() * 24)).padStart(
-      2,
-      "0"
-    )}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}:00Z`,
-    payment_method: i % 2 === 0 ? "Credit Card" : "PayPal",
-    order_id: `ORD-${String(i + 1).padStart(3, "0")}-2024`,
-  })),
-  2: Array.from({ length: 18 }, (_, i) => ({
-    id: 201 + i,
-    customer_name: `Tech Attendee ${i + 1}`,
-    customer_email: `tech${i + 1}@email.com`,
-    ticket_type: "Early Bird",
-    quantity: 1,
-    total_amount: 300,
-    booking_status: i % 5 === 0 ? "pending" : "completed",
-    booking_date: `2024-06-${String(
-      Math.floor(Math.random() * 28) + 1
-    ).padStart(2, "0")}T10:20:00Z`,
-    payment_method: "Credit Card",
-    order_id: `ORD-TECH-${String(i + 1).padStart(3, "0")}-2024`,
-  })),
-  3: Array.from({ length: 12 }, (_, i) => ({
-    id: 301 + i,
-    customer_name: `Food Explorer ${i + 1}`,
-    customer_email: `foodie${i + 1}@email.com`,
-    ticket_type: "Standard",
-    quantity: Math.floor(Math.random() * 3) + 1,
-    total_amount: Math.floor(Math.random() * 200) + 100,
-    booking_status: i % 6 === 0 ? "failed" : "completed",
-    booking_date: `2024-06-${String(
-      Math.floor(Math.random() * 28) + 1
-    ).padStart(2, "0")}T15:30:00Z`,
-    payment_method: i % 2 === 0 ? "Credit Card" : "Debit Card",
-    order_id: `ORD-FOOD-${String(i + 1).padStart(3, "0")}-2024`,
-  })),
-  4: Array.from({ length: 8 }, (_, i) => ({
-    id: 401 + i,
-    customer_name: `Art Lover ${i + 1}`,
-    customer_email: `art${i + 1}@email.com`,
-    ticket_type: "Gallery Pass",
-    quantity: 1,
-    total_amount: 150,
-    booking_status: i % 4 === 0 ? "pending" : "completed",
-    booking_date: `2024-06-${String(
-      Math.floor(Math.random() * 28) + 1
-    ).padStart(2, "0")}T18:00:00Z`,
-    payment_method: "Credit Card",
-    order_id: `ORD-ART-${String(i + 1).padStart(3, "0")}-2024`,
-  })),
-  5: Array.from({ length: 30 }, (_, i) => ({
-    id: 501 + i,
-    customer_name: `Runner ${i + 1}`,
-    customer_email: `runner${i + 1}@email.com`,
-    ticket_type: "Marathon Entry",
-    quantity: 1,
-    total_amount: 50,
-    booking_status: i % 8 === 0 ? "failed" : "completed",
-    booking_date: `2024-03-${String(
-      Math.floor(Math.random() * 28) + 1
-    ).padStart(2, "0")}T12:00:00Z`,
-    payment_method: i % 3 === 0 ? "PayPal" : "Credit Card",
-    order_id: `ORD-RUN-${String(i + 1).padStart(3, "0")}-2024`,
-  })),
-};
+const { Title, Text } = Typography;
 
 const EventDetailsPage = () => {
   const { id } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [activeTab, setActiveTab] = useState("details");
-  const [bookingData, setBookingData] = useState([]);
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [event, setEvent] = useState(null);
+
+  // State management
+  const [selectedDateId, setSelectedDateId] = useState(null);
+  const [selectedTimeId, setSelectedTimeId] = useState(null);
+
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+  });
+
+  const isDateChanging = useRef(false);
+  const isTimeChanging = useRef(false);
+
+  const {
+    ordersDates,
+    ordersTime,
+    bookingTicketUser,
+    bookingTickets,
+    loading,
+  } = useSelector((state) => state.orderSlice);
+
+  const fetchInitialDates = useCallback(() => {
+    if (!id || isInitialized) return;
+
+    console.log("Fetching initial dates for schedule:", id);
+    dispatch(getEventOrderDetailsDate({ schedule_id: id }));
+  }, [dispatch, id, isInitialized]);
+
+  const fetchTimeSlotsForDate = useCallback(
+    (dateId, shouldAutoSelectTime = true) => {
+      if (!dateId || isDateChanging.current) return;
+
+      console.log("Fetching time slots for date:", dateId);
+      isDateChanging.current = true;
+
+      setSelectedTimeId(null);
+      setPagination({ current: 1, pageSize: pagination.pageSize });
+
+      dispatch(
+        getEventOrderDetailsTime({
+          schedule_id: id,
+          show_date_id: dateId,
+        })
+      )
+        .then((response) => {
+          isDateChanging.current = false;
+
+          if (shouldAutoSelectTime && response.payload?.length > 0) {
+            const firstTimeId = response.payload[0].id;
+            console.log("Auto-selecting first time slot:", firstTimeId);
+            setSelectedTimeId(firstTimeId);
+            fetchBookingUsersForTime(
+              dateId,
+              firstTimeId,
+              1,
+              pagination.pageSize
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching time slots:", error);
+          isDateChanging.current = false;
+        });
+    },
+    [dispatch, id, pagination.pageSize]
+  );
+
+  const fetchBookingUsersForTime = useCallback(
+    (dateId, timeId, page = 1, size = 10) => {
+      if (!dateId || !timeId || isTimeChanging.current) {
+        console.warn(
+          "Missing parameters or time is changing, skipping fetchBookingUsers"
+        );
+        return;
+      }
+
+      console.log("Fetching booking users:", { dateId, timeId, page, size });
+      isTimeChanging.current = true;
+
+      dispatch(
+        getEventOrderDetailsTime({
+          schedule_id: id,
+          show_date_id: dateId,
+          show_time_id: timeId,
+          page: page,
+          size: size,
+        })
+      )
+        .then(() => {
+          isTimeChanging.current = false;
+        })
+        .catch((error) => {
+          console.error("Error fetching booking users:", error);
+          isTimeChanging.current = false;
+        });
+    },
+    [dispatch, id]
+  );
 
   useEffect(() => {
-    dispatch(fethEventOrderDetails({ schedule_id: 78 }));
-  }, [dispatch]);
+    if (!id) {
+      navigate(-1);
+      return;
+    }
+
+    if (!isInitialized) {
+      fetchInitialDates();
+    }
+  }, [id, navigate, fetchInitialDates, isInitialized]);
 
   useEffect(() => {
-    if (location.state?.event) {
-      setEvent(location.state.event);
-    } else {
-      const mockEvents = [
-        {
-          id: 1,
-          event_name: "Summer Music Festival 2024",
-          event_code: "SMF2024",
-          event_date: "2024-08-15",
-          location: "Central Park, New York",
-          total_orders: 245,
-          completed_bookings: 198,
-          pending_bookings: 32,
-          failed_bookings: 15,
-          total_revenue: 49000,
-          status: "active",
-          created_at: "2024-06-01T10:30:00Z",
-          image:
-            "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop&crop=center",
-        },
-      ];
-      const foundEvent = mockEvents.find((e) => e.id === parseInt(id));
-      setEvent(foundEvent);
+    if (
+      ordersDates &&
+      ordersDates.length > 0 &&
+      !selectedDateId &&
+      !isInitialized
+    ) {
+      const firstDateId = ordersDates[0].id;
+      console.log("Auto-selecting first date:", firstDateId);
+      setSelectedDateId(firstDateId);
+      setIsInitialized(true);
+      fetchTimeSlotsForDate(firstDateId, true);
     }
-  }, [id, location.state]);
+  }, [ordersDates, selectedDateId, isInitialized, fetchTimeSlotsForDate]);
 
-  useEffect(() => {
-    if (activeTab === "bookings" && event) {
-      setBookingLoading(true);
-      setTimeout(() => {
-        setBookingData(mockBookingDetails[event.id] || []);
-        setBookingLoading(false);
-      }, 500);
-    }
-  }, [activeTab, event]);
+  const handleDateChange = useCallback(
+    (dateId) => {
+      if (dateId === selectedDateId || isDateChanging.current) {
+        console.log("Same date selected or date is changing, ignoring");
+        return;
+      }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "completed":
-        return "success";
-      case "pending":
-        return "warning";
-      case "failed":
-        return "error";
-      case "active":
-        return "processing";
-      default:
-        return "default";
+      console.log("Date manually changed to:", dateId);
+      setSelectedDateId(dateId);
+      fetchTimeSlotsForDate(dateId, true);
+    },
+    [selectedDateId, fetchTimeSlotsForDate]
+  );
+
+  const handleTimeChange = useCallback(
+    (timeId) => {
+      if (timeId === selectedTimeId || isTimeChanging.current) {
+        console.log("Same time selected or time is changing, ignoring");
+        return;
+      }
+
+      console.log("Time manually changed to:", timeId);
+      setSelectedTimeId(timeId);
+      setPagination({ current: 1, pageSize: pagination.pageSize });
+      fetchBookingUsersForTime(selectedDateId, timeId, 1, pagination.pageSize);
+    },
+    [
+      selectedTimeId,
+      selectedDateId,
+      pagination.pageSize,
+      fetchBookingUsersForTime,
+    ]
+  );
+
+  const handlePaginationChange = useCallback(
+    (page, pageSize) => {
+      const newPagination = {
+        current: page,
+        pageSize: pageSize,
+      };
+      setPagination(newPagination);
+      fetchBookingUsersForTime(selectedDateId, selectedTimeId, page, pageSize);
+    },
+    [selectedDateId, selectedTimeId, fetchBookingUsersForTime]
+  );
+
+  const getCurrentStats = useCallback(() => {
+    if (bookingTicketUser && bookingTicketUser.booking_ticket_user) {
+      return {
+        total_bookings: bookingTicketUser.total_bookings || 0,
+        success_bookings: bookingTicketUser.success_bookings || 0,
+        failed_bookings: bookingTicketUser.failed_bookings || 0,
+        pending_bookings: bookingTicketUser.pending_bookings || 0,
+      };
     }
+    if (ordersTime && ordersTime.length > 0) {
+      return {
+        total_bookings: ordersTime[0].total_bookings || 0,
+        success_bookings: ordersTime[0].success_bookings || 0,
+        failed_bookings: ordersTime[0].failed_bookings || 0,
+        pending_bookings: ordersTime[0].pending_bookings || 0,
+      };
+    }
+    return {
+      total_bookings: 0,
+      success_bookings: 0,
+      failed_bookings: 0,
+      pending_bookings: 0,
+    };
+  }, [bookingTicketUser, ordersTime]);
+  const handleUserSelect = (userId) => {
+    navigate(
+      `${APP_PREFIX_PATH}/reports/orders/event/user/details/${id}/${selectedDateId}/${selectedTimeId}/${userId}`
+    );
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircleOutlined />;
-      case "pending":
-        return <ClockCircleOutlined />;
-      case "failed":
-        return <CloseCircleOutlined />;
-      default:
-        return <CheckCircleOutlined />;
-    }
-  };
-
-  const handleBackToList = () => {
+  const handleBackToList = useCallback(() => {
     navigate(-1);
+  }, [navigate]);
+
+  const handleCheckStatus = () => {
+    message.loading({ content: "Checking Payment Status...", duration: 2 });
+
+    setTimeout(() => {
+      message.warning("Checking Status API is not completed");
+    }, 2000);
   };
 
   const bookingColumns = [
     {
-      title: "Customer",
-      dataIndex: "customer_name",
+      title: "Customer Details",
+      dataIndex: "username",
+      width: 250,
       render: (name, record) => (
-        <div>
-          <div style={{ fontWeight: "bold" }}>{name}</div>
-          <div style={{ color: "#666", fontSize: "12px" }}>
-            {record.customer_email}
+        <div className="customer-info">
+          <div
+            style={{ display: "flex", alignItems: "center", marginBottom: 4 }}
+          >
+            <Avatar
+              size="small"
+              icon={<UserOutlined />}
+              style={{ marginRight: 8, backgroundColor: "#1890ff" }}
+            />
+            <Text strong>{name || "N/A"}</Text>
+          </div>
+          <div style={{ fontSize: "12px", color: "#666", marginLeft: 24 }}>
+            <div>{record.email || "N/A"}</div>
+            <div>{record.phone_number || "N/A"}</div>
           </div>
         </div>
       ),
     },
     {
-      title: "Order ID",
-      dataIndex: "order_id",
-      render: (orderId) => <Tag color="purple">{orderId}</Tag>,
+      title: "Contact",
+      dataIndex: "phone_number",
+      width: 120,
+      render: (phone, record) => (
+        <div>
+          <Tag color="blue" style={{ marginBottom: 4 }}>
+            {phone || "N/A"}
+          </Tag>
+          <div style={{ fontSize: "11px", color: "#999" }}>ID: {record.id}</div>
+        </div>
+      ),
     },
     {
-      title: "Ticket Details",
-      dataIndex: "ticket_type",
-      render: (type, record) => (
+      title: "Booking Stats",
+      dataIndex: "total_bookings",
+      width: 150,
+      render: (_, record) => (
         <div>
+          <div style={{ marginBottom: 4 }}>
+            <Tag color="blue">
+              <IoTicketOutline /> {record.total_bookings || 0} Bookings
+            </Tag>
+          </div>
           <div>
-            <strong>{type}</strong>
+            <Tag color="green">
+              <TeamOutlined /> {record.total_items_booked || 0} Items
+            </Tag>
           </div>
-          <div style={{ color: "#666" }}>Qty: {record.quantity}</div>
         </div>
-      ),
-    },
-    {
-      title: "Amount",
-      dataIndex: "total_amount",
-      render: (amount) => (
-        <span style={{ fontWeight: "bold", color: "#52c41a" }}>${amount}</span>
       ),
     },
     {
       title: "Status",
-      dataIndex: "booking_status",
-      render: (status) => (
-        <Tag color={getStatusColor(status)} icon={getStatusIcon(status)}>
-          {status?.toUpperCase()}
-        </Tag>
+      dataIndex: "success_bookings",
+      width: 120,
+      render: (_, record) => (
+        <div>
+          <div style={{ marginBottom: 2 }}>
+            <Badge
+              status="success"
+              text={`${record.success_bookings || 0} Success`}
+              style={{ fontSize: "11px" }}
+            />
+          </div>
+          <div style={{ marginBottom: 2 }}>
+            <Badge
+              status="error"
+              text={`${record.failed_bookings || 0} Failed`}
+              style={{ fontSize: "11px" }}
+            />
+          </div>
+          <div>
+            <Badge
+              status="processing"
+              text={`${record.pending_bookings || 0} Pending`}
+              style={{ fontSize: "11px" }}
+            />
+          </div>
+        </div>
       ),
     },
     {
-      title: "Payment Method",
-      dataIndex: "payment_method",
-      render: (method) => <Tag>{method}</Tag>,
+      title: "Email",
+      dataIndex: "email",
+      width: 200,
+      render: (email) => (
+        <Text style={{ fontSize: "12px" }}>{email || "N/A"}</Text>
+      ),
     },
     {
-      title: "Booking Date",
-      dataIndex: "booking_date",
-      render: (date) => new Date(date).toLocaleString(),
+      title: "Action",
+      dataIndex: "id",
+      width: 100,
+      render: (userId, record) => {
+        const menu = (
+          <Menu>
+            <Menu.Item key="view" onClick={() => handleUserSelect(userId)}>
+              View Details
+            </Menu.Item>
+            <Menu.Item
+              key="email"
+              onClick={() => {
+                handleCheckStatus();
+              }}
+            >
+              Check Payment Status
+            </Menu.Item>
+          </Menu>
+        );
+
+        return (
+          <Dropdown overlay={menu} trigger={["click"]}>
+            <MoreOutlined />
+          </Dropdown>
+        );
+      },
     },
   ];
 
-  if (!event) {
+  if (loading && !ordersDates && !bookingTicketUser && !isInitialized) {
     return (
-      <div>
-        <Button onClick={handleBackToList}>← Back to Events List</Button>
-        <Card style={{ marginTop: 16 }}>
-          <p>Event not found</p>
+      <div style={{ padding: "24px" }}>
+        <Button icon={<ArrowLeftOutlined />} onClick={handleBackToList}>
+          Back to Events List
+        </Button>
+        <Card style={{ marginTop: 16, textAlign: "center", padding: "48px" }}>
+          <div style={{ fontSize: "16px", color: "#666" }}>
+            Loading event details...
+          </div>
         </Card>
       </div>
     );
   }
 
+   const userList = bookingTicketUser?.booking_ticket_user?.items || [];
+  const paginationInfo = bookingTicketUser?.booking_ticket_user || {
+    total: 0,
+    page: 1,
+    size: 10,
+    pages: 1,
+  };
+  const currentStats = getCurrentStats();
+
   return (
     <div>
-      {/* Back Button */}
+      {/* Header Section */}
       <div style={{ marginBottom: 24 }}>
-        <Button onClick={handleBackToList} style={{ marginBottom: 16 }}>
-          ← Back to Events List
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={handleBackToList}
+          size="large"
+        >
+          Back to Events List
         </Button>
       </div>
 
-      {/* Event Header */}
-      <Card style={{ marginBottom: 24 }}>
-        <div
-          style={{ display: "flex", alignItems: "center", marginBottom: 16 }}
-        >
-          <Avatar src={event.image} size={64} style={{ marginRight: 16 }} />
-          <div>
-            <h2 style={{ margin: 0 }}>{event.event_name}</h2>
-            <p style={{ margin: 0, color: "#666" }}>
-              <EnvironmentOutlined style={{ marginRight: 4 }} />
-              {event.location}
-            </p>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div style={{ marginBottom: 16 }}>
-          <Button
-            type={activeTab === "details" ? "primary" : "default"}
-            onClick={() => setActiveTab("details")}
-            style={{ marginRight: 8 }}
-          >
-            Event Details
-          </Button>
-          <Button
-            type={activeTab === "bookings" ? "primary" : "default"}
-            onClick={() => setActiveTab("bookings")}
-          >
-            Bookings ({event.total_orders})
-          </Button>
-        </div>
-      </Card>
-
-      {/* Content based on active tab */}
-      {activeTab === "details" && (
-        <>
-          {/* Event Statistics */}
-          <Row gutter={16} style={{ marginBottom: 24 }}>
-            <Col xs={24} sm={12} md={6}>
-              <Card style={{ textAlign: "center" }}>
-                <Statistic
-                  title="Total Orders"
-                  value={event.total_orders}
-                  prefix={<TeamOutlined />}
-                  valueStyle={{ color: "#1890ff" }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Card style={{ textAlign: "center" }}>
-                <Statistic
-                  title="Completed"
-                  value={event.completed_bookings}
-                  prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: "#52c41a" }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Card style={{ textAlign: "center" }}>
-                <Statistic
-                  title="Pending"
-                  value={event.pending_bookings}
-                  prefix={<ClockCircleOutlined />}
-                  valueStyle={{ color: "#faad14" }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Card style={{ textAlign: "center" }}>
-                <Statistic
-                  title="Failed"
-                  value={event.failed_bookings}
-                  prefix={<CloseCircleOutlined />}
-                  valueStyle={{ color: "#ff4d4f" }}
-                />
-              </Card>
-            </Col>
-          </Row>
-
-          {/* Event Information */}
-          <Card title="Event Information">
-            <Row gutter={16}>
-              <Col xs={24} md={12}>
-                <div style={{ marginBottom: 16 }}>
-                  <strong>Event Code:</strong>
-                  <Tag color="blue" style={{ marginLeft: 8 }}>
-                    {event.event_code}
-                  </Tag>
-                </div>
-                <div style={{ marginBottom: 16 }}>
-                  <strong>Event Date:</strong>
-                  <span style={{ marginLeft: 8 }}>
-                    <CalendarOutlined style={{ marginRight: 4 }} />
-                    {new Date(event.event_date).toLocaleDateString()}
-                  </span>
-                </div>
-                <div style={{ marginBottom: 16 }}>
-                  <strong>Status:</strong>
-                  <Tag
-                    color={getStatusColor(event.status)}
-                    icon={getStatusIcon(event.status)}
-                    style={{ marginLeft: 8 }}
-                  >
-                    {event.status?.toUpperCase()}
-                  </Tag>
-                </div>
-              </Col>
-              <Col xs={24} md={12}>
-                <div style={{ marginBottom: 16 }}>
-                  <strong>Total Revenue:</strong>
-                  <span
-                    style={{
-                      color: "#52c41a",
-                      fontWeight: "bold",
-                      marginLeft: 8,
-                    }}
-                  >
-                    <DollarOutlined style={{ marginRight: 4 }} />$
-                    {event.total_revenue?.toLocaleString()}
-                  </span>
-                </div>
-                <div style={{ marginBottom: 16 }}>
-                  <strong>Created Date:</strong>
-                  <span style={{ marginLeft: 8 }}>
-                    {new Date(event.created_at).toLocaleString()}
-                  </span>
-                </div>
-              </Col>
-            </Row>
-          </Card>
-        </>
+      {/* Event Information - Show if available */}
+      {ordersDates && ordersDates.length > 0 && (
+        <EventInformation data={ordersDates[0]} />
       )}
 
-      {activeTab === "bookings" && (
-        <Card title={`Bookings for ${event.event_name}`}>
-          <Table
-            dataSource={bookingData}
-            rowKey="id"
-            loading={bookingLoading}
-            columns={bookingColumns}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              pageSizeOptions: ["10", "20", "50"],
-              //   showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} bookings`,
+      {/* Date and Time Picker - Show if dates are available */}
+      {ordersDates && ordersDates.length > 0 && (
+        <HorizontalDateTimePicker
+          dates={ordersDates || []}
+          times={ordersTime || []}
+          selectedDateId={selectedDateId}
+          selectedTimeId={selectedTimeId}
+          onDateChange={handleDateChange}
+          onTimeChange={handleTimeChange}
+          loading={loading}
+        />
+      )}
+
+      {/* Statistics Cards */}
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card
+            style={{
+              textAlign: "center",
             }}
-          />
-        </Card>
-      )}
+          >
+            <Statistic
+              title="Total Bookings"
+              value={currentStats.total_bookings || 0}
+              prefix={<TeamOutlined />}
+              valueStyle={{ color: "#1890ff", fontSize: "28px" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card
+            style={{
+              textAlign: "center",
+            }}
+          >
+            <Statistic
+              title="Completed"
+              value={currentStats.success_bookings || 0}
+              prefix={<CheckCircleOutlined />}
+              valueStyle={{ color: "#52c41a", fontSize: "28px" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card
+            style={{
+              textAlign: "center",
+            }}
+          >
+            <Statistic
+              title="Pending"
+              value={currentStats.pending_bookings || 0}
+              prefix={<ClockCircleOutlined />}
+              valueStyle={{ color: "#faad14", fontSize: "28px" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card
+            style={{
+              textAlign: "center",
+            }}
+          >
+            <Statistic
+              title="Failed"
+              value={currentStats.failed_bookings || 0}
+              prefix={<CloseCircleOutlined />}
+              valueStyle={{ color: "#ff4d4f", fontSize: "28px" }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Bookings Table */}
+      <Card
+        title={
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Title level={4} style={{ margin: 0 }}>
+              <DollarOutlined style={{ marginRight: 8 }} />
+              Bookings for Schedule {id}
+            </Title>
+            <Text style={{ fontSize: "14px", color: "#666" }}>
+              {paginationInfo.total || 0} booking
+              {(paginationInfo.total || 0) !== 1 ? "s" : ""} found
+            </Text>
+          </div>
+        }
+      >
+        <Table
+          dataSource={userList}
+          rowKey="id"
+          loading={loading}
+          columns={bookingColumns}
+          pagination={{
+            current: paginationInfo.page || 1,
+            pageSize: paginationInfo.size || 10,
+            total: paginationInfo.total || 0,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            pageSizeOptions: ["5", "10", "20", "50"],
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} of ${total} bookings`,
+            onChange: handlePaginationChange,
+            onShowSizeChange: handlePaginationChange,
+          }}
+          scroll={{ x: 1200 }}
+          size="middle"
+        />
+      </Card>
     </div>
   );
 };

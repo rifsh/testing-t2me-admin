@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Card,
   Table,
@@ -23,7 +23,7 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fethEventOrders } from "store/slices/ordersSlice";
+import { getEventOrders, getEventOrderSummary } from "store/slices/ordersSlice";
 import utils from "utils";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
@@ -31,9 +31,12 @@ import {
   resetSearchValue,
   setGlobalSearchValue,
 } from "store/slices/fliterSlice";
-import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import { DEFAULT_PAGE_SIZE, EVENT_TYPES } from "constants/PageConstants";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { fetchAllEvent } from "store/slices/eventSlice";
+import { debounce } from "lodash";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -41,25 +44,38 @@ const { Option } = Select;
 const OrdersList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // State management
+  const [selectedEventId, setSelectedEventId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeStatus, setActiveStatus] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE.size);
+
   const {
     eventOrdersDataList: eventOrdersData,
-
+    eventOrderSummary,
     loading,
     pagination,
   } = useSelector((state) => state.orderSlice);
+  const { filteredEvents } = useSelector((state) => state.event);
 
+  // Initial data fetch
   useEffect(() => {
-    dispatch(fethEventOrders(DEFAULT_PAGE_SIZE));
+    dispatch(
+      getEventOrders(DEFAULT_PAGE_SIZE)
+    );
+    dispatch(getEventOrderSummary({}));
+    dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event,...DEFAULT_PAGE_SIZE }));
   }, [dispatch]);
 
+  // Handle view details navigation
   const handleViewDetails = (schedule) => {
     navigate(`${APP_PREFIX_PATH}/reports/orders/event/details/${schedule.id}`, {
       state: { schedule },
     });
   };
-  const handlePagination = usePaginationHook(fethEventOrders);
+
+  // Dropdown menu for actions
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
@@ -71,6 +87,7 @@ const OrdersList = () => {
     </Menu>
   );
 
+  // Table columns configuration
   const tableColumns = [
     {
       title: "Schedule",
@@ -166,74 +183,119 @@ const OrdersList = () => {
     },
   ];
 
-  const handleSearch = (value) => {
-    if (value) {
-      setSearchTerm(value);
-      dispatch(setGlobalSearchValue(value));
-      dispatch(
-        fethEventOrders({
-          search: value,
-          page: 1,
-          size: DEFAULT_PAGE_SIZE.size,
-          status: activeStatus,
-        })
-      );
-    }
+  // Handle event selection
+  const handleSelectEvent = (eventId) => {
+    setSelectedEventId(eventId);
+    setCurrentPage(1); // Reset to first page when changing event
+    setSearchTerm(""); // Clear search when changing event
+
+    const params = {
+      page: 1,
+      size: pageSize,
+      event_id: eventId,
+    };
+
+    dispatch(getEventOrders(params));
+    dispatch(getEventOrderSummary({ event_id: eventId }));
   };
 
-  const handleSearchIsEmpty = (value) => {
-    if (!value) {
-      setSearchTerm("");
-      dispatch(resetSearchValue());
-      dispatch(
-        fethEventOrders({
-          search: null,
-          page: 1,
-          size: DEFAULT_PAGE_SIZE.size,
-          status: activeStatus,
-        })
-      );
-    }
+  // Handle event selection clear
+  const handleClearEvent = () => {
+    setSelectedEventId(null);
+    setCurrentPage(1);
+    setSearchTerm("");
+    dispatch(getEventOrders(DEFAULT_PAGE_SIZE));
+    dispatch(getEventOrderSummary({}));
   };
 
-  const handleShowStatus = (status) => {
-    setActiveStatus(status);
-    dispatch(
-      fethEventOrders({
-        search: searchTerm,
+  const debouncedSearch = useCallback(
+    debounce((value) => {
+      const params = {
         page: 1,
-        size: DEFAULT_PAGE_SIZE.size,
-        status,
-      })
-    );
-  };
+        size: pageSize,
+        search: value,
+        ...(selectedEventId && { event_id: selectedEventId }),
+      };
 
-  const handleTableChange = (pagination) => {
-    dispatch(
-      fethEventOrders({
-        page: pagination.current,
-        size: pagination.pageSize,
-        search: searchTerm,
-        status: activeStatus,
-      })
-    );
-  };
-
-  // Calculate total statistics
-  const totalStats = eventOrdersData.reduce(
-    (acc, schedule) => ({
-      totalBookings: acc.totalBookings + (schedule.total_bookings || 0),
-      successBookings: acc.successBookings + (schedule.success_bookings || 0),
-      pendingBookings: acc.pendingBookings + (schedule.pending_bookings || 0),
-      failedBookings: acc.failedBookings + (schedule.failed_bookings || 0),
-    }),
-    {
-      totalBookings: 0,
-      successBookings: 0,
-      pendingBookings: 0,
-      failedBookings: 0,
-    }
+      setCurrentPage(1); 
+      dispatch(getEventOrders(params));
+    }, 500),
+    [dispatch, selectedEventId, pageSize]
   );
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    if (!value.trim()) {
+     const params = {
+        page: 1,
+        size: pageSize,
+        ...(selectedEventId && { event_id: selectedEventId }),
+      };
+      setCurrentPage(1);
+      dispatch(getEventOrders(params));
+    } else {
+      debouncedSearch(value);
+    }
+  };
+
+  const handleSearchSubmit = (value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+
+    const params = {
+      page: 1,
+      size: pageSize,
+      search: value,
+      ...(selectedEventId && { event_id: selectedEventId }),
+    };
+
+    dispatch(getEventOrders(params));
+  };
+
+  const debouncedEventSearch = useCallback(
+    debounce((value) => {
+      dispatch(
+        fetchAllEvent({
+          event_type: EVENT_TYPES.event,
+          search: value,
+        })
+      );
+    }, 500),
+    [dispatch]
+  );
+
+  const handleEventSearch = (value) => {
+    if (value && value.trim()) {
+      debouncedEventSearch(value);
+    } else {
+      dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
+    }
+  };
+
+  const handleTableChange = (paginationConfig) => {
+    const newPage = paginationConfig.current;
+    const newPageSize = paginationConfig.pageSize;
+
+    setCurrentPage(newPage);
+
+    if (newPageSize !== pageSize) {
+      setPageSize(newPageSize);
+    }
+
+    const params = {
+      page: newPage,
+      size: newPageSize,
+      ...(searchTerm && { search: searchTerm }),
+      ...(selectedEventId && { event_id: selectedEventId }),
+    };
+
+    dispatch(getEventOrders(params));
+  };
+
+  // Alternative: If you prefer to use the usePaginationHook
+  const handlePagination = usePaginationHook(getEventOrders);
 
   return (
     <Card>
@@ -246,22 +308,33 @@ const OrdersList = () => {
           <div className="mr-md-3 mb-3">
             <Search
               placeholder="Search Schedules"
-              onChange={(e) => handleSearchIsEmpty(e.target.value)}
-              onSearch={handleSearch}
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onSearch={handleSearchSubmit}
               style={{ width: 200 }}
+              allowClear
             />
           </div>
-          <div className="mb-3">
+          <div className="mr-md-3 mb-3">
             <Select
-              defaultValue="All"
-              onChange={handleShowStatus}
-              className="mr-2"
+              loading={loading}
+              className="w-100"
+              placeholder="Select an event"
+              value={selectedEventId}
+              onChange={handleSelectEvent}
+              onSearch={handleEventSearch}
+              allowClear
+              onClear={handleClearEvent}
+              showArrow
+              showSearch
+              filterOption={false}
+              style={{ minWidth: 200 }}
             >
-              <Option value={null}>All</Option>
-              <Option value="active">Active</Option>
-              <Option value="completed">Completed</Option>
-              <Option value="pending">Pending</Option>
-              <Option value="failed">Failed</Option>
+              {filteredEvents.map((event) => (
+                <Option key={event.id} value={event.id}>
+                  {event.event_name}
+                </Option>
+              ))}
             </Select>
           </div>
         </Flex>
@@ -273,7 +346,7 @@ const OrdersList = () => {
           <Card>
             <Statistic
               title="Total Bookings"
-              value={totalStats.totalBookings}
+              value={eventOrderSummary?.total_bookings ?? 0}
               prefix={<TeamOutlined />}
               valueStyle={{ color: "#1890ff" }}
             />
@@ -283,7 +356,7 @@ const OrdersList = () => {
           <Card>
             <Statistic
               title="Success Bookings"
-              value={totalStats.successBookings}
+              value={eventOrderSummary?.success_bookings ?? 0}
               prefix={<CheckCircleOutlined />}
               valueStyle={{ color: "#52c41a" }}
             />
@@ -293,7 +366,7 @@ const OrdersList = () => {
           <Card>
             <Statistic
               title="Pending Bookings"
-              value={totalStats.pendingBookings}
+              value={eventOrderSummary?.pending_bookings ?? 0}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: "#faad14" }}
             />
@@ -303,7 +376,7 @@ const OrdersList = () => {
           <Card>
             <Statistic
               title="Failed Bookings"
-              value={totalStats.failedBookings}
+              value={eventOrderSummary?.failed_bookings ?? 0}
               prefix={<CloseCircleOutlined />}
               valueStyle={{ color: "#ff4d4f" }}
             />
@@ -311,18 +384,23 @@ const OrdersList = () => {
         </Col>
       </Row>
 
+      {/* Table */}
       <div className="table-responsive">
         <Table
           columns={tableColumns}
           dataSource={eventOrdersData}
           rowKey="id"
           loading={loading}
-          onChange={handleTableChange}
           pagination={{
-            current: pagination.page,
-            pageSize: pagination.size,
-            total: pagination.total,
-            onChange: (page, pageSize) => handlePagination(page, pageSize),
+            current: pagination?.page || currentPage,
+            pageSize: pagination?.size || pageSize,
+            total: pagination?.total || 0,
+            onChange: (page, pageSize) => handlePagination(page, pageSize, ),
+            onShowSizeChange: handleTableChange,
+            showSizeChanger: true,
+           
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} of ${total} items`,
           }}
         />
       </div>

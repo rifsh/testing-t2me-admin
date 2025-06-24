@@ -836,8 +836,13 @@ export const protectedRoutes = [
   },
   {
     key: "reports.orders.event.details",
-    path: `${APP_PREFIX_PATH}/reports/orders/event/details/:eventId`,
+    path: `${APP_PREFIX_PATH}/reports/orders/event/details/:id`,
     component: React.lazy(() => import("views/orders/event/details")),
+  },
+  {
+    key: "reports.orders.event.details.user",
+    path: `${APP_PREFIX_PATH}/reports/orders/event/user/details/:schedule_id/:date_id/:time_id/:user_id`,
+    component: React.lazy(() => import("views/orders/event/userDetails")),
   },
   {
     key: "reports.orders.movie",

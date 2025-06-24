@@ -1,23 +1,47 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import OrderService from "services/OrdersService";
 
-export const fethEventOrders = createAsyncThunk(
-  "orders/fethEventOrders",
+export const getEventOrders = createAsyncThunk(
+  "orders/fetchEventOrders",
   async (pageData, { rejectWithValue }) => {
     try {
-      const response = await OrderService.fethEventOrders(pageData);
+      const response = await OrderService.getEventOrders(pageData);
       return response.data[0];
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
-export const fethEventOrderDetails = createAsyncThunk(
-  "orders/fethEventOrderDetails",
+export const getEventOrderSummary = createAsyncThunk(
+  "orders/getEventOrderSummary",
   async (pageData, { rejectWithValue }) => {
     try {
-      const response = await OrderService.fethEventOrderDetails(pageData);
+      const response = await OrderService.getEventOrderSammary(pageData);
       return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const getEventOrderDetailsDate = createAsyncThunk(
+  "orders/fetchEventOrderDetailsDate",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await OrderService.getEventOrderDetailsDate(pageData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const getEventOrderDetailsTime = createAsyncThunk(
+  "orders/fetchEventOrderDetailsTime",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await OrderService.getEventOrderDetailsTime(pageData);
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -31,37 +55,101 @@ const orderSlice = createSlice({
     pagination: { size: 10, page: 1 },
     error: null,
     message: null,
-    eventOrdersDataList:[],
-    eventOrdersDataDetails:null,
+    eventOrdersDataList: [],
+    ordersDates: [],
+    ordersTime: [],
+    bookingTickets: null,
+    bookingTicketUser: null,
+    eventOrderSummary: null,
   },
-  reducers: {},
+  reducers: {
+    // Add a reset action to clear data when needed
+    resetOrderDetails: (state) => {
+      state.ordersDates = [];
+      state.ordersTime = [];
+      state.bookingTickets = null;
+      state.bookingTicketUser = null;
+    },
+    // Action to clear user specific data
+    clearUserData: (state) => {
+      state.bookingTickets = null;
+    },
+  },
 
   extraReducers: (builder) => {
     builder
-      .addCase(fethEventOrders.pending, (state) => {
+      .addCase(getEventOrders.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(fethEventOrders.fulfilled, (state, action) => {
+      .addCase(getEventOrders.fulfilled, (state, action) => {
         state.loading = false;
         state.eventOrdersDataList = action.payload.items;
         state.pagination = action.payload;
       })
-      .addCase(fethEventOrders.rejected, (state, action) => {
+      .addCase(getEventOrders.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(fethEventOrderDetails.pending, (state) => {
+      .addCase(getEventOrderSummary.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(fethEventOrderDetails.fulfilled, (state, action) => {
+      .addCase(getEventOrderSummary.fulfilled, (state, action) => {
         state.loading = false;
-        state.eventOrdersDataDetails = action.payload.items;
-       })
-      .addCase(fethEventOrderDetails.rejected, (state, action) => {
+        state.eventOrderSummary = action.payload;
+       
+      })
+      .addCase(getEventOrderSummary.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getEventOrderDetailsDate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getEventOrderDetailsDate.fulfilled, (state, action) => {
+        state.loading = false;
+        state.ordersDates = action.payload;
+      })
+      .addCase(getEventOrderDetailsDate.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getEventOrderDetailsTime.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getEventOrderDetailsTime.fulfilled, (state, action) => {
+        state.loading = false;
+
+        // Check if response has data array
+        const responseData = Array.isArray(action.payload)
+          ? action.payload[0]
+          : action.payload;
+
+        if (responseData) {
+          // If has booking_ticket_user (user list for table)
+          if (responseData.booking_ticket_user) {
+            state.bookingTicketUser = responseData;
+            state.ordersTime = [responseData]; // Also store in ordersTime for stats
+          }
+          // If has booking_tickets (individual user's bookings)
+          else if (responseData.booking_tickets) {
+            state.bookingTickets = responseData;
+          }
+          // Otherwise it's time slots data
+          else {
+            state.ordersTime = action.payload;
+          }
+        }
+      })
+      .addCase(getEventOrderDetailsTime.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
   },
 });
-export const {} = orderSlice.actions;
+
+export const { resetOrderDetails, clearUserData } = orderSlice.actions;
 export default orderSlice.reducer;
