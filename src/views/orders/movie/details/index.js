@@ -27,8 +27,8 @@ import {
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  getEventOrderDetailsDate,
-  getEventOrderDetailsTime,
+  getMovieOrderDetailsDate,
+  getMovieOrderDetailsTime,
   resetOrderDetails,
 } from "store/slices/ordersSlice";
 import HorizontalDateTimePicker from "components/util-components/DatePicker/HorizontalDateTimePicker";
@@ -39,7 +39,7 @@ import { BOOKING_TYPE } from "constants/AppConstants";
 
 const { Title, Text } = Typography;
 
-const EventDetailsPage = () => {
+const MovieDetailsPage = () => {
   const { id } = useParams();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -90,7 +90,7 @@ const EventDetailsPage = () => {
 
     try {
       const response = await dispatch(
-        getEventOrderDetailsDate({ schedule_id: id })
+        getMovieOrderDetailsDate({ schedule_id: id })
       );
       console.log("Dates fetched:", response.payload);
       return response.payload;
@@ -123,7 +123,7 @@ const EventDetailsPage = () => {
 
       const apiParams = {
         schedule_id: id,
-        ...(type === BOOKING_TYPE.EVENT_TICKET
+        ...(type === BOOKING_TYPE.MOVIE_TICKET
           ? { show_date_id: dateId }
           : { start_date: dateId }),
       };
@@ -131,7 +131,7 @@ const EventDetailsPage = () => {
       console.log("Time API params:", apiParams);
 
       try {
-        const response = await dispatch(getEventOrderDetailsTime(apiParams));
+        const response = await dispatch(getMovieOrderDetailsTime(apiParams));
         console.log("Time slots response:", response.payload);
 
         if (shouldAutoSelectTime && response.payload?.length > 0) {
@@ -180,7 +180,7 @@ const EventDetailsPage = () => {
 
       const apiParams = {
         schedule_id: id,
-        ...(type === BOOKING_TYPE.EVENT_TICKET
+        ...(type === BOOKING_TYPE.MOVIE_TICKET
           ? { show_date_id: dateId }
           : { start_date: dateId }),
         show_time_id: timeId,
@@ -191,7 +191,7 @@ const EventDetailsPage = () => {
       console.log("Booking users API params:", apiParams);
 
       try {
-        const response = await dispatch(getEventOrderDetailsTime(apiParams));
+        const response = await dispatch(getMovieOrderDetailsTime(apiParams));
         console.log("Booking users response:", response.payload);
       } catch (error) {
         console.error("Error fetching booking users:", error);
@@ -225,7 +225,7 @@ const EventDetailsPage = () => {
 
       const firstDate = ordersDates[0];
       const dateIdentifier =
-        type === BOOKING_TYPE.EVENT_TICKET
+        type === BOOKING_TYPE.MOVIE_TICKET
           ? firstDate.id
           : firstDate.start_date;
 
@@ -309,7 +309,7 @@ const EventDetailsPage = () => {
   const getUserListData = () => {
     if (!bookingTicketUser) return { userList: [], paginationInfo: {} };
 
-    if (type === BOOKING_TYPE.EVENT_TICKET) {
+    if (type === BOOKING_TYPE.MOVIE_TICKET) {
       return {
         userList: bookingTicketUser.booking_ticket_user?.items || [],
         paginationInfo: bookingTicketUser.booking_ticket_user || {
@@ -322,8 +322,8 @@ const EventDetailsPage = () => {
     } else {
       console.log("Non-ticket booking data:", bookingTicketUser);
       return {
-        userList: bookingTicketUser.seat_state?.permanent_bookings?.items || [],
-        paginationInfo: bookingTicketUser.seat_state?.permanent_bookings || {
+        userList: bookingTicketUser.movie_seat_state?.permanent_bookings?.items || [],
+        paginationInfo: bookingTicketUser.movie_seat_state?.permanent_bookings || {
           total: 0,
           page: 1,
           size: 10,
@@ -335,7 +335,7 @@ const EventDetailsPage = () => {
 
   const handleUserSelect = (userId) => {
     navigate(
-      `${APP_PREFIX_PATH}/reports/orders/event/user/details/${id}/${selectedDateId}/${selectedTimeId}/${userId}?type=${type}`
+      `${APP_PREFIX_PATH}/reports/orders/movie/user/details/${id}/${selectedDateId}/${selectedTimeId}/${userId}`
     );
   };
 
@@ -478,7 +478,7 @@ const EventDetailsPage = () => {
     return (
       <div style={{ padding: "24px" }}>
         <Button icon={<ArrowLeftOutlined />} onClick={handleBackToList}>
-          Back to Events List
+          Back to Movies List
         </Button>
         <Card style={{ marginTop: 16, textAlign: "center", padding: "48px" }}>
           <div style={{ fontSize: "16px", color: "#666" }}>
@@ -500,7 +500,7 @@ const EventDetailsPage = () => {
           onClick={handleBackToList}
           size="large"
         >
-          Back to Events List
+          Back to Movies List
         </Button>
       </div>
 
@@ -607,4 +607,4 @@ const EventDetailsPage = () => {
   );
 };
 
-export default EventDetailsPage;
+export default MovieDetailsPage;

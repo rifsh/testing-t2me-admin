@@ -47,6 +47,52 @@ export const getEventOrderDetailsTime = createAsyncThunk(
     }
   }
 );
+export const getMovieOrders = createAsyncThunk(
+  "orders/fetchMovieOrders",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await OrderService.getMovieOrders(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+export const getMovieOrderSummary = createAsyncThunk(
+  "orders/getMovieOrderSummary",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await OrderService.getMovieOrderSammary(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const getMovieOrderDetailsDate = createAsyncThunk(
+  "orders/fetchMovieOrderDetailsDate",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await OrderService.getMovieOrderDetailsDate(pageData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const getMovieOrderDetailsTime = createAsyncThunk(
+  "orders/fetchMovieOrderDetailsTime",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await OrderService.getMovieOrderDetailsTime(pageData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 const orderSlice = createSlice({
   name: "orders",
@@ -58,6 +104,7 @@ const orderSlice = createSlice({
     eventOrdersDataList: [],
     ordersDates: [],
     ordersTime: [],
+    allOrdersTime: [],
     bookingTickets: null,
     bookingTicketUser: null,
     eventOrderSummary: null,
@@ -98,7 +145,6 @@ const orderSlice = createSlice({
       .addCase(getEventOrderSummary.fulfilled, (state, action) => {
         state.loading = false;
         state.eventOrderSummary = action.payload;
-       
       })
       .addCase(getEventOrderSummary.rejected, (state, action) => {
         state.loading = false;
@@ -122,29 +168,97 @@ const orderSlice = createSlice({
       })
       .addCase(getEventOrderDetailsTime.fulfilled, (state, action) => {
         state.loading = false;
-
-        // Check if response has data array
         const responseData = Array.isArray(action.payload)
           ? action.payload[0]
           : action.payload;
 
         if (responseData) {
-          // If has booking_ticket_user (user list for table)
-          if (responseData.booking_ticket_user) {
+          if (responseData.booking_ticket_user || responseData.seat_state) {
             state.bookingTicketUser = responseData;
-            state.ordersTime = [responseData]; // Also store in ordersTime for stats
-          }
-          // If has booking_tickets (individual user's bookings)
-          else if (responseData.booking_tickets) {
+            state.ordersTime = [responseData];
+          } else if (
+            responseData.booking_tickets ||
+            responseData.user_seat_bookings
+          ) {
             state.bookingTickets = responseData;
-          }
-          // Otherwise it's time slots data
-          else {
+          } else if (responseData.is_show_times === true) {
+            state.allOrdersTime = action.payload;
+          } else {
             state.ordersTime = action.payload;
           }
         }
       })
       .addCase(getEventOrderDetailsTime.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getMovieOrders.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getMovieOrders.fulfilled, (state, action) => {
+        state.loading = false;
+        state.eventOrdersDataList = action.payload.items;
+        state.pagination = action.payload;
+      })
+      .addCase(getMovieOrders.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getMovieOrderSummary.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getMovieOrderSummary.fulfilled, (state, action) => {
+        state.loading = false;
+        state.eventOrderSummary = action.payload;
+      })
+      .addCase(getMovieOrderSummary.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getMovieOrderDetailsDate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getMovieOrderDetailsDate.fulfilled, (state, action) => {
+        state.loading = false;
+        state.ordersDates = action.payload;
+      })
+      .addCase(getMovieOrderDetailsDate.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getMovieOrderDetailsTime.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getMovieOrderDetailsTime.fulfilled, (state, action) => {
+        state.loading = false;
+        const responseData = Array.isArray(action.payload)
+          ? action.payload[0]
+          : action.payload;
+
+        if (responseData) {
+          if (
+            responseData.booking_ticket_user ||
+            responseData.movie_seat_state
+          ) {
+            state.bookingTicketUser = responseData;
+            state.ordersTime = [responseData];
+          } else if (
+            responseData.booking_tickets ||
+            responseData.user_seat_bookings
+          ) {
+            state.bookingTickets = responseData;
+          } else if (responseData.is_show_times === true) {
+            state.allOrdersTime = action.payload;
+          } else {
+            state.ordersTime = action.payload;
+          }
+        }
+      })
+      .addCase(getMovieOrderDetailsTime.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

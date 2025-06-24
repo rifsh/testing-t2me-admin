@@ -21,9 +21,15 @@ export const EventType = {
   SPORTS: "sports",
 };
 
+export const BOOKING_TYPE = {
+  EVENT_SEAT: "event_seat",
+  EVENT_TICKET: "event_ticket",
+  MOVIE_TICKET: "movie_ticket",
+  MOVIE_SEAT: "movie_seat",
+};
 export const APPROVAL_STATUS = {
   PENDING: "pending",
   APPROVED: "approved",
   REJECTED: "rejected",
-  CHANGE_REQUEST: "change request"
+  CHANGE_REQUEST: "change request",
 };

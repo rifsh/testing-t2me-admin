@@ -32,5 +32,33 @@ OrderService.getEventOrderDetailsTime = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+OrderService.getMovieOrders = function (pageData) {
+  return fetch({
+    url: `${ApiConstant.MOVIE_ORDERS_LIST}`,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
+OrderService.getMovieOrderSammary = function (pageData) {
+  return fetch({
+    url: `${ApiConstant.MOVIE_ORDERS_SUMMARY}`,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
+OrderService.getMovieOrderDetailsDate = function (pageData) {
+  return fetch({
+    url: `${ApiConstant.MOVIE_ORDERS_DETAILS_DATE}`,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
+OrderService.getMovieOrderDetailsTime = function (pageData) {
+  return fetch({
+    url: `${ApiConstant.MOVIE_ORDERS_DETAILS_TIME}`,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
 
 export default OrderService;

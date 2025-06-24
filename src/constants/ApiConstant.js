@@ -297,4 +297,10 @@ export const ApiConstant = {
     "/api/v1/event/orders/secured/schedule/show/date/details",
   EVENT_ORDERS_DETAILS_TIME:
     "/api/v1/event/orders/secured/schedule/show/time/details",
+  MOVIE_ORDERS_LIST: "/api/v1/movie/orders/secured/schedule/list",
+  MOVIE_ORDERS_SUMMARY: "/api/v1/movie/orders/secured/schedule/summary/status",
+  MOVIE_ORDERS_DETAILS_DATE:
+    "/api/v1/movie/orders/secured/schedule/show/date/details",
+  MOVIE_ORDERS_DETAILS_TIME:
+    "/api/v1/movie/orders/secured/schedule/show/time/details",
 };

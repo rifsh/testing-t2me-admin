@@ -29,7 +29,7 @@ import {
 } from "@ant-design/icons";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getEventOrderDetailsTime } from "store/slices/ordersSlice";
+import { getMovieOrderDetailsTime } from "store/slices/ordersSlice";
 import { BOOKING_TYPE } from "constants/AppConstants";
 
 const { Title, Text } = Typography;
@@ -46,7 +46,7 @@ const UserOrderDetailsPage = () => {
 
   useEffect(() => {
     dispatch(
-      getEventOrderDetailsTime({
+      getMovieOrderDetailsTime({
         schedule_id: schedule_id,
         ...(type === BOOKING_TYPE.EVENT_TICKET
           ? { show_date_id: date_id }
