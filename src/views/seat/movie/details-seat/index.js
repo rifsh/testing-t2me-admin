@@ -48,6 +48,10 @@ export default function SeatDetailsPage() {
     navigate(`${APP_PREFIX_PATH}/seat/movie/edit/${seatId}`);
   };
 
+  useEffect(() => {
+    console.log("singleSeatStructure", singleSeatStructure)
+  }, [singleSeatStructure])
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
@@ -260,11 +264,9 @@ export default function SeatDetailsPage() {
                             key={seat.id || `${rowIndex}-${seatIndex}`}
                             className="w-8 h-8 flex items-center justify-center rounded-md text-xs font-medium text-white shadow-sm"
                             style={{ backgroundColor: seatType.color }}
-                            title={`${seat.rowLabel || ""}${
-                              seat.number || ""
-                            } - ${seatType.label} - $${
-                              seat.price || seatType.basePrice || 0
-                            }`}
+                            title={`${seat.rowLabel || ""}${seat.number || ""
+                              } - ${seatType.label} - $${seat.price || seatType.basePrice || 0
+                              }`}
                           >
                             {seat.number || ""}
                           </div>

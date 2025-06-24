@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import ScreenService from "services/ScreenService";
+import { flatToNested } from "utils/seatUtils";
 
 const initialState = {
     response: null,
@@ -249,7 +250,15 @@ const screenSlice = createSlice({
             })
             .addCase(fetchScreenById.fulfilled, (state, action) => {
                 state.loading = false;
-                state.singleResponse = action.payload;
+                const data = action.payload;
+                const restructuredData = {
+                    ...data,
+                    seat_data: {
+                        seats: flatToNested(data.seat_structures[0].seat_data.seats),
+                        seatTypes: data.seat_structures[0].seat_data.seatTypes,
+                    },
+                };
+                state.singleResponse = restructuredData;
             })
             .addCase(fetchScreenById.rejected, (state, action) => {
                 state.loading = false;

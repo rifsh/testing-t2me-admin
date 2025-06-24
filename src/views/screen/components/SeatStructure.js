@@ -10,16 +10,16 @@ import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { useNavigate } from 'react-router-dom';
 
 const SeatStructure = ({ SeatStructure }) => {
-    const { seat_data } = SeatStructure ?? {};
     const navigate = useNavigate();
     const [zoomLevel, setZoomLevel] = useState(1);
-    const { seats, seatTypes } = seat_data ?? {};
+    const { seats, seatTypes } = SeatStructure;
     const seatMatrix = [];
 
-    seats?.forEach((row) => {
+    seats.forEach((row) => {
         const newRow = Array.isArray(row) ? [...row] : [];
         seatMatrix.push(newRow);
     });
+
 
     const handleZoomIn = () => {
         if (zoomLevel < 2) {
@@ -46,13 +46,6 @@ const SeatStructure = ({ SeatStructure }) => {
             }
         );
     };
-
-    useEffect(() => {
-        if (SeatStructure) {
-            console.log("screensingleresponse", seatTypes)
-
-        }
-    }, [SeatStructure])
 
     return (
         <div>
@@ -156,7 +149,7 @@ const SeatStructure = ({ SeatStructure }) => {
                                     </div>
                                 </div>
 
-                                <div className="mt-10 mb-4">
+                                {/* <div className="mt-10 mb-4">
                                     <h4 className="text-lg font-semibold mb-4 text-center">Seat Types</h4>
                                     <div className="flex flex-wrap gap-4 justify-center">
                                         {seatTypes.map((type) => (
@@ -171,7 +164,7 @@ const SeatStructure = ({ SeatStructure }) => {
                                             </div>
                                         ))}
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         ) : (
                             <Empty
