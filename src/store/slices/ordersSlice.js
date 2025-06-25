@@ -181,7 +181,7 @@ const orderSlice = createSlice({
             responseData.user_seat_bookings
           ) {
             state.bookingTickets = responseData;
-          } else if (responseData.is_show_times === true) {
+          } else if (responseData.is_time_only === true) {
             state.allOrdersTime = action.payload;
           } else {
             state.ordersTime = action.payload;
@@ -241,18 +241,18 @@ const orderSlice = createSlice({
 
         if (responseData) {
           if (
-            responseData.booking_ticket_user ||
-            responseData.movie_seat_state
-          ) {
-            state.bookingTicketUser = responseData;
-            state.ordersTime = [responseData];
+           responseData.is_time_only === true 
+          ) {state.allOrdersTime = action.payload;
+           
           } else if (
             responseData.booking_tickets ||
             responseData.user_seat_bookings
           ) {
             state.bookingTickets = responseData;
-          } else if (responseData.is_show_times === true) {
-            state.allOrdersTime = action.payload;
+          } else if (responseData.booking_ticket_user ||
+            responseData.movie_seat_state) {
+             state.bookingTicketUser = responseData;
+            state.ordersTime = [responseData];
           } else {
             state.ordersTime = action.payload;
           }
