@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Clock, Calendar } from "lucide-react";
+import { BOOKING_TYPE } from "constants/AppConstants";
 
-const BOOKING_TYPE = {
-  EVENT_TICKET: "EVENT_TICKET",
-};
 
 export const HorizontalDateTimePicker = ({
   dates,
