@@ -27,6 +27,9 @@ import {
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  clearTicketUser,
+  clearTimes,
+  clearUserData,
   getMovieOrderDetailsDate,
   getMovieOrderDetailsTime,
   resetOrderDetails,
@@ -58,13 +61,15 @@ const MovieDetailsPage = () => {
   const isDateChanging = useRef(false);
   const isTimeChanging = useRef(false);
 
-  const { ordersDates, ordersTime,allOrdersTime, bookingTicketUser, loading } = useSelector(
-    (state) => state.orderSlice
-  );
+  const { ordersDates, ordersTime, allOrdersTime, bookingTicketUser, loading } =
+    useSelector((state) => state.orderSlice);
 
   useEffect(() => {
     return () => {
       dispatch(resetOrderDetails());
+      dispatch(clearTimes());
+      dispatch(clearUserData());
+      dispatch(clearTicketUser());
       setSelectedDateId(null);
       setSelectedTimeId(null);
       setPagination({ current: 1, pageSize: 10 });
@@ -177,7 +182,7 @@ const MovieDetailsPage = () => {
         size,
       });
       isTimeChanging.current = true;
-
+      dispatch(clearTicketUser());
       const apiParams = {
         schedule_id: id,
         ...(type === BOOKING_TYPE.MOVIE_TICKET
@@ -322,8 +327,10 @@ const MovieDetailsPage = () => {
     } else {
       console.log("Non-ticket booking data:", bookingTicketUser);
       return {
-        userList: bookingTicketUser.movie_seat_state?.permanent_bookings?.items || [],
-        paginationInfo: bookingTicketUser.movie_seat_state?.permanent_bookings || {
+        userList:
+          bookingTicketUser.movie_seat_state?.permanent_bookings?.items || [],
+        paginationInfo: bookingTicketUser.movie_seat_state
+          ?.permanent_bookings || {
           total: 0,
           page: 1,
           size: 10,

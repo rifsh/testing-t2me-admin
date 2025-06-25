@@ -27,6 +27,9 @@ import {
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  clearTicketUser,
+  clearTimes,
+  clearUserData,
   getEventOrderDetailsDate,
   getEventOrderDetailsTime,
   resetOrderDetails,
@@ -58,13 +61,15 @@ const EventDetailsPage = () => {
   const isDateChanging = useRef(false);
   const isTimeChanging = useRef(false);
 
-  const { ordersDates, ordersTime,allOrdersTime, bookingTicketUser, loading } = useSelector(
-    (state) => state.orderSlice
-  );
+  const { ordersDates, ordersTime, allOrdersTime, bookingTicketUser, loading } =
+    useSelector((state) => state.orderSlice);
 
   useEffect(() => {
     return () => {
       dispatch(resetOrderDetails());
+      dispatch(clearTimes());
+      dispatch(clearUserData());
+      dispatch(clearTicketUser());
       setSelectedDateId(null);
       setSelectedTimeId(null);
       setPagination({ current: 1, pageSize: 10 });
@@ -177,7 +182,7 @@ const EventDetailsPage = () => {
         size,
       });
       isTimeChanging.current = true;
-
+      dispatch(clearTicketUser());
       const apiParams = {
         schedule_id: id,
         ...(type === BOOKING_TYPE.EVENT_TICKET
