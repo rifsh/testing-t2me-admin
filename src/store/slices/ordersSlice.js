@@ -110,14 +110,18 @@ const orderSlice = createSlice({
     eventOrderSummary: null,
   },
   reducers: {
-    // Add a reset action to clear data when needed
     resetOrderDetails: (state) => {
       state.ordersDates = [];
       state.ordersTime = [];
       state.bookingTickets = null;
       state.bookingTicketUser = null;
     },
-    // Action to clear user specific data
+    clearTimes: (state) => {
+      state.allOrdersTime = [];
+    },
+    clearTicketUser: (state) => {
+      state.bookingTicketUser = null;
+    },
     clearUserData: (state) => {
       state.bookingTickets = null;
     },
@@ -240,18 +244,18 @@ const orderSlice = createSlice({
           : action.payload;
 
         if (responseData) {
-          if (
-           responseData.is_time_only === true 
-          ) {state.allOrdersTime = action.payload;
-           
+          if (responseData.is_time_only === true) {
+            state.allOrdersTime = action.payload;
           } else if (
             responseData.booking_tickets ||
             responseData.user_seat_bookings
           ) {
             state.bookingTickets = responseData;
-          } else if (responseData.booking_ticket_user ||
-            responseData.movie_seat_state) {
-             state.bookingTicketUser = responseData;
+          } else if (
+            responseData.booking_ticket_user ||
+            responseData.movie_seat_state
+          ) {
+            state.bookingTicketUser = responseData;
             state.ordersTime = [responseData];
           } else {
             state.ordersTime = action.payload;
@@ -265,5 +269,6 @@ const orderSlice = createSlice({
   },
 });
 
-export const { resetOrderDetails, clearUserData } = orderSlice.actions;
+export const { resetOrderDetails, clearUserData, clearTicketUser, clearTimes } =
+  orderSlice.actions;
 export default orderSlice.reducer;

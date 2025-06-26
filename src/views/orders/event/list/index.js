@@ -27,10 +27,6 @@ import { getEventOrders, getEventOrderSummary } from "store/slices/ordersSlice";
 import utils from "utils";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
-import {
-  resetSearchValue,
-  setGlobalSearchValue,
-} from "store/slices/fliterSlice";
 import { DEFAULT_PAGE_SIZE, EVENT_TYPES } from "constants/PageConstants";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
