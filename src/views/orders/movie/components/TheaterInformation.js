@@ -4,7 +4,7 @@ import { CalendarOutlined, ClockCircleOutlined, InfoCircleOutlined, InfoOutlined
 
 const { Title, Text } = Typography;
 
-export default function EventInformation({ data }) {
+export default function TheaterInformation({ data }) {
 
   return (
     <div>
@@ -12,7 +12,7 @@ export default function EventInformation({ data }) {
         title={
           <Title level={4} style={{ margin: 0 }}>
             <CalendarOutlined style={{ marginRight: 8 }} />
-            Event Information
+            Theater Information
           </Title>
         }
       >
@@ -38,14 +38,14 @@ export default function EventInformation({ data }) {
             <Space direction="vertical" size="middle" style={{ width: "100%" }}>
               <div>
                 <Text strong style={{ fontSize: "16px" }}>
-                  Event Name:
+                  Theater Name:
                 </Text>
                 <div style={{ marginTop: 8 }}>
                   <InfoCircleOutlined
                     style={{ marginRight: 8, color: "#1890ff" }}
                   />
                   <Text style={{ fontSize: "14px" }}>
-                    {data?.schedule?.event?.name || "N/A"}
+                    {data?.schedule?.theatre?.name || "N/A"}
                   </Text>
                 </div>
               </div>

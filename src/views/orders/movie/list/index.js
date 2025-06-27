@@ -170,13 +170,7 @@ const OrdersList = () => {
         </div>
       ),
     },
-    {
-      title: "Available Types",
-      dataIndex: "available_types",
-      key: "available_types",
-      render: (types) => <Tag color="blue">{types || "N/A"}</Tag>,
-      sorter: (a, b) => utils.antdTableSorter(a, b, "available_types"),
-    },
+
     {
       title: "",
       dataIndex: "actions",
