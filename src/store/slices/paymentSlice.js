@@ -37,10 +37,8 @@ export const fetchAllPaymentService = createAsyncThunk(
   "payment/fetchAllPaymentService",
   async (pageData, { rejectWithValue }) => {
     try {
-      
-        const response = await PaymentService.getAllPaymentServices(pageData);
-        return response.data;
-    
+      const response = await PaymentService.getAllPaymentServices(pageData);
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error Fetching Payments");
     }
@@ -50,25 +48,11 @@ export const fetchAllPaymentService = createAsyncThunk(
 // Fetch single payment
 export const getSinglePayment = createAsyncThunk(
   "payment/getSingle",
-  async (id, { rejectWithValue }) => {
+  async (pageData, { rejectWithValue }) => {
     try {
-      if (ALL_PAYMENT_MOCK_API && ENABLE_MOCK_API) {
-        const response = PaymentMockData.fetchPaymentDataList;
-        const payment = response.data[0].items.find(
-          (item) => String(item.id) === String(id)
-        );
-
-        if (!payment) {
-          throw new Error("Payment not found");
-        }
-
-        console.log("Mock Payment Found:", payment);
-        return payment;
-      } else {
-        const response = await PaymentService.getSinglePayment(id);
-        console.log("API Response:", response);
-        return response.data;
-      }
+      const response = await PaymentService.getSinglePayment(pageData);
+      console.log("API Response:", response);
+      return response.data[0];
     } catch (error) {
       console.error("Error in getSinglePayment:", error);
       return rejectWithValue(
@@ -84,10 +68,10 @@ export const getSinglePayment = createAsyncThunk(
 
 export const fetchAllPaymentMethod = createAsyncThunk(
   "paymentMethod/fetchAllPaymentMethod",
-  async (_, { rejectWithValue }) => {  
+  async (_, { rejectWithValue }) => {
     try {
       const response = await PaymentService.getPaymentsMethod();
-      return response.data; 
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error Fetching Payments");
     }
@@ -142,7 +126,7 @@ const paymentSlice = createSlice({
       .addCase(fetchAllPaymentService.fulfilled, (state, action) => {
         state.loading = false;
         state.paymentServices = action.payload;
-       
+
         state.error = null;
       })
       .addCase(fetchAllPaymentService.rejected, (state, action) => {
@@ -195,7 +179,7 @@ const paymentSlice = createSlice({
       })
       .addCase(fetchAllPaymentMethod.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload ;
+        state.error = action.payload;
       });
   },
 });

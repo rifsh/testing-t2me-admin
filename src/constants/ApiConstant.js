@@ -228,6 +228,7 @@ export const ApiConstant = {
 
   //Payment
   PAYMENT_URL: "/api/v1/shared/payment/secured/payment",
+  SINGLE_PAYMENT_URL: "/api/v1/shared/payment/secured/payment/single/details",
   PAYMENT_METHOD: "/api/v1/shared/payment/secured/payment/methods",
   PAYMENT_SERVICE: "/api/v1/shared/payment/secured/payment/services",
 

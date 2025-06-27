@@ -61,26 +61,28 @@ const PaymentList = () => {
   const dropdownMenu = (row) => [
     {
       key: "view",
-      label: (
-        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.GET_PAYMENT_DETAILS) ? (
-          < Flex alignItems="center" >
-            <EyeOutlined />
-            <span className="ml-2">View Details</span>
-          </Flex >
-        ) : null
-      ),
-      onClick: () => showModal(row),
+      label: hasPermission(
+        PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.GET_PAYMENT_DETAILS
+      ) ? (
+        <Flex alignItems="center">
+          <EyeOutlined />
+          <span className="ml-2">View Details</span>
+        </Flex>
+      ) : null,
+      onClick: () => {
+        navigate(`${APP_PREFIX_PATH}/payment/details/${row.id}`);
+      },
     },
     {
       key: "remark",
-      label: (
-        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.EDIT_PAYMENT) ? (
-          < Flex alignItems="center" >
-            <EditOutlined />
-            <span className="ml-2">Edit Payment</span>
-          </Flex >
-        ) : null
-      ),
+      label: hasPermission(
+        PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.EDIT_PAYMENT
+      ) ? (
+        <Flex alignItems="center">
+          <EditOutlined />
+          <span className="ml-2">Edit Payment</span>
+        </Flex>
+      ) : null,
       onClick: () => navigate(`${APP_PREFIX_PATH}/payment/edit/${row.id}`),
     },
   ];
@@ -137,13 +139,15 @@ const PaymentList = () => {
     {
       title: "Actions",
       dataIndex: "actions",
-      render: (_, row) => (
-        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.EDIT_PAYMENT, PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.GET_PAYMENT_DETAILS]) ? (
-          < Dropdown menu={{ items: dropdownMenu(row) }} trigger={["click"]} >
+      render: (_, row) =>
+        hasAnyPermission([
+          PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.EDIT_PAYMENT,
+          PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.GET_PAYMENT_DETAILS,
+        ]) ? (
+          <Dropdown menu={{ items: dropdownMenu(row) }} trigger={["click"]}>
             <Button type="text" icon={<MoreOutlined />} />
-          </Dropdown >
-        ) : null
-      ),
+          </Dropdown>
+        ) : null,
     },
   ];
 
@@ -151,13 +155,17 @@ const PaymentList = () => {
     <Card>
       <Flex alignItems="center" justifyContent="space-between" className="mb-4">
         <SearchBarWithStatus fetchFunction={fetchAllPayment} />
-        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.ADD_PAYMENT) && <Button
-          type="primary"
-          icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/payment/add`)}
-        >
-          Add Payment
-        </Button>}
+        {hasPermission(
+          PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.ADD_PAYMENT
+        ) && (
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/payment/add`)}
+          >
+            Add Payment
+          </Button>
+        )}
       </Flex>
       <div className="table-responsive">
         <Table

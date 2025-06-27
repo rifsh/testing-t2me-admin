@@ -81,7 +81,7 @@ export const ScheduleOffersAndCoupons = ({ form }) => {
   };
 
   const handleCouponSelect = (couponId, coupons) => {
-    const scheduleStartDate = form.getFieldValue("start_date");
+    const scheduleStartDate = form.getFieldValue("booking_start_date_time");
     const scheduleEndDate = form.getFieldValue("end_date");
 
     if (!scheduleStartDate || !scheduleEndDate) {
