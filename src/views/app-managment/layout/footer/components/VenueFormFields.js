@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Input,
   Row,
@@ -34,6 +34,7 @@ import { APP_PREFIX_PATH } from "configs/AppConfig";
 const FooterFormFields = ({ mode }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const [selectedPlaceId, setSelectedPlaceId] = useState(null);
   const navigate = useNavigate();
   const { Option } = Select;
 
@@ -62,6 +63,8 @@ const FooterFormFields = ({ mode }) => {
   }, [error]);
 
   const handlePlaceSelect = (id) => {
+    // console.log("place", id);
+    setSelectedPlaceId(id);
     dispatch(setSelectedPlace(id));
   };
 
@@ -93,19 +96,19 @@ const FooterFormFields = ({ mode }) => {
         footer_text: values.footer_name,
         app_logo: values.app_logo,
         platform_description: values.description,
-        customer_support_keys: values.place,
+        customer_support_keys: `${values.place}_${String(selectedPlaceId)}`,
         whatsapp_contact: values.whatsapp_number,
         hotline_number: values.phone_number,
-        payment_keys: values.place,
-        contact_us_keys: values.place,
+        payment_keys: `${values.place}_${String(selectedPlaceId)}`,
+        contact_us_keys: `${values.place}_${String(selectedPlaceId)}`,
         contact_heading: values.contact_heading,
         contact_subheading: values.contact_subheading,
         whatsapp_button_text: values.whatsapp_button_text,
         whatsapp_enabled: values.whatsapp_enabled,
-        support_hours_keys: values.place,
+        support_hours_keys: `${values.place}_${String(selectedPlaceId)}`,
         days_available: days_available,
         operating_hours: operating_hours,
-        availability: availability,
+        availability: availability
       };
 
       console.log(values.payment_logos.length, "PAYMENT LOGO LENGTHI");
@@ -114,7 +117,7 @@ const FooterFormFields = ({ mode }) => {
         data.payment_logos = values.payment_logos;
       }
 
-      console.log(data, "THIS IS THE DATA");
+      console.log("THIS IS THE DATA", data);
 
       const resultAction = await dispatch(createFooter(data)).unwrap();
       navigate(`${APP_PREFIX_PATH}/app/management/layout/footer/list`);
