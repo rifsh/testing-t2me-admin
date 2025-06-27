@@ -9,12 +9,12 @@ import {
   Col,
   Statistic,
   Divider,
-  Table,
   Empty,
   Button,
   Spin,
   Collapse,
   Space,
+  Badge,
 } from "antd";
 import {
   UserOutlined,
@@ -26,13 +26,18 @@ import {
   DollarOutlined,
   DownOutlined,
   RightOutlined,
+  CreditCardOutlined,
+  SolutionOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getMovieOrderDetailsTime } from "store/slices/ordersSlice";
 import { BOOKING_TYPE } from "constants/AppConstants";
+import { FaTicketAlt } from "react-icons/fa";
 
 const { Title, Text } = Typography;
+const { Panel } = Collapse;
 
 const UserOrderDetailsPage = () => {
   const params = useParams();
@@ -48,7 +53,7 @@ const UserOrderDetailsPage = () => {
     dispatch(
       getMovieOrderDetailsTime({
         schedule_id: schedule_id,
-        ...(type === BOOKING_TYPE.EVENT_TICKET
+        ...(type === BOOKING_TYPE.MOVIE_TICKET
           ? { show_date_id: date_id }
           : { start_date: date_id }),
         show_time_id: time_id,
@@ -76,311 +81,455 @@ const UserOrderDetailsPage = () => {
       ? bookingTickets?.booking_tickets || []
       : bookingTickets?.user_seat_bookings?.bookings || [];
 
-  // Transform ticket bookings to show each ticket as a separate row
-  const transformedTicketBookings = [];
-  if (type === BOOKING_TYPE.EVENT_TICKET) {
-    bookingsData.forEach((booking) => {
-      if (booking.booking_items && booking.booking_items.length > 0) {
-        booking.booking_items.forEach((item, itemIndex) => {
-          // Create individual rows for each ticket within the booking item
-          for (
-            let ticketIndex = 0;
-            ticketIndex < (item.num_of_tickets || 1);
-            ticketIndex++
-          ) {
-            transformedTicketBookings.push({
-              ...booking,
-              booking_item: item,
-              ticketNumber: ticketIndex + 1,
-              totalTicketsInItem: item.num_of_tickets,
-              itemIndex: itemIndex,
-              ticketIndex: ticketIndex,
-              uniqueKey: `${booking.id}-${item.id}-${ticketIndex}`,
-            });
-          }
-        });
-      } else {
-        // Handle bookings without items
-        transformedTicketBookings.push({
-          ...booking,
-          booking_item: null,
-          ticketNumber: 1,
-          totalTicketsInItem: 1,
-          itemIndex: 0,
-          ticketIndex: 0,
-          uniqueKey: booking.id,
-        });
-      }
-    });
-  }
+  const hasBookings = bookingsData.length > 0;
+  const eventName = bookingTickets?.schedule?.name || "Movie";
+  const isMovieTicket = type === BOOKING_TYPE.EVENT_TICKET;
 
-  // Transform seat bookings to show each seat as a separate row
-  const transformedSeatBookings = [];
-  if (type !== BOOKING_TYPE.EVENT_TICKET) {
-    bookingsData.forEach((booking) => {
-      if (booking.seats && booking.seats.length > 0) {
-        booking.seats.forEach((seat, index) => {
-          transformedSeatBookings.push({
-            ...booking,
-            seat: seat,
-            seatIndex: index,
-            uniqueKey: `${booking.booking_id}-${seat.id}`,
-          });
-        });
-      } else {
-        // Handle bookings without seats
-        transformedSeatBookings.push({
-          ...booking,
-          seat: null,
-          seatIndex: 0,
-          uniqueKey: booking.booking_id,
-        });
-      }
-    });
-  }
+  const getPaymentStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "success":
+      case "completed":
+      case "paid":
+        return "green";
+      case "failed":
+        return "red";
+      case "pending":
+        return "orange";
+      default:
+        return "default";
+    }
+  };
 
-  const finalBookingsData =
-    type === BOOKING_TYPE.EVENT_TICKET
-      ? transformedTicketBookings
-      : transformedSeatBookings;
+  const getPaymentStatusIcon = (status) => {
+    switch (status?.toLowerCase()) {
+      case "success":
+      case "completed":
+      case "paid":
+        return <CheckCircleOutlined />;
+      case "failed":
+        return <CloseCircleOutlined />;
+      case "pending":
+        return <ClockCircleOutlined />;
+      default:
+        return <CreditCardOutlined />;
+    }
+  };
 
-  const hasBookings = finalBookingsData.length > 0;
-  const eventName = bookingTickets?.schedule?.name || "Event";
-  const isEventTicket = type === BOOKING_TYPE.EVENT_TICKET;
+  // Render ticket bookings with collapsible tickets
+  const renderTicketBookings = () => {
+    return (
+      <div style={{ marginTop: 16 }}>
+        {bookingsData.map((booking, index) => {
+          // Calculate total tickets from booking items
+          const totalTickets =
+            booking.booking_items?.reduce(
+              (sum, item) => sum + (item.num_of_tickets || 0),
+              0
+            ) || 0;
 
-  // Updated columns for individual ticket bookings
-  const ticketColumns = [
-    {
-      title: "Booking ID",
-      dataIndex: "id",
-      width: 100,
-      render: (id) => <Tag color="blue">#{id}</Tag>,
-    },
-    {
-      title: "Ticket Details",
-      dataIndex: "booking_item",
-      render: (item, record) => (
-        <div>
-          {item ? (
-            <div style={{ marginBottom: 8 }}>
-              <div>
-                <Text strong>{item.ticket_type?.name || "N/A"}</Text>
-                <Tag color="green" style={{ marginLeft: 8 }}>
-                  Ticket {record.ticketNumber} of {record.totalTicketsInItem}
-                </Tag>
-              </div>
-              <div style={{ fontSize: "12px", color: "#666" }}>
-                Price: ₹{item.ticket_type?.price || 0} each
-              </div>
-              <div style={{ fontSize: "12px", color: "#666" }}>
-                Ticket Set: {item.ticket_type?.ticket_set || "N/A"}
-              </div>
-            </div>
-          ) : (
-            <Text type="secondary">No ticket information</Text>
-          )}
-        </div>
-      ),
-    },
-    {
-      title: "Show Details",
-      dataIndex: "booking_item",
-      render: (item) => (
-        <div>
-          {item ? (
-            <div style={{ fontSize: "12px" }}>
-              <div>
-                <CalendarOutlined style={{ marginRight: 4 }} />
-                {item.show_date?.start_date || "N/A"}
-              </div>
-              <div>
-                <ClockCircleOutlined style={{ marginRight: 4 }} />
-                {item.show_time?.start_time || "N/A"} -{" "}
-                {item.show_time?.end_time || "N/A"}
-              </div>
-            </div>
-          ) : (
-            <Text type="secondary" style={{ fontSize: "12px" }}>
-              No show details
-            </Text>
-          )}
-        </div>
-      ),
-    },
-    {
-      title: "Ticket Amount",
-      dataIndex: "booking_item",
-      render: (item, record) => {
-        const ticketPrice = item?.ticket_type?.price || 0;
-        const totalBookingAmount = record.amount || 0;
-        const totalTicketsInBooking =
-          record.booking_items?.reduce(
-            (sum, bookingItem) => sum + (bookingItem.num_of_tickets || 0),
-            0
-          ) || 1;
-        const proportionalAmount = Math.round(
-          totalBookingAmount / totalTicketsInBooking
-        );
+          return (
+            <Card
+              key={booking.id}
+              style={{ marginBottom: 16 }}
+              size="small"
+              title={
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 12 }}
+                  >
+                    <SolutionOutlined style={{ color: "#1890ff" }} />
+                    <Text strong>Booking #{booking.id}</Text>
+                    <Tag color="green">SUCCESS</Tag>
+                  </div>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 16 }}
+                  >
+                    <Badge count={totalTickets} color="#52c41a">
+                      <FaTicketAlt style={{ fontSize: 16 }} />
+                    </Badge>
+                    <Text strong style={{ fontSize: 16, color: "#52c41a" }}>
+                      ₹{booking.amount || 0}
+                    </Text>
+                  </div>
+                </div>
+              }
+            >
+              <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                <Col span={8}>
+                  <Statistic
+                    title="Total Amount"
+                    value={booking.amount || 0}
+                    prefix="₹"
+                    valueStyle={{
+                      fontSize: 16,
+                      color: "#52c41a",
+                      fontWeight: "bold",
+                    }}
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="Original Amount"
+                    value={booking.original_amount || 0}
+                    prefix="₹"
+                    valueStyle={{ fontSize: 16 }}
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="Total Tickets"
+                    value={totalTickets}
+                    valueStyle={{ fontSize: 16, color: "#1890ff" }}
+                  />
+                </Col>
+              </Row>
 
-        return (
-          <div>
-            <Text strong style={{ color: "#52c41a", fontSize: "16px" }}>
-              ₹{ticketPrice}
-            </Text>
-            <div style={{ fontSize: "11px", color: "#666" }}>
-              Proportional: ₹{proportionalAmount}
-            </div>
-            {record.original_amount !== record.amount && (
+              <Descriptions
+                size="small"
+                column={2}
+                style={{ marginBottom: 16 }}
+              >
+                <Descriptions.Item label="Booking Date">
+                  <CalendarOutlined style={{ marginRight: 4 }} />
+                  {booking.created_at
+                    ? new Date(booking.created_at).toLocaleString()
+                    : "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Venue ID">
+                  <Tag color="blue">{booking.venue_id}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Schedule ID">
+                  <Tag color="purple">{booking.schedule_id}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Movie ID">
+                  <Tag color="green">{booking.event_id}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Coupon Code">
+                  {booking.coupon_code ? (
+                    <Tag color="orange">{booking.coupon_code}</Tag>
+                  ) : (
+                    <Text type="secondary">No coupon used</Text>
+                  )}
+                </Descriptions.Item>
+                <Descriptions.Item label="User Email">
+                  {booking.user?.email || "N/A"}
+                </Descriptions.Item>
+              </Descriptions>
+
+              <Collapse
+                ghost
+                expandIcon={({ isActive }) =>
+                  isActive ? <DownOutlined /> : <RightOutlined />
+                }
+              >
+                <Panel
+                  header={
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    >
+                      <FaTicketAlt />
+                      <Text strong>
+                        Ticket Details ({totalTickets} tickets)
+                      </Text>
+                    </div>
+                  }
+                  key="tickets"
+                >
+                  <Row gutter={[12, 12]}>
+                    {booking.booking_items?.map((item, itemIndex) => (
+                      <Col key={item.id} span={24}>
+                        <Card
+                          size="small"
+                          style={{
+                            border: "2px solid #52c41a",
+                            marginBottom: 12,
+                          }}
+                        >
+                          <Row gutter={[16, 8]}>
+                            <Col span={8}>
+                              <div>
+                                <Text
+                                  strong
+                                  style={{ color: "#1890ff", fontSize: 16 }}
+                                >
+                                  {item.ticket_type?.name || "N/A"}
+                                </Text>
+                                <div>
+                                  <Tag color="green" style={{ marginTop: 4 }}>
+                                    {item.num_of_tickets} tickets × ₹
+                                    {item.ticket_type?.price || 0}
+                                  </Tag>
+                                </div>
+                              </div>
+                            </Col>
+                            <Col span={8}>
+                              <div>
+                                <div style={{ marginBottom: 4 }}>
+                                  <CalendarOutlined
+                                    style={{ marginRight: 4 }}
+                                  />
+                                  <Text style={{ fontSize: 12 }}>
+                                    {item.show_date?.start_date || "N/A"}
+                                  </Text>
+                                </div>
+                                <div>
+                                  <ClockCircleOutlined
+                                    style={{ marginRight: 4 }}
+                                  />
+                                  <Text style={{ fontSize: 12 }}>
+                                    {item.show_time?.start_time || "N/A"} -{" "}
+                                    {item.show_time?.end_time || "N/A"}
+                                  </Text>
+                                </div>
+                              </div>
+                            </Col>
+                            <Col span={8} style={{ textAlign: "right" }}>
+                              <div>
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                  Total Amount
+                                </Text>
+                                <div>
+                                  <Text
+                                    strong
+                                    style={{ color: "#52c41a", fontSize: 18 }}
+                                  >
+                                    ₹
+                                    {(item.ticket_type?.price || 0) *
+                                      (item.num_of_tickets || 0)}
+                                  </Text>
+                                </div>
+                              </div>
+                            </Col>
+                          </Row>
+
+                          <Divider style={{ margin: "12px 0" }} />
+
+                          <Descriptions size="small" column={3}>
+                            <Descriptions.Item label="Ticket Set">
+                              {item.ticket_type?.ticket_set || "N/A"}
+                            </Descriptions.Item>
+
+                            <Descriptions.Item label="Structure ID">
+                              <Tag color="blue">{item.ticket_structure_id}</Tag>
+                            </Descriptions.Item>
+                          </Descriptions>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+
+                  {(!booking.booking_items ||
+                    booking.booking_items.length === 0) && (
+                    <div style={{ textAlign: "center", padding: 20 }}>
+                      <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description="No ticket details found for this booking"
+                      />
+                    </div>
+                  )}
+                </Panel>
+              </Collapse>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // Render seat bookings with collapsible seats
+  const renderSeatBookings = () => {
+    return (
+      <div style={{ marginTop: 16 }}>
+        {bookingsData.map((booking, index) => (
+          <Card
+            key={booking.booking_id}
+            style={{ marginBottom: 16 }}
+            size="small"
+            title={
               <div
                 style={{
-                  fontSize: "11px",
-                  color: "#999",
-                  textDecoration: "line-through",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                Original: ₹
-                {Math.round(
-                  (record.original_amount || 0) / totalTicketsInBooking
-                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <SolutionOutlined style={{ color: "#1890ff" }} />
+                  <Text strong>Booking #{booking.booking_id}</Text>
+                  <Tag
+                    color={getPaymentStatusColor(booking.payment_status)}
+                    icon={getPaymentStatusIcon(booking.payment_status)}
+                  >
+                    {booking.payment_status?.toUpperCase() || "N/A"}
+                  </Tag>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <Badge count={booking.seats?.length || 0} color="#52c41a">
+                    <TeamOutlined style={{ fontSize: 16 }} />
+                  </Badge>
+                  <Text strong style={{ fontSize: 16, color: "#52c41a" }}>
+                    ₹{booking.final_charged_amount || booking.final_amount || 0}
+                  </Text>
+                </div>
               </div>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      title: "Booking Date",
-      dataIndex: "created_at",
-      render: (date) => (
-        <Text style={{ fontSize: "12px" }}>
-          {date ? new Date(date).toLocaleString() : "N/A"}
-        </Text>
-      ),
-    },
-  ];
+            }
+          >
+            <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+              <Col span={6}>
+                <Statistic
+                  title="Original Amount"
+                  value={booking.original_amount || 0}
+                  prefix="₹"
+                  valueStyle={{ fontSize: 16 }}
+                />
+              </Col>
+              <Col span={6}>
+                <Statistic
+                  title="Tax Amount"
+                  value={booking.tax_amount || 0}
+                  prefix="₹"
+                  valueStyle={{ fontSize: 16, color: "#fa8c16" }}
+                />
+              </Col>
+              <Col span={6}>
+                <Statistic
+                  title="Payment Charge"
+                  value={booking.payment_charge || 0}
+                  prefix="₹"
+                  valueStyle={{ fontSize: 16, color: "#722ed1" }}
+                />
+              </Col>
+              <Col span={6}>
+                <Statistic
+                  title="Final Amount"
+                  value={
+                    booking.final_charged_amount || booking.final_amount || 0
+                  }
+                  prefix="₹"
+                  valueStyle={{
+                    fontSize: 16,
+                    color: "#52c41a",
+                    fontWeight: "bold",
+                  }}
+                />
+              </Col>
+            </Row>
 
-  // Updated columns for individual seat bookings
-  const seatColumns = [
-    {
-      title: "Booking ID",
-      dataIndex: "booking_id",
-      width: 150,
-      render: (id) => <Tag color="blue">#{id?.slice(0, 8)}...</Tag>,
-    },
-    {
-      title: "Seat Details",
-      dataIndex: "seat",
-      render: (seat) => (
-        <div>
-          {seat ? (
-            <div>
-              <Tag color="purple" style={{ marginRight: 4, marginBottom: 4 }}>
-                {seat.label}
-              </Tag>
-              <Tag color="gold" style={{ marginBottom: 4 }}>
-                {seat.type}
-              </Tag>
-              <div style={{ fontSize: "12px", color: "#666" }}>
-                Seat Price: ₹{seat.price}
-              </div>
-            </div>
-          ) : (
-            <Text type="secondary">No seat information</Text>
-          )}
-        </div>
-      ),
-    },
-    {
-      title: "Payment Details",
-      render: (record) => {
-        // Calculate proportional amounts for individual seats
-        const totalSeats = record.seats?.length || 1;
-        const seatProportion = 1 / totalSeats;
+            <Descriptions size="small" column={2} style={{ marginBottom: 16 }}>
+              <Descriptions.Item label="Booking Date">
+                <CalendarOutlined style={{ marginRight: 4 }} />
+                {booking.created_at
+                  ? new Date(booking.created_at).toLocaleString()
+                  : "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Payment Initiated">
+                <ClockCircleOutlined style={{ marginRight: 4 }} />
+                {booking.payment_initiated_at
+                  ? new Date(booking.payment_initiated_at).toLocaleString()
+                  : "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Email">
+                {booking.email || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Phone">
+                {booking.phone || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Order Reference">
+                <Tag color="blue">{booking.order_reference}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Discount">
+                ₹{booking.discounted_amount || 0}
+              </Descriptions.Item>
+            </Descriptions>
 
-        return (
-          <div>
-            <div style={{ marginBottom: 4 }}>
-              <Text strong>Original: </Text>
-              <Text>
-                ₹{Math.round((record.original_amount || 0) * seatProportion)}
-              </Text>
-            </div>
-            <div style={{ marginBottom: 4 }}>
-              <Text strong>After Discount: </Text>
-              <Text>
-                ₹
-                {Math.round(
-                  (record.amount_after_discount || 0) * seatProportion
+            <Collapse
+              ghost
+              expandIcon={({ isActive }) =>
+                isActive ? <DownOutlined /> : <RightOutlined />
+              }
+            >
+              <Panel
+                header={
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <TeamOutlined />
+                    <Text strong>
+                      Booked Seats ({booking.seats?.length || 0})
+                    </Text>
+                  </div>
+                }
+                key="seats"
+              >
+                <Row gutter={[12, 12]}>
+                  {booking.seats?.map((seat, seatIndex) => (
+                    <Col key={seat.id} span={8} md={6} lg={4}>
+                      <Card
+                        size="small"
+                        style={{
+                          textAlign: "center",
+                          border: `2px solid ${
+                            seat.type === "vip"
+                              ? "#722ed1"
+                              : seat.type === "premium"
+                              ? "#fa8c16"
+                              : "#52c41a"
+                          }`,
+                        }}
+                      >
+                        <div style={{ marginBottom: 8 }}>
+                          <Tag
+                            color={
+                              seat.type === "vip"
+                                ? "purple"
+                                : seat.type === "premium"
+                                ? "orange"
+                                : "green"
+                            }
+                            style={{ fontSize: 12, fontWeight: "bold" }}
+                          >
+                            {seat.label}
+                          </Tag>
+                        </div>
+                        <div style={{ marginBottom: 4 }}>
+                          <Text type="secondary" style={{ fontSize: 11 }}>
+                            {seat.type?.toUpperCase()}
+                          </Text>
+                        </div>
+                        <div>
+                          <Text
+                            strong
+                            style={{ color: "#52c41a", fontSize: 14 }}
+                          >
+                            ₹{seat.price}
+                          </Text>
+                        </div>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+
+                {(!booking.seats || booking.seats.length === 0) && (
+                  <div style={{ textAlign: "center", padding: 20 }}>
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description="No seats found for this booking"
+                    />
+                  </div>
                 )}
-              </Text>
-            </div>
-            <div style={{ marginBottom: 4 }}>
-              <Text strong>Tax: </Text>
-              <Text>
-                ₹{Math.round((record.tax_amount || 0) * seatProportion)}
-              </Text>
-            </div>
-            <div style={{ marginBottom: 4 }}>
-              <Text strong>Payment Charge: </Text>
-              <Text>
-                ₹{Math.round((record.payment_charge || 0) * seatProportion)}
-              </Text>
-            </div>
-            <div>
-              <Text strong style={{ color: "#52c41a" }}>
-                Final:
-              </Text>
-              <Text strong style={{ color: "#52c41a", fontSize: "16px" }}>
-                ₹{Math.round((record.final_amount || 0) * seatProportion)}
-              </Text>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      title: "Payment Status",
-      dataIndex: "payment_status",
-      render: (status) => {
-        const getStatusColor = (status) => {
-          switch (status?.toLowerCase()) {
-            case "success":
-            case "completed":
-              return "green";
-            case "failed":
-              return "red";
-            case "pending":
-              return "orange";
-            default:
-              return "default";
-          }
-        };
-        return (
-          <Tag color={getStatusColor(status)}>
-            {status?.toUpperCase() || "N/A"}
-          </Tag>
-        );
-      },
-    },
-    {
-      title: "Contact Info",
-      render: (record) => (
-        <div style={{ fontSize: "12px" }}>
-          <div>{record.email || "N/A"}</div>
-          <div>{record.phone || "N/A"}</div>
-        </div>
-      ),
-    },
-    {
-      title: "Booking Date",
-      dataIndex: "created_at",
-      render: (date) => (
-        <Text style={{ fontSize: "12px" }}>
-          {date ? new Date(date).toLocaleString() : "N/A"}
-        </Text>
-      ),
-    },
-  ];
+              </Panel>
+            </Collapse>
+          </Card>
+        ))}
+      </div>
+    );
+  };
 
   const onBackClick = () => {
     navigate(-1);
@@ -407,11 +556,11 @@ const UserOrderDetailsPage = () => {
           Back
         </Button>
         <Title level={2} style={{ marginBottom: 0 }}>
-          User {isEventTicket ? "Ticket" : "Seat"} Booking Details
+          User {isMovieTicket ? "Ticket" : "Seat"} Booking Details
         </Title>
         <Text type="secondary">
-          Event: {eventName} | Booking Type:{" "}
-          {isEventTicket ? "Event Tickets" : "Seat Reservations"}
+          Movie: {eventName} | Booking Type:{" "}
+          {isMovieTicket ? "Movie Tickets" : "Seat Reservations"}
         </Text>
       </div>
 
@@ -430,7 +579,7 @@ const UserOrderDetailsPage = () => {
               {selectedUser?.username || "User Details"}
             </Title>
             <Text type="secondary">
-              {isEventTicket
+              {isMovieTicket
                 ? "Ticket Booking History"
                 : "Seat Booking History"}
             </Text>
@@ -453,7 +602,7 @@ const UserOrderDetailsPage = () => {
           <Descriptions.Item label="Total Bookings">
             <Tag color="blue">{stats.totalBookings}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Event">
+          <Descriptions.Item label="Movie">
             <Tag color="purple">{eventName}</Tag>
           </Descriptions.Item>
         </Descriptions>
@@ -465,7 +614,7 @@ const UserOrderDetailsPage = () => {
             <Statistic
               title="Total Bookings"
               value={stats.totalBookings}
-              prefix={<DollarOutlined />}
+              prefix={<SolutionOutlined />}
               valueStyle={{ color: "#1890ff" }}
             />
           </Card>
@@ -508,33 +657,24 @@ const UserOrderDetailsPage = () => {
         title={
           <div style={{ display: "flex", alignItems: "center" }}>
             <span style={{ fontSize: 18 }}>
-              {isEventTicket ? "Booking Tickets" : "Individual Seat Bookings"}
+              {isMovieTicket ? "Ticket Bookings" : "Seat Bookings"}
             </span>
             <Tag color="blue" style={{ marginLeft: 12 }}>
-              {finalBookingsData.length}{" "}
-              {isEventTicket ? "booking(s)" : "seat(s)"}
+              {bookingsData.length} booking(s)
             </Tag>
           </div>
         }
       >
         {hasBookings ? (
-          <Table
-            dataSource={finalBookingsData}
-            rowKey={isEventTicket ? "id" : "uniqueKey"}
-            columns={isEventTicket ? ticketColumns : seatColumns}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total) =>
-                `Total ${total} ${isEventTicket ? "bookings" : "seats"}`,
-            }}
-            scroll={{ x: "max-content" }}
-          />
+          isMovieTicket ? (
+            renderTicketBookings()
+          ) : (
+            renderSeatBookings()
+          )
         ) : (
           <Empty
             description={`No ${
-              isEventTicket ? "ticket" : "seat"
+              isMovieTicket ? "ticket" : "seat"
             } bookings found for this user`}
             style={{ padding: "40px 0" }}
           />

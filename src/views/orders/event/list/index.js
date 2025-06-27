@@ -46,6 +46,7 @@ const OrdersList = () => {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedEventType, setEventType] = useState(null);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE.size);
 
   const {
@@ -187,36 +188,58 @@ const OrdersList = () => {
     },
   ];
 
-  // Handle event selection
   const handleSelectEvent = (eventId) => {
     setSelectedEventId(eventId);
-    setCurrentPage(1); // Reset to first page when changing event
-    setSearchTerm(""); // Clear search when changing event
+    setCurrentPage(1);
+    setSearchTerm("");
 
     const params = {
       page: 1,
       size: pageSize,
       event_id: eventId,
+      type: selectedEventType,
     };
 
     dispatch(getEventOrders(params));
     dispatch(getEventOrderSummary({ event_id: eventId }));
   };
+  const handleSelectEventType = (type) => {
+    setCurrentPage(1);
+    setSearchTerm("");
+    setEventType(type);
 
-  // Handle event selection clear
+    const params = {
+      page: 1,
+      size: pageSize,
+      event_id: selectedEventId,
+      type: type,
+    };
+
+    dispatch(getEventOrders(params));
+    dispatch(getEventOrderSummary({ event_id: selectedEventId }));
+  };
   const handleClearEvent = () => {
     setSelectedEventId(null);
     setCurrentPage(1);
     setSearchTerm("");
-    dispatch(getEventOrders(DEFAULT_PAGE_SIZE));
+    dispatch(
+      getEventOrders({ page: 1, size: pageSize, type: selectedEventType })
+    );
     dispatch(getEventOrderSummary({}));
   };
-
+  const handleClearEventType = () => {
+    setCurrentPage(1);
+    setEventType(null);
+    dispatch(
+      getEventOrders({ page: 1, size: pageSize, event_id: selectedEventId })
+    );
+  };
   const debouncedSearch = useCallback(
     debounce((value) => {
       const params = {
         page: 1,
         size: pageSize,
+        type: selectedEventType,
         search: value,
         ...(selectedEventId && { event_id: selectedEventId }),
       };
@@ -224,7 +247,7 @@ const OrdersList = () => {
       setCurrentPage(1);
       dispatch(getEventOrders(params));
     }, 500),
-    [dispatch, selectedEventId, pageSize]
+    [dispatch, selectedEventId, pageSize, selectedEventType]
   );
 
   const handleSearchChange = (e) => {
@@ -235,6 +258,7 @@ const OrdersList = () => {
       const params = {
         page: 1,
         size: pageSize,
+        type: selectedEventType,
         ...(selectedEventId && { event_id: selectedEventId }),
       };
       setCurrentPage(1);
@@ -251,6 +275,7 @@ const OrdersList = () => {
     const params = {
       page: 1,
       size: pageSize,
+      type: selectedEventType,
       search: value,
       ...(selectedEventId && { event_id: selectedEventId }),
     };
@@ -291,6 +316,7 @@ const OrdersList = () => {
     const params = {
       page: newPage,
       size: newPageSize,
+      type: selectedEventType,
       ...(searchTerm && { search: searchTerm }),
       ...(selectedEventId && { event_id: selectedEventId }),
     };
@@ -298,7 +324,6 @@ const OrdersList = () => {
     dispatch(getEventOrders(params));
   };
 
-  // Alternative: If you prefer to use the usePaginationHook
   const handlePagination = usePaginationHook(getEventOrders);
 
   return (
@@ -339,6 +364,26 @@ const OrdersList = () => {
                   {event.event_name}
                 </Option>
               ))}
+            </Select>
+          </div>
+          <div className="mr-md-3 mb-3">
+            <Select
+              loading={loading}
+              className="w-100"
+              placeholder="Select event type"
+              value={selectedEventType}
+              onChange={handleSelectEventType}
+              allowClear
+              onClear={handleClearEventType}
+              showArrow
+              style={{ minWidth: 200 }}
+            >
+              <Option key={"ticket_structure"} value={"ticket_structure"}>
+                {"Ticket Structure"}
+              </Option>
+              <Option key={"seat_structure"} value={"seat_structure"}>
+                {"Seat Structure"}
+              </Option>
             </Select>
           </div>
         </Flex>
@@ -399,10 +444,11 @@ const OrdersList = () => {
             current: pagination?.page || currentPage,
             pageSize: pagination?.size || pageSize,
             total: pagination?.total || 0,
-            onChange: (page, pageSize) => handlePagination(page, pageSize),
-            onShowSizeChange: handleTableChange,
+            onChange: (page, size) =>
+              handleTableChange({ current: page, pageSize: size }),
+            onShowSizeChange: (current, size) =>
+              handleTableChange({ current, pageSize: size }),
             showSizeChanger: true,
-
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} items`,
           }}

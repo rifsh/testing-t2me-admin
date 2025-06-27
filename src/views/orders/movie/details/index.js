@@ -13,6 +13,7 @@ import {
   Menu,
   Dropdown,
   message,
+  Select,
 } from "antd";
 import {
   CheckCircleOutlined,
@@ -35,12 +36,13 @@ import {
   resetOrderDetails,
 } from "store/slices/ordersSlice";
 import HorizontalDateTimePicker from "components/util-components/DatePicker/HorizontalDateTimePicker";
-import EventInformation from "../components/EventInformation";
 import { IoTicketOutline } from "react-icons/io5";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { BOOKING_TYPE } from "constants/AppConstants";
+import TheaterInformation from "../components/TheaterInformation";
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 const MovieDetailsPage = () => {
   const { id } = useParams();
@@ -51,6 +53,7 @@ const MovieDetailsPage = () => {
   const dispatch = useDispatch();
 
   const [selectedDateId, setSelectedDateId] = useState(null);
+  const [selectedMovie, setSelectedMovie] = useState(null); // Fixed: properly managed state
   const [selectedTimeId, setSelectedTimeId] = useState(null);
   const [pagination, setPagination] = useState({
     current: 1,
@@ -72,6 +75,7 @@ const MovieDetailsPage = () => {
       dispatch(clearTicketUser());
       setSelectedDateId(null);
       setSelectedTimeId(null);
+      setSelectedMovie(null); // Reset movie selection
       setPagination({ current: 1, pageSize: 10 });
       setIsInitialized(false);
       isDateChanging.current = false;
@@ -82,11 +86,27 @@ const MovieDetailsPage = () => {
   const resetState = useCallback(() => {
     setSelectedDateId(null);
     setSelectedTimeId(null);
+    setSelectedMovie(null); // Reset movie selection
     setPagination({ current: 1, pageSize: 10 });
     setIsInitialized(false);
     isDateChanging.current = false;
     isTimeChanging.current = false;
   }, []);
+
+  // Fixed: Proper movie list extraction with better error handling
+  const movieList = React.useMemo(() => {
+    if (!ordersDates || !selectedDateId) return [];
+
+    const selectedOrder = ordersDates.find((item) => {
+      const identifier =
+        type === BOOKING_TYPE.EVENT_TICKET ? item.id : item.start_date;
+      return identifier === selectedDateId;
+    });
+
+    return selectedOrder?.schedule?.movies || [];
+  }, [ordersDates, selectedDateId, type]);
+
+  console.warn("Movie List:", movieList);
 
   const fetchInitialDates = useCallback(async () => {
     if (!id) return;
@@ -120,9 +140,10 @@ const MovieDetailsPage = () => {
       console.log("Fetching time slots for date:", dateId);
       isDateChanging.current = true;
 
-      // Only reset time selection if we're changing dates
+      // Reset time and movie selection if we're changing dates
       if (dateId !== selectedDateId) {
         setSelectedTimeId(null);
+        setSelectedMovie(null); // Reset movie selection when date changes
         setPagination({ current: 1, pageSize: pagination.pageSize });
       }
 
@@ -144,12 +165,13 @@ const MovieDetailsPage = () => {
           console.log("Auto-selecting first time slot:", firstTimeId);
           setSelectedTimeId(firstTimeId);
 
-          // Fetch booking users for the first time slot
+          // Fetch booking users for the first time slot without movie filter
           await fetchBookingUsersForTime(
             dateId,
             firstTimeId,
             1,
-            pagination.pageSize
+            pagination.pageSize,
+            null // No movie filter initially
           );
         }
       } catch (error) {
@@ -162,7 +184,7 @@ const MovieDetailsPage = () => {
   );
 
   const fetchBookingUsersForTime = useCallback(
-    async (dateId, timeId, page = 1, size = 10) => {
+    async (dateId, timeId, page = 1, size = 10, movieId = null) => {
       if (!dateId || !timeId || isTimeChanging.current) {
         console.log(
           "Skipping booking users fetch - dateId:",
@@ -180,9 +202,12 @@ const MovieDetailsPage = () => {
         timeId,
         page,
         size,
+        movieId,
       });
+
       isTimeChanging.current = true;
       dispatch(clearTicketUser());
+
       const apiParams = {
         schedule_id: id,
         ...(type === BOOKING_TYPE.MOVIE_TICKET
@@ -191,6 +216,7 @@ const MovieDetailsPage = () => {
         show_time_id: timeId,
         page: page,
         size: size,
+        ...(movieId && { movie_id: movieId }), // Only include movie_id if it's provided
       };
 
       console.log("Booking users API params:", apiParams);
@@ -255,6 +281,8 @@ const MovieDetailsPage = () => {
 
       console.log("Changing date to:", date);
       setSelectedDateId(date);
+      // Reset movie selection when date changes
+      setSelectedMovie(null);
       fetchTimeSlotsForDate(date, true);
     },
     [selectedDateId, fetchTimeSlotsForDate]
@@ -271,8 +299,16 @@ const MovieDetailsPage = () => {
 
       console.log("Changing time to:", timeId);
       setSelectedTimeId(timeId);
+      // Reset movie selection when time changes
+      setSelectedMovie(null);
       setPagination({ current: 1, pageSize: pagination.pageSize });
-      fetchBookingUsersForTime(selectedDateId, timeId, 1, pagination.pageSize);
+      fetchBookingUsersForTime(
+        selectedDateId,
+        timeId,
+        1,
+        pagination.pageSize,
+        null
+      );
     },
     [
       selectedTimeId,
@@ -286,9 +322,15 @@ const MovieDetailsPage = () => {
     (page, pageSize) => {
       console.log("Pagination change:", { page, pageSize });
       setPagination({ current: page, pageSize });
-      fetchBookingUsersForTime(selectedDateId, selectedTimeId, page, pageSize);
+      fetchBookingUsersForTime(
+        selectedDateId,
+        selectedTimeId,
+        page,
+        pageSize,
+        selectedMovie
+      );
     },
-    [selectedDateId, selectedTimeId, fetchBookingUsersForTime]
+    [selectedDateId, selectedTimeId, selectedMovie, fetchBookingUsersForTime]
   );
 
   const getBookingStats = useCallback(() => {
@@ -352,6 +394,47 @@ const MovieDetailsPage = () => {
     message.loading({ content: "Checking Payment Status...", duration: 2 });
     setTimeout(() => message.warning("Status check API not implemented"), 2000);
   };
+
+  // Fixed: Proper movie selection handling
+  const handleSelectMovie = useCallback(
+    (movieId) => {
+      console.log("Movie selected:", movieId);
+      setSelectedMovie(movieId);
+      setPagination({ current: 1, pageSize: pagination.pageSize });
+      fetchBookingUsersForTime(
+        selectedDateId,
+        selectedTimeId,
+        1,
+        pagination.pageSize,
+        movieId
+      );
+    },
+    [
+      selectedDateId,
+      selectedTimeId,
+      pagination.pageSize,
+      fetchBookingUsersForTime,
+    ]
+  );
+
+  // Fixed: Proper movie clearing handling
+  const handleClearMovie = useCallback(() => {
+    console.log("Movie selection cleared");
+    setSelectedMovie(null);
+    setPagination({ current: 1, pageSize: pagination.pageSize });
+    fetchBookingUsersForTime(
+      selectedDateId,
+      selectedTimeId,
+      1,
+      pagination.pageSize,
+      null // No movie filter
+    );
+  }, [
+    selectedDateId,
+    selectedTimeId,
+    pagination.pageSize,
+    fetchBookingUsersForTime,
+  ]);
 
   const bookingColumns = [
     {
@@ -475,8 +558,10 @@ const MovieDetailsPage = () => {
   console.log("Current state:", {
     selectedDateId,
     selectedTimeId,
+    selectedMovie,
     ordersDates: ordersDates?.length,
     ordersTime: ordersTime?.length,
+    movieList: movieList?.length,
     isInitialized,
     loading,
   });
@@ -511,7 +596,7 @@ const MovieDetailsPage = () => {
         </Button>
       </div>
 
-      {ordersDates?.length > 0 && <EventInformation data={ordersDates[0]} />}
+      {ordersDates?.length > 0 && <TheaterInformation data={ordersDates[0]} />}
 
       {ordersDates?.length > 0 && (
         <HorizontalDateTimePicker
@@ -585,10 +670,43 @@ const MovieDetailsPage = () => {
             <Text style={{ fontSize: "14px", color: "#666" }}>
               {paginationInfo.total || 0} booking
               {(paginationInfo.total || 0) !== 1 ? "s" : ""} found
+              {selectedMovie && movieList.length > 0 && (
+                <span style={{ marginLeft: 8, color: "#1890ff" }}>
+                  • Filtered by:{" "}
+                  {movieList.find((m) => m.id === selectedMovie)?.title ||
+                    "Unknown Movie"}
+                </span>
+              )}
             </Text>
           </div>
         }
       >
+        {/* Movie Filter Section */}
+        <div style={{ marginBottom: 16 }}>
+          <Select
+            loading={loading}
+            placeholder="Filter by Movie (Optional)"
+            value={selectedMovie}
+            onChange={handleSelectMovie}
+            allowClear
+            onClear={handleClearMovie}
+            showArrow
+            style={{ minWidth: 250 }}
+            disabled={!movieList || movieList.length === 0}
+          >
+            {movieList.map((movie) => (
+              <Option key={movie.id} value={movie.id}>
+                {movie.title}
+              </Option>
+            ))}
+          </Select>
+          {movieList.length === 0 && selectedDateId && selectedTimeId && (
+            <Text style={{ marginLeft: 12, color: "#999", fontSize: "12px" }}>
+              No movies available for selected date and time
+            </Text>
+          )}
+        </div>
+
         <Table
           dataSource={userList}
           rowKey="id"
