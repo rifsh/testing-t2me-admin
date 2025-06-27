@@ -19,6 +19,7 @@ import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatu
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import Utils from "utils";
 
 const { Panel } = Collapse;
 
@@ -121,7 +122,12 @@ const FooterList = () => {
     {
       title: "Country",
       dataIndex: "country",
-      render: (country) => <span>{country || "N/A"}</span>,
+      render: (country) => {
+        if (!country) return <span>N/A</span>;
+        const number = Utils.removeAllAfterLastUnderscore(country);
+        if (number === null) return <span>{country}</span>;
+        return <span>{number}</span>;
+      },
       sorter: (a, b) => utils.antdTableObjectSorter(a, b, "country"),
     },
     {

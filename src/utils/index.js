@@ -459,12 +459,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-          (document.cookie = cookie
-            .replace(/^ +/, "")
-            .replace(
-              /=.*/,
-              "=;expires=" + new Date(0).toUTCString() + ";path=/"
-            ))
+        (document.cookie = cookie
+          .replace(/^ +/, "")
+          .replace(
+            /=.*/,
+            "=;expires=" + new Date(0).toUTCString() + ";path=/"
+          ))
       );
 
     // Unregister Service Workers
@@ -1137,6 +1137,72 @@ class Utils {
       default:
         return null;
     }
+  }
+
+  static extractNumberAfterUnderscore(input) {
+    // Handle edge cases
+    if (typeof input !== 'string') return null;
+    if (input.length === 0) return null;
+
+    // Find the last underscore position
+    const lastUnderscoreIndex = input.lastIndexOf('_');
+    if (lastUnderscoreIndex === -1) return null;
+
+    // Get the substring after the last underscore
+    const numberPart = input.slice(lastUnderscoreIndex + 1);
+    if (numberPart.length === 0) return null;
+
+    // Check if the remaining part is a valid number
+    if (!/^-?\d+$/.test(numberPart)) return null;
+
+    // Convert to number and return
+    const number = parseInt(numberPart, 10);
+    return isNaN(number) ? null : number;
+  }
+
+  /**
+   * Alternative version that returns a default value when no number is found
+   * @param {string} input - The input string to process
+   * @param {number} defaultValue - Value to return when no number is found
+   * @returns {number} - The extracted number or defaultValue
+   */
+  static extractNumberWithDefault(input, defaultValue = 0) {
+    const number = this.extractNumberAfterUnderscore(input);
+    return number !== null ? number : defaultValue;
+  }
+
+  static removeNumbersAfterUnderscore(input) {
+    // Handle edge cases
+    if (typeof input !== 'string') return input;
+    if (input.length === 0) return input;
+
+    // Find the last underscore position
+    const lastUnderscoreIndex = input.lastIndexOf('_');
+    if (lastUnderscoreIndex === -1) return input;
+
+    // Get the parts before and after underscore
+    const beforeUnderscore = input.slice(0, lastUnderscoreIndex);
+    const afterUnderscore = input.slice(lastUnderscoreIndex + 1);
+
+    // Check if the part after underscore is a number
+    if (/^-?\d+$/.test(afterUnderscore)) {
+      // If it's a number, return just the part before underscore
+      return beforeUnderscore;
+    }
+
+    // If not a number, return original string
+    return input;
+  }
+
+  /**
+   * Alternative version that removes everything after last underscore (not just numbers)
+   * @param {string} input - The input string to process
+   * @returns {string} - The cleaned string
+   */
+  static removeAllAfterLastUnderscore(input) {
+    if (typeof input !== 'string') return input;
+    const lastUnderscoreIndex = input.lastIndexOf('_');
+    return lastUnderscoreIndex === -1 ? input : input.slice(0, lastUnderscoreIndex);
   }
 }
 
