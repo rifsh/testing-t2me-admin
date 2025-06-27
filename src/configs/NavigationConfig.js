@@ -154,8 +154,8 @@ const superAdminDashBoardNavTree = [
             isGroupTitle: false,
             submenu: [
               {
-                key: "event.type",
-                path: `${APP_PREFIX_PATH}/event/type/list?type=general`,
+                key: "event.type.list",
+                path: `${APP_PREFIX_PATH}/event/type/list`,
                 title: "sidenav.event.type",
                 icon: DashboardOutlined,
                 breadcrumb: false,

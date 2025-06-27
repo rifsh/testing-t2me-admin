@@ -20,6 +20,13 @@ PaymentService.getAllPayment = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+PaymentService.getSinglePayment = function (pageData) {
+  return fetch({
+    url: ApiConstant.SINGLE_PAYMENT_URL,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
 
 PaymentService.getPaymentsMethod = function () {
   return fetch({
