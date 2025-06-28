@@ -177,16 +177,19 @@ const orderSlice = createSlice({
           : action.payload;
 
         if (responseData) {
-          if (responseData.booking_ticket_user || responseData.seat_state) {
-            state.bookingTicketUser = responseData;
-            state.ordersTime = [responseData];
+          if (responseData.is_time_only === true) {
+            state.allOrdersTime = action.payload;
           } else if (
             responseData.booking_tickets ||
             responseData.user_seat_bookings
           ) {
             state.bookingTickets = responseData;
-          } else if (responseData.is_time_only === true) {
-            state.allOrdersTime = action.payload;
+          } else if (
+            responseData.booking_ticket_user ||
+            responseData.seat_state
+          ) {
+            state.bookingTicketUser = responseData;
+            state.ordersTime = [responseData];
           } else {
             state.ordersTime = action.payload;
           }
