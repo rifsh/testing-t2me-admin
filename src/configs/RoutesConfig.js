@@ -797,7 +797,7 @@ export const protectedRoutes = [
     key: "organizer.reports",
     path: `${APP_PREFIX_PATH}/organizer/reports`,
     component: React.lazy(() =>
-      import("views/app-views/apps/organizer/reports")
+      import("views/app-views/apps/super-admin/reports")
     ),
   },
 
