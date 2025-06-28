@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -6,6 +5,7 @@ import {
   updateSeatType,
   removeSeatType,
   setSelectedSeatType,
+  updateSeats,
 } from "store/slices/movieSeatSlice";
 import {
   Button,
@@ -17,11 +17,16 @@ import {
   InputNumber,
   Badge,
 } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
 
 const TypeManager = () => {
   const dispatch = useDispatch();
-  const { seatTypes, selectedSeatType } = useSelector(
+  const { seatTypes, selectedSeatType, seats } = useSelector(
     (state) => state.movieSeatSlice
   );
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -63,8 +68,91 @@ const TypeManager = () => {
     });
   };
 
+  // Check if seat type is used in any seat
+  const isSeatTypeInUse = (typeId) => {
+    return seats.some((row) => row.some((seat) => seat.type === typeId));
+  };
+
+  // Get count of seats using this type
+  const getSeatTypeUsageCount = (typeId) => {
+    let count = 0;
+    seats.forEach((row) => {
+      row.forEach((seat) => {
+        if (seat.type === typeId) {
+          count++;
+        }
+      });
+    });
+    return count;
+  };
+
+  // Update seats to remove the deleted seat type
+  const updateSeatsAfterTypeRemoval = (removedTypeId) => {
+    const defaultSeatType = seatTypes.find((type) => type.id !== removedTypeId);
+    const updatedSeats = seats.map((row) =>
+      row.map((seat) => {
+        if (seat.type === removedTypeId) {
+          return {
+            ...seat,
+            type: defaultSeatType.id,
+            price: defaultSeatType.basePrice,
+          };
+        }
+        return seat;
+      })
+    );
+    dispatch(updateSeats(updatedSeats));
+  };
+
   const handleRemoveSeatType = (typeId) => {
-    dispatch(removeSeatType(typeId));
+    // Check if this is the last seat type
+    if (seatTypes.length <= 1) {
+      Modal.warning({
+        title: "Cannot Delete",
+        content: "At least one seat type must exist.",
+        okText: "OK",
+      });
+      return;
+    }
+
+    // Check if seat type is in use
+    if (isSeatTypeInUse(typeId)) {
+      const usageCount = getSeatTypeUsageCount(typeId);
+      const seatTypeLabel = seatTypes.find((type) => type.id === typeId)?.label;
+      const defaultSeatType = seatTypes.find((type) => type.id !== typeId);
+
+      Modal.confirm({
+        title: "Seat Type In Use",
+        icon: <ExclamationCircleOutlined />,
+        content: (
+          <div>
+            <p>
+              The seat type "{seatTypeLabel}" is currently used by {usageCount}{" "}
+              seat(s).
+            </p>
+            <p>
+              If you proceed, all seats using this type will be converted to "
+              {defaultSeatType?.label}" type.
+            </p>
+            <p>Do you want to continue?</p>
+          </div>
+        ),
+        okText: "Yes, Delete",
+        okType: "danger",
+        cancelText: "Cancel",
+        onOk() {
+          // First update seats, then remove the seat type
+          updateSeatsAfterTypeRemoval(typeId);
+          dispatch(removeSeatType(typeId));
+        },
+        onCancel() {
+          // Do nothing
+        },
+      });
+    } else {
+      // Seat type is not in use, delete directly
+      dispatch(removeSeatType(typeId));
+    }
   };
 
   const handleSelectSeatType = (typeId) => {
@@ -107,6 +195,18 @@ const TypeManager = () => {
           ${price.toFixed(2)}
         </div>
       ),
+    },
+    {
+      title: "Usage",
+      key: "usage",
+      render: (_, record) => {
+        const count = getSeatTypeUsageCount(record.id);
+        return (
+          <span className={count > 0 ? "text-blue-600" : "text-gray-400"}>
+            {count} seat(s)
+          </span>
+        );
+      },
     },
     {
       title: "Action",

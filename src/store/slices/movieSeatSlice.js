@@ -342,6 +342,20 @@ const movieSeatSlice = createSlice({
       const typeIndex = state.seatTypes.findIndex((type) => type.id === id);
       if (typeIndex !== -1) {
         state.seatTypes[typeIndex] = { id, label, basePrice, color };
+        
+        // Update prices of all seats that use this seat type
+        const newSeats = JSON.parse(JSON.stringify(state.seats));
+        newSeats.forEach((row, rowIndex) => {
+          row.forEach((seat, colIndex) => {
+            if (seat.type === id) {
+              newSeats[rowIndex][colIndex].price = basePrice;
+            }
+          });
+        });
+        state.seats = newSeats;
+        
+        // Update used seat types
+        state.usedSeatTypes = Utils.updateUsedSeatTypes(newSeats, state.seatTypes);
       }
     },
     removeSeatType: (state, action) => {

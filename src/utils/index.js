@@ -1031,16 +1031,34 @@ class Utils {
     const seats = [];
     let globalId = 1;
 
+    // Find the default seat type - try "standard" first, then use the first available type
+    let defaultSeatType = seatTypes.find((type) => type.id === "standard");
+
+    // If "standard" doesn't exist, use the first seat type available
+    if (!defaultSeatType && seatTypes.length > 0) {
+      defaultSeatType = seatTypes[0];
+    }
+
+    // If no seat types exist at all, create a basic default
+    if (!defaultSeatType) {
+      defaultSeatType = {
+        id: "standard",
+        label: "Standard",
+        basePrice: 10,
+        color: "#4CAF50",
+      };
+    }
+
     for (let i = 0; i < rows; i++) {
       const row = [];
       for (let j = 0; j < columns; j++) {
         row.push({
           id: globalId++,
-          rowIndex: i, // Add rowIndex property here
+          rowIndex: i,
           rowLabel: String.fromCharCode(65 + i),
           colIndex: j,
-          type: "standard",
-          price: seatTypes.find((type) => type.id === "standard").basePrice,
+          type: defaultSeatType.id,
+          price: defaultSeatType.basePrice,
           isVisible: true,
           status: null,
           number: j + 1,
