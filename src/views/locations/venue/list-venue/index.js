@@ -176,7 +176,7 @@ const VenueList = () => {
           additionalFilters={[
             {
               options: places,
-              placeholder: "Please choose a Placeasdasd",
+              placeholder: "Please choose a Place",
               formName: "place_id",
               isAutoComplete: true,
               // onClick: () => {

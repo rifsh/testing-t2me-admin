@@ -26,9 +26,15 @@ const ScheduleList = () => {
   const { allSchedule, message, pagination, editable_status, loading } =
     useSelector((state) => state.movieScheduleSlice);
   const handlePagination = usePaginationHook(getAllMovieSchedule);
-  const { hasPermission, hasAnyPermission } = usePermissions()
+  const { hasPermission, hasAnyPermission } = usePermissions();
   useEffect(() => {
-    dispatch(getAllMovieSchedule({ size: 10, page: 1, organizer: isOrganizer() ? false : null }));
+    dispatch(
+      getAllMovieSchedule({
+        size: 10,
+        page: 1,
+        organizer: isOrganizer() ? false : null,
+      })
+    );
   }, [dispatch]);
 
   // const handlePagination = (page, size) => {
@@ -131,27 +137,33 @@ const ScheduleList = () => {
     {
       title: "",
       dataIndex: "actions",
-      render: (_, elm) => (
+      render: (_, elm) =>
         hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SCHEDULE]) ? (
           <div className="text-right">
             <EllipsisDropdown menu={dropdownMenu(elm)} />
           </div>
-        ) : null
-      ),
+        ) : null,
     },
   ];
 
   return (
     <Card>
       <Flex alignItems="center" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={getAllMovieSchedule} />
-        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SCHEDULE.ADD_MOVIE_SCHEDULES) && <Button
-          type="primary"
-          icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/movie-schedule/add`)}
-        >
-          Add Schedule
-        </Button>}
+        <SearchBarWithStatus
+          fetchFunction={getAllMovieSchedule}
+          isStatus={false}
+        />
+        {hasPermission(
+          PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SCHEDULE.ADD_MOVIE_SCHEDULES
+        ) && (
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/movie-schedule/add`)}
+          >
+            Add Schedule
+          </Button>
+        )}
       </Flex>
       <div>
         <Table
@@ -182,13 +194,6 @@ const ScheduleList = () => {
                             {item.screen?.capacity})
                           </div>
                           <div>Status: {item.movie_status}</div>
-                          {item.movie?.description && (
-                            <div
-                              dangerouslySetInnerHTML={{
-                                __html: item.movie.description,
-                              }}
-                            ></div>
-                          )}
                         </div>
                       }
                     />

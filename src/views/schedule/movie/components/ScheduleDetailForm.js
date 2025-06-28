@@ -46,10 +46,12 @@ function ScheduleDetailForm({ form, mode }) {
     availableMovies,
   } = useSelector((state) => state.movieScheduleSlice);
   const { response } = useSelector((state) => state.screen);
+  const { selectedVenue } = useSelector((state) => state.locations);
   const startDate = dateRange && dateRange[0] ? dayjs(dateRange[0]) : null;
   const endDate = dateRange && dateRange[1] ? dayjs(dateRange[1]) : null;
 
   const handlePlaceSelect = (id) => {
+    dispatch(setSelectedVenue(null));
     dispatch(getVenues({ place_id: id, is_indoor: true }));
     form.setFieldValue("venue_id", undefined);
     form.setFieldValue("theatre_id", undefined);
@@ -57,7 +59,7 @@ function ScheduleDetailForm({ form, mode }) {
 
   const handleVenueSelect = (venue) => {
     form.setFieldValue("theatre_id", undefined);
-    // dispatch(setSelectedVenue(venue));
+    dispatch(setSelectedVenue(venue));
   };
 
   const handleTheatreSelect = (theatre) => {
@@ -67,6 +69,12 @@ function ScheduleDetailForm({ form, mode }) {
   };
 
   const handleBookingStartDate = (date) => {
+    const eventStartDate = form.getFieldValue("start_date");
+    if (eventStartDate && date && date.isAfter(eventStartDate)) {
+      form.setFieldsValue({ start_date: null, end_date: null });
+      dispatch(resetSchedules());
+      message.warning("Your start date and schedule has been reseted");
+    }
     dispatch(setInitialBookingStartDate(date));
   };
 
@@ -198,7 +206,13 @@ function ScheduleDetailForm({ form, mode }) {
   };
 
   const disabledStartDate = (current) => {
-    return current && current < dayjs().startOf("day");
+    const bookingStartDate = form.getFieldValue("booking_start_date");
+    if (!current || !bookingStartDate) return false;
+    return current.isBefore(dayjs(bookingStartDate).startOf("day"));
+  };
+  const disabledBookingStartDate = (current) => {
+    if (!current) return false;
+    return current.isBefore(dayjs().startOf("day"));
   };
 
   const disabledEndDate = (current) => {
@@ -264,11 +278,13 @@ function ScheduleDetailForm({ form, mode }) {
             </Col>
             <Col xs={24} sm={12}>
               <TheaterListForm
-              name="theatre_id"
+                name="theatre_id"
                 rules={[{ required: true }]}
                 form={form}
                 onSelect={handleTheatreSelect}
+                disabled={!selectedVenue}
               />
+
               {response && response.items && response.items.length <= 0 && (
                 <Alert
                   message="No screens found for this theater"
@@ -306,7 +322,7 @@ function ScheduleDetailForm({ form, mode }) {
               >
                 <DatePicker
                   style={{ width: "100%" }}
-                  disabledDate={disabledStartDate}
+                  disabledDate={disabledBookingStartDate}
                   onChange={handleBookingStartDate}
                   placeholder="Select start date"
                   showTime={true}
