@@ -338,7 +338,14 @@ function UserFormFields({ mode, user }) {
             <Form.Item
               name="event_ids"
               className="my-10"
-              label="Events"
+              label={
+                <span>
+                  Events&nbsp;
+                  <Tooltip title="Please select your events">
+                    <InfoCircleOutlined />
+                  </Tooltip>
+                </span>
+              }
               hasFeedback
             >
               <Select
