@@ -31,6 +31,7 @@ const LayoutToolbar = ({
   const { selectedSeatType, seatTypes, zoomLevel } = useSelector(
     (state) => state.movieSeatSlice
   );
+  
 
   const handleZoomIn = () => {
     dispatch(zoomIn());
@@ -127,7 +128,7 @@ const LayoutToolbar = ({
                 onClick={handleToggleVisibility}
                 disabled={selectedSeats.length === 0}
               >
-                Toggle Visibility
+                Toggle Visibility 
               </Button>
 
               <Button

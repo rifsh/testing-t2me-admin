@@ -42,6 +42,7 @@ function MovieSeatDetailForm({ form, mode }) {
     setSelectedFields({ selectedScreen: null, selectedVenue: venue });
     dispatch(setSelectedVenue(venue));
     dispatch(getSingleVenues(venue));
+    dispatch(setSelectedScreenData(null));
   };
 
   const handleScreenSelect = (screen) => {
