@@ -125,7 +125,7 @@ const EventDetailsPage = () => {
         setSelectedTimeId(null);
         setPagination({ current: 1, pageSize: pagination.pageSize });
       }
-
+      dispatch(clearTimes());
       const apiParams = {
         schedule_id: id,
         ...(type === BOOKING_TYPE.EVENT_TICKET
