@@ -60,30 +60,29 @@ const SuperAdminReport = () => {
   const isLoading =
     apiLoading.reports || apiLoading.userReports || apiLoading.exports;
 
-  useEffect(() => {
-    const savedCountry = localStorage.getItem("selectedCountry");
+  // useEffect(() => {
+  //   const savedCountry = localStorage.getItem("selectedCountry");
 
-    if (data?.[0]?.items?.length > 0 && !hasAutoSelected && !savedCountry) {
-      const firstCountryId = data[0].items[0].id;
-      dispatch(setSelectedCountry(firstCountryId));
-      localStorage.setItem("selectedCountry", JSON.stringify(firstCountryId));
-      setHasAutoSelected(true);
-      setIsInitialized(true);
-    } else if (savedCountry && !hasAutoSelected) {
-      // Restore from localStorage if available
-      dispatch(setSelectedCountry(JSON.parse(savedCountry)));
-      setHasAutoSelected(true);
-      setIsInitialized(true);
-    }
-  }, [data, dispatch, hasAutoSelected]);
+  //   if (data?.[0]?.items?.length > 0 && !hasAutoSelected && !savedCountry) {
+  //     const firstCountryId = data[0].items[0].id;
+  //     dispatch(setSelectedCountry(firstCountryId));
+  //     localStorage.setItem("selectedCountry", JSON.stringify(firstCountryId));
+  //     setHasAutoSelected(true);
+  //     setIsInitialized(true);
+  //   } else if (savedCountry && !hasAutoSelected) {
+  //     // Restore from localStorage if available
+  //     dispatch(setSelectedCountry(JSON.parse(savedCountry)));
+  //     setHasAutoSelected(true);
+  //     setIsInitialized(true);
+  //   }
+  // }, [data, dispatch, hasAutoSelected]);
 
-  useEffect(() => {
-    dispatch(fetchCountryList({ active: activeFilter, search: searchTerm }));
-  }, [dispatch, activeFilter, searchTerm]);
+  // useEffect(() => {
+  //   dispatch(fetchCountryList({ active: activeFilter, search: searchTerm }));
+  // }, [dispatch, activeFilter, searchTerm]);
 
   useEffect(() => {
     const fetchReportData = async () => {
-      if (!selectedCountry || !isInitialized) return;
       try {
         setApiLoading((prev) => ({ ...prev, reports: true }));
         await dispatch(
@@ -285,7 +284,7 @@ const SuperAdminReport = () => {
         {/* Filters and Export */}
         <div className="flex flex-col sm:flex-row gap-2 sm:items-center w-full sm:w-auto">
           <div className="flex flex-col sm:flex-row gap-2 flex-1">
-            <Select
+            {/* <Select
               showSearch
               placeholder="Country"
               className="w-full sm:w-40 text-xs sm:text-sm"
@@ -308,7 +307,7 @@ const SuperAdminReport = () => {
                   {country.name}
                 </Option>
               ))}
-            </Select>
+            </Select> */}
 
             <Select
               value={timeFilter}

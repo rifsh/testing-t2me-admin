@@ -6,12 +6,13 @@ import ThemeConfigurator from './ThemeConfigurator';
 import { DIR_RTL } from 'constants/ThemeConstant';
 
 export const NavPanel = ({ direction, mode }) => {
-
+	
 	const [open, setOpen] = useState(false);
 
   	const showDrawer = () => {
 		setOpen(true);
 	};
+	
 
   	const onClose = () => {
 		setOpen(false);
@@ -21,6 +22,7 @@ export const NavPanel = ({ direction, mode }) => {
 		<>
 			<NavItem onClick={showDrawer} mode={mode}>
 				<SettingOutlined className="nav-icon mr-0" />
+				
 			</NavItem>
 			<Drawer
 				title="Theme Config"

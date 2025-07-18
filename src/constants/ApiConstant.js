@@ -1,5 +1,6 @@
 export const ApiConstant = {
   API_BASE_URL: "https://uat-tickets2me.mitetechnology.com",
+  TENANT_COUNTRY_URL : "/api/v1/location/public/tenant/country",
   LOGIN: "/api/v1/shared/auth/public/token",
   LOG_OUT: "/api/v1/shared/auth/secured/logout",
   LEAD_REGISTER: "/api/v1/shared/auth/public/register/lead_organizer",
