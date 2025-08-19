@@ -203,6 +203,12 @@ LocationService.placeWithCountry = function (place) {
     params: { place }
   });
 };
+LocationService.TenantCountry = function () {
+  return fetch({
+    url: ApiConstant.TENANT_COUNTRY_URL,
+    method: "get"
+  });
+};
 LocationService.getVenues = function (pageData) {
   return fetch({
     url: ApiConstant.VENUE_URL,

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { connect, useDispatch } from "react-redux";
+import { connect, useDispatch, useSelector } from "react-redux";
 import { Button, Form, Input, Divider, Alert } from "antd";
 import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import PropTypes from "prop-types";
@@ -14,13 +14,19 @@ import {
   signInWithFacebook,
   getUserdata,
 } from "store/slices/authSlice";
+import {
+  getTenantCoutry
+} from "store/slices/locationSlice";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { APP_CURRENT_VERSION, BUILD_TIMESTAMP, BUILD_COMMIT } from "configs/VersionConfig";
+import GenericDropdown from "views/theater/components/GenericDropdown";
+import { TENANT_SCHEMA } from "constants/AuthConstant";
 
 export const LoginForm = (props) => {
   const navigate = useNavigate();
-
+  
+  const { tenant_country } = useSelector((state) => state.locations);
   const {
     otherSignIn,
     showForgetPassword,
@@ -45,6 +51,9 @@ export const LoginForm = (props) => {
   // }
   const dispatch = useDispatch();
   const onLogin = (values) => {
+    console.log(values,"values,")
+    const schema = tenant_country.find((schema)=>schema.id==values.country_id).schema_name
+    localStorage.setItem(TENANT_SCHEMA, schema)
     showLoading();
     signIn(values);
     dispatch(getUserdata());
@@ -72,6 +81,10 @@ export const LoginForm = (props) => {
       };
     }
   });
+
+  useEffect(() => {
+console.warn(tenant_country)
+  },[tenant_country]);
 
   const renderOtherSignIn = (
     <div>
@@ -140,11 +153,10 @@ export const LoginForm = (props) => {
           name="password"
           label={
             <div
-              className={`${
-                showForgetPassword
+              className={`${showForgetPassword
                   ? "d-flex justify-content-between w-100 align-items-center"
                   : ""
-              }`}
+                }`}
             >
               <span>Password</span>
               {showForgetPassword && (
@@ -169,6 +181,25 @@ export const LoginForm = (props) => {
             placeholder="Password"
           />
         </Form.Item>
+        <div className="my-10">
+          <GenericDropdown
+            name="country_id"
+            label="Country"
+            mode="single"
+            rules={[
+              { required: false, message: "Please select your Country!" },
+            ]}
+            fetchOptions={getTenantCoutry}
+            optionsData={tenant_country}
+            loading={loading}
+            optionLabelKey="name"
+            optionExtraLabel=""
+            optionValueKey="id"
+            searchParamKey="search"
+            isInfoVisible={true}
+            hasFeedback={true}
+          />
+        </div>
         <Form.Item>
           <Button type="primary" htmlType="submit" block loading={loading}>
             Sign In
