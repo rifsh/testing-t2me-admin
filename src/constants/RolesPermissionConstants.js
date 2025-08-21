@@ -102,7 +102,9 @@ export const PERMISSIONS = {
                     title: 'Offer',
                     GET_OFFERS: 'get_offers',
                     ADD_OFFERS: 'add_offers',
+                    ADD_ORGANIZER_OFFERS: 'add_organizer_offers',
                     EDIT_OFFERS: 'edit_offers',
+                    EDIT_ORGANIZER_OFFERS: 'edit_offers',
                     UPDATE_OFFER_STATUS: 'update_offer_status',
                     GET_OFFER_DETAIL: 'get_offer_detail',
                 },
@@ -212,6 +214,17 @@ export const PERMISSIONS = {
                 },
                 SEAT: {
                     title: 'Seat',
+                    ADD_SEAT_STRUCTURE:'add_movie_seat_structure',
+                    GET_MOVIE_SEAT_STRUCTURE:'get_movie_seat_structure',
+                    GET_SIGNLE_MOVIE_SEAT_STRUCTURE:'get_single_movie_seat_structure',
+                    EDIT_MOVIE_SEAT_STRUCTURE:'edit_movie_seat_structure',
+                    EDIT_MOVIE_SEAT_STRUCTURE_STATUS:'edit_movie_seat_structure_status',
+                    ADD_ORGANIZER_MOVIE_SEAT_STRUCTURE:'add_organizer_movie_seats',
+                    EDIT_ORGANIZER_MOVIE_SEAT_STRUCTURE:'update_organizer_movie_seats',
+                    GET_ORGANIZER_MOVIE_SEAT_STRUCTURE:'get_organizer_movie_seats',
+                    GET_ORGANIZER_SINGLE_MOVIE_SEAT_STRUCTURE:'get_organizer_movie_seat_details',
+                    ORGANIZER_MOVIE_SEAT_STRUCTURE_CHANGE:'organizer_movie_seat_changes',
+                    APPROVE_ORGANIZER_MOVIE_SEAT_STRUCTURE_CHANGE:'approve_organizer_movie_seats',
                 },
                 PERSONALITY_PROFILE: {
                     title: 'Personality Profiles',
@@ -277,7 +290,8 @@ export const PERMISSIONS = {
                 title: 'Movie',
                 SEAT: {
                     title: 'Seat',
-                    SUPER_ADMIN_APPROVAL: 'approve_organizer_movie_seats'
+                    SUPER_ADMIN_APPROVAL: 'approve_organizer_movie_seats',
+                    APPROVE_ORGANIZER_MOVIE_SEAT_STRUCTURE_CHANGE:'approve_organizer_movie_seats',
                 },
                 OFFER: {
                     title: 'Offer',

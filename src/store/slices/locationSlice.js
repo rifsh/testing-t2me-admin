@@ -18,6 +18,7 @@ export const initialState = {
   error: null,
   singleVenues: null,
   singlePlace: null,
+  tenant_country : [],
   venues: [],
   detailedCountryList: [],
   places: [],
@@ -229,6 +230,18 @@ export const getCoutryDetails = createAsyncThunk(
     try {
       const response = await LocationService.getCoutryDetails();
       return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+
+export const getTenantCoutry = createAsyncThunk(
+  "locations/getTenantCoutry",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await LocationService.TenantCountry();
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch places");
     }
@@ -605,6 +618,18 @@ const locationSlice = createSlice({
         state.placeWithCountryList = payload.items;
       })
       .addCase(fetchPlaceWithCountry.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+      })
+      .addCase(getTenantCoutry.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getTenantCoutry.fulfilled, (state, { payload }) => {
+        console.warn(payload,'....')
+        state.loading = false;
+        state.tenant_country = payload;
+      })
+      .addCase(getTenantCoutry.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
       })

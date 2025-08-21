@@ -1,7 +1,7 @@
 import axios from "axios";
 import { API_BASE_URL } from "configs/AppConfig";
 import { signOutSuccess, signOut } from "store/slices/authSlice";
-import { AUTH_TOKEN } from "constants/AuthConstant";
+import { AUTH_TOKEN, TENANT_SCHEMA } from "constants/AuthConstant";
 import { notification } from "antd";
 import store from "../store";
 import Utils from "utils";
@@ -49,10 +49,16 @@ const shouldSkipEncryption = (url) => {
 service.interceptors.request.use(
   async (config) => {
     const TOKEN_PAYLOAD_KEY = "Authorization";
+    const TENANT_HEADER_KEY = "X-Tenant-ID";
     const jwtToken = localStorage.getItem(AUTH_TOKEN) || null;
+    const tenant_schema = localStorage.getItem(TENANT_SCHEMA) || null;
 
     if (jwtToken) {
       config.headers[TOKEN_PAYLOAD_KEY] = `Bearer ${jwtToken}`;
+    }
+    console.log(tenant_schema,"tenant_schema")
+    if (tenant_schema) {
+      config.headers[TENANT_HEADER_KEY] = tenant_schema;
     }
 
     // ( enc started)

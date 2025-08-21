@@ -36,13 +36,6 @@ const ScreenDetailView = () => {
         dispatch(fetchScreenById({ screen_id: screenId }));
     }, [screenId, dispatch]);
 
-    // useEffect(() => {
-    //     if (singleResponse) {
-    //         console.log("screensingleresponse", singleResponse?.seat_structures[0].seat_data)
-    //     }
-    // }, [singleResponse]);
-
-
     const getAccessibilityTags = (accessibilityList) => {
         if (!accessibilityList || accessibilityList.length === 0) {
             return <Tag color="default">None</Tag>;
@@ -330,7 +323,7 @@ const ScreenDetailView = () => {
                         key="seating"
                     >
                         <SeatStructure
-                            SeatStructure={singleResponse?.seat_structures[0] ? singleResponse?.seat_structures[0] : null}
+                            SeatStructure={singleResponse?.seat_data ? singleResponse?.seat_data : null}
                         />
                         <Col xs={24} lg={8}>
                             <Card

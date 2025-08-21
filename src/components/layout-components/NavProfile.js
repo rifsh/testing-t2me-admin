@@ -97,6 +97,7 @@ export const NavProfile = ({ mode }) => {
   }, [userData, dispatch]);
   return (
     <Dropdown placement="bottomRight" menu={{ items }} trigger={["click"]}>
+
       <NavItem mode={mode}>
         <Profile>
           <Avatar
@@ -110,6 +111,8 @@ export const NavProfile = ({ mode }) => {
 
           <UserInfo className="profile-text">
             <Name>{userData && userData.email}</Name>
+              <Name>{singleUser && singleUser.country_name}</Name>
+
             <Title>{userRole}</Title>
           </UserInfo>
         </Profile>

@@ -69,11 +69,11 @@ const CountryFormFields = ({ mode, form }) => {
   const dispatch = useDispatch();
   const { loading, countries, error } = useSelector((state) => state.locations);
 
-  useEffect(() => {
-    if (countries.length === 0) {
-      dispatch(fetchAllCountires());
-    }
-  }, [dispatch, countries]);
+  // useEffect(() => {
+  //   if (countries.length === 0) {
+  //     dispatch(fetchAllCountires());
+  //   }
+  // }, [dispatch, countries]);
 
   const normFile = (e) => {
     if (Array.isArray(e)) {
@@ -118,7 +118,7 @@ const CountryFormFields = ({ mode, form }) => {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
-          <Form.Item
+          {/* <Form.Item
             name="country_id"
             label="Country name"
             rules={rules.country}
@@ -142,7 +142,7 @@ const CountryFormFields = ({ mode, form }) => {
                 <Option disabled>No countries available</Option>
               )}
             </Select>
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item name="name" label="Place" rules={rules.name}>
             <Input placeholder="Place Name" />
           </Form.Item>

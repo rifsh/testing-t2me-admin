@@ -18,6 +18,8 @@ import LoadingOverlay from 'components/util-components/Loader';
 import StatusTimelineCard from 'components/layout-components/Cards/StatusTimelineCard ';
 import { CommentListRender } from 'components/shared-components/Organizer/CommentListRender';
 import { Box } from '@mui/material';
+import usePermissions from 'utils/hooks/usePermissions';
+import { PERMISSIONS } from 'constants/RolesPermissionConstants';
 
 const { Title, Text, Paragraph } = Typography;
 const { confirm } = Modal;
@@ -37,6 +39,7 @@ export default function TheaterScreeningUI() {
     } = useSelector((state) => state.organizerUpdates);
     const [viewMode, setViewMode] = useState('info');
     const currentUser = getCurrentUser();
+    const { hasPermission, hasAnyPermission } = usePermissions()
 
     useEffect(() => {
         if (seatId) {
@@ -121,7 +124,7 @@ export default function TheaterScreeningUI() {
 
         if (
             approvalStatus === APPROVAL_STATUS.CHANGE_REQUEST &&
-            currentUser.role_id === UserRoleConstants.eventOrganizerRoleId
+            hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.ORGANIZER_MOVIE_SEAT_STRUCTURE_CHANGE)
         ) {
             return (
                 <Row justify="center" style={{ marginTop: 24 }} gutter={[16, 16]}>
@@ -140,7 +143,7 @@ export default function TheaterScreeningUI() {
 
         if (
             approvalStatus === APPROVAL_STATUS.PENDING &&
-            currentUser?.role_id === UserRoleConstants.superAdminRoleId
+            hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.MOVIE.SEAT.APPROVE_ORGANIZER_MOVIE_SEAT_STRUCTURE_CHANGE)
         ) {
             console.log("TrackrequestSeatsDetails", approvalStatus);
 
@@ -182,6 +185,10 @@ export default function TheaterScreeningUI() {
 
     return (
         <div className=" bg-gray-50 min-h-screen">
+            {/* Maker-Checker Actions */}
+            <div className='flex items-center justify-end'>
+                {renderActionButtons()}
+            </div>
             <Card
                 className="rounded-lg overflow-hidden border-0"
                 title={
@@ -337,10 +344,6 @@ export default function TheaterScreeningUI() {
                     } Comment`}
                 warningMessage={`Please provide a reason for the update.`}
             />
-            {/* Maker-Checker Actions */}
-            <div className='flex items-center justify-end'>
-                {renderActionButtons()}
-            </div>
         </div>
     );
 }
