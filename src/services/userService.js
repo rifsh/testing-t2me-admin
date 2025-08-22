@@ -13,7 +13,7 @@ UserService.getAllRoles = function (pageData) {
 };
 UserService.getAllUsers = function (pageData) {
   return fetch({
-    url:`${ApiConstant.USER_URL}`,
+    url: `${ApiConstant.USER_URL}`,
     method: "get",
     params: Utils.filterParams(pageData),
   });
@@ -30,7 +30,7 @@ UserService.getSingleUser = function (userId) {
   console.log(userId, "USERID IN SERVICE");
 
   return fetch({
-    url: ApiConstant.SINGLE_USER_URL,
+    url: ApiConstant.USER_DETAILS_URL,
     method: "get",
     params: {
       user_id: userId,
@@ -47,19 +47,13 @@ UserService.editUser = function (data, action) {
   });
 };
 
-UserService.updateUser = function (data, action) {
-  const encodedAction = encodeURIComponent(handleAction(action));
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+UserService.updateUser = function (data, params) {
+  // const encodedAction = encodeURIComponent(handleAction(action));
+
   return fetch({
-    url: `${ApiConstant.USER_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.USER_URL}/${data.id}`,
     method: "put",
-    data: formData,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    params: Utils.filterParams(params),
   });
 };
 
@@ -71,19 +65,12 @@ UserService.updateUserStatus = function (data, action) {
     data: data,
   });
 };
-UserService.createUser = function (data, action) {
-  const encodedAction = encodeURIComponent(handleAction(action));
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+UserService.createUser = function (data, params) {
   return fetch({
-    url: `${ApiConstant.REGISTER_USER_URL}?action=${encodedAction}`,
+    url: ApiConstant.REGISTER_USER_URL,
     method: "post",
-    data: formData,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    data: data,
+    params: Utils.filterParams(params),
   });
 };
 

@@ -77,9 +77,9 @@ export const fetchAllRoles = createAsyncThunk(
 
 export const createUser = createAsyncThunk(
   "users/create",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, params }, { rejectWithValue }) => {
     try {
-      const response = await UserService.createUser(data, action);
+      const response = await UserService.createUser(data, params);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");

@@ -8,7 +8,11 @@ import { SupportImageFormat } from "constants/SupportFileConstants";
 import { ENABLE_RESOLUTIONS } from "configs/AppConfig";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
-import { EventCodeConstants, EventType } from "constants/AppConstants";
+import {
+  EventCodeConstants,
+  EventType,
+  SUCCESS_CODE,
+} from "constants/AppConstants";
 import { encryptAES, decryptAES } from "utils/aesDecrypt";
 const ASL_AES_KEY = "your_32_byte_encryption_key_here";
 
@@ -459,12 +463,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-        (document.cookie = cookie
-          .replace(/^ +/, "")
-          .replace(
-            /=.*/,
-            "=;expires=" + new Date(0).toUTCString() + ";path=/"
-          ))
+          (document.cookie = cookie
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date(0).toUTCString() + ";path=/"
+            ))
       );
 
     // Unregister Service Workers
@@ -1159,11 +1163,11 @@ class Utils {
 
   static extractNumberAfterUnderscore(input) {
     // Handle edge cases
-    if (typeof input !== 'string') return null;
+    if (typeof input !== "string") return null;
     if (input.length === 0) return null;
 
     // Find the last underscore position
-    const lastUnderscoreIndex = input.lastIndexOf('_');
+    const lastUnderscoreIndex = input.lastIndexOf("_");
     if (lastUnderscoreIndex === -1) return null;
 
     // Get the substring after the last underscore
@@ -1191,11 +1195,11 @@ class Utils {
 
   static removeNumbersAfterUnderscore(input) {
     // Handle edge cases
-    if (typeof input !== 'string') return input;
+    if (typeof input !== "string") return input;
     if (input.length === 0) return input;
 
     // Find the last underscore position
-    const lastUnderscoreIndex = input.lastIndexOf('_');
+    const lastUnderscoreIndex = input.lastIndexOf("_");
     if (lastUnderscoreIndex === -1) return input;
 
     // Get the parts before and after underscore
@@ -1218,10 +1222,65 @@ class Utils {
    * @returns {string} - The cleaned string
    */
   static removeAllAfterLastUnderscore(input) {
-    if (typeof input !== 'string') return input;
-    const lastUnderscoreIndex = input.lastIndexOf('_');
-    return lastUnderscoreIndex === -1 ? input : input.slice(0, lastUnderscoreIndex);
+    if (typeof input !== "string") return input;
+    const lastUnderscoreIndex = input.lastIndexOf("_");
+    return lastUnderscoreIndex === -1
+      ? input
+      : input.slice(0, lastUnderscoreIndex);
   }
+  static getStatusResponse = async (
+    dispatch,
+    actionCreator,
+    {
+      actionPayload = {},
+      showMessage = false,
+      fetchFunction = null,
+      fetchPayload = null,
+    } = {}
+  ) => {
+    try {
+      const result = await dispatch(actionCreator(actionPayload)).unwrap();
+
+      if (result.status.status_code === SUCCESS_CODE) {
+        if (showMessage) {
+          message.success(result.status.message);
+        }
+
+        if (fetchFunction) {
+          try {
+            dispatch(fetchFunction(fetchPayload));
+          } catch (fetchError) {
+            console.warn("Auto-refresh failed:", fetchError);
+          }
+        }
+
+        return {
+          status: true,
+          message: result.status.message,
+          data: result.data || null,
+        };
+      } else {
+        if (showMessage) {
+          message.error(result.status.message);
+        }
+        return {
+          status: false,
+          message: result.status.message,
+          error: result.status.error || null,
+        };
+      }
+    } catch (error) {
+      // Show error message if requested
+      if (showMessage) {
+        message.error(error.message || "An unexpected error occurred");
+      }
+      return {
+        status: false,
+        message: error.message || "An unexpected error occurred",
+        error: error,
+      };
+    }
+  };
 }
 
 export default Utils;
