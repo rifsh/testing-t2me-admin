@@ -20,7 +20,6 @@ const UserForm = ({ mode = ADD, user = null }) => {
     (state) => state.event
   );
   const { response: theaterResponse } = useSelector((state) => state.theater);
-  
 
   // Super simple API configuration with proper error handling
   const apiConfig = createFormApiConfig(dispatch, navigate, createUser, mode, {
@@ -126,7 +125,7 @@ const UserForm = ({ mode = ADD, user = null }) => {
         form.setFieldValue("event_ids", []);
         form.setFieldValue("theatre_ids", []);
         if (value === 3 || value === 4) {
-          dispatch(fetchAllEvent({ event_type: "event" }));
+          dispatch(fetchAllEvent({ event_type: "General" }));
           dispatch(fetchDropdownTheaters({}));
         }
       },
@@ -143,6 +142,13 @@ const UserForm = ({ mode = ADD, user = null }) => {
       maxTagCount: 5,
       loading: eventLoading,
       filterOption: false,
+      asyncOptions: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return (filteredEvents || []).map((event) => ({
+          value: event.id,
+          label: event.event_name,
+        }));
+      },
       condition: (formData, mode) => {
         const roleId = formData.position_id;
         return roleId === 3 || roleId === 4;
@@ -170,10 +176,14 @@ const UserForm = ({ mode = ADD, user = null }) => {
         const roleId = formData.position_id;
         return roleId === 3 || roleId === 4;
       },
-      options: (theaterResponse?.items || []).map((theater) => ({
-        value: DataFormatUtils.theaterListItem(theater).id,
-        label: DataFormatUtils.theaterListItem(theater).name,
-      })),
+      asyncOptions: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return (theaterResponse?.items || []).map((theater) => ({
+          value: DataFormatUtils.theaterListItem(theater).id,
+          label: DataFormatUtils.theaterListItem(theater).name,
+        }));
+      },
+
       colProps: { xs: 24, md: 12 },
       section: "assignments",
     },
