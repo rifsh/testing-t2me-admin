@@ -29,3 +29,17 @@ export const THEME_CONFIG = {
   direction: DIR_LTR,
   blankLayout: false,
 };
+export const FEATURE_FLAGS = {
+  is_general_enabled: true,
+  is_movie_enabled: false,
+  is_event_enabled: true,
+  is_dine_enabled: false,
+  is_advertisement_enabled: true,
+  is_newsletter_enabled: true,
+  is_reports_enabled: true,
+  is_user_management_enabled: true,
+  is_app_management_enabled: true,
+  is_issue_tracking_enabled: true,
+  is_lead_events_enabled: true,
+  is_track_requests_enabled: true,
+};

@@ -1,8 +1,23 @@
 import React, { useEffect } from "react";
-import { Input, Row, Col, Card, Form, Button, Upload, Select, message, Alert } from "antd";
+import {
+  Input,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Upload,
+  Select,
+  message,
+  Alert,
+} from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchOrganizerEvents, fetchEventSupportAvailable, fetchAllEvent } from "store/slices/eventSlice";
+import {
+  fetchOrganizerEvents,
+  fetchEventSupportAvailable,
+  fetchAllEvent,
+} from "store/slices/eventSlice";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { AddNewIssue } from "store/slices/IssueSlice";
 import { useNavigate } from "react-router-dom";
@@ -40,9 +55,9 @@ const rules = {
 
 function IssueFormFields() {
   const [form] = Form.useForm();
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const { organizerEvents, eventsupport } = useSelector(state => state.event)
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { organizerEvents, eventsupport } = useSelector((state) => state.event);
   const {
     pagination,
     editable_status,
@@ -57,19 +72,20 @@ function IssueFormFields() {
   } = useSelector((state) => state.event);
 
   const handleEventSingleDetails = (eventId) => {
-    console.log("lll")
-    dispatch(fetchEventSupportAvailable(eventId))
-  }
-
+    console.log("lll");
+    dispatch(fetchEventSupportAvailable(eventId));
+  };
 
   useEffect(() => {
     if (organizerEvents && organizerEvents.length == 0) {
-      dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event, organizer: false }));
+      dispatch(
+        fetchAllEvent({ event_type: EVENT_TYPES.event, organizer: false })
+      );
     }
   }, [dispatch]);
 
   useEffect(() => {
-    console.log("filteredEvents", filteredEvents)
+    console.log("filteredEvents", filteredEvents);
   }, [filteredEvents]);
 
   const normFile = (e) => {
@@ -96,7 +112,10 @@ function IssueFormFields() {
 
           {/* Event Selection */}
           <Form.Item name="event_id" label="Select Event" rules={rules.eventId}>
-            <Select placeholder="Select an event" onChange={handleEventSingleDetails}>
+            <Select
+              placeholder="Select an event"
+              onChange={handleEventSingleDetails}
+            >
               {filteredEvents &&
                 filteredEvents.map((event) => (
                   <Option key={event.id} value={event.id}>

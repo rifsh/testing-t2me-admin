@@ -1,265 +1,253 @@
-import React, { useEffect } from "react";
-import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
-import { Tabs, Form, Button, message } from "antd";
-import Flex from "components/shared-components/Flex";
-import UserFormFields from "../components/UserFormFields";
+import React, { useCallback } from "react";
+import { Card } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
-import { createUser, updateUser } from "store/slices/userSlice";
-import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
-import { setSelectedSubmitItem } from "store/slices/modalSlice";
-import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import LoadingOverlay from "components/util-components/Loader/index";
-import { ActionType } from "utils/api/warning-submit-util";
-import WarningModal from "components/util-components/ModalItems/WarningModal";
-import {
-  fetchAllRoles,
-  setSelectedRole,
-  setSelectedUser,
-  setUserDialogVisible,
-  setUserModalLoading,
-} from "store/slices/userSlice";
-import ValidationModal from "components/util-components/ModalItems/ValidationModal";
-import {
-  setEventValidationDialogVisible,
-  validateMultipleEvent,
-} from "store/slices/eventSlice";
-import { getCurrentUser } from "configs/UserAccessConfig";
+import { AdvancedConfigurableForm } from "components/util-components/FormItems/CustomForm";
+import { createUser } from "store/slices/userSlice";
+import { ADD, EDIT } from "constants/AppConstants";
+import { createFormApiConfig, FormConfigPresets } from "utils/formApiUtils";
+import DataFormatUtils from "utils/formatData";
 import { fetchAllEvent } from "store/slices/eventSlice";
-import { UserRoleConstants } from "constants/UserRoleConstant";
 import { fetchDropdownTheaters } from "store/slices/theaterSlice";
+import { debounce } from "lodash";
 
-const ADD = "ADD";
-
-const UserForm = ({ mode, user }) => {
-  // const { mode = ADD } = props;
-  const {
-    loading,
-    error,
-    responseData,
-    responseMessage,
-    selectedUser,
-    dialogVisible,
-    responseImpactData,
-    message: warningMessage,
-    modalLoading,
-    editable_status,
-  } = useSelector((state) => state.users);
-  const { eventValidationDialogVisible, ValidateData, messages } = useSelector(
-    (state) => state.event
-  );
-  const [form] = Form.useForm();
+const UserForm = ({ mode = ADD, user = null }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user && mode === "EDIT") {
-      const formData = {
-        username: user.username,
-        position_id: user.role.position_id,
-        thumbnail_image:
-          user.thumbnail_image && user.thumbnail_image !== "images"
-            ? [
-              {
-                uid: "-1",
-                name: user.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: user.thumbnail_image,
-              },
-            ]
-            : [],
+  // Your existing selectors
+  const { filteredEvents, loading: eventLoading } = useSelector(
+    (state) => state.event
+  );
+  const { response: theaterResponse } = useSelector((state) => state.theater);
+
+  // Super simple API configuration with proper error handling
+  const apiConfig = createFormApiConfig(dispatch, navigate, createUser, mode, {
+    entityName: "User",
+    successMessage:
+      mode === ADD
+        ? "User created successfully!"
+        : "User updated successfully!",
+
+    // Custom success callback if you need additional logic
+    onSuccessCallback: (apiResponse, currentMode) => {
+      console.log("User operation completed:", apiResponse);
+      // Any additional success logic here
+    },
+
+    // Custom error callback for better error handling
+    onErrorCallback: (error, currentMode, apiResponse) => {
+      console.log("User operation failed:", { error, apiResponse });
+      // Any additional error handling logic here
+    },
+  });
+
+  // Your field definitions with sections
+  const userFields = [
+    {
+      name: "username",
+      type: "input",
+      label: "Username",
+      required: true,
+      tooltip: "Username must contain only letters, be 3-30 characters long",
+      placeholder: "Enter Username",
+      maxLength: 30,
+      showCount: true,
+      rules: [
+        { min: 3, message: "Username must be at least 3 characters" },
+        { max: 30, message: "Username cannot exceed 30 characters" },
+        {
+          pattern: /^[a-zA-Z0-9_]+$/,
+          message:
+            "Username can only contain letters, numbers, and underscores",
+        },
+      ],
+      colProps: { xs: 24, md: 12 },
+      section: "basic",
+    },
+    {
+      name: "email",
+      type: "input",
+      label: "Email Address",
+      required: true,
+      tooltip: "Enter a valid email address",
+      placeholder: "Enter Email Address",
+      rules: [{ type: "email", message: "Please enter a valid email address" }],
+      colProps: { xs: 24, md: 12 },
+      section: "basic",
+      condition: (formData, mode) => mode === ADD,
+    },
+    {
+      name: "password",
+      type: "password",
+      label: "Password",
+      required: true,
+      condition: (formData, mode) => mode === ADD,
+      tooltip:
+        "Password must be 8-30 characters with mixed case, number, and special character",
+      placeholder: "Enter Password",
+      maxLength: 30,
+      rules: [
+        { min: 8, message: "Password must be at least 8 characters" },
+        { max: 30, message: "Password cannot exceed 30 characters" },
+        {
+          pattern:
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+          message:
+            "Password must contain uppercase, lowercase, number, and special character",
+        },
+      ],
+      colProps: { xs: 24, md: 12 },
+      section: "basic",
+    },
+    {
+      name: "position_id",
+      type: "select",
+      label: "Role",
+      required: mode === ADD,
+      placeholder: "Select a Role",
+      allowClear: true,
+      showSearch: true,
+      asyncOptions: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return [
+          { value: 1, label: "Super Admin" },
+          { value: 2, label: "Tech Admin" },
+          { value: 3, label: "Event Organizer" },
+          { value: 4, label: "Event Supporting Team" },
+          { value: 5, label: "Regular User" },
+          { value: 6, label: "Viewer" },
+        ];
+      },
+      colProps: { xs: 24, md: 12 },
+      section: "basic",
+      onChange: (value, event, form, formData) => {
+        form.setFieldValue("event_ids", []);
+        form.setFieldValue("theatre_ids", []);
+        if (value === 3 || value === 4) {
+          dispatch(fetchAllEvent({ event_type: "General" }));
+          dispatch(fetchDropdownTheaters({}));
+        }
+      },
+    },
+    {
+      name: "event_ids",
+      type: "select",
+      label: "Events",
+      required: false,
+      placeholder: "Select events",
+      mode: "multiple",
+      allowClear: true,
+      showSearch: true,
+      maxTagCount: 5,
+      loading: eventLoading,
+      filterOption: false,
+      asyncOptions: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return (filteredEvents || []).map((event) => ({
+          value: event.id,
+          label: event.event_name,
+        }));
+      },
+      condition: (formData, mode) => {
+        const roleId = formData.position_id;
+        return roleId === 3 || roleId === 4;
+      },
+      options: (filteredEvents || []).map((event) => ({
+        value: event.id,
+        label: event.event_name,
+      })),
+      colProps: { xs: 24, md: 12 },
+      section: "assignments",
+    },
+    {
+      name: "theatre_ids",
+      type: "select",
+      label: "Theaters",
+      required: false,
+      placeholder: "Select theaters",
+      mode: "multiple",
+      allowClear: true,
+      showSearch: true,
+      maxTagCount: 5,
+      loading: eventLoading,
+      filterOption: false,
+      condition: (formData, mode) => {
+        const roleId = formData.position_id;
+        return roleId === 3 || roleId === 4;
+      },
+      asyncOptions: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        return (theaterResponse?.items || []).map((theater) => ({
+          value: DataFormatUtils.theaterListItem(theater).id,
+          label: DataFormatUtils.theaterListItem(theater).name,
+        }));
+      },
+
+      colProps: { xs: 24, md: 12 },
+      section: "assignments",
+    },
+    // Add section configurations
+  ].map((field) => ({
+    ...field,
+    sectionConfig:
+      {
+        basic: {
+          title: "Basic Information",
+          cardTitle: "User Details",
+          gutter: 16,
+        },
+        assignments: {
+          title: "Role Assignments",
+          cardTitle: "Events & Theaters",
+          gutter: 16,
+        },
+      }[field.section] || {},
+  }));
+
+  const customValidation = async (values, formData) => {
+    if (
+      (values.position_id === 3 || values.position_id === 4) &&
+      (!values.event_ids || values.event_ids.length === 0)
+    ) {
+      return {
+        isValid: false,
+        message:
+          "Event organizers and supporting team members must be assigned to at least one event",
       };
-      if (user.role.position_id === UserRoleConstants.eventOrganizerRoleId ||
-        user.role.position_id === UserRoleConstants.eventSupportingTeamRoleId) {
-        dispatch(fetchAllEvent({}));
-        dispatch(fetchDropdownTheaters({}));
-      }
-
-      if (
-        user.role.position_id === UserRoleConstants.eventOrganizerRoleId ||
-        user.role.position_id === UserRoleConstants.eventSupportingTeamRoleId
-      ) {
-        formData.event_ids = user.events
-          ? user.events.map((event) => event.id)
-          : [];
-        formData.theatre_ids = user.theatres
-          ? user.theatres.map((theater) => theater.id)
-          : [];
-      }
-      dispatch(setSelectedRole(user.role.position_id));
-
-      form.setFieldsValue(formData);
     }
-  }, [form, user, mode]);
-
-  useEffect(() => {
-    if (error) {
-      message.error(error);
-    }
-  }, [error]);
-
-  const onFinish = async () => {
-    const values = await form.validateFields();
-    try {
-      if (mode === "EDIT") {
-        console.log("ITS AN EDITTTTTTTTTTTTT TAXXXXXXX");
-        const data = {
-          ...values,
-          id: user.id,
-        };
-        console.log("Edit Data:", data);
-
-        const resultAction = await dispatch(
-          validateMultipleEvent(values.event_ids)
-        );
-
-        if (validateMultipleEvent.fulfilled.match(resultAction)) {
-          const response = resultAction.payload;
-          if (response.message === "warning") {
-            dispatch(setEventValidationDialogVisible(true));
-          } else if (response.data && response.data[0]?.validation_status) {
-            const resultAction = await dispatch(
-              updateUser({ data, action: ActionType.WARNING })
-            );
-
-            if (updateUser.fulfilled.match(resultAction)) {
-              dispatch(setSelectedUser(data));
-              dispatch(setUserDialogVisible(true));
-            }
-          }
-        }
-      } else {
-        // dispatch(setSelectedSubmitItem(values));
-        const formData = {
-          ...values,
-        };
-
-        if (
-          values.position_id === UserRoleConstants.eventOrganizerRoleId ||
-          values.position_id === UserRoleConstants.eventSupportingTeamRoleId
-        ) {
-          console.log(values.event_ids, "EVENT IDS");
-          console.log(formData, "THEATER IDSssss");
-
-          const resultAction = await dispatch(
-            validateMultipleEvent(values.event_ids)
-          );
-
-          // if (validateMultipleEvent.fulfilled.match(resultAction)) {
-          //   const response = resultAction.payload;
-          //   if (response.message === "warning") {
-          //     dispatch(setEventValidationDialogVisible(true));
-          //   } else if (response.data && response.data[0]?.validation_status) {
-          //   }
-          // }
-          dispatch(setSelectedSubmitItem(formData));
-        } else {
-          dispatch(setSelectedSubmitItem(formData));
-        }
-      }
-    } catch (info) {
-      console.error("Validation Failed:", info);
-      message.error("Please enter all required fields.");
-    }
-  };
-  const handleModalSubmit = async () => {
-    dispatch(setUserModalLoading(true));
-    const resultAction = await dispatch(
-      updateUser({ data: selectedUser, action: ActionType.SUBMIT })
-    );
-    dispatch(setUserModalLoading(false));
-    dispatch(setUserDialogVisible(false));
-    if (updateUser.fulfilled.match(resultAction)) {
-      dispatch(setSelectedSubmitItem(selectedUser));
-    }
+    return { isValid: true };
   };
 
-  const handleModalCancel = () => {
-    dispatch(setUserDialogVisible(false));
-  };
-  const handleValidationModalCancel = () => {
-    dispatch(setEventValidationDialogVisible(false));
+  const getInitialData = () => {
+    if (mode === EDIT && user) {
+      return DataFormatUtils.userDetails(user);
+    }
+    return {};
   };
 
   return (
-    <>
-      <Form
-        layout="vertical"
-        form={form}
-        name="user_form"
-        className="ant-advanced-search-form"
-      >
-        <PageHeaderAlt className="border-bottom" overlap>
-          <div className="container">
-            <Flex
-              className="py-2"
-              mobileFlex={false}
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <h2 className="mb-3">
-                {mode === "ADD" ? "Add New User" : `Edit User`}
-              </h2>
-              <div className="mb-3">
-                <DiscardButton form={form} />
-                <Button
-                  type="primary"
-                  onClick={() => onFinish()}
-                  htmlType="submit"
-                  loading={loading}
-                >
-                  {mode === "ADD" ? "Add" : `Save`}
-                </Button>
-              </div>
-            </Flex>
-          </div>
-        </PageHeaderAlt>
-        <div className="container">
-          <Tabs
-            defaultActiveKey="1"
-            style={{ marginTop: 30 }}
-            items={[
-              {
-                label: "General",
-                key: "1",
-                children: <UserFormFields mode={mode} user={user} />,
-              },
-            ]}
-          />
-        </div>
-      </Form>
-      <LoadingOverlay loading={loading} />
-      <ValidationModal
-        visible={eventValidationDialogVisible}
-        data={ValidateData?.errors}
-        statusMessage={messages}
-        onClose={handleValidationModalCancel}
-      />
-      <WarningModal
-        visible={dialogVisible}
-        title="Confirm Action"
-        details={warningMessage}
-        responseData={responseImpactData}
-        warningMessage="Do you want to continue?"
-        onSubmit={handleModalSubmit}
-        onCancel={handleModalCancel}
-        confirmText="Proceed"
-        cancelText="Back"
-        loading={modalLoading}
-        tableConfig={{
-          title: "Active Schedules",
-          dataKey: "items",
+    <Card>
+      <AdvancedConfigurableForm
+        config={{
+          ...FormConfigPresets.tabbed,
+          title: mode === ADD ? "Add New User" : "Edit User Account",
+          subtitle:
+            mode === ADD
+              ? "Fill in the details below to create a new user account"
+              : "Update the user information as needed",
         }}
-        editable_status={editable_status}
+        fields={userFields}
+        initialData={getInitialData()}
+        mode={mode}
+        customValidation={customValidation}
+        apiConfig={apiConfig}
+        onFieldChange={(newData, changedFields) => {
+          console.log("Form data changed:", { newData, changedFields });
+        }}
+        className="advanced-user-form"
       />
-      <SubmitAndConfirmModal
-        responseData={responseData}
-        addFunction={mode === "EDIT" ? updateUser : createUser}
-        navigationPath={`${APP_PREFIX_PATH}/user/list`}
-        responseMessage={responseMessage}
-      />
-    </>
+    </Card>
   );
 };
 
