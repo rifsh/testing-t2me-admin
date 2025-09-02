@@ -37,6 +37,8 @@ import {
 } from "@ant-design/icons";
 import { ADD, EDIT, SUCCESS_CODE } from "constants/AppConstants";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { debounce } from "lodash";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -130,12 +132,19 @@ const useAdvancedFormState = (initialData = {}, config = {}) => {
     [form, formData]
   );
 
+  // Fixed: Proper initial data setting with dependency check
   useEffect(() => {
     if (Object.keys(initialData).length > 0) {
+      // Set form fields first
       form.setFieldsValue(initialData);
+      // Then update internal state
       setFormData(initialData);
+      // Reset dirty state for edit mode
+      setIsDirty(false);
+      setTouched({});
+      setErrors({});
     }
-  }, [form, initialData]);
+  }, [form, JSON.stringify(initialData)]); // Use JSON.stringify to detect deep changes
 
   return {
     form,
@@ -316,15 +325,35 @@ const AdvancedFieldRenderer = ({
   );
   const dispatch = useDispatch();
   // Debounced search for select fields
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((searchValue) => {
+        if (fieldConfig.actionCreation && searchValue) {
+          dispatch(
+            fieldConfig.actionCreation({
+              search: searchValue,
+              size: 10,
+              ...fieldConfig.actionCreationParams,
+            })
+          );
+        }
+      }, 300), // 300ms debounce delay
+    [dispatch, fieldConfig.actionCreation, fieldConfig.actionCreationParams]
+  );
+
   const handleSearch = useCallback(
     (searchValue) => {
-      dispatch();
-      if (fieldConfig.onSearch) {
-        fieldConfig.onSearch(searchValue, formData);
+      if (searchValue && searchValue.trim()) {
+        debouncedSearch(searchValue);
       }
     },
-    [fieldConfig.onSearch, formData]
+    [debouncedSearch]
   );
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   // Render field label with tooltip
   const renderLabel = () => {
@@ -349,7 +378,13 @@ const AdvancedFieldRenderer = ({
       </span>
     );
   };
-
+  if (field.type === "component") {
+    return (
+      <div className={field.className} style={field.style}>
+        {field.component}
+      </div>
+    );
+  }
   // Render different field types
   const renderField = () => {
     const commonProps = {
@@ -359,6 +394,8 @@ const AdvancedFieldRenderer = ({
     };
 
     switch (type) {
+      case "component":
+        return field.component || null;
       case "input":
         return (
           <Input
@@ -407,7 +444,7 @@ const AdvancedFieldRenderer = ({
             showSearch={fieldConfig.showSearch}
             loading={asyncLoading || fieldConfig.loading}
             onChange={(value, option) => handleChange(value, { value, option })}
-            onSearch={fieldConfig.showSearch ? handleSearch : undefined}
+            onSearch={handleSearch}
             filterOption={fieldConfig.filterOption}
             notFoundContent={
               asyncLoading ? <Spin size="small" /> : fieldConfig.notFoundContent
@@ -869,7 +906,7 @@ const EnhancedResponseModal = ({
 };
 
 // Main Advanced Form Component
-export const AdvancedConfigurableForm = ({
+export const CustomForm = ({
   // Core Configuration
   config = {},
   fields = [],
@@ -916,7 +953,7 @@ export const AdvancedConfigurableForm = ({
     wrapperCol: null,
     ...config,
   };
-
+  const navigate = useNavigate();
   // Hooks
   const formState = useAdvancedFormState(initialData, {
     onDataChange: onFieldChange,
@@ -1002,7 +1039,6 @@ export const AdvancedConfigurableForm = ({
   // Handle form submission with enhanced flow
   const handleSubmit = useCallback(async () => {
     const result = await formState.submitForm(customValidation);
-
     if (!result.success) return;
 
     try {
@@ -1145,6 +1181,7 @@ export const AdvancedConfigurableForm = ({
             onCancel(formState.form, formState.formData);
           } else {
             formState.resetForm();
+            navigate(-1);
           }
         },
       });

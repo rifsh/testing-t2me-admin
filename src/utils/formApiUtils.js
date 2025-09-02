@@ -106,7 +106,11 @@ export const createFormApiConfig = (
             {
               actionPayload: {
                 data: formData,
-                params: { action: ApiActions.CONFIRM },
+                params: {
+                  action: ApiActions.CONFIRM,
+                  ...(currentMode === EDIT &&
+                    formData.id && { id: formData.id }),
+                },
               },
             }
           );

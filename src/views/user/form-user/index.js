@@ -2,8 +2,8 @@ import React, { useCallback } from "react";
 import { Card } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { AdvancedConfigurableForm } from "components/util-components/FormItems/CustomForm";
-import { createUser } from "store/slices/userSlice";
+import { CustomForm } from "components/util-components/FormItems/CustomForm";
+import { createUser, editUser } from "store/slices/userSlice";
 import { ADD, EDIT } from "constants/AppConstants";
 import { createFormApiConfig, FormConfigPresets } from "utils/formApiUtils";
 import DataFormatUtils from "utils/formatData";
@@ -12,37 +12,30 @@ import { fetchDropdownTheaters } from "store/slices/theaterSlice";
 import { debounce } from "lodash";
 
 const UserForm = ({ mode = ADD, user = null }) => {
+  console.log("User form mode:", mode, "User data:", user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Your existing selectors
   const { filteredEvents, loading: eventLoading } = useSelector(
     (state) => state.event
   );
+
   const { response: theaterResponse } = useSelector((state) => state.theater);
 
-  // Super simple API configuration with proper error handling
-  const apiConfig = createFormApiConfig(dispatch, navigate, createUser, mode, {
-    entityName: "User",
-    successMessage:
-      mode === ADD
-        ? "User created successfully!"
-        : "User updated successfully!",
+  const apiConfig = createFormApiConfig(
+    dispatch,
+    navigate,
+    mode === ADD ? createUser : editUser,
+    mode,
+    {
+      entityName: "User",
+      successMessage:
+        mode === ADD
+          ? "User created successfully!"
+          : "User updated successfully!",
+    }
+  );
 
-    // Custom success callback if you need additional logic
-    onSuccessCallback: (apiResponse, currentMode) => {
-      console.log("User operation completed:", apiResponse);
-      // Any additional success logic here
-    },
-
-    // Custom error callback for better error handling
-    onErrorCallback: (error, currentMode, apiResponse) => {
-      console.log("User operation failed:", { error, apiResponse });
-      // Any additional error handling logic here
-    },
-  });
-
-  // Your field definitions with sections
   const userFields = [
     {
       name: "username",
@@ -75,14 +68,14 @@ const UserForm = ({ mode = ADD, user = null }) => {
       rules: [{ type: "email", message: "Please enter a valid email address" }],
       colProps: { xs: 24, md: 12 },
       section: "basic",
-      condition: (formData, mode) => mode === ADD,
+      // condition: (formData, mode) => mode === ADD,
     },
     {
       name: "password",
       type: "password",
       label: "Password",
       required: true,
-      condition: (formData, mode) => mode === ADD,
+      // condition: (formData, mode) => mode === ADD,
       tooltip:
         "Password must be 8-30 characters with mixed case, number, and special character",
       placeholder: "Enter Password",
@@ -104,7 +97,7 @@ const UserForm = ({ mode = ADD, user = null }) => {
       name: "position_id",
       type: "select",
       label: "Role",
-      required: mode === ADD,
+      required: true,
       placeholder: "Select a Role",
       allowClear: true,
       showSearch: true,
@@ -113,10 +106,9 @@ const UserForm = ({ mode = ADD, user = null }) => {
         return [
           { value: 1, label: "Super Admin" },
           { value: 2, label: "Tech Admin" },
-          { value: 3, label: "Event Organizer" },
+          { value: 3, label: "Tech Supporting Team" },
           { value: 4, label: "Event Supporting Team" },
-          { value: 5, label: "Regular User" },
-          { value: 6, label: "Viewer" },
+          { value: 5, label: "Event Organizer" },
         ];
       },
       colProps: { xs: 24, md: 12 },
@@ -124,7 +116,7 @@ const UserForm = ({ mode = ADD, user = null }) => {
       onChange: (value, event, form, formData) => {
         form.setFieldValue("event_ids", []);
         form.setFieldValue("theatre_ids", []);
-        if (value === 3 || value === 4) {
+        if (value === 5 || value === 4) {
           dispatch(fetchAllEvent({ event_type: "General" }));
           dispatch(fetchDropdownTheaters({}));
         }
@@ -149,9 +141,12 @@ const UserForm = ({ mode = ADD, user = null }) => {
           label: event.event_name,
         }));
       },
+      actionCreation: fetchAllEvent,
+      actionCreationParams: { event_type: "General" },
+      // Fetch events when field is focused
       condition: (formData, mode) => {
         const roleId = formData.position_id;
-        return roleId === 3 || roleId === 4;
+        return roleId === 5 || roleId === 4;
       },
       options: (filteredEvents || []).map((event) => ({
         value: event.id,
@@ -169,12 +164,14 @@ const UserForm = ({ mode = ADD, user = null }) => {
       mode: "multiple",
       allowClear: true,
       showSearch: true,
+      actionCreation: fetchDropdownTheaters,
+
       maxTagCount: 5,
       loading: eventLoading,
       filterOption: false,
       condition: (formData, mode) => {
         const roleId = formData.position_id;
-        return roleId === 3 || roleId === 4;
+        return roleId === 5 || roleId === 4;
       },
       asyncOptions: async () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -187,7 +184,6 @@ const UserForm = ({ mode = ADD, user = null }) => {
       colProps: { xs: 24, md: 12 },
       section: "assignments",
     },
-    // Add section configurations
   ].map((field) => ({
     ...field,
     sectionConfig:
@@ -207,7 +203,7 @@ const UserForm = ({ mode = ADD, user = null }) => {
 
   const customValidation = async (values, formData) => {
     if (
-      (values.position_id === 3 || values.position_id === 4) &&
+      (values.position_id === 5 || values.position_id === 4) &&
       (!values.event_ids || values.event_ids.length === 0)
     ) {
       return {
@@ -219,26 +215,34 @@ const UserForm = ({ mode = ADD, user = null }) => {
     return { isValid: true };
   };
 
-  const getInitialData = () => {
+  const getInitialData = useCallback(() => {
     if (mode === EDIT && user) {
-      return DataFormatUtils.userDetails(user);
+      return {
+        ...user,
+      };
     }
-    return {};
-  };
+
+    // Return default structure for ADD mode
+    return {
+      username: "",
+      email: "",
+      password: "",
+      position_id: undefined,
+      event_ids: [],
+      theatre_ids: [],
+    };
+  }, [mode, user]);
+  const initialData = getInitialData();
 
   return (
     <Card>
-      <AdvancedConfigurableForm
+      <CustomForm
         config={{
           ...FormConfigPresets.tabbed,
           title: mode === ADD ? "Add New User" : "Edit User Account",
-          subtitle:
-            mode === ADD
-              ? "Fill in the details below to create a new user account"
-              : "Update the user information as needed",
         }}
         fields={userFields}
-        initialData={getInitialData()}
+        initialData={initialData}
         mode={mode}
         customValidation={customValidation}
         apiConfig={apiConfig}

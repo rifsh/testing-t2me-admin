@@ -1004,7 +1004,7 @@ const buildNavigationTree = (items) => {
     navigationTree.push({
       key: "UserManagement",
       path: `${APP_PREFIX_PATH}/users`,
-      title: "sidenav.user.management",
+      title: "User Management",
       icon: DashboardOutlined,
       breadcrumb: false,
       isGroupTitle: false,
