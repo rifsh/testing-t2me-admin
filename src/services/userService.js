@@ -38,12 +38,12 @@ UserService.getSingleUser = function (userId) {
   });
 };
 
-UserService.editUser = function (data, action) {
-  const encodedAction = encodeURIComponent(handleAction(action));
+UserService.editUser = function (data, params) {
   return fetch({
-    url: `${ApiConstant.USER_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.USER_URL}/${data.id}`,
     method: "put",
     data: data,
+    params: Utils.filterParams(params),
   });
 };
 

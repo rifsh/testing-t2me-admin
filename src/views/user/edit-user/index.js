@@ -8,7 +8,7 @@ import { EDIT } from "constants/AppConstants";
 const EditUser = () => {
   const dispatch = useDispatch();
   const userId = useParams();
-  const { editSingleUser } = useSelector((state) => state.users);
+  const { singleUser } = useSelector((state) => state.users);
 
   useEffect(() => {
     if (userId) {
@@ -17,7 +17,7 @@ const EditUser = () => {
     }
   }, [dispatch]);
 
-  return <UserForm mode={EDIT} user={editSingleUser} />;
+  return <UserForm mode={EDIT} user={singleUser} />;
 };
 
 export default EditUser;

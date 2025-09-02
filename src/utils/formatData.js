@@ -1,19 +1,23 @@
 class DataFormatUtils {
-  static userDetails = (user) => {
+  static userDetails = (data) => {
     return {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      phone: user.phone_number,
-      role: user.role?.name,
-      country: user.country_name,
-      avatar: user.thumbnail_image,
-      status: user.is_active,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-      access_matrix: user.access_matrix || [],
+      id: data.user?.id,
+      username: data.user?.username,
+      email: data.user?.email,
+      phone: data.user?.phone_number,
+      role: data.user?.role?.name,
+      position_id: data.user?.role?.position_id,
+      country: data.user?.country_name,
+      avatar: data.user?.thumbnail_image,
+      status: data.user?.is_active,
+      created_at: data.user?.created_at,
+      updated_at: data.user?.updated_at,
+      access_matrix: data.user?.access_matrix || [],
+      events: data.events || [],
+      theatres: data.theatres || [],
     };
   };
+
   static theaterListItem = (theater) => {
     return {
       id: theater.id,

@@ -23,7 +23,13 @@ export function ScheduleDetails({ form }) {
     loading,
     selectedEvent,
   } = useSelector((state) => state.event);
-  const { availableTicketTyps,selectedTicketType } = useSelector((state) => state.tickets);
+  const { availableTicketTyps, selectedTicketType } = useSelector(
+    (state) => state.tickets
+  );
+
+  // Add state to track the toggle value
+  const [showBookingLimit, setShowBookingLimit] = useState(false);
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -39,7 +45,6 @@ export function ScheduleDetails({ form }) {
 
   const handleSelectEvent = (id) => {
     if (!id) {
-      
       dispatch(setSelectedEvent(null));
       form.resetFields(["event_id", "venue_id"]);
       dispatch(resetSchedule());
@@ -68,6 +73,7 @@ export function ScheduleDetails({ form }) {
 
     dispatch(resetSchedule());
   };
+
   const handleSelectVenue = (id) => {
     if (!id) {
       return;
@@ -100,10 +106,22 @@ export function ScheduleDetails({ form }) {
     }
   };
 
+  // Handle booking limit toggle change
+  const handleBookingLimitToggle = (e) => {
+    const value = e.target.value;
+    setShowBookingLimit(value);
+
+    // Clear the booking limit field if toggle is set to false
+    if (!value) {
+      form.setFieldsValue({ boking_limit_per_user: undefined });
+    }
+  };
+
   return (
     <Card title="Schedule Details">
       <Row gutter={24}>
-        <Col sm={12} xl={24}>
+        {/* Row 1: Schedule Name & Event */}
+        <Col xs={24} sm={12}>
           <Form.Item
             name="name"
             label="Schedule Name"
@@ -115,7 +133,7 @@ export function ScheduleDetails({ form }) {
           </Form.Item>
         </Col>
 
-        <Col sm={12} xl={24}>
+        <Col xs={24} sm={12}>
           <Form.Item
             name="event_id"
             label="Event"
@@ -147,9 +165,10 @@ export function ScheduleDetails({ form }) {
           </Form.Item>
         </Col>
 
+        {/* Row 2: Venue & Booking Type (conditionally rendered) */}
         {selectedEvent?.venues?.length > 0 && (
           <>
-            <Col sm={24} xl={24}>
+            <Col xs={24} sm={12}>
               <Form.Item
                 name="venue_id"
                 label="Venue"
@@ -176,7 +195,8 @@ export function ScheduleDetails({ form }) {
                 </Select>
               </Form.Item>
             </Col>
-            <Col sm={24} xl={24}>
+
+            <Col xs={24} sm={12}>
               <Form.Item
                 name="available_types"
                 label="Booking Type"
@@ -187,19 +207,16 @@ export function ScheduleDetails({ form }) {
                 <Select
                   loading={loading}
                   className="w-100"
-                  placeholder="Select a venue"
+                  placeholder="Select a booking type"
                   allowClear
                   showSearch
-                  // filterOption={(input, option) =>
-                  //   option?.label?.toLowerCase()?.includes(input.toLowerCase())
-                  // }
                   onChange={(value) => {
                     dispatch(setSelectedTicketType(value));
                   }}
                 >
-                  {availableTicketTyps?.available_types?.map((venue) => (
-                    <Option key={venue.id} value={venue.id} label={venue.name}>
-                      {venue.name}
+                  {availableTicketTyps?.available_types?.map((type) => (
+                    <Option key={type.id} value={type.id} label={type.name}>
+                      {type.name}
                     </Option>
                   ))}
                 </Select>
@@ -207,7 +224,9 @@ export function ScheduleDetails({ form }) {
             </Col>
           </>
         )}
-        <Col sm={12} xl={24}>
+
+        {/* Row 3: Max Tickets & Multi Date */}
+        <Col xs={24} sm={12}>
           <Form.Item
             name="max_ticket_per_booking"
             label="Max Tickets Per Booking"
@@ -225,7 +244,8 @@ export function ScheduleDetails({ form }) {
             />
           </Form.Item>
         </Col>
-        <Col sm={12} xl={24}>
+
+        <Col xs={24} sm={12}>
           <Form.Item
             name="is_multi_date"
             label="Allow Multiple Dates Booking"
@@ -233,6 +253,62 @@ export function ScheduleDetails({ form }) {
               {
                 required: true,
                 message: "Please specify if multiple dates are allowed",
+              },
+            ]}
+          >
+            <Radio.Group>
+              <Radio value={true}>Yes</Radio>
+              <Radio value={false}>No</Radio>
+            </Radio.Group>
+          </Form.Item>
+        </Col>
+
+        {/* Row 4: Booking Limit Toggle & Payment Required */}
+        <Col xs={24} sm={12}>
+          <Form.Item
+            name="boking_limit_per_user_toggle"
+            label="Limit Bookings Per User"
+            rules={[
+              {
+                required: true,
+                message: "Please specify if booking limit is required",
+              },
+            ]}
+          >
+            <Radio.Group onChange={handleBookingLimitToggle}>
+              <Radio value={true}>Yes</Radio>
+              <Radio value={false}>No</Radio>
+            </Radio.Group>
+          </Form.Item>
+        </Col>
+        {showBookingLimit && (
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="boking_limit_per_user"
+              label="Booking Limit Per User"
+              rules={[
+                {
+                  required: true,
+                  message: "Please specify booking limit per user",
+                },
+              ]}
+            >
+              <Input
+                placeholder="Enter booking limit per user"
+                type="number"
+                min={1}
+              />
+            </Form.Item>
+          </Col>
+        )}
+        <Col xs={24} sm={12}>
+          <Form.Item
+            name="payment_required"
+            label="Is Payment Required"
+            rules={[
+              {
+                required: true,
+                message: "Please specify if payment is required",
               },
             ]}
           >
