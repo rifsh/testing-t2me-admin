@@ -164,10 +164,6 @@ export const createFormApiConfig = (
     onError: (error, currentMode, apiResponse = null) => {
       console.error(`${entityName} operation failed:`, error);
 
-      const finalErrorMessage =
-        errorMessage || error.message || "Operation failed";
-      //   message.error(finalErrorMessage);
-
       if (onErrorCallback) {
         onErrorCallback(error, currentMode, apiResponse);
       }

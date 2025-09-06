@@ -1122,8 +1122,9 @@ export const CustomForm = ({
             );
           }
         } else {
+          console.warn("API response error:", apiResponse);
           if (apiConfig.onError) {
-            apiConfig.onError(apiResponse.status.message, mode, null);
+            apiConfig.onError(apiResponse.message, mode, null);
           }
         }
 
