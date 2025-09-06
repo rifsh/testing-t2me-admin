@@ -1,11 +1,36 @@
+import React, { useEffect } from 'react'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { useSelector } from 'react-redux';
 import {
   SIDE_NAV_LIGHT,
   NAV_TYPE_SIDE,
   DIR_LTR,
 } from "constants/ThemeConstant";
-
 import { env } from "./EnvironmentConfig";
 
+const ProtectedRoute = () => {
+  const { token } = useSelector(state => state.auth);
+  const location = useLocation();
+
+  useEffect(() => {
+    // Add logging to debug the flow
+    console.log("ProtectedRoute check - Token exists:", !!token);
+  }, [token]);
+
+  if (!token) {
+    // Save the current location for later redirect if needed
+    const redirectUrl = location.pathname + location.search;
+    localStorage.setItem(REDIRECT_URL_KEY, redirectUrl);
+
+    return <Navigate to={`${AUTH_PREFIX_PATH}${UNAUTHENTICATED_ENTRY}`} replace />;
+  }
+
+  return <Outlet />;
+};
+
+export default ProtectedRoute;
+
+// App Configuration
 export const APP_NAME = "Tickets2Me";
 export const API_BASE_URL = env.API_ENDPOINT_URL;
 export const APP_PREFIX_PATH = "";
@@ -29,17 +54,140 @@ export const THEME_CONFIG = {
   direction: DIR_LTR,
   blankLayout: false,
 };
+
+// New hierarchical FEATURE_FLAGS structure
 export const FEATURE_FLAGS = {
-  is_general_enabled: true,
-  is_movie_enabled: false,
-  is_event_enabled: true,
-  is_dine_enabled: false,
-  is_advertisement_enabled: true,
-  is_newsletter_enabled: true,
-  is_reports_enabled: true,
-  is_user_management_enabled: true,
-  is_app_management_enabled: true,
-  is_issue_tracking_enabled: true,
-  is_lead_events_enabled: true,
-  is_track_requests_enabled: true,
+  // Orders category
+  orders: {
+    enabled: true,
+    subitems: {
+      event: { enabled: true },
+      movie: { enabled: false },
+    },
+  },
+
+  // Services category
+  services: {
+    enabled: true,
+    subitems: {
+      // General services subcategory
+      general: {
+        enabled: true,
+        items: {
+          place: { enabled: true },
+          venue: { enabled: true },
+          tax: { enabled: true },
+          category: { enabled: true },
+          offer: { enabled: true },
+          coupon: { enabled: true },
+          seat: { enabled: true },
+          payment: { enabled: true },
+        },
+      },
+      // Event services subcategory
+      event: {
+        enabled: true,
+        items: {
+          event_type: { enabled: true },
+          ticket: { enabled: true },
+          seat: { enabled: true },
+          event: { enabled: true },
+          schedule: { enabled: true },
+        },
+      },
+      // Movie services subcategory
+      movie: {
+        enabled: false,
+        items: {
+          theater: { enabled: true },
+          screen: { enabled: true },
+          seat: { enabled: true },
+          cast: { enabled: true },
+          movie: { enabled: true },
+          schedule: { enabled: true },
+          offer: { enabled: true },
+          coupon: { enabled: true },
+        },
+      },
+      // Dine services subcategory
+      dine: {
+        enabled: false,
+        items: {
+          restaurant: { enabled: true },
+          schedule: { enabled: true },
+        },
+      },
+    },
+  },
+
+  // Issues category
+  issues: {
+    enabled: true,
+    subitems: {
+      issue_tracking: {
+        enabled: true,
+        items: {
+          issue: { enabled: true },
+          alert: { enabled: true },
+        },
+      },
+      track_requests: {
+        enabled: true,
+        items: {
+          event: { enabled: true },
+          movie: { enabled: false },
+        },
+      },
+      lead_events: {
+        enabled: true,
+        items: {
+          event_request_list: { enabled: true },
+        },
+      },
+    },
+  },
+
+  // Advertisements category
+  advertisements: {
+    enabled: true,
+    subitems: {
+      ad_category: { enabled: true },
+      banners: { enabled: true },
+      schedule: { enabled: true },
+    },
+  },
+
+  // Newsletter category
+  newsletter: {
+    enabled: true,
+    subitems: {
+      newsletter: { enabled: true },
+      subscribers: { enabled: true },
+    },
+  },
+
+  // User Management category
+  user_management: {
+    enabled: true,
+    subitems: {
+      user: { enabled: true },
+      system_permissions: { enabled: true },
+    },
+  },
+
+  // App Management category
+  app_management: {
+    enabled: true,
+    subitems: {
+      layout: {
+        enabled: true,
+        items: {
+          footer: { enabled: true },
+          faq: { enabled: true },
+          app_info: { enabled: true },
+          terms: { enabled: true },
+        },
+      },
+    },
+  },
 };

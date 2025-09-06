@@ -1,67 +1,102 @@
 import React from "react";
-import {
-  AUTH_PREFIX_PATH,
-  APP_PREFIX_PATH,
-  FEATURE_FLAGS,
-} from "configs/AppConfig";
+import { AUTH_PREFIX_PATH, APP_PREFIX_PATH } from "configs/AppConfig";
 import TheaterList from "views/theater/components/TheaterList";
+import {
+  isFeatureEnabled,
+  isCategoryEnabled,
+  isSubcategoryEnabled,
+  isItemEnabled,
+} from "utils/navigationUtils";
 
-// All available routes mapped by feature keys (same as navigation keys)
+// Enhanced route filtering function
+const isRouteFeatureEnabled = (
+  feature,
+  category = null,
+  subcategory = null,
+  item = null
+) => {
+  // Handle legacy feature flags first
+  if (feature && isFeatureEnabled(feature) !== undefined) {
+    return isFeatureEnabled(feature);
+  }
+
+  // Handle new hierarchical structure
+  if (category && subcategory && item) {
+    // Three-level check: category -> subcategory -> item
+    return isItemEnabled(category, subcategory, item);
+  } else if (category && subcategory) {
+    // Two-level check: category -> subcategory
+    return isSubcategoryEnabled(category, subcategory);
+  } else if (category) {
+    // One-level check: category only
+    return isCategoryEnabled(category);
+  }
+
+  return true; // Default: enabled if no feature flag specified
+};
+
+// All available routes mapped by feature keys
 const ALL_PROTECTED_ROUTES = {
-  // Reports
+  // Reports (Orders category)
   "reports.dashboard": {
     key: "dashboard.default",
     path: `${APP_PREFIX_PATH}/dashboards/default`,
     component: React.lazy(() => import("views/app-views/dashboards/default")),
-    feature: "is_reports_enabled",
+    category: "orders",
   },
   "reports.analytic": {
     key: "dashboard.analytic",
     path: `${APP_PREFIX_PATH}/dashboards/analytic`,
     component: React.lazy(() => import("views/app-views/dashboards/analytic")),
-    feature: "is_reports_enabled",
+    category: "orders",
   },
   "reports.sales": {
     key: "dashboard.sales",
     path: `${APP_PREFIX_PATH}/dashboards/sales`,
     component: React.lazy(() => import("views/app-views/dashboards/sales")),
-    feature: "is_reports_enabled",
+    category: "orders",
   },
   "reports.orders.event": {
     key: "reports.orders.event",
     path: `${APP_PREFIX_PATH}/reports/orders/event`,
     component: React.lazy(() => import("views/orders/event/list")),
-    feature: "is_reports_enabled",
+    category: "orders",
+    subcategory: "event",
   },
   "reports.orders.event.details": {
     key: "reports.orders.event.details",
     path: `${APP_PREFIX_PATH}/reports/orders/event/details/:id`,
     component: React.lazy(() => import("views/orders/event/details")),
-    feature: "is_reports_enabled",
+    category: "orders",
+    subcategory: "event",
   },
   "reports.orders.event.user": {
     key: "reports.orders.event.details.user",
     path: `${APP_PREFIX_PATH}/reports/orders/event/user/details/:schedule_id/:date_id/:time_id/:user_id`,
     component: React.lazy(() => import("views/orders/event/userDetails")),
-    feature: "is_reports_enabled",
+    category: "orders",
+    subcategory: "event",
   },
   "reports.orders.movie": {
     key: "reports.orders.movie",
     path: `${APP_PREFIX_PATH}/reports/orders/movie`,
     component: React.lazy(() => import("views/orders/movie/list")),
-    feature: "is_reports_enabled",
+    category: "orders",
+    subcategory: "movie",
   },
   "reports.orders.movie.details": {
     key: "reports.orders.movie.details",
     path: `${APP_PREFIX_PATH}/reports/orders/movie/details/:id`,
     component: React.lazy(() => import("views/orders/movie/details")),
-    feature: "is_reports_enabled",
+    category: "orders",
+    subcategory: "movie",
   },
   "reports.orders.movie.user": {
     key: "reports.orders.movie.details.user",
     path: `${APP_PREFIX_PATH}/reports/orders/movie/user/details/:schedule_id/:date_id/:time_id/:user_id`,
     component: React.lazy(() => import("views/orders/movie/userDetails")),
-    feature: "is_reports_enabled",
+    category: "orders",
+    subcategory: "movie",
   },
   "organizer.reports.dashboard": {
     key: "organizer.reports",
@@ -69,7 +104,7 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-views/apps/super-admin/reports")
     ),
-    feature: "is_reports_enabled",
+    category: "orders",
   },
   "super.admin.reports": {
     key: "super-admin.reports",
@@ -77,7 +112,7 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-views/apps/super-admin/reports")
     ),
-    feature: "is_reports_enabled",
+    category: "orders",
   },
 
   // General Services
@@ -85,74 +120,113 @@ const ALL_PROTECTED_ROUTES = {
     key: "event.type.list",
     path: `${APP_PREFIX_PATH}/event/type/list`,
     component: React.lazy(() => import("views/event-type/list-type")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "event_type",
   },
   "general.event.type.add": {
     key: "event.type.add",
     path: `${APP_PREFIX_PATH}/event/type/add`,
     component: React.lazy(() => import("views/event-type/add-type")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "event_type",
   },
   "general.event.type.edit": {
     key: "event.type.edit",
     path: `${APP_PREFIX_PATH}/event/type/edit/:typeId`,
     component: React.lazy(() => import("views/event-type/edit-type")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "event_type",
   },
   "general.place": {
     key: "place.list",
     path: `${APP_PREFIX_PATH}/place/list`,
     component: React.lazy(() => import("views/locations/place/list-place")),
+    category: "services",
+    subcategory: "general",
+    item: "place",
   },
   "general.place.add": {
     key: "place.add",
     path: `${APP_PREFIX_PATH}/place/add`,
     component: React.lazy(() => import("views/locations/place/add-place")),
+    category: "services",
+    subcategory: "general",
+    item: "place",
   },
   "general.place.edit": {
     key: "place.edit",
     path: `${APP_PREFIX_PATH}/place/edit/:placeId`,
     component: React.lazy(() => import("views/locations/place/edit_place")),
+    category: "services",
+    subcategory: "general",
+    item: "place",
   },
   "general.place.details": {
     key: "place.details",
     path: `${APP_PREFIX_PATH}/place/details/:placeId`,
     component: React.lazy(() => import("views/locations/place/place-details")),
+    category: "services",
+    subcategory: "general",
+    item: "place",
   },
   "general.venue": {
     key: "venue.list",
     path: `${APP_PREFIX_PATH}/venue/list`,
     component: React.lazy(() => import("views/locations/venue/list-venue")),
+    category: "services",
+    subcategory: "general",
+    item: "venue",
   },
   "general.venue.add": {
     key: "venue.add",
     path: `${APP_PREFIX_PATH}/venue/add`,
     component: React.lazy(() => import("views/locations/venue/add-venue")),
+    category: "services",
+    subcategory: "general",
+    item: "venue",
   },
   "general.venue.edit": {
     key: "venue.edit",
     path: `${APP_PREFIX_PATH}/venue/edit/:venueId`,
     component: React.lazy(() => import("views/locations/venue/edit_venue")),
+    category: "services",
+    subcategory: "general",
+    item: "venue",
   },
   "general.venue.details": {
     key: "venue.details",
     path: `${APP_PREFIX_PATH}/venue/details/:venueId`,
     component: React.lazy(() => import("views/locations/venue/venue-details")),
+    category: "services",
+    subcategory: "general",
+    item: "venue",
   },
   "general.tax": {
     key: "tax.list",
     path: `${APP_PREFIX_PATH}/tax/list`,
     component: React.lazy(() => import("views/tax/list-tax")),
+    category: "services",
+    subcategory: "general",
+    item: "tax",
   },
   "general.tax.add": {
     key: "tax.add",
     path: `${APP_PREFIX_PATH}/tax/add`,
     component: React.lazy(() => import("views/tax/add-tax")),
+    category: "services",
+    subcategory: "general",
+    item: "tax",
   },
   "general.tax.edit": {
     key: "tax.edit",
     path: `${APP_PREFIX_PATH}/tax/edit/:taxId`,
     component: React.lazy(() => import("views/tax/edit-tax/index")),
+    category: "services",
+    subcategory: "general",
+    item: "tax",
   },
   "general.category": {
     key: "category.list",
@@ -160,11 +234,17 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/category/category/list-category")
     ),
+    category: "services",
+    subcategory: "general",
+    item: "category",
   },
   "general.category.add": {
     key: "category.add",
     path: `${APP_PREFIX_PATH}/category/add`,
     component: React.lazy(() => import("views/category/category/add-category")),
+    category: "services",
+    subcategory: "general",
+    item: "category",
   },
   "general.category.details": {
     key: "category.details",
@@ -172,6 +252,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/category/category/category-detials")
     ),
+    category: "services",
+    subcategory: "general",
+    item: "category",
   },
   "general.category.edit": {
     key: "category.edit",
@@ -179,6 +262,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/category/category/edit-category/category/index")
     ),
+    category: "services",
+    subcategory: "general",
+    item: "category",
   },
   "general.subcategory.details": {
     key: "subcategory.details",
@@ -186,6 +272,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/category/category/subcategory-details")
     ),
+    category: "services",
+    subcategory: "general",
+    item: "category",
   },
   "general.subcategory.edit": {
     key: "subcategory.edit",
@@ -193,66 +282,105 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/category/category/edit-category/subcategory/index")
     ),
+    category: "services",
+    subcategory: "general",
+    item: "category",
   },
   "general.offer": {
     key: "offer.list",
     path: `${APP_PREFIX_PATH}/offer/list/:type`,
     component: React.lazy(() => import("views/offer/list-offer")),
+    category: "services",
+    subcategory: "general",
+    item: "offer",
   },
   "general.offer.add": {
     key: "offer.add",
     path: `${APP_PREFIX_PATH}/offer/add`,
     component: React.lazy(() => import("views/offer/add-offer")),
+    category: "services",
+    subcategory: "general",
+    item: "offer",
   },
   "general.offer.edit": {
     key: "offer.edit",
     path: `${APP_PREFIX_PATH}/offer/edit/:offerId`,
     component: React.lazy(() => import("views/offer/edit-offer/index")),
+    category: "services",
+    subcategory: "general",
+    item: "offer",
   },
   "general.coupon": {
     key: "coupon.list",
     path: `${APP_PREFIX_PATH}/coupon/list/:type`,
     component: React.lazy(() => import("views/coupon/list-coupon")),
+    category: "services",
+    subcategory: "general",
+    item: "coupon",
   },
   "general.coupon.add": {
     key: "coupon.add",
     path: `${APP_PREFIX_PATH}/coupon/add`,
     component: React.lazy(() => import("views/coupon/add-coupon")),
+    category: "services",
+    subcategory: "general",
+    item: "coupon",
   },
   "general.coupon.edit": {
     key: "coupon.edit",
     path: `${APP_PREFIX_PATH}/coupon/edit/:couponId`,
     component: React.lazy(() => import("views/coupon/edit-coupon/index")),
+    category: "services",
+    subcategory: "general",
+    item: "coupon",
   },
   "general.seat": {
     key: "seat.list",
     path: `${APP_PREFIX_PATH}/seat/list`,
     component: React.lazy(() => import("views/seat/stadium/list-seat")),
+    category: "services",
+    subcategory: "general",
+    item: "seat",
   },
   "general.seat.add": {
     key: "seat.add",
     path: `${APP_PREFIX_PATH}/seat/add`,
     component: React.lazy(() => import("views/seat/stadium/add-seat")),
+    category: "services",
+    subcategory: "general",
+    item: "seat",
   },
   "general.payment": {
     key: "payment.list",
     path: `${APP_PREFIX_PATH}/payment/list`,
     component: React.lazy(() => import("views/payment/list-payment")),
+    category: "services",
+    subcategory: "general",
+    item: "payment",
   },
   "general.payment.add": {
     key: "payment.add",
     path: `${APP_PREFIX_PATH}/payment/add`,
     component: React.lazy(() => import("views/payment/add-payment")),
+    category: "services",
+    subcategory: "general",
+    item: "payment",
   },
   "general.payment.edit": {
     key: "payment.edit",
     path: `${APP_PREFIX_PATH}/payment/edit/`,
     component: React.lazy(() => import("views/payment/edit-payment")),
+    category: "services",
+    subcategory: "general",
+    item: "payment",
   },
   "general.payment.details": {
     key: "payment.details",
     path: `${APP_PREFIX_PATH}/payment/details/:paymentId`,
     component: React.lazy(() => import("views/payment/payment-details")),
+    category: "services",
+    subcategory: "general",
+    item: "payment",
   },
 
   // Event Services
@@ -260,91 +388,121 @@ const ALL_PROTECTED_ROUTES = {
     key: "ticket.list",
     path: `${APP_PREFIX_PATH}/ticket/list`,
     component: React.lazy(() => import("views/ticket/list-ticket")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "ticket",
   },
   "event.ticket.add": {
     key: "ticket.add",
     path: `${APP_PREFIX_PATH}/ticket/add`,
     component: React.lazy(() => import("views/ticket/add-ticket")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "ticket",
   },
   "event.ticket.edit": {
     key: "ticket.edit",
     path: `${APP_PREFIX_PATH}/ticket/edit/:ticketId`,
     component: React.lazy(() => import("views/ticket/edit-ticket/index")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "ticket",
   },
   "event.ticket.type": {
     key: "ticket.type",
     path: `${APP_PREFIX_PATH}/ticket/type/add`,
     component: React.lazy(() => import("views/ticket/components/MultyForm.js")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "ticket",
   },
   "event.seat": {
     key: "seat.event.list",
     path: `${APP_PREFIX_PATH}/seat/event/list`,
     component: React.lazy(() => import("views/seat/event/list-seat")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "seat",
   },
   "event.seat.add": {
     key: "seat.event.add",
     path: `${APP_PREFIX_PATH}/seat/event/add`,
     component: React.lazy(() => import("views/seat/event/add-seat")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "seat",
   },
   "event.seat.edit": {
     key: "seat.event.edit",
     path: `${APP_PREFIX_PATH}/seat/event/edit/:seatId`,
     component: React.lazy(() => import("views/seat/event/edit-seat")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "seat",
   },
   "event.seat.details": {
     key: "seat.event.details",
     path: `${APP_PREFIX_PATH}/seat/event/:seatId`,
     component: React.lazy(() => import("views/seat/event/details-seat")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "seat",
   },
   "event.list": {
     key: "event.list",
     path: `${APP_PREFIX_PATH}/event/list`,
     component: React.lazy(() => import("views/event/event-list")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "event",
   },
   "event.add": {
     key: "event.add",
     path: `${APP_PREFIX_PATH}/event/add`,
     component: React.lazy(() => import("views/event/add-event")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "event",
   },
   "event.edit": {
     key: "event.edit",
     path: `${APP_PREFIX_PATH}/event/edit/:eventId`,
     component: React.lazy(() => import("views/event/edit-event")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "event",
   },
   "event.details": {
     key: "event.details",
     path: `${APP_PREFIX_PATH}/event/details/:eventId`,
     component: React.lazy(() => import("views/event/event-details")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "event",
   },
   "event.schedule": {
     key: "schedule.list",
     path: `${APP_PREFIX_PATH}/schedule/list`,
     component: React.lazy(() => import("views/schedule/event/list-schedule")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "schedule",
   },
   "event.schedule.add": {
     key: "schedule.add",
     path: `${APP_PREFIX_PATH}/schedule/add`,
     component: React.lazy(() => import("views/schedule/event/add-schedule")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "schedule",
   },
   "event.schedule.edit": {
     key: "schedule.edit",
     path: `${APP_PREFIX_PATH}/schedule/edit/:scheduleId`,
     component: React.lazy(() => import("views/schedule/event/edit-schedule")),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "schedule",
   },
   "event.schedule.details": {
     key: "schedule.details",
@@ -352,7 +510,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/schedule/event/schedule-details")
     ),
-    feature: "is_event_enabled",
+    category: "services",
+    subcategory: "event",
+    item: "schedule",
   },
 
   // Movie Services
@@ -360,169 +520,225 @@ const ALL_PROTECTED_ROUTES = {
     key: "movie.theater.company",
     path: `${APP_PREFIX_PATH}/movie-theater-company/list`,
     component: React.lazy(() => import("views/theater/list-theater")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "theater",
   },
   "movie.theater.list": {
     key: "movie.theater.list",
     path: `${APP_PREFIX_PATH}/movie-theater/list`,
     component: TheaterList,
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "theater",
   },
   "movie.theater.add": {
     key: "movie.theater.add",
     path: `${APP_PREFIX_PATH}/movie-theater/add`,
     component: React.lazy(() => import("views/theater/add-theater")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "theater",
   },
   "movie.theater.edit": {
     key: "movie.theater.edit",
     path: `${APP_PREFIX_PATH}/movie-theater/edit/:theaterId`,
     component: React.lazy(() => import("views/theater/edit-theater")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "theater",
   },
   "movie.theater.detail": {
     key: "movie.theater.detail",
     path: `${APP_PREFIX_PATH}/movie-theater/detail/:theaterId`,
     component: React.lazy(() => import("views/theater/details-theater")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "theater",
   },
   "movie.theater.company.add": {
     key: "movie.theater.company.add",
     path: `${APP_PREFIX_PATH}/movie-theater-company/add`,
     component: React.lazy(() => import("views/theater/add-company")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "theater",
   },
   "movie.theater.company.edit": {
     key: "movie.theater.company.edit",
     path: `${APP_PREFIX_PATH}/movie-theater-company/edit/:company_id`,
     component: React.lazy(() => import("views/theater/edit-company")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "theater",
   },
   "movie.screen": {
     key: "movie.screen",
     path: `${APP_PREFIX_PATH}/screen/list`,
     component: React.lazy(() => import("views/screen/screen-list")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "screen",
   },
   "movie.screen.add": {
     key: "movie.screen.add",
     path: `${APP_PREFIX_PATH}/screen/add`,
     component: React.lazy(() => import("views/screen/screen-add")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "screen",
   },
   "movie.screen.edit": {
     key: "movie.screen.edit",
     path: `${APP_PREFIX_PATH}/screen/edit/:screenId`,
     component: React.lazy(() => import("views/screen/screen-edit")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "screen",
   },
   "movie.screen.detail": {
     key: "movie.screen.detail",
     path: `${APP_PREFIX_PATH}/screen/detail/:screenId`,
     component: React.lazy(() => import("views/screen/screen-detail")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "screen",
   },
   "movie.seat": {
     key: "seat.movie.list",
     path: `${APP_PREFIX_PATH}/seat/movie/list`,
     component: React.lazy(() => import("views/seat/movie/list-seat")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "seat",
   },
   "movie.seat.add": {
     key: "seat.movie.add",
     path: `${APP_PREFIX_PATH}/seat/movie/add`,
     component: React.lazy(() => import("views/seat/movie/add-seat")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "seat",
   },
   "movie.seat.edit": {
     key: "seat.movie.edit",
     path: `${APP_PREFIX_PATH}/seat/movie/edit/:seatId/:pageType?`,
     component: React.lazy(() => import("views/seat/movie/edit-seat")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "seat",
   },
   "movie.seat.details": {
     key: "seat.movie.details",
     path: `${APP_PREFIX_PATH}/seat/movie/:seatId`,
     component: React.lazy(() => import("views/seat/movie/details-seat")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "seat",
   },
   "movie.cast": {
     key: "movie.cast",
     path: `${APP_PREFIX_PATH}/personality/list`,
     component: React.lazy(() => import("views/Movie/cast/cast-list")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "cast",
   },
   "movie.cast.add": {
     key: "movie.cast.add",
     path: `${APP_PREFIX_PATH}/personality/add`,
     component: React.lazy(() => import("views/Movie/cast/cast-add")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "cast",
   },
   "movie.cast.details": {
     key: "movie.cast.details",
     path: `${APP_PREFIX_PATH}/personality/details/:id`,
     component: React.lazy(() => import("views/Movie/cast/cast-details")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "cast",
   },
   "movie.cast.edit": {
     key: "movie.cast.edit",
     path: `${APP_PREFIX_PATH}/personality/edit/:id`,
     component: React.lazy(() => import("views/Movie/cast/cast-edit")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "cast",
   },
   "movie.list": {
     key: "movie.movie.list",
     path: `${APP_PREFIX_PATH}/movie/list`,
     component: React.lazy(() => import("views/Movie/movie-list")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "movie",
   },
   "movie.add": {
     key: "movie.movie.add",
     path: `${APP_PREFIX_PATH}/movie/add`,
     component: React.lazy(() => import("views/Movie/movie-add")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "movie",
   },
   "movie.edit": {
     key: "movie.movie.edit",
     path: `${APP_PREFIX_PATH}/movie/edit/:id`,
     component: React.lazy(() => import("views/Movie/movie-edit")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "movie",
   },
   "movie.details": {
     key: "movie.movie.details",
     path: `${APP_PREFIX_PATH}/movie/details/:id`,
     component: React.lazy(() => import("views/Movie/movie-detail")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "movie",
   },
   "movie.schedule": {
     key: "movie.schedule.list",
     path: `${APP_PREFIX_PATH}/movie-schedule/list`,
     component: React.lazy(() => import("views/schedule/movie/schedule-list")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "schedule",
   },
   "movie.schedule.add": {
     key: "movie.schedule.add",
     path: `${APP_PREFIX_PATH}/movie-schedule/add`,
     component: React.lazy(() => import("views/schedule/movie/schedule-add")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "schedule",
   },
   "movie.schedule.details": {
     key: "movie.schedule.details",
     path: `${APP_PREFIX_PATH}/movie-schedule/details/:scheduleId`,
     component: React.lazy(() => import("views/schedule/movie/schedule-detail")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "schedule",
   },
   "movie.offer": {
     key: "movie.offer",
     path: `${APP_PREFIX_PATH}/offer/list/movie`,
     component: React.lazy(() => import("views/offer/list-offer")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "offer",
   },
   "movie.coupon": {
     key: "movie.coupon",
     path: `${APP_PREFIX_PATH}/coupon/list/movie`,
     component: React.lazy(() => import("views/coupon/list-coupon")),
-    feature: "is_movie_enabled",
+    category: "services",
+    subcategory: "movie",
+    item: "coupon",
   },
 
   // Dine Services
@@ -530,31 +746,41 @@ const ALL_PROTECTED_ROUTES = {
     key: "dine.list",
     path: `${APP_PREFIX_PATH}/dine/list`,
     component: React.lazy(() => import("views/dine/list-dine")),
-    feature: "is_dine_enabled",
+    category: "services",
+    subcategory: "dine",
+    item: "restaurant",
   },
   "dine.add": {
     key: "dine.add",
     path: `${APP_PREFIX_PATH}/dine/add`,
     component: React.lazy(() => import("views/dine/add-dine")),
-    feature: "is_dine_enabled",
+    category: "services",
+    subcategory: "dine",
+    item: "restaurant",
   },
   "dine.restaurant": {
     key: "dine.restaurant",
     path: `${APP_PREFIX_PATH}/restaurant/list`,
     component: React.lazy(() => import("views/dine/list-restaurant")),
-    feature: "is_dine_enabled",
+    category: "services",
+    subcategory: "dine",
+    item: "restaurant",
   },
   "dine.restaurant.add": {
     key: "restaurant.add",
     path: `${APP_PREFIX_PATH}/restaurant/add`,
     component: React.lazy(() => import("views/dine/add-restaurant")),
-    feature: "is_dine_enabled",
+    category: "services",
+    subcategory: "dine",
+    item: "restaurant",
   },
   "dine.schedule": {
     key: "dine.schedule",
     path: `${APP_PREFIX_PATH}/dine/schedule/list`,
     component: React.lazy(() => import("views/dine/Schedule/schedule-list")),
-    feature: "is_dine_enabled",
+    category: "services",
+    subcategory: "dine",
+    item: "schedule",
   },
 
   // Issues
@@ -564,7 +790,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-views/apps/issues/issue-list")
     ),
-    feature: "is_issue_tracking_enabled",
+    category: "issues",
+    subcategory: "issue_tracking",
+    item: "issue",
   },
   "issue.add": {
     key: "issue.add",
@@ -572,7 +800,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-views/apps/issues/add-issue")
     ),
-    feature: "is_issue_tracking_enabled",
+    category: "issues",
+    subcategory: "issue_tracking",
+    item: "issue",
   },
   "issue.details": {
     key: "issue.details",
@@ -580,7 +810,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-views/apps/issues/issue-details")
     ),
-    feature: "is_issue_tracking_enabled",
+    category: "issues",
+    subcategory: "issue_tracking",
+    item: "issue",
   },
   "alerts.list": {
     key: "alerts.list",
@@ -588,7 +820,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-views/apps/alerts/alerts-list")
     ),
-    feature: "is_issue_tracking_enabled",
+    category: "issues",
+    subcategory: "issue_tracking",
+    item: "alert",
   },
   "alerts.details": {
     key: "alerts.details",
@@ -596,7 +830,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-views/apps/alerts/alerts-details")
     ),
-    feature: "is_issue_tracking_enabled",
+    category: "issues",
+    subcategory: "issue_tracking",
+    item: "alert",
   },
 
   // Track Requests
@@ -606,7 +842,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/track-team/event-organizer/update-list")
     ),
-    feature: "is_track_requests_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "event",
   },
   "track.event.organizer.details": {
     key: "org.details",
@@ -614,7 +852,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/track-team/event-organizer/update-list-details/index.js")
     ),
-    feature: "is_track_requests_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "event",
   },
   "track.event.organizer.edit": {
     key: "org.event.edit",
@@ -622,23 +862,29 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/track-team/event-organizer/update-edit/index")
     ),
-    feature: "is_track_requests_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "event",
   },
   "track.movie.seats": {
     key: "trackRequest.movie.seats.status.list",
-    path: `${APP_PREFIX_PATH}/track/moive-seats/status/list`,
+    path: `${APP_PREFIX_PATH}/track/movie-seats/status/list`,
     component: React.lazy(() =>
       import("views/track-team/movie-organizer/seat-organizer/status-list")
     ),
-    feature: "is_movie_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
   },
   "track.movie.seats.details": {
     key: "trackRequest.movie.seats.status.details",
-    path: `${APP_PREFIX_PATH}/track/moive-seats/status/details/:seatId`,
+    path: `${APP_PREFIX_PATH}/track/movie-seats/status/details/:seatId`,
     component: React.lazy(() =>
       import("views/track-team/movie-organizer/seat-organizer/status-details")
     ),
-    feature: "is_movie_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
   },
   "track.movie.offer": {
     key: "trackRequest.offer.status",
@@ -646,7 +892,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/track-team/offer-organizer/status-list")
     ),
-    feature: "is_movie_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
   },
   "track.movie.offer.details": {
     key: "trackRequest.offer.status.details",
@@ -654,7 +902,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/track-team/offer-organizer/status-details")
     ),
-    feature: "is_movie_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
   },
   "track.movie.coupon": {
     key: "trackRequest.coupon.status",
@@ -662,7 +912,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/track-team/coupon-organizer/status-list")
     ),
-    feature: "is_movie_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
   },
   "track.movie.coupon.details": {
     key: "trackRequest.coupon.status.details",
@@ -670,33 +922,41 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/track-team/coupon-organizer/status-details")
     ),
-    feature: "is_movie_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
   },
   "track.movie.schedule": {
     key: "trackRequest.movie.schedule.status.list",
-    path: `${APP_PREFIX_PATH}/track/moive-schedule/status/list/:type`,
+    path: `${APP_PREFIX_PATH}/track/movie-schedule/status/list/movie`,
     component: React.lazy(() =>
       import("views/track-team/movie-organizer/Schedule-organizer/status-list")
     ),
-    feature: "is_movie_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
   },
   "track.movie.schedule.details": {
     key: "trackRequest.movie.schedule.status.detail",
-    path: `${APP_PREFIX_PATH}/track/moive-schedule/status/detail/:scheduleId`,
+    path: `${APP_PREFIX_PATH}/track/movie-schedule/status/detail/:scheduleId`,
     component: React.lazy(() =>
       import(
         "views/track-team/movie-organizer/Schedule-organizer/status-detail"
       )
     ),
-    feature: "is_movie_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
   },
   "track.movie.screen": {
     key: "trackRequest.movie.screen.status.list",
-    path: `${APP_PREFIX_PATH}/track/moive-screens/status/list`,
+    path: `${APP_PREFIX_PATH}/track/movie-screens/status/list`,
     component: React.lazy(() =>
       import("views/track-team/movie-organizer/screen-organizer/status-list")
     ),
-    feature: "is_movie_enabled",
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
   },
 
   // Lead Events
@@ -704,37 +964,49 @@ const ALL_PROTECTED_ROUTES = {
     key: "lead.event.list",
     path: `${APP_PREFIX_PATH}/leadevent/list`,
     component: React.lazy(() => import("views/leadevent/eventrequest-list")),
-    feature: "is_lead_events_enabled",
+    category: "issues",
+    subcategory: "lead_events",
+    item: "event_request_list",
   },
   "lead.event.details": {
     key: "lead.event.details",
     path: `${APP_PREFIX_PATH}/leadevent/details/:eventId`,
     component: React.lazy(() => import("views/leadevent/lead-details")),
-    feature: "is_lead_events_enabled",
+    category: "issues",
+    subcategory: "lead_events",
+    item: "event_request_list",
   },
   "lead.event.add": {
     key: "lead.event.add",
     path: `${APP_PREFIX_PATH}/event/add/:eventId`,
     component: React.lazy(() => import("views/leadevent/add-leadevent")),
-    feature: "is_lead_events_enabled",
+    category: "issues",
+    subcategory: "lead_events",
+    item: "event_request_list",
   },
   "lead.event.convert": {
     key: "lead.event.convert.list",
     path: `${APP_PREFIX_PATH}/leadevent/convert`,
     component: React.lazy(() => import("views/leadevent/convertevent-list")),
-    feature: "is_lead_events_enabled",
+    category: "issues",
+    subcategory: "lead_events",
+    item: "event_request_list",
   },
   "lead.event.convert.details": {
     key: "lead.event.convert.details",
     path: `${APP_PREFIX_PATH}/leadevent/convert/details/:eventId`,
     component: React.lazy(() => import("views/leadevent/convert-details")),
-    feature: "is_lead_events_enabled",
+    category: "issues",
+    subcategory: "lead_events",
+    item: "event_request_list",
   },
   "lead.event.edit": {
     key: "lead.event.edit",
     path: `${APP_PREFIX_PATH}/leadevent/edit/:eventId`,
     component: React.lazy(() => import("views/leadevent/edit- leadevent")),
-    feature: "is_lead_events_enabled",
+    category: "issues",
+    subcategory: "lead_events",
+    item: "event_request_list",
   },
 
   // Advertisement
@@ -744,7 +1016,8 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/advertisement/category/list-ad-category")
     ),
-    feature: "is_advertisement_enabled",
+    category: "advertisements",
+    subcategory: "ad_category",
   },
   "advertisement.category.add": {
     key: "advertisement.category.add",
@@ -752,7 +1025,8 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/advertisement/category/add-ad-category")
     ),
-    feature: "is_advertisement_enabled",
+    category: "advertisements",
+    subcategory: "ad_category",
   },
   "advertisement.category.edit": {
     key: "advertisement.category.edit",
@@ -760,7 +1034,8 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/advertisement/category/edit-ad-category")
     ),
-    feature: "is_advertisement_enabled",
+    category: "advertisements",
+    subcategory: "ad_category",
   },
   "advertisement.banner": {
     key: "advertisement.banner.list",
@@ -768,7 +1043,8 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/advertisement/banner/list-ad-banner")
     ),
-    feature: "is_advertisement_enabled",
+    category: "advertisements",
+    subcategory: "banners",
   },
   "advertisement.banner.add": {
     key: "advertisement.banner.add",
@@ -776,7 +1052,8 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/advertisement/banner/add-ad-banner")
     ),
-    feature: "is_advertisement_enabled",
+    category: "advertisements",
+    subcategory: "banners",
   },
   "advertisement.banner.edit": {
     key: "advertisement.banner.edit",
@@ -784,7 +1061,8 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/advertisement/banner/edit-ad-banner")
     ),
-    feature: "is_advertisement_enabled",
+    category: "advertisements",
+    subcategory: "banners",
   },
   "advertisement.schedule": {
     key: "advertisement.schedule.list",
@@ -792,7 +1070,8 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/advertisement/schedule/list-ad-schedule")
     ),
-    feature: "is_advertisement_enabled",
+    category: "advertisements",
+    subcategory: "schedule",
   },
   "advertisement.schedule.add": {
     key: "advertisement.schedule.add",
@@ -800,7 +1079,8 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/advertisement/schedule/add-ad-schedule")
     ),
-    feature: "is_advertisement_enabled",
+    category: "advertisements",
+    subcategory: "schedule",
   },
   "advertisement.schedule.edit": {
     key: "advertisement.schedule.edit",
@@ -808,7 +1088,8 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/advertisement/schedule/edit-ad-schedule/index")
     ),
-    feature: "is_advertisement_enabled",
+    category: "advertisements",
+    subcategory: "schedule",
   },
 
   // Newsletter
@@ -816,19 +1097,22 @@ const ALL_PROTECTED_ROUTES = {
     key: "news-letter.list",
     path: `${APP_PREFIX_PATH}/news-letter/list/`,
     component: React.lazy(() => import("views/news-letter/newsLetter/list")),
-    feature: "is_newsletter_enabled",
+    category: "newsletter",
+    subcategory: "newsletter",
   },
   "newsletter.add": {
     key: "news-letter.add",
     path: `${APP_PREFIX_PATH}/news-letter/add/`,
     component: React.lazy(() => import("views/news-letter/newsLetter/add")),
-    feature: "is_newsletter_enabled",
+    category: "newsletter",
+    subcategory: "newsletter",
   },
   "newsletter.subscriber": {
     key: "news-letter.subscriber.list",
     path: `${APP_PREFIX_PATH}/news-letter/subscriber/list/`,
     component: React.lazy(() => import("views/news-letter/subscribers/list")),
-    feature: "is_newsletter_enabled",
+    category: "newsletter",
+    subcategory: "subscribers",
   },
 
   // User Management
@@ -836,25 +1120,29 @@ const ALL_PROTECTED_ROUTES = {
     key: "user.list",
     path: `${APP_PREFIX_PATH}/user/list`,
     component: React.lazy(() => import("views/user/list-user")),
-    feature: "is_user_management_enabled",
+    category: "user_management",
+    subcategory: "user",
   },
   "user.add": {
     key: "user.add",
     path: `${APP_PREFIX_PATH}/user/add`,
     component: React.lazy(() => import("views/user/add-user")),
-    feature: "is_user_management_enabled",
+    category: "user_management",
+    subcategory: "user",
   },
   "user.edit": {
     key: "user.edit",
     path: `${APP_PREFIX_PATH}/user/edit/:userId`,
     component: React.lazy(() => import("views/user/edit-user/index")),
-    feature: "is_user_management_enabled",
+    category: "user_management",
+    subcategory: "user",
   },
   "access.control": {
     key: "accessControl.list",
     path: `${APP_PREFIX_PATH}/access-control/list`,
     component: React.lazy(() => import("views/access-premissions/access-list")),
-    feature: "is_user_management_enabled",
+    category: "user_management",
+    subcategory: "system_permissions",
   },
 
   // App Management
@@ -864,7 +1152,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-managment/layout/footer/list-footer")
     ),
-    feature: "is_app_management_enabled",
+    category: "app_management",
+    subcategory: "layout",
+    item: "footer",
   },
   "app.footer.add": {
     key: "app.management.layout.footer.add",
@@ -872,7 +1162,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-managment/layout/footer/add-footer")
     ),
-    feature: "is_app_management_enabled",
+    category: "app_management",
+    subcategory: "layout",
+    item: "footer",
   },
   "app.faq": {
     key: "app.management.layout.faq.list",
@@ -880,7 +1172,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-managment/layout/faq/list-faq/index")
     ),
-    feature: "is_app_management_enabled",
+    category: "app_management",
+    subcategory: "layout",
+    item: "faq",
   },
   "app.faq.add": {
     key: "app.management.layout.faq.add-faq",
@@ -888,7 +1182,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-managment/layout/faq/add-faq")
     ),
-    feature: "is_app_management_enabled",
+    category: "app_management",
+    subcategory: "layout",
+    item: "faq",
   },
   "app.faq.edit": {
     key: "app.management.layout.faq.edit-faq",
@@ -896,7 +1192,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-managment/layout/faq/edit-faq")
     ),
-    feature: "is_app_management_enabled",
+    category: "app_management",
+    subcategory: "layout",
+    item: "faq",
   },
   "app.info": {
     key: "app.management.layout.info.list",
@@ -904,7 +1202,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-managment/layout/app-info/list-info")
     ),
-    feature: "is_app_management_enabled",
+    category: "app_management",
+    subcategory: "layout",
+    item: "app_info",
   },
   "app.info.add": {
     key: "app.management.layout.info.add",
@@ -912,7 +1212,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-managment/layout/app-info/add-info/index")
     ),
-    feature: "is_app_management_enabled",
+    category: "app_management",
+    subcategory: "layout",
+    item: "app_info",
   },
   "app.terms": {
     key: "app.management.layout.terms.list",
@@ -920,7 +1222,9 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-managment/layout/terms/list-terms")
     ),
-    feature: "is_app_management_enabled",
+    category: "app_management",
+    subcategory: "layout",
+    item: "terms",
   },
   "app.terms.add": {
     key: "app.management.layout.terms.add",
@@ -928,17 +1232,19 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import("views/app-managment/layout/terms/add-term")
     ),
-    feature: "is_app_management_enabled",
+    category: "app_management",
+    subcategory: "layout",
+    item: "terms",
   },
 
-  // Mail
+  // Mail (no feature flag)
   "mail.list": {
     key: "mail.list",
     path: `${APP_PREFIX_PATH}/mail/list`,
     component: React.lazy(() => import("views/app-views/apps/mail/mail-list")),
   },
 
-  // Additional Super Admin Routes (without feature flags)
+  // Additional Super Admin Routes (no feature flags)
   "super.admin.organizer.details": {
     key: "super.admin.organizer.details",
     path: `${APP_PREFIX_PATH}/super-admin/organizer-details/:organizerId`,
@@ -1026,16 +1332,16 @@ export const publicRoutes = [
   },
 ];
 
-// Helper function to check if a feature is enabled
-const isFeatureEnabled = (feature) => {
-  if (!feature) return true;
-  return FEATURE_FLAGS[feature] === true;
-};
-
-// Function to get filtered routes based on feature flags
+// Enhanced function to get filtered routes based on hierarchical feature flags
 const getFilteredProtectedRoutes = () => {
   return Object.values(ALL_PROTECTED_ROUTES).filter((route) => {
-    return isFeatureEnabled(route.feature);
+    // Check hierarchical feature flags
+    return isRouteFeatureEnabled(
+      route.feature, // Legacy feature flag (for backward compatibility)
+      route.category,
+      route.subcategory,
+      route.item
+    );
   });
 };
 

@@ -8,25 +8,207 @@ import { APP_PREFIX_PATH, FEATURE_FLAGS } from "configs/AppConfig";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { jwtDecode } from "jwt-decode";
+import {
+  isCategoryEnabled,
+  isSubcategoryEnabled,
+  isItemEnabled,
+} from "utils/navigationUtils";
 
-// Define feature categories for better organization
+// Updated feature categories mapping to new structure
 const FEATURE_CATEGORIES = {
-  REPORTS: "is_reports_enabled",
-  GENERAL: "is_general_enabled",
-  EVENT: "is_event_enabled",
-  MOVIE: "is_movie_enabled",
-  DINE: "is_dine_enabled",
-  ISSUE_TRACKING: "is_issue_tracking_enabled",
-  TRACK_REQUESTS: "is_track_requests_enabled",
-  LEAD_EVENTS: "is_lead_events_enabled",
-  ADVERTISEMENT: "is_advertisement_enabled",
-  NEWSLETTER: "is_newsletter_enabled",
-  USER_MANAGEMENT: "is_user_management_enabled",
-  APP_MANAGEMENT: "is_app_management_enabled",
+  REPORTS: "orders",
+  GENERAL: "services.general",
+  EVENT: "services.event",
+  MOVIE: "services.movie",
+  DINE: "services.dine",
+  ISSUE_TRACKING: "issues.issue_tracking",
+  TRACK_REQUESTS: "issues.track_requests",
+  LEAD_EVENTS: "issues.lead_events",
+  ADVERTISEMENT: "advertisements",
+  NEWSLETTER: "newsletter",
+  USER_MANAGEMENT: "user_management",
+  APP_MANAGEMENT: "app_management",
+};
+
+/**
+ * Build dynamic submenu items based on feature flags
+ * @param {string} category - Main category
+ * @param {string} subcategory - Subcategory (optional)
+ * @param {Array} items - Array of submenu items to filter
+ * @returns {Array} - Filtered submenu items
+ */
+const buildDynamicSubmenu = (category, subcategory, items) => {
+  return items.filter((item) => {
+    // Handle orders submenu filtering
+    if (category === "orders") {
+      if (item.key === "reports.orders.event") {
+        return isSubcategoryEnabled("orders", "event");
+      }
+      if (item.key === "reports.orders.movie") {
+        return isSubcategoryEnabled("orders", "movie");
+      }
+    }
+
+    // Handle services filtering
+    if (category === "services" && subcategory) {
+      // For general services
+      if (subcategory === "general") {
+        const itemMap = {
+          "place.list": "place",
+          "venue.list": "venue",
+          "tax.list": "tax",
+          "category.list": "category",
+          "offer.list": "offer",
+          "coupon.list": "coupon",
+          "seat.list": "seat",
+          "sidenav.payment": "payment",
+        };
+        const featureItem = itemMap[item.key];
+        if (featureItem) {
+          return isItemEnabled("services", "general", featureItem);
+        }
+      }
+
+      // For event services
+      if (subcategory === "event") {
+        const itemMap = {
+          "event.type.list": "event_type",
+          "ticket.list": "ticket",
+          "seat.event.list": "seat",
+          "event.list": "event",
+          "schedule.list": "schedule",
+        };
+        const featureItem = itemMap[item.key];
+        if (featureItem) {
+          return isItemEnabled("services", "event", featureItem);
+        }
+      }
+
+      // For movie services
+      if (subcategory === "movie") {
+        const itemMap = {
+          "movie.theater": "theater",
+          "movie.screen": "screen",
+          "movie.seat": "seat",
+          "movie.cast": "cast",
+          "movie.movie": "movie",
+          "movie.schedule": "schedule",
+          "movie.offer.list": "offer",
+          "movie.coupon.list": "coupon",
+        };
+        const featureItem = itemMap[item.key];
+        if (featureItem) {
+          return isItemEnabled("services", "movie", featureItem);
+        }
+      }
+
+      // For dine services
+      if (subcategory === "dine") {
+        const itemMap = {
+          "dine.dine": "restaurant",
+          "dine.restaurant": "restaurant",
+          "dine.schedule": "schedule",
+        };
+        const featureItem = itemMap[item.key];
+        if (featureItem) {
+          return isItemEnabled("services", "dine", featureItem);
+        }
+      }
+    }
+
+    // Handle issues filtering
+    if (category === "issues" && subcategory) {
+      // For issue tracking
+      if (subcategory === "issue_tracking") {
+        const itemMap = {
+          "issue.list": "issue",
+          "alerts.list": "alert",
+        };
+        const featureItem = itemMap[item.key];
+        if (featureItem) {
+          return isItemEnabled("issues", "issue_tracking", featureItem);
+        }
+      }
+
+      // For track requests
+      if (subcategory === "track_requests") {
+        if (item.key && item.key.includes("event")) {
+          return isItemEnabled("issues", "track_requests", "event");
+        }
+        if (item.key && item.key.includes("movie")) {
+          return isItemEnabled("issues", "track_requests", "movie");
+        }
+      }
+
+      // For lead events
+      if (subcategory === "lead_events") {
+        const itemMap = {
+          "customerEvent.update": "event_request_list",
+        };
+        const featureItem = itemMap[item.key];
+        if (featureItem) {
+          return isItemEnabled("issues", "lead_events", featureItem);
+        }
+      }
+    }
+
+    // Handle advertisements filtering
+    if (category === "advertisements") {
+      const itemMap = {
+        "advertisement.category.list": "ad_category",
+        "advertisement.banner.list": "banners",
+        "advertisement.schedule.list": "schedule",
+      };
+      const featureItem = itemMap[item.key];
+      if (featureItem) {
+        return isSubcategoryEnabled("advertisements", featureItem);
+      }
+    }
+
+    // Handle newsletter filtering
+    if (category === "newsletter") {
+      const itemMap = {
+        "news-letter.list": "newsletter",
+        "news-letter.subscriber.list": "subscribers",
+      };
+      const featureItem = itemMap[item.key];
+      if (featureItem) {
+        return isSubcategoryEnabled("newsletter", featureItem);
+      }
+    }
+
+    // Handle user management filtering
+    if (category === "user_management") {
+      const itemMap = {
+        "user.list": "user",
+        "accessControl.list": "system_permissions",
+      };
+      const featureItem = itemMap[item.key];
+      if (featureItem) {
+        return isSubcategoryEnabled("user_management", featureItem);
+      }
+    }
+
+    // Handle app management filtering
+    if (category === "app_management") {
+      const itemMap = {
+        "app.management.layout.footer.list": "footer",
+        "app.management.layout.faq.list": "faq",
+        "app.management.layout.info.list": "app_info",
+        "app.management.layout.terms.list": "terms",
+      };
+      const featureItem = itemMap[item.key];
+      if (featureItem) {
+        return isItemEnabled("app_management", "layout", featureItem);
+      }
+    }
+
+    return true; // Default: keep item if no specific rule
+  });
 };
 
 const ALL_NAVIGATION_ITEMS = {
-  // Reports - All items under is_reports_enabled
+  // Reports - All items under orders (dynamic submenu)
   "reports.dashboard": {
     key: "super-admin.reports",
     path: `${APP_PREFIX_PATH}/super-admin/reports`,
@@ -42,24 +224,27 @@ const ALL_NAVIGATION_ITEMS = {
     title: "sidenav.apps.admin.reports.orders",
     icon: DashboardOutlined,
     breadcrumb: false,
-    submenu: [
-      {
-        key: "reports.orders.event",
-        path: `${APP_PREFIX_PATH}/reports/orders/event`,
-        title: "sidenav.event",
-        icon: DashboardOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-      {
-        key: "reports.orders.movie",
-        path: `${APP_PREFIX_PATH}/reports/orders/movie`,
-        title: "sidenav.movie",
-        icon: DashboardOutlined,
-        breadcrumb: false,
-        submenu: [],
-      },
-    ],
+    get submenu() {
+      const allSubmenuItems = [
+        {
+          key: "reports.orders.event",
+          path: `${APP_PREFIX_PATH}/reports/orders/event`,
+          title: "sidenav.event",
+          icon: DashboardOutlined,
+          breadcrumb: false,
+          submenu: [],
+        },
+        {
+          key: "reports.orders.movie",
+          path: `${APP_PREFIX_PATH}/reports/orders/movie`,
+          title: "sidenav.movie",
+          icon: DashboardOutlined,
+          breadcrumb: false,
+          submenu: [],
+        },
+      ];
+      return buildDynamicSubmenu("orders", null, allSubmenuItems);
+    },
     category: FEATURE_CATEGORIES.REPORTS,
   },
   "organizer.reports.dashboard": {
@@ -72,7 +257,7 @@ const ALL_NAVIGATION_ITEMS = {
     category: FEATURE_CATEGORIES.REPORTS,
   },
 
-  // General Services - All items under is_general_enabled
+  // General Services - All items under services.general
   "general.place": {
     key: "place.list",
     path: `${APP_PREFIX_PATH}/place/list`,
@@ -81,6 +266,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.GENERAL,
+    featureItem: "place",
   },
   "general.venue": {
     key: "venue.list",
@@ -90,6 +276,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.GENERAL,
+    featureItem: "venue",
   },
   "general.tax": {
     key: "tax.list",
@@ -99,6 +286,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.GENERAL,
+    featureItem: "tax",
   },
   "general.category": {
     key: "category.list",
@@ -108,6 +296,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.GENERAL,
+    featureItem: "category",
   },
   "general.offer": {
     key: "offer.list",
@@ -117,6 +306,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.GENERAL,
+    featureItem: "offer",
   },
   "general.coupon": {
     key: "coupon.list",
@@ -126,6 +316,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.GENERAL,
+    featureItem: "coupon",
   },
   "general.seat": {
     key: "seat.list",
@@ -135,6 +326,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.GENERAL,
+    featureItem: "seat",
   },
   "general.payment": {
     key: "sidenav.payment",
@@ -144,9 +336,10 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.GENERAL,
+    featureItem: "payment",
   },
 
-  // Event Services - All items under is_event_enabled
+  // Event Services - All items under services.event
   "event.type": {
     key: "event.type.list",
     path: `${APP_PREFIX_PATH}/event/type/list`,
@@ -155,6 +348,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.EVENT,
+    featureItem: "event_type",
   },
   "event.ticket": {
     key: "ticket.list",
@@ -164,6 +358,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.EVENT,
+    featureItem: "ticket",
   },
   "event.seat": {
     key: "seat.event.list",
@@ -173,6 +368,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.EVENT,
+    featureItem: "seat",
   },
   "event.list": {
     key: "event.list",
@@ -182,6 +378,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.EVENT,
+    featureItem: "event",
   },
   "event.schedule": {
     key: "schedule.list",
@@ -191,9 +388,10 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.EVENT,
+    featureItem: "schedule",
   },
 
-  // Movie Services - All items under is_movie_enabled
+  // Movie Services - All items under services.movie
   "movie.theater": {
     key: "movie.theater",
     path: `${APP_PREFIX_PATH}/movie-theater-company/list`,
@@ -202,6 +400,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.MOVIE,
+    featureItem: "theater",
   },
   "movie.screen": {
     key: "movie.screen",
@@ -211,6 +410,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.MOVIE,
+    featureItem: "screen",
   },
   "movie.seat": {
     key: "movie.seat",
@@ -220,6 +420,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.MOVIE,
+    featureItem: "seat",
   },
   "movie.cast": {
     key: "movie.cast",
@@ -229,6 +430,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.MOVIE,
+    featureItem: "cast",
   },
   "movie.list": {
     key: "movie.movie",
@@ -238,6 +440,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.MOVIE,
+    featureItem: "movie",
   },
   "movie.schedule": {
     key: "movie.schedule",
@@ -247,6 +450,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.MOVIE,
+    featureItem: "schedule",
   },
   "movie.offer": {
     key: "movie.offer.list",
@@ -256,6 +460,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.MOVIE,
+    featureItem: "offer",
   },
   "movie.coupon": {
     key: "movie.coupon.list",
@@ -265,9 +470,10 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.MOVIE,
+    featureItem: "coupon",
   },
 
-  // Dine Services - All items under is_dine_enabled
+  // Dine Services - All items under services.dine
   "dine.list": {
     key: "dine.dine",
     path: `${APP_PREFIX_PATH}/dine/list`,
@@ -276,6 +482,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.DINE,
+    featureItem: "restaurant",
   },
   "dine.restaurant": {
     key: "dine.restaurant",
@@ -285,6 +492,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.DINE,
+    featureItem: "restaurant",
   },
   "dine.schedule": {
     key: "dine.schedule",
@@ -294,9 +502,10 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.DINE,
+    featureItem: "schedule",
   },
 
-  // Issues - All items under is_issue_tracking_enabled
+  // Issues - All items under issues.issue_tracking
   "issue.list": {
     key: "issue.list",
     path: `${APP_PREFIX_PATH}/issue/list`,
@@ -305,6 +514,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.ISSUE_TRACKING,
+    featureItem: "issue",
   },
   "alerts.list": {
     key: "alerts.list",
@@ -314,9 +524,10 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.ISSUE_TRACKING,
+    featureItem: "alert",
   },
 
-  // Track Requests - All items under is_track_requests_enabled
+  // Track Requests - All items under issues.track_requests
   "track.event.organizer": {
     key: "eventOrganiser.update",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
@@ -325,6 +536,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.TRACK_REQUESTS,
+    featureItem: "event",
   },
   "track.movie.seats": {
     key: "trackRequest.movie.seats.status.list",
@@ -334,6 +546,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.TRACK_REQUESTS,
+    featureItem: "movie",
   },
   "track.movie.offer": {
     key: "trackRequest.movie.offer.status.list",
@@ -343,6 +556,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.TRACK_REQUESTS,
+    featureItem: "movie",
   },
   "track.movie.coupon": {
     key: "trackRequest.movie.coupon.status.list",
@@ -352,6 +566,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.TRACK_REQUESTS,
+    featureItem: "movie",
   },
   "track.movie.schedule": {
     key: "trackRequest.movie.schedule.status.list",
@@ -361,6 +576,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.TRACK_REQUESTS,
+    featureItem: "movie",
   },
   "track.movie.screen": {
     key: "trackRequest.movie.screen.status.list",
@@ -370,9 +586,10 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.TRACK_REQUESTS,
+    featureItem: "movie",
   },
 
-  // Lead Events - All items under is_lead_events_enabled
+  // Lead Events - All items under issues.lead_events
   "lead.event": {
     key: "customerEvent.update",
     path: `${APP_PREFIX_PATH}/leadevent/list`,
@@ -381,9 +598,10 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.LEAD_EVENTS,
+    featureItem: "event_request_list",
   },
 
-  // Advertisement - All items under is_advertisement_enabled
+  // Advertisement - All items under advertisements
   "advertisement.category": {
     key: "advertisement.category.list",
     path: `${APP_PREFIX_PATH}/advertisement/category/list`,
@@ -392,6 +610,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.ADVERTISEMENT,
+    featureItem: "ad_category",
   },
   "advertisement.banner": {
     key: "advertisement.banner.list",
@@ -401,6 +620,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.ADVERTISEMENT,
+    featureItem: "banners",
   },
   "advertisement.schedule": {
     key: "advertisement.schedule.list",
@@ -410,9 +630,10 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.ADVERTISEMENT,
+    featureItem: "schedule",
   },
 
-  // Newsletter - All items under is_newsletter_enabled
+  // Newsletter - All items under newsletter
   "newsletter.list": {
     key: "news-letter.list",
     path: `${APP_PREFIX_PATH}/news-letter/list/`,
@@ -421,6 +642,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.NEWSLETTER,
+    featureItem: "newsletter",
   },
   "newsletter.subscriber": {
     key: "news-letter.subscriber.list",
@@ -430,9 +652,10 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.NEWSLETTER,
+    featureItem: "subscribers",
   },
 
-  // User Management - All items under is_user_management_enabled
+  // User Management - All items under user_management
   "user.list": {
     key: "user.list",
     path: `${APP_PREFIX_PATH}/user/list`,
@@ -441,6 +664,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.USER_MANAGEMENT,
+    featureItem: "user",
   },
   "access.control": {
     key: "accessControl.list",
@@ -450,9 +674,11 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.USER_MANAGEMENT,
+    featureItem: "system_permissions",
   },
+  
 
-  // App Management - All items under is_app_management_enabled
+  // App Management - All items under app_management
   "app.footer": {
     key: "app.management.layout.footer.list",
     path: `${APP_PREFIX_PATH}/app/management/layout/footer/list`,
@@ -461,6 +687,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.APP_MANAGEMENT,
+    featureItem: "footer",
   },
   "app.faq": {
     key: "app.management.layout.faq.list",
@@ -470,6 +697,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.APP_MANAGEMENT,
+    featureItem: "faq",
   },
   "app.info": {
     key: "app.management.layout.info.list",
@@ -479,6 +707,7 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.APP_MANAGEMENT,
+    featureItem: "app_info",
   },
   "app.terms": {
     key: "app.management.layout.terms.list",
@@ -488,10 +717,11 @@ const ALL_NAVIGATION_ITEMS = {
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.APP_MANAGEMENT,
+    featureItem: "terms",
   },
 };
 
-// Role-based navigation access mapping
+// Role-based navigation access mapping (unchanged)
 const ROLE_NAVIGATION_ACCESS = {
   [UserRoleConstants.superAdminRoleId]: [
     // Reports
@@ -750,13 +980,31 @@ const ROLE_NAVIGATION_ACCESS = {
 };
 
 /**
- * Check if a feature is enabled based on feature flags
- * @param {string} featureFlag - The feature flag to check
- * @returns {boolean} - Whether the feature is enabled
+ * Check navigation feature availability based on new structure
+ * @param {string} featureCategory - Feature category from FEATURE_CATEGORIES
+ * @param {string} featureItem - Specific feature item (optional)
+ * @returns {boolean}
  */
-const isFeatureEnabled = (featureFlag) => {
-  if (!featureFlag) return true;
-  return FEATURE_FLAGS[featureFlag] === true;
+const isNavigationFeatureEnabled = (featureCategory, featureItem = null) => {
+  if (!featureCategory) return true;
+
+  const parts = featureCategory.split(".");
+
+  if (parts.length === 1) {
+    // Single level: orders, advertisements, etc.
+    if (featureItem) {
+      return isSubcategoryEnabled(parts[0], featureItem);
+    }
+    return isCategoryEnabled(parts[0]);
+  } else if (parts.length === 2) {
+    // Two levels: services.general, issues.tracking, etc.
+    if (featureItem) {
+      return isItemEnabled(parts[0], parts[1], featureItem);
+    }
+    return isSubcategoryEnabled(parts[0], parts[1]);
+  }
+
+  return true;
 };
 
 /**
@@ -770,10 +1018,18 @@ const getFilteredNavigationItems = (allowedKeys) => {
       const item = ALL_NAVIGATION_ITEMS[key];
       if (!item) return false;
 
-      // Check if the feature category is enabled
-      return isFeatureEnabled(item.category);
+      // Check if the feature category and specific item are enabled
+      return isNavigationFeatureEnabled(item.category, item.featureItem);
     })
-    .map((key) => ALL_NAVIGATION_ITEMS[key]);
+    .map((key) => {
+      const item = ALL_NAVIGATION_ITEMS[key];
+      // Return item with resolved submenu if it's a getter
+      return {
+        ...item,
+        submenu:
+          typeof item.submenu === "function" ? item.submenu : item.submenu,
+      };
+    });
 };
 
 /**
@@ -801,7 +1057,7 @@ const buildNavigationTree = (items) => {
   const groupedItems = groupItemsByCategory(items);
   const navigationTree = [];
 
-  // Reports Section
+  // Reports Section (Orders)
   if (groupedItems[FEATURE_CATEGORIES.REPORTS]?.length > 0) {
     navigationTree.push({
       key: "Reports",
@@ -815,13 +1071,6 @@ const buildNavigationTree = (items) => {
   }
 
   // Applications Section (Services)
-  const serviceCategories = [
-    FEATURE_CATEGORIES.GENERAL,
-    FEATURE_CATEGORIES.EVENT,
-    FEATURE_CATEGORIES.MOVIE,
-    FEATURE_CATEGORIES.DINE,
-  ];
-
   const servicesSubmenu = [];
 
   // General Services
@@ -876,34 +1125,47 @@ const buildNavigationTree = (items) => {
     });
   }
 
-  if (servicesSubmenu.length > 0) {
-    navigationTree.push({
-      key: "Applications",
-      path: `${APP_PREFIX_PATH}/apps`,
-      title: "sidenav.applications",
-      icon: DashboardOutlined,
-      breadcrumb: false,
-      isGroupTitle: true,
-      submenu: [
-        {
-          key: "Services",
-          path: `${APP_PREFIX_PATH}/services`,
-          title: "sidenav.services",
-          icon: DashboardOutlined,
-          breadcrumb: false,
-          isGroupTitle: false,
-          submenu: servicesSubmenu,
-        },
-      ],
-    });
-  }
+  // if (servicesSubmenu.length > 0) {
+  //   navigationTree.push({
+  //     key: "Applications",
+  //     path: `${APP_PREFIX_PATH}/apps`,
+  //     title: "sidenav.applications",
+  //     icon: DashboardOutlined,
+  //     breadcrumb: false,
+  //     isGroupTitle: true,
+  //     submenu: [
+  //       {
+  //         key: "Services",
+  //         path: `${APP_PREFIX_PATH}/services`,
+  //         title: "sidenav.services",
+  //         icon: DashboardOutlined,
+  //         breadcrumb: false,
+  //         isGroupTitle: false,
+  //         submenu: servicesSubmenu,
+  //       },
+  //     ],
+  //   });
+  // }
 
   // Issues Section
+  const issuesSubmenu = [];
+
   if (groupedItems[FEATURE_CATEGORIES.ISSUE_TRACKING]?.length > 0) {
-    navigationTree.push({
-      key: "Issues",
-      path: `${APP_PREFIX_PATH}/issues`,
-      title: "sidenav.apps.issues",
+    issuesSubmenu.push({
+      key: "Services",
+      path: `${APP_PREFIX_PATH}/services`,
+      title: "sidenav.services",
+      icon: DashboardOutlined,
+      breadcrumb: false,
+      isGroupTitle: false,
+      submenu: servicesSubmenu,
+    });
+  }
+  if (groupedItems[FEATURE_CATEGORIES.ISSUE_TRACKING]?.length > 0) {
+    issuesSubmenu.push({
+      key: "issue_tracking",
+      path: `${APP_PREFIX_PATH}/issues/tracking`,
+      title: "Issue Tracking",
       icon: DashboardOutlined,
       breadcrumb: false,
       isGroupTitle: false,
@@ -914,11 +1176,11 @@ const buildNavigationTree = (items) => {
   // Track Requests Section
   if (groupedItems[FEATURE_CATEGORIES.TRACK_REQUESTS]?.length > 0) {
     const trackingItems = groupedItems[FEATURE_CATEGORIES.TRACK_REQUESTS];
-    const eventTracking = trackingItems.filter((item) =>
-      item.key.includes("event")
+    const eventTracking = trackingItems.filter(
+      (item) => item.featureItem === "event"
     );
-    const movieTracking = trackingItems.filter((item) =>
-      item.key.includes("movie")
+    const movieTracking = trackingItems.filter(
+      (item) => item.featureItem === "movie"
     );
 
     const trackingSubmenu = [];
@@ -948,7 +1210,7 @@ const buildNavigationTree = (items) => {
     }
 
     if (trackingSubmenu.length > 0) {
-      navigationTree.push({
+      issuesSubmenu.push({
         key: "TrackRequests",
         path: `${APP_PREFIX_PATH}/track`,
         title: "Track Requests",
@@ -962,7 +1224,7 @@ const buildNavigationTree = (items) => {
 
   // Lead Events Section
   if (groupedItems[FEATURE_CATEGORIES.LEAD_EVENTS]?.length > 0) {
-    navigationTree.push({
+    issuesSubmenu.push({
       key: "LeadEvents",
       path: `${APP_PREFIX_PATH}/lead-events`,
       title: "Lead Event Requests",
@@ -970,6 +1232,18 @@ const buildNavigationTree = (items) => {
       breadcrumb: false,
       isGroupTitle: false,
       submenu: groupedItems[FEATURE_CATEGORIES.LEAD_EVENTS],
+    });
+  }
+
+  if (issuesSubmenu.length > 0) {
+    navigationTree.push({
+      key: "Applications",
+      path: `${APP_PREFIX_PATH}/issues`,
+      title: "sidenav.applications",
+      icon: DashboardOutlined,
+      breadcrumb: false,
+      isGroupTitle: true,
+      submenu: issuesSubmenu,
     });
   }
 
@@ -1088,9 +1362,9 @@ const navigationConfig = () => {
     console.log(`Navigation tree built successfully for role: ${userRoleId}`, {
       totalItems: filteredItems.length,
       treeNodes: navigationTree.length,
-      enabledFeatures: Object.entries(FEATURE_FLAGS)
-        .filter(([, enabled]) => enabled)
-        .map(([feature]) => feature),
+      enabledCategories: Object.keys(FEATURE_FLAGS).filter((category) =>
+        isCategoryEnabled(category)
+      ),
     });
 
     return navigationTree;
@@ -1102,20 +1376,22 @@ const navigationConfig = () => {
 
 /**
  * Utility function to check if a specific feature is available for current user
- * @param {string} featureFlag - Feature flag to check
+ * @param {string} category - Feature category
+ * @param {string} subcategory - Feature subcategory (optional)
  * @returns {boolean} - Whether feature is available
  */
-export const isFeatureAvailableForUser = (featureFlag) => {
+export const isFeatureAvailableForUser = (category, subcategory = null) => {
   const token = localStorage.getItem(AUTH_TOKEN);
   if (!token) return false;
 
   const userRoleId = getUserRoleFromToken(token);
   if (!userRoleId) return false;
 
-  const allowedKeys = ROLE_NAVIGATION_ACCESS[userRoleId] || [];
-  const userItems = getFilteredNavigationItems(allowedKeys);
-
-  return userItems.some((item) => item.category === featureFlag);
+  if (subcategory) {
+    return isSubcategoryEnabled(category, subcategory);
+  } else {
+    return isCategoryEnabled(category);
+  }
 };
 
 /**
@@ -1123,16 +1399,9 @@ export const isFeatureAvailableForUser = (featureFlag) => {
  * @returns {string[]} - Array of available feature categories
  */
 export const getAvailableCategoriesForUser = () => {
-  const token = localStorage.getItem(AUTH_TOKEN);
-  if (!token) return [];
-
-  const userRoleId = getUserRoleFromToken(token);
-  if (!userRoleId) return [];
-
-  const allowedKeys = ROLE_NAVIGATION_ACCESS[userRoleId] || [];
-  const userItems = getFilteredNavigationItems(allowedKeys);
-
-  return [...new Set(userItems.map((item) => item.category))];
+  return Object.keys(FEATURE_FLAGS).filter((category) =>
+    isCategoryEnabled(category)
+  );
 };
 
 export default navigationConfig;
