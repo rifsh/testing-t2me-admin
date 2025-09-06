@@ -232,6 +232,7 @@ export const ApiConstant = {
   PAYMENT_URL: "/api/v1/shared/payment/secured/payment",
   SINGLE_PAYMENT_URL: "/api/v1/shared/payment/secured/payment/single/details",
   PAYMENT_METHOD: "/api/v1/shared/payment/secured/payment/methods",
+  PAYMENT_ADD_ON_SERVICE: "/api/v1/event/add_on/secured/add_on_master",
   PAYMENT_SERVICE: "/api/v1/shared/payment/secured/payment/services",
 
   // lead event list

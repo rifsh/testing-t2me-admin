@@ -34,6 +34,12 @@ PaymentService.getPaymentsMethod = function () {
     method: "get",
   });
 };
+PaymentService.getPaymentAddOnService = function () {
+  return fetch({
+    url: ApiConstant.PAYMENT_ADD_ON_SERVICE,
+    method: "get",
+  });
+};
 
 PaymentService.addPayment = function (paymentData, action) {
   console.log(paymentData, "paymentData");

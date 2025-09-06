@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllEvent, setSelectedEvent } from "store/slices/eventSlice";
 import {
   resetSchedule,
+  setAddOnServie,
   setScheduleSelectTime,
 } from "store/slices/scheduleSlice";
 import { setSelectedVenue } from "store/slices/locationSlice";
@@ -13,6 +14,7 @@ import {
   getAvailableTicketsType,
   setSelectedTicketType,
 } from "store/slices/ticketSlice";
+import { getPaymentAddOnService } from "store/slices/paymentSlice";
 
 const { Option } = Select;
 
@@ -26,8 +28,7 @@ export function ScheduleDetails({ form }) {
   const { availableTicketTyps, selectedTicketType } = useSelector(
     (state) => state.tickets
   );
-
-  // Add state to track the toggle value
+  const { addOnServiceList } = useSelector((state) => state.payment);
   const [showBookingLimit, setShowBookingLimit] = useState(false);
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export function ScheduleDetails({ form }) {
         await dispatch(
           fetchAllEvent({ event_type: EVENT_TYPES.event })
         ).unwrap();
+        dispatch(getPaymentAddOnService());
       } catch (error) {
         console.error("Failed to fetch events:", error);
       }
@@ -67,6 +69,7 @@ export function ScheduleDetails({ form }) {
       event_id: id,
       venue_id: venueId,
       name: currentValues.name,
+      add_ons: currentValues.add_ons, // Preserve add_ons
     };
     form.resetFields();
     form.setFieldsValue(valuesToKeep);
@@ -84,6 +87,7 @@ export function ScheduleDetails({ form }) {
       event_id: currentValues.event_id,
       venue_id: id,
       name: currentValues.name,
+      add_ons: currentValues.add_ons, // Preserve add_ons
     };
     form.resetFields();
     form.setFieldsValue(valuesToKeep);
@@ -106,15 +110,24 @@ export function ScheduleDetails({ form }) {
     }
   };
 
-  // Handle booking limit toggle change
   const handleBookingLimitToggle = (e) => {
     const value = e.target.value;
     setShowBookingLimit(value);
 
-    // Clear the booking limit field if toggle is set to false
     if (!value) {
       form.setFieldsValue({ boking_limit_per_user: undefined });
     }
+  };
+
+  const handleAddOnsChange = (selectedValues) => {
+    const addOnsData = (addOnServiceList?.available_add_ons || []).map(
+      (addon) => ({
+        name: addon.name,
+        status: selectedValues.includes(addon.name),
+      })
+    );
+
+    dispatch(setAddOnServie(addOnsData));
   };
 
   return (
@@ -165,7 +178,7 @@ export function ScheduleDetails({ form }) {
           </Form.Item>
         </Col>
 
-        {/* Row 2: Venue & Booking Type (conditionally rendered) */}
+        {/* Row 2: Venue & Booking Type */}
         {selectedEvent?.venues?.length > 0 && (
           <>
             <Col xs={24} sm={12}>
@@ -263,7 +276,7 @@ export function ScheduleDetails({ form }) {
           </Form.Item>
         </Col>
 
-        {/* Row 4: Booking Limit Toggle & Payment Required */}
+        {/* Row 4: Booking Limit Toggle */}
         <Col xs={24} sm={12}>
           <Form.Item
             name="boking_limit_per_user_toggle"
@@ -281,6 +294,7 @@ export function ScheduleDetails({ form }) {
             </Radio.Group>
           </Form.Item>
         </Col>
+
         {showBookingLimit && (
           <Col xs={24} sm={12}>
             <Form.Item
@@ -301,6 +315,8 @@ export function ScheduleDetails({ form }) {
             </Form.Item>
           </Col>
         )}
+
+        {/* Row 5: Payment Required & Add-Ons */}
         <Col xs={24} sm={12}>
           <Form.Item
             name="payment_required"
@@ -316,6 +332,30 @@ export function ScheduleDetails({ form }) {
               <Radio value={true}>Yes</Radio>
               <Radio value={false}>No</Radio>
             </Radio.Group>
+          </Form.Item>
+        </Col>
+
+        <Col xs={24} sm={12}>
+          <Form.Item name="add_ons" label="Add-On Services">
+            <Select
+              loading={loading}
+              className="w-100"
+              placeholder="Select Add-On Services"
+              allowClear
+              showArrow
+              showSearch
+              mode="multiple"
+              onChange={handleAddOnsChange}
+              filterOption={(input, option) =>
+                option?.label?.toLowerCase()?.includes(input.toLowerCase())
+              }
+            >
+              {addOnServiceList?.available_add_ons?.map((addon) => (
+                <Option key={addon.name} value={addon.name} label={addon.name}>
+                  {addon.name}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
         </Col>
       </Row>

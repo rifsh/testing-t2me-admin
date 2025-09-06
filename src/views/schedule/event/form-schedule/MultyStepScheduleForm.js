@@ -40,6 +40,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
   const { availableTicketTyps, selectedTicketType } = useSelector(
     (state) => state.tickets
   );
+  const { selectedAddOnServiceList } = useSelector((state) => state.schedules);
   const { selectedVenue } = useSelector((state) => state.locations);
   const { selectedSubmitItem } = useSelector((state) => state.modalSlice);
   const dispatch = useDispatch();
@@ -91,6 +92,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
           ad_start_date_time: scheduleDetails?.ad_start_date_time
             ? dayjs(scheduleDetails.ad_start_date_time)
             : null,
+          add_ons: scheduleDetails.add_ons.map((items) => items.name) || [],
         };
 
         form.setFieldsValue(formValues);
@@ -244,6 +246,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         ad_start_date_time: dayjs(values.ad_start_date_time).format(
           "YYYY-MM-DDTHH:mm"
         ),
+        add_ons: selectedAddOnServiceList || [],
         name: values.name,
         event_id: values.event_id,
         venue_id: values.venue_id,

@@ -7,6 +7,7 @@ export const initialState = {
   loading: false,
   payments: [],
   singlePayment: null,
+  addOnServiceList: [],
   error: null,
   // message: null,
   responseData: null,
@@ -55,6 +56,21 @@ export const getSinglePayment = createAsyncThunk(
       return response.data[0];
     } catch (error) {
       console.error("Error in getSinglePayment:", error);
+      return rejectWithValue(
+        error.response?.data ||
+          error.message ||
+          "Error Fetching Payment Details"
+      );
+    }
+  }
+);
+export const getPaymentAddOnService = createAsyncThunk(
+  "payment/getPaymentAddOnService",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await PaymentService.getPaymentAddOnService(pageData);
+      return response.data[0];
+    } catch (error) {
       return rejectWithValue(
         error.response?.data ||
           error.message ||
@@ -146,6 +162,21 @@ const paymentSlice = createSlice({
         state.error = null;
       })
       .addCase(getSinglePayment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.singlePayment = null;
+      })
+      .addCase(getPaymentAddOnService.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        // state.singlePayment = null;
+      })
+      .addCase(getPaymentAddOnService.fulfilled, (state, action) => {
+        state.loading = false;
+        state.addOnServiceList = action.payload;
+        state.error = null;
+      })
+      .addCase(getPaymentAddOnService.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.singlePayment = null;
