@@ -115,7 +115,7 @@ export function ScheduleDetails({ form }) {
     setShowBookingLimit(value);
 
     if (!value) {
-      form.setFieldsValue({ boking_limit_per_user: undefined });
+      form.setFieldsValue({ booking_limit_per_user: undefined });
     }
   };
 
@@ -279,7 +279,7 @@ export function ScheduleDetails({ form }) {
         {/* Row 4: Booking Limit Toggle */}
         <Col xs={24} sm={12}>
           <Form.Item
-            name="boking_limit_per_user_toggle"
+            name="booking_limit_per_user_toggle"
             label="Limit Bookings Per User"
             rules={[
               {
@@ -298,7 +298,7 @@ export function ScheduleDetails({ form }) {
         {showBookingLimit && (
           <Col xs={24} sm={12}>
             <Form.Item
-              name="boking_limit_per_user"
+              name="booking_limit_per_user"
               label="Booking Limit Per User"
               rules={[
                 {

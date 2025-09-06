@@ -86,6 +86,10 @@ const MultyStepScheduleForm = ({ mode, id }) => {
           end_date: scheduleDetails?.end_date
             ? dayjs(scheduleDetails.end_date)
             : null,
+          booking_limit_per_user: scheduleDetails?.booking_limit_per_user || 1,
+          booking_limit_per_user_toggle:
+            scheduleDetails?.booking_limit_per_user || false,
+          payment_required: scheduleDetails?.payment_required || false,
           booking_start_date_time: scheduleDetails?.booking_start_date_time
             ? dayjs(scheduleDetails.booking_start_date_time)
             : null,
@@ -243,9 +247,16 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         booking_start_date_time: dayjs(values.booking_start_date_time).format(
           "YYYY-MM-DDTHH:mm"
         ),
+
         ad_start_date_time: dayjs(values.ad_start_date_time).format(
           "YYYY-MM-DDTHH:mm"
         ),
+        booking_limit_per_user: values.booking_limit_per_user_toggle
+          ? values.booking_limit_per_user
+          : null,
+        payment_required: values.payment_required,
+        booking_limit_per_user_toggle: values.booking_limit_per_user_toggle,
+
         add_ons: selectedAddOnServiceList || [],
         name: values.name,
         event_id: values.event_id,
