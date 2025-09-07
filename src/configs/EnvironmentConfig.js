@@ -33,6 +33,8 @@ const prod = {
   SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS,
 };
 
+
+
 const test = {
   API_ENDPOINT_URL: "/api",
 };
@@ -43,6 +45,8 @@ const getEnv = () => {
       return demo;
     case "uat":
       return uat;
+    case "prod":
+      return prod;
     case "production":
       return prod;
     case "development":
