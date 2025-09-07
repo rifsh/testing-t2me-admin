@@ -26,7 +26,7 @@ const demo = {
 };
 // temp
 const prod = {
-  API_ENDPOINT_URL: "https://service.tickets2me.com",
+  API_ENDPOINT_URL: "https://api.tickets2me.com",
   AES_KEY: "your_32_byte_encryption_key_here",
   NEED_ENCRYPT_DECRYPT: false,
   ENCRYPT_PARAMS: false,
