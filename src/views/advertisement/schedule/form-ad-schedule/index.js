@@ -32,7 +32,7 @@ const AdScheduleForm = ({ mode, scheduleDetails, id }) => {
     loading,
     error,
     responseData,
-    message,
+    message: resMessage,
     responseMessage,
     createScheduleLoading,
     filteredAdBanner,
@@ -188,7 +188,7 @@ const AdScheduleForm = ({ mode, scheduleDetails, id }) => {
         responseData={responseData}
         addFunction={mode === "EDIT" ? editAdSchedule : createAdSchedule}
         navigationPath={`${APP_PREFIX_PATH}/advertisement/schedule/list`}
-        responseMessage={mode === "EDIT" ? message : responseMessage}
+        responseMessage={mode === "EDIT" ? resMessage : responseMessage}
       />
     </>
   );

@@ -82,7 +82,7 @@ const TicketFormFields = ({ mode, ticket }) => {
       const ticketData = {
         venue_id: values.venue_id,
         number_of_tickets: values.number_of_tickets,
-        base_price: values.base_price,
+        base_price: values.type_price,
         name: values.name,
         ticket_types: [
           {

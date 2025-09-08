@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { fetchAdBanner, fetchAdBanners } from 'store/slices/advertisementSlice';
 import { fetchAdCategories } from "store/slices/adCategorySlice";
+import CDNImage from 'components/layout-components/Image/CDNImage';
 const FileGallery = ({ onDragStart, onDragEnd }) => {
   const dispatch = useDispatch();
   const {
@@ -15,9 +16,9 @@ const FileGallery = ({ onDragStart, onDragEnd }) => {
 
   const {
     adCategories,
-  
+
     subPagination,
-    
+
     editable_status,
     message: responseMessage,
   } = useSelector((state) => state.adCategory);
@@ -47,20 +48,26 @@ const FileGallery = ({ onDragStart, onDragEnd }) => {
         playsInline
       />
     ) : (
-      <img
+      // <img
+      //   src={mediaPath}
+      //   alt="Image Thumbnail"
+      //   style={{
+      //     width: "70%",
+      //     height: "70%",
+      //     objectFit: "cover",
+      //   }}
+      // />
+      <CDNImage
         src={mediaPath}
-        alt="Image Thumbnail"
-        style={{
-          width: "70%",
-          height: "70%",
-          objectFit: "cover",
-        }}
+        alt={`Image Thumbnail`}
+        height={100}
+        width={100}
       />
     );
   };
 
   return (
-    <Card title="File Gallery" className="h-full" onKeyDown={ preventFormSubmit }>
+    <Card title="File Gallery" className="h-full" onKeyDown={preventFormSubmit}>
       <SearchBarWithStatus
         fetchFunction={fetchAdBanners}
         isStatus={false}
@@ -79,10 +86,10 @@ const FileGallery = ({ onDragStart, onDragEnd }) => {
           },
         ]}
 
-        // ADD FILTERATION FUNCTION AFTER API COMPLETED
+      // ADD FILTERATION FUNCTION AFTER API COMPLETED
 
       />
-       {/* <SearchBarWithStatus fetchFunction={fetchAdBanner} /> */}
+      {/* <SearchBarWithStatus fetchFunction={fetchAdBanner} /> */}
       <div
         style={{
           display: "grid",

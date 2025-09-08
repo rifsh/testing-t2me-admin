@@ -30,7 +30,7 @@ import { fetchEventOnPlaces, fetchEventType } from "store/slices/eventSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ActionType } from "utils/api/warning-submit-util";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
@@ -144,7 +144,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 uid: "-1",
                 name: banner.media_path.split("/").pop(),
                 status: "done",
-                url: banner.media_path,
+                url: `${CDN_PATH}/${banner.media_path}`,
               },
             ]
           : [],

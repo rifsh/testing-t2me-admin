@@ -5,7 +5,7 @@ import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import {
@@ -24,6 +24,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import CDNImage from "components/layout-components/Image/CDNImage";
 
 const AdBannerlist = () => {
   const dispatch = useDispatch();
@@ -54,7 +55,7 @@ const AdBannerlist = () => {
   // const handlePagination = (page, size, type) => {
   //   dispatch(fetchAdBanners({ page: page, size: size }));
   // };
-  
+
   const handleMediaClick = (mediaPath) => {
     dispatch(setSelectedMedia(mediaPath));
     dispatch(setModalVisible(true));
@@ -111,7 +112,7 @@ const AdBannerlist = () => {
         const isVideo = /\.(mp4|webm|ogg)$/i.test(mediaPath);
         return isVideo ? (
           <video
-            src={mediaPath}
+            src={`${CDN_PATH}/${mediaPath}`}
             style={{ width: 80, height: 50 }}
             muted
             playsInline
@@ -122,11 +123,17 @@ const AdBannerlist = () => {
             }}
           />
         ) : (
-          <img
+          // <img
+          //   src={`${CDN_PATH}/${mediaPath}`}
+          //   alt="Image Thumbnail"
+          //   onClick={() => handleMediaClick(mediaPath)}
+          //   style={{ width: 80, height: 50 }}
+          // />
+          <CDNImage
             src={mediaPath}
-            alt="Image Thumbnail"
-            onClick={() => handleMediaClick(mediaPath)}
-            style={{ width: 80, height: 50 }}
+            alt={`Image Thumbnail`}
+            height={50}
+            width={80}
           />
         );
       },
@@ -284,15 +291,20 @@ const AdBannerlist = () => {
               style={{ width: "100%", height: "auto", borderRadius: "8px" }}
             />
           ) : (
-            <img
+            // <img
+            //   src={`${CDN_PATH}/${selectedMedia}`}
+            //   alt="Media Preview"
+            //   style={{
+            //     width: "50%",
+            //     height: "auto",
+            //     borderRadius: "8px",
+            //     objectFit: "cover",
+            //   }}
+            // />
+            <CDNImage
               src={selectedMedia}
-              alt="Media Preview"
-              style={{
-                width: "50%",
-                height: "auto",
-                borderRadius: "8px",
-                objectFit: "cover",
-              }}
+              alt={`Media Preview`}
+              width={300}
             />
           ))}
       </Modal>
