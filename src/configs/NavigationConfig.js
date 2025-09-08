@@ -733,22 +733,22 @@ const ROLE_NAVIGATION_ACCESS = {
     "general.venue",
     "general.tax",
     "general.category",
-    // "general.offer",
-    // "general.coupon",
-    // "general.seat",
+    "general.offer",
+    "general.coupon",
+    "general.seat",
     "general.payment",
 
     // Event Services
     "event.type",
     "event.ticket",
-    // "event.seat",
+    "event.seat",
     "event.list",
     "event.schedule",
 
     // Movie Services
     "movie.theater",
     "movie.screen",
-    // "movie.seat",
+    "movie.seat",
     "movie.cast",
     "movie.list",
     "movie.schedule",
@@ -801,15 +801,15 @@ const ROLE_NAVIGATION_ACCESS = {
     "general.venue",
     "general.tax",
     "general.category",
-    // "general.offer",
-    // "general.coupon",
-    // "general.seat",
+    "general.offer",
+    "general.coupon",
+    "general.seat",
     "general.payment",
 
     // Event Services
     "event.type",
     "event.ticket",
-    // "event.seat",
+    "event.seat",
     "event.list",
     "event.schedule",
 
@@ -903,7 +903,7 @@ const ROLE_NAVIGATION_ACCESS = {
     // Event Services
     "event.type",
     "event.ticket",
-    // "event.seat",
+    "event.seat",
     "event.list",
     "event.schedule",
 
