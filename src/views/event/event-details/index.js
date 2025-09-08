@@ -31,6 +31,7 @@ import { EnrollUser } from "store/slices/leadEventSlice";
 import { UserAddOutlined } from "@ant-design/icons";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { getCurrentUser } from "configs/UserAccessConfig";
+import { CDN_PATH } from "configs/AppConfig";
 
 const { Title, Text } = Typography;
 export const getUserRole = () => {
@@ -138,7 +139,7 @@ const EventDetails = () => {
                   >
                     <Image
                       alt={`media image ${index + 1}`}
-                      src={url}
+                      src={`${CDN_PATH}/${url}`}
                       height={400}
                       width="100%"
                       style={{
