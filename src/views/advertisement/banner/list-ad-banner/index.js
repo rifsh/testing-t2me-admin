@@ -24,6 +24,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import CDNImage from "components/layout-components/Image/CDNImage";
 
 const AdBannerlist = () => {
   const dispatch = useDispatch();
@@ -122,11 +123,17 @@ const AdBannerlist = () => {
             }}
           />
         ) : (
-          <img
-            src={`${CDN_PATH}/${mediaPath}`}
-            alt="Image Thumbnail"
-            onClick={() => handleMediaClick(mediaPath)}
-            style={{ width: 80, height: 50 }}
+          // <img
+          //   src={`${CDN_PATH}/${mediaPath}`}
+          //   alt="Image Thumbnail"
+          //   onClick={() => handleMediaClick(mediaPath)}
+          //   style={{ width: 80, height: 50 }}
+          // />
+          <CDNImage
+            src={mediaPath}
+            alt={`Image Thumbnail`}
+            height={50}
+            width={80}
           />
         );
       },
@@ -284,15 +291,20 @@ const AdBannerlist = () => {
               style={{ width: "100%", height: "auto", borderRadius: "8px" }}
             />
           ) : (
-            <img
-              src={`${CDN_PATH}/${selectedMedia}`}
-              alt="Media Preview"
-              style={{
-                width: "50%",
-                height: "auto",
-                borderRadius: "8px",
-                objectFit: "cover",
-              }}
+            // <img
+            //   src={`${CDN_PATH}/${selectedMedia}`}
+            //   alt="Media Preview"
+            //   style={{
+            //     width: "50%",
+            //     height: "auto",
+            //     borderRadius: "8px",
+            //     objectFit: "cover",
+            //   }}
+            // />
+            <CDNImage
+              src={selectedMedia}
+              alt={`Media Preview`}
+              width={300}
             />
           ))}
       </Modal>
