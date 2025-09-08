@@ -92,11 +92,11 @@ const TaxFormFields = ({ mode, tax }) => {
     dispatch(fetchAvailableCategory());
   }, []);
 
-  useEffect(() => {
-    if (error) {
-      message.error(error);
-    }
-  }, [error]);
+  // useEffect(() => {
+  //   if (error) {
+  //     message.error(error);
+  //   }
+  // }, [error]);
 
   useEffect(() => {
     console.log("taxxxxxxxxxxxx", tax);
@@ -119,6 +119,12 @@ const TaxFormFields = ({ mode, tax }) => {
       form.setFieldsValue(formData);
     }
   }, [form, tax, mode]);
+
+  useEffect(() => {
+    if (isLocationBased) {
+      dispatch(getPlaces({}));
+    }
+  }, [isLocationBased])
 
   const handleCountrySelect = (id) => {
     form.setFieldValue("place_id", null);
@@ -206,17 +212,17 @@ const TaxFormFields = ({ mode, tax }) => {
             }
           }
         } else {
-          const resultAction = await dispatch(
-            validateCountry(values.country_id)
-          );
-          if (validateCountry.fulfilled.match(resultAction)) {
-            const response = resultAction.payload;
-            if (response.message === "warning") {
-              dispatch(setPlaceValidationDialogVisible(true));
-            } else if (response.data && response.data[0]?.validation_status) {
-              dispatch(setSelectedSubmitItem(values));
-            }
-          }
+          dispatch(setSelectedSubmitItem(values));
+          dispatch(setPlaceValidationDialogVisible(true));
+          // const resultAction = await dispatch(
+          //   validateCountry(values.country_id)
+          // );
+          // if (validateCountry.fulfilled.match(resultAction)) {
+          //   const response = resultAction.payload;
+          //   if (response.message === "warning") {
+          //   } else if (response.data && response.data[0]?.validation_status) {
+          //   }
+          // }
         }
       } catch (errorInfo) {
         console.error("Validation Failed:", errorInfo);
@@ -269,7 +275,7 @@ const TaxFormFields = ({ mode, tax }) => {
               {mode === "EDIT" ? "Edit Tax" : "Add Tax"}
             </h2>
 
-            <Form.Item name="country_id" label="Country Name">
+            {/* <Form.Item name="country_id" label="Country Name">
               <Select
                 className="w-100"
                 placeholder="Choose a Country"
@@ -288,7 +294,7 @@ const TaxFormFields = ({ mode, tax }) => {
                   <Option disabled>No countries available</Option>
                 )}
               </Select>
-            </Form.Item>
+            </Form.Item> */}
 
             <Form.Item name="islocationbased" valuePropName="checked">
               <Checkbox onChange={handleCheckboxChange}>
