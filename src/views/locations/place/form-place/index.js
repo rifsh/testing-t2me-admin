@@ -15,7 +15,7 @@ import {
   setSelectedPlace,
   getSinglePlace,
 } from "store/slices/locationSlice";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import {
@@ -69,23 +69,23 @@ const CountryForm = ({ mode, placeId }) => {
           name: singlePlace.name,
           banner_images: singlePlace?.media
             ? singlePlace?.media?.map((banner, index) => ({
-                uid: `-banner-${index}`,
-                name: banner?.media_url.split("/").pop(),
-                status: "done",
-                url: banner?.media_url,
-              }))
+              uid: `-banner-${index}`,
+              name: banner?.media_url.split("/").pop(),
+              status: "done",
+              url: banner?.media_url,
+            }))
             : [],
           thumbnail_image:
             singlePlace.thumbnail_image &&
-            singlePlace.thumbnail_image !== "images"
+              singlePlace.thumbnail_image !== "images"
               ? [
-                  {
-                    uid: "-1",
-                    name: singlePlace.thumbnail_image.split("/").pop(),
-                    status: "done",
-                    url: singlePlace.thumbnail_image,
-                  },
-                ]
+                {
+                  uid: "-1",
+                  name: singlePlace.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: `${CDN_PATH}/${singlePlace.thumbnail_image}`,
+                },
+              ]
               : [],
           description: singlePlace.description,
         });

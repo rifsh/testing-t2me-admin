@@ -5,7 +5,7 @@ import Flex from "components/shared-components/Flex";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import {
@@ -54,7 +54,7 @@ const AdBannerlist = () => {
   // const handlePagination = (page, size, type) => {
   //   dispatch(fetchAdBanners({ page: page, size: size }));
   // };
-  
+
   const handleMediaClick = (mediaPath) => {
     dispatch(setSelectedMedia(mediaPath));
     dispatch(setModalVisible(true));
@@ -123,7 +123,7 @@ const AdBannerlist = () => {
           />
         ) : (
           <img
-            src={mediaPath}
+            src={`${CDN_PATH}/${mediaPath}`}
             alt="Image Thumbnail"
             onClick={() => handleMediaClick(mediaPath)}
             style={{ width: 80, height: 50 }}
@@ -285,7 +285,7 @@ const AdBannerlist = () => {
             />
           ) : (
             <img
-              src={selectedMedia}
+              src={`${CDN_PATH}/${selectedMedia}`}
               alt="Media Preview"
               style={{
                 width: "50%",
