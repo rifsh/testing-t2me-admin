@@ -9,6 +9,7 @@ export const initialState = {
   filteredSchedules: [],
   selectedCoupons: [],
   submitedData: null,
+  selectedAddOnServiceList: [],
   selectedOffers: [],
   selectedItemForModal: null,
   isSelectTime: false,
@@ -273,6 +274,9 @@ const scheduleSlice = createSlice({
     setScheduleSelectTime: (state, action) => {
       state.isSelectTime = action.payload;
     },
+    setAddOnServie: (state, action) => {
+      state.selectedAddOnServiceList = action.payload;
+    },
     resetSchedule: (state, action) => {
       return initialState;
     },
@@ -356,6 +360,6 @@ export const {
   updateTimeSlot,
   setScheduleSubmitData,
   setScheduleSelectTime,
-  updateSelectedOffer,
+  updateSelectedOffer,setAddOnServie,
 } = scheduleSlice.actions;
 export default scheduleSlice.reducer;

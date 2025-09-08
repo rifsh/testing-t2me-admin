@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import UserService from "services/userService";
+import DataFormatUtils from "utils/formatData";
 
 export const initialState = {
   loading: false,
@@ -77,9 +78,9 @@ export const fetchAllRoles = createAsyncThunk(
 
 export const createUser = createAsyncThunk(
   "users/create",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, params }, { rejectWithValue }) => {
     try {
-      const response = await UserService.createUser(data, action);
+      const response = await UserService.createUser(data, params);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");
@@ -89,9 +90,9 @@ export const createUser = createAsyncThunk(
 
 export const editUser = createAsyncThunk(
   "users/edit",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, params }, { rejectWithValue }) => {
     try {
-      const response = await UserService.editUser(data, action);
+      const response = await UserService.editUser(data, params);
       return response.status;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit user");
@@ -208,7 +209,7 @@ const userSlice = createSlice({
       })
       .addCase(getSingleUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.singleUser = action.payload;
+        state.singleUser = DataFormatUtils.userDetails(action.payload);
         state.editSingleUser = action.payload;
       })
       .addCase(getSingleUser.rejected, (state, action) => {

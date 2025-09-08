@@ -14,18 +14,20 @@ import {
   signInWithFacebook,
   getUserdata,
 } from "store/slices/authSlice";
-import {
-  getTenantCoutry
-} from "store/slices/locationSlice";
+import { getTenantCoutry } from "store/slices/locationSlice";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { APP_CURRENT_VERSION, BUILD_TIMESTAMP, BUILD_COMMIT } from "configs/VersionConfig";
+import {
+  APP_CURRENT_VERSION,
+  BUILD_TIMESTAMP,
+  BUILD_COMMIT,
+} from "configs/VersionConfig";
 import GenericDropdown from "views/theater/components/GenericDropdown";
 import { TENANT_SCHEMA } from "constants/AuthConstant";
 
 export const LoginForm = (props) => {
   const navigate = useNavigate();
-  
+
   const { tenant_country } = useSelector((state) => state.locations);
   const {
     otherSignIn,
@@ -51,9 +53,11 @@ export const LoginForm = (props) => {
   // }
   const dispatch = useDispatch();
   const onLogin = (values) => {
-    console.log(values,"values,")
-    const schema = tenant_country.find((schema)=>schema.id==values.country_id).schema_name
-    localStorage.setItem(TENANT_SCHEMA, schema)
+    console.log(values, "values,");
+    const schema = tenant_country.find(
+      (schema) => schema.id == values.country_id
+    ).schema_name;
+    localStorage.setItem(TENANT_SCHEMA, schema);
     showLoading();
     signIn(values);
     dispatch(getUserdata());
@@ -83,8 +87,8 @@ export const LoginForm = (props) => {
   });
 
   useEffect(() => {
-console.warn(tenant_country)
-  },[tenant_country]);
+    console.warn(tenant_country);
+  }, [tenant_country]);
 
   const renderOtherSignIn = (
     <div>
@@ -153,10 +157,11 @@ console.warn(tenant_country)
           name="password"
           label={
             <div
-              className={`${showForgetPassword
+              className={`${
+                showForgetPassword
                   ? "d-flex justify-content-between w-100 align-items-center"
                   : ""
-                }`}
+              }`}
             >
               <span>Password</span>
               {showForgetPassword && (
@@ -186,9 +191,7 @@ console.warn(tenant_country)
             name="country_id"
             label="Country"
             mode="single"
-            rules={[
-              { required: false, message: "Please select your Country!" },
-            ]}
+            rules={[{ required: true, message: "Please select your Country!" }]}
             fetchOptions={getTenantCoutry}
             optionsData={tenant_country}
             loading={loading}
@@ -205,7 +208,9 @@ console.warn(tenant_country)
             Sign In
           </Button>
         </Form.Item>
-        <span>{APP_CURRENT_VERSION} - {BUILD_TIMESTAMP} - {BUILD_COMMIT} </span>
+        <span>
+          {APP_CURRENT_VERSION} - {BUILD_TIMESTAMP} - {BUILD_COMMIT}{" "}
+        </span>
         {/* {otherSignIn ? renderOtherSignIn : null} */}
         {extra}
       </Form>

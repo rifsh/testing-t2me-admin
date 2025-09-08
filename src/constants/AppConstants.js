@@ -1,4 +1,12 @@
 //advertisement category codes
+
+export const EDIT = "edit";
+export const ADD = "add";
+export const ApiActions = {
+  SUBMIT: "submit",
+  CONFIRM: "confirm",
+};
+export const SUCCESS_CODE = "00000";
 export const AdvCategoryCode = [
   "payment-bottom-banner",
   "home-middle-banner",

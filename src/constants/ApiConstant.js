@@ -16,6 +16,7 @@ export const ApiConstant = {
   USER_URL: "/api/v1/shared/auth/secured/users",
   USER_STATUS_URL: "/api/v1/shared/auth/secured/users_status",
   SINGLE_USER_URL: "/api/v1/shared/auth/secured/singleuser",
+  USER_DETAILS_URL: "/api/v1/shared/auth/secured/user/details",
   REGISTER_USER_URL: "/api/v1/shared/auth/secured/register",
   ROLES_URL: "/api/v1/shared/auth/secured/role",
   SUB_CATEGORY_URL: "/api/v1/shared/category/secured/subcategory",
@@ -231,6 +232,7 @@ export const ApiConstant = {
   PAYMENT_URL: "/api/v1/shared/payment/secured/payment",
   SINGLE_PAYMENT_URL: "/api/v1/shared/payment/secured/payment/single/details",
   PAYMENT_METHOD: "/api/v1/shared/payment/secured/payment/methods",
+  PAYMENT_ADD_ON_SERVICE: "/api/v1/event/add_on/secured/add_on_master",
   PAYMENT_SERVICE: "/api/v1/shared/payment/secured/payment/services",
 
   // lead event list

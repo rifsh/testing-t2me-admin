@@ -21,7 +21,7 @@
     "@use-gesture/react": "^10.3.1",
     "@visx/pattern": "2.10.0",
     "antd": "^5.3.0",
-    "apexcharts": "^3.54.1",
+    "apexcharts": "^4.5.0",
     "axios": "^0.21.0",
     "chartjs": "^0.3.24",
     "chartjs-adapter-date-fns": "^3.0.0",
