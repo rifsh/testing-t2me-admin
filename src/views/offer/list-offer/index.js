@@ -31,6 +31,7 @@ import usePaginationHook from "utils/hooks/usePaginationHandler";
 import { isOrganizer } from "configs/UserAccessConfig";
 import usePermissions from "utils/hooks/usePermissions";
 import { PERMISSIONS } from "constants/RolesPermissionConstants";
+import CDNImage from "components/layout-components/Image/CDNImage";
 
 const OfferList = () => {
   const navigate = useNavigate();
@@ -293,7 +294,7 @@ const OfferList = () => {
             {selectedOffer.thumbnail_image &&
               selectedOffer.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">
-                <img
+                {/* <img
                   src={selectedOffer.thumbnail_image}
                   alt="Offer Thumbnail"
                   style={{
@@ -301,6 +302,12 @@ const OfferList = () => {
                     maxHeight: "200px",
                     objectFit: "contain",
                   }}
+                /> */}
+                <CDNImage
+                  src={selectedOffer.thumbnail_image}
+                  alt={`Image Thumbnail`}
+                  height={100}
+                  width={80}
                 />
               </Descriptions.Item>
             ) : (

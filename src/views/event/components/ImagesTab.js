@@ -1,4 +1,5 @@
 import { Row, Col, Image, Empty } from "antd";
+import { CDN_PATH } from "configs/AppConfig";
 
 const ImagesTab = ({ eventDetails }) => {
   return (
@@ -8,7 +9,7 @@ const ImagesTab = ({ eventDetails }) => {
           {eventDetails.event_images.map((img, index) => (
             <Col xs={24} sm={12} md={8} key={index}>
               <Image
-                src={img.image}
+                src={`${CDN_PATH}/${img.image}`}
                 alt="Event"
                 width="100%"
                 style={{ borderRadius: "8px" }}
