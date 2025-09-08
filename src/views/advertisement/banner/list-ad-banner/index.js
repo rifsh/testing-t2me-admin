@@ -112,7 +112,7 @@ const AdBannerlist = () => {
         const isVideo = /\.(mp4|webm|ogg)$/i.test(mediaPath);
         return isVideo ? (
           <video
-            src={mediaPath}
+            src={`${CDN_PATH}/${mediaPath}`}
             style={{ width: 80, height: 50 }}
             muted
             playsInline

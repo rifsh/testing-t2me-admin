@@ -29,7 +29,7 @@ import {
   setModalVisible,
   editScheduleStatus,
 } from "store/slices/advertisementSlice";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
@@ -37,6 +37,7 @@ import SearchBarWithStatus from "components/util-components/Search/SearchBarWith
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import CDNImage from "components/layout-components/Image/CDNImage";
 
 
 const { Option } = Select;
@@ -113,18 +114,18 @@ const CouponList = () => {
         const isVideo = /\.(mp4|webm|ogg)$/i.test(mediaPath);
         return isVideo ? (
           <video
-            src={mediaPath}
+            src={`${CDN_PATH}/${mediaPath}`}
             style={{ width: 80, height: 50, cursor: "pointer" }}
             muted
             playsInline
             onClick={() => handleMediaClick(mediaPath)}
           />
         ) : (
-          <img
+          <CDNImage
             src={mediaPath}
-            alt="Image Thumbnail"
-            style={{ width: 80, height: 50, cursor: "pointer" }}
-            onClick={() => handleMediaClick(mediaPath)}
+            alt={`Image Thumbnail`}
+            height={50}
+            width={80}
           />
         );
       },
