@@ -120,20 +120,22 @@ export function ScheduleDetails({ form }) {
   };
 
   const handleAddOnsChange = (selectedValues) => {
-    const addOnsData = (addOnServiceList?.available_add_ons || []).map(
-      (addon) => ({
+    const addOnsData = (addOnServiceList?.available_add_ons || [])
+      .filter((addon) => selectedValues.includes(addon.name)) 
+      .map((addon) => ({
         name: addon.name,
-        status: selectedValues.includes(addon.name),
-      })
-    );
+        status: true,
+        id: addon.id, 
+        price: addon.price,
+      }));  
 
     dispatch(setAddOnServie(addOnsData));
+    form.setFieldsValue({ add_ons: selectedValues });
   };
 
   return (
     <Card title="Schedule Details">
       <Row gutter={24}>
-        {/* Row 1: Schedule Name & Event */}
         <Col xs={24} sm={12}>
           <Form.Item
             name="name"

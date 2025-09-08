@@ -676,7 +676,6 @@ const ALL_NAVIGATION_ITEMS = {
     category: FEATURE_CATEGORIES.USER_MANAGEMENT,
     featureItem: "system_permissions",
   },
-  
 
   // App Management - All items under app_management
   "app.footer": {
@@ -1286,15 +1285,15 @@ const buildNavigationTree = (items) => {
     });
   }
 
-  // App Management Section
+  // App Management Section - Alternative approach
   if (groupedItems[FEATURE_CATEGORIES.APP_MANAGEMENT]?.length > 0) {
     navigationTree.push({
       key: "AppManagement",
       path: `${APP_PREFIX_PATH}/app/management`,
       title: "sidenav.app.management",
       icon: SettingOutlined,
-      breadcrumb: true,
-      isGroupTitle: true,
+      breadcrumb: false,
+      isGroupTitle: false,
       submenu: [
         {
           key: "app.management.layout",
@@ -1302,6 +1301,7 @@ const buildNavigationTree = (items) => {
           title: "sidenav.app.management.layout",
           icon: LayoutOutlined,
           breadcrumb: false,
+          isGroupTitle: false,
           submenu: groupedItems[FEATURE_CATEGORIES.APP_MANAGEMENT],
         },
       ],
