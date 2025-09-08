@@ -43,15 +43,15 @@ export const Logo = ({ mobileLogo, logoType }) => {
   const getLogo = () => {
     if (logoType === 'light') {
       if (navCollapsed) {
-        return '/img/logo-sm-white.png';
+        return '/img/logos/C_H Logo-8.png';
       }
-      return '/img/logo-white.png';
+      return '/img/logos/C_H Logo-8.png';
     }
 
     if (navCollapsed) {
-      return '/img/logo-sm.png';
+      return '/img/logos/C_cropped_V Logo-8.png';
     }
-    return '/img/logo.png';
+    return '/img/logos/C_H Logo-8.png';
   };
 
   const getLogoWidth = () => {
@@ -66,10 +66,10 @@ export const Logo = ({ mobileLogo, logoType }) => {
       className={isMobile && !mobileLogo ? 'd-none' : 'logo'}
       style={{ width: `${getLogoWidthGutter()}` }}
     >
-      <img 
-        src={getLogo()} 
-        alt={`${APP_NAME} logo`} 
-        width={getLogoWidth()} 
+      <img
+        src={getLogo()}
+        alt={`${APP_NAME} logo`}
+        width={getLogoWidth()}
       />
     </LogoWrapper>
   );
