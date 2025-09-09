@@ -309,10 +309,14 @@ const scheduleSlice = createSlice({
       return initialState;
     },
     setFoodTimeSlots: (state, action) => {
-      state.foodTimeSlots = {
-        ...state.foodTimeSlots,
-        ...action.payload,
-      };
+      if (Array.isArray(action.payload)) {
+        state.foodTimeSlots = action.payload;
+      } else {
+        state.foodTimeSlots = {
+          ...state.foodTimeSlots,
+          ...action.payload,
+        };
+      }
     },
   },
   extraReducers: (builder) => {

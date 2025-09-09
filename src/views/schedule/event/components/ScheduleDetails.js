@@ -69,7 +69,6 @@ export function ScheduleDetails({ form }) {
       event_id: id,
       venue_id: venueId,
       name: currentValues.name,
-      add_ons: currentValues.add_ons, // Preserve add_ons
     };
     form.resetFields();
     form.setFieldsValue(valuesToKeep);
@@ -121,13 +120,13 @@ export function ScheduleDetails({ form }) {
 
   const handleAddOnsChange = (selectedValues) => {
     const addOnsData = (addOnServiceList?.available_add_ons || [])
-      .filter((addon) => selectedValues.includes(addon.name)) 
+      .filter((addon) => selectedValues.includes(addon.name))
       .map((addon) => ({
         name: addon.name,
         status: true,
-        id: addon.id, 
+        id: addon.id,
         price: addon.price,
-      }));  
+      }));
 
     dispatch(setAddOnServie(addOnsData));
     form.setFieldsValue({ add_ons: selectedValues });
