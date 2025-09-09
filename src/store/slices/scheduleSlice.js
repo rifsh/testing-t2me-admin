@@ -19,6 +19,7 @@ export const initialState = {
   responseData: null,
   responseMessage: null,
   timeSlots: {},
+  foodTimeSlots: {},
   scheduleDetails: {},
   activeTab: null,
   dates: [],
@@ -275,10 +276,47 @@ const scheduleSlice = createSlice({
       state.isSelectTime = action.payload;
     },
     setAddOnServie: (state, action) => {
+      // Replace the entire selectedAddOnServiceList with new data
       state.selectedAddOnServiceList = action.payload;
+    },
+
+    // Alternative: If you want to add/remove individual items
+    toggleAddOnService: (state, action) => {
+      const { addon, isSelected } = action.payload;
+
+      if (isSelected) {
+        // Add to list if not already present
+        const existingIndex = state.selectedAddOnServiceList.findIndex(
+          (item) => item.name === addon.name
+        );
+
+        if (existingIndex === -1) {
+          state.selectedAddOnServiceList.push({
+            name: addon.name,
+            status: true,
+            id: addon.id,
+            price: addon.price,
+          });
+        }
+      } else {
+        // Remove from list
+        state.selectedAddOnServiceList = state.selectedAddOnServiceList.filter(
+          (item) => item.name !== addon.name
+        );
+      }
     },
     resetSchedule: (state, action) => {
       return initialState;
+    },
+    setFoodTimeSlots: (state, action) => {
+      if (Array.isArray(action.payload)) {
+        state.foodTimeSlots = action.payload;
+      } else {
+        state.foodTimeSlots = {
+          ...state.foodTimeSlots,
+          ...action.payload,
+        };
+      }
     },
   },
   extraReducers: (builder) => {
@@ -360,6 +398,9 @@ export const {
   updateTimeSlot,
   setScheduleSubmitData,
   setScheduleSelectTime,
-  updateSelectedOffer,setAddOnServie,
+  updateSelectedOffer,
+  setAddOnServie,
+  setFoodTimeSlots,
+  toggleAddOnService,
 } = scheduleSlice.actions;
 export default scheduleSlice.reducer;
