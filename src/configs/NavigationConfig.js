@@ -4,7 +4,10 @@ import {
   OrderedListOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { APP_PREFIX_PATH, FEATURE_FLAGS } from "configs/AppConfig";
+import {
+  APP_PREFIX_PATH,
+  NAVIGATION_BAR_FEATURE_FLAGS,
+} from "configs/AppConfig";
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { jwtDecode } from "jwt-decode";
@@ -978,19 +981,18 @@ const ROLE_NAVIGATION_ACCESS = {
   ],
 };
 
-/**
- * Check navigation feature availability based on new structure
- * @param {string} featureCategory - Feature category from FEATURE_CATEGORIES
- * @param {string} featureItem - Specific feature item (optional)
- * @returns {boolean}
- */
 const isNavigationFeatureEnabled = (featureCategory, featureItem = null) => {
   if (!featureCategory) return true;
 
   const parts = featureCategory.split(".");
 
   if (parts.length === 1) {
-    // Single level: orders, advertisements, etc.
+    // Special handling for app_management since it has a nested structure
+    if (parts[0] === 'app_management' && featureItem) {
+      // App management items are under app_management.subitems.layout.items
+      return isItemEnabled('app_management', 'layout', featureItem);
+    }
+    
     if (featureItem) {
       return isSubcategoryEnabled(parts[0], featureItem);
     }
@@ -1012,23 +1014,58 @@ const isNavigationFeatureEnabled = (featureCategory, featureItem = null) => {
  * @returns {Object[]} - Array of filtered navigation items
  */
 const getFilteredNavigationItems = (allowedKeys) => {
-  return allowedKeys
-    .filter((key) => {
-      const item = ALL_NAVIGATION_ITEMS[key];
-      if (!item) return false;
-
-      // Check if the feature category and specific item are enabled
-      return isNavigationFeatureEnabled(item.category, item.featureItem);
-    })
+  console.log('=== NAVIGATION FILTERING DEBUG ===');
+  console.log('Allowed keys for role:', allowedKeys);
+  
+  const filteredResults = allowedKeys
     .map((key) => {
       const item = ALL_NAVIGATION_ITEMS[key];
+      if (!item) {
+        console.log(`❌ Item not found: ${key}`);
+        return null;
+      }
+
+      // Check if the feature category and specific item are enabled
+      const isFeatureEnabled = isNavigationFeatureEnabled(item.category, item.featureItem);
+      
+      console.log(`🔍 Checking ${key}:`, {
+        category: item.category,
+        featureItem: item.featureItem,
+        isFeatureEnabled: isFeatureEnabled,
+        title: item.title
+      });
+
+      if (!isFeatureEnabled) {
+        console.log(`🚫 Filtered out: ${key} (feature disabled)`);
+        return null;
+      }
+
+      console.log(`✅ Included: ${key}`);
+      return item;
+    })
+    .filter(Boolean)
+    .map((item) => {
       // Return item with resolved submenu if it's a getter
       return {
         ...item,
-        submenu:
-          typeof item.submenu === "function" ? item.submenu : item.submenu,
+        submenu: typeof item.submenu === "function" ? item.submenu : item.submenu,
       };
     });
+
+  console.log('=== FILTERING RESULTS ===');
+  console.log('Total items after filtering:', filteredResults.length);
+  
+  // Group by category for debugging
+  const debugGroups = filteredResults.reduce((groups, item) => {
+    const category = item.category || 'uncategorized';
+    if (!groups[category]) groups[category] = [];
+    groups[category].push(item.title || item.key);
+    return groups;
+  }, {});
+  
+  console.log('Items by category:', debugGroups);
+  
+  return filteredResults;
 };
 
 /**
@@ -1052,6 +1089,9 @@ const groupItemsByCategory = (items) => {
  * @param {Object[]} items - Array of filtered navigation items
  * @returns {Object[]} - Array representing the navigation tree
  */
+// Fix for the buildNavigationTree function - replace the existing function with this corrected version
+
+// Fixed version of buildNavigationTree function
 const buildNavigationTree = (items) => {
   const groupedItems = groupItemsByCategory(items);
   const navigationTree = [];
@@ -1069,7 +1109,10 @@ const buildNavigationTree = (items) => {
     });
   }
 
-  // Applications Section (Services)
+  // Applications Section (Services + Issues)
+  const applicationsSubmenu = [];
+
+  // Services Subsection
   const servicesSubmenu = [];
 
   // General Services
@@ -1124,33 +1167,9 @@ const buildNavigationTree = (items) => {
     });
   }
 
-  // if (servicesSubmenu.length > 0) {
-  //   navigationTree.push({
-  //     key: "Applications",
-  //     path: `${APP_PREFIX_PATH}/apps`,
-  //     title: "sidenav.applications",
-  //     icon: DashboardOutlined,
-  //     breadcrumb: false,
-  //     isGroupTitle: true,
-  //     submenu: [
-  //       {
-  //         key: "Services",
-  //         path: `${APP_PREFIX_PATH}/services`,
-  //         title: "sidenav.services",
-  //         icon: DashboardOutlined,
-  //         breadcrumb: false,
-  //         isGroupTitle: false,
-  //         submenu: servicesSubmenu,
-  //       },
-  //     ],
-  //   });
-  // }
-
-  // Issues Section
-  const issuesSubmenu = [];
-
-  if (groupedItems[FEATURE_CATEGORIES.ISSUE_TRACKING]?.length > 0) {
-    issuesSubmenu.push({
+  // Add Services to Applications if any services exist
+  if (servicesSubmenu.length > 0) {
+    applicationsSubmenu.push({
       key: "Services",
       path: `${APP_PREFIX_PATH}/services`,
       title: "sidenav.services",
@@ -1160,8 +1179,10 @@ const buildNavigationTree = (items) => {
       submenu: servicesSubmenu,
     });
   }
+
+  // Issue Tracking
   if (groupedItems[FEATURE_CATEGORIES.ISSUE_TRACKING]?.length > 0) {
-    issuesSubmenu.push({
+    applicationsSubmenu.push({
       key: "issue_tracking",
       path: `${APP_PREFIX_PATH}/issues/tracking`,
       title: "Issue Tracking",
@@ -1209,7 +1230,7 @@ const buildNavigationTree = (items) => {
     }
 
     if (trackingSubmenu.length > 0) {
-      issuesSubmenu.push({
+      applicationsSubmenu.push({
         key: "TrackRequests",
         path: `${APP_PREFIX_PATH}/track`,
         title: "Track Requests",
@@ -1223,7 +1244,7 @@ const buildNavigationTree = (items) => {
 
   // Lead Events Section
   if (groupedItems[FEATURE_CATEGORIES.LEAD_EVENTS]?.length > 0) {
-    issuesSubmenu.push({
+    applicationsSubmenu.push({
       key: "LeadEvents",
       path: `${APP_PREFIX_PATH}/lead-events`,
       title: "Lead Event Requests",
@@ -1234,15 +1255,16 @@ const buildNavigationTree = (items) => {
     });
   }
 
-  if (issuesSubmenu.length > 0) {
+  // Add Applications section if any subsections exist
+  if (applicationsSubmenu.length > 0) {
     navigationTree.push({
       key: "Applications",
-      path: `${APP_PREFIX_PATH}/issues`,
+      path: `${APP_PREFIX_PATH}/applications`,
       title: "sidenav.applications",
       icon: DashboardOutlined,
       breadcrumb: false,
       isGroupTitle: true,
-      submenu: issuesSubmenu,
+      submenu: applicationsSubmenu,
     });
   }
 
@@ -1285,7 +1307,7 @@ const buildNavigationTree = (items) => {
     });
   }
 
-  // App Management Section - Alternative approach
+  // App Management Section - FIXED: This was the main issue
   if (groupedItems[FEATURE_CATEGORIES.APP_MANAGEMENT]?.length > 0) {
     navigationTree.push({
       key: "AppManagement",
@@ -1307,6 +1329,14 @@ const buildNavigationTree = (items) => {
       ],
     });
   }
+
+  // Debug logging - remove in production
+  console.log("Navigation Debug Info:", {
+    appManagementItems: groupedItems[FEATURE_CATEGORIES.APP_MANAGEMENT],
+    appManagementEnabled:
+      groupedItems[FEATURE_CATEGORIES.APP_MANAGEMENT]?.length > 0,
+    totalNavigationItems: navigationTree.length,
+  });
 
   return navigationTree;
 };
@@ -1362,8 +1392,8 @@ const navigationConfig = () => {
     console.log(`Navigation tree built successfully for role: ${userRoleId}`, {
       totalItems: filteredItems.length,
       treeNodes: navigationTree.length,
-      enabledCategories: Object.keys(FEATURE_FLAGS).filter((category) =>
-        isCategoryEnabled(category)
+      enabledCategories: Object.keys(NAVIGATION_BAR_FEATURE_FLAGS).filter(
+        (category) => isCategoryEnabled(category)
       ),
     });
 
@@ -1399,7 +1429,7 @@ export const isFeatureAvailableForUser = (category, subcategory = null) => {
  * @returns {string[]} - Array of available feature categories
  */
 export const getAvailableCategoriesForUser = () => {
-  return Object.keys(FEATURE_FLAGS).filter((category) =>
+  return Object.keys(NAVIGATION_BAR_FEATURE_FLAGS).filter((category) =>
     isCategoryEnabled(category)
   );
 };
