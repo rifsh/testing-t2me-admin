@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react'
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useSelector } from 'react-redux';
+import React, { useEffect } from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   SIDE_NAV_LIGHT,
   NAV_TYPE_SIDE,
@@ -9,7 +9,7 @@ import {
 import { env } from "./EnvironmentConfig";
 
 const ProtectedRoute = () => {
-  const { token } = useSelector(state => state.auth);
+  const { token } = useSelector((state) => state.auth);
   const location = useLocation();
 
   useEffect(() => {
@@ -22,7 +22,9 @@ const ProtectedRoute = () => {
     const redirectUrl = location.pathname + location.search;
     localStorage.setItem(REDIRECT_URL_KEY, redirectUrl);
 
-    return <Navigate to={`${AUTH_PREFIX_PATH}${UNAUTHENTICATED_ENTRY}`} replace />;
+    return (
+      <Navigate to={`${AUTH_PREFIX_PATH}${UNAUTHENTICATED_ENTRY}`} replace />
+    );
   }
 
   return <Outlet />;
@@ -55,9 +57,12 @@ export const THEME_CONFIG = {
   direction: DIR_LTR,
   blankLayout: false,
 };
-
-// New hierarchical FEATURE_FLAGS structure
-export const FEATURE_FLAGS = {
+export const APP_FEATURE_FLAGS = {
+  MOVIE: true,
+  EVENT: true,
+  DINE: false,
+};
+export const NAVIGATION_BAR_FEATURE_FLAGS = {
   // Orders category
   orders: {
     enabled: true,
@@ -176,19 +181,19 @@ export const FEATURE_FLAGS = {
     },
   },
 
-  // App Management category
+  // App Management category - FIXED
   app_management: {
-    enabled: true,
+    enabled: true,  // <-- This was missing
     subitems: {
       layout: {
-        enabled: true,
+        enabled: true,  // <-- This was missing
         items: {
-          footer: { enabled: true },
-          faq: { enabled: true },
-          app_info: { enabled: true },
-          terms: { enabled: true },
-        },
-      },
-    },
-  },
+          footer: { enabled: true },    // <-- Changed from false to true
+          faq: { enabled: true },       // <-- Changed from false to true
+          app_info: { enabled: true },  // <-- Changed from false to true
+          terms: { enabled: true },     // <-- Changed from false to true
+        }
+      }
+    }
+  }
 };

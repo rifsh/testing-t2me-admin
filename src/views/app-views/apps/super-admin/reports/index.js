@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { Link } from "react-router-dom";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_FEATURE_FLAGS, APP_PREFIX_PATH } from "configs/AppConfig";
 import { DatePicker, Select, Table, message, Spin, Card } from "antd";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -265,20 +265,25 @@ const SuperAdminReport = () => {
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
         {/* Tabs */}
         <div className="flex gap-2 w-full sm:w-auto">
-          {["events", "movies"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              disabled={isLoading}
-              className={`flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                activeTab === tab
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
+          {[
+            { key: "events", enabled: APP_FEATURE_FLAGS.EVENT },
+            { key: "movies", enabled: APP_FEATURE_FLAGS.MOVIE },
+          ]
+            .filter((tab) => tab.enabled)
+            .map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                disabled={isLoading}
+                className={`flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${
+                  activeTab === tab.key
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                {tab.key.charAt(0).toUpperCase() + tab.key.slice(1)}
+              </button>
+            ))}
         </div>
 
         {/* Filters and Export */}

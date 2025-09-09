@@ -1,4 +1,4 @@
-import { FEATURE_FLAGS } from "configs/AppConfig";
+import { NAVIGATION_BAR_FEATURE_FLAGS } from "configs/AppConfig";
 
 /**
  * Check if a main category is enabled
@@ -6,7 +6,7 @@ import { FEATURE_FLAGS } from "configs/AppConfig";
  * @returns {boolean}
  */
 export const isCategoryEnabled = (category) => {
-  const categoryConfig = FEATURE_FLAGS[category];
+  const categoryConfig = NAVIGATION_BAR_FEATURE_FLAGS[category];
   return categoryConfig && categoryConfig.enabled === true;
 };
 
@@ -19,7 +19,7 @@ export const isCategoryEnabled = (category) => {
 export const isSubcategoryEnabled = (category, subcategory) => {
   if (!isCategoryEnabled(category)) return false;
   
-  const categoryConfig = FEATURE_FLAGS[category];
+  const categoryConfig = NAVIGATION_BAR_FEATURE_FLAGS[category];
   const subConfig = categoryConfig.subitems && categoryConfig.subitems[subcategory];
   
   return subConfig && subConfig.enabled === true;
@@ -35,7 +35,7 @@ export const isSubcategoryEnabled = (category, subcategory) => {
 export const isItemEnabled = (category, subcategory, item) => {
   if (!isSubcategoryEnabled(category, subcategory)) return false;
   
-  const subConfig = FEATURE_FLAGS[category].subitems[subcategory];
+  const subConfig = NAVIGATION_BAR_FEATURE_FLAGS[category].subitems[subcategory];
   
   // Handle 2-level structure (no items property)
   if (!subConfig.items) return true;
@@ -82,7 +82,7 @@ export const getEnabledFeaturesInCategory = (category) => {
     return [];
   }
   
-  const categoryConfig = FEATURE_FLAGS[category];
+  const categoryConfig = NAVIGATION_BAR_FEATURE_FLAGS[category];
   const subitems = categoryConfig.subitems || {};
   
   return Object.keys(subitems).filter(subitem => 
