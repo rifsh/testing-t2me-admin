@@ -57,10 +57,10 @@ export const TicketSetDetails = () => {
           <Space direction="vertical" style={{ width: "100%" }}>
             <div className="mb-4">
               <Space direction="vertical" style={{ width: "100%" }}>
-                <Space>
+                {/* <Space>
                   <Text strong>Venue ID:</Text>
                   <Text>{ticketType.venue_id}</Text>
-                </Space>
+                </Space> */}
                 <Space>
                   <Text strong>Total Tickets:</Text>
                   <Text>{ticketType.number_of_tickets || 0}</Text>
