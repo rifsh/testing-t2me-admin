@@ -27,6 +27,7 @@ import Utils from "utils";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import usePermissions from "utils/hooks/usePermissions";
 import { PERMISSIONS } from "constants/RolesPermissionConstants";
+import CDNImage from "components/layout-components/Image/CDNImage";
 const { Panel } = Collapse;
 
 const PaymentList = () => {
@@ -92,7 +93,7 @@ const PaymentList = () => {
       title: "Place",
       render: (row) => (
         <div>
-          <img
+          {/* <img
             src={row.place?.thumbnail_image}
             alt={row.place?.name}
             style={{
@@ -101,6 +102,12 @@ const PaymentList = () => {
               marginRight: 10,
               objectFit: "cover",
             }}
+          /> */}
+          <CDNImage
+            src={row.place?.thumbnail_image}
+            alt={`Image Thumbnail`}
+            height={50}
+            width={80}
           />
           <span>{row.place?.name || "N/A"}</span>
         </div>
@@ -110,7 +117,7 @@ const PaymentList = () => {
       title: "Event",
       render: (row) => (
         <div>
-          <img
+          {/* <img
             src={row.event?.thumbnail_image}
             alt={row.event?.event_name}
             style={{
@@ -119,6 +126,12 @@ const PaymentList = () => {
               marginRight: 10,
               objectFit: "cover",
             }}
+          /> */}
+          <CDNImage
+            src={row.event?.thumbnail_image}
+            alt={`Image Thumbnail`}
+            height={50}
+            width={80}
           />
           <span>{row.event?.event_name || "N/A"}</span>
         </div>
@@ -158,14 +171,14 @@ const PaymentList = () => {
         {hasPermission(
           PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.ADD_PAYMENT
         ) && (
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            onClick={() => navigate(`${APP_PREFIX_PATH}/payment/add`)}
-          >
-            Add Payment
-          </Button>
-        )}
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              onClick={() => navigate(`${APP_PREFIX_PATH}/payment/add`)}
+            >
+              Add Payment
+            </Button>
+          )}
       </Flex>
       <div className="table-responsive">
         <Table

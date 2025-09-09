@@ -236,11 +236,11 @@ const IssueList = () => {
                 style={{ width: 200 }}
               />
             </div>
-            <div className="mb-3">
+            <div className="mb-3 w-60">
               <Select
                 defaultValue="All"
                 onChange={handleShowStatus}
-                className="mr-2"
+                className="mr-2 w-full"
               >
                 <Option value={null}>All</Option>
                 <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
@@ -248,7 +248,7 @@ const IssueList = () => {
                   Tech Admin
                 </Option>
                 <Option value={UserRoleConstants.techSupportingTeamRoleId}>
-                  Super Supporting Team
+                  Tech Supporting Team
                 </Option>
                 <Option value={UserRoleConstants.eventSupportingTeamRoleId}>
                   Event Supporting Team
