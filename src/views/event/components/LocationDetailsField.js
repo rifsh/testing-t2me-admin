@@ -54,6 +54,24 @@ const LocationDetailsField = ({ form }) => {
     dispatch(resetTicketSelection());
   };
 
+  const handleVenueDeselect = (value) => {
+    // Get current selected venues from state
+    const venue = filteredVenues.find((venue) => venue.id === value);
+    if (venue) {
+      dispatch(setSelectedVenueList([venue]));
+    }
+
+    form.setFieldsValue({
+      venues: null,
+      available_types: null,
+      seat_structure_id: null,
+      ticket_structure_id: null,
+      ticket_set: null,
+    });
+
+    dispatch(resetTicketSelection());
+  };
+
   const handleValidationModalCancel = () => {
     dispatch(setPlaceValidationDialogVisible(false));
   };
@@ -73,6 +91,7 @@ const LocationDetailsField = ({ form }) => {
           label="Venue"
           rules={rules.venue}
           onSelect={(value) => handleVenueSelect(value)}
+          onDeselect={handleVenueDeselect}
         />
       </Card>
       <ValidationModal
