@@ -31,6 +31,7 @@ import {
   filterBanner,
 } from "store/slices/advertisementSlice";
 import { ScheduleTimeSlots } from "views/schedule/event/components/ScheduleTimeSlotes";
+import { CDN_PATH } from "configs/AppConfig";
 
 const { Dragger } = Upload;
 const { Title, Text, Paragraph } = Typography;
@@ -163,7 +164,7 @@ function AdScheduleFormFields({ form }) {
             </>
           ) : (
             <img
-              src={selectedDroppedFile.media_path}
+              src={`${CDN_PATH}/${selectedDroppedFile.media_path}`}
               alt="Preview"
               style={{
                 width: "100%",

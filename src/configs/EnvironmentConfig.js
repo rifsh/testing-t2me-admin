@@ -9,6 +9,7 @@ const dev = {
   NEED_ENCRYPT_DECRYPT: false,
   ENCRYPT_PARAMS: false,
   SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS,
+  CDN_PATH: 'https://cdn-media.tickets2mecdn.org'
 };
 
 const uat = {
@@ -17,21 +18,26 @@ const uat = {
   NEED_ENCRYPT_DECRYPT: false,
   ENCRYPT_PARAMS: false,
   SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS,
+  CDN_PATH: 'https://cdn-media.tickets2mecdn.org'
 };
 const demo = {
   API_ENDPOINT_URL: "https://demo-tickets2me.mitetechnology.in",
   AES_KEY: "your_32_byte_encryption_key_here",
   NEED_ENCRYPT_DECRYPT: false,
   SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS,
+  CDN_PATH: 'https://cdn-media.tickets2mecdn.org'
 };
 // temp
 const prod = {
-  API_ENDPOINT_URL: "https://service.tickets2me.com",
+  API_ENDPOINT_URL: "https://api.tickets2me.com",
   AES_KEY: "your_32_byte_encryption_key_here",
   NEED_ENCRYPT_DECRYPT: false,
   ENCRYPT_PARAMS: false,
   SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS,
+  CDN_PATH: 'https://cdn-media.tickets2me.com'
 };
+
+
 
 const test = {
   API_ENDPOINT_URL: "/api",
@@ -43,6 +49,8 @@ const getEnv = () => {
       return demo;
     case "uat":
       return uat;
+    case "prod":
+      return prod;
     case "production":
       return prod;
     case "development":

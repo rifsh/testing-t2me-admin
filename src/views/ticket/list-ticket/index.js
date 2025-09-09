@@ -159,6 +159,10 @@ const TicketList = () => {
             title: "Base Price",
             dataIndex: "base_price",
             render: (price, record) => {
+              if (price === null || price === undefined) {
+                return '----';
+              }
+
               const currencyCode = record?.venue?.place?.country?.currency_code;
               return `${currencyCode ? currencyCode : ""} ${price}`;
             },
@@ -211,7 +215,7 @@ const TicketList = () => {
                                       fontWeight: "bold",
                                     }}
                                   >
-                                    Price : ${ticket.price}
+                                    Price: {ticket?.price != null ? `${record?.venue?.place?.country?.currency_code || ''} ${ticket.price}` : 'N/A'}
                                   </span>
                                 </div>
                               </Col>

@@ -41,6 +41,7 @@ import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/S
 import { isOrganizer } from "configs/UserAccessConfig";
 import usePermissions from "utils/hooks/usePermissions";
 import { PERMISSIONS } from "constants/RolesPermissionConstants";
+import CDNImage from "components/layout-components/Image/CDNImage";
 
 const { Option } = Select;
 
@@ -253,7 +254,7 @@ const CouponList = () => {
             {selectedCoupon.thumbnail_image &&
               selectedCoupon.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">
-                <img
+                {/* <img
                   src={selectedCoupon.thumbnail_image}
                   alt="Offer Thumbnail"
                   style={{
@@ -261,6 +262,12 @@ const CouponList = () => {
                     maxHeight: "200px",
                     objectFit: "contain",
                   }}
+                /> */}
+                <CDNImage
+                  src={selectedCoupon.thumbnail_image}
+                  alt={`Image Thumbnail`}
+                  height={100}
+                  width={80}
                 />
               </Descriptions.Item>
             ) : (

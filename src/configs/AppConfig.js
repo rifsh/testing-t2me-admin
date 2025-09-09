@@ -35,6 +35,7 @@ export default ProtectedRoute;
 // App Configuration
 export const APP_NAME = "Tickets2Me";
 export const API_BASE_URL = env.API_ENDPOINT_URL;
+export const CDN_PATH = env.CDN_PATH;
 export const APP_PREFIX_PATH = "";
 export const AUTH_PREFIX_PATH = "";
 export const REDIRECT_URL_KEY = "redirect";

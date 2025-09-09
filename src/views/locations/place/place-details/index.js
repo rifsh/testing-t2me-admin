@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
-import { Card, Row, Col, Typography, Image, Alert, Carousel } from "antd";
+import { Card, Row, Col, Typography, Alert, Carousel } from "antd";
 import Loading from "components/shared-components/Loading";
 import { useSelector, useDispatch } from "react-redux";
 import {
   getSinglePlace,
 } from "store/slices/locationSlice";
 import { useParams } from "react-router-dom";
+import CDNImage from "components/layout-components/Image/CDNImage";
 
 const { Title, Text } = Typography;
 
@@ -28,35 +29,17 @@ const PlaceDetails = () => {
 
   const mediaImages = singlePlace.media?.map((item) => item.media_url) || [];
 
-  const isNoImage = !singlePlace.thumbnail_image || singlePlace.thumbnail_image === "images";
-
   return (
     <Row gutter={[16, 16]} style={{ padding: "20px" }}>
       <Col span={24}>
         <Card
           bordered={false}
           cover={
-            isNoImage ? (
-              <div
-                style={{
-                  height: 300,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#f0f0f0",
-                  color: "#888",
-                }}
-              >
-                No Image
-              </div>
-            ) : (
-              <Image
-                alt="place thumbnail"
-                src={singlePlace.thumbnail_image}
-                height={300}
-                style={{ objectFit: "cover" }}
-              />
-            )
+            <CDNImage
+              src={singlePlace.thumbnail_image}
+              alt="place thumbnail"
+              height={300}
+            />
           }
         >
           <Title level={2} style={{ margin: "10px 0" }}>
@@ -74,10 +57,9 @@ const PlaceDetails = () => {
           <Row gutter={[16, 16]}>
             <Col span={12}>
               <Text strong>Country:</Text> {singlePlace.country?.name || "Not Available"}
-              {/* <Text strong>Address:</Text> {singlePlace.address || "Not Available"} */}
             </Col>
             <Col span={12}>
-              {/* <Text strong>Country:</Text> {singlePlace.country?.name || "Not Available"} */}
+              {/* Additional information can go here */}
             </Col>
           </Row>
         </Card>
@@ -92,7 +74,11 @@ const PlaceDetails = () => {
             <Carousel autoplay>
               {mediaImages.map((url, index) => (
                 <div key={index}>
-                  <Image alt={`media image ${index + 1}`} src={url} height={300} />
+                  <CDNImage
+                    src={url}
+                    alt={`media image ${index + 1}`}
+                    height={300}
+                  />
                 </div>
               ))}
             </Carousel>

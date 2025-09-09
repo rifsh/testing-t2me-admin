@@ -14,7 +14,7 @@ import {
   makeChangeOffer,
 } from "store/slices/offerSlice";
 import { useNavigate } from "react-router-dom";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import moment from "moment/moment";
 import dayjs from "dayjs";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
@@ -80,7 +80,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
                 uid: "-1",
                 name: offer.thumbnail_image.split("/").pop(),
                 status: "done",
-                url: offer.thumbnail_image,
+                url: `${CDN_PATH}/${offer.thumbnail_image}`,
               },
             ]
             : [],

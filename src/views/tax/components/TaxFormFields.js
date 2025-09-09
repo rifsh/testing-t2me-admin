@@ -92,11 +92,11 @@ const TaxFormFields = ({ mode, tax }) => {
     dispatch(fetchAvailableCategory());
   }, []);
 
-  useEffect(() => {
-    if (error) {
-      message.error(error);
-    }
-  }, [error]);
+  // useEffect(() => {
+  //   if (error) {
+  //     message.error(error);
+  //   }
+  // }, [error]);
 
   useEffect(() => {
     console.log("taxxxxxxxxxxxx", tax);
@@ -120,78 +120,36 @@ const TaxFormFields = ({ mode, tax }) => {
     }
   }, [form, tax, mode]);
 
-  // const handleCountrySelect = (id) => {
-  //   form.setFieldValue("place_id", null);
-  //   dispatch(getPlaces({ country_id: id }));
-  // };
+  useEffect(() => {
+    if (isLocationBased) {
+      dispatch(getPlaces({}));
+    }
+  }, [isLocationBased])
+
+  const handleCountrySelect = (id) => {
+    form.setFieldValue("place_id", null);
+    dispatch(getPlaces({ country_id: id }));
+  };
 
   const handleCheckboxChange = (e) => {
-  setIsLocationBased(e.target.checked);
-  if (e.target.checked) {
-    form.setFieldValue("place_id", null);
-    dispatch(getPlaces({})); // fetch all places without country
-  }
-};
+    setIsLocationBased(e.target.checked);
+  };
 
   const onFinish = async () => {
-  const values = await form.validateFields();
+    const values = await form.validateFields();
 
-  if (mode === "EDIT") {
-    console.log("ITS AN EDIT TAX");
-
-    if (isLocationBased && !form.getFieldValue("place_id")) {
-      message.error("Place ID is missing. Please select a place.");
-      return;
-    }
-
-    const data = {
-      ...values,
-      id: tax.id,
-    };
-    console.log("Edit Data:", data);
-
-    if (isLocationBased) {
-      const resultAction = await dispatch(validatePlace(values.place_id));
-      if (validatePlace.fulfilled.match(resultAction)) {
-        const response = resultAction.payload;
-        if (response.message === "warning") {
-          dispatch(setPlaceValidationDialogVisible(true));
-        } else if (response.data && response.data[0]?.validation_status) {
-          const resultAction = await dispatch(
-            editTax({
-              data,
-              action: ActionType.WARNING,
-              pageData: { page: 1, size: 10 },
-            })
-          );
-
-          if (editTax.fulfilled.match(resultAction)) {
-            dispatch(setSelectedTaxDetails(data));
-            dispatch(setTaxDialogVisible(true));
-          }
-        }
-      }
-    } else {
-      // ✅ No country_id validation anymore, just proceed
-      const resultAction = await dispatch(
-        editTax({
-          data,
-          action: ActionType.WARNING,
-          pageData: { page: 1, size: 10 },
-        })
-      );
-
-      if (editTax.fulfilled.match(resultAction)) {
-        dispatch(setSelectedTaxDetails(data));
-        dispatch(setTaxDialogVisible(true));
-      }
-    }
-  } else {
-    try {
-      if (isLocationBased && !form.getFieldValue("place_id")) {
+    if (mode === "EDIT") {
+      console.log("ITS AN EDITTTTTTTTTTTTT TAXXXXXXX");
+      if (!form.getFieldValue("place_id") && isLocationBased) {
         message.error("Place ID is missing. Please select a place.");
         return;
       }
+
+      const data = {
+        ...values,
+        id: tax.id,
+      };
+      console.log("Edit Data:", data);
 
       if (isLocationBased) {
         const resultAction = await dispatch(validatePlace(values.place_id));
@@ -200,18 +158,77 @@ const TaxFormFields = ({ mode, tax }) => {
           if (response.message === "warning") {
             dispatch(setPlaceValidationDialogVisible(true));
           } else if (response.data && response.data[0]?.validation_status) {
-            dispatch(setSelectedSubmitItem(values));
+            const resultAction = await dispatch(
+              editTax({
+                data,
+                action: ActionType.WARNING,
+                pageData: { page: 1, size: 10 },
+              })
+            );
+
+            if (editTax.fulfilled.match(resultAction)) {
+              dispatch(setSelectedTaxDetails(data));
+              dispatch(setTaxDialogVisible(true));
+            }
           }
         }
       } else {
-        // ✅ No country validation, directly set data
-        dispatch(setSelectedSubmitItem(values));
+        const resultAction = await dispatch(validateCountry(values.country_id));
+        if (validateCountry.fulfilled.match(resultAction)) {
+          const response = resultAction.payload;
+          if (response.message === "warning") {
+            dispatch(setPlaceValidationDialogVisible(true));
+          } else if (response.data && response.data[0]?.validation_status) {
+            const resultAction = await dispatch(
+              editTax({
+                data,
+                action: ActionType.WARNING,
+                pageData: { page: 1, size: 10 },
+              })
+            );
+
+            if (editTax.fulfilled.match(resultAction)) {
+              dispatch(setSelectedTaxDetails(data));
+              dispatch(setTaxDialogVisible(true));
+            }
+          }
+        }
       }
-    } catch (errorInfo) {
-      console.error("Validation Failed:", errorInfo);
+    } else {
+      try {
+        if (!form.getFieldValue("place_id") && isLocationBased) {
+          message.error("Place ID is missing. Please select a place.");
+          return;
+        }
+
+        if (isLocationBased) {
+          const resultAction = await dispatch(validatePlace(values.place_id));
+          if (validatePlace.fulfilled.match(resultAction)) {
+            const response = resultAction.payload;
+            if (response.message === "warning") {
+              dispatch(setPlaceValidationDialogVisible(true));
+            } else if (response.data && response.data[0]?.validation_status) {
+              dispatch(setSelectedSubmitItem(values));
+            }
+          }
+        } else {
+          dispatch(setSelectedSubmitItem(values));
+          dispatch(setPlaceValidationDialogVisible(true));
+          // const resultAction = await dispatch(
+          //   validateCountry(values.country_id)
+          // );
+          // if (validateCountry.fulfilled.match(resultAction)) {
+          //   const response = resultAction.payload;
+          //   if (response.message === "warning") {
+          //   } else if (response.data && response.data[0]?.validation_status) {
+          //   }
+          // }
+        }
+      } catch (errorInfo) {
+        console.error("Validation Failed:", errorInfo);
+      }
     }
-  }
-};
+  };
 
   const handleWarningPagination = (page, size) => {
     dispatch(
@@ -289,21 +306,23 @@ const TaxFormFields = ({ mode, tax }) => {
               <Form.Item name="place_id" label="Place name">
                 <Select
                   className="w-100"
-                  placeholder="Select a Place"
+                  placeholder="Choose a Tax"
                   loading={locationLoading}
                   showSearch
                   filterOption={filterOption}
-                  notFoundContent="No places available"
                 >
-                  {filteredPlaces?.map((place) => (
-                    <Option key={place.id} value={place.id}>
-                      {place.name}
-                    </Option>
-                  ))}
+                  {filteredPlaces && filteredPlaces.length > 0 ? (
+                    filteredPlaces.map((country) => (
+                      <Option key={country.id} value={country.id}>
+                        {country.name}
+                      </Option>
+                    ))
+                  ) : (
+                    <Option disabled>No countries available</Option>
+                  )}
                 </Select>
               </Form.Item>
             )}
-
             <Form.Item name="available_category" label="Tax Category">
               <Select
                 className="w-100"
