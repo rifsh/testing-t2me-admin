@@ -2,6 +2,7 @@ import React from "react";
 import { Card, Row, Col, Typography, Image, Carousel, Alert } from "antd";
 import Loading from "components/shared-components/Loading";
 import { useSelector } from "react-redux";
+import { CDN_PATH } from "configs/AppConfig";
 
 const { Title, Text } = Typography;
 // singleCategory
@@ -40,7 +41,7 @@ const CategoryDetails = () => {
             ) : (
               <Image
                 alt="Category thumbnail"
-                src={singleCategory.thumbnail_image}
+                src={`${CDN_PATH}/${singleCategory.thumbnail_image}`}
                 height={300}
                 style={{ objectFit: "cover" }}
               />
