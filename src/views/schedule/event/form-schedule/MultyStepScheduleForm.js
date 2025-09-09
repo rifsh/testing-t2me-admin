@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { Form, Button, message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentStep, resetState } from "store/slices/eventSlice";
@@ -74,15 +74,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
       dispatch(setCurrentStep(1));
     };
   }, [dispatch, mode, id]);
-  const shouldShowFoodTimeSlots = useMemo(() => {
-    return (
-      selectedAddOnServiceList &&
-      Array.isArray(selectedAddOnServiceList) &&
-      selectedAddOnServiceList.some(
-        (item) => item && item.name === "MULTI_QR_GENERATION"
-      )
-    );
-  }, [selectedAddOnServiceList]);
+
   // Second useEffect for setting form fields
   useEffect(() => {
     const setFormFields = () => {
@@ -106,7 +98,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
           ad_start_date_time: scheduleDetails?.ad_start_date_time
             ? dayjs(scheduleDetails.ad_start_date_time)
             : null,
-
+            
           add_ons: scheduleDetails.add_ons.map((items) => items.name) || [],
         };
 
@@ -269,8 +261,8 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         booking_limit_per_user_toggle: values.booking_limit_per_user_toggle,
 
         add_ons: selectedAddOnServiceList || [],
-        food_slots: foodTimeSlots || [],
-
+        food_slots : foodTimeSlots || [],
+         
         name: values.name,
         event_id: values.event_id,
         venue_id: values.venue_id,
@@ -389,10 +381,11 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         return (
           <div>
             <ScheduleDetails form={form} />
-            {shouldShowFoodTimeSlots && <AddOnsFoodTimeSlotes form={form} />}
+            {selectedAddOnServiceList.find(
+              (tiem) => tiem.name === "USER_AND_FOOD"
+            ) && <AddOnsFoodTimeSlotes form={form} />}
           </div>
         );
-
       case 2:
         return <ScheduleTimeSlots form={form} mode={mode} />;
       case 3:
