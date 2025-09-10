@@ -412,17 +412,23 @@ const IssueDetails = () => {
             <Space direction="vertical" style={{ padding: '10px 0', width: '100%' }}>
               <Space align="start" style={{ display: 'flex', alignItems: 'center' }}>
                 <UserOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
-                <Text type="secondary" style={{ fontSize: '14px', marginLeft: '8px' }}>
+                <div className="text-gray-500 text-sm ml-2">
                   Raised by
-                  {IssueDetails?.user?.role?.name && (
-                    <Text type="warning" style={{ marginLeft: '8px', fontSize: '14px' }}>
-                      {IssueDetails.user.role.name}
-                    </Text>
+                  {IssueDetails?.user?.name && (
+                    <span className="ml-2 text-gray-800 font-medium">
+                      {IssueDetails.user.name}
+                    </span>
                   )}
-                  <span style={{ fontSize: '14px', marginLeft: '8px', color: '#1890ff' }}>
+                  <span className="ml-2 text-blue-600">
                     {IssueDetails?.user?.email || IssueDetails.email}
                   </span>
-                </Text>
+                  {IssueDetails?.user?.role?.name && (
+                    <span className="ml-1 text-yellow-600 text-sm">
+                      ({IssueDetails.user.role.name})
+                    </span>
+                  )}
+                </div>
+
               </Space>
             </Space>
             <Space>

@@ -5,6 +5,7 @@ import {
   fetchAllTickets,
   getAvailableTicketsType,
   resetAvailableTicketSets,
+  resetTicketSets,
   setSelectedTicketType,
   setTicketValidationDialogVisible,
 } from "store/slices/ticketSlice";
@@ -88,6 +89,7 @@ const TicketField = ({ form }) => {
       });
       // } else {
       dispatch(resetAvailableTicketSets());
+      dispatch(resetTicketSets());
       dispatch(fetchAllTickets({ venue_id: value }));
       // }
     }

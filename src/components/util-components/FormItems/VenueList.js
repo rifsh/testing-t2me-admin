@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import debounce from "lodash/debounce";
 import { getVenues, setSelectedVenue } from "store/slices/locationSlice";
 
-const VenueListForm = ({ form, label, rules, onSelect, mode, disabled }) => {
+const VenueListForm = ({ form, label, rules, onSelect, mode, disabled, onDeselect }) => {
   const dispatch = useDispatch();
   const { filteredVenues, selectedVenue, loading } = useSelector(
     (state) => state.locations
@@ -33,6 +33,10 @@ const VenueListForm = ({ form, label, rules, onSelect, mode, disabled }) => {
     dispatch(setSelectedVenue(venue));
   };
 
+  const handleDeselectVenue = (value) => {
+    if (onDeselect) onDeselect(value);
+  };
+
   return (
     <Form.Item name="venue_id" label={label} rules={rules}>
       <Select
@@ -57,6 +61,7 @@ const VenueListForm = ({ form, label, rules, onSelect, mode, disabled }) => {
           label: venue.name,
         }))}
         onSelect={handleSetSelectedVenue}
+        onDeselect={handleDeselectVenue}
       />
     </Form.Item>
   );
