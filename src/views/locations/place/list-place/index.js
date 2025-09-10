@@ -18,7 +18,6 @@ import {
   getSinglePlace,
   setLocationDialogVisible,
   setLocationModalLoading,
-  getCoutryDetails,
   setEditItemId,
 } from "store/slices/locationSlice";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
@@ -138,17 +137,17 @@ const PlaceList = () => {
       <Row gutter={16} justify="space-between" align="middle" wrap={false}>
         <SearchBarWithStatus
           fetchFunction={getPlaces}
-          additionalFilters={[
-            {
-              options: detailedCountryList,
-              placeholder: "Please choose a country",
-              formName: "country_id",
-              isAutoComplete: true,
-              onClick: () => {
-                dispatch(getCoutryDetails());
-              },
-            },
-          ]}
+        // additionalFilters={[
+        //   {
+        //     options: detailedCountryList,
+        //     placeholder: "Please choose a country",
+        //     formName: "country_id",
+        //     isAutoComplete: true,
+        //     onClick: () => {
+        //       dispatch(getCoutryDetails());
+        //     },
+        //   },
+        // ]}
         />
 
         <Col xs={24} sm={8} style={{ textAlign: "right" }}>
