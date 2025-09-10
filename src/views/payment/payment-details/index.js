@@ -1,3 +1,4 @@
+import { CDN_PATH } from "configs/AppConfig";
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -157,7 +158,7 @@ const PaymentDetails = () => {
                 <div className="flex items-start space-x-4">
                   {paymentData.place.thumbnail_image && (
                     <img
-                      src={paymentData.place.thumbnail_image}
+                      src={`${CDN_PATH}/${paymentData.place.thumbnail_image}`}
                       alt={paymentData.place.name}
                       className="w-16 h-16 rounded-lg object-cover"
                     />
@@ -326,7 +327,7 @@ const PaymentDetails = () => {
                 <h3 className="text-lg font-medium text-gray-900 mb-3">
                   Terms & Conditions
                 </h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
+                <p className="text-sm text-gray-600 leading-relaxed truncate">
                   {paymentData.terms_and_conditions}
                 </p>
               </div>

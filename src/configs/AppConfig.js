@@ -165,7 +165,7 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
 
   // Newsletter category
   newsletter: {
-    enabled: true,
+    enabled: false,
     subitems: {
       newsletter: { enabled: true },
       subscribers: { enabled: true },

@@ -47,7 +47,7 @@ import {
   validateOfferCoupon,
   setOfferCouponValidationDialogVisible,
 } from "store/slices/offerSlice";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { SubmitAndConfirmModal } from "../../../components/util-components/ModalItems/SubmitConfirmModal";
@@ -180,29 +180,29 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           eventDetails.event_coupons?.map((coupon) => coupon.coupons.id) || [],
         thumbnail_image: eventDetails.thumbnail_image
           ? [
-              {
-                uid: "-1",
-                name: eventDetails.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: eventDetails.thumbnail_image,
-              },
-            ]
+            {
+              uid: "-1",
+              name: eventDetails.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${eventDetails.thumbnail_image}`,
+            },
+          ]
           : [],
         banner_images: eventDetails.media
           ? eventDetails.media.map((image, index) => ({
-              uid: `-${index + 1}`,
-              name: image.media_url.split("/").pop(),
-              status: "done",
-              url: image.media_url,
-            }))
+            uid: `-${index + 1}`,
+            name: image.media_url.split("/").pop(),
+            status: "done",
+            url: `${CDN_PATH}/${image.media_url}`,
+          }))
           : [],
         event_images: eventDetails.event_images
           ? eventDetails.event_images.map((image, index) => ({
-              uid: `-${index + 1}`,
-              name: image.image.split("/").pop(),
-              status: "done",
-              url: image.image,
-            }))
+            uid: `-${index + 1}`,
+            name: image.image.split("/").pop(),
+            status: "done",
+            url: `${CDN_PATH}/${image.image}`,
+          }))
           : [],
       };
 
