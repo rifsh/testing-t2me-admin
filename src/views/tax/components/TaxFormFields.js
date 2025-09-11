@@ -9,6 +9,7 @@ import {
   Button,
   message,
   Checkbox,
+  InputNumber,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -86,7 +87,6 @@ const TaxFormFields = ({ mode, tax }) => {
     availableTaxCategory = [],
   } = taxState;
 
-
   useEffect(() => {
     dispatch(getCoutryDetails());
     dispatch(fetchAvailableCategory());
@@ -124,7 +124,7 @@ const TaxFormFields = ({ mode, tax }) => {
     if (isLocationBased) {
       dispatch(getPlaces({}));
     }
-  }, [isLocationBased])
+  }, [isLocationBased]);
 
   const handleCountrySelect = (id) => {
     form.setFieldValue("place_id", null);
@@ -366,14 +366,22 @@ const TaxFormFields = ({ mode, tax }) => {
               label="Percentage (%)"
               rules={[
                 { required: true, message: RulesMessageConstants.CAPACITY },
+                {
+                  type: "number",
+                  min: 0,
+                  max: 100,
+                  message: "Enter a value between 0 and 100",
+                },
               ]}
             >
-              <Input
-                type="number"
-                maxLength={3}
+              <InputNumber
+                min={0}
                 max={100}
+                style={{ width: "100%" }}
                 placeholder="Enter percentage"
-                onWheel={(e) => e.target.blur()}
+                onWheel={(e) => e.currentTarget.blur()}
+                parser={(value) => value && value.toString().slice(0, 3)}
+                formatter={(value) => (value ? `${value}` : "")}
               />
             </Form.Item>
 
