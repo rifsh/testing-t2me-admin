@@ -101,8 +101,8 @@ const MultyStepScheduleForm = ({ mode, id }) => {
           ad_start_date_time: scheduleDetails?.ad_start_date_time
             ? dayjs(scheduleDetails.ad_start_date_time)
             : null,
-
-          add_ons: scheduleDetails.add_ons.map((items) => items.name) || [],
+            
+          add_ons: scheduleDetails.add_ons?.map((items) => items.name) || [],
         };
 
         form.setFieldsValue(formValues);

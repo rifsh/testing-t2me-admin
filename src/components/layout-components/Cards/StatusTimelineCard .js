@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, Timeline } from 'antd'; // Assuming you're using Ant Design
+import React from "react";
+import { Card, Timeline } from "antd"; // Ant Design
 
 const StatusTimelineCard = ({
     title = "Timeline",
@@ -10,29 +10,52 @@ const StatusTimelineCard = ({
     status,
     statusLabels = {
         "change request": "Change Requested",
-        "approved": "Approved",
-        "rejected": "Rejected",
-        "pending": "Pending Approval"
+        approved: "Approved",
+        rejected: "Rejected",
+        pending: "Pending Approval",
     },
     statusColors = {
         "change request": "#FF8300",
-        "pending": "gray",
-        "approved": "green",
-        "rejected": "red"
-    }
+        pending: "gray",
+        approved: "green",
+        rejected: "red",
+    },
 }) => {
+    const timelineItems = [];
+
+    if (createdAt) {
+        timelineItems.push({
+            color: "blue",
+            label: `Created on ${new Date(createdAt).toLocaleString()}`,
+        });
+    }
+
+    if (updatedAt) {
+        timelineItems.push({
+            color: "orange",
+            label: `Last updated on ${new Date(updatedAt).toLocaleString()}`,
+        });
+    }
+
+    if (status) {
+        timelineItems.push({
+            color: statusColors[status] || "gray",
+            label: statusLabels[status] || status,
+        });
+    }
+
+    if (timelineItems.length === 0) {
+        return null; // nothing to show
+    }
+
     return (
         <Card title={title} className={className} bordered={bordered}>
             <Timeline>
-                <Timeline.Item color="blue">
-                    Created on {new Date(createdAt).toLocaleString()}
-                </Timeline.Item>
-                <Timeline.Item color="orange">
-                    Last updated on {new Date(updatedAt).toLocaleString()}
-                </Timeline.Item>
-                <Timeline.Item color={statusColors[status] || "gray"}>
-                    {statusLabels[status] || status}
-                </Timeline.Item>
+                {timelineItems.map((item, index) => (
+                    <Timeline.Item key={index} color={item.color}>
+                        {item.label}
+                    </Timeline.Item>
+                ))}
             </Timeline>
         </Card>
     );
