@@ -32,7 +32,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Flex from "components/shared-components/Flex";
 import { useNavigate } from "react-router-dom";
 import LocationMarker from "./LocationMarker";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
@@ -111,23 +111,23 @@ const VenueFormFields = ({ mode, venue }) => {
           : venue.venue_add_on_services,
         banner_images: venue?.media
           ? venue?.media?.map((banner, index) => ({
-              uid: `-banner-${index}`,
-              name: banner?.media_url.split("/").pop(),
-              status: "done",
-              url: banner?.media_url,
-            }))
+            uid: `-banner-${index}`,
+            name: banner?.media_url.split("/").pop(),
+            status: "done",
+            url: `${CDN_PATH}/${banner?.media_url}`,
+          }))
           : [],
 
         thumbnail_image:
           venue.thumbnail_image && venue.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: venue.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: venue.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: venue.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${venue.thumbnail_image}`,
+              },
+            ]
             : [],
       });
     }
@@ -278,9 +278,9 @@ const VenueFormFields = ({ mode, venue }) => {
       // Clean and sanitize add-on services
       const cleanedAddOnServices = Array.isArray(values.venue_add_on_services)
         ? values.venue_add_on_services.map((item) => ({
-            title: item.title?.trim(),
-            services: Array.isArray(item.services) ? item.services : [],
-          }))
+          title: item.title?.trim(),
+          services: Array.isArray(item.services) ? item.services : [],
+        }))
         : [];
 
       // Shared base data
@@ -417,7 +417,7 @@ const VenueFormFields = ({ mode, venue }) => {
               onSelect={handlePlaceSelect}
               rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
             />
-            
+
             <Form.Item
               name="name"
               label="Venue"

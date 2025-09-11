@@ -20,7 +20,7 @@ import {
 } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
@@ -90,7 +90,7 @@ const CategoryFormFields = ({ mode, category }) => {
                   uid: "-1",
                   name: category.thumbnail_image.split("/").pop(),
                   status: "done",
-                  url: category.thumbnail_image,
+                  url: `${CDN_PATH}/${category.thumbnail_image}`,
                 },
               ]
             : [],

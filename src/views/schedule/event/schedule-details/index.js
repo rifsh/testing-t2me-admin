@@ -38,6 +38,8 @@ import Loading from "components/shared-components/Loading";
 import ShowTimesDetails from "../components/ShowTimesDetails";
 import OfferDetailsTable from "../components/OfferDetailsTable";
 import CouponDetailsTable from "../components/CouponDetailsTable";
+import { CDN_PATH } from "configs/AppConfig";
+import CDNImage from "components/layout-components/Image/CDNImage";
 
 const { Panel } = Collapse;
 const { TabPane } = Tabs;
@@ -132,18 +134,24 @@ const ScheduleDetails = () => {
 
   const offerColumns = [
     {
-      title: "Offer",
+      title: "Offersssss",
       dataIndex: ["offer", "name"],
       key: "name",
       render: (text, record) => (
         <div className="flex items-center">
           {record.offer.thumbnail_image && (
-            <Image
+            // <Image
+            //   src={`${CDN_PATH}/${record.offer.thumbnail_image}`}
+            //   width={40}
+            //   height={40}
+            //   className="rounded mr-2"
+            //   preview={false}
+            // />
+            <CDNImage
               src={record.offer.thumbnail_image}
-              width={40}
-              height={40}
-              className="rounded mr-2"
-              preview={false}
+              alt={`Image Thumbnail`}
+              height={50}
+              width={80}
             />
           )}
           <Text strong>{text}</Text>
@@ -268,12 +276,19 @@ const ScheduleDetails = () => {
                   <>
                     <div className="flex mb-4">
                       {venue.place?.thumbnail_image && (
-                        <Image
+                        // <Image
+                        //   src={`${CDN_PATH}/${venue.place.thumbnail_image}`}
+                        //   alt={venue.name}
+                        //   width={120}
+                        //   className="rounded-lg"
+                        //   preview={true}
+                        // />
+                        <CDNImage
                           src={venue.place.thumbnail_image}
-                          alt={venue.name}
-                          width={120}
-                          className="rounded-lg"
-                          preview={false}
+                          alt={`Image Thumbnail`}
+                          height={80}
+                          width={80}
+                          preview={true}
                         />
                       )}
                       <div className="ms-4">
@@ -381,9 +396,9 @@ const ScheduleDetails = () => {
                 {available_types === "seat_structure"
                   ? show_seat_details?.length || 0
                   : show_dates?.reduce(
-                      (total, date) => total + (date.show_times?.length || 0),
-                      0
-                    ) || 0}
+                    (total, date) => total + (date.show_times?.length || 0),
+                    0
+                  ) || 0}
               </Title>
             </div>
           </Col>
