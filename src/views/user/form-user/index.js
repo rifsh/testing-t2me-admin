@@ -155,35 +155,35 @@ const UserForm = ({ mode = ADD, user = null }) => {
       colProps: { xs: 24, md: 12 },
       section: "assignments",
     },
-    {
-      name: "theatre_ids",
-      type: "select",
-      label: "Theaters",
-      required: false,
-      placeholder: "Select theaters",
-      mode: "multiple",
-      allowClear: true,
-      showSearch: true,
-      actionCreation: fetchDropdownTheaters,
+    // {
+    //   name: "theatre_ids",
+    //   type: "select",
+    //   label: "Theaters",
+    //   required: false,
+    //   placeholder: "Select theaters",
+    //   mode: "multiple",
+    //   allowClear: true,
+    //   showSearch: true,
+    //   actionCreation: fetchDropdownTheaters,
 
-      maxTagCount: 5,
-      loading: eventLoading,
-      filterOption: false,
-      condition: (formData, mode) => {
-        const roleId = formData.position_id;
-        return roleId === 5 || roleId === 4;
-      },
-      asyncOptions: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        return (theaterResponse?.items || []).map((theater) => ({
-          value: DataFormatUtils.theaterListItem(theater).id,
-          label: DataFormatUtils.theaterListItem(theater).name,
-        }));
-      },
+    //   maxTagCount: 5,
+    //   loading: eventLoading,
+    //   filterOption: false,
+    //   condition: (formData, mode) => {
+    //     const roleId = formData.position_id;
+    //     return roleId === 5 || roleId === 4;
+    //   },
+    //   asyncOptions: async () => {
+    //     await new Promise((resolve) => setTimeout(resolve, 500));
+    //     return (theaterResponse?.items || []).map((theater) => ({
+    //       value: DataFormatUtils.theaterListItem(theater).id,
+    //       label: DataFormatUtils.theaterListItem(theater).name,
+    //     }));
+    //   },
 
-      colProps: { xs: 24, md: 12 },
-      section: "assignments",
-    },
+    //   colProps: { xs: 24, md: 12 },
+    //   section: "assignments",
+    // },
   ].map((field) => ({
     ...field,
     sectionConfig:
@@ -195,7 +195,7 @@ const UserForm = ({ mode = ADD, user = null }) => {
         },
         assignments: {
           title: "Role Assignments",
-          cardTitle: "Events & Theaters",
+          cardTitle: "Events",
           gutter: 16,
         },
       }[field.section] || {},
