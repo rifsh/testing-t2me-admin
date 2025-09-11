@@ -22,7 +22,7 @@ import {
   setSelectedCatDetails,
 } from "store/slices/categorySlice";
 import { useDispatch, useSelector } from "react-redux";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import { Option } from "antd/es/mentions";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
@@ -91,13 +91,14 @@ const SubCategoryFormFields = ({ mode, category }) => {
         thumbnail_image:
           category.thumbnail_image && category.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: category.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: category.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: category.thumbnail_image.split("/").pop(),
+                status: "done",
+                // url: category.thumbnail_image,
+                url: `${CDN_PATH}/${category.thumbnail_image}`,
+              },
+            ]
             : [],
       });
     }

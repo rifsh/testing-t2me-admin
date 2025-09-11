@@ -11,6 +11,7 @@ const CDNImage = ({
     className = "",
     fallbackElement = null,
     showFallbackOnError = true,
+    preview = false,
     ...imageProps
 }) => {
     const [hasError, setHasError] = useState(false);
@@ -68,6 +69,7 @@ const CDNImage = ({
                 src={imageUrl}
                 height={height}
                 width={width}
+                preview={preview}
                 style={{
                     objectFit: "cover",
                     display: isLoading ? "none" : "block",
