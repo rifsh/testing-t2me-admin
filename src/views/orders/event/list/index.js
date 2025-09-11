@@ -28,7 +28,7 @@ import utils from "utils";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
 import { DEFAULT_PAGE_SIZE, EVENT_TYPES } from "constants/PageConstants";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { fetchAllEvent } from "store/slices/eventSlice";
@@ -101,7 +101,7 @@ const OrdersList = () => {
       render: (name, record) => (
         <div style={{ display: "flex", alignItems: "center" }}>
           <Avatar
-            src={record.event?.thumbnail_image}
+            src={`${CDN_PATH}/${record.event?.thumbnail_image}`}
             size={40}
             style={{ marginRight: 12 }}
             icon={<CalendarOutlined />}
