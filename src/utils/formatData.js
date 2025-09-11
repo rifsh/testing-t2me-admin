@@ -32,5 +32,37 @@ class DataFormatUtils {
       updated_at: theater.place?.updated_at || null,
     };
   };
+  static eventItem = (event) => {
+    return {
+      id: event.id,
+      value: event.id, // Required for Select component
+      name: event.event_name,
+      description: event.description,
+      thumbnail: event.thumbnail_image,
+      status: event.status,
+      created_at: event.created_at,
+      updated_at: event.updated_at,
+
+      category_id: event.category?.id,
+      category_name: event.category?.name,
+      sub_category_id: event.sub_category?.id,
+      sub_category_name: event.sub_category?.name,
+      event_type_id: event.event_type?.id,
+      event_type_name: event.event_type?.name,
+      event_type_display_name: event.event_type?.display_name,
+      event_type_redirect_url: event.event_type?.redirect_url,
+      event_type_code: event.event_type?.event_code,
+      event_type_status: event.event_type?.status,
+      event_type_description: event.event_type?.description,
+      venues: (event.venues || []).map((venue) => ({
+        id: venue.id,
+        name: venue.name,
+        description: venue.description,
+        place_name: venue.place?.name || null,
+      })),
+
+      updates: event.updates || [],
+    };
+  };
 }
 export default DataFormatUtils;

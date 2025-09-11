@@ -370,6 +370,8 @@ const TaxFormFields = ({ mode, tax }) => {
             >
               <Input
                 type="number"
+                maxLength={3}
+                max={100}
                 placeholder="Enter percentage"
                 onWheel={(e) => e.target.blur()}
               />

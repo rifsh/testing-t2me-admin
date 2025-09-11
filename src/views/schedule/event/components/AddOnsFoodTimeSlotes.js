@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Card,
   Form,
-  Select,
   Input,
   Row,
   Col,
@@ -15,8 +14,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { setFoodTimeSlots } from "store/slices/scheduleSlice";
 import dayjs from "dayjs";
 import { AddOnsFoodTimeSlotValidator } from "utils/validation/addOnsFoodTimeValidation";
-
-const { Option } = Select;
 
 export function AddOnsFoodTimeSlotes({ form }) {
   const dispatch = useDispatch();
@@ -34,7 +31,6 @@ export function AddOnsFoodTimeSlotes({ form }) {
     },
   ]);
 
-  // Initialize from Redux store if available
   useEffect(() => {
     if (reduxTimeSlots && Object.keys(reduxTimeSlots).length > 0) {
       const slotsArray = Object.values(reduxTimeSlots).flat();
@@ -45,7 +41,10 @@ export function AddOnsFoodTimeSlotes({ form }) {
   }, [reduxTimeSlots]);
 
   const addTimeSlot = () => {
-    const newId = Math.max(...foodTimeSlots.map((slot) => slot.id)) + 1;
+    const newId =
+      foodTimeSlots.length > 0
+        ? Math.max(...foodTimeSlots.map((slot) => slot.id)) + 1
+        : 1;
     const newTimeSlot = {
       id: newId,
       name: "",
@@ -53,7 +52,6 @@ export function AddOnsFoodTimeSlotes({ form }) {
       end_time: null,
       num_of_tickets: null,
     };
-
     const updatedTimeSlots = [...foodTimeSlots, newTimeSlot];
     setLocalTimeSlots(updatedTimeSlots);
     dispatch(setFoodTimeSlots(updatedTimeSlots));
@@ -62,7 +60,6 @@ export function AddOnsFoodTimeSlotes({ form }) {
 
   const removeTimeSlot = (id) => {
     if (foodTimeSlots.length === 1) return;
-
     const updatedTimeSlots = foodTimeSlots.filter((slot) => slot.id !== id);
     setLocalTimeSlots(updatedTimeSlots);
     dispatch(setFoodTimeSlots(updatedTimeSlots));
@@ -70,13 +67,13 @@ export function AddOnsFoodTimeSlotes({ form }) {
   };
 
   const updateTimeSlot = (id, field, value) => {
-    const updatedTimeSlots = foodTimeSlots.map((slot) => {
-      if (slot.id === id) {
-        return { ...slot, [field]: value };
-      }
-      return slot;
-    });
-
+    let fieldValue = value;
+    if (["start_time", "end_time"].includes(field) && value) {
+      fieldValue = value.format("HH:mm");
+    }
+    const updatedTimeSlots = foodTimeSlots.map((slot) =>
+      slot.id === id ? { ...slot, [field]: fieldValue } : slot
+    );
     setLocalTimeSlots(updatedTimeSlots);
     dispatch(setFoodTimeSlots(updatedTimeSlots));
     form.setFieldsValue({ time_slots: updatedTimeSlots });
@@ -105,8 +102,6 @@ export function AddOnsFoodTimeSlotes({ form }) {
                       new Error("At least one time slot is required")
                     );
                   }
-
-                  // Use comprehensive validation
                   const validation =
                     AddOnsFoodTimeSlotValidator.validateAllSlots(
                       foodTimeSlots,
@@ -116,11 +111,9 @@ export function AddOnsFoodTimeSlotes({ form }) {
                         requireUniqueNames: true,
                       }
                     );
-
                   if (!validation.passed) {
                     return Promise.reject(new Error(validation.message));
                   }
-
                   return Promise.resolve();
                 },
               },
@@ -129,7 +122,6 @@ export function AddOnsFoodTimeSlotes({ form }) {
             <div>
               {foodTimeSlots.map((slot, index) => {
                 const slotValidation = getSlotValidation(slot);
-
                 return (
                   <Card
                     key={slot.id}
@@ -187,7 +179,6 @@ export function AddOnsFoodTimeSlotes({ form }) {
                           />
                         </Form.Item>
                       </Col>
-
                       <Col xs={24} sm={6}>
                         <Form.Item
                           label="Start Time"
@@ -195,7 +186,11 @@ export function AddOnsFoodTimeSlotes({ form }) {
                         >
                           <TimePicker
                             placeholder="09:00"
-                            value={slot.start_time}
+                            value={
+                              slot.start_time
+                                ? dayjs(slot.start_time, "HH:mm")
+                                : null
+                            }
                             onChange={(time) =>
                               updateTimeSlot(slot.id, "start_time", time)
                             }
@@ -204,7 +199,6 @@ export function AddOnsFoodTimeSlotes({ form }) {
                           />
                         </Form.Item>
                       </Col>
-
                       <Col xs={24} sm={6}>
                         <Form.Item
                           label="End Time"
@@ -212,8 +206,8 @@ export function AddOnsFoodTimeSlotes({ form }) {
                           validateStatus={
                             slot.start_time &&
                             slot.end_time &&
-                            !dayjs(slot.end_time).isAfter(
-                              dayjs(slot.start_time)
+                            !dayjs(slot.end_time, "HH:mm").isAfter(
+                              dayjs(slot.start_time, "HH:mm")
                             )
                               ? "error"
                               : ""
@@ -221,8 +215,8 @@ export function AddOnsFoodTimeSlotes({ form }) {
                           help={
                             slot.start_time &&
                             slot.end_time &&
-                            !dayjs(slot.end_time).isAfter(
-                              dayjs(slot.start_time)
+                            !dayjs(slot.end_time, "HH:mm").isAfter(
+                              dayjs(slot.start_time, "HH:mm")
                             )
                               ? "End time must be after start time"
                               : ""
@@ -230,7 +224,11 @@ export function AddOnsFoodTimeSlotes({ form }) {
                         >
                           <TimePicker
                             placeholder="12:00"
-                            value={slot.end_time}
+                            value={
+                              slot.end_time
+                                ? dayjs(slot.end_time, "HH:mm")
+                                : null
+                            }
                             onChange={(time) =>
                               updateTimeSlot(slot.id, "end_time", time)
                             }
@@ -239,7 +237,6 @@ export function AddOnsFoodTimeSlotes({ form }) {
                           />
                         </Form.Item>
                       </Col>
-
                       <Col xs={24} sm={6}>
                         <Form.Item
                           label="Number of Tickets"
@@ -258,8 +255,6 @@ export function AddOnsFoodTimeSlotes({ form }) {
                         </Form.Item>
                       </Col>
                     </Row>
-
-                    {/* Show validation message for this slot */}
                     {!slotValidation.passed && (
                       <div
                         style={{
@@ -274,7 +269,6 @@ export function AddOnsFoodTimeSlotes({ form }) {
                   </Card>
                 );
               })}
-
               <Button
                 type="dashed"
                 onClick={addTimeSlot}

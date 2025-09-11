@@ -41,3 +41,7 @@ export const APPROVAL_STATUS = {
   REJECTED: "rejected",
   CHANGE_REQUEST: "change request",
 };
+
+export const BOOKING_ADDON_TYPE = {
+  USER_AND_FOOD: "USER_AND_FOOD",
+};

@@ -62,15 +62,17 @@ const UserList = () => {
   const { hasPermission, hasAnyPermission } = usePermissions();
 
   useEffect(() => {
-    dispatch(fetchAllUsers({
-      ...DEFAULT_PAGE_SIZE,
-      // role_id: currentUser.role_id
-    }));
+    dispatch(
+      fetchAllUsers({
+        ...DEFAULT_PAGE_SIZE,
+        // role_id: currentUser.role_id
+      })
+    );
   }, [dispatch]);
 
   useEffect(() => {
-    console.log("filteredUsers", filteredUsers)
-  }, [filteredUsers])
+    console.log("filteredUsers", filteredUsers);
+  }, [filteredUsers]);
 
   const showModal = (user) => {
     setSelectedUser(user);
@@ -97,8 +99,8 @@ const UserList = () => {
   };
 
   useEffect(() => {
-    console.log("CurrentUser", currentUser)
-  }, [currentUser])
+    console.log("CurrentUser", currentUser);
+  }, [currentUser]);
 
   const getDropdownMenu = (row) => [
     {
@@ -109,7 +111,9 @@ const UserList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       ),
-      onClick: () => showModal(row),
+      onClick: () => {
+        navigate(`${APP_PREFIX_PATH}/user/${row.id}`);
+      },
     },
     {
       key: "edit",
@@ -140,7 +144,11 @@ const UserList = () => {
       sorter: (a, b) => Utils.antdTableSorter(a, b, ["role", "name"]),
     },
     // Utils.statusColumnUtil(handleUpdateStatus, true, "is_active"),
-    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.USER.USER.EDIT_USER_STATUS), 'is_active'),
+    Utils.statusColumnUtil(
+      handleUpdateStatus,
+      !hasPermission(PERMISSIONS.APPLICATIONS.USER.USER.EDIT_USER_STATUS),
+      "is_active"
+    ),
     {
       title: "",
       dataIndex: "actions",
@@ -160,13 +168,15 @@ const UserList = () => {
         style={{ paddingBottom: "30px" }}
       >
         <SearchBarWithStatus fetchFunction={fetchAllUsers} />
-        {hasPermission(PERMISSIONS.APPLICATIONS.USER.USER.ADD_USER) && <Button
-          type="primary"
-          icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/user/add`)}
-        >
-          Add User
-        </Button>}
+        {hasPermission(PERMISSIONS.APPLICATIONS.USER.USER.ADD_USER) && (
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/user/add`)}
+          >
+            Add User
+          </Button>
+        )}
       </Flex>
       <Table
         columns={tableColumns}
@@ -206,30 +216,28 @@ const UserList = () => {
             <Descriptions.Item label="Events">
               {selectedUser.events?.length && Array.isArray(selectedUser.events)
                 ? selectedUser.events.map((event, index) => (
-                  <span key={event.id}>
-                    {event.event_name}
-                    {index < selectedUser.events.length - 1 && ", "}
-                  </span>
-                ))
+                    <span key={event.id}>
+                      {event.event_name}
+                      {index < selectedUser.events.length - 1 && ", "}
+                    </span>
+                  ))
                 : "No additional information available"}
             </Descriptions.Item>
 
             <Descriptions.Item label="Theaters">
-              {Array.isArray(selectedUser.theatres) && selectedUser.theatres.length > 0 ? (
-                selectedUser.theatres.map((event, index) => (
-                  <span key={event.id}>
-                    {event.name}
-                    {index < selectedUser.theatres.length - 1 && ", "}
-                  </span>
-                ))
-              ) : (
-                "No additional information available"
-              )}
+              {Array.isArray(selectedUser.theatres) &&
+              selectedUser.theatres.length > 0
+                ? selectedUser.theatres.map((event, index) => (
+                    <span key={event.id}>
+                      {event.name}
+                      {index < selectedUser.theatres.length - 1 && ", "}
+                    </span>
+                  ))
+                : "No additional information available"}
             </Descriptions.Item>
 
-
             {selectedUser.thumbnail_image &&
-              selectedUser.thumbnail_image !== "images" ? (
+            selectedUser.thumbnail_image !== "images" ? (
               <Descriptions.Item label="Thumbnail Image">
                 <img
                   src={selectedUser.thumbnail_image}

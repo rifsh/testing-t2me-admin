@@ -11,70 +11,60 @@ export class AddOnsFoodTimeSlotValidator {
    * @returns {Object} - { passed: boolean, message: string }
    */
   static validateSingleSlot(slot) {
-    // Check if slot name is provided
-    if (!slot.name || slot.name.trim() === '') {
-      return { passed: false, message: 'Slot name is required' };
-    }
-
-    // Check slot name length
-    if (slot.name.trim().length < 2) {
-      return { passed: false, message: 'Slot name must be at least 2 characters long' };
-    }
-
-    // Check slot name length (max 50 characters)
-    if (slot.name.trim().length > 50) {
-      return { passed: false, message: 'Slot name cannot exceed 50 characters' };
-    }
-
-    // Validate slot name characters (only letters, numbers, spaces, and basic punctuation)
-    const nameRegex = /^[a-zA-Z0-9\s\-_.,()]+$/;
-    if (!nameRegex.test(slot.name.trim())) {
-      return { passed: false, message: 'Slot name contains invalid characters' };
-    }
-
-    // Check if start time is provided
-    if (!slot.start_time) {
-      return { passed: false, message: 'Start time is required' };
-    }
-
-    // Check if end time is provided
-    if (!slot.end_time) {
-      return { passed: false, message: 'End time is required' };
-    }
-
-    // Validate time range
-    if (slot.start_time && slot.end_time) {
-      const startTime = dayjs(slot.start_time);
-      const endTime = dayjs(slot.end_time);
-
-      if (!endTime.isAfter(startTime)) {
-        return { passed: false, message: 'End time must be after start time' };
-      }
-
-      // Check minimum duration (at least 30 minutes)
-      const duration = endTime.diff(startTime, 'minute');
-      if (duration < 30) {
-        return { passed: false, message: 'Time slot must be at least 30 minutes long' };
-      }
-
-      // Check maximum duration (no more than 12 hours)
-      if (duration > 720) {
-        return { passed: false, message: 'Time slot cannot exceed 12 hours' };
-      }
-    }
-
-    // Check number of tickets
-    if (!slot.num_of_tickets || slot.num_of_tickets < 1) {
-      return { passed: false, message: 'Number of tickets must be at least 1' };
-    }
-
-    // Check maximum tickets limit
-    if (slot.num_of_tickets > 10000) {
-      return { passed: false, message: 'Number of tickets cannot exceed 10,000' };
-    }
-
-    return { passed: true, message: '' };
+  if (!slot.name || slot.name.trim() === '') {
+    return { passed: false, message: 'Slot name is required' };
   }
+
+  if (slot.name.trim().length < 2) {
+    return { passed: false, message: 'Slot name must be at least 2 characters long' };
+  }
+
+  if (slot.name.trim().length > 50) {
+    return { passed: false, message: 'Slot name cannot exceed 50 characters' };
+  }
+
+  const nameRegex = /^[a-zA-Z0-9\s\-_.,()]+$/;
+  if (!nameRegex.test(slot.name.trim())) {
+    return { passed: false, message: 'Slot name contains invalid characters' };
+  }
+
+  if (!slot.start_time) {
+    return { passed: false, message: 'Start time is required' };
+  }
+
+  if (!slot.end_time) {
+    return { passed: false, message: 'End time is required' };
+  }
+
+  if (slot.start_time && slot.end_time) {
+    const startTime = dayjs(slot.start_time, "HH:mm");
+    const endTime = dayjs(slot.end_time, "HH:mm");
+
+    if (!endTime.isAfter(startTime)) {
+      return { passed: false, message: 'End time must be after start time' };
+    }
+
+    const duration = endTime.diff(startTime, 'minute');
+    if (duration < 30) {
+      return { passed: false, message: 'Time slot must be at least 30 minutes long' };
+    }
+
+    if (duration > 720) {
+      return { passed: false, message: 'Time slot cannot exceed 12 hours' };
+    }
+  }
+
+  if (!slot.num_of_tickets || slot.num_of_tickets < 1) {
+    return { passed: false, message: 'Number of tickets must be at least 1' };
+  }
+
+  if (slot.num_of_tickets > 10000) {
+    return { passed: false, message: 'Number of tickets cannot exceed 10,000' };
+  }
+
+  return { passed: true, message: '' };
+}
+
 
   /**
    * Validates all time slots for duplicate names
