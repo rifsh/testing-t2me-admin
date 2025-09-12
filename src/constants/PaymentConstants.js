@@ -34,7 +34,7 @@ export const SERVICE_TYPE = [
 ];
 
 export const PAYMENT_STATUS_OPTIONS = [
-  { value: "all", label: "ALL" },
+  { value: null, label: "ALL" },
   { value: "pending", label: "PENDING" },
   { value: "paid", label: "PAID" },
   { value: "processing", label: "PROCESSING" },

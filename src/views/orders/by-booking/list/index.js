@@ -331,22 +331,22 @@ const BookingList = () => {
 
     const handleSearchSubmit = (value) => {
         setSearchTerm(value);
-        setCurrentPage(1);
-        fetchOrders(1, pageSize, { search: value });
+        // Keep the current page when searching
+        fetchOrders(currentPage, pageSize, { search: value });
     };
 
     const handleSelectPaymentStatus = (status) => {
-        setSelectedPaymentStatus(status);
-        setCurrentPage(1);
-        fetchOrders(1, pageSize, {
-            ...(status && status !== "ALL" && { payment_status: status }),
+        setSelectedPaymentStatus(status === 'all' ? null : status);
+        // Keep the current page when filtering by payment status
+        fetchOrders(currentPage, pageSize, {
+            ...(status && status !== "all" && { payment_status: status }),
         });
     };
 
     const handleSelectEventType = (type) => {
         setSelectedEventType(type);
-        setCurrentPage(1);
-        fetchOrders(1, pageSize, { type });
+        // Keep the current page when filtering by event type
+        fetchOrders(currentPage, pageSize, { type });
     };
 
     const handleTableChange = (paginationConfig) => {
