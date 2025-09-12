@@ -34,7 +34,7 @@ import Flex from "components/shared-components/Flex";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { PAYMENT_STATUS_OPTIONS } from "constants/PaymentConstants";
-
+import { debounce } from "lodash";
 const { Search } = Input;
 const { Option } = Select;
 const { Text } = Typography;
@@ -323,43 +323,56 @@ const BookingList = () => {
 
     const ordersData = ordersByBooking?.items || [];
 
+    const debouncedFetch = useCallback(
+        debounce((value) => {
+            setCurrentPage(1);
+            fetchOrders(1, pageSize, value ? { search: value } : {});
+        }, 500),
+        [pageSize, selectedEventType, selectedPaymentStatus]
+    );
+
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setSearchTerm(value);
-
-        if (!value) {
-            setCurrentPage(1);
-            fetchOrders(1, pageSize);
-        }
+        debouncedFetch(value);
     };
 
     const handleSearchSubmit = (value) => {
         setSearchTerm(value);
-        fetchOrders(1, pageSize, { search: value });
         setCurrentPage(1);
+        fetchOrders(1, pageSize, value ? { search: value } : {});
     };
 
     const handleSelectPaymentStatus = (status) => {
         setSelectedPaymentStatus(status);
-        fetchOrders(currentPage, pageSize, {
-            ...(status && status !== "all" ? { status } : {})
+        setCurrentPage(1);
+        fetchOrders(1, pageSize, {
+            ...(status && status !== "all" ? { status } : {}),
         });
     };
 
-
     const handleSelectEventType = (type) => {
         setSelectedEventType(type);
-        // Keep the current page when filtering by event type
-        fetchOrders(currentPage, pageSize, { type });
+        setCurrentPage(1);
+        fetchOrders(1, pageSize, { type });
     };
 
     const handleTableChange = (paginationConfig) => {
         const newPage = paginationConfig.current;
         const newPageSize = paginationConfig.pageSize;
+
         setCurrentPage(newPage);
         setPageSize(newPageSize);
-        fetchOrders(newPage, newPageSize);
+
+        fetchOrders(newPage, newPageSize, {
+            ...(selectedPaymentStatus && selectedPaymentStatus !== "all"
+                ? { status: selectedPaymentStatus }
+                : {}),
+            ...(selectedEventType ? { type: selectedEventType } : {}),
+            ...(searchTerm ? { search: searchTerm } : {}),
+        });
     };
+
 
     useEffect(() => {
         if (pagination) {
@@ -444,13 +457,16 @@ const BookingList = () => {
                             pageSize: pagination?.size || pageSize,
                             total: pagination?.total || 0,
                             onChange: (page, size) => handleTableChange({ current: page, pageSize: size }),
-                            onShowSizeChange: (current, size) =>
-                                handleTableChange({ current, pageSize: size }),
                             showSizeChanger: true,
-                            showTotal: (total, range) =>
-                                `${range[0]}-${range[1]} of ${total} items`,
+                            onShowSizeChange: (current, size) => {
+                                setCurrentPage(1);
+                                setPageSize(size);
+                                fetchOrders(1, size);
+                            },
+                            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
                         }}
                     />
+
                 </div>
             </Card>
         </div>
