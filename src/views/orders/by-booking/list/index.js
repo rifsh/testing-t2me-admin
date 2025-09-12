@@ -73,9 +73,9 @@ const BookingList = () => {
     };
 
     const handleViewDetails = (order) => {
-        navigate(`${APP_PREFIX_PATH}/reports/orders/details/${order.id}`, {
-            state: { order },
-        });
+        // navigate(`${APP_PREFIX_PATH}/reports/orders/details/${order.id}`, {
+        //     state: { order },
+        // });
     };
 
     const dropdownMenu = (row) => (
