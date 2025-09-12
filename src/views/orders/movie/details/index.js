@@ -339,7 +339,7 @@ const MovieDetailsPage = () => {
         total: bookingTicketUser.total_bookings || 0,
         success: bookingTicketUser.success_bookings || 0,
         failed: bookingTicketUser.failed_bookings || 0,
-        pending: bookingTicketUser.pending_bookings || 0,
+        pending: bookingTicketUser.processing_bookings || 0,
       };
     }
     if (ordersTime?.length > 0) {
@@ -347,7 +347,7 @@ const MovieDetailsPage = () => {
         total: ordersTime[0].total_bookings || 0,
         success: ordersTime[0].success_bookings || 0,
         failed: ordersTime[0].failed_bookings || 0,
-        pending: ordersTime[0].pending_bookings || 0,
+        pending: ordersTime[0].processing_bookings || 0,
       };
     }
     return { total: 0, success: 0, failed: 0, pending: 0 };
@@ -514,7 +514,7 @@ const MovieDetailsPage = () => {
           <div>
             <Badge
               status="processing"
-              text={`${record.pending_bookings || 0} Pending`}
+              text={`${record.processing_bookings || 0} Pending`}
               style={{ fontSize: "11px" }}
             />
           </div>

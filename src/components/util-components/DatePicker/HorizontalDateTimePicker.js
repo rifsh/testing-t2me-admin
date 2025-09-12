@@ -94,12 +94,12 @@ export const HorizontalDateTimePicker = ({
     const {
       success_bookings = 0,
       failed_bookings = 0,
-      pending_bookings = 0,
+      processing_bookings = 0,
     } = item;
 
     if (success_bookings > 0) return "success";
     if (failed_bookings > 0) return "failed";
-    if (pending_bookings > 0) return "pending";
+    if (processing_bookings > 0) return "pending";
     return null;
   };
 
@@ -123,7 +123,7 @@ export const HorizontalDateTimePicker = ({
       total_bookings = 0,
       success_bookings = 0,
       failed_bookings = 0,
-      pending_bookings = 0,
+      processing_bookings = 0,
     } = item;
 
     if (total_bookings === 0) return null;
@@ -132,7 +132,7 @@ export const HorizontalDateTimePicker = ({
       total: total_bookings,
       success: success_bookings,
       failed: failed_bookings,
-      pending: pending_bookings,
+      pending: processing_bookings,
     };
   };
 
