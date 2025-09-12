@@ -7,6 +7,7 @@
   "sidenav.dashboard.analytic": "Analytic",
   "sidenav.dashboard.sales": "Sales",
   "sidenav.event": "Event",
+  "sidenav.order.booking": "By Booking",
   "sidenav.order.event": "By Event",
   "sidenav.event.add": "add",
   "sidenav.services": "Services",

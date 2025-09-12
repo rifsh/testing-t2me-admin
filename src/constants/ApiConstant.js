@@ -1,6 +1,6 @@
 export const ApiConstant = {
   API_BASE_URL: "https://uat-tickets2me.mitetechnology.com",
-  TENANT_COUNTRY_URL : "/api/v1/location/public/tenant/country",
+  TENANT_COUNTRY_URL: "/api/v1/location/public/tenant/country",
   LOGIN: "/api/v1/shared/auth/public/token",
   LOG_OUT: "/api/v1/shared/auth/secured/logout",
   LEAD_REGISTER: "/api/v1/shared/auth/public/register/lead_organizer",
@@ -297,14 +297,11 @@ export const ApiConstant = {
   //Orders
   EVENT_ORDERS_LIST: "/api/v1/event/orders/secured/schedule/list",
   EVENT_ORDERS_SUMMARY: "/api/v1/event/orders/secured/schedule/summary/status",
-  EVENT_ORDERS_DETAILS_DATE:
-    "/api/v1/event/orders/secured/schedule/show/date/details",
-  EVENT_ORDERS_DETAILS_TIME:
-    "/api/v1/event/orders/secured/schedule/show/time/details",
+  EVENT_ORDERS_DETAILS_DATE: "/api/v1/event/orders/secured/schedule/show/date/details",
+  EVENT_ORDERS_DETAILS_TIME: "/api/v1/event/orders/secured/schedule/show/time/details",
   MOVIE_ORDERS_LIST: "/api/v1/movie/orders/secured/schedule/list",
   MOVIE_ORDERS_SUMMARY: "/api/v1/movie/orders/secured/schedule/summary/status",
-  MOVIE_ORDERS_DETAILS_DATE:
-    "/api/v1/movie/orders/secured/schedule/show/date/details",
-  MOVIE_ORDERS_DETAILS_TIME:
-    "/api/v1/movie/orders/secured/schedule/show/time/details",
+  MOVIE_ORDERS_DETAILS_DATE: "/api/v1/movie/orders/secured/schedule/show/date/details",
+  MOVIE_ORDERS_DETAILS_TIME: "/api/v1/movie/orders/secured/schedule/show/time/details",
+  BOOKING_LIST: "/api/v1/event/orders/secured/orders/list",
 };

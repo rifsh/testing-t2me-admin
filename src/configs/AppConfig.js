@@ -68,6 +68,7 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
     enabled: true,
     subitems: {
       event: { enabled: true },
+      booking: { enabled: true },
       movie: { enabled: false },
     },
   },
