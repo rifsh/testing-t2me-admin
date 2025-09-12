@@ -61,7 +61,7 @@ function UserFormFields({ mode, user }) {
     ) {
       dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
     }
-  }, [dispatch, mode, user, UserRoleConstants]);
+  }, [dispatch, mode, UserRoleConstants]);
 
   const handleSelectedRole = (role) => {
     dispatch(setSelectedRole(role));

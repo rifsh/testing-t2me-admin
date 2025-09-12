@@ -160,15 +160,15 @@ const TaxList = () => {
         <SearchBarWithStatus
           fetchFunction={fetchAllTax}
           additionalFilters={[
-            {
-              options: detailedCountryList,
-              placeholder: "Please choose a country",
-              formName: "country_id",
-              isAutoComplete: true,
-              onClick: () => {
-                dispatch(getCoutryDetails());
-              },
-            },
+            // {
+            //   options: detailedCountryList,
+            //   placeholder: "Please choose a country",
+            //   formName: "country_id",
+            //   isAutoComplete: true,
+            //   onClick: () => {
+            //     dispatch(getCoutryDetails());
+            //   },
+            // },
             {
               options: filteredPlaces,
               placeholder: "Please choose a Place",

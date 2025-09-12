@@ -37,7 +37,7 @@ import {
 import HorizontalDateTimePicker from "components/util-components/DatePicker/HorizontalDateTimePicker";
 import EventInformation from "../components/EventInformation";
 import { IoTicketOutline } from "react-icons/io5";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import { BOOKING_TYPE } from "constants/AppConstants";
 
 const { Title, Text } = Typography;
@@ -364,7 +364,7 @@ const EventDetailsPage = () => {
             <Avatar
               size="small"
               icon={<UserOutlined />}
-              src={record?.user?.thumbnail_image}
+              src={`${CDN_PATH}/${record?.user?.thumbnail_image}`}
               style={{ marginRight: 8, backgroundColor: "#1890ff" }}
             />
             <Text strong>{name || "N/A"}</Text>
@@ -429,7 +429,7 @@ const EventDetailsPage = () => {
           <div>
             <Badge
               status="processing"
-              text={`${record.pending_bookings || 0} Pending`}
+              text={`${record.pending_bookings || 0} Processing`}
               style={{ fontSize: "11px" }}
             />
           </div>
@@ -548,7 +548,7 @@ const EventDetailsPage = () => {
         <Col xs={24} sm={12} md={6}>
           <Card style={{ textAlign: "center" }}>
             <Statistic
-              title="Pending"
+              title="Processing"
               value={stats.pending}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: "#faad14", fontSize: "28px" }}

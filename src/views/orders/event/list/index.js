@@ -28,7 +28,7 @@ import utils from "utils";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
 import { DEFAULT_PAGE_SIZE, EVENT_TYPES } from "constants/PageConstants";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { fetchAllEvent } from "store/slices/eventSlice";
@@ -69,10 +69,9 @@ const OrdersList = () => {
   // Handle view details navigation
   const handleViewDetails = (schedule) => {
     navigate(
-      `${APP_PREFIX_PATH}/reports/orders/event/details/${schedule.id}?type=${
-        schedule.available_types === "ticket_structure"
-          ? BOOKING_TYPE.EVENT_TICKET
-          : BOOKING_TYPE.EVENT_SEAT
+      `${APP_PREFIX_PATH}/reports/orders/event/details/${schedule.id}?type=${schedule.available_types === "ticket_structure"
+        ? BOOKING_TYPE.EVENT_TICKET
+        : BOOKING_TYPE.EVENT_SEAT
       }`,
       {
         state: { schedule },
@@ -101,7 +100,7 @@ const OrdersList = () => {
       render: (name, record) => (
         <div style={{ display: "flex", alignItems: "center" }}>
           <Avatar
-            src={record.event?.thumbnail_image}
+            src={`${CDN_PATH}/${record.event?.thumbnail_image}`}
             size={40}
             style={{ marginRight: 12 }}
             icon={<CalendarOutlined />}
@@ -158,7 +157,7 @@ const OrdersList = () => {
           <div style={{ marginBottom: 4 }}>
             <span style={{ color: "#faad14" }}>
               <ClockCircleOutlined style={{ marginRight: 4 }} />
-              Pending: {record.pending_bookings}
+              Processing: {record.pending_bookings}
             </span>
           </div>
           <div>
@@ -414,7 +413,7 @@ const OrdersList = () => {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="Pending Bookings"
+              title="Processing Bookings"
               value={eventOrderSummary?.pending_bookings ?? 0}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: "#faad14" }}

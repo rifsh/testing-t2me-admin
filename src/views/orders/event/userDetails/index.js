@@ -35,6 +35,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getEventOrderDetailsTime } from "store/slices/ordersSlice";
 import { BOOKING_TYPE } from "constants/AppConstants";
 import { FaTicketAlt } from "react-icons/fa";
+import { CDN_PATH } from "configs/AppConfig";
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
@@ -572,7 +573,7 @@ const UserOrderDetailsPage = () => {
             size={64}
             icon={<UserOutlined />}
             style={{ marginRight: 16, backgroundColor: "#1890ff" }}
-            src={selectedUser.thumbnail_image}
+            src={`${CDN_PATH}/${selectedUser.thumbnail_image}`}
           />
           <div>
             <Title level={2} style={{ margin: 0 }}>

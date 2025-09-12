@@ -32,3 +32,11 @@ export const SERVICE_TYPE = [
   // { value: "telegram-notification", label: "Telegram Notification", code: "tlgm-notif" },
   // { value: "in-app-message", label: "In-App Message", code: "inapp-msg" }
 ];
+
+export const PAYMENT_STATUS_OPTIONS = [
+  { value: null, label: "ALL" },
+  { value: "pending", label: "PENDING" },
+  { value: "paid", label: "PAID" },
+  { value: "processing", label: "PROCESSING" },
+  { value: "failed", label: "FAILED" },
+];

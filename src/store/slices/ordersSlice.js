@@ -69,6 +69,17 @@ export const getMovieOrderSummary = createAsyncThunk(
     }
   }
 );
+export const getOrderByBookings = createAsyncThunk(
+  "orders/getOrderByBookings",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await OrderService.getMovieOrderByBookings(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 export const getMovieOrderDetailsDate = createAsyncThunk(
   "orders/fetchMovieOrderDetailsDate",
@@ -103,6 +114,7 @@ const orderSlice = createSlice({
     message: null,
     eventOrdersDataList: [],
     ordersDates: [],
+    ordersByBooking: [],
     ordersTime: [],
     allOrdersTime: [],
     bookingTickets: null,
@@ -268,7 +280,21 @@ const orderSlice = createSlice({
       .addCase(getMovieOrderDetailsTime.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+      .addCase(getOrderByBookings.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getOrderByBookings.fulfilled, (state, action) => {
+        state.loading = false;
+        state.ordersByBooking = action.payload;
+        state.pagination = action.payload;
+      })
+      .addCase(getOrderByBookings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
   },
 });
 
