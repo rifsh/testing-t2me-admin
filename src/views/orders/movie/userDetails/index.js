@@ -72,7 +72,7 @@ const UserOrderDetailsPage = () => {
     totalBookings: bookingTickets?.total_bookings || 0,
     successBookings: bookingTickets?.success_bookings || 0,
     failedBookings: bookingTickets?.failed_bookings || 0,
-    pendingBookings: bookingTickets?.pending_bookings || 0,
+    pendingBookings: bookingTickets?.processing_bookings || 0,
   };
 
   // Get bookings data based on type

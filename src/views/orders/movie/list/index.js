@@ -158,7 +158,7 @@ const OrdersList = () => {
           <div style={{ marginBottom: 4 }}>
             <span style={{ color: "#faad14" }}>
               <ClockCircleOutlined style={{ marginRight: 4 }} />
-              Pending: {record.pending_bookings}
+              Pending: {record.processing_bookings}
             </span>
           </div>
           <div>
@@ -364,7 +364,7 @@ const OrdersList = () => {
           <Card>
             <Statistic
               title="Pending Bookings"
-              value={eventOrderSummary?.pending_bookings ?? 0}
+              value={eventOrderSummary?.processing_bookings ?? 0}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: "#faad14" }}
             />
