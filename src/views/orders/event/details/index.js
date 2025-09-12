@@ -429,7 +429,7 @@ const EventDetailsPage = () => {
           <div>
             <Badge
               status="processing"
-              text={`${record.pending_bookings || 0} Pending`}
+              text={`${record.pending_bookings || 0} Processing`}
               style={{ fontSize: "11px" }}
             />
           </div>
@@ -548,7 +548,7 @@ const EventDetailsPage = () => {
         <Col xs={24} sm={12} md={6}>
           <Card style={{ textAlign: "center" }}>
             <Statistic
-              title="Pending"
+              title="Processing"
               value={stats.pending}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: "#faad14", fontSize: "28px" }}

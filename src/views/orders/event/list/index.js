@@ -69,10 +69,9 @@ const OrdersList = () => {
   // Handle view details navigation
   const handleViewDetails = (schedule) => {
     navigate(
-      `${APP_PREFIX_PATH}/reports/orders/event/details/${schedule.id}?type=${
-        schedule.available_types === "ticket_structure"
-          ? BOOKING_TYPE.EVENT_TICKET
-          : BOOKING_TYPE.EVENT_SEAT
+      `${APP_PREFIX_PATH}/reports/orders/event/details/${schedule.id}?type=${schedule.available_types === "ticket_structure"
+        ? BOOKING_TYPE.EVENT_TICKET
+        : BOOKING_TYPE.EVENT_SEAT
       }`,
       {
         state: { schedule },
@@ -158,7 +157,7 @@ const OrdersList = () => {
           <div style={{ marginBottom: 4 }}>
             <span style={{ color: "#faad14" }}>
               <ClockCircleOutlined style={{ marginRight: 4 }} />
-              Pending: {record.pending_bookings}
+              Processing: {record.pending_bookings}
             </span>
           </div>
           <div>
@@ -414,7 +413,7 @@ const OrdersList = () => {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="Pending Bookings"
+              title="Processing Bookings"
               value={eventOrderSummary?.pending_bookings ?? 0}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: "#faad14" }}

@@ -232,7 +232,7 @@ const ALL_NAVIGATION_ITEMS = {
         {
           key: "reports.orders.event",
           path: `${APP_PREFIX_PATH}/reports/orders/event`,
-          title: "sidenav.event",
+          title: "sidenav.order.event",
           icon: DashboardOutlined,
           breadcrumb: false,
           submenu: [],
@@ -240,7 +240,7 @@ const ALL_NAVIGATION_ITEMS = {
         {
           key: "reports.orders.movie",
           path: `${APP_PREFIX_PATH}/reports/orders/movie`,
-          title: "sidenav.movie",
+          title: "sidenav.order.movie",
           icon: DashboardOutlined,
           breadcrumb: false,
           submenu: [],
@@ -992,7 +992,7 @@ const isNavigationFeatureEnabled = (featureCategory, featureItem = null) => {
       // App management items are under app_management.subitems.layout.items
       return isItemEnabled('app_management', 'layout', featureItem);
     }
-    
+
     if (featureItem) {
       return isSubcategoryEnabled(parts[0], featureItem);
     }
@@ -1016,7 +1016,7 @@ const isNavigationFeatureEnabled = (featureCategory, featureItem = null) => {
 const getFilteredNavigationItems = (allowedKeys) => {
   console.log('=== NAVIGATION FILTERING DEBUG ===');
   console.log('Allowed keys for role:', allowedKeys);
-  
+
   const filteredResults = allowedKeys
     .map((key) => {
       const item = ALL_NAVIGATION_ITEMS[key];
@@ -1027,7 +1027,7 @@ const getFilteredNavigationItems = (allowedKeys) => {
 
       // Check if the feature category and specific item are enabled
       const isFeatureEnabled = isNavigationFeatureEnabled(item.category, item.featureItem);
-      
+
       console.log(`🔍 Checking ${key}:`, {
         category: item.category,
         featureItem: item.featureItem,
@@ -1054,7 +1054,7 @@ const getFilteredNavigationItems = (allowedKeys) => {
 
   console.log('=== FILTERING RESULTS ===');
   console.log('Total items after filtering:', filteredResults.length);
-  
+
   // Group by category for debugging
   const debugGroups = filteredResults.reduce((groups, item) => {
     const category = item.category || 'uncategorized';
@@ -1062,9 +1062,9 @@ const getFilteredNavigationItems = (allowedKeys) => {
     groups[category].push(item.title || item.key);
     return groups;
   }, {});
-  
+
   console.log('Items by category:', debugGroups);
-  
+
   return filteredResults;
 };
 
