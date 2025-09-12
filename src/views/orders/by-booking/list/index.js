@@ -46,7 +46,7 @@ const BookingList = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE.size);
-    const [selectedPaymentStatus, setSelectedPaymentStatus] = useState(null);
+    const [selectedPaymentStatus, setSelectedPaymentStatus] = useState('all');
     const [selectedEventType, setSelectedEventType] = useState('ticket');
 
     const { ordersByBooking, loading, pagination } = useSelector(
@@ -64,13 +64,11 @@ const BookingList = () => {
                 size,
                 type: selectedEventType || "ticket",
                 ...(searchTerm && { search: searchTerm }),
-                ...(selectedPaymentStatus && selectedPaymentStatus !== "ALL" && {
-                    status: selectedPaymentStatus,
-                }),
                 ...extraParams,
             })
         );
     };
+
 
     const handleViewDetails = (order) => {
         // navigate(`${APP_PREFIX_PATH}/reports/orders/details/${order.id}`, {
@@ -326,22 +324,28 @@ const BookingList = () => {
     const ordersData = ordersByBooking?.items || [];
 
     const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
+        const value = e.target.value;
+        setSearchTerm(value);
+
+        if (!value) {
+            setCurrentPage(1);
+            fetchOrders(1, pageSize);
+        }
     };
 
     const handleSearchSubmit = (value) => {
         setSearchTerm(value);
-        // Keep the current page when searching
-        fetchOrders(currentPage, pageSize, { search: value });
+        fetchOrders(1, pageSize, { search: value });
+        setCurrentPage(1);
     };
 
     const handleSelectPaymentStatus = (status) => {
-        setSelectedPaymentStatus(status === 'all' ? null : status);
-        // Keep the current page when filtering by payment status
+        setSelectedPaymentStatus(status);
         fetchOrders(currentPage, pageSize, {
-            ...(status && status !== "all" && { status: status }),
+            ...(status && status !== "all" ? { status } : {})
         });
     };
+
 
     const handleSelectEventType = (type) => {
         setSelectedEventType(type);
