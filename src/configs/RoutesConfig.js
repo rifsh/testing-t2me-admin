@@ -1137,6 +1137,13 @@ const ALL_PROTECTED_ROUTES = {
     category: "user_management",
     subcategory: "user",
   },
+  "user.details": {
+    key: "user.details",
+    path: `${APP_PREFIX_PATH}/user/:userId`,
+    component: React.lazy(() => import("views/user/details-user/index")),
+    category: "user_management",
+    subcategory: "user",
+  },
   "access.control": {
     key: "accessControl.list",
     path: `${APP_PREFIX_PATH}/access-control/list`,

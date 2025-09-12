@@ -58,7 +58,7 @@ export const THEME_CONFIG = {
   blankLayout: false,
 };
 export const APP_FEATURE_FLAGS = {
-  MOVIE: true,
+  MOVIE: false,
   EVENT: true,
   DINE: false,
 };
@@ -183,17 +183,17 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
 
   // App Management category - FIXED
   app_management: {
-    enabled: true,  // <-- This was missing
+    enabled: true, // <-- This was missing
     subitems: {
       layout: {
-        enabled: true,  // <-- This was missing
+        enabled: true, // <-- This was missing
         items: {
-          footer: { enabled: true },    // <-- Changed from false to true
-          faq: { enabled: true },       // <-- Changed from false to true
-          app_info: { enabled: true },  // <-- Changed from false to true
-          terms: { enabled: true },     // <-- Changed from false to true
-        }
-      }
-    }
-  }
+          footer: { enabled: true }, // <-- Changed from false to true
+          faq: { enabled: true }, // <-- Changed from false to true
+          app_info: { enabled: true }, // <-- Changed from false to true
+          terms: { enabled: true }, // <-- Changed from false to true
+        },
+      },
+    },
+  },
 };

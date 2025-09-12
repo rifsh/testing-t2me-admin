@@ -15,10 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllRoles, setSelectedRole } from "store/slices/userSlice";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { UserRoleConstants } from "constants/UserRoleConstant";
-import {
-  InfoCircleOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
+import { InfoCircleOutlined, UploadOutlined } from "@ant-design/icons";
 import { userRules } from "../constants/RuleConstants";
 import {
   SupportImageFormat,
@@ -28,11 +25,10 @@ import {
 import Utils from "utils/index";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import GenericDropdown from "views/theater/components/GenericDropdown";
-import {
-  fetchDropdownTheaters,
-} from "store/slices/theaterSlice";
+import { fetchDropdownTheaters } from "store/slices/theaterSlice";
 import { debounce } from "lodash";
 import { EVENT_TYPES } from "constants/PageConstants";
+import { APP_FEATURE_FLAGS } from "configs/AppConfig";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -55,7 +51,17 @@ function UserFormFields({ mode, user }) {
     ) {
       dispatch(fetchAllRoles({}));
     }
-  }, [dispatch, mode, user]);
+
+    if (
+      mode === "EDIT" &&
+      (user?.user?.role?.position_id ===
+        UserRoleConstants.eventOrganizerRoleId ||
+        user?.user?.role?.position_id ===
+          UserRoleConstants.eventSupportingTeamRoleId)
+    ) {
+      dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
+    }
+  }, [dispatch, mode, user, UserRoleConstants]);
 
   const handleSelectedRole = (role) => {
     dispatch(setSelectedRole(role));
@@ -77,10 +83,6 @@ function UserFormFields({ mode, user }) {
       console.log("theaterresponse", response?.items);
     }
   }, [response]);
-
-  const onRadioChange = (e) => {
-    setValue(e.target.value);
-  };
 
   // Fixed debounced search function
   const debouncedSearch = useCallback(
@@ -151,7 +153,7 @@ function UserFormFields({ mode, user }) {
                     (role) =>
                       !(
                         getCurrentUser().role_id ===
-                        UserRoleConstants.techAdminRoleId &&
+                          UserRoleConstants.techAdminRoleId &&
                         (role.position_id === 1 || role.position_id === 2)
                       )
                   )
@@ -165,67 +167,75 @@ function UserFormFields({ mode, user }) {
           )}
 
           {(selectedRole === UserRoleConstants.eventOrganizerRoleId ||
-            selectedRole === UserRoleConstants.eventSupportingTeamRoleId) && (
-            <div className="my-10">
-              <Form.Item
-                name="event_ids"
-                label={
-                  <span>
-                    Events&nbsp;
-                    <Tooltip title="Please select your events">
-                      <InfoCircleOutlined />
-                    </Tooltip>
-                  </span>
-                }
-                rules={[{ required: true, message: "Please select an event" }]}
-              >
-                <Select
-                  loading={eventLoading}
-                  className="w-100"
-                  placeholder="Select an event"
-                  onSearch={handleSearch}
-                  allowClear
-                  showArrow
-                  showSearch
-                  filterOption={false}
-                  notFoundContent={
-                    eventLoading ? "Loading..." : "No events found"
+            selectedRole === UserRoleConstants.eventSupportingTeamRoleId) &&
+            APP_FEATURE_FLAGS.EVENT && (
+              <div className="my-10">
+                <Form.Item
+                  name="event_ids"
+                  label={
+                    <span>
+                      Events&nbsp;
+                      <Tooltip title="Please select your events">
+                        <InfoCircleOutlined />
+                      </Tooltip>
+                    </span>
                   }
+                  rules={[
+                    { required: true, message: "Please select an event" },
+                  ]}
                 >
-                  {filteredEvents?.map((event) => (
-                    <Option
-                      key={event.id}
-                      value={event.id}
-                      label={event.event_name}
-                    >
-                      {event.event_name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </div>
-          )}
+                  <Select
+                    loading={eventLoading}
+                    className="w-100"
+                    placeholder="Select an event"
+                    onSearch={handleSearch}
+                    allowClear
+                    showArrow
+                    mode="multiple"
+                    showSearch
+                    filterOption={false}
+                    notFoundContent={
+                      eventLoading ? "Loading..." : "No events found"
+                    }
+                  >
+                    {filteredEvents?.map((event) => (
+                      <Option
+                        key={event.id}
+                        value={event.id}
+                        label={event.event_name}
+                      >
+                        {event.event_name}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </div>
+            )}
           {(selectedRole === UserRoleConstants.eventOrganizerRoleId ||
-            selectedRole === UserRoleConstants.eventSupportingTeamRoleId) && (
-            <div className="my-10">
-              <GenericDropdown
-                name="theatre_ids"
-                label="Theaters"
-                mode="multiple"
-                rules={[
-                  { required: false, message: "Please select your theaters!" },
-                ]}
-                fetchOptions={fetchDropdownTheaters}
-                optionsData={response?.items}
-                loading={loading}
-                optionLabelKey="name"
-                optionExtraLabel=""
-                optionValueKey="id"
-                searchParamKey="search"
-                isInfoVisible={true}
-              />
-            </div>
-          )}
+            selectedRole === UserRoleConstants.eventSupportingTeamRoleId) &&
+            APP_FEATURE_FLAGS.MOVIE && (
+              <div className="my-10">
+                <GenericDropdown
+                  name="theatre_ids"
+                  label="Theaters"
+                  mode="multiple"
+                  rules={[
+                    {
+                      required: false,
+                      message: "Please select your theaters!",
+                    },
+                  ]}
+                  fetchOptions={fetchDropdownTheaters}
+                  optionsData={response?.items}
+                  loading={loading}
+                  optionLabelKey="name"
+                  optionExtraLabel=""
+                  optionValueKey="id"
+                  searchParamKey="search"
+                  isInfoVisible={true}
+                />
+              </div>
+            )}
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
@@ -335,60 +345,67 @@ function UserFormFields({ mode, user }) {
         {(selectedRole === UserRoleConstants.eventOrganizerRoleId ||
           selectedRole === UserRoleConstants.eventSupportingTeamRoleId) && (
           <>
-            <Form.Item
-              name="event_ids"
-              className="my-10"
-              label={
-                <span>
-                  Events&nbsp;
-                  <Tooltip title="Please select your events">
-                    <InfoCircleOutlined />
-                  </Tooltip>
-                </span>
-              }
-              hasFeedback
-            >
-              <Select
-                onSearch={handleSearch}
-                allowClear
-                mode="multiple"
-                loading={eventLoading}
-                style={{ width: "100%" }}
-                placeholder="Please select your events"
-                maxTagCount={5}
-                showArrow
-                showSearch
-                filterOption={false}
-                notFoundContent={
-                  eventLoading ? "Loading..." : "No events found"
+            {APP_FEATURE_FLAGS.EVENT === true && (
+              <Form.Item
+                name="event_ids"
+                className="my-10"
+                label={
+                  <span>
+                    Events&nbsp;
+                    <Tooltip title="Please select your events">
+                      <InfoCircleOutlined />
+                    </Tooltip>
+                  </span>
                 }
+                hasFeedback
               >
-                {filteredEvents?.map((event) => (
-                  <Option key={event.id} value={event.id}>
-                    {event.event_name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <div className="my-10">
-              <GenericDropdown
-                name="theatre_ids"
-                label="Theaters"
-                mode="multiple"
-                rules={[
-                  { required: false, message: "Please select your theaters!" },
-                ]}
-                fetchOptions={fetchDropdownTheaters}
-                optionsData={response?.items}
-                loading={loading}
-                optionLabelKey="name"
-                optionExtraLabel=""
-                optionValueKey="id"
-                searchParamKey="search"
-                isInfoVisible={true}
-                hasFeedback={true}
-              />
-            </div>
+                <Select
+                  onSearch={handleSearch}
+                  allowClear
+                  mode="multiple"
+                  loading={eventLoading}
+                  style={{ width: "100%" }}
+                  placeholder="Please select your events"
+                  maxTagCount={5}
+                  showArrow
+                  showSearch
+                  filterOption={false}
+                  notFoundContent={
+                    eventLoading ? "Loading..." : "No events found"
+                  }
+                >
+                  {filteredEvents?.map((event) => (
+                    <Option key={event.id} value={event.id}>
+                      {event.event_name}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            )}
+            {APP_FEATURE_FLAGS.MOVIE === true && (
+              <div className="my-10">
+                <GenericDropdown
+                  name="theatre_ids"
+                  label="Theaters"
+                  mode="multiple"
+                  rules={[
+                    {
+                      required: false,
+                      message: "Please select your theaters!",
+                    },
+                  ]}
+                  fetchOptions={fetchDropdownTheaters}
+                  optionsData={response?.items}
+                  loading={loading}
+                  optionLabelKey="name"
+                  optionExtraLabel=""
+                  optionValueKey="id"
+                  searchParamKey="search"
+                  isInfoVisible={true}
+                  hasFeedback={true}
+                />
+              </div>
+            )}
           </>
         )}
 

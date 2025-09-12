@@ -24,7 +24,10 @@ import dayjs from "dayjs";
 import LoadingOverlay from "components/util-components/Loader/index";
 
 import ConfirmationPage from "../components/ConfirmationPage";
-import { AvailableBookingType } from "constants/AppConstants";
+import {
+  AvailableBookingType,
+  BOOKING_ADDON_TYPE,
+} from "constants/AppConstants";
 import { AddOnsFoodTimeSlotes } from "../components/AddOnsFoodTimeSlotes";
 
 const MultyStepScheduleForm = ({ mode, id }) => {
@@ -261,8 +264,8 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         booking_limit_per_user_toggle: values.booking_limit_per_user_toggle,
 
         add_ons: selectedAddOnServiceList || [],
-        food_slots : foodTimeSlots || [],
-         
+        food_slots: foodTimeSlots || [],
+
         name: values.name,
         event_id: values.event_id,
         venue_id: values.venue_id,
@@ -382,7 +385,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
           <div>
             <ScheduleDetails form={form} />
             {selectedAddOnServiceList.find(
-              (tiem) => tiem.name === "USER_AND_FOOD"
+              (tiem) => tiem.name === BOOKING_ADDON_TYPE.USER_AND_FOOD
             ) && <AddOnsFoodTimeSlotes form={form} />}
           </div>
         );
