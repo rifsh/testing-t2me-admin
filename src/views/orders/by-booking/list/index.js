@@ -65,7 +65,7 @@ const BookingList = () => {
                 type: selectedEventType || "ticket",
                 ...(searchTerm && { search: searchTerm }),
                 ...(selectedPaymentStatus && selectedPaymentStatus !== "ALL" && {
-                    payment_status: selectedPaymentStatus,
+                    status: selectedPaymentStatus,
                 }),
                 ...extraParams,
             })
@@ -339,7 +339,7 @@ const BookingList = () => {
         setSelectedPaymentStatus(status === 'all' ? null : status);
         // Keep the current page when filtering by payment status
         fetchOrders(currentPage, pageSize, {
-            ...(status && status !== "all" && { payment_status: status }),
+            ...(status && status !== "all" && { status: status }),
         });
     };
 
