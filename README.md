@@ -21,6 +21,7 @@ See the section about [running tests](https://facebook.github.io/create-react-ap
 
 ### `yarn build`
 
+// "build": "GENERATE_SOURCEMAP=false CI=false REACT_APP_BUILD_TIMESTAMP=$(date '+%Y-%m-%d') react-scripts build"
 Builds the app for production to the `build` folder.\
 It correctly bundles React in production mode and optimizes the build for the best performance.
 
