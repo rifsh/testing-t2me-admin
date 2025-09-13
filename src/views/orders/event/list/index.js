@@ -157,11 +157,7 @@ const OrdersList = () => {
           <div style={{ marginBottom: 4 }}>
             <span style={{ color: "#faad14" }}>
               <ClockCircleOutlined style={{ marginRight: 4 }} />
-<<<<<<< Updated upstream
               Processing: {record.pending_bookings}
-=======
-              Pending: {record.processing_bookings}
->>>>>>> Stashed changes
             </span>
           </div>
           <div>
@@ -417,13 +413,8 @@ const OrdersList = () => {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-<<<<<<< Updated upstream
               title="Processing Bookings"
               value={eventOrderSummary?.pending_bookings ?? 0}
-=======
-              title="Pending Bookings"
-              value={eventOrderSummary?.processing_bookings ?? 0}
->>>>>>> Stashed changes
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: "#faad14" }}
             />

@@ -79,7 +79,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "reports.orders.booking.detail": {
     key: "reports.orders.booking.detail",
-    path: `${APP_PREFIX_PATH}/reports/orders/by-booking/detail/:id`,
+    path: `${APP_PREFIX_PATH}/reports/orders/by-booking/detail/:id/:type`,
     component: React.lazy(() => import("views/orders/by-booking/details")),
     category: "orders",
     subcategory: "event",

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, Tag, Button, Divider, Progress, Timeline, Row, Col } from 'antd';
+import React, { useEffect } from 'react';
+import { Card, Tag, Button, Divider, Progress, Timeline, Row, Col, message, Space, Typography, Descriptions } from 'antd';
 import {
     CalendarOutlined,
     UserOutlined,
@@ -7,267 +7,380 @@ import {
     DollarOutlined,
     PhoneOutlined,
     MailOutlined,
-    TagOutlined
+    TagOutlined,
+    CreditCardOutlined,
+    QrcodeOutlined,
+    FileTextOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    ExclamationCircleOutlined
 } from '@ant-design/icons';
+import { useDispatch, useSelector } from 'react-redux';
+import { getOrderByBookingDetails } from 'store/slices/ordersSlice';
+import { useNavigate, useParams } from 'react-router-dom';
+import Loading from 'components/shared-components/Loading';
+import LoadingOverlay from 'components/util-components/Loader';
+
+const { Title, Text } = Typography;
 
 const OrderBookingDetails = () => {
-    // Sample data from the API response
-    const bookingData = {
-        id: 27,
-        amount: 600.0,
-        original_amount: 600.0,
-        tax_amount: 90.0,
-        final_amount: 724.5,
-        add_on_charge: 0.0,
-        coupon_code: null,
-        email: "user@example.com",
-        phone: "817236487136",
-        payment_status: "processing",
-        qr_used: false,
-        order_reference: "58e71a43-489a-41bf-be98-c3e98367a6f8",
-        payment_initiated_at: "2025-08-27T07:20:45.997472",
-        payment_url: "https://paypage.sandbox.ngenius-payments.com/?code=1536d00c2e1a3e34",
-        created_at: "2025-08-27T07:20:28.203911",
-        user: {
-            id: 40,
-            username: "shbk",
-            email: "shbk707@gmail.com"
-        },
-        event: {
-            id: 11,
-            event_name: "MUSIC FUSION FEST",
-            description: "Music Fest is a large cultural event where musicians, bands, and performers gather to present live music to audiences, often spread across multiple stages and days."
-        },
-        venue: {
-            id: 1,
-            name: "Park Hyatt",
-            description: "Discover Park Hyatt Dubai, a premier event space in UAE. Perfect for weddings, conferences, and parties. Explore amenities, location, and book your event at Park Hyatt Dubai today!"
-        },
-        schedules: {
-            id: 2,
-            start_date: "2025-11-15T00:00:00",
-            end_date: "2025-11-18T00:00:00"
-        },
-        coupon: null
-    };
+    const dispatch = useDispatch();
+    const { id, type } = useParams();
+    const navigate = useNavigate();
+    const { ordersByBookingDetails, loading, pagination } = useSelector(
+        (state) => state.orderSlice
+    );
 
-    // Format date for display
-    const formatDate = (dateString) => {
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        return new Date(dateString).toLocaleDateString(undefined, options);
-    };
+    useEffect(() => {
+        if (id && type && id !== "undefined" && type !== "undefined") {
+            dispatch(getOrderByBookingDetails({ id, type }));
+        } else {
+            message.warning("Invalid booking id or type");
+            navigate(-1);
+        }
+    }, [dispatch, id, type, navigate]);
 
-    // Get payment status color
-    const getPaymentStatusColor = (status) => {
+    const getPaymentStatusIcon = (status) => {
         switch (status) {
-            case 'completed': return 'green';
-            case 'processing': return 'orange';
-            case 'failed': return 'red';
-            default: return 'blue';
+            case 'completed':
+                return <CheckCircleOutlined className="text-green-500" />;
+            case 'processing':
+                return <ClockCircleOutlined className="text-yellow-500" />;
+            case 'failed':
+                return <ExclamationCircleOutlined className="text-red-500" />;
+            default:
+                return <ClockCircleOutlined className="text-gray-500" />;
         }
     };
 
-    return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4">
-            <div className="max-w-6xl mx-auto">
-                <Card className="shadow-lg rounded-xl overflow-hidden border-0">
-                    {/* Header Section */}
-                    <div className="bg-gradient-to-r from-purple-600 to-blue-500 text-white p-6">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                            <div>
-                                <h1 className="text-2xl md:text-3xl font-bold mb-2">{bookingData.event.event_name}</h1>
-                                <p className="text-purple-100">Booking Reference: {bookingData.order_reference}</p>
-                            </div>
-                            <Tag color={getPaymentStatusColor(bookingData.payment_status)} className="text-sm px-3 py-1 mt-4 md:mt-0">
-                                {bookingData.payment_status.toUpperCase()}
-                            </Tag>
-                        </div>
-                    </div>
+    const getPaymentStatusColor = (status) => {
+        switch (status) {
+            case 'completed':
+                return 'success';
+            case 'processing':
+                return 'processing';
+            case 'failed':
+                return 'error';
+            default:
+                return 'default';
+        }
+    };
 
-                    <div className="p-6">
-                        {/* Main Content Grid */}
-                        <Row gutter={[24, 24]}>
-                            {/* Left Column - Event Details */}
-                            <Col xs={24} lg={14}>
-                                <Card title="Event Details" className="mb-6 shadow-sm">
-                                    <div className="flex items-start mb-4">
-                                        <div className="bg-blue-100 p-3 rounded-full mr-4">
-                                            <CalendarOutlined className="text-blue-600 text-lg" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-semibold text-gray-800">Event Dates</h3>
-                                            <p className="text-gray-600">
-                                                {formatDate(bookingData.schedules.start_date)} - {formatDate(bookingData.schedules.end_date)}
-                                            </p>
-                                        </div>
-                                    </div>
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
 
-                                    <Divider className="my-4" />
+    const formatDateRange = (startDate, endDate) => {
+        if (!startDate || !endDate) return 'N/A';
+        const start = new Date(startDate).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+        const end = new Date(endDate).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+        return `${start} - ${end}`;
+    };
 
-                                    <div className="flex items-start mb-4">
-                                        <div className="bg-green-100 p-3 rounded-full mr-4">
-                                            <EnvironmentOutlined className="text-green-600 text-lg" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-semibold text-gray-800">Venue</h3>
-                                            <p className="text-gray-800 font-medium">{bookingData.venue.name}</p>
-                                            <p className="text-gray-600 mt-1">{bookingData.venue.description.replace(/<[^>]*>/g, '')}</p>
-                                        </div>
-                                    </div>
+    // Safe access to nested properties with fallbacks
+    const getSafeValue = (obj, path, defaultValue = 'N/A') => {
+        if (!obj) return defaultValue;
 
-                                    <Divider className="my-4" />
+        const keys = path.split('.');
+        let value = obj;
 
-                                    <div className="flex items-start">
-                                        <div className="bg-purple-100 p-3 rounded-full mr-4">
-                                            <UserOutlined className="text-purple-600 text-lg" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-semibold text-gray-800">Booked By</h3>
-                                            <p className="text-gray-800 font-medium">{bookingData.user.username}</p>
-                                            <p className="text-gray-600">{bookingData.user.email}</p>
-                                        </div>
-                                    </div>
-                                </Card>
+        for (const key of keys) {
+            if (value === null || value === undefined) return defaultValue;
+            value = value[key];
+        }
 
-                                <Card title="Payment Information" className="shadow-sm">
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Original Amount:</span>
-                                            <span className="font-medium">${bookingData.original_amount.toFixed(2)}</span>
-                                        </div>
+        return value !== null && value !== undefined ? value : defaultValue;
+    };
 
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Tax:</span>
-                                            <span className="font-medium">${bookingData.tax_amount.toFixed(2)}</span>
-                                        </div>
+    if (loading) {
+        return <LoadingOverlay loading={loading} />;
+    }
 
-                                        {bookingData.add_on_charge > 0 && (
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">Additional Charges:</span>
-                                                <span className="font-medium">${bookingData.add_on_charge.toFixed(2)}</span>
-                                            </div>
-                                        )}
-
-                                        <Divider className="my-2" />
-
-                                        <div className="flex justify-between text-lg font-bold">
-                                            <span>Total Amount:</span>
-                                            <span className="text-blue-600">${bookingData.final_amount.toFixed(2)}</span>
-                                        </div>
-
-                                        <div className="mt-6">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="text-gray-600">Payment Status</span>
-                                                <Tag color={getPaymentStatusColor(bookingData.payment_status)}>
-                                                    {bookingData.payment_status.toUpperCase()}
-                                                </Tag>
-                                            </div>
-
-                                            {bookingData.payment_status === 'processing' && (
-                                                <>
-                                                    <Progress percent={60} status="active" className="mb-4" />
-                                                    <Button
-                                                        type="primary"
-                                                        size="large"
-                                                        className="w-full bg-blue-600 hover:bg-blue-700 border-0"
-                                                        onClick={() => window.open(bookingData.payment_url, '_blank')}
-                                                    >
-                                                        Complete Payment
-                                                    </Button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                </Card>
-                            </Col>
-
-                            {/* Right Column - Timeline and Contact */}
-                            <Col xs={24} lg={10}>
-                                <Card title="Booking Timeline" className="mb-6 shadow-sm">
-                                    <Timeline>
-                                        <Timeline.Item color="green">
-                                            <p className="font-semibold">Booking Created</p>
-                                            <p className="text-gray-500 text-sm">
-                                                {new Date(bookingData.created_at).toLocaleString()}
-                                            </p>
-                                        </Timeline.Item>
-                                        <Timeline.Item color="blue">
-                                            <p className="font-semibold">Payment Initiated</p>
-                                            <p className="text-gray-500 text-sm">
-                                                {new Date(bookingData.payment_initiated_at).toLocaleString()}
-                                            </p>
-                                        </Timeline.Item>
-                                        <Timeline.Item color="gray">
-                                            <p className="font-semibold">Payment Completion</p>
-                                            <p className="text-gray-500 text-sm">Pending</p>
-                                        </Timeline.Item>
-                                        <Timeline.Item color="gray">
-                                            <p className="font-semibold">QR Code Generated</p>
-                                            <p className="text-gray-500 text-sm">After payment completion</p>
-                                        </Timeline.Item>
-                                    </Timeline>
-                                </Card>
-
-                                <Card title="Contact Information" className="shadow-sm">
-                                    <div className="space-y-4">
-                                        <div className="flex items-center">
-                                            <MailOutlined className="text-gray-500 mr-3" />
-                                            <div>
-                                                <p className="text-gray-600 text-sm">Email</p>
-                                                <p className="font-medium">{bookingData.email}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center">
-                                            <PhoneOutlined className="text-gray-500 mr-3" />
-                                            <div>
-                                                <p className="text-gray-600 text-sm">Phone</p>
-                                                <p className="font-medium">{bookingData.phone}</p>
-                                            </div>
-                                        </div>
-
-                                        <Divider className="my-4" />
-
-                                        <div className="flex items-center">
-                                            <TagOutlined className="text-gray-500 mr-3" />
-                                            <div>
-                                                <p className="text-gray-600 text-sm">Coupon Code</p>
-                                                <p className="font-medium">
-                                                    {bookingData.coupon_code || 'No coupon applied'}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                                            <h4 className="font-semibold text-yellow-800 flex items-center">
-                                                <i className="fas fa-info-circle mr-2"></i> Important Note
-                                            </h4>
-                                            <p className="text-yellow-700 text-sm mt-1">
-                                                Your booking will be confirmed only after the payment is completed.
-                                                You can complete the payment using the link provided.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </Card>
-                            </Col>
-                        </Row>
-
-                        {/* Footer Actions */}
-                        <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                            <Button size="large" className="border-blue-600 text-blue-600">
-                                Download Invoice
-                            </Button>
-                            <Button size="large" className="border-purple-600 text-purple-600">
-                                Contact Support
-                            </Button>
-                            <Button size="large" className="border-gray-600 text-gray-600">
-                                Modify Booking
-                            </Button>
-                        </div>
-                    </div>
-                </Card>
+    if (!ordersByBookingDetails) {
+        return (
+            <div className="flex items-center justify-center min-h-96">
+                <Text className="text-gray-500">No booking details found</Text>
             </div>
-        </div>
+        );
+    }
+
+    const order = ordersByBookingDetails;
+
+    return (
+        <>
+            <LoadingOverlay loading={loading} />
+            <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
+                {/* Header */}
+                <div className="mb-6">
+                    <Title level={2} className="!mb-2 text-gray-800">
+                        Booking Details{" "}
+                        <span className="text-sm italic text-gray-500">({type} type)</span>
+                    </Title>
+                    <Text className="text-gray-600">
+                        Order Reference:{" "}
+                        <Text code className="font-mono">
+                            {getSafeValue(order, 'order_reference', 'N/A')}
+                        </Text>
+                    </Text>
+                </div>
+
+                <Row gutter={[24, 24]}>
+                    {/* Event Information */}
+                    <Col xs={24} lg={16}>
+                        <Card
+                            title={
+                                <div className="flex items-center gap-2">
+                                    <CalendarOutlined className="text-blue-500" />
+                                    <span>Event Information</span>
+                                </div>
+                            }
+                            className="shadow-sm hover:shadow-md transition-shadow duration-200"
+                        >
+                            <div className="space-y-4">
+                                <div>
+                                    <Title level={4} className="!mb-2 text-gray-800">
+                                        {getSafeValue(order, 'event.event_name', 'Event Name Not Available')}
+                                    </Title>
+                                    <Text className="text-gray-600 leading-relaxed">
+                                        {getSafeValue(order, 'event.description', 'No description available')}
+                                    </Text>
+                                </div>
+
+                                <Divider />
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <EnvironmentOutlined className="text-green-500 text-lg" />
+                                        <div>
+                                            <Text strong className="block">Venue</Text>
+                                            <Text className="text-gray-600">
+                                                {getSafeValue(order, 'venue.name', 'Venue not specified')}
+                                            </Text>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <CalendarOutlined className="text-purple-500 text-lg" />
+                                        <div>
+                                            <Text strong className="block">Event Dates</Text>
+                                            <Text className="text-gray-600">
+                                                {formatDateRange(
+                                                    getSafeValue(order, 'schedules.start_date'),
+                                                    getSafeValue(order, 'schedules.end_date')
+                                                )}
+                                            </Text>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Customer Information */}
+                        <Card
+                            title={
+                                <div className="flex items-center gap-2">
+                                    <UserOutlined className="text-indigo-500" />
+                                    <span>Customer Information</span>
+                                </div>
+                            }
+                            className="shadow-sm hover:shadow-md transition-shadow duration-200 mt-6"
+                        >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="flex items-center gap-3">
+                                    <UserOutlined className="text-blue-500 text-lg" />
+                                    <div>
+                                        <Text strong className="block">Name</Text>
+                                        <Text className="text-gray-600">
+                                            {getSafeValue(order, 'user.username', 'Not provided')}
+                                        </Text>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <MailOutlined className="text-red-500 text-lg" />
+                                    <div>
+                                        <Text strong className="block">Email</Text>
+                                        <Text className="text-gray-600">
+                                            {getSafeValue(order, 'email', 'Not provided')}
+                                        </Text>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <PhoneOutlined className="text-green-500 text-lg" />
+                                    <div>
+                                        <Text strong className="block">Phone</Text>
+                                        <Text className="text-gray-600">
+                                            {getSafeValue(order, 'phone', 'Not provided')}
+                                        </Text>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <QrcodeOutlined className="text-orange-500 text-lg" />
+                                    <div>
+                                        <Text strong className="block">QR Status</Text>
+                                        <Tag color={getSafeValue(order, 'qr_used', false) ? 'success' : 'default'}>
+                                            {getSafeValue(order, 'qr_used', false) ? 'Used' : 'Not Used'}
+                                        </Tag>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
+
+                    {/* Payment & Summary */}
+                    <Col xs={24} lg={8}>
+                        {/* Payment Status */}
+                        <Card
+                            title={
+                                <div className="flex items-center gap-2">
+                                    <CreditCardOutlined className="text-green-500" />
+                                    <span>Payment Status</span>
+                                </div>
+                            }
+                            className="shadow-sm hover:shadow-md transition-shadow duration-200 mb-6"
+                        >
+                            <div className="text-center space-y-4">
+                                <div className="flex items-center justify-center gap-2">
+                                    {getPaymentStatusIcon(getSafeValue(order, 'payment_status'))}
+                                    <Tag
+                                        color={getPaymentStatusColor(getSafeValue(order, 'payment_status'))}
+                                        className="px-4 py-1 text-sm font-medium uppercase"
+                                    >
+                                        {getSafeValue(order, 'payment_status', 'unknown')}
+                                    </Tag>
+                                </div>
+
+                                {getSafeValue(order, 'payment_url') && getSafeValue(order, 'payment_url') !== 'N/A' && (
+                                    <Button
+                                        type="primary"
+                                        block
+                                        onClick={() => window.open(order.payment_url, '_blank')}
+                                        className="bg-blue-500 hover:bg-blue-600"
+                                    >
+                                        Complete Payment
+                                    </Button>
+                                )}
+                            </div>
+                        </Card>
+
+                        {/* Price Breakdown */}
+                        <Card
+                            title={
+                                <div className="flex items-center gap-2">
+                                    <DollarOutlined className="text-green-500" />
+                                    <span>Price Breakdown</span>
+                                </div>
+                            }
+                            className="shadow-sm hover:shadow-md transition-shadow duration-200"
+                        >
+                            <div className="space-y-3">
+                                <div className="flex justify-between">
+                                    <Text>Original Amount</Text>
+                                    <Text strong>${getSafeValue(order, 'original_amount', 0).toFixed(2)}</Text>
+                                </div>
+
+                                {getSafeValue(order, 'add_on_charge', 0) > 0 && (
+                                    <div className="flex justify-between">
+                                        <Text>Add-on Charges</Text>
+                                        <Text strong>${getSafeValue(order, 'add_on_charge', 0).toFixed(2)}</Text>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-between">
+                                    <Text>Tax Amount</Text>
+                                    <Text>${getSafeValue(order, 'tax_amount', 0).toFixed(2)}</Text>
+                                </div>
+
+                                {getSafeValue(order, 'coupon_code') && getSafeValue(order, 'coupon_code') !== 'N/A' && (
+                                    <div className="flex justify-between text-green-600">
+                                        <Text>Coupon ({getSafeValue(order, 'coupon_code')})</Text>
+                                        <Text>-${(getSafeValue(order, 'amount', 0) - getSafeValue(order, 'final_amount', 0)).toFixed(2)}</Text>
+                                    </div>
+                                )}
+
+                                <Divider className="!my-3" />
+
+                                <div className="flex justify-between">
+                                    <Title level={5} className="!mb-0">Final Amount</Title>
+                                    <Title level={5} className="!mb-0 text-green-600">
+                                        ${getSafeValue(order, 'final_amount', 0).toFixed(2)}
+                                    </Title>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Order Timeline */}
+                        <Card
+                            title={
+                                <div className="flex items-center gap-2">
+                                    <FileTextOutlined className="text-purple-500" />
+                                    <span>Order Timeline</span>
+                                </div>
+                            }
+                            className="shadow-sm hover:shadow-md transition-shadow duration-200 mt-6"
+                        >
+                            <Timeline
+                                items={[
+                                    {
+                                        color: 'blue',
+                                        children: (
+                                            <div>
+                                                <Text strong className="block">Order Created</Text>
+                                                <Text className="text-gray-500 text-sm">
+                                                    {formatDate(getSafeValue(order, 'created_at'))}
+                                                </Text>
+                                            </div>
+                                        ),
+                                    },
+                                    {
+                                        color: getSafeValue(order, 'payment_initiated_at') ? 'orange' : 'gray',
+                                        children: (
+                                            <div>
+                                                <Text strong className="block">Payment Initiated</Text>
+                                                <Text className="text-gray-500 text-sm">
+                                                    {getSafeValue(order, 'payment_initiated_at')
+                                                        ? formatDate(order.payment_initiated_at)
+                                                        : 'Pending'
+                                                    }
+                                                </Text>
+                                            </div>
+                                        ),
+                                    },
+                                    {
+                                        color: getSafeValue(order, 'payment_status') === 'completed' ? 'green' : 'gray',
+                                        children: (
+                                            <div>
+                                                <Text strong className="block">Payment Completed</Text>
+                                                <Text className="text-gray-500 text-sm">
+                                                    {getSafeValue(order, 'payment_status') === 'completed' ? 'Completed' : 'Pending'}
+                                                </Text>
+                                            </div>
+                                        ),
+                                    },
+                                ]}
+                            />
+                        </Card>
+                    </Col>
+                </Row>
+            </div>
+        </>
     );
 };
 

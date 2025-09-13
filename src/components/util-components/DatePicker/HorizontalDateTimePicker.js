@@ -343,7 +343,7 @@ export const HorizontalDateTimePicker = ({
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 bg-amber-500 rounded-full shadow-sm"></div>
-            <span className="text-slate-600 font-medium">Pending</span>
+            <span className="text-slate-600 font-medium">Processing</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-sm"></div>

@@ -429,11 +429,7 @@ const EventDetailsPage = () => {
           <div>
             <Badge
               status="processing"
-<<<<<<< Updated upstream
               text={`${record.pending_bookings || 0} Processing`}
-=======
-              text={`${record.processing_bookings || 0} Pending`}
->>>>>>> Stashed changes
               style={{ fontSize: "11px" }}
             />
           </div>
