@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AutoComplete, Input, Select } from "antd";
+import { AutoComplete, Input, Select, Button } from "antd";
 import { useDispatch } from "react-redux";
 import Flex from "components/shared-components/Flex";
 import { resetSearchValue, resetStatusValue, setGlobalSearchValue, setGlobalStatusValue } from "store/slices/fliterSlice";
@@ -18,20 +18,57 @@ const SearchBarWithStatus = ({
   method = ''
 }) => {
   const dispatch = useDispatch();
-  const [searchValue, setSearchValue] = useState(null);
+  const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState(null);
   const [filterValues, setFilterValues] = useState({});
 
+  // Initialize filter state
   useEffect(() => {
-    dispatch(resetStatusValue())
+    dispatch(resetStatusValue());
   }, []);
 
+  // Check if any filters are active
+  const hasActiveFilters = () => {
+    return searchValue !== '' ||
+      statusFilter !== null ||
+      Object.values(filterValues).some(value => value !== null && value !== undefined && value !== '');
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    // Reset local state
+    setSearchValue('');
+    setStatusFilter(null);
+    setFilterValues({});
+
+    // Reset Redux state
+    dispatch(resetSearchValue());
+    dispatch(resetStatusValue());
+
+    // Fetch data with all filters cleared
+    const fetchParams = {
+      search: null,
+      page: 1,
+      size: 10,
+    };
+
+    if (isPermission) {
+      fetchParams.filter_by_display_name = displayName;
+      fetchParams.order_id = roleId;
+      fetchParams.filter_by_method = method;
+    }
+
+    dispatch(fetchFunction(fetchParams));
+  };
+
   const handleSearch = (value) => {
-    if (isPermission && value) {
-      dispatch(setGlobalSearchValue(value));
+    const searchTerm = value.trim();
+
+    if (isPermission) {
+      dispatch(setGlobalSearchValue(searchTerm));
       dispatch(
         fetchFunction({
-          search: value || null,
+          search: searchTerm || null,
           page: 1,
           size: 10,
           ...(isStatus && { active: statusFilter }),
@@ -44,36 +81,46 @@ const SearchBarWithStatus = ({
       return;
     }
 
-    if (value) {
-      setSearchValue(value || null);
-      dispatch(setGlobalSearchValue(value));
-      dispatch(
-        fetchFunction({
-          search: value || null,
-          page: 1,
-          size: 10,
-          ...(isStatus && { active: statusFilter }),
-          ...filterValues,
-        })
-      );
+    setSearchValue(searchTerm);
+    dispatch(setGlobalSearchValue(searchTerm));
+    dispatch(
+      fetchFunction({
+        search: searchTerm || null,
+        page: 1,
+        size: 10,
+        ...(isStatus && { active: statusFilter }),
+        ...filterValues,
+      })
+    );
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchValue(value);
+
+    // If search input is cleared, trigger search with empty value
+    if (!value) {
+      handleSearchIsEmpty();
     }
   };
 
-  const handleSearchIsEmpty = (value) => {
-    if (!value) {
-      setSearchValue(null);
-      dispatch(resetSearchValue())
-      dispatch(
-        fetchFunction({
-          search: null,
-          page: 1,
-          size: 10,
-          ...(isStatus && { active: statusFilter }),
-          ...filterValues,
-          filter_by_display_name: displayName
-        })
-      );
+  const handleSearchIsEmpty = () => {
+    setSearchValue('');
+    dispatch(resetSearchValue());
+
+    const fetchParams = {
+      search: null,
+      page: 1,
+      size: 10,
+      ...(isStatus && { active: statusFilter }),
+      ...filterValues,
+    };
+
+    if (isPermission) {
+      fetchParams.filter_by_display_name = displayName;
     }
+
+    dispatch(fetchFunction(fetchParams));
   };
 
   const handleFilterItemIsEmpty = (value) => {
@@ -92,7 +139,7 @@ const SearchBarWithStatus = ({
 
   const handleStatusChange = (status) => {
     setStatusFilter(status);
-    dispatch(setGlobalStatusValue(status))
+    dispatch(setGlobalStatusValue(status));
     dispatch(
       fetchFunction({
         search: searchValue,
@@ -141,10 +188,12 @@ const SearchBarWithStatus = ({
   const handleAutoCompleteSelect = (value, option, formName) => {
     const selectedId = option.id;
 
-    setFilterValues((prev) => ({
-      ...prev,
+    const newFilterValues = {
+      ...filterValues,
       [formName]: selectedId,
-    }));
+    };
+
+    setFilterValues(newFilterValues);
 
     dispatch(
       fetchFunction({
@@ -152,23 +201,39 @@ const SearchBarWithStatus = ({
         page: 1,
         size: 10,
         ...(isStatus && { active: statusFilter }),
-        ...filterValues,
-        [formName]: selectedId,
+        ...newFilterValues,
       })
     );
   };
 
+  // Reset AutoComplete value when filter is cleared
+  const getAutoCompleteValue = (formName) => {
+    const filterValue = filterValues[formName];
+    if (!filterValue) return '';
+
+    const filterConfig = additionalFilters.find(f => f.formName === formName);
+    if (!filterConfig || !filterConfig.options) return '';
+
+    const selectedOption = filterConfig.options.find(opt =>
+      opt.id.toString() === filterValue.toString()
+    );
+
+    return selectedOption ? selectedOption.name : '';
+  };
+
   return (
-    <Flex className="mb-1" mobileFlex={false} >
+    <Flex className="mb-1" mobileFlex={false} alignItems="center">
       {/* Search Input */}
       <div className="mr-md-3 mb-3"
         style={{ width: !isStatus && "100%" }}
       >
         <Search
           placeholder={placeholder}
-          onChange={(e) => handleSearchIsEmpty(e.target.value)}
+          onChange={handleSearchChange}
           onSearch={handleSearch}
           style={{ width: isStatus ? 200 : "100%" }}
+          value={searchValue}
+          allowClear
         />
       </div>
 
@@ -176,10 +241,12 @@ const SearchBarWithStatus = ({
       {isStatus && (
         <div className="mb-3 mr-md-3">
           <Select
-            defaultValue="All"
+            value={statusFilter}
             onChange={handleStatusChange}
             className="mr-2"
             style={{ minWidth: 180 }}
+            allowClear
+            onClear={() => handleStatusChange(null)}
           >
             <Option value={null}>All</Option>
             <Option value={true}>Active</Option>
@@ -199,7 +266,23 @@ const SearchBarWithStatus = ({
                 options={getAutoCompleteOptions(filter.options)}
                 style={{ width: 180 }}
                 onClick={filter.onClick}
-                onChange={(e) => handleFilterItemIsEmpty(e)}
+                onChange={(value) => {
+                  if (!value) {
+                    const newFilterValues = { ...filterValues };
+                    delete newFilterValues[filter.formName];
+                    setFilterValues(newFilterValues);
+
+                    dispatch(
+                      fetchFunction({
+                        search: searchValue,
+                        page: 1,
+                        size: 10,
+                        ...(isStatus && { active: statusFilter }),
+                        ...newFilterValues,
+                      })
+                    );
+                  }
+                }}
                 placeholder={filter.placeholder || "Select"}
                 onSelect={(value, option) =>
                   handleAutoCompleteSelect(value, option, filter.formName)
@@ -209,14 +292,19 @@ const SearchBarWithStatus = ({
                     ?.toLowerCase()
                     .includes(inputValue.toLowerCase())
                 }
+                value={getAutoCompleteValue(filter.formName)}
+                allowClear
               />
             ) : (
               <Select
                 placeholder={filter.placeholder || "Select"}
                 onClick={filter.onClick}
-                onSelect={(value) => handleFilterChange(value, filter.formName)}
+                onChange={(value) => handleFilterChange(value, filter.formName)}
                 style={{ minWidth: 180 }}
                 className="mr-2"
+                value={filterValues[filter.formName] || null}
+                allowClear
+                onClear={() => handleFilterChange(null, filter.formName)}
               >
                 <Option value={null}>All</Option>
                 {filter.options.map((option) => {
@@ -234,6 +322,22 @@ const SearchBarWithStatus = ({
           </div>
         );
       })}
+
+      {/* Clear Button - Only shown when filters are active */}
+      {hasActiveFilters() && (
+        <div className="mb-3">
+          <Button
+            type="default"
+            onClick={clearAllFilters}
+            style={{
+              borderColor: '#d9d9d9',
+              color: '#595959'
+            }}
+          >
+            Clear All
+          </Button>
+        </div>
+      )}
     </Flex>
   );
 };
