@@ -101,7 +101,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
           ad_start_date_time: scheduleDetails?.ad_start_date_time
             ? dayjs(scheduleDetails.ad_start_date_time)
             : null,
-            
+
           add_ons: scheduleDetails.add_ons?.map((items) => items.name) || [],
         };
 
@@ -264,8 +264,10 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         booking_limit_per_user_toggle: values.booking_limit_per_user_toggle,
 
         add_ons: selectedAddOnServiceList || [],
-        food_slots: foodTimeSlots || [],
-
+        food_slots:
+          state.foodTimeSlots && Object.keys(state.foodTimeSlots).length > 0
+            ? state.foodTimeSlots
+            : null,
         name: values.name,
         event_id: values.event_id,
         venue_id: values.venue_id,
