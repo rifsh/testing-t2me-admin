@@ -66,6 +66,8 @@ const IssueList = () => {
   // };
 
   const handleSearch = (value) => {
+    console.log(value);
+
     if (value) {
       dispatch(setGlobalSearchValue(value));
       setSearchTerm(value);
@@ -81,6 +83,10 @@ const IssueList = () => {
   };
 
   const handleSearchIsEmpty = (value) => {
+    if (value) {
+      dispatch(setGlobalSearchValue(value));
+      setSearchTerm(value);
+    }
     if (!value) {
       dispatch(resetSearchValue());
       dispatch(
@@ -300,6 +306,7 @@ const IssueList = () => {
               onChange={(e) => handleSearchIsEmpty(e.target.value)}
               onSearch={(value) => handleSearch(value)}
               style={{ width: 200 }}
+              value={searchTerm}
             />
           </div>
           <div className="mb-3">
@@ -307,6 +314,7 @@ const IssueList = () => {
               defaultValue="All"
               onChange={handleShowStatus}
               className="mr-2"
+              value={activeStatus}
             >
               <Option value={null}>All</Option>
               <Option value={true}>Closed</Option>
@@ -320,6 +328,7 @@ const IssueList = () => {
                 onChange={handleUserFilterStatus}
                 className="mr-2"
                 style={{ width: 150 }}
+                value={userFilter}
               >
                 <Option value={null}>All</Option>
                 <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
@@ -340,6 +349,9 @@ const IssueList = () => {
               </Select>
             </div>
           )}
+          <div className="mb-3">
+            <Button onClick={handleClearFilters}>Clear</Button>
+          </div>
         </Flex>
         {hasPermission(PERMISSIONS.APPLICATIONS.ISSUES.ISSUE.ADD_ISSUES) && CurrentUser?.role_id !== 1 && (
           <div>

@@ -29,6 +29,7 @@ import { TextConstants } from "constants/TextConstant";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import usePermissions from "utils/hooks/usePermissions";
 import { PERMISSIONS } from "constants/RolesPermissionConstants";
+import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice";
 
 const { Option } = Select;
 
@@ -190,8 +191,13 @@ const IssueList = () => {
   };
   const handleSearchIsEmpty = (value) => {
     console.log("enterd is empty search");
+    if (value) {
+      dispatch(setGlobalSearchValue(value));
+      setSearchTerm(value);
+    }
     if (!value) {
       console.log("is empty search");
+      dispatch(resetSearchValue());
 
       dispatch(
         fetchAllAlertissues({ search: null, page: 1, size: 10, active: activeStatus })
@@ -234,6 +240,7 @@ const IssueList = () => {
                 onChange={(e) => handleSearchIsEmpty(e.target.value)}
                 onSearch={(value) => handleSearch(value)}
                 style={{ width: 200 }}
+                value={searchTerm}
               />
             </div>
             <div className="mb-3 w-60">
@@ -241,6 +248,7 @@ const IssueList = () => {
                 defaultValue="All"
                 onChange={handleShowStatus}
                 className="mr-2 w-full"
+                value={activeStatus}
               >
                 <Option value={null}>All</Option>
                 <Option value={TextConstants.CurrentUser}>Assigned to me</Option>
@@ -255,6 +263,17 @@ const IssueList = () => {
                 </Option>
 
               </Select>
+            </div>
+            <div className="mb-3 ml-2">
+              <Button
+                onClick={() => {
+                  setSearchTerm("");
+                  setactiveStatus(null);
+                  dispatch(fetchAllAlertissues({ page: 1, size: 10, search: null, role_id: null }));
+                }}
+              >
+                Clear
+              </Button>
             </div>
           </Flex>
           {getCurrentUser().role_id == UserRoleConstants.eventOrganizerRoleId && <div>
