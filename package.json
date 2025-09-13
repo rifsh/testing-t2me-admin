@@ -91,7 +91,7 @@
   },
   "scripts": {
     "prebuild": "./write-commit.sh",
-    "build": "NODE_OPTIONS=--max_old_space_size=8192 CI=false REACT_APP_BUILD_TIMESTAMP=$(date '+%Y-%m-%d | %I:%M%p') REACT_APP_COMMIT_HASH=$(cat commit-hash.txt) react-scripts build",
+    "build": "GENERATE_SOURCEMAP=false CI=false react-scripts build",    
     "start": "react-scripts start",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
