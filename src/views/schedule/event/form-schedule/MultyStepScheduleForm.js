@@ -265,8 +265,8 @@ const MultyStepScheduleForm = ({ mode, id }) => {
 
         add_ons: selectedAddOnServiceList || [],
         food_slots:
-          state.foodTimeSlots && Object.keys(state.foodTimeSlots).length > 0
-            ? state.foodTimeSlots
+          foodTimeSlots && Object.keys(foodTimeSlots).length > 0
+            ? foodTimeSlots
             : null,
         name: values.name,
         event_id: values.event_id,
