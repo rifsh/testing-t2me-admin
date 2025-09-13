@@ -269,6 +269,23 @@ const IssueList = () => {
 
   const { Search } = Input;
 
+  const handleClearFilters = () => {
+    setSearchTerm(null);
+    setactiveStatus(null);
+    setUserFilter(null);
+
+    dispatch(resetSearchValue());
+    dispatch(
+      fetchAllissues({
+        ...DEFAULT_PAGE_SIZE,
+        search: null,
+        filter: null,
+        role_id: null,
+      })
+    );
+  };
+
+
   return (
     <Card>
       <Flex

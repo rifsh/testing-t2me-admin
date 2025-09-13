@@ -124,7 +124,7 @@ const EventsList = () => {
           <span className="ml-2">View Details</span>
         </Flex>
       </Menu.Item>}
-      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT) &&<Menu.Item>
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT) && <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditEvent(row.id)}>
           <EditOutlined />
           <span className="ml-2">Edit Event</span>
@@ -226,6 +226,23 @@ const EventsList = () => {
     // dispatch(filterEvent({ searchTerm: null, status }));
   };
   const { Search } = Input;
+
+  const handleClearFilters = () => {
+    setSearchTerm(null);
+    setactiveStatus(null);
+
+    dispatch(resetSearchValue());
+    dispatch(
+      fetchAllEvent({
+        search: null,
+        page: DEFAULT_PAGE_SIZE.page,
+        size: DEFAULT_PAGE_SIZE.size,
+        event_type: EVENT_TYPES.event,
+      })
+    );
+  };
+
+
   return (
     <Card>
       <Flex
@@ -240,6 +257,7 @@ const EventsList = () => {
               onChange={(e) => handleSearchIsEmpty(e.target.value)}
               onSearch={(value) => handleSearch(value)}
               style={{ width: 200 }}
+              value={searchTerm}
             />
           </div>
           <div className="mb-3">
@@ -252,6 +270,9 @@ const EventsList = () => {
               <Option value={true}>Active</Option>
               <Option value={false}>Inactive</Option>
             </Select>
+          </div>
+          <div className="mb-3">
+            <Button onClick={handleClearFilters}>Clear</Button>
           </div>
         </Flex>
         <div>
