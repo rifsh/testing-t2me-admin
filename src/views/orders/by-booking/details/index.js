@@ -293,25 +293,25 @@ const OrderBookingDetails = () => {
                             <div className="space-y-3">
                                 <div className="flex justify-between">
                                     <Text>Original Amount</Text>
-                                    <Text strong>${getSafeValue(order, 'original_amount', 0).toFixed(2)}</Text>
+                                    <Text strong>{getSafeValue(order, 'original_amount', 0).toFixed(2)}</Text>
                                 </div>
 
                                 {getSafeValue(order, 'add_on_charge', 0) > 0 && (
                                     <div className="flex justify-between">
                                         <Text>Add-on Charges</Text>
-                                        <Text strong>${getSafeValue(order, 'add_on_charge', 0).toFixed(2)}</Text>
+                                        <Text strong>{getSafeValue(order, 'add_on_charge', 0).toFixed(2)}</Text>
                                     </div>
                                 )}
 
                                 <div className="flex justify-between">
                                     <Text>Tax Amount</Text>
-                                    <Text>${getSafeValue(order, 'tax_amount', 0).toFixed(2)}</Text>
+                                    <Text>{getSafeValue(order, 'tax_amount', 0).toFixed(2)}</Text>
                                 </div>
 
                                 {getSafeValue(order, 'coupon_code') && getSafeValue(order, 'coupon_code') !== 'N/A' && (
                                     <div className="flex justify-between text-green-600">
                                         <Text>Coupon ({getSafeValue(order, 'coupon_code')})</Text>
-                                        <Text>-${(getSafeValue(order, 'amount', 0) - getSafeValue(order, 'final_amount', 0)).toFixed(2)}</Text>
+                                        <Text>-{(getSafeValue(order, 'amount', 0) - getSafeValue(order, 'final_amount', 0)).toFixed(2)}</Text>
                                     </div>
                                 )}
 
@@ -320,7 +320,7 @@ const OrderBookingDetails = () => {
                                 <div className="flex justify-between">
                                     <Title level={5} className="!mb-0">Final Amount</Title>
                                     <Title level={5} className="!mb-0 text-green-600">
-                                        ${getSafeValue(order, 'final_amount', 0).toFixed(2)}
+                                        {getSafeValue(order, 'final_amount', 0).toFixed(2)}
                                     </Title>
                                 </div>
                             </div>
