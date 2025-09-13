@@ -209,6 +209,10 @@ const EventsList = () => {
   };
   const handleSearchIsEmpty = (value) => {
     console.log("enterd is empty search");
+    if (value) {
+      dispatch(setGlobalSearchValue(value));
+      setSearchTerm(value);
+    }
     if (!value) {
       console.log("is empty search");
       dispatch(resetSearchValue());

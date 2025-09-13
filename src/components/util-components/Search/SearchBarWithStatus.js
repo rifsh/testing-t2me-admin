@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { AutoComplete, Input, Select, Button } from "antd";
 import { useDispatch } from "react-redux";
 import Flex from "components/shared-components/Flex";
@@ -7,20 +7,26 @@ import { resetSearchValue, resetStatusValue, setGlobalSearchValue, setGlobalStat
 const { Option } = Select;
 const { Search } = Input;
 
-const SearchBarWithStatus = ({
+const SearchBarWithStatus = forwardRef(({
   fetchFunction,
   additionalFilters = [],
   isStatus = true,
+  clearBtnVisibility = true,
   isPermission = false,
   placeholder = 'Search',
   displayName = '',
   roleId = '',
   method = ''
-}) => {
+}, ref) => {
   const dispatch = useDispatch();
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState(null);
   const [filterValues, setFilterValues] = useState({});
+
+  useImperativeHandle(ref, () => ({
+    clearAllFilters,
+  }));
+
 
   // Initialize filter state
   useEffect(() => {
@@ -324,7 +330,7 @@ const SearchBarWithStatus = ({
       })}
 
       {/* Clear Button - Only shown when filters are active */}
-      {hasActiveFilters() && (
+      {hasActiveFilters() && clearBtnVisibility && (
         <div className="mb-3">
           <Button
             type="default"
@@ -340,6 +346,6 @@ const SearchBarWithStatus = ({
       )}
     </Flex>
   );
-};
+});
 
 export default SearchBarWithStatus;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Card,
   Table,
@@ -35,6 +35,7 @@ const LeadEvent = () => {
   const navigate = useNavigate();
   const [activeStatus, setactiveStatus] = useState();
   const handlePagination = usePaginationHook(getLeadEvents);
+  const searchBarRef = useRef();
 
   const { filteredLeadEvents, loading, pagination, searchTerm, statusFilter } =
     useSelector((state) => state.leadEvents);
@@ -236,7 +237,7 @@ const LeadEvent = () => {
   return (
     <Card>
       <Row gutter={16} justify="start" align="" wrap={false}>
-        <SearchBarWithStatus fetchFunction={getLeadEvents} isStatus={false} />
+        <SearchBarWithStatus clearBtnVisibility={false} fetchFunction={getLeadEvents} ref={searchBarRef} isStatus={false} />
 
         <div className="mb-3">
           <Select
@@ -244,12 +245,23 @@ const LeadEvent = () => {
             onChange={handleShowStatus}
             className="mr-2 wide-select"
             style={{ minWidth: "150px" }}
+            value={activeStatus}
           >
             <Option value={null}>All</Option>
             <Option value="rejected">Rejected</Option>
             <Option value="pending">Pending</Option>
             <Option value="approved">Approved</Option>
           </Select>
+        </div>
+
+        <div className="mb-3">
+          <Button onClick={() => {
+            searchBarRef.current.clearAllFilters();
+            setactiveStatus(null)
+          }
+          }>
+            Clear
+          </Button>
         </div>
       </Row>
       <div className="table-responsive">

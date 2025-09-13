@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Card,
   Table,
@@ -7,7 +7,8 @@ import {
   Menu,
   Row, Dropdown,
   Form,
-  Tag
+  Tag,
+  Button
 } from "antd";
 import {
   EyeOutlined,
@@ -53,6 +54,7 @@ const EventOrganiseUpdateList = () => {
   } = useSelector((state) => state.organizerUpdates);
   const [activeStatus, setactiveStatus] = useState();
   const { hasPermission, hasAnyPermission } = usePermissions();
+  const searchBarRef = useRef();
 
   useEffect(() => {
     // dispatch(fetchOrgUpdates());
@@ -151,19 +153,24 @@ const EventOrganiseUpdateList = () => {
 
   const [form] = Form.useForm();
 
+
+
   return (
     <Card>
       <Row gutter={16} justify="start" align="" wrap={false}>
         <SearchBarWithStatus
+          ref={searchBarRef}
           fetchFunction={fetchOrganizerUpdates}
           isStatus={false}
+          clearBtnVisibility={false}
         />
 
         <div className="mb-3">
           <Select
             defaultValue="All"
             onChange={handleShowStatus}
-            className="mr-2 wide-select"
+            className="mr-2 wide-select w-32"
+            value={activeStatus}
           >
             <Option value={null}>All</Option>
             <Option value="REJECTED">Rejected</Option>
@@ -172,7 +179,15 @@ const EventOrganiseUpdateList = () => {
             <Option value="UPDATES">Update Requested</Option>
           </Select>
         </div>
-
+        <div className="mb-3">
+          <Button onClick={() => {
+            searchBarRef.current.clearAllFilters();
+            setactiveStatus(null)
+          }
+          }>
+            Clear
+          </Button>
+        </div>
       </Row>
 
 
