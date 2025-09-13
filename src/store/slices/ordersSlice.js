@@ -73,14 +73,24 @@ export const getOrderByBookings = createAsyncThunk(
   "orders/getOrderByBookings",
   async (pageData, { rejectWithValue }) => {
     try {
-      const response = await OrderService.getMovieOrderByBookings(pageData);
+      const response = await OrderService.getOrderByBookings(pageData);
       return response.data[0];
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
-
+export const getOrderByBookingDetails = createAsyncThunk(
+  "orders/getOrderByBookingDetails",
+  async (pageData, { rejectWithValue }) => {
+    try {
+      const response = await OrderService.getOrderByBookingDetails(pageData);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 export const getMovieOrderDetailsDate = createAsyncThunk(
   "orders/fetchMovieOrderDetailsDate",
   async (pageData, { rejectWithValue }) => {
@@ -115,6 +125,7 @@ const orderSlice = createSlice({
     eventOrdersDataList: [],
     ordersDates: [],
     ordersByBooking: [],
+    ordersByBookingDetails: null,
     ordersTime: [],
     allOrdersTime: [],
     bookingTickets: null,
@@ -294,7 +305,19 @@ const orderSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
+      .addCase(getOrderByBookingDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getOrderByBookingDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.ordersByBookingDetails = action.payload;
+        state.pagination = action.payload;
+      })
+      .addCase(getOrderByBookingDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
   },
 });
 

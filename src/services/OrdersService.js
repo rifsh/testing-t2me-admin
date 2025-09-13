@@ -60,9 +60,16 @@ OrderService.getMovieOrderDetailsTime = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
-OrderService.getMovieOrderByBookings = function (pageData) {
+OrderService.getOrderByBookings = function (pageData) {
   return fetch({
     url: `${ApiConstant.BOOKING_LIST}`,
+    method: "get",
+    params: Utils.filterParams(pageData),
+  });
+};
+OrderService.getOrderByBookingDetails = function (pageData) {
+  return fetch({
+    url: `${ApiConstant.BOOKING_DETAILS}`,
     method: "get",
     params: Utils.filterParams(pageData),
   });

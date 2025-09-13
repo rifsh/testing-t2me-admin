@@ -71,9 +71,12 @@ const BookingList = () => {
 
 
     const handleViewDetails = (order) => {
-        // navigate(`${APP_PREFIX_PATH}/reports/orders/details/${order.id}`, {
-        //     state: { order },
-        // });
+        navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${order.id}/${selectedEventType}`, {
+            state: { order },
+        });
+        // console.log(order?.id);
+        // console.log(selectedEventType);
+
     };
 
     const dropdownMenu = (row) => (
