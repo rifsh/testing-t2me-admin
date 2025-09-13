@@ -37,16 +37,78 @@ import { AdvCategoryCode } from "constants/AppConstants";
 const ADD = "ADD";
 const EDIT = "EDIT";
 
-const rules = {
-  name: [{ required: true, message: "Please enter category name" }],
-  description: [
-    { required: true, message: "Please enter category description" },
-  ],
-  category_code: [{ required: true, message: "Please enter category code" }],
-  min_size: [{ required: true, message: "please enter min size" }],
-  max_size: [{ required: true, message: "please enter max size" }],
-  resolution: [{ required: false, message: "please enter resolution" }],
-  file_type: [{ required: true, message: "please enter file_type" }],
+// Custom validation functions
+const validateFileSize = (rule, value) => {
+  return new Promise((resolve, reject) => {
+    if (!value) {
+      reject(new Error(rule.message));
+      return;
+    }
+
+    const numValue = parseFloat(value);
+
+    // Check if it's a valid number
+    if (isNaN(numValue)) {
+      reject(new Error("Please enter a valid number"));
+      return;
+    }
+
+    // Check if it's positive
+    if (numValue <= 0) {
+      reject(new Error("File size must be greater than 0"));
+      return;
+    }
+
+    // Check reasonable limits (e.g., max 1000MB)
+    if (numValue > 1000) {
+      reject(new Error("File size cannot exceed 1000 MB"));
+      return;
+    }
+
+    resolve();
+  });
+};
+
+const validateMinMaxSize = (form) => (rule, value) => {
+  return new Promise((resolve, reject) => {
+    if (!value) {
+      reject(new Error(rule.message));
+      return;
+    }
+
+    const numValue = parseFloat(value);
+
+    if (isNaN(numValue)) {
+      reject(new Error("Please enter a valid number"));
+      return;
+    }
+
+    if (numValue <= 0) {
+      reject(new Error("File size must be greater than 0"));
+      return;
+    }
+
+    if (numValue > 1000) {
+      reject(new Error("File size cannot exceed 1000 MB"));
+      return;
+    }
+
+    // Cross-field validation
+    const minSize = form.getFieldValue('min_size');
+    const maxSize = form.getFieldValue('max_size');
+
+    if (rule.field === 'max_size' && minSize && numValue <= parseFloat(minSize)) {
+      reject(new Error("Max size must be greater than min size"));
+      return;
+    }
+
+    if (rule.field === 'min_size' && maxSize && numValue >= parseFloat(maxSize)) {
+      reject(new Error("Min size must be less than max size"));
+      return;
+    }
+
+    resolve();
+  });
 };
 
 const CategoryFormFields = ({ mode, category }) => {
@@ -68,6 +130,25 @@ const CategoryFormFields = ({ mode, category }) => {
     warningPagination,
   } = useSelector((state) => state.adCategory);
 
+  // Dynamic rules with form context
+  const rules = {
+    name: [{ required: true, message: "Please enter category name" }],
+    description: [
+      { required: true, message: "Please enter category description" },
+    ],
+    category_code: [{ required: true, message: "Please enter category code" }],
+    min_size: [
+      { required: true, message: "Please enter min size" },
+      { validator: validateMinMaxSize(form), field: 'min_size' }
+    ],
+    max_size: [
+      { required: true, message: "Please enter max size" },
+      { validator: validateMinMaxSize(form), field: 'max_size' }
+    ],
+    resolution: [{ required: false, message: "Please enter resolution" }],
+    file_type: [{ required: true, message: "Please enter file_type" }],
+  };
+
   useEffect(() => {
     if (error) {
       message.error(error);
@@ -83,11 +164,22 @@ const CategoryFormFields = ({ mode, category }) => {
         min_size: category.min_size,
         max_size: category.max_size,
         resolution: category.resolution,
-        // file_type: category.file_type
         file_type: category.file_type ? category.file_type.split(", ") : [],
       });
     }
   }, [mode, category, form]);
+
+  // Handle field changes to trigger cross-validation
+  const handleFileSizeChange = (field) => {
+    // Re-validate both min and max size when either changes
+    setTimeout(() => {
+      if (field === 'min_size') {
+        form.validateFields(['max_size']);
+      } else if (field === 'max_size') {
+        form.validateFields(['min_size']);
+      }
+    }, 100);
+  };
 
   const onFinish = async () => {
     try {
@@ -141,9 +233,9 @@ const CategoryFormFields = ({ mode, category }) => {
   const handleModalCancel = () => {
     dispatch(setAdCategoryDialogVisible(false));
   };
+
   const handleWarningPagination = (page, size) => {
     console.log("------------------------");
-
     console.log("CHANIGN...........");
 
     dispatch(
@@ -160,28 +252,30 @@ const CategoryFormFields = ({ mode, category }) => {
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
           <Form form={form} layout="vertical">
-          <Form.Item
-            name="category_code"
-            label="Code"
-            rules={rules.category_code}
-          >
-            <Select
-              loading={loading}
-              mode="single"
-              style={{ width: "100%" }}
-              placeholder="Please select Code"
-              showSearch
+            <Form.Item
+              name="category_code"
+              label="Code"
+              rules={rules.category_code}
             >
-              {AdvCategoryCode.map((item) => (
-                <Select.Option key={item} value={item}>
-                  {item}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+              <Select
+                loading={loading}
+                mode="single"
+                style={{ width: "100%" }}
+                placeholder="Please select Code"
+                showSearch
+              >
+                {AdvCategoryCode.map((item) => (
+                  <Select.Option key={item} value={item}>
+                    {item}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+
             <Form.Item name="name" label="Category Name" rules={rules.name}>
               <Input placeholder="Category" />
             </Form.Item>
+
             <Form.Item
               name="description"
               label="Description"
@@ -198,21 +292,35 @@ const CategoryFormFields = ({ mode, category }) => {
               label="Min Size (MB)"
               rules={rules.min_size}
             >
-              <Input placeholder="Min Size  " />
+              <Input
+                placeholder="Min Size"
+                type="number"
+                min={0}
+                step={0.1}
+                onChange={() => handleFileSizeChange('min_size')}
+              />
             </Form.Item>
+
             <Form.Item
               name="max_size"
               label="Max Size (MB)"
               rules={rules.max_size}
             >
-              <Input placeholder="Max Size  " />
+              <Input
+                placeholder="Max Size"
+                type="number"
+                min={0}
+                step={0.1}
+                onChange={() => handleFileSizeChange('max_size')}
+              />
             </Form.Item>
+
             <Form.Item name="resolution" label="Resolution (Height X Width)">
               <Select
                 loading={loading}
                 mode="single"
                 style={{ width: "100%" }}
-                placeholder="Please select resoluion"
+                placeholder="Please select resolution"
                 notFoundContent={
                   FileTypeResolutions.length ? null : "No File Types Available"
                 }
@@ -245,6 +353,7 @@ const CategoryFormFields = ({ mode, category }) => {
                 ))}
               </Select>
             </Form.Item>
+
             <div
               style={{
                 display: "flex",
@@ -254,7 +363,6 @@ const CategoryFormFields = ({ mode, category }) => {
               }}
             >
               <DiscardButton form={form} />
-
               <Button type="primary" onClick={onFinish} loading={loading}>
                 {mode === ADD ? "Add" : "Update"}
               </Button>
@@ -262,7 +370,9 @@ const CategoryFormFields = ({ mode, category }) => {
           </Form>
         </Card>
       </Col>
+
       <LoadingOverlay loading={loading} />
+
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
@@ -282,6 +392,7 @@ const CategoryFormFields = ({ mode, category }) => {
         pagination={warningPagination}
         onPaginationChange={handleWarningPagination}
       />
+
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? updateAdCategory : addAdCategory}
