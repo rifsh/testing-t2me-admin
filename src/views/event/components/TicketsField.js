@@ -19,7 +19,7 @@ import { setavailableSeats } from "store/slices/eventSlice";
 const { Option } = Select;
 const TicketField = ({ form }) => {
   const dispatch = useDispatch();
-  const { selectedVenueList,selectedVenue } = useSelector((state) => state.locations);
+  const { selectedVenueList, selectedVenue } = useSelector((state) => state.locations);
   const {
     message,
     validationStatus,
@@ -81,17 +81,17 @@ const TicketField = ({ form }) => {
         ticket_set: null,
       });
 
-      // if (selectedBookingType === 1) {
-      dispatch(getEventAllSeatStructures({ venue_id: value }));
+      if (selectedBookingType === 1) {
+        dispatch(getEventAllSeatStructures({ venue_id: value }));
 
-      form.setFieldsValue({
-        available_seats: [],
-      });
-      // } else {
-      dispatch(resetAvailableTicketSets());
-      dispatch(resetTicketSets());
-      dispatch(fetchAllTickets({ venue_id: value }));
-      // }
+        // form.setFieldsValue({
+        //   available_seats: [],
+        // });
+      } else {
+        // dispatch(resetAvailableTicketSets());
+        // dispatch(resetTicketSets());
+        dispatch(fetchAllTickets({ venue_id: value }));
+      }
     }
 
     if (venue?.capacity) {

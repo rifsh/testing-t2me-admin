@@ -35,6 +35,13 @@ const LocationDetailsField = ({ form }) => {
 
     dispatch(resetTicketSelection());
     dispatch(setSelectedVenueList("clear"));
+    form.setFieldsValue({
+      venues: null,
+      available_types: null,
+      seat_structure_id: null,
+      ticket_structure_id: null,
+      ticket_set: null,
+    });
   };
 
   const handleVenueSelect = (value) => {
@@ -45,6 +52,7 @@ const LocationDetailsField = ({ form }) => {
     }
 
     form.setFieldsValue({
+      venues: null,
       available_types: null,
       seat_structure_id: null,
       ticket_structure_id: null,
