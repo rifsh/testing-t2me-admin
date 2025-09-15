@@ -12,7 +12,7 @@ import {
 } from "antd";
 import {
   addCategory,
-  updateCategory,  
+  updateCategory,
   editCategory,
   setCatDialogVisible,
   setCatModalLoading,
@@ -36,6 +36,7 @@ import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
+import BackButton from "components/Buttons/BackPageButoon";
 
 const { Text } = Typography;
 const ADD = "ADD";
@@ -86,13 +87,13 @@ const CategoryFormFields = ({ mode, category }) => {
         thumbnail_image:
           category.thumbnail_image && category.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: category.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: `${CDN_PATH}/${category.thumbnail_image}`,
-                },
-              ]
+              {
+                uid: "-1",
+                name: category.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${category.thumbnail_image}`,
+              },
+            ]
             : [],
       });
     }
@@ -115,7 +116,7 @@ const CategoryFormFields = ({ mode, category }) => {
           ...values,
         };
         console.log(formData);
-        
+
         dispatch(setSelectedSubmitItem(formData));
 
         // const resultAction = await dispatch(addCategory(values));
@@ -219,6 +220,8 @@ const CategoryFormFields = ({ mode, category }) => {
                 gap: 10,
               }}
             >
+              <BackButton />
+
               <DiscardButton form={form} />
 
               <Button type="primary" onClick={onFinish} loading={loading}>

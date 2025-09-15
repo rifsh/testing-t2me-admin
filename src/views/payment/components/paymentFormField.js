@@ -13,6 +13,7 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { EVENT_TYPES } from "constants/PageConstants";
+import BackButton from "components/Buttons/BackPageButoon";
 
 const { Option } = Select;
 
@@ -153,6 +154,7 @@ const PaymentFormFields = ({ mode }) => {
         <PaymentMethodTabs form={form} />
         <AddOnServicesForm form={form} />
         <Flex className="py-2" mobileFlex={false} justifyContent="flex-end">
+          <BackButton />
           <DiscardButton form={form} />
           <div className="mb-3">
             <Button

@@ -25,6 +25,7 @@ import {
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import LoadingOverlay from "components/util-components/Loader/index";
+import BackButton from "components/Buttons/BackPageButoon";
 
 const CountryForm = ({ mode, placeId }) => {
   const [form] = Form.useForm();
@@ -202,7 +203,8 @@ const CountryForm = ({ mode, placeId }) => {
               <h2 className="mb-3">
                 {!placeId ? "Add New Place" : `Edit Place`}{" "}
               </h2>
-              <div className="mb-3">
+              <div className="mb-3 flex">
+                <BackButton />
                 <DiscardButton form={form} />
                 <Button
                   type="primary"
