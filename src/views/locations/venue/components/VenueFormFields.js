@@ -62,6 +62,7 @@ import ResizedImgePicker from "components/util-components/Image/ResizedImgePicke
 import VenueTechnology from "./VenueTechnology";
 import ReactQuill from "react-quill";
 import TextEditor from "components/util-components/FormItems/TextEditor";
+import BackButton from "components/Buttons/BackPageButoon";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -665,7 +666,10 @@ const VenueFormFields = ({ mode, venue }) => {
               mobileFlex={false}
               justifyContent="space-between"
             >
-              <DiscardButton form={form} />
+              <div className="flex ">
+                <BackButton />
+                <DiscardButton form={form} />
+              </div>
               <Button type="primary" onClick={onFinish} loading={loading}>
                 {mode === "ADD" ? "Add" : "Save"}
               </Button>

@@ -20,6 +20,7 @@ import {
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import LoadingOverlay from "components/util-components/Loader/index";
 import { ActionType } from "utils/api/warning-submit-util";
+import BackButton from "components/Buttons/BackPageButoon";
 
 const EventTypeForm = ({ mode, typeId }) => {
   const {
@@ -115,7 +116,8 @@ const EventTypeForm = ({ mode, typeId }) => {
               <h2 className="mb-3">
                 {mode === "ADD" ? "Add New Type" : "Edit Type"}
               </h2>
-              <div className="mb-3">
+              <div className="mb-3 flex">
+                <BackButton />
                 <DiscardButton form={form} />
                 <Button
                   type="primary"

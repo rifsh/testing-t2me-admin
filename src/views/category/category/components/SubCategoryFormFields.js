@@ -40,6 +40,7 @@ import { ActionType } from "utils/api/warning-submit-util";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import { filterOption } from "components/util-components/FormItems/dropDownSearch";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
+import BackButton from "components/Buttons/BackPageButoon";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -270,6 +271,7 @@ const SubCategoryFormFields = ({ mode, category }) => {
                 gap: 10,
               }}
             >
+              <BackButton />
               <DiscardButton form={form} />
               <Button
                 type="primary"

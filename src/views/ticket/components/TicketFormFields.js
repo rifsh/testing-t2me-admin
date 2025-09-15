@@ -36,6 +36,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import LoadingOverlay from "components/util-components/Loader/index";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
+import BackButton from "components/Buttons/BackPageButoon";
 
 const TicketFormFields = ({ mode, ticket }) => {
   const [form] = Form.useForm();
@@ -170,10 +171,10 @@ const TicketFormFields = ({ mode, ticket }) => {
               validator: (_, value) =>
                 value && VenueData?.capacity && value > VenueData.capacity
                   ? Promise.reject(
-                      new Error(
-                        `The number of tickets cannot exceed the venue capacity of ${VenueData.capacity}.`
-                      )
+                    new Error(
+                      `The number of tickets cannot exceed the venue capacity of ${VenueData.capacity}.`
                     )
+                  )
                   : Promise.resolve(),
             },
           ]}
@@ -249,7 +250,10 @@ const TicketFormFields = ({ mode, ticket }) => {
         </Card>
       )}
       <Flex className="py-2" mobileFlex={false} justifyContent="space-between">
-        <DiscardButton form={form} />
+        <div className="flex">
+          <BackButton />
+          <DiscardButton form={form} />
+        </div>
 
         {ticketType === "dynamic" ? (
           <Button

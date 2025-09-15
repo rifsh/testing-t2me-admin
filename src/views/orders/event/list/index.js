@@ -323,7 +323,22 @@ const OrdersList = () => {
     dispatch(getEventOrders(params));
   };
 
-  const handlePagination = usePaginationHook(getEventOrders);
+  const handleClearAllFilters = () => {
+    setSearchTerm("");
+    setSelectedEventId(null);
+    setEventType(null);
+    setCurrentPage(1);
+
+    const params = {
+      page: 1,
+      size: pageSize,
+    };
+
+    dispatch(getEventOrders(params));
+    dispatch(getEventOrderSummary({}));
+    dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event })); // reload event dropdown
+  };
+
 
   return (
     <Card>
@@ -384,6 +399,9 @@ const OrdersList = () => {
                 {"Seat Structure"}
               </Option>
             </Select>
+          </div>
+          <div className="mb-3">
+            <Button onClick={handleClearAllFilters}>Clear</Button>
           </div>
         </Flex>
       </Flex>
