@@ -39,8 +39,8 @@ export const TicketStructureSelector = ({ form }) => {
         base_price: selectedStructure?.base_price,
         ticket_set: selectedSet?.ticket_set,
         tickets: selectedSet?.tickets,
-        id: selectedStructure.id,
-        ticketStructureId: selectedStructure.id,
+        id: selectedStructure?.id,
+        ticketStructureId: selectedStructure?.id,
       };
 
       dispatch(addOrUpdateTicketSetforEvent(ticketSetData));
