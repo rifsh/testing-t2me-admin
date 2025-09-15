@@ -10,6 +10,7 @@ import {
     Tooltip,
     Space,
     Typography,
+    Button,
 } from "antd";
 import {
     EyeOutlined,
@@ -376,26 +377,27 @@ const BookingList = () => {
         });
     };
 
+    const handleClearAllFilters = () => {
+        const resetPage = 1;
+        const resetSearch = "";
+        const resetStatus = "all";
+        const resetType = "ticket";
 
-    useEffect(() => {
-        if (pagination) {
-            console.log("paginationcheck", pagination);
-        }
-    }, [pagination]);
+        setSearchTerm(resetSearch);
+        setSelectedPaymentStatus(resetStatus);
+        setSelectedEventType(resetType);
+        setCurrentPage(resetPage);
 
-    // Summary Cards
-    const getSummaryData = () => {
-        const totalOrders = ordersData.length;
-        const paidOrders = ordersData.filter(order => order.payment_status === 'paid').length;
-        const pendingOrders = ordersData.filter(order => order.payment_status === 'pending').length;
-        const totalRevenue = ordersData
-            .filter(order => order.payment_status === 'paid')
-            .reduce((sum, order) => sum + (order.final_amount || order.amount || 0), 0);
-
-        return { totalOrders, paidOrders, pendingOrders, totalRevenue };
+        dispatch(
+            getOrderByBookings({
+                page: resetPage,
+                size: 10,
+                type: selectedEventType || "ticket",
+            })
+        );
     };
 
-    const { totalOrders, paidOrders, pendingOrders, totalRevenue } = getSummaryData();
+
 
     return (
         <div>
@@ -443,6 +445,10 @@ const BookingList = () => {
                                 <Option value="ticket">Ticket Structure</Option>
                                 <Option value="seat">Seat Structure</Option>
                             </Select>
+                        </div>
+
+                        <div className="mb-3">
+                            <Button onClick={handleClearAllFilters}>Clear</Button>
                         </div>
                     </Flex>
                 </Flex>
