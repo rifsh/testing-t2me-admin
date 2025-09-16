@@ -70,14 +70,10 @@ const BookingList = () => {
         );
     };
 
-
     const handleViewDetails = (order) => {
         navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${order.id}/${selectedEventType}`, {
             state: { order },
         });
-        // console.log(order?.id);
-        // console.log(selectedEventType);
-
     };
 
     const dropdownMenu = (row) => (
@@ -124,10 +120,59 @@ const BookingList = () => {
     };
 
     const formatDate = (dateString) => {
+        if (!dateString) return { date: 'N/A', time: 'N/A' };
         const date = new Date(dateString);
         return {
             date: date.toLocaleDateString(),
             time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+    };
+
+    // Helper function to get order data based on structure type
+    const getOrderData = (order) => {
+        if (selectedEventType === 'seat') {
+            return {
+                ...order.order_data,
+                id: order.id,
+                created_at: order.created_at,
+                order_reference: order.order_data?.order_reference || order.order_id
+            };
+        }
+        return order;
+    };
+
+    // Helper function to get customer details based on structure type
+    const getCustomerDetails = (order) => {
+        const orderData = getOrderData(order);
+
+        return {
+            username: orderData.user?.username || "Guest User",
+            email: orderData.email,
+            phone: orderData.phone
+        };
+    };
+
+    // Helper function to get amount details based on structure type
+    const getAmountDetails = (order) => {
+        const orderData = getOrderData(order);
+
+        return {
+            final_amount: orderData.final_amount || orderData.amount || 0,
+            original_amount: orderData.original_amount,
+            tax_amount: orderData.tax_amount,
+            add_on_charge: orderData.add_on_charge || 0
+        };
+    };
+
+    // Helper function to get payment details based on structure type
+    const getPaymentDetails = (order) => {
+        const orderData = getOrderData(order);
+
+        return {
+            payment_status: orderData.payment_status,
+            qr_used: orderData.qr_used,
+            coupon_code: orderData.coupon_code,
+            payment_initiated_at: orderData.payment_initiated_at
         };
     };
 
@@ -136,68 +181,104 @@ const BookingList = () => {
             title: "Order ID",
             dataIndex: "id",
             key: "id",
-            render: (id) => (
-                <div>
-                    <Text strong>#{id}</Text>
-                </div>
-            ),
+            render: (id, record) => {
+                const orderData = getOrderData(record);
+                return (
+                    <div>
+                        <Text strong>#{orderData.order_reference?.substring(0, 8) || id}</Text>
+                    </div>
+                );
+            },
             sorter: (a, b) => a.id - b.id,
             width: 100,
         },
         {
             title: "Customer Details",
             key: "customer",
-            render: (record) => (
-                <div>
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                        <UserOutlined style={{ marginRight: 4, color: '#1890ff' }} />
-                        <Text strong>{record?.user?.username || "Guest User"}</Text>
+            render: (record) => {
+                const customer = getCustomerDetails(record);
+                return (
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                            <UserOutlined style={{ marginRight: 4, color: '#1890ff' }} />
+                            <Text strong>{customer.username}</Text>
+                        </div>
+                        {customer.email && (
+                            <div style={{ fontSize: '12px', color: '#666' }}>
+                                {customer.email}
+                            </div>
+                        )}
+                        {customer.phone && (
+                            <div style={{ fontSize: '12px', color: '#666' }}>
+                                📞 {customer.phone}
+                            </div>
+                        )}
                     </div>
-                    {record.email && (
-                        <div style={{ fontSize: '12px', color: '#666' }}>
-                            {record.email}
-                        </div>
-                    )}
-                    {record.phone && (
-                        <div style={{ fontSize: '12px', color: '#666' }}>
-                            📞 {record.phone}
-                        </div>
-                    )}
-                </div>
-            ),
+                );
+            },
             width: 200,
         },
         {
             title: "Event & Venue",
             key: "event_venue",
-            render: (record) => (
-                <div>
-                    <div style={{ marginBottom: 4 }}>
-                        <Text strong style={{ color: '#1890ff' }}>
-                            {record.event?.event_name}
-                        </Text>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', fontSize: '12px', color: '#666' }}>
-                        <EnvironmentOutlined style={{ marginRight: 4 }} />
-                        {record.venue?.name}
-                    </div>
-                    {record.event?.description && (
-                        <Tooltip title={record.event.description}>
-                            <div style={{ fontSize: '11px', color: '#999', marginTop: 2 }}>
-                                {record.event.description.length > 50
-                                    ? `${record.event.description.substring(0, 50)}...`
-                                    : record.event.description}
+            render: (record) => {
+                // For seat structure, we might not have event/venue details in the response
+                if (selectedEventType === 'seat') {
+                    return (
+                        <div>
+                            <div style={{ marginBottom: 4 }}>
+                                <Text strong style={{ color: '#1890ff' }}>
+                                    Seat Booking
+                                </Text>
                             </div>
-                        </Tooltip>
-                    )}
-                </div>
-            ),
+                            <div style={{ fontSize: '12px', color: '#666' }}>
+                                {record.show_seat_details_id ? `Show ID: ${record.show_seat_details_id}` : 'N/A'}
+                            </div>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div>
+                        <div style={{ marginBottom: 4 }}>
+                            <Text strong style={{ color: '#1890ff' }}>
+                                {record.event?.event_name || 'N/A'}
+                            </Text>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '12px', color: '#666' }}>
+                            <EnvironmentOutlined style={{ marginRight: 4 }} />
+                            {record.venue?.name || 'N/A'}
+                        </div>
+                        {record.event?.description && (
+                            <Tooltip title={record.event.description}>
+                                <div style={{ fontSize: '11px', color: '#999', marginTop: 2 }}>
+                                    {record.event.description.length > 50
+                                        ? `${record.event.description.substring(0, 50)}...`
+                                        : record.event.description}
+                                </div>
+                            </Tooltip>
+                        )}
+                    </div>
+                );
+            },
             width: 250,
         },
         {
             title: "Schedule",
             key: "schedule",
             render: (record) => {
+                if (selectedEventType === 'seat') {
+                    const createdDate = formatDate(record.created_at);
+                    return (
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
+                                <CalendarOutlined style={{ marginRight: 4, color: '#52c41a' }} />
+                                <Text style={{ fontSize: '12px' }}>Booked: {createdDate.date}</Text>
+                            </div>
+                        </div>
+                    );
+                }
+
                 const startDate = formatDate(record.schedules?.start_date);
                 const endDate = formatDate(record.schedules?.end_date);
 
@@ -219,35 +300,36 @@ const BookingList = () => {
         {
             title: "Amount Details",
             key: "amount_details",
-            render: (record) => (
-                <div>
-                    <div style={{ marginBottom: 2 }}>
-                        <Text strong style={{ color: '#1890ff' }}>
-                            {(record.final_amount || record.amount || 0).toFixed(2)}
-                        </Text>
+            render: (record) => {
+                const amounts = getAmountDetails(record);
+                return (
+                    <div>
+                        <div style={{ marginBottom: 2 }}>
+                            <Text strong style={{ color: '#1890ff' }}>
+                                {amounts.final_amount.toFixed(2)}
+                            </Text>
+                        </div>
+                        {amounts.original_amount !== amounts.final_amount && (
+                            <div style={{ fontSize: '11px', color: '#666' }}>
+                                Original: {amounts.original_amount?.toFixed(2) || amounts.final_amount.toFixed(2)}
+                            </div>
+                        )}
+                        {amounts.tax_amount && (
+                            <div style={{ fontSize: '11px', color: '#666' }}>
+                                Tax: {amounts.tax_amount.toFixed(2)}
+                            </div>
+                        )}
+                        {amounts.add_on_charge > 0 && (
+                            <div style={{ fontSize: '11px', color: '#666' }}>
+                                Add-on: {amounts.add_on_charge.toFixed(2)}
+                            </div>
+                        )}
                     </div>
-                    {record.original_amount !== record.amount && (
-                        <div style={{ fontSize: '11px', color: '#666' }}>
-                            Original: {record.original_amount?.toFixed(2)}
-                        </div>
-                    )}
-                    {record.tax_amount && (
-                        <div style={{ fontSize: '11px', color: '#666' }}>
-                            Tax: {record.tax_amount.toFixed(2)}
-                        </div>
-                    )}
-                    {record.add_on_charge > 0 && (
-                        <div style={{ fontSize: '11px', color: '#666' }}>
-                            Add-on: {record.add_on_charge.toFixed(2)}
-                        </div>
-                    )}
-                </div>
-            ),
+                );
+            },
             sorter: (a, b) => {
-                const amountA = a.final_amount !== null && a.final_amount !== undefined
-                    ? a.final_amount : a.amount;
-                const amountB = b.final_amount !== null && b.final_amount !== undefined
-                    ? b.final_amount : b.amount;
+                const amountA = getAmountDetails(a).final_amount;
+                const amountB = getAmountDetails(b).final_amount;
                 return amountA - amountB;
             },
             width: 130,
@@ -255,37 +337,48 @@ const BookingList = () => {
         {
             title: "Status & Features",
             key: "status_features",
-            render: (record) => (
-                <div>
-                    <div style={{ marginBottom: 6 }}>
-                        {getPaymentStatusTag(record.payment_status)}
+            render: (record) => {
+                const paymentDetails = getPaymentDetails(record);
+                return (
+                    <div>
+                        <div style={{ marginBottom: 6 }}>
+                            {getPaymentStatusTag(paymentDetails.payment_status)}
+                        </div>
+                        <Space size={4}>
+                            {paymentDetails.qr_used && (
+                                <Tooltip title="QR Code Used">
+                                    <Tag color="green" size="small">
+                                        <QrcodeOutlined /> QR Used
+                                    </Tag>
+                                </Tooltip>
+                            )}
+                            {paymentDetails.coupon_code && (
+                                <Tooltip title={`Coupon: ${paymentDetails.coupon_code}`}>
+                                    <Tag color="purple" size="small">
+                                        <TagOutlined /> Coupon
+                                    </Tag>
+                                </Tooltip>
+                            )}
+                            {selectedEventType === 'seat' && record.order_data?.seats && (
+                                <Tooltip title={`${record.order_data.seats.length} seat(s) booked`}>
+                                    <Tag color="blue" size="small">
+                                        {record.order_data.seats.length} Seat(s)
+                                    </Tag>
+                                </Tooltip>
+                            )}
+                        </Space>
                     </div>
-                    <Space size={4}>
-                        {record.qr_used && (
-                            <Tooltip title="QR Code Used">
-                                <Tag color="green" size="small">
-                                    <QrcodeOutlined /> QR Used
-                                </Tag>
-                            </Tooltip>
-                        )}
-                        {record.coupon_code && (
-                            <Tooltip title={`Coupon: ${record.coupon_code}`}>
-                                <Tag color="purple" size="small">
-                                    <TagOutlined /> Coupon
-                                </Tag>
-                            </Tooltip>
-                        )}
-                    </Space>
-                </div>
-            ),
+                );
+            },
             width: 180,
         },
         {
             title: "Order Info",
             key: "order_info",
             render: (record) => {
-                const createdDate = formatDate(record.created_at);
-                const paymentDate = record.payment_initiated_at ? formatDate(record.payment_initiated_at) : null;
+                const orderData = getOrderData(record);
+                const createdDate = formatDate(orderData.created_at);
+                const paymentDate = orderData.payment_initiated_at ? formatDate(orderData.payment_initiated_at) : null;
 
                 return (
                     <div>
@@ -301,10 +394,10 @@ const BookingList = () => {
                                 </Text>
                             </div>
                         )}
-                        {record.order_reference && (
-                            <Tooltip title={record.order_reference}>
+                        {orderData.order_reference && (
+                            <Tooltip title={orderData.order_reference}>
                                 <div style={{ fontSize: '11px', color: '#999' }}>
-                                    Ref: {record.order_reference.substring(0, 8)}...
+                                    Ref: {orderData.order_reference.substring(0, 8)}...
                                 </div>
                             </Tooltip>
                         )}
@@ -391,13 +484,11 @@ const BookingList = () => {
         dispatch(
             getOrderByBookings({
                 page: resetPage,
-                size: 10,
-                type: selectedEventType || "ticket",
+                size: pageSize,
+                type: resetType,
             })
         );
     };
-
-
 
     return (
         <div>
@@ -475,7 +566,6 @@ const BookingList = () => {
                             showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
                         }}
                     />
-
                 </div>
             </Card>
         </div>
