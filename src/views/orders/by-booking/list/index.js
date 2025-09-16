@@ -71,6 +71,13 @@ const BookingList = () => {
     };
 
     const handleViewDetails = (order) => {
+        if (selectedEventType === 'seat') {
+            console.log(order);
+            navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${order.order_id}/${selectedEventType}?showSeatId=${order?.show_seat_details_id}`, {
+                state: { order },
+            });
+            return;
+        }
         navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${order.id}/${selectedEventType}`, {
             state: { order },
         });
@@ -133,7 +140,7 @@ const BookingList = () => {
         if (selectedEventType === 'seat') {
             return {
                 ...order.order_data,
-                id: order.id,
+                id: order.order_id,
                 created_at: order.created_at,
                 order_reference: order.order_data?.order_reference || order.order_id
             };
@@ -185,12 +192,12 @@ const BookingList = () => {
                 const orderData = getOrderData(record);
                 return (
                     <div>
-                        <Text strong>#{orderData.order_reference?.substring(0, 8) || id}</Text>
+                        <Text strong>#{orderData.id || id}</Text>
                     </div>
                 );
             },
             sorter: (a, b) => a.id - b.id,
-            width: 100,
+            width: 200,
         },
         {
             title: "Customer Details",
