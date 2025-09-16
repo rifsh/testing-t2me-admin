@@ -73,7 +73,7 @@ const BookingList = () => {
     const handleViewDetails = (order) => {
         if (selectedEventType === 'seat') {
             console.log(order);
-            navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${order.order_id}/${selectedEventType}?showSeatId=${order?.show_seat_details_id}`, {
+            navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${order.order_id}/${selectedEventType}?orderId=${order?.id}`, {
                 state: { order },
             });
             return;
@@ -497,6 +497,13 @@ const BookingList = () => {
         );
     };
 
+    useEffect(() => {
+        if (ordersData) {
+            console.log("ordersData", ordersData);
+        }
+
+    }, [ordersData])
+
     return (
         <div>
             <Card>
@@ -556,7 +563,7 @@ const BookingList = () => {
                     <Table
                         columns={tableColumns}
                         dataSource={ordersData}
-                        rowKey="id"
+                        rowKey={(record) => getOrderData(record).id}
                         loading={loading}
                         scroll={{ x: 1400 }}
                         pagination={{

@@ -20,6 +20,7 @@ import { getOrderByBookingDetails } from 'store/slices/ordersSlice';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Loading from 'components/shared-components/Loading';
 import LoadingOverlay from 'components/util-components/Loader';
+import SeatBookingUI from '../components/SeatBookingUI ';
 
 const { Title, Text } = Typography;
 
@@ -29,30 +30,32 @@ const OrderBookingDetails = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
-    const showSeatId = searchParams.get("showSeatId");
+    const orderId = searchParams.get("orderId");
     const { ordersByBookingDetails, loading, pagination } = useSelector(
         (state) => state.orderSlice
     );
 
     useEffect(() => {
         if (id && type && id !== "undefined" && type !== "undefined") {
-            let params = {
-                id,
-                type,
-            }
+            let params = {};
 
             if (type === 'seat') {
                 params = {
-                    ...params,
-                    showSeatId
-                }
+                    order_id: id,
+                    type,
+                    id: orderId
+                };
+            } else {
+                params = { id, type };
             }
+
             dispatch(getOrderByBookingDetails(params));
         } else {
             message.warning("Invalid booking id or type");
             navigate(-1);
         }
-    }, [dispatch, id, type, showSeatId, navigate]);
+    }, [dispatch, id, type, orderId, navigate]);
+
 
     const getPaymentStatusIcon = (status) => {
         switch (status) {
@@ -134,6 +137,14 @@ const OrderBookingDetails = () => {
     }
 
     const order = ordersByBookingDetails;
+
+    if (type === 'seat') {
+        return (
+            <SeatBookingUI
+                orderData={order}
+            />
+        )
+    }
 
     return (
         <>
