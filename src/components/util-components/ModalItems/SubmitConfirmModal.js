@@ -1,6 +1,7 @@
 import { message } from "antd";
 import ResponseShowModal from "components/util-components/ModalItems/ResponseShowModal";
 import { TextConstants } from "constants/TextConstant";
+import { useDraft } from "drafts/hooks/useDraftManager";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -19,10 +20,19 @@ export const SubmitAndConfirmModal = ({
   onCloseMessage = TextConstants.ItemAddCanceled,
   responseMessage,
   pagination,
+  recordId,
+  formType,
+  form,
+  mode,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
+  const { deleteDraft } = useDraft({
+    form,
+    formType: formType,
+    mode,
+    recordId: recordId,
+  });
   const { responseDialogVisible, selectedSubmitItem, modalLoading } =
     useSelector((state) => state.modalSlice);
 
@@ -74,6 +84,7 @@ export const SubmitAndConfirmModal = ({
 
       if (addFunction.fulfilled.match(resultAction)) {
         message.success(onSubmitMessage);
+        deleteDraft();
         dispatch(resetStatusModalState());
         navigate(navigationPath);
       } else {

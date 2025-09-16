@@ -48,6 +48,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import { filterOption } from "components/util-components/FormItems/dropDownSearch";
 import BackButton from "components/Buttons/BackPageButoon";
+import DraftSystem from "drafts/components/DraftSystem";
 
 const { Option } = Select;
 
@@ -392,7 +393,15 @@ const TaxFormFields = ({ mode, tax }) => {
               justifyContent="space-between"
             >
               <div className="flex ">
-                <BackButton />
+                <DraftSystem
+                  form={form}
+                  formType="tax"
+                  mode={mode}
+                  titleField="name"
+                  excludeFromDraft={["id", "created_at"]}
+                  style={{ marginRight: 12, display: "inline-block" }}
+                  enableAutoSave={mode !== "EDIT"}
+                />
                 <DiscardButton form={form} />
               </div>
               <Button type="primary" onClick={onFinish} loading={loading}>
@@ -436,6 +445,9 @@ const TaxFormFields = ({ mode, tax }) => {
         addFunction={mode === "EDIT" ? editTax : addTax}
         navigationPath={`${APP_PREFIX_PATH}/tax/list`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"tax"}
       />
     </Row>
   );
