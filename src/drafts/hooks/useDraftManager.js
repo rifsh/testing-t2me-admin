@@ -1,8 +1,8 @@
-// useUniversalDraft.js
+
 import { useCallback, useState, useEffect, useRef } from "react";
 import { message } from "antd";
 
-const useUniversalDraft = ({
+const useDraft = ({
   form,
   formType,
   mode = "ADD",
@@ -194,4 +194,4 @@ const useUniversalDraft = ({
   };
 };
 
-export { useUniversalDraft };
+export { useDraft };

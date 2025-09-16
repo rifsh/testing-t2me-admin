@@ -1,7 +1,7 @@
 // DraftManager.js
 class DraftManager {
   constructor() {
-    this.dbName = "UniversalFormDrafts";
+    this.dbName = "FormDrafts";
     this.version = 1;
     this.db = null;
   }

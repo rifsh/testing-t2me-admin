@@ -1,4 +1,3 @@
-// UniversalDraftSystem.js
 import React, { useState } from "react";
 import { Button, Space, Tooltip, Tag, Modal, Typography, Empty } from "antd";
 import {
@@ -7,11 +6,11 @@ import {
   ClockCircleOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-import { useUniversalDraft } from "drafts/hooks/useDraftManager";
+import { useDraft } from "drafts/hooks/useDraftManager";
 
 const { Text } = Typography;
 
-const UniversalDraftSystem = ({
+const DraftSystem = ({
   form,
   formType,
   mode = "ADD",
@@ -33,7 +32,7 @@ const UniversalDraftSystem = ({
     loadDraft,
     currentDraftId,
     draftCount,
-  } = useUniversalDraft({
+  } = useDraft({
     form,
     formType,
     mode,
@@ -143,4 +142,4 @@ const UniversalDraftSystem = ({
   );
 };
 
-export default UniversalDraftSystem;
+export default DraftSystem;

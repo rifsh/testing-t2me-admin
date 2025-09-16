@@ -1,4 +1,4 @@
-// UniversalDraftModal.js
+
 import React, { useState } from "react";
 import {
   Modal,
@@ -20,7 +20,7 @@ import {
 
 const { Text } = Typography;
 
-const UniversalDraftModal = ({
+const DraftModal = ({
   visible,
   onClose,
   drafts,
@@ -210,4 +210,4 @@ const UniversalDraftModal = ({
   );
 };
 
-export default UniversalDraftModal;
+export default DraftModal;

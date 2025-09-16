@@ -25,8 +25,8 @@ import {
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import LoadingOverlay from "components/util-components/Loader/index";
-import UniversalDraftSystem from "drafts/components/UniversalDraftSystem";
-import { useUniversalDraft } from "drafts/hooks/useDraftManager";
+import DraftSystem from "drafts/components/DraftSystem";
+import { useDraft } from "drafts/hooks/useDraftManager";
 
 // Update with actual path
 
@@ -52,7 +52,7 @@ const CountryForm = ({ mode, placeId }) => {
     singlePlace,
     message: warningMessage,
   } = useSelector((state) => state.locations);
-  const { deleteDraft } = useUniversalDraft({
+  const { deleteDraft } = useDraft({
     form,
     formType: "place",
     mode,
@@ -212,7 +212,7 @@ const CountryForm = ({ mode, placeId }) => {
               </h2>
               <div className="mb-3">
                 {/* Add Draft Integration Component */}
-                <UniversalDraftSystem
+                <DraftSystem
                   form={form}
                   formType="place"
                   mode={mode}
