@@ -49,6 +49,7 @@ const BookingList = () => {
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE.size);
     const [selectedPaymentStatus, setSelectedPaymentStatus] = useState('all');
     const [selectedEventType, setSelectedEventType] = useState('ticket');
+    const [isTypeChanging, setIsTypeChanging] = useState(false); // Track type changes
 
     const { ordersByBooking, loading, pagination } = useSelector(
         (state) => state.orderSlice
@@ -425,7 +426,26 @@ const BookingList = () => {
         },
     ];
 
-    const ordersData = ordersByBooking?.items || [];
+    // Filter data to only show items that match the current selectedEventType
+    const getFilteredOrdersData = () => {
+        const ordersData = ordersByBooking?.items || [];
+
+        // Don't show any data while type is changing
+        if (isTypeChanging) {
+            return [];
+        }
+
+        // Validate data structure matches the selected type
+        return ordersData.filter(order => {
+            if (selectedEventType === 'seat') {
+                // For seat type, expect order_data and order_id structure
+                return order.order_data && order.order_id;
+            } else {
+                // For ticket type, expect direct order structure
+                return !order.order_data && order.id;
+            }
+        });
+    };
 
     const debouncedFetch = useCallback(
         debounce((value) => {
@@ -456,9 +476,20 @@ const BookingList = () => {
     };
 
     const handleSelectEventType = (type) => {
+        setIsTypeChanging(true); // Set flag to hide data during transition
         setSelectedEventType(type);
         setCurrentPage(1);
+
+        // Clear search and payment status when changing type to avoid confusion
+        setSearchTerm("");
+        setSelectedPaymentStatus("all");
+
         fetchOrders(1, pageSize, { type });
+
+        // Reset the flag after a brief delay to allow new data to load
+        setTimeout(() => {
+            setIsTypeChanging(false);
+        }, 100);
     };
 
     const handleTableChange = (paginationConfig) => {
@@ -487,6 +518,7 @@ const BookingList = () => {
         setSelectedPaymentStatus(resetStatus);
         setSelectedEventType(resetType);
         setCurrentPage(resetPage);
+        setIsTypeChanging(true);
 
         dispatch(
             getOrderByBookings({
@@ -495,14 +527,26 @@ const BookingList = () => {
                 type: resetType,
             })
         );
+
+        setTimeout(() => {
+            setIsTypeChanging(false);
+        }, 100);
     };
 
+    // Add effect to clear isTypeChanging flag when new data arrives
     useEffect(() => {
-        if (ordersData) {
-            console.log("ordersData", ordersData);
+        if (!loading && ordersByBooking?.items) {
+            setIsTypeChanging(false);
         }
+    }, [loading, ordersByBooking]);
 
-    }, [ordersData])
+    useEffect(() => {
+        if (ordersByBooking?.items) {
+            console.log("ordersData", ordersByBooking.items);
+            console.log("selectedEventType", selectedEventType);
+            console.log("filteredData", getFilteredOrdersData());
+        }
+    }, [ordersByBooking, selectedEventType]);
 
     return (
         <div>
@@ -562,9 +606,16 @@ const BookingList = () => {
                 <div className="table-responsive">
                     <Table
                         columns={tableColumns}
-                        dataSource={ordersData}
-                        rowKey={(record) => getOrderData(record).id}
-                        loading={loading}
+                        dataSource={getFilteredOrdersData()}
+                        rowKey={(record) => {
+                            try {
+                                return getOrderData(record).id;
+                            } catch (error) {
+                                console.warn('Error getting order ID:', error, record);
+                                return record.id || record.order_id || Math.random();
+                            }
+                        }}
+                        loading={loading || isTypeChanging}
                         scroll={{ x: 1400 }}
                         pagination={{
                             current: pagination?.page || currentPage,
