@@ -300,6 +300,9 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
         navigationPath={`${APP_PREFIX_PATH}/offer/list/${type}`}
         responseMessage={responseMessage}
         pagination={submitPagination}
+        mode={mode}
+        form={form}
+        formType={"offer"}
       />
       <CommentShowModal
         visible={isCommentModalVisible}

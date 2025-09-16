@@ -557,6 +557,9 @@ const MultyStepTicketForm = () => {
         addFunction={addTicket}
         navigationPath={`${APP_PREFIX_PATH}/ticket/list`}
         responseMessage={responseMessage}
+        mode={"ADD"}
+        form={form}
+        formType={"ticket"}
       />
     </div>
   );

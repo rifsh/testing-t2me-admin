@@ -507,6 +507,9 @@ const AddMovie = ({ mode, id }) => {
         addFunction={mode === MODE.ADD ? createMovie : editMovie}
         navigationPath={`${APP_PREFIX_PATH}/movie/list`}
         responseMessage={submitMessage}
+        mode={mode}
+        form={form}
+        formType={"movie"}
       />
     </>
   );

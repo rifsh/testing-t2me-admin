@@ -263,6 +263,7 @@ const CountryForm = ({ mode, placeId }) => {
         mode={mode}
         form={form}
         formType={"place"}
+        
       />
     </>
   );

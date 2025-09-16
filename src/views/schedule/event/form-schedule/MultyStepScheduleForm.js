@@ -438,6 +438,9 @@ const MultyStepScheduleForm = ({ mode, id }) => {
         addFunction={addSchedule}
         navigationPath={`${APP_PREFIX_PATH}/schedule/list`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"schedule"}
       />
     </div>
   );

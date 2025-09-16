@@ -50,7 +50,7 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
     responseData,
     responseMessage,
     filteredEvents,
-    eventDetails
+    eventDetails,
   } = useSelector((state) => state.event);
   const dispatch = useDispatch();
   const [form] = Form.useForm();
@@ -60,7 +60,9 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
     isCommentModalVisible,
     comment,
     actionType,
-    responseDataEvent, responseMessageEvent, message,
+    responseDataEvent,
+    responseMessageEvent,
+    message,
   } = useSelector((state) => state.organizerUpdates);
   console.log("------------------", eventId);
   console.log("------------------", mode);
@@ -78,31 +80,31 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    console.log(mode,"-----------------MODE");
-    
+    console.log(mode, "-----------------MODE");
+
     if (mode === "EDIT" && eventDetails) {
       console.log(eventDetails.thumbnail_image);
-      
+
       form.setFieldsValue({
         event_name: eventDetails.event_name,
         description: eventDetails.description,
         banner_images: eventDetails?.media
           ? eventDetails?.media?.map((banner, index) => ({
-            uid: `-banner-${index}`,
-            name: banner?.media_url.split("/").pop(),
-            status: "done",
-            url: banner?.media_url,
-          }))
+              uid: `-banner-${index}`,
+              name: banner?.media_url.split("/").pop(),
+              status: "done",
+              url: banner?.media_url,
+            }))
           : [],
         thumbnail_image: eventDetails.thumbnail_image
           ? [
-            {
-              uid: "-1",
-              name: eventDetails.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: eventDetails.thumbnail_image,
-            },
-          ]
+              {
+                uid: "-1",
+                name: eventDetails.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: eventDetails.thumbnail_image,
+              },
+            ]
           : [],
         event_images: eventDetails.event_images
           ? eventDetails.event_images.map((image, index) => ({
@@ -134,24 +136,32 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
 
       if (singleOrganizerUpdate.updated_fields != null) {
         form.setFieldsValue({
-          event_name: singleOrganizerUpdate.updated_fields?.event_name ?? singleOrganizerUpdate.events?.event_name,
-          description: singleOrganizerUpdate.updated_fields?.description ?? singleOrganizerUpdate.events.description,
+          event_name:
+            singleOrganizerUpdate.updated_fields?.event_name ??
+            singleOrganizerUpdate.events?.event_name,
+          description:
+            singleOrganizerUpdate.updated_fields?.description ??
+            singleOrganizerUpdate.events.description,
           banner_images: singleOrganizerUpdate.updated_fields?.banner_images
-            ? singleOrganizerUpdate.updated_fields?.banner_images?.map((banner, index) => ({
-              uid: `-banner-${index}`,
-              name: banner.split("/").pop(),
-              status: "done",
-              url: banner,
-            }))
+            ? singleOrganizerUpdate.updated_fields?.banner_images?.map(
+                (banner, index) => ({
+                  uid: `-banner-${index}`,
+                  name: banner.split("/").pop(),
+                  status: "done",
+                  url: banner,
+                })
+              )
             : singleOrganizerUpdate?.events?.banner_images
-              ? singleOrganizerUpdate.events?.banner_images?.map((banner, index) => ({
-                uid: `-banner-${index}`,
-                name: banner.split("/").pop(),
-                status: "done",
-                url: banner,
-              }))
-              : [],
-            // 
+            ? singleOrganizerUpdate.events?.banner_images?.map(
+                (banner, index) => ({
+                  uid: `-banner-${index}`,
+                  name: banner.split("/").pop(),
+                  status: "done",
+                  url: banner,
+                })
+              )
+            : [],
+          //
           event_images: singleOrganizerUpdate.updated_fields?.event_images
             ? singleOrganizerUpdate.updated_fields?.event_images?.map(
                 (image, index) => ({
@@ -317,35 +327,29 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
           banner_images: getBannerImagesPayload(values.banner_images),
           thumbnail_image: getThumbnailPayload(values.thumbnail_image),
           event_images: getEventImagesPayload(values.event_images),
-          event_add_on_services: values.event_add_on_services 
-          ? values.event_add_on_services.map(service => ({
-            title: service.title,
-            services: service.add || []
-          }))
-          : [],
-        event_qna: values.event_qna 
-          ? values.event_qna.map(qnaSection => ({
-            title: qnaSection.title,
-            qna: qnaSection.qna.map(qa => ({
-              question: qa.question,
-              answer: qa.answer
-            }))
-          }))
-          : [],
+          event_add_on_services: values.event_add_on_services
+            ? values.event_add_on_services.map((service) => ({
+                title: service.title,
+                services: service.add || [],
+              }))
+            : [],
+          event_qna: values.event_qna
+            ? values.event_qna.map((qnaSection) => ({
+                title: qnaSection.title,
+                qna: qnaSection.qna.map((qa) => ({
+                  question: qa.question,
+                  answer: qa.answer,
+                })),
+              }))
+            : [],
           id: eventId,
         };
         console.log("Edit Data:", data);
 
         dispatch(setSelectedSubmitItem(data));
       }
-
-
-      
-
     } else if (mode === "ORGEDIT") {
-
-
-      dispatch(setActionType('update'));
+      dispatch(setActionType("update"));
       dispatch(setCommentModalVisibility(true));
     } else {
       try {
@@ -369,10 +373,7 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
         dispatch(setSubmitLoading(false));
       }
     }
-
-
   };
-
 
   const handleSubmit = async () => {
     if (comment.trim().length === 0) {
@@ -381,13 +382,11 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
     }
     const values = await form.validateFields();
 
-
-
     try {
       const data = {
         ...values,
         id: eventId,
-        comments: comment
+        comments: comment,
       };
 
       console.log("...............", data);
@@ -488,19 +487,46 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
             Next
           </Button>
         ) : (
-          <Button type="primary" loading={mode == "EDIT" || "ORGEDIT" ? loading : submitLoading} onClick={onFinish}>
+          <Button
+            type="primary"
+            loading={mode == "EDIT" || "ORGEDIT" ? loading : submitLoading}
+            onClick={onFinish}
+          >
             Submit
           </Button>
         )}
       </div>
-      <LoadingOverlay 
-        loading={loading || submitLoading} 
-      />
+      <LoadingOverlay loading={loading || submitLoading} />
       <SubmitAndConfirmModal
-        responseData={mode === "EDIT" ? responseDataEvent : mode === "ORGEDIT" ? responseDataEvent : responseData}
-        addFunction={mode === "EDIT" ? updateOrganizerEvent : mode === "ORGEDIT" ? updateOrganizerReChanges : addEvent}
-        navigationPath={mode === "ORGEDIT" ? `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist` : `${APP_PREFIX_PATH}/event/list`}
-        responseMessage={mode === "EDIT" ? responseMessageEvent : mode === "ORGEDIT" ? responseMessageEvent : responseMessage}
+        responseData={
+          mode === "EDIT"
+            ? responseDataEvent
+            : mode === "ORGEDIT"
+            ? responseDataEvent
+            : responseData
+        }
+        addFunction={
+          mode === "EDIT"
+            ? updateOrganizerEvent
+            : mode === "ORGEDIT"
+            ? updateOrganizerReChanges
+            : addEvent
+        }
+        navigationPath={
+          mode === "ORGEDIT"
+            ? `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`
+            : `${APP_PREFIX_PATH}/event/list`
+        }
+        responseMessage={
+          mode === "EDIT"
+            ? responseMessageEvent
+            : mode === "ORGEDIT"
+            ? responseMessageEvent
+            : responseMessage
+        }
+        mode={mode}
+        form={form}
+        formType={"lead-evnet-org"}
       />
       <CommentShowModal
         visible={isCommentModalVisible}
@@ -509,7 +535,9 @@ const MultyStepEventFormOrganizer = ({ eventId, mode }) => {
         loading={loading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Comment`}
+        title={`${
+          actionType.charAt(0).toUpperCase() + actionType.slice(1)
+        } Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />
     </div>

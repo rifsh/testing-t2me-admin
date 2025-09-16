@@ -189,6 +189,9 @@ const AdScheduleForm = ({ mode, scheduleDetails, id }) => {
         addFunction={mode === "EDIT" ? editAdSchedule : createAdSchedule}
         navigationPath={`${APP_PREFIX_PATH}/advertisement/schedule/list`}
         responseMessage={mode === "EDIT" ? resMessage : responseMessage}
+        mode={mode}
+        form={form}
+        formType={"add-schedule"}
       />
     </>
   );

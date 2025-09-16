@@ -150,6 +150,9 @@ const EventTypeForm = ({ mode, typeId }) => {
           navigationPath={`${APP_PREFIX_PATH}/event/type/list`}
           responseMessage={responseMessage}
           pagination={submitPagination}
+          mode={mode}
+          form={form}
+          formType={"event-type"}
         />
       </Form>
     </>

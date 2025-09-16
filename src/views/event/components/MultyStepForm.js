@@ -59,6 +59,7 @@ import getEventFormItems from "configs/UserAccessConfig";
 import { getSingleLeadEvents, addLeadEvent } from "store/slices/leadEventSlice";
 import { EVENT_TYPES } from "constants/PageConstants";
 import { add } from "lodash";
+import DraftSystem from "drafts/components/DraftSystem";
 
 const MultyStepEventForm = ({ eventId, mode }) => {
   const {
@@ -102,7 +103,7 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     if (!eventType.length) {
       dispatch(fetchEventType({ active: true }));
     }
-  }, [dispatch, eventType.length]);
+  }, [dispatch, eventType.length, eventId]); // Added eventId dependency
 
   useEffect(() => {
     if (mode === "LEAD" && eventId && !singleLeadEvent) {
@@ -153,6 +154,8 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     dispatch,
     availableTicketTyps,
     filteredTickets,
+    selectedOffers.length, // Added dependency
+    selectedCoupons.length, // Added dependency
   ]);
 
   useEffect(() => {
@@ -180,29 +183,29 @@ const MultyStepEventForm = ({ eventId, mode }) => {
           eventDetails.event_coupons?.map((coupon) => coupon.coupons.id) || [],
         thumbnail_image: eventDetails.thumbnail_image
           ? [
-            {
-              uid: "-1",
-              name: eventDetails.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: `${CDN_PATH}/${eventDetails.thumbnail_image}`,
-            },
-          ]
+              {
+                uid: "-1",
+                name: eventDetails.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${eventDetails.thumbnail_image}`,
+              },
+            ]
           : [],
         banner_images: eventDetails.media
           ? eventDetails.media.map((image, index) => ({
-            uid: `-${index + 1}`,
-            name: image.media_url.split("/").pop(),
-            status: "done",
-            url: `${CDN_PATH}/${image.media_url}`,
-          }))
+              uid: `-${index + 1}`,
+              name: image.media_url.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${image.media_url}`,
+            }))
           : [],
         event_images: eventDetails.event_images
           ? eventDetails.event_images.map((image, index) => ({
-            uid: `-${index + 1}`,
-            name: image.image.split("/").pop(),
-            status: "done",
-            url: `${CDN_PATH}/${image.image}`,
-          }))
+              uid: `-${index + 1}`,
+              name: image.image.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${image.image}`,
+            }))
           : [],
       };
 
@@ -315,6 +318,8 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     dispatch,
     availableTicketTyps,
     filteredTickets,
+    selectedOffers.length, // Added dependency
+    selectedCoupons.length, // Added dependency
   ]);
 
   useEffect(() => {
@@ -628,9 +633,46 @@ const MultyStepEventForm = ({ eventId, mode }) => {
     }
   };
 
+  // Draft system callbacks
+  const handleDraftSaved = (draftData) => {
+    console.log("Draft saved:", draftData);
+    // Optional: You can dispatch an action or show a custom message
+  };
+
+  const handleDraftLoaded = (draftData) => {
+    console.log("Draft loaded:", draftData);
+    // Optional: You might need to update Redux state based on loaded draft
+    // For example, if the draft contains selected offers/coupons
+  };
+
   return (
     <div>
       <h2>{mode === "EDIT" ? "Edit Event" : "Create Event"}</h2>
+
+      {/* Fixed DraftSystem usage */}
+      <DraftSystem
+        form={form}
+        formType="event" // Changed from "place" to "event"
+        mode={mode}
+        recordId={eventId} // Pass eventId as recordId
+        titleField="event_name" // Changed from "name" to "event_name"
+        excludeFromDraft={[
+          "id",
+          "created_at",
+          "updated_at",
+          "thumbnail_image", // Exclude file fields
+          "banner_images",
+          "event_images",
+        ]}
+        style={{ marginRight: 12, display: "inline-block" }}
+        enableAutoSave={mode !== "EDIT"} // Only enable auto-save for ADD/LEAD modes
+        autoSaveInterval={5000} // Increased interval to 5 seconds
+        onDraftSaved={handleDraftSaved}
+        onDraftLoaded={handleDraftLoaded}
+        showLabels={true}
+        size="small"
+      />
+
       <div
         style={{
           display: "flex",
@@ -727,6 +769,9 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         addFunction={mode === "EDIT" ? editEvent : addEvent}
         navigationPath={`${APP_PREFIX_PATH}/event/list`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"event"}
       />
     </div>
   );
