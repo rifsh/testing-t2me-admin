@@ -25,6 +25,10 @@ import {
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import LoadingOverlay from "components/util-components/Loader/index";
+import DraftSystem from "drafts/components/DraftSystem";
+import { useDraft } from "drafts/hooks/useDraftManager";
+
+// Update with actual path
 import BackButton from "components/Buttons/BackPageButoon";
 
 const CountryForm = ({ mode, placeId }) => {
@@ -49,7 +53,12 @@ const CountryForm = ({ mode, placeId }) => {
     singlePlace,
     message: warningMessage,
   } = useSelector((state) => state.locations);
-
+  const { deleteDraft } = useDraft({
+    form,
+    formType: "place",
+    mode,
+    recordId: placeId,
+  });
   useEffect(() => {
     console.log("FETCHING SINGLE PLACE");
 
@@ -70,23 +79,23 @@ const CountryForm = ({ mode, placeId }) => {
           name: singlePlace.name,
           banner_images: singlePlace?.media
             ? singlePlace?.media?.map((banner, index) => ({
-              uid: `-banner-${index}`,
-              name: banner?.media_url.split("/").pop(),
-              status: "done",
-              url: banner?.media_url,
-            }))
+                uid: `-banner-${index}`,
+                name: banner?.media_url.split("/").pop(),
+                status: "done",
+                url: banner?.media_url,
+              }))
             : [],
           thumbnail_image:
             singlePlace.thumbnail_image &&
-              singlePlace.thumbnail_image !== "images"
+            singlePlace.thumbnail_image !== "images"
               ? [
-                {
-                  uid: "-1",
-                  name: singlePlace.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: `${CDN_PATH}/${singlePlace.thumbnail_image}`,
-                },
-              ]
+                  {
+                    uid: "-1",
+                    name: singlePlace.thumbnail_image.split("/").pop(),
+                    status: "done",
+                    url: `${CDN_PATH}/${singlePlace.thumbnail_image}`,
+                  },
+                ]
               : [],
           description: singlePlace.description,
         });
@@ -122,6 +131,7 @@ const CountryForm = ({ mode, placeId }) => {
         if (createPlace.fulfilled.match(resultAction)) {
           antdMessage.success(`Place ${values.name} added successfully`);
           navigate(`${APP_PREFIX_PATH}/place/list`);
+          deleteDraft();
         }
       } else {
         console.log("ITS AN EDITTTTTTTTTTTTT");
@@ -165,13 +175,11 @@ const CountryForm = ({ mode, placeId }) => {
     const resultAction = await dispatch(
       editPlace({ data: selectedPlace, action: ActionType.SUBMIT })
     );
+
     dispatch(setLocationModalLoading(false));
     dispatch(setLocationDialogVisible(false));
     if (editPlace.fulfilled.match(resultAction)) {
       dispatch(setSelectedSubmitItem(selectedPlace));
-      // antdMessage.success(`Event ${selectedPlace.name} updated successfully`);
-      // form.resetFields();
-      // navigate(`${APP_PREFIX_PATH}/place/list`);
     }
   };
 
@@ -204,7 +212,18 @@ const CountryForm = ({ mode, placeId }) => {
                 {!placeId ? "Add New Place" : `Edit Place`}{" "}
               </h2>
               <div className="mb-3 flex">
-                <BackButton />
+                {/* Add Draft Integration Component */}
+                <DraftSystem
+                  form={form}
+                  formType="place"
+                  mode={mode}
+                  recordId={placeId}
+                  titleField="name"
+                  excludeFromDraft={["id", "created_at"]}
+                  style={{ marginRight: 12, display: "inline-block" }}
+                  enableAutoSave={mode !== "EDIT"}
+                />
+
                 <DiscardButton form={form} />
                 <Button
                   type="primary"
