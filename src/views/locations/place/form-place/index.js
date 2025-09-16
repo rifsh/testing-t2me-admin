@@ -53,12 +53,7 @@ const CountryForm = ({ mode, placeId }) => {
     singlePlace,
     message: warningMessage,
   } = useSelector((state) => state.locations);
-  const { deleteDraft } = useDraft({
-    form,
-    formType: "place",
-    mode,
-    recordId: placeId,
-  });
+
   useEffect(() => {
     console.log("FETCHING SINGLE PLACE");
 
@@ -131,7 +126,6 @@ const CountryForm = ({ mode, placeId }) => {
         if (createPlace.fulfilled.match(resultAction)) {
           antdMessage.success(`Place ${values.name} added successfully`);
           navigate(`${APP_PREFIX_PATH}/place/list`);
-          deleteDraft();
         }
       } else {
         console.log("ITS AN EDITTTTTTTTTTTTT");
@@ -208,7 +202,7 @@ const CountryForm = ({ mode, placeId }) => {
               justifyContent="space-between"
               alignItems="center"
             >
-              <h2 className="mb-3">
+              <h2 className="mb-3 font-semibold">
                 {!placeId ? "Add New Place" : `Edit Place`}{" "}
               </h2>
               <div className="mb-3 flex">
@@ -217,7 +211,6 @@ const CountryForm = ({ mode, placeId }) => {
                   form={form}
                   formType="place"
                   mode={mode}
-                  recordId={placeId}
                   titleField="name"
                   excludeFromDraft={["id", "created_at"]}
                   style={{ marginRight: 12, display: "inline-block" }}
@@ -237,18 +230,8 @@ const CountryForm = ({ mode, placeId }) => {
             </Flex>
           </div>
         </PageHeaderAlt>
-        <div className="container">
-          <Tabs
-            defaultActiveKey="1"
-            style={{ marginTop: 30 }}
-            items={[
-              {
-                label: "General",
-                key: "1",
-                children: <CountryFormFields mode={mode} form={form} />,
-              },
-            ]}
-          />
+        <div className="container pt-20">
+          <CountryFormFields mode={mode} form={form} />,
         </div>
       </Form>
       <LoadingOverlay loading={createPlaceLoading} />
@@ -277,6 +260,9 @@ const CountryForm = ({ mode, placeId }) => {
         addFunction={mode === "EDIT" ? editPlace : createPlace}
         navigationPath={`${APP_PREFIX_PATH}/place/list`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"place"}
       />
     </>
   );
