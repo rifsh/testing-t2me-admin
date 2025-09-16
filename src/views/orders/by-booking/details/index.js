@@ -17,9 +17,10 @@ import {
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { getOrderByBookingDetails } from 'store/slices/ordersSlice';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Loading from 'components/shared-components/Loading';
 import LoadingOverlay from 'components/util-components/Loader';
+import SeatBookingUI from '../components/SeatBookingUI ';
 
 const { Title, Text } = Typography;
 
@@ -27,18 +28,34 @@ const OrderBookingDetails = () => {
     const dispatch = useDispatch();
     const { id, type } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const orderId = searchParams.get("orderId");
     const { ordersByBookingDetails, loading, pagination } = useSelector(
         (state) => state.orderSlice
     );
 
     useEffect(() => {
         if (id && type && id !== "undefined" && type !== "undefined") {
-            dispatch(getOrderByBookingDetails({ id, type }));
+            let params = {};
+
+            if (type === 'seat') {
+                params = {
+                    order_id: id,
+                    type,
+                    id: orderId
+                };
+            } else {
+                params = { id, type };
+            }
+
+            dispatch(getOrderByBookingDetails(params));
         } else {
             message.warning("Invalid booking id or type");
             navigate(-1);
         }
-    }, [dispatch, id, type, navigate]);
+    }, [dispatch, id, type, orderId, navigate]);
+
 
     const getPaymentStatusIcon = (status) => {
         switch (status) {
@@ -120,6 +137,14 @@ const OrderBookingDetails = () => {
     }
 
     const order = ordersByBookingDetails;
+
+    if (type === 'seat') {
+        return (
+            <SeatBookingUI
+                orderData={order}
+            />
+        )
+    }
 
     return (
         <>
@@ -293,25 +318,25 @@ const OrderBookingDetails = () => {
                             <div className="space-y-3">
                                 <div className="flex justify-between">
                                     <Text>Original Amount</Text>
-                                    <Text strong>${getSafeValue(order, 'original_amount', 0).toFixed(2)}</Text>
+                                    <Text strong>{getSafeValue(order, 'original_amount', 0).toFixed(2)}</Text>
                                 </div>
 
                                 {getSafeValue(order, 'add_on_charge', 0) > 0 && (
                                     <div className="flex justify-between">
                                         <Text>Add-on Charges</Text>
-                                        <Text strong>${getSafeValue(order, 'add_on_charge', 0).toFixed(2)}</Text>
+                                        <Text strong>{getSafeValue(order, 'add_on_charge', 0).toFixed(2)}</Text>
                                     </div>
                                 )}
 
                                 <div className="flex justify-between">
                                     <Text>Tax Amount</Text>
-                                    <Text>${getSafeValue(order, 'tax_amount', 0).toFixed(2)}</Text>
+                                    <Text>{getSafeValue(order, 'tax_amount', 0).toFixed(2)}</Text>
                                 </div>
 
                                 {getSafeValue(order, 'coupon_code') && getSafeValue(order, 'coupon_code') !== 'N/A' && (
                                     <div className="flex justify-between text-green-600">
                                         <Text>Coupon ({getSafeValue(order, 'coupon_code')})</Text>
-                                        <Text>-${(getSafeValue(order, 'amount', 0) - getSafeValue(order, 'final_amount', 0)).toFixed(2)}</Text>
+                                        <Text>-{(getSafeValue(order, 'amount', 0) - getSafeValue(order, 'final_amount', 0)).toFixed(2)}</Text>
                                     </div>
                                 )}
 
@@ -320,7 +345,7 @@ const OrderBookingDetails = () => {
                                 <div className="flex justify-between">
                                     <Title level={5} className="!mb-0">Final Amount</Title>
                                     <Title level={5} className="!mb-0 text-green-600">
-                                        ${getSafeValue(order, 'final_amount', 0).toFixed(2)}
+                                        {getSafeValue(order, 'final_amount', 0).toFixed(2)}
                                     </Title>
                                 </div>
                             </div>

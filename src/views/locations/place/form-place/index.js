@@ -29,6 +29,7 @@ import DraftSystem from "drafts/components/DraftSystem";
 import { useDraft } from "drafts/hooks/useDraftManager";
 
 // Update with actual path
+import BackButton from "components/Buttons/BackPageButoon";
 
 const CountryForm = ({ mode, placeId }) => {
   const [form] = Form.useForm();
@@ -210,7 +211,7 @@ const CountryForm = ({ mode, placeId }) => {
               <h2 className="mb-3">
                 {!placeId ? "Add New Place" : `Edit Place`}{" "}
               </h2>
-              <div className="mb-3">
+              <div className="mb-3 flex">
                 {/* Add Draft Integration Component */}
                 <DraftSystem
                   form={form}

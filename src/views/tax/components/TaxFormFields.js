@@ -47,6 +47,7 @@ import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import { filterOption } from "components/util-components/FormItems/dropDownSearch";
+import BackButton from "components/Buttons/BackPageButoon";
 
 const { Option } = Select;
 
@@ -390,7 +391,10 @@ const TaxFormFields = ({ mode, tax }) => {
               mobileFlex={false}
               justifyContent="space-between"
             >
-              <DiscardButton form={form} />
+              <div className="flex ">
+                <BackButton />
+                <DiscardButton form={form} />
+              </div>
               <Button type="primary" onClick={onFinish} loading={loading}>
                 {mode === "ADD" ? "Add" : "Save"}
               </Button>

@@ -308,11 +308,11 @@ const orderSlice = createSlice({
       .addCase(getOrderByBookingDetails.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.ordersByBookingDetails = null;
       })
       .addCase(getOrderByBookingDetails.fulfilled, (state, action) => {
         state.loading = false;
         state.ordersByBookingDetails = action.payload;
-        state.pagination = action.payload;
       })
       .addCase(getOrderByBookingDetails.rejected, (state, action) => {
         state.loading = false;

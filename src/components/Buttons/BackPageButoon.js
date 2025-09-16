@@ -1,29 +1,28 @@
-import { Button, Col, Row } from 'antd'
-import React from 'react'
-import { ArrowLeftOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import React from "react";
+import { Button, Col, Row } from "antd";
+import { ArrowLeftOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
-const BackPageButoon = ({ path }) => {
+const BackButton = ({ path, label = "Back", icon = <ArrowLeftOutlined /> }) => {
     const navigate = useNavigate();
-    const handleBackToList = () => {
-        navigate(`${path}`);
+
+    const handleBack = () => {
+        if (path) {
+            navigate(path);
+        } else {
+            navigate(-1); // fallback to previous page
+        }
     };
 
     return (
-        <>
-            <Row style={{ marginBottom: 16 }}>
-                <Col>
-                    <Button
-                        icon={<ArrowLeftOutlined />}
-                        onClick={handleBackToList}
-                    >
-                        Back to Screen List
-                    </Button>
-                </Col>
-            </Row>
-        </>
-    )
-}
+        <Row style={{ marginBottom: 16 }}>
+            <Col>
+                <Button className="mr-2" icon={icon} onClick={handleBack}>
+                    {label}
+                </Button>
+            </Col>
+        </Row>
+    );
+};
 
-export default BackPageButoon
+export default BackButton;

@@ -326,6 +326,7 @@ const AccessControlDashboard = () => {
                             placeholder="Search..."
                             fetchFunction={fetchPermissionsDisplayNames}
                             isStatus={false}
+                            clearBtnVisibility={false}
                         />
                     </div>
                     <div className="flex flex-col justify-between h-[calc(100%-110px)]">
