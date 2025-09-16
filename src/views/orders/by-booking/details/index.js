@@ -17,7 +17,7 @@ import {
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { getOrderByBookingDetails } from 'store/slices/ordersSlice';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Loading from 'components/shared-components/Loading';
 import LoadingOverlay from 'components/util-components/Loader';
 
@@ -27,18 +27,32 @@ const OrderBookingDetails = () => {
     const dispatch = useDispatch();
     const { id, type } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const showSeatId = searchParams.get("showSeatId");
     const { ordersByBookingDetails, loading, pagination } = useSelector(
         (state) => state.orderSlice
     );
 
     useEffect(() => {
         if (id && type && id !== "undefined" && type !== "undefined") {
-            dispatch(getOrderByBookingDetails({ id, type }));
+            let params = {
+                id,
+                type,
+            }
+
+            if (type === 'seat') {
+                params = {
+                    ...params,
+                    showSeatId
+                }
+            }
+            dispatch(getOrderByBookingDetails(params));
         } else {
             message.warning("Invalid booking id or type");
             navigate(-1);
         }
-    }, [dispatch, id, type, navigate]);
+    }, [dispatch, id, type, showSeatId, navigate]);
 
     const getPaymentStatusIcon = (status) => {
         switch (status) {

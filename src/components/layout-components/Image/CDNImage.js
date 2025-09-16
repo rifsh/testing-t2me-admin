@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Image as AntImage } from "antd";
+import { Image as AntImage, Spin, Skeleton } from "antd";
 import { CDN_PATH } from "configs/AppConfig";
 
 const CDNImage = ({
@@ -12,6 +12,7 @@ const CDNImage = ({
     fallbackElement = null,
     showFallbackOnError = true,
     preview = false,
+    loadingIndicator = "shimmer",
     ...imageProps
 }) => {
     const [hasError, setHasError] = useState(false);
@@ -35,6 +36,43 @@ const CDNImage = ({
     // Generate the full image URL if we have a valid source
     const imageUrl = src && src !== "images" ? `${CDN_PATH}/${src}` : null;
 
+    // Loading indicators
+    const renderLoadingIndicator = () => {
+        switch (loadingIndicator) {
+            case "spinner":
+                return (
+                    <div
+                        className="flex items-center justify-center bg-gray-100"
+                        style={{ height, width, ...style }}
+                    >
+                        <Spin size="large" />
+                    </div>
+                );
+
+            case "skeleton":
+                return (
+                    <Skeleton.Image
+                        active
+                        style={{
+                            height,
+                            width,
+                            ...style
+                        }}
+                        className={className}
+                    />
+                );
+
+            case "shimmer":
+            default:
+                return (
+                    <div
+                        className="animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer"
+                        style={{ height, width, ...style }}
+                    />
+                );
+        }
+    };
+
     // Default fallback UI
     const defaultFallback = (
         <div
@@ -48,9 +86,25 @@ const CDNImage = ({
                 color: "#888",
                 ...style,
             }}
-            className={className}
+            className={`${className} rounded-lg`}
         >
-            No Image
+            <div className="flex flex-col items-center">
+                <div
+                    style={{
+                        height,
+                        width,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        backgroundColor: "#f0f0f0",
+                        color: "#888",
+                        ...style,
+                    }}
+                    className={className}
+                >
+                    No Image
+                </div>
+            </div>
         </div>
     );
 
@@ -62,8 +116,13 @@ const CDNImage = ({
     }
 
     return (
-        <>
-            {isLoading && fallbackUI}
+        <div className="relative overflow-hidden" style={{ height, width }}>
+            {isLoading && (
+                <div className="absolute inset-0 z-10">
+                    {renderLoadingIndicator()}
+                </div>
+            )}
+
             <AntImage
                 alt={alt}
                 src={imageUrl}
@@ -72,15 +131,16 @@ const CDNImage = ({
                 preview={preview}
                 style={{
                     objectFit: "cover",
-                    display: isLoading ? "none" : "block",
+                    opacity: isLoading ? 0 : 1,
+                    transition: "opacity 0.3s ease-in-out",
                     ...style,
                 }}
-                className={className}
+                className={`${className} ${isLoading ? "invisible" : "visible"}`}
                 onError={handleError}
                 onLoad={handleLoad}
                 {...imageProps}
             />
-        </>
+        </div>
     );
 };
 
