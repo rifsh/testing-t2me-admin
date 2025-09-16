@@ -105,8 +105,8 @@ const SeatBookingUI = ({ orderData }) => {
                 {/* Header */}
                 <div className="mb-6">
                     <Title level={2} className="flex items-center gap-2 mb-2">
-                        <ShoppingCartOutlined className="text-blue-600" />
-                        Order Details
+                        Booking Details
+                        <span className="text-sm italic text-gray-500">(seat type)</span>
                     </Title>
                     <Text type="secondary">Order ID: {orderData.order_id || 'N/A'}</Text>
                 </div>
@@ -203,12 +203,12 @@ const SeatBookingUI = ({ orderData }) => {
                                 </Tag>
                             </div>
                             <Descriptions column={1} size="small">
-                                <Descriptions.Item label="Payment Method ID">
+                                {/* <Descriptions.Item label="Payment Method ID">
                                     {orderInfo.payment_method_id ?
                                         `#${orderInfo.payment_method_id}` :
                                         <Text type="secondary">Not available</Text>
                                     }
-                                </Descriptions.Item>
+                                </Descriptions.Item> */}
                                 <Descriptions.Item label="Payment Initiated">
                                     {formatDate(orderInfo.payment_initiated_at)}
                                 </Descriptions.Item>
