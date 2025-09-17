@@ -401,6 +401,16 @@ const ALL_NAVIGATION_ITEMS = {
     category: FEATURE_CATEGORIES.EVENT,
     featureItem: "schedule",
   },
+  "event.schedule.add-on": {
+    key: "schedule.list.add-on",
+    path: `${APP_PREFIX_PATH}/schedule/list`,
+    title: "sidenav.schedule.add-on",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.EVENT,
+    featureItem: "schedule",
+  },
 
   // Movie Services - All items under services.movie
   "movie.theater": {
@@ -878,6 +888,7 @@ const ROLE_NAVIGATION_ACCESS = {
 
     // Event Services
     "event.list",
+    "event.schedule.add-on",
 
     // Movie Services (limited access)
     "movie.offer",
@@ -963,6 +974,7 @@ const ROLE_NAVIGATION_ACCESS = {
   [UserRoleConstants.eventSupportingTeamRoleId]: [
     // Event Services
     "event.list",
+    "event.schedule.add-on",
 
     // Movie Services (limited access)
     "movie.offer",

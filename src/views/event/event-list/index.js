@@ -130,6 +130,14 @@ const EventsList = () => {
           <span className="ml-2">Edit Event</span>
         </Flex>
       </Menu.Item>}
+      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT) && <Menu.Item>
+        <Flex alignItems="center" onClick={() => {
+          navigate(`${APP_PREFIX_PATH}/qr-scanner`);
+        }}>
+          <EditOutlined />
+          <span className="ml-2">QR code</span>
+        </Flex>
+      </Menu.Item>}
     </Menu>
   );
 
