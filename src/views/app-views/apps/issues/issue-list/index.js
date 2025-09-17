@@ -315,6 +315,7 @@ const IssueList = () => {
               onChange={handleShowStatus}
               className="mr-2"
               value={activeStatus}
+              style={{ width: 150 }}
             >
               <Option value={null}>All</Option>
               <Option value={true}>Closed</Option>

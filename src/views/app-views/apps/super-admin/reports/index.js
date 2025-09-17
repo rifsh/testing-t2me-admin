@@ -275,11 +275,10 @@ const SuperAdminReport = () => {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 disabled={isLoading}
-                className={`flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${
-                  activeTab === tab.key
+                className={`flex-1 sm:flex-none px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${activeTab === tab.key
                     ? "bg-green-600 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {tab.key.charAt(0).toUpperCase() + tab.key.slice(1)}
               </button>
@@ -384,9 +383,8 @@ const SuperAdminReport = () => {
             color: "blue",
           },
           {
-            title: `Active ${
-              activeTab === "events" ? "Event" : "Movie"
-            } Organizers`,
+            title: `Active ${activeTab === "events" ? "Event" : "Movie"
+              } Organizers`,
             value:
               activeTab === "events"
                 ? reportData?.active_users_in_events
@@ -407,12 +405,10 @@ const SuperAdminReport = () => {
             title: `${activeTab === "events" ? "Events" : "Movies"} Revenue`,
             value:
               activeTab === "events"
-                ? `${reportData?.total_event_revenue ?? 0} ${
-                    reportData?.revenue_by_country?.[0]?.currency_code ?? ""
-                  }`
-                : `${reportData?.total_movie_revenue ?? 0} ${
-                    reportData?.revenue_by_country?.[0]?.currency_code ?? ""
-                  }`,
+                ? `${reportData?.total_event_revenue?.toFixed(4) ?? 0} ${reportData?.revenue_by_country?.[0]?.currency_code ?? ""
+                }`
+                : `${reportData?.total_movie_revenue?.toFixed(4) ?? 0} ${reportData?.revenue_by_country?.[0]?.currency_code ?? ""
+                }`,
             icon: "💰",
             color: "yellow",
           },
@@ -569,12 +565,10 @@ const SuperAdminReport = () => {
             </h4>
             <p className="text-lg font-semibold text-green-600">
               {activeTab === "events"
-                ? `${reportData?.total_event_revenue?.toLocaleString() ?? 0} ${
-                    reportData?.revenue_by_country?.[0]?.currency_code ?? ""
-                  }`
-                : `${reportData?.total_movie_revenue?.toLocaleString() ?? 0} ${
-                    reportData?.revenue_by_country?.[0]?.currency_code ?? ""
-                  }`}
+                ? `${reportData?.total_event_revenue?.toLocaleString() ?? 0} ${reportData?.revenue_by_country?.[0]?.currency_code ?? ""
+                }`
+                : `${reportData?.total_movie_revenue?.toLocaleString() ?? 0} ${reportData?.revenue_by_country?.[0]?.currency_code ?? ""
+                }`}
             </p>
           </div>
         </div>
