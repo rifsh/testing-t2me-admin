@@ -256,6 +256,9 @@ const CategoryFormFields = ({ mode, category }) => {
         addFunction={mode === EDIT ? editCategory : addCategory}
         navigationPath={`${APP_PREFIX_PATH}/category/list`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"catgry"}
       />
     </Row>
   );

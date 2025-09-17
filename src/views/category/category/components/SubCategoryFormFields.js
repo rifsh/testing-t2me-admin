@@ -317,6 +317,9 @@ const SubCategoryFormFields = ({ mode, category }) => {
         addFunction={mode === EDIT ? editSubCategory : addSubCategory}
         navigationPath={`${APP_PREFIX_PATH}/category/list`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"sub-catgry"}
       />
     </Row>
   );

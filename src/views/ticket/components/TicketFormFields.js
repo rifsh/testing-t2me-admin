@@ -283,6 +283,10 @@ const TicketFormFields = ({ mode, ticket }) => {
         addFunction={addTicket}
         navigationPath={`${APP_PREFIX_PATH}/ticket/list`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"ticket-form"}
+
       />
     </Form>
   );

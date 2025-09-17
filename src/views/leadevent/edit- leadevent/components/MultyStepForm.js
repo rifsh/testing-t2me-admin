@@ -603,6 +603,9 @@ const handleStepClick = async (stepNumber) => {
         addFunction={mode === "EDITLEAD" ? editLeadEvent : addLeadEvent}
         navigationPath={`${APP_PREFIX_PATH}/leadevent/convert`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"leade-event-edit"}
       />
     </div>
   );

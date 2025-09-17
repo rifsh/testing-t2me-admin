@@ -334,6 +334,9 @@ const ScheduleForm = (props) => {
         navigationPath={`${APP_PREFIX_PATH}/movie-schedule/list`}
         responseMessage={responseMessage}
         pagination={submitPagination}
+        mode={mode}
+        form={form}
+        formType={"movie-schedule"}
       />
     </>
   );
