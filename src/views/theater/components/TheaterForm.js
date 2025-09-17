@@ -431,6 +431,9 @@ const TheaterForm = ({ mode = MODE.ADD, theaterEditId }) => {
                 addFunction={mode === MODE.ADD ? createTheater : editTheater}
                 navigationPath={`${APP_PREFIX_PATH}/movie-theater-company/list`}
                 responseMessage={submitMessage}
+                mode={mode}
+        form={form}
+        formType={"theatre"}
             />
         </div>
     );

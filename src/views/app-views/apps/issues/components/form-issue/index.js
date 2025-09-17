@@ -115,6 +115,9 @@ const IssueForm = (props) => {
         addFunction={addOffer}
         navigationPath={`${APP_PREFIX_PATH}/offer/list?type=general`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"issues"}
       />
     </>
   );

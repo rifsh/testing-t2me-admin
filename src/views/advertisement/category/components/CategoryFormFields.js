@@ -94,15 +94,23 @@ const validateMinMaxSize = (form) => (rule, value) => {
     }
 
     // Cross-field validation
-    const minSize = form.getFieldValue('min_size');
-    const maxSize = form.getFieldValue('max_size');
+    const minSize = form.getFieldValue("min_size");
+    const maxSize = form.getFieldValue("max_size");
 
-    if (rule.field === 'max_size' && minSize && numValue <= parseFloat(minSize)) {
+    if (
+      rule.field === "max_size" &&
+      minSize &&
+      numValue <= parseFloat(minSize)
+    ) {
       reject(new Error("Max size must be greater than min size"));
       return;
     }
 
-    if (rule.field === 'min_size' && maxSize && numValue >= parseFloat(maxSize)) {
+    if (
+      rule.field === "min_size" &&
+      maxSize &&
+      numValue >= parseFloat(maxSize)
+    ) {
       reject(new Error("Min size must be less than max size"));
       return;
     }
@@ -139,11 +147,11 @@ const CategoryFormFields = ({ mode, category }) => {
     category_code: [{ required: true, message: "Please enter category code" }],
     min_size: [
       { required: true, message: "Please enter min size" },
-      { validator: validateMinMaxSize(form), field: 'min_size' }
+      { validator: validateMinMaxSize(form), field: "min_size" },
     ],
     max_size: [
       { required: true, message: "Please enter max size" },
-      { validator: validateMinMaxSize(form), field: 'max_size' }
+      { validator: validateMinMaxSize(form), field: "max_size" },
     ],
     resolution: [{ required: false, message: "Please enter resolution" }],
     file_type: [{ required: true, message: "Please enter file_type" }],
@@ -173,10 +181,10 @@ const CategoryFormFields = ({ mode, category }) => {
   const handleFileSizeChange = (field) => {
     // Re-validate both min and max size when either changes
     setTimeout(() => {
-      if (field === 'min_size') {
-        form.validateFields(['max_size']);
-      } else if (field === 'max_size') {
-        form.validateFields(['min_size']);
+      if (field === "min_size") {
+        form.validateFields(["max_size"]);
+      } else if (field === "max_size") {
+        form.validateFields(["min_size"]);
       }
     }, 100);
   };
@@ -297,7 +305,7 @@ const CategoryFormFields = ({ mode, category }) => {
                 type="number"
                 min={0}
                 step={0.1}
-                onChange={() => handleFileSizeChange('min_size')}
+                onChange={() => handleFileSizeChange("min_size")}
               />
             </Form.Item>
 
@@ -311,7 +319,7 @@ const CategoryFormFields = ({ mode, category }) => {
                 type="number"
                 min={0}
                 step={0.1}
-                onChange={() => handleFileSizeChange('max_size')}
+                onChange={() => handleFileSizeChange("max_size")}
               />
             </Form.Item>
 
@@ -398,6 +406,9 @@ const CategoryFormFields = ({ mode, category }) => {
         addFunction={mode === "EDIT" ? updateAdCategory : addAdCategory}
         navigationPath={`${APP_PREFIX_PATH}/advertisement/category/list`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"category"}
       />
     </Row>
   );

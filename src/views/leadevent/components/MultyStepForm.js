@@ -447,7 +447,10 @@ const MultyStepEventForm = ({ eventId, mode }) => {
         responseData={responseData}
         addFunction={mode === "EDIT" ? editEvent : addLeadEvent}
         navigationPath={`${APP_PREFIX_PATH}/leadevent/list`}
-        responseMessage={responseMessage}
+        responseMessage={responseMessage}mode={mode}
+        form={form}
+        formType={"lead-event"}
+
       />
     </div>
   );

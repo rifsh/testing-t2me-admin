@@ -295,6 +295,9 @@ const SeatForm = (props) => {
         navigationPath={`${APP_PREFIX_PATH}/seat/event/list`}
         responseMessage={responseMessage}
         pagination={submitPagination}
+        mode={mode}
+        form={form}
+        formType={"seat"}
       />
     </>
   );

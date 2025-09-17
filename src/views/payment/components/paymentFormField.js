@@ -174,6 +174,9 @@ const PaymentFormFields = ({ mode }) => {
         addFunction={mode === "EDIT" ? addPayment : addPayment}
         navigationPath={`${APP_PREFIX_PATH}/payment/list`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"payment"}
       />
     </>
   );

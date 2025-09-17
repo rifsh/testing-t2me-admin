@@ -24,7 +24,10 @@ import dayjs from "dayjs";
 import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
-import { setComment, setCommentModalVisibility } from "store/slices/EventOrganizerSlice";
+import {
+  setComment,
+  setCommentModalVisibility,
+} from "store/slices/EventOrganizerSlice";
 import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
 
 const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
@@ -52,7 +55,9 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
     isCommentModalVisible,
     comment,
     actionType,
-    responseDataEvent, responseMessageEvent } = useSelector((state) => state.organizerUpdates);
+    responseDataEvent,
+    responseMessageEvent,
+  } = useSelector((state) => state.organizerUpdates);
 
   useEffect(() => {
     dispatch(setIsDateRequired(false));
@@ -93,13 +98,13 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         thumbnail_image:
           coupon.thumbnail_image && coupon.thumbnail_image !== "images"
             ? [
-              {
-                uid: "-1",
-                name: coupon.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: coupon.thumbnail_image,
-              },
-            ]
+                {
+                  uid: "-1",
+                  name: coupon.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: coupon.thumbnail_image,
+                },
+              ]
             : [],
       };
 
@@ -187,7 +192,6 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
       } else {
         const formData = {
           ...processedValues,
-
         };
 
         dispatch(setSelectedSubmitItem(formData));
@@ -236,13 +240,17 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
       id: coupon.id,
     };
     const pageData = {
-      coupon_id: Number(editData.id)
+      coupon_id: Number(editData.id),
     };
-    console.log("editData", editData)
+    console.log("editData", editData);
 
     try {
       const resultAction = await dispatch(
-        makeChangesCoupon({ data: editData, action: ActionType.SUBMIT, pageData })
+        makeChangesCoupon({
+          data: editData,
+          action: ActionType.SUBMIT,
+          pageData,
+        })
       );
 
       if (makeChangesCoupon.fulfilled.match(resultAction)) {
@@ -265,8 +273,8 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
   };
 
   useEffect(() => {
-    console.log('isMakeChanges', isMakeChanges)
-  }, [isMakeChanges])
+    console.log("isMakeChanges", isMakeChanges);
+  }, [isMakeChanges]);
 
   return (
     <>
@@ -347,13 +355,18 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         responseData={responseData}
         // addFunction={mode === "EDIT" ? editCoupon : addCoupon}
         addFunction={
-          mode === 'EDIT'
-            ? (isMakeChanges ? makeChangesCoupon : editCoupon)
+          mode === "EDIT"
+            ? isMakeChanges
+              ? makeChangesCoupon
+              : editCoupon
             : addCoupon
         }
         navigationPath={`${APP_PREFIX_PATH}/coupon/list/${type}`}
         responseMessage={responseMessage}
         pagination={submitPagination}
+        mode={mode}
+        form={form}
+        formType={"coupon"}
       />
 
       <CommentShowModal
@@ -363,7 +376,9 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         loading={organizerLoading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Comment`}
+        title={`${
+          actionType.charAt(0).toUpperCase() + actionType.slice(1)
+        } Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />
     </>

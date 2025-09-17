@@ -447,6 +447,9 @@ const AdBannerFormFields = ({ mode, banner }) => {
         navigationPath={`${APP_PREFIX_PATH}/advertisement/banner/list`}
         responseMessage={responseMessage}
         loading={modalLoading}
+        mode={mode}
+        form={form}
+        formType={"advBanner"}
       />
     </Row>
   );

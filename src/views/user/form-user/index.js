@@ -217,6 +217,9 @@ const UserForm = ({ mode = ADD, user = {} }) => {
         addFunction={mode === "EDIT" ? updateUser : createUser}
         navigationPath={`${APP_PREFIX_PATH}/user/list`}
         responseMessage={responseMessage}
+        mode={mode}
+        form={form}
+        formType={"user"}
       />
     </>
   );

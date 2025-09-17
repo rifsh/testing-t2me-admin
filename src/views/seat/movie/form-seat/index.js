@@ -426,6 +426,9 @@ const SeatForm = (props) => {
         navigationPath={`${APP_PREFIX_PATH}/seat/movie/list`}
         responseMessage={responseMessage}
         pagination={submitPagination}
+        mode={mode}
+        form={form}
+        formType={"moive-seat"}
       />
 
       <CommentShowModal
