@@ -18,9 +18,11 @@ import {
   UserOutlined,
   FileTextOutlined,
   CommentOutlined,
-  RightOutlined
+  RightOutlined,
+  PictureOutlined,
+  FileImageOutlined
 } from '@ant-design/icons';
-import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import { APP_PREFIX_PATH, CDN_PATH } from 'configs/AppConfig';
 import CommentShowModal from 'components/util-components/ModalItems/CommentShowModal';
 import { getCurrentUser } from 'configs/UserAccessConfig';
 import moment from 'moment';
@@ -354,6 +356,79 @@ const IssueDetails = () => {
       </div>
     );
   };
+
+  // Helper function to render issue images
+  const renderIssueImages = () => {
+    if (!IssueDetails.issue_ticket_file || IssueDetails.issue_ticket_file.length === 0) {
+      return (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px',
+          backgroundColor: '#f5f5f5',
+          borderRadius: '8px',
+          border: '2px dashed #d9d9d9'
+        }}>
+          <Space direction="vertical" align="center">
+            <FileImageOutlined style={{ fontSize: '48px', color: '#bfbfbf' }} />
+            <Text type="secondary">No images attached to this issue</Text>
+          </Space>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+        {IssueDetails.issue_ticket_file.map((fileItem, index) => (
+          <div className='mb-3' key={index} style={{ position: 'relative' }}>
+            <Image
+              src={`${CDN_PATH}/${fileItem.file}`}
+              alt={`Issue attachment ${index + 1}`}
+              style={{
+                width: '200px',
+                height: '200px',
+                objectFit: 'cover',
+                borderRadius: '8px',
+                border: '1px solid #f0f0f0'
+              }}
+              preview={{
+                mask: (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%'
+                  }}>
+                    <PictureOutlined style={{ fontSize: '24px' }} />
+                  </div>
+                )
+              }}
+              fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3awyMIPqyLsis7PPOq3QdDFcvjV3jOD1boQVTPQrgSkktTgbSf4A4LbmgqISBgTEFyFYuLykAsTuAbJEioKOA7DkgdjqEvQHEToKwj4DVhAQ5A9k3gGyB5IxEoBmML4BsnSQk8XQkNtReEOBxcfXxUQg1Mjc0dyHgXNJBSWpFCYh2zi+oLMpMzyhRcASGUqqCZ16yno6CkYGRAQMDKMwhqj/fAIcloxgHQqxAjIHBEugw5sUIsSQpBobtQPdLciLEVJYzMPBHMDBsayhILEqEO4DxG0txmrERhM29nYGBddr//5/DGRjYNRkY/l7////39v///y4Dmn+LgeHANwDrkl1AuO+pmgAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAwqADAAQAAAABAAAAwwAAAAD9b/HnAAAHlklEQVR4Ae3dP3Ik1RnG4W+FgYxN"
+            />
+            {/* Optional: Add file name or size info */}
+            <Text
+              type="secondary"
+              style={{
+                position: 'absolute',
+                bottom: '-25px',
+                left: '0',
+                fontSize: '12px',
+                width: '200px',
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              Image {index + 1}
+            </Text>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -459,6 +534,17 @@ const IssueDetails = () => {
             <Title level={4} style={{ margin: 0 }}>Issue Description</Title>
           </Space>
           <Text>{IssueDetails.issue}</Text>
+        </Space>
+      </Card>
+
+      {/* Issue Images Card */}
+      <Card style={{ marginTop: 16 }}>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Space>
+            <PictureOutlined />
+            <Title level={4} style={{ margin: 0 }}>Issue Images</Title>
+          </Space>
+          {renderIssueImages()}
         </Space>
       </Card>
 
