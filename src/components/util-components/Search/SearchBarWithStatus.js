@@ -272,10 +272,19 @@ const SearchBarWithStatus = forwardRef(({
                 options={getAutoCompleteOptions(filter.options)}
                 style={{ width: 180 }}
                 onClick={filter.onClick}
+                placeholder={filter.placeholder || "Select"}
+                value={getAutoCompleteValue(filter.formName) || filterValues[`${filter.formName}_text`] || ""}
                 onChange={(value) => {
+                  // Store raw text for showing in input
+                  setFilterValues({
+                    ...filterValues,
+                    [`${filter.formName}_text`]: value,
+                  });
+
                   if (!value) {
                     const newFilterValues = { ...filterValues };
                     delete newFilterValues[filter.formName];
+                    delete newFilterValues[`${filter.formName}_text`];
                     setFilterValues(newFilterValues);
 
                     dispatch(
@@ -289,18 +298,22 @@ const SearchBarWithStatus = forwardRef(({
                     );
                   }
                 }}
-                placeholder={filter.placeholder || "Select"}
-                onSelect={(value, option) =>
-                  handleAutoCompleteSelect(value, option, filter.formName)
-                }
+                onSelect={(value, option) => {
+                  handleAutoCompleteSelect(value, option, filter.formName);
+
+                  // Store both id and text
+                  setFilterValues({
+                    ...filterValues,
+                    [filter.formName]: option.id,
+                    [`${filter.formName}_text`]: option.label,
+                  });
+                }}
                 filterOption={(inputValue, option) =>
-                  option?.label
-                    ?.toLowerCase()
-                    .includes(inputValue.toLowerCase())
+                  option?.label?.toLowerCase().includes(inputValue.toLowerCase())
                 }
-                value={getAutoCompleteValue(filter.formName)}
                 allowClear
               />
+
             ) : (
               <Select
                 placeholder={filter.placeholder || "Select"}
