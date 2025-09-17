@@ -164,13 +164,13 @@ const VenueList = () => {
   return (
     <Card>
       <Row gutter={16} justify={"space-between"} style={{ marginBottom: 16 }}>
-        <Col xs={24} sm={8}>
+        {/* <Col xs={24} sm={8}> */}
           {/* <PlaceWithCountryForm
             allPlaceVisible={true}
             form={form}
             // onSelect={(id) => handleSelectPlace(id)}
           /> */}
-        </Col>
+        {/* </Col> */}
         <SearchBarWithStatus
           fetchFunction={getVenues}
           additionalFilters={[
