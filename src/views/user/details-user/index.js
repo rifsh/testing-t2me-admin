@@ -127,7 +127,7 @@ const UserDetail = () => {
                   dataSource={events}
                   renderItem={(event) => (
                     <List.Item>
-                      <Text>{event.name || `Event ID: ${event.id}`}</Text>
+                      <Text>{event.event_name || `Event ID: ${event.id}`}</Text>
                     </List.Item>
                   )}
                   bordered={false}
