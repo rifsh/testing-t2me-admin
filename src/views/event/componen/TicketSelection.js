@@ -3,7 +3,6 @@ import * as antd from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllTickets } from "store/slices/ticketSlice";
 import { getEventAllSeatStructures } from "store/slices/movieSeatSlice";
-import { clearAllVenueData } from "../utils/eventValidation";
 import { setEventFormData } from "store/slices/eventSlice";
 
 const {
@@ -49,7 +48,6 @@ const TicketSelectionField = ({ form, currentValues }) => {
   );
   const { filteredVenues } = useSelector((state) => state.locations);
 
-  // Initialize form fields
   useEffect(() => {
     const currentFormValues = form.getFieldsValue();
 
@@ -67,7 +65,7 @@ const TicketSelectionField = ({ form, currentValues }) => {
     initializeField("ticket_sets");
     initializeField("ticket_quantities");
   }, [form]);
-  // Store API data when it arrives
+
   useEffect(() => {
     if (activeVenueTab) {
       const venueId = parseInt(activeVenueTab);
@@ -88,14 +86,10 @@ const TicketSelectionField = ({ form, currentValues }) => {
             seatStructures: venueSeatStructures,
           },
         }));
-
-        // Debug log to check data structure
-        console.log("Venue tickets data:", venueTickets);
       }
     }
   }, [activeVenueTab, filteredTickets, allSeats]);
 
-  // Set active venue tab
   useEffect(() => {
     if (venues.length > 0 && !activeVenueTab) {
       setActiveVenueTab(venues[0].toString());
@@ -108,7 +102,6 @@ const TicketSelectionField = ({ form, currentValues }) => {
     }
   }, [venues, activeVenueTab]);
 
-  // Fetch data for active venue
   useEffect(() => {
     if (activeVenueTab && venues.includes(parseInt(activeVenueTab))) {
       const venueId = parseInt(activeVenueTab);
@@ -121,46 +114,10 @@ const TicketSelectionField = ({ form, currentValues }) => {
     }
   }, [activeVenueTab, dispatch, venues, fetchedVenues]);
 
-  // Store API data when it arrives
-  useEffect(() => {
-    if (activeVenueTab) {
-      const venueId = parseInt(activeVenueTab);
-
-      const venueTickets = Array.isArray(filteredTickets)
-        ? filteredTickets.filter((ticket) => ticket.venue?.id === venueId)
-        : [];
-
-      const venueSeatStructures = Array.isArray(allSeats)
-        ? allSeats.filter((seat) => seat.venue_id === venueId)
-        : [];
-
-      if (venueTickets.length > 0 || venueSeatStructures.length > 0) {
-        setVenueData((prev) => ({
-          ...prev,
-          [venueId]: {
-            tickets: venueTickets,
-            seatStructures: venueSeatStructures,
-          },
-        }));
-      }
-    }
-  }, [activeVenueTab, filteredTickets, allSeats]);
-
-  // Handle venue tab change
   const handleVenueTabChange = useCallback((activeKey) => {
     setActiveVenueTab(activeKey);
   }, []);
 
-  // Handle clear all data
-  const handleClearAllData = () => {
-    clearAllVenueData(form, dispatch);
-    setVenueData({});
-    setActiveTicketTypeTab({});
-    message.success("All ticket and seat data cleared");
-  };
-
-  // Event handlers
-  // Enhanced event handlers that sync with both form and Redux
   const handleSeatSelection = (venueId, seatId, checked) => {
     const currentSeats = form.getFieldValue("selected_seats") || {};
     const venueSeats = currentSeats[venueId] || {};
@@ -173,13 +130,8 @@ const TicketSelectionField = ({ form, currentValues }) => {
       },
     };
 
-    // Update form immediately
     form.setFieldValue("selected_seats", updatedSeats);
-
-    // Sync with Redux store
     dispatch(setEventFormData({ selected_seats: updatedSeats }));
-
-    console.log("✅ Seat selection updated:", updatedSeats);
   };
 
   const handleTicketTypeSelection = (venueId, selectedTypes) => {
@@ -190,13 +142,8 @@ const TicketSelectionField = ({ form, currentValues }) => {
       [venueId]: selectedTypes,
     };
 
-    // Update form immediately
     form.setFieldValue("selected_ticket_types", updatedTypes);
-
-    // Sync with Redux store
     dispatch(setEventFormData({ selected_ticket_types: updatedTypes }));
-
-    console.log("✅ Ticket types updated:", updatedTypes);
   };
 
   const handleTicketSetSelection = (venueId, ticketTypeId, ticketSetIds) => {
@@ -211,15 +158,10 @@ const TicketSelectionField = ({ form, currentValues }) => {
       },
     };
 
-    // Update form immediately
     form.setFieldValue("ticket_sets", updatedSets);
-
-    // Sync with Redux store
     dispatch(setEventFormData({ ticket_sets: updatedSets }));
-
-    console.log("✅ Ticket sets updated:", updatedSets);
   };
-  // Sync form data with Redux whenever it changes
+
   useEffect(() => {
     const formData = {
       selected_ticket_types: selectedTicketTypes,
@@ -228,14 +170,12 @@ const TicketSelectionField = ({ form, currentValues }) => {
       ticket_quantities: ticketQuantities,
     };
 
-    // Only dispatch if data has actually changed
     if (
       Object.keys(formData.selected_ticket_types || {}).length > 0 ||
       Object.keys(formData.selected_seats || {}).length > 0 ||
       Object.keys(formData.ticket_sets || {}).length > 0
     ) {
       dispatch(setEventFormData(formData));
-      console.log("📡 Syncing ticket data to Redux:", formData);
     }
   }, [
     selectedTicketTypes,
@@ -245,7 +185,6 @@ const TicketSelectionField = ({ form, currentValues }) => {
     dispatch,
   ]);
 
-  // Render functions
   const renderSeatSelection = (venueId) => {
     const currentVenueData = venueData[venueId];
     const venueSeatData = currentVenueData?.seatStructures || [];
@@ -310,7 +249,6 @@ const TicketSelectionField = ({ form, currentValues }) => {
       (t) => t.id === ticketTypeId
     );
 
-    // Fix: Access ticket_types array instead of ticketSets
     const ticketSetsForType = ticketType?.ticket_types || [];
 
     if (!ticketSetsForType.length) {
@@ -407,6 +345,7 @@ const TicketSelectionField = ({ form, currentValues }) => {
       </Tabs>
     );
   };
+
   const renderTicketTypeSelection = (venueId) => {
     const currentVenueData = venueData[venueId];
     const venueTicketTypes = currentVenueData?.tickets || [];
@@ -480,6 +419,7 @@ const TicketSelectionField = ({ form, currentValues }) => {
       </Card>
     );
   };
+
   const renderVenueTab = (venue) => {
     const hasSeats =
       selectedSeats[venue.id] &&
@@ -545,20 +485,7 @@ const TicketSelectionField = ({ form, currentValues }) => {
 
   return (
     <Form form={form} layout="vertical">
-      <Card
-        title="Ticket Selection"
-        bordered
-        extra={
-          <Button
-            type="primary"
-            danger
-            onClick={handleClearAllData}
-            size="small"
-          >
-            Clear All Data
-          </Button>
-        }
-      >
+      <Card title="Ticket Selection" bordered>
         <Tabs
           type="card"
           size="large"
@@ -573,7 +500,6 @@ const TicketSelectionField = ({ form, currentValues }) => {
         </Tabs>
       </Card>
 
-      {/* Hidden form fields to store the data */}
       <Form.Item name="selected_seats" hidden />
       <Form.Item name="selected_ticket_types" hidden />
       <Form.Item name="ticket_sets" hidden />

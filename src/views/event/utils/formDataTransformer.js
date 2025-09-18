@@ -5,48 +5,36 @@
  * @param {Object} formData - Current form data structure
  * @returns {Object} - Transformed data for API submission
  */
-export const transformFormDataForAPI = (formData) => {
+// utils/formDataTransformer.js
+
+/**
+ * Transform form data from current structure to API structure
+ */
+export const transformFormDataForAPI = (formData, additionalContext = {}) => {
   const {
-    // Basic fields that map directly
-    event_name,
-    description,
-    event_add_on_services,
-    event_qna,
-    category_id,
-    sub_category_id,
-    place,
-    venue_id,
-    tax_ids = [],
+    selectedOffers = [],
+    selectedCoupons = [],
+    selectedVenueList = [],
+    ticketTypes = [],
+    availableSeats = [],
+    eventId = null
+  } = additionalContext;
 
-    // Fields that need transformation
-    selected_ticket_types = {},
-    ticket_sets = {},
-    selected_seats = {},
-    ticket_quantities = {},
-    additional_booking_info = [],
-    additional_booking_notes = "",
-
-    // Fields that might have different names in old structure
-    eventName,
-    eventDescription,
-
-    // Default values and calculated fields
-    ...rest
-  } = formData;
+  console.log('🔄 Starting data transformation...');
+  console.log('📥 Input form data:', formData);
+  console.log('📥 Additional context:', additionalContext);
 
   // Transform ticket structure from nested object to flat array
   const transformTicketStructure = () => {
     const ticketStructure = [];
+    const ticketSets = formData.ticket_sets || {};
 
-    // Iterate through each venue's ticket sets
-    Object.keys(ticket_sets).forEach((venueId) => {
-      const venueTicketSets = ticket_sets[venueId] || {};
-
-      // For each ticket type in this venue
+    Object.keys(ticketSets).forEach((venueId) => {
+      const venueTicketSets = ticketSets[venueId] || {};
+      
       Object.keys(venueTicketSets).forEach((ticketTypeId) => {
         const ticketSetNames = venueTicketSets[ticketTypeId] || [];
-
-        // Create an entry for each ticket set name
+        
         ticketSetNames.forEach((ticketSetName) => {
           ticketStructure.push({
             id: parseInt(ticketTypeId),
@@ -56,92 +44,124 @@ export const transformFormDataForAPI = (formData) => {
       });
     });
 
+    console.log('🎫 Transformed ticket structure:', ticketStructure);
     return ticketStructure;
   };
 
-  // Calculate max capacity from venues (you might need to adjust this logic)
+  // Get max capacity - you might need to calculate this based on your business logic
   const calculateMaxCapacity = () => {
-    // This is a placeholder calculation
-    // You might want to sum up capacity from venue data or use a different logic
-    return 900; // Default or calculated value
-  };
-
-  // Get the primary venue (first one) for venues field
-  const getPrimaryVenue = () => {
-    return venue_id && venue_id.length > 0 ? venue_id[0] : null;
-  };
-
-  // Get ticket structure ID (you might need different logic here)
-  const getTicketStructureId = () => {
-    // Get the first ticket type ID from selected_ticket_types
-    const venueIds = Object.keys(selected_ticket_types);
-    if (venueIds.length > 0) {
-      const firstVenueTickets = selected_ticket_types[venueIds[0]];
-      return firstVenueTickets && firstVenueTickets.length > 0
-        ? firstVenueTickets[0]
-        : null;
+    // Option 1: Use form data if available
+    if (formData.max_capacity) {
+      return parseInt(formData.max_capacity);
     }
-    return null;
+    
+    // Option 2: Calculate from venue capacities
+    if (selectedVenueList && selectedVenueList.length > 0) {
+      const totalCapacity = selectedVenueList.reduce((total, venue) => {
+        return total + (venue.capacity || 0);
+      }, 0);
+      return totalCapacity;
+    }
+    
+    // Option 3: Default value
+    return 1200;
   };
 
-  // Transform additional booking info
-  const transformAdditionalBookingInfo = () => {
-    return additional_booking_info.map((section) => ({
-      sectionTitle: section.sectionTitle,
-      sectionItems: section.sectionItems || [],
+  // Get primary venue ID
+  const getPrimaryVenue = () => {
+    const venueIds = formData.venue_id || [];
+    return venueIds.length > 0 ? venueIds[0] : null;
+  };
+
+  // Get ticket structure ID
+  const getTicketStructureId = () => {
+    if (formData.ticket_structure_id) {
+      return formData.ticket_structure_id;
+    }
+    
+    // Fallback: get from selected ticket types
+    const selectedTicketTypes = formData.selected_ticket_types || {};
+    const venueIds = Object.keys(selectedTicketTypes);
+    
+    if (venueIds.length > 0) {
+      const firstVenueTickets = selectedTicketTypes[venueIds[0]];
+      return firstVenueTickets && firstVenueTickets.length > 0 ? firstVenueTickets[0] : 1;
+    }
+    
+    return 1; // Default
+  };
+
+  // Transform file objects to the expected format
+  const transformFileFields = (fileField) => {
+    if (!fileField || !Array.isArray(fileField)) return null;
+    
+    return fileField.map((file, index) => ({
+      uid: file.uid || `${Date.now()}-${index}`,
+      name: file.name || `file-${index}`,
+      status: file.status || 'done',
+      url: file.url || file.thumbUrl || '',
+      originFileObj: file.originFileObj || {},
+      thumbUrl: file.thumbUrl || file.url || ''
     }));
   };
 
   // Build the transformed object
   const transformedData = {
-    // Basic information (prioritize form fields over legacy fields)
-    event_name: event_name || eventName || "",
-    description: description || eventDescription || "",
-
-    // Add-on services and QNA (direct mapping)
-    event_add_on_services: event_add_on_services || [],
-    event_qna: event_qna || [],
-
+    // Basic information
+    event_name: formData.event_name || '',
+    description: formData.description || '',
+    
+    // File uploads
+    thumbnail_image: transformFileFields(formData.thumbnail_image),
+    banner_images: transformFileFields(formData.banner_images),
+    event_images: transformFileFields(formData.event_images),
+    
+    // Add-on services and QNA
+    event_add_on_services: formData.event_add_on_services || [],
+    event_qna: formData.event_qna || [],
+    
     // Category information
-    category_id: category_id || null,
-    sub_category_id: sub_category_id || null,
-
+    category_id: formData.category_id || null,
+    sub_category_id: formData.sub_category_id || null,
+    
     // Location information
-    place: place || "",
-    venue_id: venue_id || [],
-    tax_ids: tax_ids || [],
-
+    place: formData.place || '',
+    venue_ids: formData.venue_id || [],
+    tax_ids: formData.tax_ids || [],
+    
     // Venue and capacity information
     venues: getPrimaryVenue(),
     max_capacity: calculateMaxCapacity(),
-    venue_ids: venue_id || [], // Duplicate of venue_id for API compatibility
-
+    venue_ids: formData.venue_id || [],
+    
     // Ticket information
     ticket_structure_id: getTicketStructureId(),
-    ticket_set: null, // Usually null in the target structure
+    ticket_set: null,
     ticket_structure: transformTicketStructure(),
-
-    // Offers and coupons (empty by default, you can extend this)
-    offer_ids: [],
-    coupon_ids: [],
-
+    
+    // Offers and coupons
+    offer_ids: selectedOffers.map(offer => offer.id),
+    coupon_ids: selectedCoupons.map(coupon => coupon.id),
+    
     // Additional booking information
-    additional_booking_details: transformAdditionalBookingInfo(),
-    additional_notes: additional_booking_notes || "",
-
+    additional_booking_details: formData.additional_booking_info || [],
+    additional_notes: formData.additional_booking_notes || '',
+    
     // Default/calculated fields
-    max_tickets: 0,
-    event_type_id: 1,
-    event_seat_structure_id: null,
+    max_tickets: parseInt(formData.max_tickets || '0', 10),
+    event_type_id: formData.event_type_id,
+    event_seat_structure_id: availableSeats && availableSeats.length > 0 
+      ? availableSeats.map(item => item.id) 
+      : null,
+    
+    // Include lead_id if in create mode
+    ...(eventId && { lead_id: eventId })
   };
 
-  console.log("🔄 Data Transformation:");
-  console.log("📥 Input data:", formData);
-  console.log("📤 Transformed data:", transformedData);
-  console.log("🎫 Ticket structure:", transformedData.ticket_structure);
-
+  console.log('📤 Transformed data:', transformedData);
   return transformedData;
 };
+
 
 /**
  * Validate transformed data before API submission
@@ -152,11 +172,11 @@ export const validateTransformedData = (transformedData) => {
   const errors = [];
 
   // Required fields validation
-  if (!transformedData.event_name || !transformedData.event_name.trim()) {
+  if (!transformedData.event_name?.trim()) {
     errors.push("Event name is required");
   }
 
-  if (!transformedData.description || !transformedData.description.trim()) {
+  if (!transformedData.description?.trim()) {
     errors.push("Event description is required");
   }
 
@@ -172,18 +192,27 @@ export const validateTransformedData = (transformedData) => {
     errors.push("At least one venue is required");
   }
 
-  if (
-    !transformedData.ticket_structure ||
-    transformedData.ticket_structure.length === 0
-  ) {
+  if (!transformedData.ticket_structure || transformedData.ticket_structure.length === 0) {
     errors.push("Ticket structure is required");
   }
+
+  // Validate file uploads
+  if (!transformedData.thumbnail_image || transformedData.thumbnail_image.length === 0) {
+    errors.push("Thumbnail image is required");
+  }
+
+  if (!transformedData.banner_images || transformedData.banner_images.length === 0) {
+    errors.push("At least one banner image is required");
+  }
+
+  console.log('🔍 Validation result:', { isValid: errors.length === 0, errors });
 
   return {
     isValid: errors.length === 0,
     errors,
   };
 };
+
 
 /**
  * Complete transformation and validation utility

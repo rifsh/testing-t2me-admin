@@ -10,10 +10,10 @@ import {
   fetchAllTax,
   setTaxValidationDialogVisible,
 } from "store/slices/taxSlice";
-import { clearAllTicketData } from "store/slices/eventSlice"; // Import the new action
 import { useDispatch, useSelector } from "react-redux";
 import { RulesMessageConstants } from "constants/RulesConstant";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
+import { setEventFormData } from "store/slices/eventSlice";
 
 const { Row, Col, Card, Form, Select, Typography, List, Space } = antd;
 const { Option } = Select;
@@ -51,7 +51,6 @@ const LocationDetailsField = ({ mode, form }) => {
     ValidateData: taxErrors,
   } = useSelector((state) => state.tax);
 
-  // Fetch taxes based on selected place
   useEffect(() => {
     const placeId = form.getFieldValue("place_id");
     if (placeId) {
@@ -60,42 +59,37 @@ const LocationDetailsField = ({ mode, form }) => {
   }, [dispatch, form]);
 
   const onPlaceSelect = (placeId) => {
-    console.log(`🏠 Place selected: ${placeId}`);
+    // First, set the place_id value
+    form.setFieldValue("place_id", placeId);
 
-    // Reset venue and tax fields
+    // Then reset dependent fields
     form.resetFields(["venue_id", "tax_ids"]);
 
-    // Clear ALL ticket data (simplified approach)
-    dispatch(clearAllTicketData());
+    const cleanFormData = {
+      place_id: placeId, // Include the selected place
+      selected_ticket_types: {},
+      selected_seats: {},
+      ticket_sets: {},
+      ticket_quantities: {},
+    };
 
-    // Fetch venues for the new place
+    form.setFieldsValue(cleanFormData);
+    dispatch(setEventFormData(cleanFormData));
     dispatch(getVenues({ place_id: placeId }));
-
-    console.log(`🏠 Place change complete, all ticket data cleared`);
   };
 
   const onVenueChange = (selectedVenueIds) => {
-    console.log(`🏢 Venues changed:`, selectedVenueIds);
-
-    // Reset tax fields when venues change
     form.resetFields(["tax_ids"]);
-
-    // Clear ALL ticket data when venues change (simplified)
-    dispatch(clearAllTicketData());
-
-    console.log(`🏢 Venue change complete, all ticket data cleared`);
   };
 
   const onTaxChange = (ids) => {
     const selected = allTax.filter((tax) => ids.includes(tax.id));
-    console.log(`💰 Tax selection changed:`, selected);
   };
 
   const closePlaceModal = () =>
     dispatch(setPlaceValidationDialogVisible(false));
   const closeTaxModal = () => dispatch(setTaxValidationDialogVisible(false));
 
-  // Get selected place and venues names for display
   const selectedPlaceId = form.getFieldValue("place_id");
   const selectedVenueIds = form.getFieldValue("venue_id") || [];
 
@@ -108,7 +102,6 @@ const LocationDetailsField = ({ mode, form }) => {
   return (
     <>
       <Row gutter={24}>
-        {/* Left Column with Forms */}
         <Col xs={24} lg={14}>
           <Card title="Location Details" bordered>
             <Form form={form} layout="vertical" size="large">
@@ -136,8 +129,7 @@ const LocationDetailsField = ({ mode, form }) => {
                       mode="multiple"
                       disabled={!filteredVenues.length}
                       loading={venueLoading}
-                      onSelect={onVenueChange}
-                      onDeselect={onVenueChange}
+                      onChange={onVenueChange}
                     />
                   </Form.Item>
                 </Col>
@@ -161,7 +153,6 @@ const LocationDetailsField = ({ mode, form }) => {
           </Card>
         </Col>
 
-        {/* Right Column displaying selections */}
         <Col xs={24} lg={10}>
           <Card title="Selection Summary" bordered style={{ marginBottom: 16 }}>
             <Space direction="vertical" size="middle" style={{ width: "100%" }}>

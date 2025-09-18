@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Form, Steps, Button, message, Modal } from "antd";
-import { useNavigate } from "react-router-dom";
+import { Form, Steps, Button, message } from "antd";
 
 import EventDetailsField from "./EventDetailsField";
 import TicketSelection from "./TicketSelection";
@@ -13,8 +12,6 @@ import LocationDetailsField from "./LocationDetailsField copy";
 import {
   validateSection,
   clearDependentFields,
-  clearAllVenueData,
-  cleanVenueDependentData,
 } from "../utils/eventValidation";
 
 import {
@@ -24,7 +21,6 @@ import {
   setCompletedSections,
   setValidationErrors,
   setLoading,
-  resetEventForm,
   addEvent,
   editEvent,
   fetchEventDetails,
@@ -37,27 +33,10 @@ import {
   setSelectedEvent,
 } from "store/slices/eventSlice";
 
+import { fetchSubcategories } from "store/slices/categorySlice";
+import { getVenues } from "store/slices/locationSlice";
+import { setSelectedTaxDetails } from "store/slices/taxSlice";
 import {
-  validateSubCategory,
-  setCategoryValidationDialogVisible,
-  fetchSubcategories,
-} from "store/slices/categorySlice";
-
-import {
-  validateVenue,
-  setPlaceValidationDialogVisible,
-  getVenues,
-} from "store/slices/locationSlice";
-
-import {
-  validateTax,
-  setTaxValidationDialogVisible,
-  setSelectedTaxDetails,
-} from "store/slices/taxSlice";
-
-import {
-  validateTicket,
-  setTicketValidationDialogVisible,
   fetchAllTickets,
   getAvailableTicketsType,
 } from "store/slices/ticketSlice";
@@ -68,20 +47,19 @@ import {
 } from "store/slices/offerSlice";
 
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
-import { transformAndValidateFormData } from "../utils/formDataTransformer";
 import { EVENT_SECTIONS } from "constants/AppConstants";
 import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
-import DraftSystem from "drafts/components/DraftSystem";
+import { transformFormDataForAPI } from "../utils/formDataTransformer";
+import { EVENT_TYPES } from "constants/PageConstants";
 
 const { Step } = Steps;
 
 export default function EventForm({ eventId, mode = "add" }) {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const {
     formData,
@@ -105,20 +83,15 @@ export default function EventForm({ eventId, mode = "add" }) {
   } = useSelector((state) => state.event);
 
   const { selectedTax } = useSelector((state) => state.tax);
-  const { selectedVenueList, selectedVenue } = useSelector(
-    (state) => state.locations
-  );
+  const { selectedVenueList } = useSelector((state) => state.locations);
   const { ticketTypes, availableSeats } = useSelector((state) => state.tickets);
 
-  const [showValidationSummary, setShowValidationSummary] = useState(false);
   const completedSectionsSet = new Set(completedSections);
 
-  // Initialize form with Redux data
   useEffect(() => {
     form.setFieldsValue(formData);
   }, [form, formData]);
 
-  // Fetch initial data
   useEffect(() => {
     if (eventId && mode === "edit") {
       dispatch(fetchEventDetails(eventId));
@@ -128,7 +101,6 @@ export default function EventForm({ eventId, mode = "add" }) {
     }
   }, [dispatch, eventId, mode, eventType.length]);
 
-  // Pre-populate form for edit mode
   useEffect(() => {
     if (
       mode === "edit" &&
@@ -225,183 +197,9 @@ export default function EventForm({ eventId, mode = "add" }) {
     selectedCoupons.length,
   ]);
 
-  const validateCurrentStep = async (values) => {
-    const currentSection = EVENT_SECTIONS[currentStep];
-    const sectionKey = currentSection.key;
-
-    switch (sectionKey) {
-      case "category":
-        const subCategoryId = values.sub_category_id;
-        const resultActionCat = await dispatch(
-          validateSubCategory(subCategoryId)
-        );
-        if (validateSubCategory.fulfilled.match(resultActionCat)) {
-          const response = resultActionCat.payload;
-          if (response.message === "warning") {
-            dispatch(setCategoryValidationDialogVisible(true));
-            return false;
-          } else if (response.data && response.data[0]?.validation_status) {
-            return true;
-          }
-        }
-        return false;
-
-      case "location":
-        const venueId = values.venue_id;
-        const resultActionVenue = await dispatch(validateVenue(venueId[0]));
-        if (validateVenue.fulfilled.match(resultActionVenue)) {
-          const response = resultActionVenue.payload;
-          if (response.message === "warning") {
-            dispatch(setPlaceValidationDialogVisible(true));
-            return false;
-          } else if (response.data && response.data[0]?.validation_status) {
-            return true;
-          }
-        }
-        return false;
-
-      case "pricing":
-        if (selectedTax.length > 0) {
-          const resultActionTax = await dispatch(validateTax(selectedTax));
-          if (validateTax.fulfilled.match(resultActionTax)) {
-            const response = resultActionTax.payload;
-            if (response.message === "warning") {
-              dispatch(setTaxValidationDialogVisible(true));
-              return false;
-            } else if (response.data && response.data[0]?.validation_status) {
-              return true;
-            }
-          }
-          return false;
-        }
-        return true;
-
-      case "ticket":
-        // Get the most current form values
-        const currentFormValues = form.getFieldsValue();
-        const completeValues = { ...formData, ...currentFormValues, ...values };
-
-        console.log("=== TICKET VALIDATION START ===");
-        console.log("Complete values for validation:", completeValues);
-
-        // Step 1: Validate form data structure using your validateTicketSection
-        const ticketValidation = await validateSection(
-          "ticket",
-          form,
-          completeValues
-        );
-
-        if (!ticketValidation.isValid) {
-          console.error("Form validation failed:", ticketValidation);
-          message.error(
-            ticketValidation.message || "Please complete ticket configuration"
-          );
-          return false;
-        }
-
-        console.log("✅ Form validation passed");
-
-        // Step 2: Additional business logic validation (simplified)
-        const venues = completeValues.venue_id || [];
-        const selectedTicketTypes = completeValues.selected_ticket_types || {};
-        const selectedSeats = completeValues.selected_seats || {};
-        const ticketSets = completeValues.ticket_sets || {};
-
-        let hasAnyValidConfiguration = false;
-
-        // Check each venue for valid configuration
-        for (const venueId of venues) {
-          const venueKey = String(venueId);
-          const venueTicketTypes = selectedTicketTypes[venueKey] || [];
-          const venueSeats = selectedSeats[venueKey] || {};
-          const venueTicketSets = ticketSets[venueKey] || {};
-
-          // Check if venue has seats selected
-          const hasSeatsConfig = Object.values(venueSeats).some(
-            (selected) => selected === true
-          );
-
-          // Check if venue has complete ticket type configuration
-          const hasTicketTypesConfig =
-            Array.isArray(venueTicketTypes) &&
-            venueTicketTypes.length > 0 &&
-            venueTicketTypes.every((typeId) => {
-              const sets = venueTicketSets[typeId] || [];
-              return Array.isArray(sets) && sets.length > 0;
-            });
-
-          // At least one valid configuration per venue
-          if (hasSeatsConfig || hasTicketTypesConfig) {
-            hasAnyValidConfiguration = true;
-            console.log(`✅ Venue ${venueId} has valid configuration`);
-          } else {
-            console.warn(`⚠️ Venue ${venueId} missing configuration`);
-          }
-        }
-
-        if (!hasAnyValidConfiguration) {
-          message.error(
-            "Please configure at least one venue with either seats or complete ticket types"
-          );
-          return false;
-        }
-
-        console.log("✅ Business logic validation passed");
-
-        // Step 3: API validation (if needed)
-        const ticketStructureId = values.ticket_structure_id;
-
-        if (ticketStructureId) {
-          console.log(
-            "Performing API validation for ticket structure:",
-            ticketStructureId
-          );
-
-          try {
-            const resultActionTicket = await dispatch(
-              validateTicket(ticketStructureId)
-            );
-
-            if (validateTicket.fulfilled.match(resultActionTicket)) {
-              const response = resultActionTicket.payload;
-
-              if (response.message === "warning") {
-                console.log("API validation returned warning");
-                dispatch(setTicketValidationDialogVisible(true));
-                return false;
-              } else if (response.data && response.data[0]?.validation_status) {
-                console.log("✅ API validation passed");
-                return true;
-              } else {
-                console.error("API validation failed:", response);
-                message.error("Ticket structure validation failed");
-                return false;
-              }
-            } else {
-              console.error("API validation request failed");
-              message.error("Failed to validate ticket structure");
-              return false;
-            }
-          } catch (error) {
-            console.error("API validation error:", error);
-            message.error("Error during ticket validation");
-            return false;
-          }
-        } else {
-          // No ticket structure ID - validation passes if form validation passed
-          console.log("✅ No ticket structure ID - validation complete");
-          return true;
-        }
-
-      default:
-        return true;
-    }
-  };
-
   const validateCurrentSection = useCallback(async () => {
     const currentSection = EVENT_SECTIONS[currentStep];
     const sectionKey = currentSection.key;
-
     const currentFormValues = form.getFieldsValue();
     const completeValues = { ...formData, ...currentFormValues };
 
@@ -415,52 +213,17 @@ export default function EventForm({ eventId, mode = "add" }) {
             [sectionKey]: result.errors,
           })
         );
-        setShowValidationSummary(true);
-        return false;
-      }
-
-      const apiValid = await validateCurrentStep(completeValues);
-
-      if (!apiValid) {
         return false;
       }
 
       const newErrors = { ...validationErrors };
       delete newErrors[sectionKey];
       dispatch(setValidationErrors(newErrors));
-      setShowValidationSummary(false);
-
       return true;
     } catch (error) {
       return false;
     }
   }, [form, currentStep, dispatch, validationErrors, formData]);
-
-  // Enhanced form values change handler
-  const handleFormValuesChange = useCallback(
-    (changedValues, allValues) => {
-      console.log("Form values changed:", changedValues);
-
-      dispatch(setEventFormData(allValues));
-
-      const changedKey = Object.keys(changedValues)[0];
-      if (["category_id", "place_id", "venue_id"].includes(changedKey)) {
-        console.log("Clearing dependent fields for:", changedKey);
-        const updated = clearDependentFields(
-          form,
-          changedKey,
-          allValues,
-          dispatch
-        );
-
-        setTimeout(() => {
-          form.setFieldsValue(updated);
-          dispatch(setEventFormData(updated));
-        }, 0);
-      }
-    },
-    [form, dispatch]
-  );
 
   const handleNext = async () => {
     dispatch(setLoading(true));
@@ -475,10 +238,24 @@ export default function EventForm({ eventId, mode = "add" }) {
 
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      const isValid = await validateCurrentSection();
+      const validationResult = await validateCurrentSection();
 
-      if (!isValid) {
-        message.error("Please complete all required fields before proceeding");
+      if (!validationResult) {
+        // Get the specific validation errors from Redux state
+        const currentSectionErrors = validationErrors[currentSection.key] || [];
+
+        if (currentSectionErrors.length > 0) {
+          // Show the first specific error message
+          const firstError = currentSectionErrors[0];
+          const errorMessage =
+            firstError.errors?.[0] ||
+            "Please complete all required fields before proceeding";
+          message.error(errorMessage);
+        } else {
+          message.error(
+            "Please complete all required fields before proceeding"
+          );
+        }
         return;
       }
 
@@ -509,20 +286,17 @@ export default function EventForm({ eventId, mode = "add" }) {
     }
   };
 
-  const handleFieldsChange = useCallback(
-    (changedFields, allFields) => {
-      const currentValues = form.getFieldsValue();
-      const currentSection = EVENT_SECTIONS[currentStep];
+  const handleFieldsChange = useCallback(() => {
+    const currentValues = form.getFieldsValue();
+    const currentSection = EVENT_SECTIONS[currentStep];
 
-      dispatch(
-        updateSectionData({
-          section: currentSection.key,
-          data: currentValues,
-        })
-      );
-    },
-    [form, currentStep, dispatch]
-  );
+    dispatch(
+      updateSectionData({
+        section: currentSection.key,
+        data: currentValues,
+      })
+    );
+  }, [form, currentStep, dispatch]);
 
   const handlePrev = () => {
     if (currentStep > 0) {
@@ -559,109 +333,122 @@ export default function EventForm({ eventId, mode = "add" }) {
   };
 
   const handleSubmit = async () => {
+    console.log("🚀 handleSubmit triggered");
+    console.log("📊 Current formData:", formData);
+    console.log("🏷️ Current mode:", mode);
+
     dispatch(setLoading(true));
 
     try {
-      console.log("=== FORM SUBMISSION START ===");
+      console.log("🔍 Starting form validation...");
+      console.log("📝 Form instance:", form);
 
-      // Step 1: Validate all form fields
       const finalValues = await form.validateFields();
-      console.log("✅ Form fields validated:", finalValues);
+      console.log("✅ Form validation successful");
+      console.log("📋 Final form values:", finalValues);
+      console.log("📋 Final form values keys:", Object.keys(finalValues || {}));
 
-      // Step 2: Combine all form data
+      // Check for undefined values in finalValues
+      Object.entries(finalValues || {}).forEach(([key, value]) => {
+        if (value === undefined) {
+          console.warn(`⚠️ Undefined value found for key: ${key}`);
+        }
+        if (Array.isArray(value)) {
+          console.log(`📊 Array field ${key} has length:`, value.length);
+        }
+      });
+
       const completeFormData = {
         ...formData,
         ...finalValues,
-        // Ensure ticket data is included
-        selected_ticket_types: finalValues.selected_ticket_types || {},
-        selected_seats: finalValues.selected_seats || {},
-        ticket_sets: finalValues.ticket_sets || {},
-        ticket_quantities: finalValues.ticket_quantities || {},
+        event_type_id: eventType.find((item) => item.name === EVENT_TYPES.event)
+          ?.id,
       };
+      console.log("🔄 Merging form data...");
+      console.log("📦 Complete form data:", completeFormData);
+      console.log(
+        "📦 Complete form data keys:",
+        Object.keys(completeFormData || {})
+      );
 
-      console.log("Complete form data:", completeFormData);
-
-      // Step 3: Validate all sections
-      const sectionValidations = {};
-      let hasValidationErrors = false;
-
-      for (const section of EVENT_SECTIONS) {
-        try {
-          const validation = await validateSection(
-            section.key,
-            form,
-            completeFormData
+      // Check for undefined values in completeFormData
+      Object.entries(completeFormData || {}).forEach(([key, value]) => {
+        if (value === undefined) {
+          console.warn(
+            `⚠️ Undefined value in completeFormData for key: ${key}`
           );
-          sectionValidations[section.key] = validation;
-
-          if (!validation.isValid) {
-            hasValidationErrors = true;
-            console.error(
-              `❌ Section ${section.key} validation failed:`,
-              validation
-            );
-          } else {
-            console.log(`✅ Section ${section.key} validation passed`);
-          }
-        } catch (error) {
-          console.error(`❌ Section ${section.key} validation error:`, error);
-          hasValidationErrors = true;
-          sectionValidations[section.key] = {
-            isValid: false,
-            errors: [{ name: [section.key], errors: [error.message] }],
-          };
         }
-      }
+        if (Array.isArray(value)) {
+          console.log(
+            `📊 Array field ${key} in completeFormData has length:`,
+            value.length
+          );
+        } else if (value && typeof value === "object") {
+          console.log(`🏷️ Object field ${key}:`, value);
+        }
+      });
 
-      if (hasValidationErrors) {
-        const allErrors = {};
-        Object.keys(sectionValidations).forEach((sectionKey) => {
-          if (!sectionValidations[sectionKey].isValid) {
-            allErrors[sectionKey] = sectionValidations[sectionKey].errors;
-          }
-        });
+      console.warn(completeFormData, "completeFormData");
 
-        dispatch(setValidationErrors(allErrors));
-        setShowValidationSummary(true);
-        message.error("Please fix all validation errors before submitting");
-        return;
-      }
-
-      console.log("✅ All section validations passed");
-
-      // Step 4: Prepare submission data based on mode
       if (mode === "edit") {
+        console.log("🔧 Submission mode: EDIT");
+        console.log(
+          "📤 Calling handleEditModeSubmission with:",
+          completeFormData
+        );
         await handleEditModeSubmission(completeFormData);
+        console.log("✅ Edit mode submission completed");
       } else {
+        console.log("➕ Submission mode: CREATE");
+        console.log(
+          "📤 Calling handleCreateModeSubmission with:",
+          completeFormData
+        );
         await handleCreateModeSubmission(completeFormData);
+        console.log("✅ Create mode submission completed");
       }
-    } catch (error) {
-      console.error("❌ Form submission error:", error);
 
-      // Provide more specific error messages
+      console.log("🎉 Submission handled successfully");
+    } catch (error) {
+      console.error("❌ Error during submission:", error);
+      console.error("❌ Error stack:", error.stack);
+      console.error("❌ Error name:", error.name);
+      console.error("❌ Error message:", error.message);
+
+      // Log additional error properties
+      if (error.errorFields) {
+        console.error("📝 Error fields:", error.errorFields);
+        console.error("📝 Error fields length:", error.errorFields.length);
+      }
+
       if (error.errorFields && error.errorFields.length > 0) {
         const firstError = error.errorFields[0];
+        console.error("🎯 First validation error:", firstError);
+        console.error("🎯 First error name:", firstError.name);
+        console.error("🎯 First error errors:", firstError.errors);
+
         message.error(
           `Validation error: ${
             firstError.errors?.[0] || "Please check required fields"
           }`
         );
       } else if (error.message) {
+        console.error("💬 Using error message:", error.message);
         message.error(`Submission failed: ${error.message}`);
       } else {
+        console.error("❓ Unknown error type, using fallback message");
         message.error(
           "Failed to create event. Please check all fields and try again."
         );
       }
     } finally {
+      console.log("🏁 Finally block executing");
       dispatch(setLoading(false));
+      console.log("⏳ Loading state set to false");
     }
   };
 
-  // Separate function for edit mode
   const handleEditModeSubmission = async (completeFormData) => {
-    console.log("=== EDIT MODE SUBMISSION ===");
-
     const offers = {
       offer_ids: selectedOffers?.map((offer) => offer.id) || [],
       coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
@@ -673,8 +460,6 @@ export default function EventForm({ eventId, mode = "add" }) {
       max_tickets: parseInt(completeFormData.max_tickets || "0", 10),
       id: eventId,
     };
-
-    console.log("Edit data prepared:", editData);
 
     try {
       const offerValidationResult = await dispatch(
@@ -698,7 +483,6 @@ export default function EventForm({ eventId, mode = "add" }) {
           if (editEvent.fulfilled.match(editResult)) {
             dispatch(setSelectedEvent(editData));
             dispatch(setDialogVisible(true));
-            console.log("✅ Edit event successful");
           } else {
             throw new Error(editResult.payload || "Failed to update event");
           }
@@ -711,78 +495,44 @@ export default function EventForm({ eventId, mode = "add" }) {
         );
       }
     } catch (error) {
-      console.error("❌ Edit submission error:", error);
       throw error;
     }
   };
 
-  // Separate function for create mode
   const handleCreateModeSubmission = async (completeFormData) => {
-    console.log("=== CREATE MODE SUBMISSION ===");
+    console.log("➕ handleCreateModeSubmission started");
+    console.log("📊 Input data:", completeFormData);
 
-    const offers = {
-      offer_ids: selectedOffers?.map((offer) => offer.id) || [],
-      coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
-    };
+    // Safe array handling with default empty arrays
+    const selectedOffersSafe = selectedOffers || [];
+    const selectedCouponsSafe = selectedCoupons || [];
+    const selectedVenueListSafe = selectedVenueList || [];
+    const ticketTypesSafe = ticketTypes || [];
+    const availableSeatsSafe = availableSeats || [];
 
-    const venue_id = {
-      venue_ids: selectedVenueList?.map((venue) => venue.id) || [],
-    };
-
-    // **FIXED**: Better ticket structure handling
-    const ticket_structure = {
-      ticket_structure:
-        ticketTypes?.reduce((acc, ticketType) => {
-          if (
-            ticketType.ticket_types &&
-            Array.isArray(ticketType.ticket_types)
-          ) {
-            const structureItems = ticketType.ticket_types
-              .filter((ticket) => ticket.ticket_set) // Only include tickets with sets
-              .map((ticket) => ({
-                id: ticket.ticketStructureId,
-                ticket_set: ticket.ticket_set,
-              }));
-            return [...acc, ...structureItems];
-          }
-          return acc;
-        }, []) || [],
-    };
-
-    // **ENHANCED**: Include ticket selection data
-    const ticketSelectionData = {
-      selected_ticket_types: completeFormData.selected_ticket_types || {},
-      selected_seats: completeFormData.selected_seats || {},
-      ticket_sets: completeFormData.ticket_sets || {},
-      ticket_quantities: completeFormData.ticket_quantities || {},
-    };
-
-    const createData = {
-      ...completeFormData,
-      ...venue_id,
-      ...ticket_structure,
-      ...offers,
-      ...ticketSelectionData,
-      lead_id: eventId,
-      additional_booking_details:
-        completeFormData.additional_booking_info || [],
-      additional_notes: completeFormData.additional_booking_notes || "",
-      event_add_on_services: completeFormData.event_add_on_services || [],
-      event_qna: completeFormData.event_qna || [],
-      max_tickets: parseInt(completeFormData.max_tickets || "0", 10),
-      event_seat_structure_id:
-        availableSeats.length > 0
-          ? availableSeats.map((item) => item.id)
-          : null,
-    };
-
-    console.log("Create data prepared:", createData);
+    console.log("🏢 Selected venues:", selectedVenueListSafe);
+    console.log("🎫 Ticket types:", ticketTypesSafe);
+    console.log("💺 Available seats:", availableSeatsSafe);
 
     try {
+      // Use the transformer to convert form data to API structure
+      const transformedData = transformFormDataForAPI(completeFormData, {
+        selectedOffers: selectedOffersSafe,
+        selectedCoupons: selectedCouponsSafe,
+        selectedVenueList: selectedVenueListSafe,
+        ticketTypes: ticketTypesSafe,
+        availableSeats: availableSeatsSafe,
+        eventId: eventId,
+      });
+
+      console.log("✅ Data transformation completed");
+      console.log("📤 Final create data:", transformedData);
+
+      // Validate offers and coupons
       const offerValidationResult = await dispatch(
         validateOfferCoupon({
-          offers: selectedOffers,
-          coupons: selectedCoupons,
+          offers: selectedOffersSafe,
+          coupons: selectedCouponsSafe,
         })
       );
 
@@ -793,8 +543,9 @@ export default function EventForm({ eventId, mode = "add" }) {
           dispatch(setOfferCouponValidationDialogVisible(true));
           return;
         } else if (response.data && response.data[0]?.validation_status) {
-          dispatch(setSelectedSubmitItem(createData));
-          console.log("✅ Create event data submitted");
+          // Use the transformed data for submission
+          dispatch(setSelectedSubmitItem(transformedData));
+          console.log("✅ Event data set for submission");
         } else {
           throw new Error("Offer/coupon validation failed");
         }
@@ -804,12 +555,11 @@ export default function EventForm({ eventId, mode = "add" }) {
         );
       }
     } catch (error) {
-      console.error("❌ Create submission error:", error);
+      console.error("❌ Error in handleCreateModeSubmission:", error);
       throw error;
     }
   };
 
-  // Modal handlers
   const handleWarningPagination = (page, size) => {
     dispatch(
       editEvent({
@@ -835,10 +585,6 @@ export default function EventForm({ eventId, mode = "add" }) {
   const handleModalCancel = () => {
     dispatch(setDialogVisible(false));
   };
-
-  useEffect(() => {
-    form.setFieldsValue(formData);
-  }, [currentStep, form, formData]);
 
   const renderSectionContent = () => {
     const currentSection = EVENT_SECTIONS[currentStep];
@@ -871,29 +617,6 @@ export default function EventForm({ eventId, mode = "add" }) {
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white">
-      <div className="mb-4">
-        {/* <DraftSystem
-          form={form}
-          formType="event"
-          mode={mode}
-          recordId={eventId}
-          titleField="event_name"
-          excludeFromDraft={[
-            "id",
-            "created_at",
-            "updated_at",
-            "thumbnail_image",
-            "banner_images",
-            "event_images",
-          ]}
-          style={{ marginRight: 12, display: "inline-block" }}
-          enableAutoSave={mode !== "edit"}
-          autoSaveInterval={5000}
-          showLabels={true}
-          size="small"
-        /> */}
-      </div>
-
       <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg mb-4">
         <Button
           size="large"
@@ -946,7 +669,6 @@ export default function EventForm({ eventId, mode = "add" }) {
         )}
       </div>
 
-      {/* Steps Navigation */}
       <Steps
         current={currentStep}
         type="navigation"
@@ -982,25 +704,34 @@ export default function EventForm({ eventId, mode = "add" }) {
           );
         })}
       </Steps>
-
-      {/* Form Content */}
+      {validationErrors[EVENT_SECTIONS[currentStep]?.key]?.length > 0 && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 font-medium mb-2">
+            Please fix the following errors:
+          </p>
+          <ul className="text-red-600 text-sm list-disc list-inside">
+            {validationErrors[EVENT_SECTIONS[currentStep].key].map(
+              (error, index) => (
+                <li key={index}>
+                  <strong>{error.name?.join(".")}:</strong>{" "}
+                  {error.errors?.join(", ")}
+                </li>
+              )
+            )}
+          </ul>
+        </div>
+      )}
       <Form
         form={form}
         layout="vertical"
         size="large"
         initialValues={formData}
         onFieldsChange={handleFieldsChange}
-        // In your EventForm component, update the onValuesChange handler
-        // In EventForm component, update the onValuesChange handler:
         onValuesChange={(changedValues, allValues) => {
-          console.log("Form values changing:", changedValues);
-
-          // Always update Redux store with complete values
           dispatch(setEventFormData(allValues));
 
           const changedKey = Object.keys(changedValues)[0];
 
-          // Handle ticket data updates specifically
           if (
             [
               "selected_ticket_types",
@@ -1009,30 +740,16 @@ export default function EventForm({ eventId, mode = "add" }) {
               "ticket_quantities",
             ].includes(changedKey)
           ) {
-            console.log(
-              `Ticket data updated: ${changedKey}`,
-              changedValues[changedKey]
-            );
+            // Handle ticket data updates
           }
 
           if (["category_id", "place_id", "venue_id"].includes(changedKey)) {
-            console.log("Clearing dependent fields for:", changedKey);
             const updated = clearDependentFields(
               form,
               changedKey,
               allValues,
               dispatch
             );
-
-            if (changedKey === "venue_id") {
-              const selectedVenues = changedValues.venue_id || [];
-              const { cleanedValues } = cleanVenueDependentData(
-                selectedVenues,
-                allValues
-              );
-              form.setFieldsValue(cleanedValues);
-              dispatch(setEventFormData(cleanedValues));
-            }
 
             setTimeout(() => {
               form.setFieldsValue(updated);
@@ -1041,31 +758,9 @@ export default function EventForm({ eventId, mode = "add" }) {
           }
         }}
       >
-        <div className="min-h-[400px] relative">
-          {renderSectionContent()}
-
-          {/* Show current section validation errors */}
-          {validationErrors[EVENT_SECTIONS[currentStep]?.key]?.length > 0 && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 font-medium mb-2">
-                Please fix the following errors:
-              </p>
-              <ul className="text-red-600 text-sm list-disc list-inside">
-                {validationErrors[EVENT_SECTIONS[currentStep].key].map(
-                  (error, index) => (
-                    <li key={index}>
-                      <strong>{error.name?.join(".")}:</strong>{" "}
-                      {error.errors?.join(", ")}
-                    </li>
-                  )
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
+        <div className="min-h-[400px] relative">{renderSectionContent()}</div>
       </Form>
 
-      {/* Warning Modal */}
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
@@ -1086,7 +781,6 @@ export default function EventForm({ eventId, mode = "add" }) {
         onPaginationChange={handleWarningPagination}
       />
 
-      {/* Submit and Confirm Modal */}
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "edit" ? editEvent : addEvent}

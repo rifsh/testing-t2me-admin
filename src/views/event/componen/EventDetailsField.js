@@ -18,19 +18,6 @@ const { TextArea } = antd.Input;
 const { Text } = antd.Typography;
 
 const EventDetailsField = ({ mode }) => {
-  // FIXED: Create deep clones of file objects to make them extensible
-  const normFile = (e) => {
-    if (Array.isArray(e)) {
-      return e.map((file) => ({ ...file })); // Clone each file object
-    }
-
-    if (e?.fileList) {
-      return e.fileList.map((file) => ({ ...file })); // Clone each file object
-    }
-
-    return [];
-  };
-
   // Alternative normFile function that creates proper clones
   const safeNormFile = (e) => {
     let fileList = [];
@@ -110,6 +97,7 @@ const EventDetailsField = ({ mode }) => {
               <antd.Form.Item
                 name="thumbnail_image"
                 label="Thumbnail"
+                required={true}
                 valuePropName="fileList"
                 getValueFromEvent={safeNormFile}
               >

@@ -364,7 +364,7 @@ const eventSlice = createSlice({
     },
     setSubmitLoading(state, action) {
       state.submitLoading = action.payload;
-    },
+    }, // Add this new action to your eventSlice reducers:
     clearAllTicketData: (state) => {
       state.formData.selected_ticket_types = {};
       state.formData.selected_seats = {};
@@ -380,24 +380,6 @@ const eventSlice = createSlice({
       if (state.validationErrors.ticket) {
         delete state.validationErrors.ticket;
       }
-    },
-
-    // NEW: Clear ticket data for specific venues only
-    clearTicketDataForVenues: (state, action) => {
-      const venuesToClear = action.payload; // array of venue IDs to clear
-
-      [
-        "selected_ticket_types",
-        "selected_seats",
-        "ticket_sets",
-        "ticket_quantities",
-      ].forEach((field) => {
-        venuesToClear.forEach((venueId) => {
-          if (state.formData[field][venueId]) {
-            delete state.formData[field][venueId];
-          }
-        });
-      });
     },
 
     clearTicketSectionCompletion: (state) => {
@@ -746,6 +728,7 @@ export const {
   filterEvent,
   setSubmitData,
   toggleSelectedCoupon,
+  clearAllTicketData,
   setWarningMessage,
   setEventFormData,
   updateSectionData,
@@ -759,8 +742,6 @@ export const {
   resetSelected,
   setCurrentStep,
   setSubmitLoading,
-  clearAllTicketData, // NEW
-  clearTicketDataForVenues,
   setEventValidationDialogVisible,
   clearTicketSectionCompletion,
   setEditItemId,

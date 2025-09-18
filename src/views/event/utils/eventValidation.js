@@ -1,4 +1,7 @@
-import { clearTicketSectionCompletion, setEventFormData } from "store/slices/eventSlice";
+import {
+  clearTicketSectionCompletion,
+  setEventFormData,
+} from "store/slices/eventSlice";
 
 export const ValidationRules = {
   basic: {
@@ -12,8 +15,6 @@ export const ValidationRules = {
       { min: 10, message: "Description must be at least 10 characters" },
       { max: 1000, message: "Description cannot exceed 1000 characters" },
     ],
-    thumbnail_image: [],
-    banner_images: [],
   },
 
   category: {
@@ -26,22 +27,13 @@ export const ValidationRules = {
     venue_id: [
       { required: true, message: "At least one venue must be selected" },
     ],
-    tax_ids: [],
   },
 
   ticket: {
-    selected_ticket_types: [
-      { required: true, message: "Ticket type selection is required" },
-    ],
-    selected_seats: [{ required: true, message: "Seat selection is required" }],
-    ticket_sets: [],
-    ticket_quantities: [],
+    venue_id: [{ required: true, message: "Please select venues first" }],
   },
 
-  pricing: {
-    selectedOffers: [],
-    selectedCoupons: [],
-  },
+  pricing: {},
 
   additionalinfo: {
     additional_booking_info: [
@@ -57,13 +49,6 @@ export const ValidationRules = {
                 new Error("At least one item is required per section")
               );
             }
-            for (const item of section.sectionItems) {
-              if (!item || item.trim() === "") {
-                return Promise.reject(
-                  new Error("Section items cannot be empty")
-                );
-              }
-            }
           }
           return Promise.resolve();
         },
@@ -72,102 +57,10 @@ export const ValidationRules = {
   },
 };
 
-export const getRequiredFields = (sectionKey) => {
-  const rules = ValidationRules[sectionKey] || {};
-  return Object.keys(rules).filter((fieldName) => {
-    const fieldRules = rules[fieldName];
-    return fieldRules.some((rule) => rule.required === true);
-  });
-};
-
-export const getStepForField = (fieldName) => {
-  const mapping = {
-    event_name: 0,
-    description: 0,
-    category_id: 1,
-    sub_category_id: 1,
-    place_id: 2,
-    venue_id: 2,
-    selected_ticket_types: 3,
-    selected_seats: 3,
-    selectedOffers: 4,
-    selectedCoupons: 4,
-    additional_booking_info: 5,
-  };
-  return typeof mapping[fieldName] === "number" ? mapping[fieldName] : null;
-};
-
 const makeFieldError = (pathArray, errMsg) => ({
   name: pathArray,
   errors: [errMsg],
 });
-
-// Clear all venue-dependent data completely
-export const clearAllVenueData = (form, dispatch = null) => {
-  const resetValues = {
-    selected_ticket_types: {},
-    selected_seats: {},
-    ticket_sets: {},
-    ticket_quantities: {},
-  };
-
-  console.log("Clearing all venue data");
-  form.setFieldsValue(resetValues);
-
-  if (dispatch) {
-    dispatch(setEventFormData(resetValues));
-  }
-
-  return resetValues;
-};
-
-// Clean venue data for specific venues only
-export const cleanVenueDependentData = (
-  selectedVenues = [],
-  currentValues = {}
-) => {
-  const venueIds = Array.isArray(selectedVenues) ? selectedVenues : [];
-  const venueIdsAsNumbers = venueIds.map((v) => parseInt(v));
-  const venueIdsAsStrings = venueIds.map((v) => String(v));
-
-  const fieldsToClean = [
-    "selected_ticket_types",
-    "selected_seats",
-    "ticket_sets",
-    "ticket_quantities",
-  ];
-
-  const cleanedValues = { ...currentValues };
-  let hasChanges = false;
-
-  fieldsToClean.forEach((fieldName) => {
-    const fieldData = currentValues[fieldName] || {};
-    const cleanedFieldData = {};
-
-    Object.keys(fieldData).forEach((venueIdStr) => {
-      const venueIdNum = parseInt(venueIdStr);
-
-      if (
-        venueIdsAsNumbers.includes(venueIdNum) ||
-        venueIdsAsStrings.includes(venueIdStr)
-      ) {
-        cleanedFieldData[venueIdStr] = fieldData[venueIdStr];
-      } else {
-        hasChanges = true;
-        console.log(
-          `Cleaning ${fieldName} data for removed venue ${venueIdStr}`
-        );
-      }
-    });
-
-    cleanedValues[fieldName] = cleanedFieldData;
-  });
-
-  return {
-    cleanedValues,
-    hasChanges,
-  };
-};
 
 export const validateSection = async (sectionKey, form, formData = {}) => {
   const sectionRules = ValidationRules[sectionKey];
@@ -185,17 +78,17 @@ export const validateSection = async (sectionKey, form, formData = {}) => {
 
     switch (sectionKey) {
       case "basic":
-        return await validateBasicSection(values, form);
+        return await validateBasicSection(values);
       case "category":
-        return await validateCategorySection(values, form);
+        return await validateCategorySection(values);
       case "location":
-        return await validateLocationSection(values, form);
+        return await validateLocationSection(values);
       case "ticket":
-        return await validateTicketSection(values, form);
+        return await validateTicketSection(values);
       case "pricing":
-        return await validatePricingSection(values, form);
+        return await validatePricingSection();
       case "additionalinfo":
-        return await validateAdditionalInfoSection(values, form);
+        return await validateAdditionalInfoSection(values);
       default:
         return { isValid: true, errors: [], message: "" };
     }
@@ -208,9 +101,10 @@ export const validateSection = async (sectionKey, form, formData = {}) => {
   }
 };
 
-const validateBasicSection = async (values = {}, form = null) => {
+const validateBasicSection = async (values = {}) => {
   const errors = [];
 
+  // Event name validation
   if (!values.event_name || !values.event_name.trim()) {
     errors.push(makeFieldError(["event_name"], "Event name is required"));
   } else if (values.event_name.length < 3) {
@@ -219,6 +113,7 @@ const validateBasicSection = async (values = {}, form = null) => {
     );
   }
 
+  // Description validation
   if (!values.description || !values.description.trim()) {
     errors.push(
       makeFieldError(["description"], "Event description is required")
@@ -232,6 +127,46 @@ const validateBasicSection = async (values = {}, form = null) => {
     );
   }
 
+  // Thumbnail image validation
+  const thumbnailImage = values.thumbnail_image;
+  if (
+    !thumbnailImage ||
+    !Array.isArray(thumbnailImage) ||
+    thumbnailImage.length === 0
+  ) {
+    errors.push(
+      makeFieldError(["thumbnail_image"], "Thumbnail image is required")
+    );
+  } else {
+    // Validate thumbnail image properties
+    const validThumbnails = thumbnailImage.filter(
+      (file) => file && (file.status === "done" || file.status === "uploading")
+    );
+
+    if (validThumbnails.length === 0) {
+      errors.push(
+        makeFieldError(
+          ["thumbnail_image"],
+          "Please upload a valid thumbnail image"
+        )
+      );
+    }
+
+    // Optional: Check file size (if available)
+    const largeThumbnails = thumbnailImage.filter(
+      (file) => file.size && file.size > 5 * 1024 * 1024 // 5MB limit
+    );
+
+    if (largeThumbnails.length > 0) {
+      errors.push(
+        makeFieldError(
+          ["thumbnail_image"],
+          "Thumbnail image must be less than 5MB"
+        )
+      );
+    }
+  }
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -239,7 +174,7 @@ const validateBasicSection = async (values = {}, form = null) => {
   };
 };
 
-const validateCategorySection = async (values = {}, form = null) => {
+const validateCategorySection = async (values = {}) => {
   const errors = [];
 
   if (!values.category_id) {
@@ -251,10 +186,6 @@ const validateCategorySection = async (values = {}, form = null) => {
     );
   }
 
-  if (form && values.category_id && !values.sub_category_id) {
-    form.setFieldValue("sub_category_id", null);
-  }
-
   return {
     isValid: errors.length === 0,
     errors,
@@ -264,7 +195,7 @@ const validateCategorySection = async (values = {}, form = null) => {
   };
 };
 
-const validateLocationSection = async (values = {}, form = null) => {
+const validateLocationSection = async (values = {}) => {
   const errors = [];
 
   if (!values.place_id) {
@@ -278,19 +209,6 @@ const validateLocationSection = async (values = {}, form = null) => {
     );
   }
 
-  if (form && venue && Array.isArray(venue)) {
-    const currentFormValues = form.getFieldsValue();
-    const { cleanedValues, hasChanges } = cleanVenueDependentData(
-      venue,
-      currentFormValues
-    );
-
-    if (hasChanges) {
-      console.log("Location validation: Cleaning venue-dependent data");
-      form.setFieldsValue(cleanedValues);
-    }
-  }
-
   return {
     isValid: errors.length === 0,
     errors,
@@ -298,144 +216,56 @@ const validateLocationSection = async (values = {}, form = null) => {
   };
 };
 
-const validatePricingSection = async (values = {}, form = null) => ({
+const validateTicketSection = async (values) => {
+  const errors = [];
+  const venues = values.venue_id;
+
+  if (!venues || venues.length === 0) {
+    errors.push(makeFieldError(["venue_id"], "Please select venues first"));
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    message: errors.length > 0 ? "Please select venues first" : "",
+  };
+};
+
+const validatePricingSection = async () => ({
   isValid: true,
   errors: [],
   message: "",
 });
 
-const validateTicketSection = async (values = {}, form = null) => {
+const validateAdditionalInfoSection = async (values = {}) => {
   const errors = [];
-  const venues = values.venue_id || [];
+  const additionalInfo = values.additional_booking_info || [];
 
-  console.log("=== TICKET VALIDATION START ===");
-  console.log("Venues:", venues);
-  console.log("All form values:", values);
-
-  if (!venues || venues.length === 0) {
-    errors.push(makeFieldError(["venue_id"], "Please select venues first"));
-    return {
-      isValid: false,
-      errors,
-      message: "Venue selection is required for ticket configuration",
-    };
-  }
-
-  const selectedTicketTypes = values.selected_ticket_types || {};
-  const selectedSeats = values.selected_seats || {};
-  const ticketSets = values.ticket_sets || {};
-
-  let hasAnyConfiguration = false;
-  let hasValidConfiguration = false;
-
-  for (const venueId of venues) {
-    // Try both string and number keys
-    const venueKey = String(venueId);
-    const venueNumKey = parseInt(venueId);
-
-    const venueTicketTypes = 
-      selectedTicketTypes[venueKey] || 
-      selectedTicketTypes[venueNumKey] || 
-      [];
-    
-    const venueSeats = 
-      selectedSeats[venueKey] || 
-      selectedSeats[venueNumKey] || 
-      {};
-    
-    const venueTicketSets = 
-      ticketSets[venueKey] || 
-      ticketSets[venueNumKey] || 
-      {};
-
-    console.log(`Venue ${venueId} configuration:`, {
-      ticketTypes: venueTicketTypes,
-      seats: venueSeats,
-      ticketSets: venueTicketSets,
-    });
-
-    // Check if venue has seats selected
-    const hasSeats = Object.keys(venueSeats).some(
-      (seatId) => venueSeats[seatId] === true
-    );
-
-    // Check if venue has ticket types selected
-    const hasTicketTypes = Array.isArray(venueTicketTypes) && venueTicketTypes.length > 0;
-
-    if (hasSeats || hasTicketTypes) {
-      hasAnyConfiguration = true;
-
-      // Seats configuration is always valid
-      if (hasSeats) {
-        hasValidConfiguration = true;
-        console.log(`✅ Venue ${venueId} has valid seat configuration`);
-      }
-
-      // Check ticket types configuration
-      if (hasTicketTypes) {
-        let allTicketTypesValid = true;
-
-        for (const ticketTypeId of venueTicketTypes) {
-          const ticketSetKey = String(ticketTypeId);
-          const ticketSetNumKey = parseInt(ticketTypeId);
-          const setsForType = 
-            venueTicketSets[ticketSetKey] ||
-            venueTicketSets[ticketSetNumKey] ||
-            [];
-
-          if (!Array.isArray(setsForType) || setsForType.length === 0) {
-            allTicketTypesValid = false;
-            console.log(`❌ Missing ticket sets for type ${ticketTypeId} in venue ${venueId}`);
-            break;
-          }
-
-          const hasValidSets = setsForType.some(
-            (set) => set && String(set).trim() !== ""
-          );
-          
-          if (!hasValidSets) {
-            allTicketTypesValid = false;
-            console.log(`❌ Empty ticket sets for type ${ticketTypeId} in venue ${venueId}`);
-            break;
-          }
-        }
-
-        if (allTicketTypesValid) {
-          hasValidConfiguration = true;
-          console.log(`✅ Venue ${venueId} has valid ticket type configuration`);
-        }
-      }
-    } else {
-      console.log(`❌ Venue ${venueId} has no configuration`);
+  for (let i = 0; i < additionalInfo.length; i++) {
+    const section = additionalInfo[i];
+    if (!section.sectionTitle || section.sectionTitle.trim() === "") {
+      errors.push(
+        makeFieldError(
+          ["additional_booking_info", i, "sectionTitle"],
+          "Section title is required"
+        )
+      );
+    }
+    if (!section.sectionItems || section.sectionItems.length === 0) {
+      errors.push(
+        makeFieldError(
+          ["additional_booking_info", i, "sectionItems"],
+          "At least one item is required"
+        )
+      );
     }
   }
 
-  // **KEY FIX**: More lenient validation
-  if (!hasAnyConfiguration) {
-    errors.push(
-      makeFieldError(
-        ["venue_configuration"],
-        "At least one venue must have either ticket types or seats configured"
-      )
-    );
-  }
-
-  // **IMPORTANT**: Allow partial configurations during development
-  const isValidForProduction = errors.length === 0 && hasValidConfiguration;
-  const isValidForDevelopment = errors.length === 0 && hasAnyConfiguration;
-
-  console.log("=== TICKET VALIDATION END ===");
-  console.log("Has any configuration:", hasAnyConfiguration);
-  console.log("Has valid configuration:", hasValidConfiguration);
-  console.log("Errors:", errors);
-
   return {
-    isValid: isValidForDevelopment, // Use this for more lenient validation
+    isValid: errors.length === 0,
     errors,
-    message: errors.length > 0 
-      ? "Please complete ticket configuration for all venues"
-      : !hasAnyConfiguration 
-      ? "Please configure at least one venue"
+    message: errors.length
+      ? "Please complete all additional information sections"
       : "",
   };
 };
@@ -446,8 +276,6 @@ export const clearDependentFields = (
   currentValues = {},
   dispatch = null
 ) => {
-  console.log("Clearing dependent fields for:", fieldName);
-
   switch (fieldName) {
     case "category_id":
       const categoryResetValues = { sub_category_id: null };
@@ -475,93 +303,17 @@ export const clearDependentFields = (
       }
       if (dispatch) {
         dispatch(setEventFormData({ ...currentValues, ...placeResetValues }));
-        // Clear ticket section completion
         dispatch(clearTicketSectionCompletion());
       }
       return { ...currentValues, ...placeResetValues };
-
-    case "venue_id":
-      const selectedVenues = currentValues.venue_id || [];
-      const { cleanedValues } = cleanVenueDependentData(
-        selectedVenues,
-        currentValues
-      );
-
-      if (form && typeof form.setFieldsValue === "function") {
-        form.setFieldsValue(cleanedValues);
-      }
-      if (dispatch) {
-        dispatch(setEventFormData(cleanedValues));
-        // Clear ticket section completion when venues change
-        dispatch(clearTicketSectionCompletion());
-      }
-      return cleanedValues;
 
     default:
       return currentValues;
   }
 };
 
-const validateAdditionalInfoSection = async (values = {}, form = null) => {
-  const errors = [];
-  const additionalInfo = values.additional_booking_info || [];
-
-  for (let i = 0; i < additionalInfo.length; i++) {
-    const section = additionalInfo[i];
-    if (!section.sectionTitle || section.sectionTitle.trim() === "") {
-      errors.push(
-        makeFieldError(
-          ["additional_booking_info", i, "sectionTitle"],
-          "Section title is required"
-        )
-      );
-    }
-    if (!section.sectionItems || section.sectionItems.length === 0) {
-      errors.push(
-        makeFieldError(
-          ["additional_booking_info", i, "sectionItems"],
-          "At least one item is required"
-        )
-      );
-    } else {
-      for (let j = 0; j < section.sectionItems.length; j++) {
-        const item = section.sectionItems[j];
-        if (!item || item.trim() === "") {
-          errors.push(
-            makeFieldError(
-              ["additional_booking_info", i, "sectionItems", j],
-              "Item cannot be empty"
-            )
-          );
-        }
-      }
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    message: errors.length
-      ? "Please complete all additional information sections"
-      : "",
-  };
-};
-
-export const mapErrorsToStep = (errors = []) => {
-  if (!errors || errors.length === 0) return null;
-  const first = errors[0];
-  const fieldName = Array.isArray(first.name) ? first.name[0] : null;
-  const step = fieldName ? getStepForField(fieldName) : null;
-  return { step, fieldName, message: first.errors?.join(", ") || "" };
-};
-
 export default {
   ValidationRules,
   validateSection,
-  getRequiredFields,
   clearDependentFields,
-  cleanVenueDependentData,
-  clearAllVenueData,
-  getStepForField,
-  mapErrorsToStep,
 };
