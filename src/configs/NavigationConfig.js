@@ -401,16 +401,6 @@ const ALL_NAVIGATION_ITEMS = {
     category: FEATURE_CATEGORIES.EVENT,
     featureItem: "schedule",
   },
-  "event.schedule.add-on": {
-    key: "schedule.list.add-on",
-    path: `${APP_PREFIX_PATH}/schedule/list`,
-    title: "sidenav.schedule.add-on",
-    icon: OrderedListOutlined,
-    breadcrumb: false,
-    submenu: [],
-    category: FEATURE_CATEGORIES.EVENT,
-    featureItem: "schedule",
-  },
 
   // Movie Services - All items under services.movie
   "movie.theater": {

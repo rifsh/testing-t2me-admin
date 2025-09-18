@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Table, Select, Input, Button, Menu, message, Collapse, } from "antd";
-import { EyeOutlined, FormOutlined, EditOutlined } from "@ant-design/icons";
+import { EyeOutlined, FormOutlined, EditOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -102,6 +102,18 @@ const EventsList = () => {
     dispatch(setStatusDialogVisible(true));
   };
 
+  const handleVerifyEvent = (id) => {
+    console.log("Verify Event:", id);
+    // Add your verify event logic here
+    message.success(`Event ${id} verified successfully`);
+  };
+
+  const handleVerifyAddon = (id) => {
+    console.log("Verify Addon for Event:", id);
+    // Add your verify addon logic here
+    message.success(`Addon for event ${id} verified successfully`);
+  };
+
   // const handlePagination = (page, size) => {
   //   dispatch(fetchAllEvent({ page: page, size: size, event_type: EVENT_TYPES.event }));
   // };
@@ -185,16 +197,38 @@ const EventsList = () => {
         </Collapse>
       ),
     },
+
     utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT_STATUS)),
     {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
-        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT, PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.GET_EVENT_DETAIL]) ? (
-          <div className="text-right">
+        <div className="text-right">
+          {/* Verify Event Button */}
+          <Button
+            type="primary"
+            size="small"
+            icon={<CheckCircleOutlined />}
+            onClick={() => handleVerifyEvent(elm.id)}
+            style={{ marginRight: 8 }}
+          >
+            Verify Event
+          </Button>
+
+          {/* Verify Addon Button */}
+          <Button
+            type="default"
+            size="small"
+            icon={<CheckCircleOutlined />}
+            onClick={() => handleVerifyAddon(elm.id)}
+          >
+            Verify Addon
+          </Button>
+
+          {hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT, PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.GET_EVENT_DETAIL]) && (
             <EllipsisDropdown menu={dropdownMenu(elm)} />
-          </div>
-        ) : null
+          )}
+        </div>
       ),
     },
   ];
