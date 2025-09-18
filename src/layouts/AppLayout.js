@@ -13,6 +13,7 @@ import navigationConfig from 'configs/NavigationConfig';
 import { TEMPLATE, MEDIA_QUERIES } from 'constants/ThemeConstant';
 import styled from '@emotion/styled';
 import utils from 'utils';
+import { MAIN_LAYOUT_COMPONENT } from 'configs/AppConfig';
 
 const { Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -72,7 +73,7 @@ export const AppLayout = ({ navCollapsed, navType, direction, children }) => {
         return { paddingLeft: getLayoutGutter() }
     }
 
-    if (location.pathname === '/qr-scanner') {
+    if (MAIN_LAYOUT_COMPONENT.includes(location.pathname)) {
         return (
             <>
                 {children}
