@@ -1,5 +1,14 @@
 //advertisement category codes
 
+import { CategoryOutlined } from "@mui/icons-material";
+import { BiSolidOffer } from "react-icons/bi";
+import { IoInformationCircleOutline } from "react-icons/io5";
+import {
+  UserOutlined,
+  EnvironmentOutlined,
+  TeamOutlined,
+} from "@ant-design/icons";
+
 export const EDIT = "edit";
 export const ADD = "add";
 export const ApiActions = {
@@ -45,3 +54,36 @@ export const APPROVAL_STATUS = {
 export const BOOKING_ADDON_TYPE = {
   USER_AND_FOOD: "USER_AND_FOOD",
 };
+
+export const EVENT_SECTIONS = [
+  {
+    key: "basic",
+    title: "Basic Info",
+    icon: <UserOutlined />,
+  },
+  {
+    key: "category",
+    title: "Category",
+    icon: <CategoryOutlined />,
+  },
+  {
+    key: "location",
+    title: "Location",
+    icon: <EnvironmentOutlined />,
+  },
+  {
+    key: "ticket",
+    title: "Tickets and Food",
+    icon: <TeamOutlined />,
+  },
+  {
+    key: "pricing",
+    title: "Offer and Coupon",
+    icon: <BiSolidOffer />,
+  },
+  {
+    key: "additionalinfo",
+    title: "Addons",
+    icon: <IoInformationCircleOutline />,
+  },
+];
