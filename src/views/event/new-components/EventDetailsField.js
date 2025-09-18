@@ -19,41 +19,15 @@ const { Text } = antd.Typography;
 
 const EventDetailsField = ({ mode }) => {
   // Alternative normFile function that creates proper clones
-  const safeNormFile = (e) => {
-    let fileList = [];
-
+  const normFile = (e) => {
     if (Array.isArray(e)) {
-      fileList = e;
-    } else if (e?.fileList) {
-      fileList = e.fileList;
+      // Clone each file object to make it extensible
+      return e.map((file) => ({ ...file }));
     }
 
-    // Create deep clones to avoid "object is not extensible" error
-    return fileList.map((file) => {
-      // Handle both File objects and Ant Design file objects
-      if (file.originFileObj) {
-        return {
-          ...file,
-          uid: file.uid,
-          name: file.name,
-          status: file.status,
-          url: file.url,
-          thumbUrl: file.thumbUrl,
-          originFileObj: file.originFileObj,
-          response: file.response,
-          error: file.error,
-          linkProps: file.linkProps,
-          xhr: file.xhr,
-        };
-      } else {
-        return {
-          ...file,
-          uid: file.uid || Math.random().toString(36).substr(2, 9),
-          name: file.name,
-          status: file.status || "done",
-        };
-      }
-    });
+    const fileList = e?.fileList || [];
+    // Clone each file object to make it extensible
+    return fileList.map((file) => ({ ...file }));
   };
 
   return (
@@ -99,7 +73,7 @@ const EventDetailsField = ({ mode }) => {
                 label="Thumbnail"
                 required={true}
                 valuePropName="fileList"
-                getValueFromEvent={safeNormFile}
+                getValueFromEvent={normFile}
               >
                 <ResizedImgePicker
                   maxCount={1}
@@ -119,7 +93,7 @@ const EventDetailsField = ({ mode }) => {
                 name="banner_images"
                 label="Banners"
                 valuePropName="fileList"
-                getValueFromEvent={safeNormFile}
+                getValueFromEvent={normFile}
               >
                 <ResizedImgePicker
                   maxCount={20}
@@ -141,7 +115,7 @@ const EventDetailsField = ({ mode }) => {
             name="event_images"
             label="Additional Images"
             valuePropName="fileList"
-            getValueFromEvent={safeNormFile}
+            getValueFromEvent={normFile}
           >
             <ResizedImgePicker
               maxCount={20}

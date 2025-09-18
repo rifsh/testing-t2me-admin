@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Form, Steps, Button, message } from "antd";
 
@@ -31,14 +31,18 @@ import {
   toggleSelectedCoupon,
   toggleSelectedOffer,
   setSelectedEvent,
+  clearSelectedCoupons,
+  clearAllTicketData,
+  resetEventForm,
 } from "store/slices/eventSlice";
 
 import { fetchSubcategories } from "store/slices/categorySlice";
 import { getVenues } from "store/slices/locationSlice";
-import { setSelectedTaxDetails } from "store/slices/taxSlice";
+import { setSelectedTaxDetails, clearSelectedTax } from "store/slices/taxSlice";
 import {
   fetchAllTickets,
   getAvailableTicketsType,
+  clearTicketSelection,
 } from "store/slices/ticketSlice";
 
 import {
@@ -54,12 +58,14 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { transformFormDataForAPI } from "../utils/formDataTransformer";
 import { EVENT_TYPES } from "constants/PageConstants";
+import DraftSystem from "drafts/components/DraftSystem";
 
 const { Step } = Steps;
 
 export default function EventForm({ eventId, mode = "add" }) {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const isInitialized = useRef(false); // Track if component has been initialized
 
   const {
     formData,
@@ -88,26 +94,71 @@ export default function EventForm({ eventId, mode = "add" }) {
 
   const completedSectionsSet = new Set(completedSections);
 
+  // Initial cleanup - only once per component mount
   useEffect(() => {
-    form.setFieldsValue(formData);
-  }, [form, formData]);
+    if (!isInitialized.current) {
+      console.log("🔄 Initializing EventForm - Mode:", mode);
+
+      if (mode === "add") {
+        form.resetFields();
+
+        dispatch(resetEventForm());
+        dispatch(clearAllTicketData());
+        const initialValues = {
+          event_name: "",
+          description: "",
+          category_id: undefined,
+          sub_category_id: undefined,
+          place: "",
+          venue_id: [],
+          tax_ids: [],
+          available_types: [],
+          max_capacity: 0,
+          event_type_id: undefined,
+          ticket_structure_id: undefined,
+          offer: [],
+          coupon: [],
+          thumbnail_image: [],
+          banner_images: [],
+        };
+
+        form.setFieldsValue(initialValues);
+        dispatch(setEventFormData(initialValues));
+
+        console.log("✅ ADD mode initialization complete");
+      } else if (mode === "edit" && eventId) {
+        console.log("📝 EDIT mode - will load event data");
+      }
+
+      isInitialized.current = true;
+    }
+  }, []);
 
   useEffect(() => {
-    if (eventId && mode === "edit") {
-      dispatch(fetchEventDetails(eventId));
-    }
     if (!eventType.length) {
       dispatch(fetchEventType({ active: true }));
     }
-  }, [dispatch, eventId, mode, eventType.length]);
+  }, [dispatch, eventType.length]);
 
+  // Handle edit mode data loading - separate from initialization
+  useEffect(() => {
+    if (eventId && mode === "edit" && isInitialized.current) {
+      console.log("📥 Loading event details for edit mode");
+      dispatch(fetchEventDetails(eventId));
+    }
+  }, [dispatch, eventId, mode]);
+
+  // Populate form for edit mode when eventDetails are loaded
   useEffect(() => {
     if (
       mode === "edit" &&
       eventDetails &&
+      isInitialized.current &&
       !selectedOffers.length &&
       !selectedCoupons.length
     ) {
+      console.log("📝 Populating form with event details");
+
       const formValues = {
         event_name: eventDetails.event_name,
         description: eventDetails.description,
@@ -144,7 +195,9 @@ export default function EventForm({ eventId, mode = "add" }) {
       };
 
       form.setFieldsValue(formValues);
+      dispatch(setEventFormData(formValues));
 
+      // Load related data
       if (eventDetails.taxs && eventDetails.taxs.length > 0) {
         dispatch(setSelectedTaxDetails(eventDetails.taxs));
       }
@@ -159,6 +212,7 @@ export default function EventForm({ eventId, mode = "add" }) {
       }
       dispatch(getAvailableTicketsType());
 
+      // Load selected offers
       if (eventDetails.event_offers && eventDetails.event_offers.length > 0) {
         eventDetails.event_offers.forEach((eventOffer) => {
           dispatch(
@@ -174,6 +228,7 @@ export default function EventForm({ eventId, mode = "add" }) {
         });
       }
 
+      // Load selected coupons
       if (eventDetails.event_coupons && eventDetails.event_coupons.length > 0) {
         eventDetails.event_coupons.forEach((eventCoupon) => {
           dispatch(
@@ -187,6 +242,8 @@ export default function EventForm({ eventId, mode = "add" }) {
           );
         });
       }
+
+      console.log("✅ Edit mode form population complete");
     }
   }, [
     eventDetails,
@@ -196,6 +253,21 @@ export default function EventForm({ eventId, mode = "add" }) {
     selectedOffers.length,
     selectedCoupons.length,
   ]);
+
+  // Update form when formData changes (but not on initial load for add mode)
+  useEffect(() => {
+    if (isInitialized.current && mode === "edit") {
+      form.setFieldsValue(formData);
+    }
+  }, [form, formData, mode]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      console.log("🧹 Cleaning up EventForm on unmount");
+      // Optionally clear states on unmount if needed
+    };
+  }, []);
 
   const validateCurrentSection = useCallback(async () => {
     const currentSection = EVENT_SECTIONS[currentStep];
@@ -241,11 +313,9 @@ export default function EventForm({ eventId, mode = "add" }) {
       const validationResult = await validateCurrentSection();
 
       if (!validationResult) {
-        // Get the specific validation errors from Redux state
         const currentSectionErrors = validationErrors[currentSection.key] || [];
 
         if (currentSectionErrors.length > 0) {
-          // Show the first specific error message
           const firstError = currentSectionErrors[0];
           const errorMessage =
             firstError.errors?.[0] ||
@@ -334,29 +404,11 @@ export default function EventForm({ eventId, mode = "add" }) {
 
   const handleSubmit = async () => {
     console.log("🚀 handleSubmit triggered");
-    console.log("📊 Current formData:", formData);
-    console.log("🏷️ Current mode:", mode);
-
     dispatch(setLoading(true));
 
     try {
-      console.log("🔍 Starting form validation...");
-      console.log("📝 Form instance:", form);
-
       const finalValues = await form.validateFields();
       console.log("✅ Form validation successful");
-      console.log("📋 Final form values:", finalValues);
-      console.log("📋 Final form values keys:", Object.keys(finalValues || {}));
-
-      // Check for undefined values in finalValues
-      Object.entries(finalValues || {}).forEach(([key, value]) => {
-        if (value === undefined) {
-          console.warn(`⚠️ Undefined value found for key: ${key}`);
-        }
-        if (Array.isArray(value)) {
-          console.log(`📊 Array field ${key} has length:`, value.length);
-        }
-      });
 
       const completeFormData = {
         ...formData,
@@ -364,87 +416,35 @@ export default function EventForm({ eventId, mode = "add" }) {
         event_type_id: eventType.find((item) => item.name === EVENT_TYPES.event)
           ?.id,
       };
-      console.log("🔄 Merging form data...");
-      console.log("📦 Complete form data:", completeFormData);
-      console.log(
-        "📦 Complete form data keys:",
-        Object.keys(completeFormData || {})
-      );
-
-      // Check for undefined values in completeFormData
-      Object.entries(completeFormData || {}).forEach(([key, value]) => {
-        if (value === undefined) {
-          console.warn(
-            `⚠️ Undefined value in completeFormData for key: ${key}`
-          );
-        }
-        if (Array.isArray(value)) {
-          console.log(
-            `📊 Array field ${key} in completeFormData has length:`,
-            value.length
-          );
-        } else if (value && typeof value === "object") {
-          console.log(`🏷️ Object field ${key}:`, value);
-        }
-      });
-
-      console.warn(completeFormData, "completeFormData");
 
       if (mode === "edit") {
         console.log("🔧 Submission mode: EDIT");
-        console.log(
-          "📤 Calling handleEditModeSubmission with:",
-          completeFormData
-        );
         await handleEditModeSubmission(completeFormData);
-        console.log("✅ Edit mode submission completed");
       } else {
         console.log("➕ Submission mode: CREATE");
-        console.log(
-          "📤 Calling handleCreateModeSubmission with:",
-          completeFormData
-        );
         await handleCreateModeSubmission(completeFormData);
-        console.log("✅ Create mode submission completed");
       }
 
       console.log("🎉 Submission handled successfully");
     } catch (error) {
       console.error("❌ Error during submission:", error);
-      console.error("❌ Error stack:", error.stack);
-      console.error("❌ Error name:", error.name);
-      console.error("❌ Error message:", error.message);
-
-      // Log additional error properties
-      if (error.errorFields) {
-        console.error("📝 Error fields:", error.errorFields);
-        console.error("📝 Error fields length:", error.errorFields.length);
-      }
 
       if (error.errorFields && error.errorFields.length > 0) {
         const firstError = error.errorFields[0];
-        console.error("🎯 First validation error:", firstError);
-        console.error("🎯 First error name:", firstError.name);
-        console.error("🎯 First error errors:", firstError.errors);
-
         message.error(
           `Validation error: ${
             firstError.errors?.[0] || "Please check required fields"
           }`
         );
       } else if (error.message) {
-        console.error("💬 Using error message:", error.message);
         message.error(`Submission failed: ${error.message}`);
       } else {
-        console.error("❓ Unknown error type, using fallback message");
         message.error(
           "Failed to create event. Please check all fields and try again."
         );
       }
     } finally {
-      console.log("🏁 Finally block executing");
       dispatch(setLoading(false));
-      console.log("⏳ Loading state set to false");
     }
   };
 
@@ -501,21 +501,14 @@ export default function EventForm({ eventId, mode = "add" }) {
 
   const handleCreateModeSubmission = async (completeFormData) => {
     console.log("➕ handleCreateModeSubmission started");
-    console.log("📊 Input data:", completeFormData);
 
-    // Safe array handling with default empty arrays
     const selectedOffersSafe = selectedOffers || [];
     const selectedCouponsSafe = selectedCoupons || [];
     const selectedVenueListSafe = selectedVenueList || [];
     const ticketTypesSafe = ticketTypes || [];
     const availableSeatsSafe = availableSeats || [];
 
-    console.log("🏢 Selected venues:", selectedVenueListSafe);
-    console.log("🎫 Ticket types:", ticketTypesSafe);
-    console.log("💺 Available seats:", availableSeatsSafe);
-
     try {
-      // Use the transformer to convert form data to API structure
       const transformedData = transformFormDataForAPI(completeFormData, {
         selectedOffers: selectedOffersSafe,
         selectedCoupons: selectedCouponsSafe,
@@ -526,9 +519,7 @@ export default function EventForm({ eventId, mode = "add" }) {
       });
 
       console.log("✅ Data transformation completed");
-      console.log("📤 Final create data:", transformedData);
 
-      // Validate offers and coupons
       const offerValidationResult = await dispatch(
         validateOfferCoupon({
           offers: selectedOffersSafe,
@@ -543,7 +534,6 @@ export default function EventForm({ eventId, mode = "add" }) {
           dispatch(setOfferCouponValidationDialogVisible(true));
           return;
         } else if (response.data && response.data[0]?.validation_status) {
-          // Use the transformed data for submission
           dispatch(setSelectedSubmitItem(transformedData));
           console.log("✅ Event data set for submission");
         } else {
@@ -615,9 +605,65 @@ export default function EventForm({ eventId, mode = "add" }) {
     }
   };
 
+  // Don't render until initialized
+  if (!isInitialized.current) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white">
       <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg mb-4">
+        <DraftSystem
+          form={form}
+          formType="event"
+          mode={mode}
+          recordId={eventId}
+          titleField="event_name"
+          excludeFromDraft={["id", "created_at"]}
+          style={{ marginRight: 12, display: "inline-block" }}
+          enableAutoSave={mode !== "edit"}
+          externalFormData={formData} // Pass Redux formData
+          onGetCompleteData={() => {
+            // This function returns complete data from all steps
+            const currentValues = form.getFieldsValue();
+            return {
+              ...formData, // All previous steps data
+              ...currentValues, // Current step data
+            };
+          }}
+          onDraftLoaded={(draft) => {
+            console.log("📥 Draft loaded, merging with Redux state");
+
+            // Ensure file objects are extensible before setting state
+            const clonedFormValues = JSON.parse(
+              JSON.stringify(draft.formValues)
+            );
+
+            // Make file arrays extensible
+            ["thumbnail_image", "banner_images", "event_images"].forEach(
+              (field) => {
+                if (
+                  clonedFormValues[field] &&
+                  Array.isArray(clonedFormValues[field])
+                ) {
+                  clonedFormValues[field] = clonedFormValues[field].map(
+                    (file) => ({ ...file })
+                  );
+                }
+              }
+            );
+
+            // Merge with existing Redux state, don't replace
+            const currentFormData = formData || {};
+            const mergedData = {
+              ...currentFormData, // Preserve existing Redux data
+              ...clonedFormValues, // Add/update with draft data
+            };
+
+            dispatch(setEventFormData(mergedData));
+          }}
+        />
+
         <Button
           size="large"
           onClick={handlePrev}
@@ -626,7 +672,6 @@ export default function EventForm({ eventId, mode = "add" }) {
         >
           Previous
         </Button>
-
         <div className="text-center">
           <span className="text-gray-500">
             Step {currentStep + 1} of {EVENT_SECTIONS.length}
@@ -639,7 +684,6 @@ export default function EventForm({ eventId, mode = "add" }) {
             completed
           </div>
         </div>
-
         {currentStep < EVENT_SECTIONS.length - 1 ? (
           <Button
             type="primary"
@@ -704,6 +748,7 @@ export default function EventForm({ eventId, mode = "add" }) {
           );
         })}
       </Steps>
+
       {validationErrors[EVENT_SECTIONS[currentStep]?.key]?.length > 0 && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-600 font-medium mb-2">
@@ -721,27 +766,17 @@ export default function EventForm({ eventId, mode = "add" }) {
           </ul>
         </div>
       )}
+
       <Form
         form={form}
         layout="vertical"
         size="large"
-        initialValues={formData}
+        initialValues={{}}
         onFieldsChange={handleFieldsChange}
         onValuesChange={(changedValues, allValues) => {
           dispatch(setEventFormData(allValues));
 
           const changedKey = Object.keys(changedValues)[0];
-
-          if (
-            [
-              "selected_ticket_types",
-              "selected_seats",
-              "ticket_sets",
-              "ticket_quantities",
-            ].includes(changedKey)
-          ) {
-            // Handle ticket data updates
-          }
 
           if (["category_id", "place_id", "venue_id"].includes(changedKey)) {
             const updated = clearDependentFields(
