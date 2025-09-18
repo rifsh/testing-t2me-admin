@@ -18,16 +18,32 @@ const { TextArea } = antd.Input;
 const { Text } = antd.Typography;
 
 const EventDetailsField = ({ mode }) => {
-  // Alternative normFile function that creates proper clones
   const normFile = (e) => {
+    console.warn("eeeeeeeeeeeeeeeeeeeee", e);
     if (Array.isArray(e)) {
-      // Clone each file object to make it extensible
-      return e.map((file) => ({ ...file }));
+      // Filter out empty strings and invalid entries, keep only valid file objects
+      return e
+        .filter(
+          (file) =>
+            file &&
+            typeof file === "object" &&
+            file !== null &&
+            (file.originFileObject || file.name || file.uid)
+        )
+        .map((file) => ({ ...file }));
     }
 
     const fileList = e?.fileList || [];
-    // Clone each file object to make it extensible
-    return fileList.map((file) => ({ ...file }));
+    // Filter out empty strings and invalid entries, keep only valid file objects
+    return fileList
+      .filter(
+        (file) =>
+          file &&
+          typeof file === "object" &&
+          file !== null &&
+          (file.originFileObject || file.name || file.uid)
+      )
+      .map((file) => ({ ...file }));
   };
 
   return (
