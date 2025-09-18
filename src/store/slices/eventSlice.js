@@ -41,6 +41,36 @@ const initialState = {
   editable_status: null,
   eventsupport: null,
   pagination: { size: 10, page: 1 },
+  formData: {
+    // Basic Info
+    event_name: "",
+    description: "",
+
+    // Category
+    category_id: null,
+    sub_category_id: null,
+
+    // Location
+    place_id: null,
+    venue_id: [],
+
+    // Tickets - **KEY ADDITION**: Initialize with proper structure
+    selected_ticket_types: {},
+    selected_seats: {},
+    ticket_sets: {},
+    ticket_quantities: {},
+
+    // Pricing
+    selectedOffers: [],
+    selectedCoupons: [],
+
+    // Additional Info
+    additional_booking_info: [],
+  },
+  currentStep: 0,
+  completedSections: [],
+  validationErrors: {},
+  isLoading: false,
 };
 
 export const fetchEventDetails = createAsyncThunk(
@@ -276,6 +306,30 @@ const eventSlice = createSlice({
     resetState: (state) => {
       return initialState;
     },
+    setEventFormData: (state, action) => {
+      state.formData = { ...state.formData, ...action.payload };
+    },
+
+    updateSectionData: (state, action) => {
+      const { section, data } = action.payload;
+      state.formData = { ...state.formData, ...data };
+    },
+
+    setCompletedSections: (state, action) => {
+      state.completedSections = action.payload;
+    },
+
+    setValidationErrors: (state, action) => {
+      state.validationErrors = action.payload;
+    },
+
+    setLoading: (state, action) => {
+      state.isLoading = action.payload;
+    },
+
+    resetEventForm: (state) => {
+      return initialState;
+    },
     filterEvent: (state, action) => {
       const { searchTerm, status } = action.payload;
 
@@ -310,6 +364,34 @@ const eventSlice = createSlice({
     },
     setSubmitLoading(state, action) {
       state.submitLoading = action.payload;
+    }, // Add this new action to your eventSlice reducers:
+    clearAllTicketData: (state) => {
+      state.formData.selected_ticket_types = {};
+      state.formData.selected_seats = {};
+      state.formData.ticket_sets = {};
+      state.formData.ticket_quantities = {};
+
+      // Remove ticket section from completed sections
+      state.completedSections = state.completedSections.filter(
+        (step) => step !== 3
+      );
+
+      // Clear ticket validation errors
+      if (state.validationErrors.ticket) {
+        delete state.validationErrors.ticket;
+      }
+    },
+
+    clearTicketSectionCompletion: (state) => {
+      // Remove ticket section (step 3) from completed sections
+      state.completedSections = state.completedSections.filter(
+        (step) => step !== 3
+      );
+
+      // Clear ticket-related validation errors
+      if (state.validationErrors.ticket) {
+        delete state.validationErrors.ticket;
+      }
     },
     resetSelected: (state) => {
       state.selectedOffers = [];
@@ -646,13 +728,22 @@ export const {
   filterEvent,
   setSubmitData,
   toggleSelectedCoupon,
+  clearAllTicketData,
   setWarningMessage,
+  setEventFormData,
+  updateSectionData,
+
+  setCompletedSections,
+  setValidationErrors,
+  setLoading,
+  resetEventForm,
   resetState,
   toggleSelectedOffer,
   resetSelected,
   setCurrentStep,
   setSubmitLoading,
   setEventValidationDialogVisible,
+  clearTicketSectionCompletion,
   setEditItemId,
 } = eventSlice.actions;
 

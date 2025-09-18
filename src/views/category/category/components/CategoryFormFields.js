@@ -37,6 +37,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { ActionType } from "utils/api/warning-submit-util";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 import BackButton from "components/Buttons/BackPageButoon";
+import DraftSystem from "drafts/components/DraftSystem";
 
 const { Text } = Typography;
 const ADD = "ADD";
@@ -87,13 +88,13 @@ const CategoryFormFields = ({ mode, category }) => {
         thumbnail_image:
           category.thumbnail_image && category.thumbnail_image !== "images"
             ? [
-              {
-                uid: "-1",
-                name: category.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: `${CDN_PATH}/${category.thumbnail_image}`,
-              },
-            ]
+                {
+                  uid: "-1",
+                  name: category.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: `${CDN_PATH}/${category.thumbnail_image}`,
+                },
+              ]
             : [],
       });
     }
@@ -105,7 +106,7 @@ const CategoryFormFields = ({ mode, category }) => {
     }
     return e?.fileList || [];
   };
-  const handleBeforeUpload = Utils.handleBeforeUpload;
+  // const handleBeforeUpload = Utils.handleBeforeUpload;
 
   const onFinish = async () => {
     try {
@@ -220,7 +221,15 @@ const CategoryFormFields = ({ mode, category }) => {
                 gap: 10,
               }}
             >
-              <BackButton />
+              <DraftSystem
+                form={form}
+                formType="catgry"
+                mode={mode}
+                titleField="name"
+                excludeFromDraft={["id", "created_at"]}
+                style={{ marginRight: 12, display: "inline-block" }}
+                enableAutoSave={mode !== "EDIT"}
+              />
 
               <DiscardButton form={form} />
 
