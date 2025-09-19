@@ -23,6 +23,7 @@ import { addTicket } from "store/slices/ticketSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import DraftSystem from "drafts/components/DraftSystem";
 
 const { Step } = Steps;
 
@@ -48,7 +49,7 @@ const MultyStepTicketForm = () => {
   ]);
   const [showNormalTicketModal, setShowNormalTicketModal] = useState(false);
   const [remainingTickets, setRemainingTickets] = useState(0);
-  
+
   const nextStep = async () => {
     try {
       const values = await form.validateFields();
@@ -125,7 +126,9 @@ const MultyStepTicketForm = () => {
       const availableTickets = calculateRemainingTickets();
 
       if (availableTickets <= 0) {
-        message.error("No more tickets available to allocate. Check your ticket distribution.");
+        message.error(
+          "No more tickets available to allocate. Check your ticket distribution."
+        );
         return;
       }
 
@@ -134,7 +137,7 @@ const MultyStepTicketForm = () => {
         name: "Normal Ticket",
         price: 0, // Default price
         number_of_tickets: availableTickets,
-        ticket_set: "Normal Ticket Type"
+        ticket_set: "Normal Ticket Type",
       };
 
       // Add the new structure
@@ -161,9 +164,9 @@ const MultyStepTicketForm = () => {
       setCurrentStep(newStep);
 
       // Update ticketCategory
-      setTicketCategory(prevCategory => [
-        ...prevCategory, 
-        { step: newStep, value: "Normal Ticket Type" }
+      setTicketCategory((prevCategory) => [
+        ...prevCategory,
+        { step: newStep, value: "Normal Ticket Type" },
       ]);
 
       // Mark the new step as saved
@@ -171,7 +174,9 @@ const MultyStepTicketForm = () => {
 
       message.success("Normal ticket type added successfully");
     } else {
-      message.warning("Save the current step before adding a new ticket structure");
+      message.warning(
+        "Save the current step before adding a new ticket structure"
+      );
     }
   };
 
@@ -252,7 +257,7 @@ const MultyStepTicketForm = () => {
       message.error("An error occurred. Please check your data and try again.");
     }
   };
-  
+
   const handleNormalTicketCreation = async () => {
     try {
       const values = await normalTicketForm.validateFields();
@@ -293,7 +298,7 @@ const MultyStepTicketForm = () => {
       message.error("Please fill in all required fields");
     }
   };
-  
+
   const extractTicketData = (responseData) => {
     if (!responseData || !Array.isArray(responseData.ticket_types)) {
       return {};
@@ -317,7 +322,7 @@ const MultyStepTicketForm = () => {
   };
 
   const mappedTicketData = extractTicketData(responseData);
-  
+
   const calculateTotalTickets = (currentValues, currentStep) => {
     let totalTickets = 0;
 
@@ -413,11 +418,15 @@ const MultyStepTicketForm = () => {
       message.error("An error occurred while saving the ticket data");
     }
   };
-  
+
   useEffect(() => {
     // This initializes ticket form when component mounts
-    if (tickets && tickets.length > 0 && 
-        tickets[0]?.ticket_types && tickets[0].ticket_types.length === 0) {
+    if (
+      tickets &&
+      tickets.length > 0 &&
+      tickets[0]?.ticket_types &&
+      tickets[0].ticket_types.length === 0
+    ) {
       // If there are tickets but no ticket types, set up the initial structure
       setTicketCategory([{ step: 0, value: "" }]);
     }
@@ -495,6 +504,16 @@ const MultyStepTicketForm = () => {
       {/* Navigation Buttons */}
       <Row justify="space-between" style={{ marginTop: "30px" }}>
         <Col>
+          {" "}
+          <DraftSystem
+            form={form}
+            formType="ticket-type"
+            mode={"ADD"}
+            titleField="name"
+            excludeFromDraft={["id", "created_at"]}
+            style={{ marginRight: 12, display: "inline-block" }}
+            enableAutoSave={true}
+          />
           <Button onClick={prevStep} disabled={currentStep === 0}>
             Previous
           </Button>
@@ -559,7 +578,7 @@ const MultyStepTicketForm = () => {
         responseMessage={responseMessage}
         mode={"ADD"}
         form={form}
-        formType={"ticket"}
+        formType={"ticket-type"}
       />
     </div>
   );

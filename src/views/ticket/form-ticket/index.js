@@ -5,6 +5,7 @@ import Flex from "components/shared-components/Flex";
 import TicketFormFields from "../components/TicketFormFields";
 import ProductListData from "assets/data/product-list.data.json";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
+import DraftSystem from "drafts/components/DraftSystem";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -71,6 +72,8 @@ const TicketForm = (props) => {
                 {mode === "ADD" ? "Add New Event" : `Edit Event`}
               </h2>
               <div className="mb-3">
+                {" "}
+                
                 <DiscardButton form={form} />
                 <Button
                   type="primary"

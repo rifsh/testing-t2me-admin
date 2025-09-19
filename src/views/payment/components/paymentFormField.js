@@ -14,6 +14,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { EVENT_TYPES } from "constants/PageConstants";
 import BackButton from "components/Buttons/BackPageButoon";
+import DraftSystem from "drafts/components/DraftSystem";
 
 const { Option } = Select;
 
@@ -27,12 +28,66 @@ const PaymentFormFields = ({ mode }) => {
   const [placeId, setPlaceId] = useState();
   const [submitting, setSubmitting] = useState(false);
 
+  // State to track all form data for draft system
+  const [allFormData, setAllFormData] = useState({});
+
   useEffect(() => {
     dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
   }, [dispatch]);
 
   const handleSelectEvent = (id) => {
     if (!id) return;
+  };
+
+  // Enhanced function to get complete form data including nested arrays
+  const getCompleteFormData = () => {
+    const mainFormValues = form.getFieldsValue();
+    console.log("🔍 Getting complete form data:", mainFormValues);
+    
+    // Ensure payment_methods and add_on_services are properly structured
+    const completeData = {
+      ...mainFormValues,
+      place_id: placeId,
+      // Ensure these arrays exist even if empty
+      payment_methods: mainFormValues.payment_methods || [],
+      add_on_services: mainFormValues.add_on_services || []
+    };
+
+    console.log("📊 Complete form data structure:", {
+      mainFields: Object.keys(mainFormValues).filter(k => !['payment_methods', 'add_on_services'].includes(k)),
+      paymentMethods: completeData.payment_methods?.length || 0,
+      addOnServices: completeData.add_on_services?.length || 0
+    });
+
+    return completeData;
+  };
+
+  // Handle draft loaded - restore all form data including nested structures
+  const handleDraftLoaded = (draftData) => {
+    console.log("📥 Loading draft data:", draftData);
+    
+    const { formValues } = draftData;
+    
+    // Set place ID if it exists
+    if (formValues.place_id) {
+      setPlaceId(formValues.place_id);
+    }
+
+    // Set all form values at once
+    form.setFieldsValue({
+      ...formValues,
+      // Ensure arrays are properly set
+      payment_methods: formValues.payment_methods || [{}],
+      add_on_services: formValues.add_on_services || []
+    });
+
+    console.log("✅ Form values set:", {
+      paymentMethods: formValues.payment_methods?.length || 0,
+      addOnServices: formValues.add_on_services?.length || 0
+    });
+
+    // Force re-render of child components by updating state
+    setAllFormData(formValues);
   };
 
   const validatePaymentMethods = (paymentMethods) => {
@@ -151,10 +206,28 @@ const PaymentFormFields = ({ mode }) => {
           </Row>
         </Card>
 
-        <PaymentMethodTabs form={form} />
-        <AddOnServicesForm form={form} />
+        {/* Pass key to force re-render when draft is loaded */}
+        <PaymentMethodTabs 
+          form={form} 
+          key={`payment-methods-${JSON.stringify(allFormData.payment_methods || [])}`}
+        />
+        <AddOnServicesForm 
+          form={form} 
+          key={`add-on-services-${JSON.stringify(allFormData.add_on_services || [])}`}
+        />
+        
         <Flex className="py-2" mobileFlex={false} justifyContent="flex-end">
-          <BackButton />
+          <DraftSystem
+            form={form}
+            formType="payment"
+            mode={mode}
+            titleField="name"
+            excludeFromDraft={["id", "created_at"]}
+            style={{ marginRight: 12, display: "inline-block" }}
+            enableAutoSave={mode !== "EDIT"}
+            onGetCompleteData={getCompleteFormData}
+            onDraftLoaded={handleDraftLoaded}
+          />
           <DiscardButton form={form} />
           <div className="mb-3">
             <Button

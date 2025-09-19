@@ -1,3 +1,4 @@
+// Enhanced TicketFormFields.js with proper draft support
 import React, { useState, useEffect } from "react";
 import {
   Form,
@@ -37,6 +38,7 @@ import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import LoadingOverlay from "components/util-components/Loader/index";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import BackButton from "components/Buttons/BackPageButoon";
+import DraftSystem from "drafts/components/DraftSystem";
 
 const TicketFormFields = ({ mode, ticket }) => {
   const [form] = Form.useForm();
@@ -59,6 +61,9 @@ const TicketFormFields = ({ mode, ticket }) => {
   const { loading, responseData, responseMessage } = useSelector(
     (state) => state.tickets
   );
+
+  // State for draft system
+  const [allFormData, setAllFormData] = useState({});
   const numberOfTickets = Form.useWatch("number_of_tickets", form);
 
   useEffect(() => {
@@ -66,6 +71,67 @@ const TicketFormFields = ({ mode, ticket }) => {
       form.setFieldsValue({ type_number_of_tickets: numberOfTickets });
     }
   }, [numberOfTickets, form]);
+
+  // Enhanced function to get complete form data for draft
+  const getCompleteFormData = () => {
+    const mainFormValues = form.getFieldsValue();
+    console.log("🎫 Getting complete ticket form data:", mainFormValues);
+
+    // Include Redux state for tickets if available
+    const ticketReduxData = tickets && tickets.length > 0 ? tickets[0] : null;
+
+    const completeData = {
+      ...mainFormValues,
+      // Include ticket types from Redux if available
+      ...(ticketReduxData && {
+        redux_ticket_data: {
+          venue_id: ticketReduxData.venue_id,
+          place_id: ticketReduxData.place_id,
+          base_price: ticketReduxData.base_price,
+          number_of_tickets: ticketReduxData.number_of_tickets,
+        },
+      }),
+    };
+
+    console.log("📊 Complete ticket form data:", {
+      mainFields: Object.keys(mainFormValues),
+      hasReduxData: !!ticketReduxData,
+      completeFields: Object.keys(completeData),
+    });
+
+    return completeData;
+  };
+
+  // Handle draft loaded - restore all form data
+  const handleDraftLoaded = (draftData) => {
+    console.log("📥 Loading ticket draft data:", draftData);
+
+    const { formValues } = draftData;
+
+    // Set all form values
+    const formValuesToSet = { ...formValues };
+
+    // Remove redux data from form values (it's metadata)
+    if (formValuesToSet.redux_ticket_data) {
+      delete formValuesToSet.redux_ticket_data;
+    }
+
+    form.setFieldsValue(formValuesToSet);
+
+    // If there's redux data, dispatch it back to store
+    if (formValues.redux_ticket_data) {
+      console.log(
+        "🔄 Restoring Redux ticket data:",
+        formValues.redux_ticket_data
+      );
+      // You might need to dispatch actions to restore Redux state here
+      // Example: dispatch(restoreTicketData(formValues.redux_ticket_data));
+    }
+
+    console.log("✅ Ticket form values set");
+    setAllFormData(formValues);
+  };
+
   const addTicketType = async () => {
     try {
       const formValues = await form.validateFields();
@@ -134,7 +200,11 @@ const TicketFormFields = ({ mode, ticket }) => {
   const ticketType = Form.useWatch("ticket_type", form);
 
   return (
-    <Form form={form} layout="vertical">
+    <Form
+      form={form}
+      layout="vertical"
+      key={`ticket-form-${JSON.stringify(allFormData)}`}
+    >
       <Card title="Ticket Form">
         <PlaceWithCountryForm
           form={form}
@@ -171,10 +241,10 @@ const TicketFormFields = ({ mode, ticket }) => {
               validator: (_, value) =>
                 value && VenueData?.capacity && value > VenueData.capacity
                   ? Promise.reject(
-                    new Error(
-                      `The number of tickets cannot exceed the venue capacity of ${VenueData.capacity}.`
+                      new Error(
+                        `The number of tickets cannot exceed the venue capacity of ${VenueData.capacity}.`
+                      )
                     )
-                  )
                   : Promise.resolve(),
             },
           ]}
@@ -249,9 +319,20 @@ const TicketFormFields = ({ mode, ticket }) => {
           </Form.Item>
         </Card>
       )}
+
       <Flex className="py-2" mobileFlex={false} justifyContent="space-between">
         <div className="flex">
-          <BackButton />
+          <DraftSystem
+            form={form}
+            formType="ticket"
+            mode={mode}
+            titleField="name"
+            excludeFromDraft={["id", "created_at"]}
+            style={{ marginRight: 12, display: "inline-block" }}
+            enableAutoSave={mode !== "EDIT"}
+            onGetCompleteData={getCompleteFormData}
+            onDraftLoaded={handleDraftLoaded}
+          />
           <DiscardButton form={form} />
         </div>
 
@@ -285,8 +366,7 @@ const TicketFormFields = ({ mode, ticket }) => {
         responseMessage={responseMessage}
         mode={mode}
         form={form}
-        formType={"ticket-form"}
-
+        formType={"ticket"}
       />
     </Form>
   );
