@@ -51,7 +51,6 @@ import {
 } from "store/slices/offerSlice";
 
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
-import { EVENT_SECTIONS } from "constants/AppConstants";
 import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
@@ -59,6 +58,7 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import { transformFormDataForAPI } from "../utils/formDataTransformer";
 import { EVENT_TYPES } from "constants/PageConstants";
 import DraftSystem from "drafts/components/DraftSystem";
+import { getRoleBasedEventSections } from "configs/UserAccessConfig";
 
 const { Step } = Steps;
 
@@ -270,7 +270,7 @@ export default function EventForm({ eventId, mode = "add" }) {
   }, []);
 
   const validateCurrentSection = useCallback(async () => {
-    const currentSection = EVENT_SECTIONS[currentStep];
+    const currentSection = getRoleBasedEventSections()[currentStep];
     const sectionKey = currentSection.key;
     const currentFormValues = form.getFieldsValue();
     const completeValues = { ...formData, ...currentFormValues };
@@ -302,7 +302,7 @@ export default function EventForm({ eventId, mode = "add" }) {
 
     try {
       const currentValues = await form.validateFields();
-      const currentSection = EVENT_SECTIONS[currentStep];
+      const currentSection = getRoleBasedEventSections()[currentStep];
 
       dispatch(
         updateSectionData({ section: currentSection.key, data: currentValues })
@@ -335,7 +335,7 @@ export default function EventForm({ eventId, mode = "add" }) {
         const newCompletedSections = [...completedSections, currentStep];
         dispatch(setCompletedSections(newCompletedSections));
 
-        if (currentStep < EVENT_SECTIONS.length - 1) {
+        if (currentStep < getRoleBasedEventSections().length - 1) {
           dispatch(setCurrentStep(currentStep + 1));
         }
       } else {
@@ -358,7 +358,7 @@ export default function EventForm({ eventId, mode = "add" }) {
 
   const handleFieldsChange = useCallback(() => {
     const currentValues = form.getFieldsValue();
-    const currentSection = EVENT_SECTIONS[currentStep];
+    const currentSection = getRoleBasedEventSections()[currentStep];
 
     dispatch(
       updateSectionData({
@@ -371,7 +371,7 @@ export default function EventForm({ eventId, mode = "add" }) {
   const handlePrev = () => {
     if (currentStep > 0) {
       const currentValues = form.getFieldsValue();
-      const currentSection = EVENT_SECTIONS[currentStep];
+      const currentSection = getRoleBasedEventSections()[currentStep];
 
       dispatch(
         updateSectionData({
@@ -387,7 +387,7 @@ export default function EventForm({ eventId, mode = "add" }) {
   const handleStepClick = (step) => {
     if (step <= currentStep) {
       const currentValues = form.getFieldsValue();
-      const currentSection = EVENT_SECTIONS[currentStep];
+      const currentSection = getRoleBasedEventSections()[currentStep];
 
       dispatch(
         updateSectionData({
@@ -577,7 +577,7 @@ export default function EventForm({ eventId, mode = "add" }) {
   };
 
   const renderSectionContent = () => {
-    const currentSection = EVENT_SECTIONS[currentStep];
+    const currentSection = getRoleBasedEventSections()[currentStep];
     const sectionErrors = validationErrors[currentSection?.key] || [];
 
     const commonProps = {
@@ -674,17 +674,17 @@ export default function EventForm({ eventId, mode = "add" }) {
         </Button>
         <div className="text-center">
           <span className="text-gray-500">
-            Step {currentStep + 1} of {EVENT_SECTIONS.length}
+            Step {currentStep + 1} of {getRoleBasedEventSections().length}
           </span>
           <div className="text-sm text-gray-400 mt-1">
-            {EVENT_SECTIONS[currentStep]?.title}
+            {getRoleBasedEventSections()[currentStep]?.title}
           </div>
           <div className="text-xs text-green-600 mt-1">
-            {completedSections.length} of {EVENT_SECTIONS.length} sections
-            completed
+            {completedSections.length} of {getRoleBasedEventSections().length}{" "}
+            sections completed
           </div>
         </div>
-        {currentStep < EVENT_SECTIONS.length - 1 ? (
+        {currentStep < getRoleBasedEventSections().length - 1 ? (
           <Button
             type="primary"
             size="large"
@@ -719,7 +719,7 @@ export default function EventForm({ eventId, mode = "add" }) {
         size="small"
         className="site-navigation-steps mb-8"
       >
-        {EVENT_SECTIONS.map((section, index) => {
+        {getRoleBasedEventSections().map((section, index) => {
           const hasErrors = validationErrors[section.key]?.length > 0;
           const isComplete = completedSectionsSet.has(index);
           const isClickable = index <= currentStep;
@@ -749,13 +749,14 @@ export default function EventForm({ eventId, mode = "add" }) {
         })}
       </Steps>
 
-      {validationErrors[EVENT_SECTIONS[currentStep]?.key]?.length > 0 && (
+      {validationErrors[getRoleBasedEventSections()[currentStep]?.key]?.length >
+        0 && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-600 font-medium mb-2">
             Please fix the following errors:
           </p>
           <ul className="text-red-600 text-sm list-disc list-inside">
-            {validationErrors[EVENT_SECTIONS[currentStep].key].map(
+            {validationErrors[getRoleBasedEventSections()[currentStep].key].map(
               (error, index) => (
                 <li key={index}>
                   <strong>{error.name?.join(".")}:</strong>{" "}

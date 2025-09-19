@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch } from "react-redux";
 import { currentStepSaveUpdate } from "store/slices/ticketSlice";
+import DraftSystem from "drafts/components/DraftSystem";
 const TicketStructureFields = ({ ticket_states }) => {
   const [ticketTypes, setTicketTypes] = useState([{ id: 1 }]); // Dynamically manage form fields
   const {
