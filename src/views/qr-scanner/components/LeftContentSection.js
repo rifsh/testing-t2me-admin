@@ -143,18 +143,12 @@ const LeftContentSection = ({
                     </motion.div>
                 </div>
                 <AnimatePresence mode="wait">
-                    <motion.p
-                        key={serviceType}
-                        className="text-gray-600 text-sm mt-3 text-center"
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        transition={{ duration: 0.2 }}
-                    >
+                    <p className="text-gray-600 text-sm mt-3 text-center">
                         {serviceType === 'entry'
                             ? 'Scanning for event entry validation'
                             : 'Scanning to unlock add-on services and experiences'}
-                    </motion.p>
+                    </p>
+
                 </AnimatePresence>
             </motion.div>
 

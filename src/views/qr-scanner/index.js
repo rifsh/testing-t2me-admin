@@ -34,91 +34,69 @@ const ScannerApp = () => {
         reader.onload = (e) => {
             const img = new Image();
             img.onload = () => {
-                // Create canvas to process image
                 const canvas = canvasRef.current || document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
 
-                // Set canvas dimensions to match image
                 canvas.width = img.width;
                 canvas.height = img.height;
-
-                // Draw image on canvas
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                // Get image data for QR code scanning
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-                // Simulate progress for UX
-                const interval = setInterval(() => {
-                    setProgress(prev => {
-                        if (prev >= 90) { // Stop at 90% to complete after scanning
-                            clearInterval(interval);
+                try {
+                    const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
 
-                            // Try to decode QR code
-                            try {
-                                const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+                    if (qrCode) {
+                        setProgress(100); // instantly mark as done
 
-                                if (qrCode) {
-                                    // QR code found and decoded
-                                    setProgress(100);
-
-                                    // Parse QR code data (assuming it's JSON)
-                                    try {
-                                        const qrData = JSON.parse(qrCode.data);
-                                        setExtractedData({
-                                            ticketId: qrData.ticketId || 'TKT-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
-                                            attendeeName: qrData.attendeeName || 'John Doe',
-                                            eventName: qrData.eventName || 'Tech Conference 2024',
-                                            ticketType: qrData.ticketType || 'VIP Access',
-                                            validUntil: qrData.validUntil || '2024-12-31'
-                                        });
-                                        setError('');
-                                    } catch (e) {
-                                        // If not JSON, treat as raw text
-                                        setExtractedData({
-                                            ticketId: qrCode.data,
-                                            attendeeName: 'John Doe',
-                                            eventName: 'Tech Conference 2024',
-                                            ticketType: 'VIP Access',
-                                            validUntil: '2024-12-31'
-                                        });
-                                        setError('QR code decoded but data format is not standard');
-                                    }
-                                } else {
-                                    // No QR code found
-                                    setError('No QR code found in the image');
-                                    setExtractedData({
-                                        ticketId: '',
-                                        attendeeName: '',
-                                        eventName: '',
-                                        ticketType: '',
-                                        validUntil: ''
-                                    });
-                                }
-                            } catch (error) {
-                                setError('Error processing QR code: ' + error.message);
-                                setExtractedData({
-                                    ticketId: '',
-                                    attendeeName: '',
-                                    eventName: '',
-                                    ticketType: '',
-                                    validUntil: ''
-                                });
-                            }
-
-                            setTimeout(() => {
-                                setProcessing(false);
-                            }, 500);
-                            return 90;
+                        try {
+                            const qrData = JSON.parse(qrCode.data);
+                            setExtractedData({
+                                ticketId: qrData.ticketId || 'TKT-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                                attendeeName: qrData.attendeeName || 'John Doe',
+                                eventName: qrData.eventName || 'Tech Conference 2024',
+                                ticketType: qrData.ticketType || 'VIP Access',
+                                validUntil: qrData.validUntil || '2024-12-31'
+                            });
+                            setError('');
+                        } catch {
+                            setExtractedData({
+                                ticketId: qrCode.data,
+                                attendeeName: 'John Doe',
+                                eventName: 'Tech Conference 2024',
+                                ticketType: 'VIP Access',
+                                validUntil: '2024-12-31'
+                            });
+                            setError('QR code decoded but data format is not standard');
                         }
-                        return prev + 3;
+                    } else {
+                        setError('No QR code found in the image');
+                        setExtractedData({
+                            ticketId: '',
+                            attendeeName: '',
+                            eventName: '',
+                            ticketType: '',
+                            validUntil: ''
+                        });
+                    }
+                } catch (error) {
+                    setError('Error processing QR code: ' + error.message);
+                    setExtractedData({
+                        ticketId: '',
+                        attendeeName: '',
+                        eventName: '',
+                        ticketType: '',
+                        validUntil: ''
                     });
-                }, 80);
+                }
+
+                setProcessing(false);
             };
             img.src = e.target.result;
         };
         reader.readAsDataURL(file);
     };
+
 
     const handleDataChange = (field, value) => {
         setExtractedData(prev => ({
