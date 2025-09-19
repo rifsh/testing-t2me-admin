@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import QRScanner from './QRScanner';
 
 const RightScannerSection = ({ processing, uploadedFile, decodedValue }) => {
     const scannerSectionStyle = {
@@ -35,12 +36,12 @@ const RightScannerSection = ({ processing, uploadedFile, decodedValue }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="ms-10 w-full max-w-sm bg-white bg-opacity-10 rounded-2xl p-8 backdrop-blur-sm border border-white border-opacity-20"
+                className="ms-10 w-full h-full max-w-sm bg-opacity-10 rounded-2xl p-1 backdrop-blur-sm"
             >
-                <div className="relative w-full h-72 perspective-1000">
+                <div className="relative w-full h-full perspective-1000">
                     {/* Front side - QR Code Display */}
                     <motion.div
-                        className="absolute w-full h-full bg-white rounded-xl flex justify-center items-center flex-col overflow-hidden shadow-xl backface-hidden"
+                        className="absolute w-full h-full rounded-xl flex justify-center items-center flex-col overflow-hidden backface-hidden"
                         initial={false}
                         animate={{ rotateY: isFlipped ? 180 : 0 }}
                         transition={{ duration: 0.6 }}
@@ -80,7 +81,7 @@ const RightScannerSection = ({ processing, uploadedFile, decodedValue }) => {
                                 transition={{ delay: 0.2 }}
                                 className="text-center text-gray-600"
                             >
-                                <motion.div
+                                {/* <motion.div
                                     animate={{
                                         scale: [1, 1.1, 1],
                                         rotate: [0, 5, -5, 0]
@@ -96,74 +97,15 @@ const RightScannerSection = ({ processing, uploadedFile, decodedValue }) => {
                                         <path fillRule="evenodd" d="M3 4a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 2V5h1v1H5zM3 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3zm2 2v-1h1v1H5zM13 3a1 1 0 00-1 1v3a1 1 0 001 1h3a1 1 0 001-1V4a1 1 0 00-1-1h-3zm1 2v1h1V5h-1z" clipRule="evenodd" />
                                         <path d="M11 4a1 1 0 10-2 0v1a1 1 0 002 0V4zM10 7a1 1 0 011 1v1h2a1 1 0 110 2h-3a1 1 0 01-1-1V8a1 1 0 01-1-1zM16 10a1 1 0 100-2H4a1 1 0 100 2h12zM9 13a1 1 0 011-1h1a1 1 0 110 2v2a1 1 0 11-2 0v-3zM7 16a1 1 0 01-1-1v-2a1 1 0 112 0v2a1 1 0 01-1 1zM15 16a1 1 0 01-1-1v-2a1 1 0 112 0v2a1 1 0 01-1 1z" />
                                     </svg>
-                                </motion.div>
-                                <p>Upload a QR Code to preview</p>
+                                </motion.div> */}
+                                <div>
+                                    <QRScanner />
+                                </div>
                             </motion.div>
                         )}
                     </motion.div>
 
-                    {/* Back side - Decoded Value Display */}
-                    <motion.div
-                        className="absolute w-full h-full bg-gradient-to-br from-purple-600 to-blue-500 rounded-xl flex flex-col justify-center items-center p-4 backface-hidden shadow-xl"
-                        initial={false}
-                        animate={{ rotateY: isFlipped ? 0 : -180 }}
-                        transition={{ duration: 0.6 }}
-                        style={{ transformStyle: 'preserve-3d', transform: 'rotateY(180deg)' }}
-                    >
-                        <motion.h3
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="text-white text-xl font-semibold mb-2 text-center"
-                        >
-                            Decoded Content
-                        </motion.h3>
-
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.4 }}
-                            className="bg-black bg-opacity-30 rounded-lg p-3 w-full max-w-xs mb-4"
-                        >
-                            <motion.p
-                                className="text-white text-lg font-mono break-all text-center"
-                            >
-                                {decodedValue}
-                            </motion.p>
-                        </motion.div>
-
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handleFlip}
-                            className="bg-white text-purple-600 px-4 py-2 rounded-full font-medium text-sm mt-2"
-                        >
-                            View QR Code
-                        </motion.button>
-                    </motion.div>
                 </div>
-
-                {/* Flip button (only shown when there's a decoded value) */}
-                <AnimatePresence>
-                    {showDecoded && !isFlipped && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            transition={{ delay: 0.5 }}
-                            className="flex justify-center mt-4"
-                        >
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={handleFlip}
-                                className="bg-white text-[#f20c32] px-4 py-2 rounded-full font-medium text-sm"
-                            >
-                                View Decoded Content
-                            </motion.button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
             </motion.div>
         </div>
     );

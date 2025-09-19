@@ -504,7 +504,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "event.schedule.add-on": {
     key: "schedule.list",
-    path: `${APP_PREFIX_PATH}/qr-scanner`,
+    path: `${APP_PREFIX_PATH}/qr-scanner/:type`,
     component: React.lazy(() => import("views/qr-scanner")),
     category: "services",
     subcategory: "event",

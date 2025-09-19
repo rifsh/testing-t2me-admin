@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Select, Input, Button, Menu, message, Collapse, } from "antd";
+import { Card, Table, Select, Input, Button, Menu, message, Collapse, Tooltip, Space, } from "antd";
 import { EyeOutlined, FormOutlined, EditOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -27,8 +27,9 @@ import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice";
-import { PERMISSIONS } from "constants/RolesPermissionConstants";
+import { PERMISSIONS, ROLES } from "constants/RolesPermissionConstants";
 import usePermissions from "utils/hooks/usePermissions";
+import AddOnsModal from "views/qr-scanner/components/Modal";
 const { Panel } = Collapse;
 
 const { Option } = Select;
@@ -61,6 +62,8 @@ const EventsList = () => {
   }
   const handlePagination = usePaginationHook(fetchAllEvent);
   const { hasPermission, hasAnyPermission } = usePermissions();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
     dispatch(fetchAllEvent(eventParams));
@@ -102,21 +105,21 @@ const EventsList = () => {
     dispatch(setStatusDialogVisible(true));
   };
 
-  const handleVerifyEvent = (id) => {
-    console.log("Verify Event:", id);
-    // Add your verify event logic here
-    message.success(`Event ${id} verified successfully`);
+  const handleVerifyEvent = (data) => {
+    console.log("Verify Event:", data);
+    navigate(`${APP_PREFIX_PATH}/qr-scanner/event`);
   };
 
-  const handleVerifyAddon = (id) => {
-    console.log("Verify Addon for Event:", id);
-    // Add your verify addon logic here
-    message.success(`Addon for event ${id} verified successfully`);
+  const handleVerifyAddon = (data) => {
+    console.log("Verify Addon for Event:", data);
+    showAddonModal(data);
   };
 
-  // const handlePagination = (page, size) => {
-  //   dispatch(fetchAllEvent({ page: page, size: size, event_type: EVENT_TYPES.event }));
-  // };
+  const showAddonModal = (event) => {
+    setSelectedEvent(event);
+    setModalVisible(true);
+  };
+
 
   const handleModalSubmit = async () => {
     dispatch(setModalLoading(true));
@@ -142,14 +145,14 @@ const EventsList = () => {
           <span className="ml-2">Edit Event</span>
         </Flex>
       </Menu.Item>}
-      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT) && <Menu.Item>
+      {/* {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT) && <Menu.Item>
         <Flex alignItems="center" onClick={() => {
           navigate(`${APP_PREFIX_PATH}/qr-scanner`);
         }}>
           <EditOutlined />
           <span className="ml-2">QR code</span>
         </Flex>
-      </Menu.Item>}
+      </Menu.Item>} */}
     </Menu>
   );
 
@@ -177,8 +180,7 @@ const EventsList = () => {
         <Collapse defaultActiveKey={[]} accordion>
           {record?.venues && record.venues.length > 0 ? (
             record.venues.map((venue, index) => (
-              // extra={<span>{venue.place.name}</span>}
-              <Panel header={venue.name} key={index} >
+              <Panel header={venue.name} key={index}>
                 <ul style={{ paddingLeft: 20 }}>
                   <li style={{ padding: "10px 0" }}>
                     <div>
@@ -192,46 +194,74 @@ const EventsList = () => {
               </Panel>
             ))
           ) : (
-            <Panel collapsible="disabled" header={"No venue available"}></Panel>
+            <Panel collapsible="disabled" header={"No venue available"} />
           )}
         </Collapse>
       ),
     },
 
-    utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT_STATUS)),
+    utils.statusColumnUtil(
+      handleUpdateStatus,
+      !hasPermission(
+        PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT_STATUS
+      )
+    ),
+
+    {
+      title: "",
+      dataIndex: "qrHandler",
+      width: 200,
+      align: 'center',
+      render: (_, elm) => (
+        <Space size={'small'} className="text-right">
+          {/* Verify Event Button */}
+          {currentUser?.role_id === ROLES.EVENT_ORGANIZER && elm?.jsonb_add_ons?.length > 0 && (
+            <>
+              <Tooltip title="Verify Event">
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<CheckCircleOutlined />}
+                  onClick={() => handleVerifyEvent(elm)}
+                  style={{
+                    borderRadius: '6px',
+                    background: '#52c41a',
+                    borderColor: '#52c41a'
+                  }}
+                >
+                  Verify
+                </Button>
+              </Tooltip>
+
+              <Tooltip title="Verify Addon">
+                <Button
+                  size="small"
+                  icon={<CheckCircleOutlined />}
+                  onClick={() => handleVerifyAddon(elm)}
+                  style={{ borderRadius: '6px' }}
+                >
+                  Verify Addon
+                </Button>
+              </Tooltip>
+            </>
+          )}
+        </Space>
+      ),
+    },
     {
       title: "",
       dataIndex: "actions",
       render: (_, elm) => (
         <div className="text-right">
-          {/* Verify Event Button */}
-          <Button
-            type="primary"
-            size="small"
-            icon={<CheckCircleOutlined />}
-            onClick={() => handleVerifyEvent(elm.id)}
-            style={{ marginRight: 8 }}
-          >
-            Verify Event
-          </Button>
-
-          {/* Verify Addon Button */}
-          <Button
-            type="default"
-            size="small"
-            icon={<CheckCircleOutlined />}
-            onClick={() => handleVerifyAddon(elm.id)}
-          >
-            Verify Addon
-          </Button>
-
-          {hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT, PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.GET_EVENT_DETAIL]) && (
-            <EllipsisDropdown menu={dropdownMenu(elm)} />
-          )}
+          {hasAnyPermission([
+            PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT,
+            PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.GET_EVENT_DETAIL,
+          ]) && <EllipsisDropdown menu={dropdownMenu(elm)} />}
         </div>
       ),
     },
   ];
+
   const [searchTerm, setSearchTerm] = useState();
   const [activeStatus, setactiveStatus] = useState();
   const handleSearch = (value) => {
@@ -382,6 +412,43 @@ const EventsList = () => {
         pageData={DEFAULT_PAGE_SIZE}
         onSubmitMessage={TextConstants.StatusUpdatedSuccess}
         onCloseMessage={TextConstants.StatusUpdateCanceled}
+      />
+      <style jsx global>{`
+        .table-row-light {
+          background-color: #ffffff !important;
+        }
+        .table-row-dark {
+          background-color: #fafafa !important;
+        }
+        .ant-table-thead > tr > th {
+          background: #f8f9fa !important;
+          border-bottom: 2px solid #e8e8e8 !important;
+          font-weight: 600 !important;
+          color: #262626 !important;
+          padding: 16px 24px !important;
+        }
+        .ant-table-tbody > tr > td {
+          padding: 16px 24px !important;
+          border-bottom: 1px solid #f0f0f0 !important;
+        }
+        .ant-table-tbody > tr:hover > td {
+          background: #f0f9ff !important;
+        }
+        .ant-collapse-ghost > .ant-collapse-item {
+          border-bottom: none !important;
+        }
+        .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-header {
+          padding: 8px 12px !important;
+        }
+        .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
+          padding: 8px 12px !important;
+        }
+      `}</style>
+
+      <AddOnsModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        eventData={selectedEvent}
       />
     </Card>
   );

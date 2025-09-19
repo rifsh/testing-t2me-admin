@@ -2,8 +2,10 @@ import { useState, useRef } from "react";
 import jsQR from "jsqr";
 import LeftContentSection from "./components/LeftContentSection";
 import RightScannerSection from "./components/RightScannerSection";
+import { useParams } from "react-router-dom";
 
 const ScannerApp = () => {
+    const { type } = useParams();
     const [processing, setProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
     const [extractedData, setExtractedData] = useState({
@@ -116,6 +118,7 @@ const ScannerApp = () => {
 
             <div className="w-full max-w-6xl h-[80vh] bg-white rounded-3xl shadow-2xl flex overflow-hidden">
                 <LeftContentSection
+                    scannerType={type}
                     processing={processing}
                     progress={progress}
                     extractedData={extractedData}

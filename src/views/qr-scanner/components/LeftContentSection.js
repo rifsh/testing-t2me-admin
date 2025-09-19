@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ENTRY_TYPES, SCANNER_TYPES } from 'constants/QrConstants';
+import { useDispatch, useSelector } from 'react-redux';
+import { setServiceType } from 'store/slices/qrVerificationSlice';
 
 const LeftContentSection = ({
+    scannerType,
     processing,
     progress,
     extractedData,
@@ -9,9 +13,9 @@ const LeftContentSection = ({
     handleFileUpload,
     handleDataChange
 }) => {
-    const [serviceType, setServiceType] = useState('entry'); // 'entry' or 'addon'
+    const dispatch = useDispatch();
+    const { serviceType } = useSelector((state) => state.qr);
 
-    // Animation variants
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -77,7 +81,7 @@ const LeftContentSection = ({
             </motion.div>
 
             {/* Modern Service Type Toggle */}
-            <motion.div className="mb-8" variants={itemVariants}>
+            {scannerType === SCANNER_TYPES.addon && < motion.div className="mb-8" variants={itemVariants}>
                 <label className="block text-gray-700 text-sm font-bold mb-4 text-center">
                     Select Service Type
                 </label>
@@ -87,23 +91,23 @@ const LeftContentSection = ({
                         variants={toggleVariants}
                     >
                         <motion.button
-                            className={`relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 focus:outline-red-700 ${serviceType === 'entry'
+                            className={`relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 focus:outline-red-700 ${serviceType === ENTRY_TYPES.user
                                 ? 'text-white shadow-md bg-[#f20c32]'
                                 : 'text-gray-600 hover:text-gray-800'
                                 }`}
                             style={{
-                                backgroundColor: serviceType === 'entry' ? '#f20c32' : 'transparent',
+                                backgroundColor: serviceType === ENTRY_TYPES.user ? '#f20c32' : 'transparent',
                                 width: '120px'
                             }}
-                            onClick={() => setServiceType('entry')}
+                            onClick={() => dispatch(setServiceType(ENTRY_TYPES.user))}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
                             Entry
-                            {serviceType === 'entry' && (
+                            {serviceType === ENTRY_TYPES.user && (
                                 <motion.svg
                                     className="w-5 h-5 absolute -top-2 -right-2"
-                                    fill={`${serviceType === 'entry' ? '#efbf04' : 'currentColor'}`}
+                                    fill={`${serviceType === ENTRY_TYPES.user ? '#efbf04' : 'currentColor'}`}
                                     viewBox="0 0 20 20"
                                     initial={{ scale: 0, rotate: -180 }}
                                     animate={{ scale: 1, rotate: 0 }}
@@ -114,23 +118,23 @@ const LeftContentSection = ({
                             )}
                         </motion.button>
                         <motion.button
-                            className={`relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 focus:outline-red-700 ${serviceType === 'addon'
+                            className={`relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 focus:outline-red-700 ${serviceType === ENTRY_TYPES.addon
                                 ? 'text-white shadow-md bg-[#f20c32]'
                                 : 'text-gray-600 hover:text-gray-800'
                                 }`}
                             style={{
-                                backgroundColor: serviceType === 'addon' ? '#f20c32' : 'transparent',
+                                backgroundColor: serviceType === ENTRY_TYPES.addon ? '#f20c32' : 'transparent',
                                 width: '120px'
                             }}
-                            onClick={() => setServiceType('addon')}
+                            onClick={() => dispatch(setServiceType(ENTRY_TYPES.addon))}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
                             Add-On
-                            {serviceType === 'addon' && (
+                            {serviceType === ENTRY_TYPES.addon && (
                                 <motion.svg
                                     className="w-5 h-5 absolute -top-2 -right-2"
-                                    fill={`${serviceType === 'addon' ? '#efbf04' : 'currentColor'}`}
+                                    fill={`${serviceType === ENTRY_TYPES.addon ? '#efbf04' : 'currentColor'}`}
                                     viewBox="0 0 20 20"
                                     initial={{ scale: 0, rotate: -180 }}
                                     animate={{ scale: 1, rotate: 0 }}
@@ -144,13 +148,13 @@ const LeftContentSection = ({
                 </div>
                 <AnimatePresence mode="wait">
                     <p className="text-gray-600 text-sm mt-3 text-center">
-                        {serviceType === 'entry'
+                        {serviceType === ENTRY_TYPES.user
                             ? 'Scanning for event entry validation'
                             : 'Scanning to unlock add-on services and experiences'}
                     </p>
 
                 </AnimatePresence>
-            </motion.div>
+            </motion.div>}
 
             <motion.p
                 className="text-gray-600 text-lg leading-relaxed mb-6"
@@ -215,7 +219,7 @@ const LeftContentSection = ({
                     </motion.div>
                 )}
             </AnimatePresence>
-        </motion.div>
+        </motion.div >
     );
 };
 
