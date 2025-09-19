@@ -45,7 +45,7 @@ const VenueList = () => {
   const { responseData } = useSelector((state) => state.modalSlice);
   const {
     filteredVenues,
-    pagination,
+    listPagination: pagination,
     loading,
     places,
     editable_status,
@@ -165,7 +165,7 @@ const VenueList = () => {
     <Card>
       <Row gutter={16} justify={"space-between"} style={{ marginBottom: 16 }}>
         {/* <Col xs={24} sm={8}> */}
-          {/* <PlaceWithCountryForm
+        {/* <PlaceWithCountryForm
             allPlaceVisible={true}
             form={form}
             // onSelect={(id) => handleSelectPlace(id)}

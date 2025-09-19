@@ -41,6 +41,7 @@ export const initialState = {
   ValidateData: null,
   placeValidationDialogVisible: false,
   pagination: { size: 10, page: 1 },
+  listPagination: { size: 10, page: 1 },
   editItemId: null,
 };
 
@@ -466,6 +467,7 @@ const locationSlice = createSlice({
         state.venues = action.payload.items;
         state.filteredVenues = action.payload.items;
         state.pagination = action.payload;
+        state.listPagination = action.payload;
       })
       .addCase(getVenues.rejected, (state, action) => {
         state.loading = false;
