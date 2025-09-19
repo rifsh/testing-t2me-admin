@@ -305,7 +305,7 @@ const VenueFormFields = ({ mode, venue }) => {
               <div className="flex ">
                 <DraftSystem
                   form={form}
-                  formType="place"
+                  formType="venue"
                   mode={mode}
                   titleField="name"
                   excludeFromDraft={["id", "created_at"]}
