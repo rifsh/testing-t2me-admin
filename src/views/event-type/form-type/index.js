@@ -21,6 +21,7 @@ import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import LoadingOverlay from "components/util-components/Loader/index";
 import { ActionType } from "utils/api/warning-submit-util";
 import BackButton from "components/Buttons/BackPageButoon";
+import DraftSystem from "drafts/components/DraftSystem";
 
 const EventTypeForm = ({ mode, typeId }) => {
   const {
@@ -117,7 +118,15 @@ const EventTypeForm = ({ mode, typeId }) => {
                 {mode === "ADD" ? "Add New Type" : "Edit Type"}
               </h2>
               <div className="mb-3 flex">
-                <BackButton />
+                <DraftSystem
+                  form={form}
+                  formType="event-type"
+                  mode={mode}
+                  titleField="name"
+                  excludeFromDraft={["id", "created_at"]}
+                  style={{ marginRight: 12, display: "inline-block" }}
+                  enableAutoSave={mode !== "EDIT"}
+                />
                 <DiscardButton form={form} />
                 <Button
                   type="primary"

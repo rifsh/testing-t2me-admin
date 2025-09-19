@@ -13,6 +13,7 @@ import {
   UNAUTHENTICATED_ENTRY,
 } from "./AppConfig";
 import EventBookingInfo from "views/event/components/BookingInfo";
+import { EVENT_SECTIONS } from "constants/AppConstants";
 
 export const isOrganizer = () => {
   const currentUser = getCurrentUser();
@@ -182,5 +183,28 @@ export const AUTHENTICATED_ENTRY = () => {
       return `${APP_PREFIX_PATH}/category/list`;
     default:
       return `${APP_PREFIX_PATH}/super-admin/reports`;
+  }
+};
+export const getRoleBasedEventSections = () => {
+  const currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    console.error("User not authenticated");
+    return []; // or redirect to login
+  }
+
+  switch (currentUser.role_id) {
+    case UserRoleConstants.superAdminRoleId:
+      return EVENT_SECTIONS;
+
+    case UserRoleConstants.techAdminRoleId:
+      return EVENT_SECTIONS;
+
+    case UserRoleConstants.eventOrganizerRoleId:
+      return EVENT_SECTIONS.filter((item) => item.key === "basic");
+
+    default:
+      console.warn("Unknown role ID:", currentUser.role_id);
+      return EVENT_SECTIONS;
   }
 };
