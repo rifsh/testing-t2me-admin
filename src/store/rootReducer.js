@@ -36,6 +36,7 @@ import movieScheduleSlice from "./slices/movieScheduleSlice";
 import report from "./slices/reportSlice"; // Adjust path if needed
 import FilterSlice from "./slices/fliterSlice";
 import orderSlice from "./slices/ordersSlice";
+import qr from "./slices/qrVerificationSlice";
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -76,6 +77,7 @@ const rootReducer = (asyncReducers = {}) => {
       report,
       filter: FilterSlice,
       orderSlice,
+      qr,
       ...asyncReducers,
     });
 

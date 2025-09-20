@@ -502,6 +502,14 @@ const ALL_PROTECTED_ROUTES = {
     subcategory: "event",
     item: "schedule",
   },
+  "event.schedule.add-on": {
+    key: "schedule.list",
+    path: `${APP_PREFIX_PATH}/qr-scanner/:type/:eventId`,
+    component: React.lazy(() => import("views/qr-scanner")),
+    category: "services",
+    subcategory: "event",
+    item: "schedule",
+  },
   "event.schedule.add": {
     key: "schedule.add",
     path: `${APP_PREFIX_PATH}/schedule/add`,
@@ -1323,6 +1331,24 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() =>
       import(
         "views/app-views/apps/organizer/reports/theater-details/movie-details"
+      )
+    ),
+  },
+  "user.consumes": {
+    key: "user.consumes.list",
+    path: `${APP_PREFIX_PATH}/user/consumes/:id/:eventId`,
+    component: React.lazy(() =>
+      import(
+        "views/consumes/user-consumes/list-user"
+      )
+    ),
+  },
+  "food.consumes": {
+    key: "food.consumes.list",
+    path: `${APP_PREFIX_PATH}/food/consumes/:id`,
+    component: React.lazy(() =>
+      import(
+        "views/consumes/food-consumes/list-food"
       )
     ),
   },

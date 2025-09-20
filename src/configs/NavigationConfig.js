@@ -878,6 +878,7 @@ const ROLE_NAVIGATION_ACCESS = {
 
     // Event Services
     "event.list",
+    "event.schedule.add-on",
 
     // Movie Services (limited access)
     "movie.offer",
@@ -963,6 +964,7 @@ const ROLE_NAVIGATION_ACCESS = {
   [UserRoleConstants.eventSupportingTeamRoleId]: [
     // Event Services
     "event.list",
+    "event.schedule.add-on",
 
     // Movie Services (limited access)
     "movie.offer",

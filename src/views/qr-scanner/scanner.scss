@@ -1,0 +1,504 @@
+// QRScanner.scss
+.qr-scanner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    color: #333;
+}
+
+.scanner-header {
+    text-align: center;
+    margin-bottom: 20px;
+
+    h2 {
+        margin: 0 0 8px 0;
+        font-weight: 600;
+        color: #ffffff;
+    }
+
+    p {
+        margin: 0;
+        color: #e3e3e3;
+    }
+}
+
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    background-color: #000;
+}
+
+.qr-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+
+    &.paused {
+        opacity: 0.7;
+        filter: grayscale(1);
+    }
+}
+
+.camera-permission-denied {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+
+    .permission-message {
+        text-align: center;
+        padding: 20px;
+
+        i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        button {
+            margin-top: 16px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+
+            &:hover {
+                background-color: #2980b9;
+            }
+        }
+    }
+}
+
+.scanning-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.scan-frame {
+    width: 70%;
+    height: 70%;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    position: relative;
+
+    .corner {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-color: #3498db;
+        border-style: solid;
+
+        &.top-left {
+            top: -2px;
+            left: -2px;
+            border-width: 4px 0 0 4px;
+            border-radius: 12px 0 0 0;
+        }
+
+        &.top-right {
+            top: -2px;
+            right: -2px;
+            border-width: 4px 4px 0 0;
+            border-radius: 0 12px 0 0;
+        }
+
+        &.bottom-left {
+            bottom: -2px;
+            left: -2px;
+            border-width: 0 0 4px 4px;
+            border-radius: 0 0 0 12px;
+        }
+
+        &.bottom-right {
+            bottom: -2px;
+            right: -2px;
+            border-width: 0 4px 4px 0;
+            border-radius: 0 0 12px 0;
+        }
+    }
+
+    .scan-line {
+        position: absolute;
+        height: 2px;
+        width: 100%;
+        background: linear-gradient(to right, transparent, #3498db, transparent);
+        top: 50%;
+        animation: scan 2s linear infinite;
+
+        @keyframes scan {
+            0% {
+                top: 20%;
+            }
+
+            50% {
+                top: 80%;
+            }
+
+            100% {
+                top: 20%;
+            }
+        }
+    }
+}
+
+.error-message {
+    margin: 16px 0;
+    padding: 12px;
+    background-color: #ffecec;
+    color: #e74c3c;
+    border-radius: 8px;
+    width: 100%;
+    text-align: center;
+}
+
+.scanner-controls {
+    display: flex;
+    gap: 12px;
+    margin: 20px 0;
+
+    .control-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &.start {
+            background-color: #2ecc71;
+            color: white;
+
+            &:hover {
+                background-color: #27ae60;
+            }
+        }
+
+        &.stop {
+            background-color: #e74c3c;
+            color: white;
+
+            &:hover {
+                background-color: #c0392b;
+            }
+        }
+
+        &.switch-camera {
+            background-color: #f1f1f1;
+            color: #333;
+
+            &:hover {
+                background-color: #e0e0e0;
+            }
+        }
+    }
+}
+
+.scan-result {
+    width: 100%;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    margin-top: 20px;
+
+    h3 {
+        margin: 0 0 12px 0;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .scanned-text {
+        padding: 12px;
+        background-color: white;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        word-break: break-all;
+        margin-bottom: 16px;
+    }
+
+    .copy-button {
+        padding: 10px 16px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+
+        &:hover {
+            background-color: #2980b9;
+        }
+    }
+}
+
+// Icon styles using pseudo-elements
+.icon-camera-off:before {
+    content: "📷";
+}
+
+.icon-play:before {
+    content: "▶";
+}
+
+.icon-stop:before {
+    content: "⏹";
+}
+
+.icon-camera-switch:before {
+    content: "🔄";
+}
+
+.qr-warning-modal {
+    .ant-modal-content {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .ant-modal-body {
+        padding: 0;
+    }
+
+    .modal-content {
+        text-align: center;
+        padding: 24px;
+
+        .warning-icon {
+            font-size: 48px;
+            color: #faad14;
+            margin-bottom: 16px;
+        }
+
+        h3 {
+            color: #d48806;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+    }
+}
+
+.scan-status {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    z-index: 10;
+    border-radius: 12px;
+
+    .status-text {
+        margin-top: 16px;
+        font-weight: 500;
+        font-size: 18px;
+    }
+
+    // Loading spinner animation
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    }
+
+    // Success checkmark animation
+    .success-checkmark {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #2ecc71;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        animation: scaleUp 0.3s ease-in-out;
+
+        @keyframes scaleUp {
+            0% {
+                transform: scale(0);
+            }
+
+            70% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    }
+
+    // Error cross animation
+    .error-cross {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #e74c3c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        animation: pulse 0.5s ease-in-out;
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    }
+}
+
+// Video status classes
+.qr-video {
+    transition: filter 0.3s ease;
+
+    &.scanning {
+        filter: brightness(0.7);
+    }
+
+    &.success {
+        filter: sepia(1) hue-rotate(60deg) brightness(0.9);
+    }
+
+    &.error {
+        filter: sepia(1) hue-rotate(320deg) brightness(0.9);
+    }
+}
+
+// Add these to your existing scan-line animation
+.scan-line {
+    // ... existing code
+
+    // Add pause animation when not scanning
+    .qr-video:not(.scanning) & {
+        animation-play-state: paused;
+        opacity: 0.5;
+    }
+
+    // Change color based on status
+    .success & {
+        background: linear-gradient(to right, transparent, #2ecc71, transparent);
+    }
+
+    .error & {
+        background: linear-gradient(to right, transparent, #e74c3c, transparent);
+    }
+}
+
+// Corner colors based on status
+.scan-frame {
+    // ... existing code
+
+    .success & .corner {
+        border-color: #2ecc71;
+    }
+
+    .error & .corner {
+        border-color: #e74c3c;
+        animation: blink 0.5s infinite;
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+    }
+}
+
+// Modal enhancements
+.qr-warning-modal {
+    .modal-actions {
+        button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+
+            &:first-child {
+                background-color: #3498db;
+                color: white;
+
+                &:hover {
+                    background-color: #2980b9;
+                }
+            }
+
+            &:last-child {
+                background-color: #e74c3c;
+                color: white;
+
+                &:hover {
+                    background-color: #c0392b;
+                }
+            }
+        }
+    }
+}

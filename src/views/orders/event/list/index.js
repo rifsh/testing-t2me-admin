@@ -336,7 +336,7 @@ const OrdersList = () => {
 
     dispatch(getEventOrders(params));
     dispatch(getEventOrderSummary({}));
-    dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event })); // reload event dropdown
+    dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
   };
 
 
