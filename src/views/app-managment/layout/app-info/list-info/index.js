@@ -28,6 +28,7 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { TextConstants } from "constants/TextConstant";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import CDNImage from "components/layout-components/Image/CDNImage";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -55,10 +56,16 @@ const AppInfoList = () => {
       dataIndex: ["details", "under_maintenance", "maintenance_image"],
       render: (mediaPath) => {
         return (
-          <img
+          // <img
+          //   src={mediaPath}
+          //   alt="Image Thumbnail"
+          //   style={{ width: 80, height: 50 }}
+          // />
+          <CDNImage
             src={mediaPath}
-            alt="Image Thumbnail"
-            style={{ width: 80, height: 50 }}
+            alt={`Image Thumbnail`}
+            height={50}
+            width={80}
           />
         );
       },
@@ -69,10 +76,11 @@ const AppInfoList = () => {
       dataIndex: ["details", "under_maintenance", "isComingSoonImage"],
       render: (mediaPath) => {
         return (
-          <img
+          <CDNImage
             src={mediaPath}
-            alt="Image Thumbnail"
-            style={{ width: 80, height: 50 }}
+            alt={`Image Thumbnail`}
+            height={100}
+            width={100}
           />
         );
       },
@@ -91,11 +99,11 @@ const AppInfoList = () => {
       ),
       sorter: (a, b) =>
         a.record.details.under_maintenance.enabled ===
-        b.record.details.under_maintenance.enabled
+          b.record.details.under_maintenance.enabled
           ? 0
           : a.record.details.under_maintenance.enabled
-          ? -1
-          : 1,
+            ? -1
+            : 1,
       sortDirections: ["ascend", "descend"],
     },
     {
@@ -115,11 +123,11 @@ const AppInfoList = () => {
       ),
       sorter: (a, b) =>
         a.record.details.under_maintenance.isComingSoonFlag ===
-        b.record.details.under_maintenance.isComingSoonFlag
+          b.record.details.under_maintenance.isComingSoonFlag
           ? 0
           : a.record.details.under_maintenance.isComingSoonFlag
-          ? -1
-          : 1,
+            ? -1
+            : 1,
       sortDirections: ["ascend", "descend"],
     },
     {

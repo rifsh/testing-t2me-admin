@@ -36,7 +36,7 @@ import { fetchAppInfo, updateInfo } from "store/slices/AppInfoSlice";
 import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { RulesMessageConstants } from "constants/RulesConstant";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import LoadingOverlay from "components/util-components/Loader/index";
 import { filterOption } from "components/util-components/FormItems/dropDownSearch";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
@@ -78,38 +78,39 @@ const TaxFormFields = ({ mode, tax }) => {
         appstore_url: maintenanceData.appstore_url,
         isComingSoonImage:
           maintenanceData.isComingSoonImage &&
-          maintenanceData.isComingSoonImage !== "images"
+            maintenanceData.isComingSoonImage !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: maintenanceData.isComingSoonImage.split("/").pop(),
-                  status: "done",
-                  url: maintenanceData.isComingSoonImage,
-                },
-              ]
+              {
+                uid: "-1",
+                name: maintenanceData.isComingSoonImage.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${maintenanceData.isComingSoonImage}`,
+              },
+            ]
             : [],
         banner:
           maintenanceData.banner &&
-          Array.isArray(maintenanceData.banner) &&
-          maintenanceData.banner.length > 0
+            Array.isArray(maintenanceData.banner) &&
+            maintenanceData.banner.length > 0
             ? maintenanceData.banner.map((url, index) => ({
-                uid: `-${index + 1}`,
-                name: url.split("/").pop(),
-                status: "done",
-                url: url,
-              }))
+              uid: `-${index + 1}`,
+              name: url.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${url}`,
+            }))
             : [],
         maintenance_image:
           maintenanceData.maintenance_image &&
-          maintenanceData.maintenance_image !== "images"
+            maintenanceData.maintenance_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: maintenanceData.maintenance_image.split("/").pop(),
-                  status: "done",
-                  url: maintenanceData.maintenance_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: maintenanceData.maintenance_image.split("/").pop(),
+                status: "done",
+                // url: maintenanceData.maintenance_image,
+                url: `${CDN_PATH}/${maintenanceData.maintenance_image}`,
+              },
+            ]
             : [],
       };
       form.setFieldsValue(formData);
