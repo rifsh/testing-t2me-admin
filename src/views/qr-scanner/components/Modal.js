@@ -9,8 +9,8 @@ import {
 import { APP_PREFIX_PATH, CDN_PATH } from 'configs/AppConfig';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { setServiceType } from 'store/slices/qrVerificationSlice';
-import { ENTRY_TYPES } from 'constants/QrConstants';
+import { setScannerType, setServiceType } from 'store/slices/qrVerificationSlice';
+import { ENTRY_TYPES, SCANNER_TYPES } from 'constants/QrConstants';
 
 const AddOnsModal = ({ visible, onClose, eventData }) => {
     const dispatch = useDispatch();
@@ -20,7 +20,8 @@ const AddOnsModal = ({ visible, onClose, eventData }) => {
 
     const handleAddonClikc = () => {
         dispatch(setServiceType(ENTRY_TYPES.addon));
-        navigate(`${APP_PREFIX_PATH}/qr-scanner/add-ons`);
+        dispatch(setScannerType(SCANNER_TYPES.addon));
+        navigate(`${APP_PREFIX_PATH}/qr-scanner/${SCANNER_TYPES.addon}`);
     }
 
     return (

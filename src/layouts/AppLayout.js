@@ -73,7 +73,7 @@ export const AppLayout = ({ navCollapsed, navType, direction, children }) => {
         return { paddingLeft: getLayoutGutter() }
     }
 
-    if (MAIN_LAYOUT_COMPONENT.includes(location.pathname)) {
+    if (MAIN_LAYOUT_COMPONENT.includes(location.pathname) || location.pathname.includes('consumes')) {
         return (
             <>
                 {children}

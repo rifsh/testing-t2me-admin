@@ -30,6 +30,8 @@ import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice
 import { PERMISSIONS, ROLES } from "constants/RolesPermissionConstants";
 import usePermissions from "utils/hooks/usePermissions";
 import AddOnsModal from "views/qr-scanner/components/Modal";
+import { setScannerType } from "store/slices/qrVerificationSlice";
+import { SCANNER_TYPES } from "constants/QrConstants";
 const { Panel } = Collapse;
 
 const { Option } = Select;
@@ -106,8 +108,8 @@ const EventsList = () => {
   };
 
   const handleVerifyEvent = (data) => {
-    console.log("Verify Event:", data);
-    navigate(`${APP_PREFIX_PATH}/qr-scanner/event`);
+    dispatch(setScannerType(SCANNER_TYPES.event));
+    navigate(`${APP_PREFIX_PATH}/qr-scanner/${SCANNER_TYPES.event}`);
   };
 
   const handleVerifyAddon = (data) => {

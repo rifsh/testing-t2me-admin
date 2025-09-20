@@ -1334,6 +1334,24 @@ const ALL_PROTECTED_ROUTES = {
       )
     ),
   },
+  "user.consumes": {
+    key: "user.consumes.list",
+    path: `${APP_PREFIX_PATH}/user/consumes/:id`,
+    component: React.lazy(() =>
+      import(
+        "views/consumes/user-consumes/list-user"
+      )
+    ),
+  },
+  "food.consumes": {
+    key: "food.consumes.list",
+    path: `${APP_PREFIX_PATH}/food/consumes/:id`,
+    component: React.lazy(() =>
+      import(
+        "views/consumes/food-consumes/list-food"
+      )
+    ),
+  },
 };
 
 // Public routes remain unchanged

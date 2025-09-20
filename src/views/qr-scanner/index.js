@@ -1,10 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import jsQR from "jsqr";
 import LeftContentSection from "./components/LeftContentSection";
 import RightScannerSection from "./components/RightScannerSection";
 import { useParams } from "react-router-dom";
+import { PiTrayArrowUpDuotone } from "react-icons/pi";
+import { setScannerType } from "store/slices/qrVerificationSlice";
+import { useDispatch } from "react-redux";
 
 const ScannerApp = () => {
+    const dispatch = useDispatch();
     const { type } = useParams();
     const [processing, setProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -110,6 +114,10 @@ const ScannerApp = () => {
     const backgroundGradientStyle = {
         background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
     };
+
+    useEffect(() => {
+        dispatch(setScannerType(type));
+    }, [type])
 
     return (
         <div className="min-h-screen p-5 flex justify-center items-center" style={backgroundGradientStyle}>

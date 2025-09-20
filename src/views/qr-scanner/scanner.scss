@@ -274,3 +274,44 @@
 .icon-camera-switch:before {
     content: "🔄";
 }
+
+.qr-warning-modal {
+    .ant-modal-content {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .ant-modal-body {
+        padding: 0;
+    }
+
+    .modal-content {
+        text-align: center;
+        padding: 24px;
+
+        .warning-icon {
+            font-size: 48px;
+            color: #faad14;
+            margin-bottom: 16px;
+        }
+
+        h3 {
+            color: #d48806;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+    }
+}

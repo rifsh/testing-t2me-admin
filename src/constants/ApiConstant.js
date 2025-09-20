@@ -308,5 +308,5 @@ export const ApiConstant = {
 
   //addon-qr-validations
   USER_LIST: '/api/v1/event/add_on/secured/scan/event/booking_ticket/addon_user_and_food/user',
-  ADDON_LIST: '/api/v1/event/add_on/secured/scan/event/booking_ticket/addon_user_and_food',
+  ADDON_LIST: '/api/v1/event/add_on/secured/scan/event/booking_ticket/addon_user_and_food/food',
 };

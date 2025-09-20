@@ -3,18 +3,23 @@ import { useEffect, useRef, useState } from 'react';
 import './../scanner.scss';
 import { message } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
-import { ENTRY_TYPES } from 'constants/QrConstants';
-import { fetchTcketUsers } from 'store/slices/qrVerificationSlice';
+import { ENTRY_TYPES, SCANNER_TYPES } from 'constants/QrConstants';
+import { fetchTcketAddon, fetchTcketUsers } from 'store/slices/qrVerificationSlice';
+import { useNavigate } from 'react-router-dom';
+import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import QrWarningModal from './QrWarningModal';
 
 const QRScanner = (props) => {
     const dispatch = useDispatch();
+    const navigate = useNavigate()
     const videoElementRef = useRef(null);
     const [scanned, setScannedText] = useState('');
     const [isScanning, setIsScanning] = useState(true);
+    const [showWarningModal, setShowWarningModal] = useState(false);
     const [hasPermission, setHasPermission] = useState(null);
     const [cameraError, setCameraError] = useState(null);
     const qrScannerRef = useRef(null);
-    const { serviceType } = useSelector((state) => state.qr);
+    const { serviceType, scannerType } = useSelector((state) => state.qr);
 
     useEffect(() => {
         const video = videoElementRef.current;
@@ -49,21 +54,7 @@ const QRScanner = (props) => {
                             // not JSON, keep as string
                         }
                     }
-
                     setScannedText(parsed);
-                    message.success('Data retrieved');
-
-                    console.log('decoded qr code raw:', result.data);
-                    console.log('decoded qr code parsed:', parsed);
-
-                    // Example: if QR contains {"booking_ticket_id": "123"}
-                    if (parsed?.booking_ticket_id) {
-                        console.log("Booking Ticket ID:", parsed.booking_ticket_id);
-
-                        if (serviceType === ENTRY_TYPES.user) {
-                            dispatch(fetchTcketUsers({ booking_ticket_id: parsed.booking_ticket_id }))
-                        }
-                    }
 
                     if (navigator.vibrate) {
                         navigator.vibrate(200);
@@ -106,6 +97,48 @@ const QRScanner = (props) => {
             }
         };
     }, [hasPermission, props]);
+
+    const userListValidation = async () => {
+        try {
+            const result = await dispatch(
+                fetchTcketUsers({ booking_ticket_id: scanned?.booking_ticket_id })
+            ).unwrap();
+            navigate(`${APP_PREFIX_PATH}/user/consumes/${scanned?.booking_ticket_id}`)
+            console.log("API success:", result);
+            message.success("Ticket verified successfully!");
+        } catch (err) {
+            setShowWarningModal(true);
+            // message.error("Ticket verification failed");
+        }
+    };
+
+    const addonListValidation = async () => {
+        try {
+            const result = await dispatch(
+                fetchTcketAddon({ booking_ticket_id: scanned?.booking_ticket_id })
+            ).unwrap();
+            navigate(`${APP_PREFIX_PATH}/food/consumes/${scanned?.booking_ticket_id}`)
+            console.log("API success:", result);
+            message.success("Ticket verified successfully!");
+        } catch (err) {
+            setShowWarningModal(true);
+            // message.error("Ticket verification failed");
+        }
+    };
+
+    useEffect(() => {
+        if (!scanned) return;
+        if (scannerType === SCANNER_TYPES.addon) {
+            if (serviceType === ENTRY_TYPES.user) {
+                userListValidation();
+            } else {
+                addonListValidation();
+            }
+        } else {
+            message.warning('Event validation')
+        }
+    }, [serviceType, scannerType, scanned, dispatch]);
+
 
 
     return (
@@ -165,6 +198,13 @@ const QRScanner = (props) => {
                     Switch Camera
                 </button>
             </div> */}
+
+            <QrWarningModal
+                isVisible={showWarningModal}
+                onClose={() => setShowWarningModal(false)}
+                // onRetry={handleRetryScan}
+                // errorMessage={errorMessage}
+            />
         </div>
     );
 };

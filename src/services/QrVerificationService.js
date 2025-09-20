@@ -12,6 +12,13 @@ QrVerificationService.getUserData = function (pageData) {
         params: Utils.filterParams(pageData),
     });
 };
+QrVerificationService.getFoodData = function (pageData) {
+    return fetch({
+        url: ApiConstant.ADDON_LIST,
+        method: "get",
+        params: Utils.filterParams(pageData),
+    });
+};
 // QrVerificationService.getPermissionDisplayNames = function (pageData) {
 //     return fetch({
 //         url: ApiConstant.GET_PERSMISSIONS_DISPLAY_NAMES,
