@@ -21,7 +21,7 @@ const AddOnsModal = ({ visible, onClose, eventData }) => {
     const handleAddonClikc = () => {
         dispatch(setServiceType(ENTRY_TYPES.addon));
         dispatch(setScannerType(SCANNER_TYPES.addon));
-        navigate(`${APP_PREFIX_PATH}/qr-scanner/${SCANNER_TYPES.addon}`);
+        navigate(`${APP_PREFIX_PATH}/qr-scanner/${SCANNER_TYPES.addon}/${eventData?.id}`);
     }
 
     return (

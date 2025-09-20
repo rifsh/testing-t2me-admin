@@ -315,3 +315,190 @@
         }
     }
 }
+
+.scan-status {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    z-index: 10;
+    border-radius: 12px;
+
+    .status-text {
+        margin-top: 16px;
+        font-weight: 500;
+        font-size: 18px;
+    }
+
+    // Loading spinner animation
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    }
+
+    // Success checkmark animation
+    .success-checkmark {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #2ecc71;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        animation: scaleUp 0.3s ease-in-out;
+
+        @keyframes scaleUp {
+            0% {
+                transform: scale(0);
+            }
+
+            70% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    }
+
+    // Error cross animation
+    .error-cross {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #e74c3c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        animation: pulse 0.5s ease-in-out;
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    }
+}
+
+// Video status classes
+.qr-video {
+    transition: filter 0.3s ease;
+
+    &.scanning {
+        filter: brightness(0.7);
+    }
+
+    &.success {
+        filter: sepia(1) hue-rotate(60deg) brightness(0.9);
+    }
+
+    &.error {
+        filter: sepia(1) hue-rotate(320deg) brightness(0.9);
+    }
+}
+
+// Add these to your existing scan-line animation
+.scan-line {
+    // ... existing code
+
+    // Add pause animation when not scanning
+    .qr-video:not(.scanning) & {
+        animation-play-state: paused;
+        opacity: 0.5;
+    }
+
+    // Change color based on status
+    .success & {
+        background: linear-gradient(to right, transparent, #2ecc71, transparent);
+    }
+
+    .error & {
+        background: linear-gradient(to right, transparent, #e74c3c, transparent);
+    }
+}
+
+// Corner colors based on status
+.scan-frame {
+    // ... existing code
+
+    .success & .corner {
+        border-color: #2ecc71;
+    }
+
+    .error & .corner {
+        border-color: #e74c3c;
+        animation: blink 0.5s infinite;
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+    }
+}
+
+// Modal enhancements
+.qr-warning-modal {
+    .modal-actions {
+        button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+
+            &:first-child {
+                background-color: #3498db;
+                color: white;
+
+                &:hover {
+                    background-color: #2980b9;
+                }
+            }
+
+            &:last-child {
+                background-color: #e74c3c;
+                color: white;
+
+                &:hover {
+                    background-color: #c0392b;
+                }
+            }
+        }
+    }
+}

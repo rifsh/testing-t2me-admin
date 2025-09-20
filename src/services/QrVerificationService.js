@@ -26,12 +26,14 @@ QrVerificationService.getFoodData = function (pageData) {
 //         params: Utils.filterParams(pageData),
 //     });
 // };
-// QrVerificationService.addPermissionAccess = function (data) {
-//     return fetch({
-//         url: `${ApiConstant.ADD_PERSMISSIONS_ACCESS}`,
-//         method: "put",
-//         data: data,
-//     });
-// };
+QrVerificationService.consumeUsers = function (data, bookingTicketId) {
+    const params = { booking_ticket_id: bookingTicketId }
+    return fetch({
+        url: `${ApiConstant.CONSUME_USER_LIST}`,
+        method: "put",
+        params,
+        data: data,
+    });
+};
 
 export default QrVerificationService;

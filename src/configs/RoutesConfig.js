@@ -504,7 +504,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "event.schedule.add-on": {
     key: "schedule.list",
-    path: `${APP_PREFIX_PATH}/qr-scanner/:type`,
+    path: `${APP_PREFIX_PATH}/qr-scanner/:type/:eventId`,
     component: React.lazy(() => import("views/qr-scanner")),
     category: "services",
     subcategory: "event",
@@ -1336,7 +1336,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "user.consumes": {
     key: "user.consumes.list",
-    path: `${APP_PREFIX_PATH}/user/consumes/:id`,
+    path: `${APP_PREFIX_PATH}/user/consumes/:id/:eventId`,
     component: React.lazy(() =>
       import(
         "views/consumes/user-consumes/list-user"

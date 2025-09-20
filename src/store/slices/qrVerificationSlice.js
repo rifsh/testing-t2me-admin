@@ -8,6 +8,7 @@ const initialState = {
     scannerType: null,
     pagination: { size: 10, page: 1 },
     loading: false,
+    submitLoading: false,
     error: "",
     message: "",
 };
@@ -23,6 +24,18 @@ export const fetchTcketUsers = createAsyncThunk(
         }
     }
 );
+export const cosnumeTicketUsers = createAsyncThunk(
+    "qr/cosnumeTicketUsers",
+    async ({ pageData, bookingTicketId }, { rejectWithValue }) => {
+        try {
+            const response = await QrVerificationService.consumeUsers(pageData, bookingTicketId);
+            return response.data[0];
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Error");
+        }
+    }
+);
+
 export const fetchTcketAddon = createAsyncThunk(
     "qr/fetchTcketAddon",
     async (pageData, { rejectWithValue }) => {
@@ -54,7 +67,7 @@ const qrVerificationSlice = createSlice({
             })
             .addCase(fetchTcketUsers.fulfilled, (state, action) => {
                 state.loading = false;
-                state.response = action.payload?.items;
+                state.response = action.payload;
                 state.pagination = action.payload;
             })
             .addCase(fetchTcketUsers.rejected, (state, action) => {
@@ -72,6 +85,17 @@ const qrVerificationSlice = createSlice({
             .addCase(fetchTcketAddon.rejected, (state, action) => {
                 state.message = action.payload;
                 state.loading = false;
+            })
+            .addCase(cosnumeTicketUsers.pending, (state) => {
+                state.submitLoading = true;
+            })
+            .addCase(cosnumeTicketUsers.fulfilled, (state, action) => {
+                state.submitLoading = false;
+                state.response = action.payload;
+            })
+            .addCase(cosnumeTicketUsers.rejected, (state, action) => {
+                state.message = action.payload;
+                state.submitLoading = false;
             })
     }
 });

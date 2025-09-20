@@ -9,7 +9,7 @@ import { useDispatch } from "react-redux";
 
 const ScannerApp = () => {
     const dispatch = useDispatch();
-    const { type } = useParams();
+    const { type, eventId } = useParams();
     const [processing, setProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
     const [extractedData, setExtractedData] = useState({

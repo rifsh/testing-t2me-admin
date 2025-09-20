@@ -5,12 +5,13 @@ import { message } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { ENTRY_TYPES, SCANNER_TYPES } from 'constants/QrConstants';
 import { fetchTcketAddon, fetchTcketUsers } from 'store/slices/qrVerificationSlice';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import QrWarningModal from './QrWarningModal';
 
 const QRScanner = (props) => {
     const dispatch = useDispatch();
+    const { eventId } = useParams();
     const navigate = useNavigate()
     const videoElementRef = useRef(null);
     const [scanned, setScannedText] = useState('');
@@ -18,6 +19,8 @@ const QRScanner = (props) => {
     const [showWarningModal, setShowWarningModal] = useState(false);
     const [hasPermission, setHasPermission] = useState(null);
     const [cameraError, setCameraError] = useState(null);
+    const [scanStatus, setScanStatus] = useState('idle'); // 'idle', 'scanning', 'success', 'error'
+    const [errorMessage, setErrorMessage] = useState('');
     const qrScannerRef = useRef(null);
     const { serviceType, scannerType } = useSelector((state) => state.qr);
 
@@ -46,6 +49,9 @@ const QRScanner = (props) => {
             video,
             (result) => {
                 try {
+                    // Prevent multiple scans while processing
+                    if (scanStatus === 'scanning') return;
+
                     let parsed = result.data;
                     if (typeof result.data === "string") {
                         try {
@@ -55,6 +61,7 @@ const QRScanner = (props) => {
                         }
                     }
                     setScannedText(parsed);
+                    setScanStatus('scanning');
 
                     if (navigator.vibrate) {
                         navigator.vibrate(200);
@@ -65,6 +72,9 @@ const QRScanner = (props) => {
                     }
                 } catch (err) {
                     console.error("Failed to process scanned QR:", err);
+                    setScanStatus('error');
+                    setErrorMessage('Invalid QR code format');
+                    setTimeout(() => setScanStatus('idle'), 2000);
                 }
             }
             ,
@@ -96,19 +106,25 @@ const QRScanner = (props) => {
                 qrScannerRef.current.destroy();
             }
         };
-    }, [hasPermission, props]);
+    }, [hasPermission, props, scanStatus]);
 
     const userListValidation = async () => {
         try {
             const result = await dispatch(
-                fetchTcketUsers({ booking_ticket_id: scanned?.booking_ticket_id })
+                fetchTcketUsers({ booking_ticket_id: scanned?.booking_ticket_id, event_id: eventId })
             ).unwrap();
-            navigate(`${APP_PREFIX_PATH}/user/consumes/${scanned?.booking_ticket_id}`)
-            console.log("API success:", result);
-            message.success("Ticket verified successfully!");
+            setScanStatus('success');
+            setTimeout(() => {
+                navigate(`${APP_PREFIX_PATH}/user/consumes/${scanned?.booking_ticket_id}/${eventId}`)
+                console.log("API success:", result);
+                message.success("Ticket verified successfully!");
+                setScanStatus('idle');
+            }, 1000);
         } catch (err) {
+            setScanStatus('error');
+            setErrorMessage(err.message || "Ticket verification failed");
             setShowWarningModal(true);
-            // message.error("Ticket verification failed");
+            setTimeout(() => setScanStatus('idle'), 2000);
         }
     };
 
@@ -117,17 +133,24 @@ const QRScanner = (props) => {
             const result = await dispatch(
                 fetchTcketAddon({ booking_ticket_id: scanned?.booking_ticket_id })
             ).unwrap();
-            navigate(`${APP_PREFIX_PATH}/food/consumes/${scanned?.booking_ticket_id}`)
-            console.log("API success:", result);
-            message.success("Ticket verified successfully!");
+            setScanStatus('success');
+            setTimeout(() => {
+                navigate(`${APP_PREFIX_PATH}/food/consumes/${scanned?.booking_ticket_id}`)
+                console.log("API success:", result);
+                message.success("Ticket verified successfully!");
+                setScanStatus('idle');
+            }, 1000);
         } catch (err) {
+            setScanStatus('error');
+            setErrorMessage(err.message || "Ticket verification failed");
             setShowWarningModal(true);
-            // message.error("Ticket verification failed");
+            setTimeout(() => setScanStatus('idle'), 2000);
         }
     };
 
     useEffect(() => {
-        if (!scanned) return;
+        if (!scanned || scanStatus !== 'scanning') return;
+
         if (scannerType === SCANNER_TYPES.addon) {
             if (serviceType === ENTRY_TYPES.user) {
                 userListValidation();
@@ -136,10 +159,18 @@ const QRScanner = (props) => {
             }
         } else {
             message.warning('Event validation')
+            setScanStatus('idle');
         }
-    }, [serviceType, scannerType, scanned, dispatch]);
+    }, [serviceType, scannerType, scanned, dispatch, scanStatus]);
 
-
+    const handleRetryScan = () => {
+        setScanStatus('idle');
+        setScannedText('');
+        setShowWarningModal(false);
+        if (qrScannerRef.current) {
+            qrScannerRef.current.start();
+        }
+    };
 
     return (
         <div className="qr-scanner-container">
@@ -150,7 +181,7 @@ const QRScanner = (props) => {
 
             <div className="video-wrapper">
                 <video
-                    className={`qr-video ${isScanning ? 'scanning' : 'paused'}`}
+                    className={`qr-video ${isScanning ? 'scanning' : 'paused'} ${scanStatus}`}
                     ref={videoElementRef}
                 />
 
@@ -171,6 +202,26 @@ const QRScanner = (props) => {
                             <div className="corner bottom-right"></div>
                             <div className="scan-line"></div>
                         </div>
+
+                        {/* Status indicator */}
+                        {scanStatus !== 'idle' && (
+                            <div className={`scan-status ${scanStatus}`}>
+                                {scanStatus === 'scanning' && (
+                                    <div className="loading-spinner"></div>
+                                )}
+                                {scanStatus === 'success' && (
+                                    <div className="success-checkmark">✓</div>
+                                )}
+                                {scanStatus === 'error' && (
+                                    <div className="error-cross">✗</div>
+                                )}
+                                <p className="status-text">
+                                    {scanStatus === 'scanning' && 'Processing...'}
+                                    {scanStatus === 'success' && 'Success!'}
+                                    {scanStatus === 'error' && 'Invalid'}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -180,31 +231,13 @@ const QRScanner = (props) => {
                     <p>{cameraError}</p>
                 </div>
             )}
-
-            {/* <div className="scanner-controls">
-                <button
-                    className={`control-button ${isScanning ? 'stop' : 'start'}`}
-                    onClick={toggleScanning}
-                >
-                    <i className={`icon-${isScanning ? 'stop' : 'play'}`}></i>
-                    {isScanning ? 'Stop Scanning' : 'Start Scanning'}
-                </button>
-
-                <button
-                    className="control-button switch-camera"
-                    onClick={switchCamera}
-                >
-                    <i className="icon-camera-switch"></i>
-                    Switch Camera
-                </button>
-            </div> */}
-
+            {/* 
             <QrWarningModal
                 isVisible={showWarningModal}
                 onClose={() => setShowWarningModal(false)}
-                // onRetry={handleRetryScan}
-                // errorMessage={errorMessage}
-            />
+                onRetry={handleRetryScan}
+                errorMessage={errorMessage}
+            /> */}
         </div>
     );
 };

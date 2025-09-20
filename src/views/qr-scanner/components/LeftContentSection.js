@@ -160,11 +160,11 @@ const LeftContentSection = ({
                 className="text-gray-600 text-lg leading-relaxed mb-6"
                 variants={itemVariants}
             >
-                Upload QR code images to extract attendee data and unlock <b>add-on services</b> during events.
+                Scan QR code to extract attendee data and unlock <b>add-on services</b> during events.
             </motion.p>
 
             {/* File Upload Section */}
-            <motion.div className="mb-6" variants={itemVariants}>
+            {/* <motion.div className="mb-6" variants={itemVariants}>
                 <label className="block text-gray-700 text-sm font-bold mb-2">
                     Upload QR Code Image
                 </label>
@@ -192,7 +192,7 @@ const LeftContentSection = ({
                         </motion.p>
                     )}
                 </AnimatePresence>
-            </motion.div>
+            </motion.div> */}
 
             {/* Processing Progress */}
             <AnimatePresence>
