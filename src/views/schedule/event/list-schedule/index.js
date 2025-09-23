@@ -138,6 +138,13 @@ const ScheduleList = () => {
         {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.ADD_EVENT_SCHEDULES) && <Button
           type="primary"
           icon={<FormOutlined />}
+          onClick={() => navigate(`${APP_PREFIX_PATH}/schedule/new/add`)}
+        >
+          Add Schedule (New)
+        </Button>}
+        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.ADD_EVENT_SCHEDULES) && <Button
+          type="primary"
+          icon={<FormOutlined />}
           onClick={() => navigate(`${APP_PREFIX_PATH}/schedule/add`)}
         >
           Add Schedule

@@ -518,6 +518,14 @@ const ALL_PROTECTED_ROUTES = {
     subcategory: "event",
     item: "schedule",
   },
+  "event.schedule.new.add": {
+    key: "schedule.add",
+    path: `${APP_PREFIX_PATH}/schedule/new/add`,
+    component: React.lazy(() => import("views/schedule/event/new-add-schedule")),
+    category: "services",
+    subcategory: "event",
+    item: "schedule",
+  },
   "event.schedule.edit": {
     key: "schedule.edit",
     path: `${APP_PREFIX_PATH}/schedule/edit/:scheduleId`,
