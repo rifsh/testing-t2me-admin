@@ -344,9 +344,7 @@ const CalendarViewCard = () => {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Calendar Schedule
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-800">Event Schedule</h1>
             <p className="text-gray-600">
               {hasValidDateRange
                 ? "Manage your time slots for the selected dates"

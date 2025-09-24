@@ -98,7 +98,7 @@ const CompactDateTimePicker = ({
         className={`
           w-24 h-24 rounded-xl border-2 border-gray-200 bg-white 
           hover:border-blue-300 hover:shadow-md transition-all duration-200
-          flex flex-col items-center justify-center p-2 text-center
+          flex flex-col items-center justify-center p-4 text-center
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
           ${selectedDateTime ? "text-gray-800" : "text-gray-400"}
         `}
