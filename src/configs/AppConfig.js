@@ -98,7 +98,7 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
         items: {
           event_type: { enabled: true },
           ticket: { enabled: true },
-          seat: { enabled: false },
+          seat: { enabled: true },
           event: { enabled: true },
           schedule: { enabled: true },
         },
