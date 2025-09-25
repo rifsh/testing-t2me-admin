@@ -41,7 +41,6 @@ const { Option } = Select;
 const FormCard = ({ onSubmit, form }) => {
   const dispatch = useDispatch();
 
-  // Redux state
   const {
     filteredEvents = [],
     loading,
@@ -52,13 +51,11 @@ const FormCard = ({ onSubmit, form }) => {
   );
   const { addOnServiceList } = useSelector((state) => state.payment);
 
-  // Local state
   const [allowMultipleDates, setAllowMultipleDates] = useState(false);
   const [limitBookingsPerUser, setLimitBookingsPerUser] = useState(false);
   const [isPaymentRequired, setIsPaymentRequired] = useState(false);
   const [selectedAddOns, setSelectedAddOns] = useState([]);
 
-  // Load initial data
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -67,14 +64,12 @@ const FormCard = ({ onSubmit, form }) => {
         ).unwrap();
         dispatch(getPaymentAddOnService());
       } catch (error) {
-        console.error("Failed to fetch events:", error);
         message.error("Failed to load events");
       }
     };
     fetchEvents();
   }, [dispatch]);
 
-  // Debounced search
   const debouncedSearch = useCallback(
     debounce((value) => {
       dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event, search: value }));
@@ -82,7 +77,6 @@ const FormCard = ({ onSubmit, form }) => {
     [dispatch]
   );
 
-  // Handle event selection
   const handleSelectEvent = (eventId) => {
     if (!eventId) {
       dispatch(setSelectedEvent(null));
@@ -102,16 +96,14 @@ const FormCard = ({ onSubmit, form }) => {
     const venueId = event.venues?.[0]?.id || null;
     dispatch(setSelectedVenue(venueId));
 
-    // Auto-select first venue if available
     form.setFieldsValue({
       venue_id: venueId,
-      available_types: undefined, // Reset booking type
+      available_types: undefined,
     });
 
     dispatch(resetSchedule());
   };
 
-  // Handle venue selection
   const handleSelectVenue = (venueId) => {
     if (!venueId) return;
 
@@ -119,12 +111,10 @@ const FormCard = ({ onSubmit, form }) => {
     dispatch(resetSchedule());
   };
 
-  // Handle booking type selection
   const handleBookingTypeChange = (typeId) => {
     dispatch(setSelectedTicketType(typeId));
   };
 
-  // Handle search
   const handleSearch = (value) => {
     if (value && value.trim()) {
       debouncedSearch(value);
@@ -133,7 +123,6 @@ const FormCard = ({ onSubmit, form }) => {
     }
   };
 
-  // Handle booking limit toggle
   const handleBookingLimitToggle = (enabled) => {
     setLimitBookingsPerUser(enabled);
 
@@ -142,17 +131,14 @@ const FormCard = ({ onSubmit, form }) => {
     }
   };
 
-  // Handle multiple dates toggle
   const handleMultipleDatesToggle = (enabled) => {
     setAllowMultipleDates(enabled);
   };
 
-  // Handle payment required toggle
   const handlePaymentRequiredToggle = (enabled) => {
     setIsPaymentRequired(enabled);
   };
 
-  // Handle add-ons change
   const handleAddOnsChange = (addonName, checked) => {
     let updatedAddOns;
 
@@ -177,12 +163,10 @@ const FormCard = ({ onSubmit, form }) => {
     form.setFieldValue("add_ons", updatedAddOns);
   };
 
-  // Handle form submission
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
 
-      // Prepare final data with toggle states
       const finalData = {
         ...values,
         is_multi_date: allowMultipleDates,
@@ -194,12 +178,10 @@ const FormCard = ({ onSubmit, form }) => {
       message.success("Form validation successful!");
       onSubmit(finalData);
     } catch (errorInfo) {
-      console.log("Failed:", errorInfo);
       message.error("Please check the form fields and try again");
     }
   };
 
-  // Handle cancel
   const handleCancel = () => {
     form.resetFields();
     setSelectedAddOns([]);
@@ -235,7 +217,6 @@ const FormCard = ({ onSubmit, form }) => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="p-6">
         <Form
           form={form}
@@ -245,15 +226,12 @@ const FormCard = ({ onSubmit, form }) => {
           requiredMark={false}
         >
           <div className="grid grid-cols-12 gap-6">
-            {/* Left Column - Form Fields */}
             <div className="col-span-8 space-y-8">
-              {/* Basic Information Section */}
               <div>
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
                   Basic Information
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
-                  {/* Schedule Name */}
                   <Form.Item
                     name="name"
                     label={
@@ -283,7 +261,6 @@ const FormCard = ({ onSubmit, form }) => {
                     />
                   </Form.Item>
 
-                  {/* Event */}
                   <Form.Item
                     name="event_id"
                     label={
@@ -343,7 +320,6 @@ const FormCard = ({ onSubmit, form }) => {
                     </Select>
                   </Form.Item>
 
-                  {/* Venue */}
                   {selectedEvent?.venues?.length > 0 && (
                     <Form.Item
                       name="venue_id"
@@ -377,7 +353,6 @@ const FormCard = ({ onSubmit, form }) => {
                     </Form.Item>
                   )}
 
-                  {/* Booking Type */}
                   {availableTicketTyps?.available_types?.length > 0 && (
                     <Form.Item
                       name="available_types"
@@ -415,6 +390,7 @@ const FormCard = ({ onSubmit, form }) => {
                   )}
                 </div>
               </div>
+
               <div>
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
                   Ticket Settings
@@ -448,12 +424,11 @@ const FormCard = ({ onSubmit, form }) => {
                     <InputNumber
                       placeholder="Enter max tickets"
                       min={1}
-                      className="w-full "
+                      className="w-full"
                       max={100}
                     />
                   </Form.Item>
 
-                  {/* Booking Limit Per User */}
                   <Form.Item
                     name="booking_limit_per_user"
                     label={
@@ -493,11 +468,12 @@ const FormCard = ({ onSubmit, form }) => {
                       min={1}
                       max={50}
                       disabled={!limitBookingsPerUser}
-                      className="w-full "
+                      className="w-full"
                     />
                   </Form.Item>
                 </div>
               </div>
+
               {selectedAddOns.length > 0 && (
                 <div>
                   <h2 className="text-lg font-medium text-gray-900 mb-4">
@@ -508,15 +484,12 @@ const FormCard = ({ onSubmit, form }) => {
               )}
             </div>
 
-            {/* Right Column - Custom Toggle Cards */}
             <div className="col-span-4 space-y-6">
-              {/* Booking Settings Section */}
               <div>
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
                   Booking Settings
                 </h2>
                 <div className="space-y-3">
-                  {/* Allow Multiple Dates Booking */}
                   <div
                     onClick={() =>
                       handleMultipleDatesToggle(!allowMultipleDates)
@@ -529,9 +502,7 @@ const FormCard = ({ onSubmit, form }) => {
                   >
                     <div className="flex items-center space-x-3">
                       <div
-                        className={`w-8 h-8 rounded flex items-center justify-center ${
-                          allowMultipleDates ? "bg-red-500" : "bg-red-500"
-                        }`}
+                        className={`w-8 h-8 rounded flex items-center justify-center bg-red-500`}
                       >
                         <CalendarOutlined className="text-white text-sm" />
                       </div>
@@ -575,7 +546,6 @@ const FormCard = ({ onSubmit, form }) => {
                     </div>
                   </div>
 
-                  {/* Limit Bookings Per User */}
                   <div
                     onClick={() =>
                       handleBookingLimitToggle(!limitBookingsPerUser)
@@ -632,7 +602,6 @@ const FormCard = ({ onSubmit, form }) => {
                     </div>
                   </div>
 
-                  {/* Is Payment Required */}
                   <div
                     onClick={() =>
                       handlePaymentRequiredToggle(!isPaymentRequired)
@@ -688,13 +657,13 @@ const FormCard = ({ onSubmit, form }) => {
                   </div>
                 </div>
               </div>
+
               {addOnServiceList?.available_add_ons && (
                 <div>
                   <h2 className="text-lg font-medium text-gray-900 mb-4">
                     Add On Services
                   </h2>
 
-                  {/* Hidden Form Item for Add-ons */}
                   <Form.Item name="add_ons" hidden>
                     <Input />
                   </Form.Item>
@@ -717,11 +686,7 @@ const FormCard = ({ onSubmit, form }) => {
                       >
                         <div className="flex items-center space-x-3">
                           <div
-                            className={`w-8 h-8 rounded flex items-center justify-center ${
-                              selectedAddOns.includes(addon.name)
-                                ? "bg-yellow-500"
-                                : "bg-yellow-500"
-                            }`}
+                            className={`w-8 h-8 rounded flex items-center justify-center bg-yellow-500`}
                           >
                             <span className="text-white text-sm">
                               {addon.name.charAt(0)}

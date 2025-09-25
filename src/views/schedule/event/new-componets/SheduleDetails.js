@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Form } from "antd";
 import FormCard from "./FormCard";
 import CalendarViewCard from "./PlanCard";
+import OfferCouponCard from "./OfferCouponCard";
 
 // Main Component
 const ScheduleDetails = () => {
@@ -30,10 +31,15 @@ const ScheduleDetails = () => {
           onSubmit={handleFormSubmit}
           onCancel={handleCancel}
         />
+      ) : tab === 2 ? (
+        <CalendarViewCard onSubmit={() => setTab(3)} form={form} />
       ) : (
-        <CalendarViewCard
-          onBack={() => setTab(1)}
-          formData={form.getFieldsValue()}
+        <OfferCouponCard
+          form={form}
+          onSubmit={handleFormSubmit}
+          onCancel={handleCancel}
+          scheduleStartDate={"scheduleStartDate"}
+          scheduleEndDate={"scheduleEndDate"}
         />
       )}
     </div>

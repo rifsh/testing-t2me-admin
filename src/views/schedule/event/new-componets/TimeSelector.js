@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Copy, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import {
   generateTimeSlots,
   ScheduleUtil,
@@ -19,15 +19,142 @@ const TimeSelector = ({
   onOverlapWarning,
   blockedSlots = [],
   onBlockTimeSlot,
-  // FIXED: Add missing props
   multiDateSelectionEnabled = false,
   onMultiDateTimeSlot = null,
+  dayColors = [],
+  getColorForDay,
+  ticketOptionsMap = {},
+  ticketSetOptionsMap = {},
+  seatStructureOptionsMap = {},
 }) => {
   const timeSlots = generateTimeSlots();
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState(null);
   const [dragEnd, setDragEnd] = useState(null);
   const [overlapMessage, setOverlapMessage] = useState(null);
+
+  const getDaySpecificColors = (dayIndex) => {
+    const colorSets = [
+      {
+        main: "bg-red-500",
+        light: "bg-red-50", 
+        border: "border-red-200",
+        text: "text-red-700",
+      },
+      {
+        main: "bg-blue-500",
+        light: "bg-blue-50",
+        border: "border-blue-200", 
+        text: "text-blue-700",
+      },
+      {
+        main: "bg-green-500",
+        light: "bg-green-50",
+        border: "border-green-200",
+        text: "text-green-700",
+      },
+      {
+        main: "bg-yellow-500", 
+        light: "bg-yellow-50",
+        border: "border-yellow-200",
+        text: "text-yellow-700",
+      },
+      {
+        main: "bg-purple-500",
+        light: "bg-purple-50",
+        border: "border-purple-200",
+        text: "text-purple-700",
+      },
+      {
+        main: "bg-pink-500",
+        light: "bg-pink-50", 
+        border: "border-pink-200",
+        text: "text-pink-700",
+      },
+      {
+        main: "bg-indigo-500",
+        light: "bg-indigo-50",
+        border: "border-indigo-200", 
+        text: "text-indigo-700",
+      },
+    ];
+
+    return colorSets[dayIndex % colorSets.length];
+  };
+
+  const getEventColors = (event, dayIndex) => {
+    if (event.isBlocked || event.type === "blocked" || event.isMultiDay) {
+      return {
+        main: "bg-orange-500",
+        light: "bg-orange-50",
+        border: "border-orange-200",
+        text: "text-orange-700",
+      };
+    }
+
+    return getDaySpecificColors(dayIndex);
+  };
+
+  const getEventDisplayText = (event) => {
+    if (event.ticketType && ticketOptionsMap[event.ticketType]) {
+      return ticketOptionsMap[event.ticketType];
+    }
+    
+    if (event.ticketSet && ticketSetOptionsMap[event.ticketSet]) {
+      return ticketSetOptionsMap[event.ticketSet];
+    }
+
+    if (event.seat_structure_id && seatStructureOptionsMap[event.seat_structure_id]) {
+      return seatStructureOptionsMap[event.seat_structure_id];
+    }
+
+    if (event.ticketType) {
+      return `Ticket: ${event.ticketType}`;
+    }
+    
+    if (event.ticketSet) {
+      return `Set: ${event.ticketSet}`;
+    }
+
+    if (event.seat_structure_id) {
+      return `Seat: ${event.seat_structure_id}`;
+    }
+
+    if (event.isMultiDay) return "Multi-day";
+    if (event.type === "blocked") return "Blocked";
+    
+    return event.type || "Time Slot";
+  };
+
+  const getEventTooltip = (event) => {
+    const details = [];
+    
+    if (event.ticketType) {
+      const name = ticketOptionsMap[event.ticketType] || event.ticketType;
+      details.push(`Ticket Type: ${name}`);
+    }
+    
+    if (event.ticketSet) {
+      const name = ticketSetOptionsMap[event.ticketSet] || event.ticketSet;
+      details.push(`Ticket Set: ${name}`);
+    }
+    
+    if (event.seat_structure_id) {
+      const name = seatStructureOptionsMap[event.seat_structure_id] || event.seat_structure_id;
+      details.push(`Seats: ${name}`);
+    }
+    
+    const timeRange = `${formatTime(
+      event.startTime.hour,
+      event.startTime.minute || 0
+    )} to ${formatTime(
+      event.endTime.hour,
+      event.endTime.minute || 0
+    )}`;
+    details.push(timeRange);
+    
+    return details.join(' | ');
+  };
 
   const getSlotFromPosition = (dayIndex, slotIndex) => {
     const hour = slotIndex;
@@ -56,7 +183,55 @@ const TimeSelector = ({
 
     const potentialEnd = getSlotFromPosition(dayIndex, slotIndex);
 
-    // FIXED: Allow cross-day selection if multi-date is enabled
+    if (selectionStart) {
+      let startTime = { ...selectionStart };
+      let endTime = {
+        day: potentialEnd.day,
+        hour: potentialEnd.hour + 1,
+        minute: 0,
+      };
+
+      if (endTime.hour >= 24) {
+        endTime.day += Math.floor(endTime.hour / 24);
+        endTime.hour = endTime.hour % 24;
+      }
+
+      const wouldBeMultiDay = startTime.day !== endTime.day;
+
+      if (wouldBeMultiDay && !multiDateSelectionEnabled) {
+        setOverlapMessage({
+          type: "warning",
+          message:
+            "Multi-day selection disabled. Enable multi-date selection to span multiple days.",
+        });
+        return;
+      } else {
+        if (overlapMessage && overlapMessage.type === "warning") {
+          setOverlapMessage(null);
+        }
+      }
+
+      const potentialEvent = {
+        startTime: startTime.day <= endTime.day ? startTime : endTime,
+        endTime: startTime.day <= endTime.day ? endTime : startTime,
+        id: "temp-drag-preview",
+      };
+
+      const conflictingEvents = ScheduleUtil.findConflictingEvents(
+        potentialEvent,
+        events
+      );
+
+      if (conflictingEvents.length > 0) {
+        setOverlapMessage({
+          type: "warning",
+          message: `Selection would overlap with ${conflictingEvents.length} existing event(s)`,
+        });
+      } else if (overlapMessage && overlapMessage.message.includes("overlap")) {
+        setOverlapMessage(null);
+      }
+    }
+
     if (multiDateSelectionEnabled || potentialEnd.day === selectionStart?.day) {
       setDragEnd(potentialEnd);
     }
@@ -71,13 +246,11 @@ const TimeSelector = ({
         minute: 0,
       };
 
-      // Handle hour overflow for multi-day events
       if (endTime.hour >= 24) {
         endTime.day += Math.floor(endTime.hour / 24);
         endTime.hour = endTime.hour % 24;
       }
 
-      // Ensure proper time ordering
       const startMinutes =
         startTime.day * 1440 + timeToMinutes(startTime.hour, startTime.minute);
       const endMinutes =
@@ -89,33 +262,65 @@ const TimeSelector = ({
         endTime = { ...temp };
       }
 
+      const isMultiDay = startTime.day !== endTime.day;
+
+      if (isMultiDay && !multiDateSelectionEnabled) {
+        setOverlapMessage({
+          type: "error",
+          message:
+            "Multi-day selections are disabled. Enable multi-date selection to create events spanning multiple days.",
+        });
+
+        if (onOverlapWarning) {
+          onOverlapWarning(
+            "Cannot create multi-day event: Multi-date selection is disabled",
+            []
+          );
+        }
+
+        setIsSelecting(false);
+        setSelectionStart(null);
+        setDragEnd(null);
+        setTimeout(() => setOverlapMessage(null), 4000);
+        return;
+      }
+
       const newEvent = {
         startTime,
         endTime,
         id: `temp-${Date.now()}`,
       };
 
-      // FIXED: Check if multi-date selection is allowed
-      if (startTime.day !== endTime.day) {
-        if (multiDateSelectionEnabled) {
-          newEvent.isMultiDay = true;
-          newEvent.type = "blocked";
+      if (isMultiDay && multiDateSelectionEnabled) {
+        newEvent.isMultiDay = true;
+        newEvent.type = "blocked";
 
-          // Call the multi-date handler if provided
+        const conflictingEvents = ScheduleUtil.findConflictingEvents(
+          newEvent,
+          events
+        );
+
+        if (conflictingEvents.length > 0) {
+          const conflictMessage = `Cannot create multi-day event: overlaps with ${conflictingEvents.length} existing event(s) across multiple days`;
+          setOverlapMessage({
+            type: "error",
+            message: conflictMessage,
+          });
+
+          if (onOverlapWarning) {
+            onOverlapWarning(conflictMessage, conflictingEvents);
+          }
+
+          setTimeout(() => setOverlapMessage(null), 4000);
+        } else {
           if (onMultiDateTimeSlot) {
             onMultiDateTimeSlot(newEvent);
           } else {
-            // Fallback to regular time slot handler
             onTimeSlotSelect(newEvent);
           }
           message.success("Multi-day time slot created successfully!");
-        } else {
-          message.warning(
-            "Multi-day selections are disabled. Enable it from the toggle above."
-          );
         }
       } else {
-        // Single day event - check for conflicts
         const conflictingEvents = ScheduleUtil.findConflictingEvents(
           newEvent,
           events
@@ -145,13 +350,16 @@ const TimeSelector = ({
     setDragEnd(null);
   };
 
-  // FIXED: Show selection for both single and multi-day based on settings
+  const getSelectionColor = (dayIndex) => {
+    const colors = getDaySpecificColors(dayIndex);
+    return colors.light.replace('bg-', 'bg-').replace('-50', '-200');
+  };
+
   const isSlotSelected = (dayIndex, slotIndex) => {
     if (!selectionStart || !dragEnd || !isSelecting) {
       return false;
     }
 
-    // If multi-date is disabled, only highlight same-day selections
     if (!multiDateSelectionEnabled && dayIndex !== selectionStart.day) {
       return false;
     }
@@ -167,6 +375,28 @@ const TimeSelector = ({
     const maxMinutes = Math.max(startMinutes, endMinutes + 60);
 
     return currentMinutes >= minMinutes && currentMinutes < maxMinutes;
+  };
+
+  const isSlotInConflict = (dayIndex, slotIndex) => {
+    if (!selectionStart || !dragEnd || !isSelecting) return false;
+
+    if (isSlotSelected(dayIndex, slotIndex)) {
+      let startTime = { ...selectionStart };
+      let endTime = { ...dragEnd, hour: dragEnd.hour + 1 };
+
+      const potentialEvent = {
+        startTime: startTime.day <= endTime.day ? startTime : endTime,
+        endTime: startTime.day <= endTime.day ? endTime : startTime,
+        id: "temp-conflict-check",
+      };
+
+      const conflicts = ScheduleUtil.findConflictingEvents(
+        potentialEvent,
+        events
+      );
+      return conflicts.length > 0;
+    }
+    return false;
   };
 
   const isSlotBlocked = (dayIndex, slotIndex) => {
@@ -185,11 +415,22 @@ const TimeSelector = ({
     });
   };
 
-  // FIXED: Enhanced getEventInSlot for proper event display
   const getEventInSlot = (dayIndex, hour, minute) => {
-    const visibleEvent = events.find((event) => {
-      if (!event.startTime || !event.endTime) return false;
+    const validEvents = events.filter((event) => {
+      const isValid =
+        event &&
+        event.id &&
+        event.startTime &&
+        event.endTime &&
+        typeof event.startTime.day === "number" &&
+        typeof event.startTime.hour === "number" &&
+        typeof event.endTime.day === "number" &&
+        typeof event.endTime.hour === "number";
 
+      return isValid;
+    });
+
+    const visibleEvent = validEvents.find((event) => {
       const eventStartDay = event.startTime.day;
       const eventEndDay = event.endTime.day;
       const eventStartMinutes = timeToMinutes(
@@ -202,40 +443,21 @@ const TimeSelector = ({
       );
       const slotMinutes = timeToMinutes(hour, minute);
 
-      console.log(
-        `Checking event ${event.id} for slot Day:${dayIndex} ${hour}:${minute}`
-      );
-      console.log(`Event spans Day:${eventStartDay} to Day:${eventEndDay}`);
-
       if (dayIndex < eventStartDay || dayIndex > eventEndDay) return false;
 
-      // Handle both single-day and multi-day events
       if (eventStartDay === eventEndDay) {
-        // Single day event
-        const matches =
+        return (
           dayIndex === eventStartDay &&
           slotMinutes >= eventStartMinutes &&
-          slotMinutes < eventEndMinutes;
-        if (matches) console.log(`✓ Single-day event ${event.id} matches slot`);
-        return matches;
+          slotMinutes < eventEndMinutes
+        );
       } else {
-        // Multi-day event logic
         if (dayIndex === eventStartDay) {
-          const matches = slotMinutes >= eventStartMinutes;
-          if (matches)
-            console.log(`✓ Multi-day event ${event.id} matches start day`);
-          return matches;
+          return slotMinutes >= eventStartMinutes;
         } else if (dayIndex === eventEndDay) {
-          const matches = slotMinutes < eventEndMinutes;
-          if (matches)
-            console.log(`✓ Multi-day event ${event.id} matches end day`);
-          return matches;
+          return slotMinutes < eventEndMinutes;
         } else {
-          // Middle days of multi-day event
-          const matches = dayIndex > eventStartDay && dayIndex < eventEndDay;
-          if (matches)
-            console.log(`✓ Multi-day event ${event.id} matches middle day`);
-          return matches;
+          return dayIndex > eventStartDay && dayIndex < eventEndDay;
         }
       }
     });
@@ -256,7 +478,6 @@ const TimeSelector = ({
       let durationMinutes = 0;
 
       if (eventStartDay === eventEndDay) {
-        // Single day event
         const eventEndMinutes = timeToMinutes(
           event.endTime.hour,
           event.endTime.minute || 0
@@ -267,7 +488,6 @@ const TimeSelector = ({
         );
         durationMinutes = eventEndMinutes - eventStartMinutes;
       } else {
-        // Multi-day event - show duration from start time to end of day
         const endOfDayMinutes = timeToMinutes(23, 59);
         const eventStartMinutes = timeToMinutes(
           eventStartHour,
@@ -284,17 +504,14 @@ const TimeSelector = ({
       };
     }
 
-    // Handle continuation of multi-day events
     if (
       event.isMultiDay &&
       dayIndex > eventStartDay &&
       dayIndex <= eventEndDay
     ) {
       if (dayIndex < eventEndDay) {
-        // Full day
         return { show: true, height: 24 };
       } else if (dayIndex === eventEndDay && slotIndex === 0) {
-        // Last day - show from start of day to end time
         const eventEndMinutes = timeToMinutes(
           event.endTime.hour,
           event.endTime.minute || 0
@@ -305,57 +522,6 @@ const TimeSelector = ({
     }
 
     return { show: false };
-  };
-
-  const getEventColors = (event) => {
-    // Multi-day or blocked events
-    if (event.isBlocked || event.type === "blocked" || event.isMultiDay) {
-      return {
-        main: "bg-orange-500",
-        light: "bg-orange-50",
-        border: "border-orange-200",
-        text: "text-orange-700",
-      };
-    }
-
-    const colorOptions = [
-      {
-        main: "bg-blue-500",
-        light: "bg-blue-50",
-        border: "border-blue-200",
-        text: "text-blue-700",
-      },
-      {
-        main: "bg-green-500",
-        light: "bg-green-50",
-        border: "border-green-200",
-        text: "text-green-700",
-      },
-      {
-        main: "bg-yellow-500",
-        light: "bg-yellow-50",
-        border: "border-yellow-200",
-        text: "text-yellow-700",
-      },
-      {
-        main: "bg-purple-500",
-        light: "bg-purple-50",
-        border: "border-purple-200",
-        text: "text-purple-700",
-      },
-      {
-        main: "bg-red-500",
-        light: "bg-red-50",
-        border: "border-red-200",
-        text: "text-red-700",
-      },
-    ];
-
-    if (!event.colorIndex) {
-      event.colorIndex = Math.floor(Math.random() * colorOptions.length);
-    }
-
-    return colorOptions[event.colorIndex] || colorOptions[0];
   };
 
   const displaySlots = [];
@@ -380,7 +546,6 @@ const TimeSelector = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* Overlap Warning Message */}
       {overlapMessage && (
         <div
           className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-50 p-3 rounded-lg shadow-lg border flex items-center space-x-2 ${
@@ -394,7 +559,6 @@ const TimeSelector = ({
         </div>
       )}
 
-      {/* Selection Mode Indicator */}
       <div className="absolute top-4 right-4 z-40 bg-blue-50 border border-blue-200 rounded-lg p-2">
         <div className="text-xs text-blue-700 font-medium">
           {multiDateSelectionEnabled
@@ -403,7 +567,6 @@ const TimeSelector = ({
         </div>
       </div>
 
-      {/* Time slots on the left - Sticky */}
       <div className="sticky left-0 z-20 w-20 bg-gray-50 border-r border-gray-200 float-left">
         {displaySlots.map((slot, i) => (
           <div
@@ -416,7 +579,6 @@ const TimeSelector = ({
         ))}
       </div>
 
-      {/* Calendar grid */}
       <div
         className="ml-20 grid min-h-full"
         style={{
@@ -438,6 +600,12 @@ const TimeSelector = ({
                 ? getEventDisplayInfo(event, dayIndex, slotIndex)
                 : { show: false };
 
+              const selectionColorClass = isSelected 
+                ? isSlotInConflict(dayIndex, slotIndex)
+                  ? "bg-red-200 border-2 border-red-400 cursor-not-allowed"
+                  : getSelectionColor(dayIndex) + " cursor-pointer border-2 " + getDaySpecificColors(dayIndex).border
+                : "";
+
               return (
                 <div
                   key={`slot-${dayIndex}-${slotIndex}`}
@@ -445,16 +613,13 @@ const TimeSelector = ({
                     isOccupied
                       ? "cursor-not-allowed"
                       : isSelected
-                      ? multiDateSelectionEnabled
-                        ? "bg-orange-200 cursor-pointer" // Orange for multi-day
-                        : "bg-blue-200 cursor-pointer" // Blue for single day
+                      ? selectionColorClass
                       : "hover:bg-gray-50 cursor-pointer"
                   }`}
                   style={{ minHeight: "64px" }}
                   onMouseDown={() => handleMouseDown(dayIndex, slotIndex)}
                   onMouseEnter={() => handleMouseEnter(dayIndex, slotIndex)}
                 >
-                  {/* Event Block */}
                   {event && eventInfo.show && (
                     <div
                       className="absolute inset-x-1 top-0 cursor-pointer hover:opacity-90 transition-opacity z-10 flex"
@@ -466,44 +631,29 @@ const TimeSelector = ({
                         e.stopPropagation();
                         onEventClick(event);
                       }}
-                      title={`${
-                        event.isMultiDay
-                          ? "Multi-day"
-                          : event.type === "blocked"
-                          ? "Blocked"
-                          : event.type
-                      } - ${formatTime(
-                        event.startTime.hour,
-                        event.startTime.minute || 0
-                      )} to ${formatTime(
-                        event.endTime.hour,
-                        event.endTime.minute || 0
-                      )}`}
+                      title={getEventTooltip(event)}
                     >
                       <div
                         className={`w-1 rounded-l ${
-                          getEventColors(event).main
+                          getEventColors(event, dayIndex).main
                         }`}
                       />
                       <div
-                        className={`flex-1 ${getEventColors(event).light} ${
-                          getEventColors(event).border
+                        className={`flex-1 ${getEventColors(event, dayIndex).light} ${
+                          getEventColors(event, dayIndex).border
                         } border-l-0 border rounded-r p-2 overflow-hidden`}
                       >
                         <div
-                          className={`font-medium truncate text-sm leading-tight capitalize ${
-                            getEventColors(event).text
+                          className={`font-medium truncate text-sm leading-tight ${
+                            getEventColors(event, dayIndex).text
                           }`}
                         >
-                          {event.isMultiDay
-                            ? "Multi-day"
-                            : event.type === "blocked"
-                            ? "Blocked"
-                            : event.type}
+                          {getEventDisplayText(event)}
                         </div>
+                        
                         <div
                           className={`opacity-75 truncate text-xs leading-tight mt-1 ${
-                            getEventColors(event).text
+                            getEventColors(event, dayIndex).text
                           }`}
                         >
                           {formatTime(
@@ -511,15 +661,24 @@ const TimeSelector = ({
                             event.startTime.minute || 0
                           )}
                         </div>
+                        
                         {eventInfo.height > 1 && (
                           <div
                             className={`opacity-75 text-xs mt-1 ${
-                              getEventColors(event).text
+                              getEventColors(event, dayIndex).text
                             }`}
                           >
-                            {ScheduleUtil.formatDuration(
-                              event.startTime,
-                              event.endTime
+                            {event.ticketType && event.ticketSet && ticketSetOptionsMap[event.ticketSet] ? (
+                              <div className="truncate">
+                                {ticketSetOptionsMap[event.ticketSet]}
+                              </div>
+                            ) : (
+                              <div>
+                                {ScheduleUtil.formatDuration(
+                                  event.startTime,
+                                  event.endTime
+                                )}
+                              </div>
                             )}
                           </div>
                         )}
@@ -533,7 +692,6 @@ const TimeSelector = ({
         ))}
       </div>
 
-      {/* Custom Scrollbar Styles */}
       <style jsx>{`
         div::-webkit-scrollbar {
           width: 8px;
