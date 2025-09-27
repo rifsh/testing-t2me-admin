@@ -8,6 +8,7 @@
   "sidenav.dashboard.sales": "Sales",
   "sidenav.event": "Event",
   "sidenav.order.booking": "By Booking",
+  "sidenav.order.appscheduler": "By Event Booking",
   "sidenav.order.event": "By Event",
   "sidenav.event.add": "add",
   "sidenav.services": "Services",

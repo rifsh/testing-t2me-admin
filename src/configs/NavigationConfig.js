@@ -246,6 +246,14 @@ const ALL_NAVIGATION_ITEMS = {
           submenu: [],
         },
         {
+          key: "reports.orders.appscheduler",
+          path: `${APP_PREFIX_PATH}/reports/orders/app-scheduler`,
+          title: "sidenav.order.appscheduler",
+          icon: DashboardOutlined,
+          breadcrumb: false,
+          submenu: [],
+        },
+        {
           key: "reports.orders.movie",
           path: `${APP_PREFIX_PATH}/reports/orders/movie`,
           title: "sidenav.order.movie",
