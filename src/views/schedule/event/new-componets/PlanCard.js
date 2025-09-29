@@ -12,7 +12,6 @@ import { getDaysDiff, getTypeColor, ScheduleUtil } from "../utils";
 import CompactDateTimePicker from "./CompactDateTimePicker";
 import TimeSlotsSidebar from "./TimeSlotsSidebar";
 
-// Helper functions defined outside component to avoid initialization issues
 const formatDateForAPI = (date) => {
   if (!date) return null;
   const year = date.getFullYear();
@@ -61,10 +60,8 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
 
   const weekDayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
-  // Get existing data from Redux
   const { scheduleFormData } = useSelector((state) => state.schedules);
 
-  // Use refs to prevent infinite loops
   const lastSavedData = useRef(null);
   const saveTimeout = useRef(null);
   const isInitialized = useRef(false);
@@ -78,7 +75,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     return { startDate, endDate, isSelecting: false };
   };
 
-  // Initialize states with existing data from Redux
   const [dateRange, setDateRange] = useState(() => {
     if (scheduleFormData?.start_date && scheduleFormData?.end_date) {
       return {
@@ -90,7 +86,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     return getDefaultDateRange();
   });
 
-  // Restore events from scheduleFormData.show_dates with proper absolute day indexing
   const [allEvents, setAllEvents] = useState(() => {
     if (
       scheduleFormData?.show_dates &&
@@ -99,14 +94,12 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       const restoredEvents = [];
       let eventIdCounter = 1;
 
-      // Create date map for absolute day indexing
       const allDaysInRange = getAllDaysInRangeFromDates(
         scheduleFormData.start_date,
         scheduleFormData.end_date
       );
 
       scheduleFormData.show_dates.forEach((showDate) => {
-        // Find the absolute day index for this date
         const absoluteDayIndex = allDaysInRange.findIndex((day) => {
           const dayStr = formatDateForAPI(day);
           return dayStr === showDate.start_date;
@@ -125,18 +118,19 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
               id: `restored-${eventIdCounter++}`,
               type: "meeting",
               startTime: {
-                day: absoluteDayIndex, // Use absolute day index
+                day: absoluteDayIndex,
                 hour: startHour,
                 minute: startMinute || 0,
               },
               endTime: {
-                day: absoluteDayIndex, // Use absolute day index
+                day: absoluteDayIndex,
                 hour: endHour,
                 minute: endMinute || 0,
               },
-              ticketType: showTime.ticket_structure_id,
-              ticketSet: showTime.ticket_set,
-              isMultiDay: showTime.is_midnight === "true",
+              ticket_structure_id: showTime.ticket_structure_id,
+              ticket_set: showTime.ticket_set,
+              seat_structure_id: showTime.seat_structure_id,
+              is_multi_date: showTime.is_midnight === "true",
               color: getTypeColor("meeting"),
             };
 
@@ -145,10 +139,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         }
       });
 
-      console.log(
-        "Restored events from Redux with absolute indexing:",
-        restoredEvents
-      );
       return restoredEvents;
     }
     return [];
@@ -165,16 +155,11 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
   const [pendingDateChange, setPendingDateChange] = useState(null);
 
-  // Initialize form fields with existing data - Fixed infinite loop
   useEffect(() => {
     if (scheduleFormData && !isInitialized.current) {
-      console.log("Initializing form with schedule data:", scheduleFormData);
-
-      // Only set form values if they exist in scheduleFormData
       if (scheduleFormData.ad_start_date_time) {
         const adStartDate = new Date(scheduleFormData.ad_start_date_time);
         form.setFieldValue("ad_start_date_time", adStartDate);
-        console.log("Set ad_start_date_time:", adStartDate);
       }
 
       if (scheduleFormData.booking_start_date_time) {
@@ -182,20 +167,16 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
           scheduleFormData.booking_start_date_time
         );
         form.setFieldValue("booking_start_date_time", bookingStartDate);
-        console.log("Set booking_start_date_time:", bookingStartDate);
       }
 
-      // Set multi-date selection based on existing data
       if (scheduleFormData.is_multi_date !== undefined) {
         setMultiDateSelectionEnabled(scheduleFormData.is_multi_date);
       }
 
       isInitialized.current = true;
-      console.log("Form initialized with existing data");
     }
   }, [scheduleFormData, form]);
 
-  // Helper function to generate show_dates from events
   const generateShowDatesFromEvents = useCallback(
     (events, currentDateRange) => {
       if (
@@ -216,7 +197,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         const startDay = event.startTime.day;
         const endDay = event.endTime.day;
 
-        // Handle multi-day events
         for (let day = startDay; day <= endDay; day++) {
           if (allDaysInRange[day]) {
             const dateStr = formatDateForAPI(allDaysInRange[day]);
@@ -236,8 +216,9 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
               )
                 .toString()
                 .padStart(2, "0")}`,
-              ticket_structure_id: event.ticketType || 11,
-              ticket_set: event.ticketSet || "GOLD A1",
+              ticket_structure_id: event.ticket_structure_id || 11,
+              ticket_set: event.ticket_set || "GOLD A1",
+              seat_structure_id: event.seat_structure_id,
               is_midnight:
                 event.endTime.hour < event.startTime.hour ? "true" : "false",
             });
@@ -245,7 +226,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         }
       });
 
-      // Convert to show_dates format
       const showDates = Object.entries(eventsByDate).map(
         ([dateStr, showTimes]) => ({
           start_date: dateStr,
@@ -254,7 +234,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         })
       );
 
-      // Sort by date
       showDates.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
       return showDates;
@@ -262,34 +241,27 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     []
   );
 
-  // Enhanced debounced auto-save function to prevent infinite loops
   const debouncedSave = useCallback(
     (dataToSave) => {
-      // Clear existing timeout
       if (saveTimeout.current) {
         clearTimeout(saveTimeout.current);
       }
 
-      // Set new timeout for debounced save
       saveTimeout.current = setTimeout(() => {
         const dataString = JSON.stringify(dataToSave);
         const lastDataString = JSON.stringify(lastSavedData.current);
 
-        // Only dispatch if data has actually changed
         if (dataString !== lastDataString) {
-          console.log("Auto-saving calendar data:", dataToSave);
           dispatch(setScheduleFormData(dataToSave));
           lastSavedData.current = { ...dataToSave };
         }
-      }, 1000); // Debounce for 1 second
+      }, 1000);
     },
     [dispatch]
   );
 
-  // Enhanced manual save function for immediate saves
   const saveToRedux = useCallback(() => {
     const currentFormData = form.getFieldsValue();
-    console.log("Current form data for save:", currentFormData);
 
     const dataToSave = {
       ...scheduleFormData,
@@ -301,7 +273,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         ? formatDateForAPI(dateRange.endDate)
         : scheduleFormData?.end_date,
       is_multi_date: multiDateSelectionEnabled,
-      // Properly handle Advertisement and Booking Start Times
       ad_start_date_time: currentFormData.ad_start_date_time
         ? formatDateTime(currentFormData.ad_start_date_time)
         : scheduleFormData?.ad_start_date_time,
@@ -311,10 +282,8 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       show_dates: generateShowDatesFromEvents(allEvents, dateRange),
     };
 
-    console.log("Saving data to Redux:", dataToSave);
     dispatch(setScheduleFormData(dataToSave));
     lastSavedData.current = { ...dataToSave };
-    console.log("Manual save completed");
   }, [
     dispatch,
     form,
@@ -325,13 +294,10 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     allEvents,
   ]);
 
-  // Enhanced handler for Advertisement Start Time changes
   const handleAdStartTimeChange = useCallback(
     (date) => {
-      console.log("Advertisement Start Time changed:", date);
       form.setFieldValue("ad_start_date_time", date);
 
-      // Immediately save to Redux
       const updatedData = {
         ...scheduleFormData,
         ad_start_date_time: date ? formatDateTime(date) : null,
@@ -342,13 +308,10 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     [form, scheduleFormData, debouncedSave]
   );
 
-  // Enhanced handler for Booking Start Time changes
   const handleBookingStartTimeChange = useCallback(
     (date) => {
-      console.log("Booking Start Time changed:", date);
       form.setFieldValue("booking_start_date_time", date);
 
-      // Immediately save to Redux
       const updatedData = {
         ...scheduleFormData,
         booking_start_date_time: date ? formatDateTime(date) : null,
@@ -385,15 +348,11 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     });
   };
 
-  // Update the handleCreateEvent function to preserve all data including DateTime fields
   const handleCreateEvent = () => {
-    // Save current state to Redux before submitting
     saveToRedux();
 
     const currentFormData = form.getFieldsValue();
-    console.log("Form data on submit:", currentFormData);
 
-    // Final data preparation with all required fields
     const finalData = {
       ...scheduleFormData,
       ...currentFormData,
@@ -409,11 +368,9 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       show_dates: generateShowDatesFromEvents(allEvents, dateRange),
     };
 
-    console.log("Final calendar data being submitted:", finalData);
     onSubmit(finalData);
   };
 
-  // Enhanced date range change handler
   const handleDateRangeChange = (range) => {
     const hasExistingTimeSlots = allEvents && allEvents.length > 0;
 
@@ -431,12 +388,11 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     setAllEvents([]);
     setBlockedSlots([]);
 
-    // Save date range changes immediately
     const updatedData = {
       ...scheduleFormData,
       start_date: formatDateForAPI(range.startDate),
       end_date: formatDateForAPI(range.endDate),
-      show_dates: [], // Clear events when date range changes
+      show_dates: [],
     };
 
     dispatch(setScheduleFormData(updatedData));
@@ -452,8 +408,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     setShowResetConfirmModal(false);
     setPendingDateChange(null);
   };
-
-  // ... existing functions (getVisibleDays, handleTimeSlotSelect, etc.)
 
   const getVisibleDays = () => {
     const allDays = getAllDaysInRange();
@@ -483,7 +437,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
 
   const handleEventSave = (eventData) => {
     if (eventData.id && eventData.id.startsWith("temp-")) {
-      // New event creation
       const eventDayIndex = eventData.startTime.day + currentWeekStart;
       const colorClass = getColorForDay(eventDayIndex);
 
@@ -493,17 +446,16 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         color: colorClass,
         startTime: {
           ...eventData.startTime,
-          day: eventDayIndex, // Use absolute day index
+          day: eventDayIndex,
         },
         endTime: {
           ...eventData.endTime,
-          day: eventData.endTime.day + currentWeekStart, // Use absolute day index
+          day: eventData.endTime.day + currentWeekStart,
         },
       };
 
       setAllEvents((prev) => {
         const updated = [...prev, newEvent];
-        // Trigger debounced save after state update
         debouncedSave({
           ...scheduleFormData,
           show_dates: generateShowDatesFromEvents(updated, dateRange),
@@ -512,7 +464,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       });
       message.success("Event created successfully!");
     } else {
-      // Event update
       const eventDayIndex =
         eventData.originalStartDay !== undefined
           ? eventData.originalStartDay
@@ -527,14 +478,14 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
           day:
             eventData.originalStartDay !== undefined
               ? eventData.originalStartDay
-              : eventData.startTime.day + currentWeekStart, // Adjust for absolute indexing
+              : eventData.startTime.day + currentWeekStart,
         },
         endTime: {
           ...eventData.endTime,
           day:
             eventData.originalEndDay !== undefined
               ? eventData.originalEndDay
-              : eventData.endTime.day + currentWeekStart, // Adjust for absolute indexing
+              : eventData.endTime.day + currentWeekStart,
         },
       };
 
@@ -542,7 +493,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         const updated = prev.map((e) =>
           e.id === eventData.id ? updatedEvent : e
         );
-        // Trigger debounced save after state update
         debouncedSave({
           ...scheduleFormData,
           show_dates: generateShowDatesFromEvents(updated, dateRange),
@@ -553,7 +503,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     }
   };
 
-  // Get visible events with proper week-relative positioning
   const getVisibleEvents = () => {
     const visibleEvents = allEvents.filter((event) => {
       if (!event.startTime || !event.endTime) return false;
@@ -566,19 +515,18 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       return !(eventEndDay < weekStart || eventStartDay > weekEnd);
     });
 
-    // Map to week-relative positions for display
     const mappedEvents = visibleEvents.map((event) => ({
       ...event,
       startTime: {
         ...event.startTime,
-        day: event.startTime.day - currentWeekStart, // Convert to week-relative
+        day: event.startTime.day - currentWeekStart,
       },
       endTime: {
         ...event.endTime,
-        day: event.endTime.day - currentWeekStart, // Convert to week-relative
+        day: event.endTime.day - currentWeekStart,
       },
-      originalStartDay: event.startTime.day, // Keep absolute reference
-      originalEndDay: event.endTime.day, // Keep absolute reference
+      originalStartDay: event.startTime.day,
+      originalEndDay: event.endTime.day,
     }));
 
     return mappedEvents;
@@ -602,7 +550,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
 
   const hasValidDateRange = dateRange.startDate && dateRange.endDate;
 
-  // Clean up timeout on unmount
   useEffect(() => {
     return () => {
       if (saveTimeout.current) {
@@ -613,7 +560,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
 
   return (
     <div className="max-w-full mx-auto bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-      {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
@@ -631,7 +577,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                 checked={multiDateSelectionEnabled}
                 onChange={(e) => {
                   setMultiDateSelectionEnabled(e.target.checked);
-                  // Manually save when this changes
                   debouncedSave({
                     ...scheduleFormData,
                     is_multi_date: e.target.checked,
@@ -651,17 +596,14 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       </div>
 
       <div className="grid grid-cols-12 gap-6">
-        {/* Left Sidebar */}
         <div className="col-span-3 space-y-6">
           <div className="mt-8 space-y-4">
-            {/* Enhanced Advertisement Start Time Picker */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 Advertisement Start Time *
               </label>
               <CompactDateTimePicker
                 onDateTimeChange={handleAdStartTimeChange}
-                placeholder="Select Adv Start Time"
                 label=""
                 fullWidth={true}
                 size="default"
@@ -673,15 +615,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                     ?.time_zone
                 }
               />
-
-              {form.getFieldValue("ad_start_date_time") && (
-                <div className="text-xs text-green-600">
-                  Selected:{" "}
-                  {new Date(
-                    form.getFieldValue("ad_start_date_time")
-                  ).toLocaleString()}
-                </div>
-              )}
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
@@ -689,7 +622,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
               </label>
               <CompactDateTimePicker
                 onDateTimeChange={handleBookingStartTimeChange}
-                placeholder="Select Booking Start Time"
                 label=""
                 fullWidth={true}
                 size="default"
@@ -701,14 +633,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                     ?.time_zone
                 }
               />
-              {form.getFieldValue("booking_start_date_time") && (
-                <div className="text-xs text-green-600">
-                  Selected:{" "}
-                  {new Date(
-                    form.getFieldValue("booking_start_date_time")
-                  ).toLocaleString()}
-                </div>
-              )}
             </div>
           </div>
 
@@ -730,7 +654,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                 Total Days: {allDaysInRange.length}
               </div>
 
-              {/* Show current datetime settings */}
               <div className="mt-2 space-y-1">
                 {scheduleFormData?.ad_start_date_time && (
                   <div className="text-xs text-purple-600">
@@ -759,7 +682,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
               onEventDelete={(eventId) => {
                 setAllEvents((prevEvents) => {
                   const updated = prevEvents.filter((e) => e.id !== eventId);
-                  // Trigger debounced save after delete
                   debouncedSave({
                     ...scheduleFormData,
                     show_dates: generateShowDatesFromEvents(updated, dateRange),
@@ -797,11 +719,11 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                       color: colorClass,
                       startTime: {
                         ...templateEvent.startTime,
-                        day: dayIndex, // Use absolute day index
+                        day: dayIndex,
                       },
                       endTime: {
                         ...templateEvent.endTime,
-                        day: dayIndex, // Use absolute day index
+                        day: dayIndex,
                       },
                     });
                   }
@@ -810,7 +732,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                 if (newEvents.length > 0) {
                   setAllEvents((prev) => {
                     const updated = [...prev, ...newEvents];
-                    // Trigger debounced save after apply to all
                     debouncedSave({
                       ...scheduleFormData,
                       show_dates: generateShowDatesFromEvents(
@@ -834,11 +755,9 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
           )}
         </div>
 
-        {/* Main Calendar Area - Rest of the JSX remains the same */}
         <div className="col-span-9">
           {hasValidDateRange ? (
             <div>
-              {/* Navigation Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-4">
                   <button
@@ -874,7 +793,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                     onClick={onBack}
                     className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-xl font-medium transition-colors flex items-center space-x-2"
                   >
-                    <Plus size={16} />
                     <span>Go Back</span>
                   </button>
                   <button
@@ -882,12 +800,11 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                     className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center space-x-2"
                   >
                     <Plus size={16} />
-                    <span>Create Schedule</span>
+                    <span>Save Timeslotes</span>
                   </button>
                 </div>
               </div>
 
-              {/* Calendar Grid */}
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <div
                   className="grid gap-4 mb-4"
@@ -926,13 +843,12 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                       ...timeSlotData,
                       id: `multi-${Date.now()}`,
                       type: "blocked",
-                      isMultiDay: true,
+                      is_multi_date: true,
                       color: "bg-orange-500 border-orange-600",
                     };
                     setBlockedSlots((prev) => [...prev, newMultiEvent]);
                     setAllEvents((prev) => {
                       const updated = [...prev, newMultiEvent];
-                      // Trigger debounced save for multi-date slot
                       debouncedSave({
                         ...scheduleFormData,
                         show_dates: generateShowDatesFromEvents(
@@ -978,7 +894,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         onDelete={(eventId) => {
           setAllEvents((prevEvents) => {
             const updated = prevEvents.filter((e) => e.id !== eventId);
-            // Trigger debounced save after delete
             debouncedSave({
               ...scheduleFormData,
               show_dates: generateShowDatesFromEvents(updated, dateRange),
@@ -996,7 +911,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         form={form}
       />
 
-      {/* Reset Confirmation Modal */}
       <Modal
         title="Reset All Time Slots"
         open={showResetConfirmModal}
