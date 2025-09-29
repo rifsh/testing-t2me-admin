@@ -77,7 +77,7 @@ const CountryForm = ({ mode, placeId }) => {
                 uid: `-banner-${index}`,
                 name: banner?.media_url.split("/").pop(),
                 status: "done",
-                url: banner?.media_url,
+                url: `${CDN_PATH}/${banner?.media_url}`,
               }))
             : [],
           thumbnail_image:
@@ -263,7 +263,6 @@ const CountryForm = ({ mode, placeId }) => {
         mode={mode}
         form={form}
         formType={"place"}
-        
       />
     </>
   );

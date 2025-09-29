@@ -1,4 +1,5 @@
 //utils
+// Updated utils functions for proper date handling
 export const getDaysInMonth = (date) => {
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -18,7 +19,7 @@ export const getDaysInMonth = (date) => {
     );
     days.push({
       date: date.getDate(),
-      fullDate: date,
+      fullDate: new Date(date), // Fix: Create proper date object
       isCurrentMonth: false,
     });
   }
@@ -28,7 +29,7 @@ export const getDaysInMonth = (date) => {
     const date = new Date(year, month, i);
     days.push({
       date: i,
-      fullDate: date,
+      fullDate: new Date(date), // Fix: Create proper date object
       isCurrentMonth: true,
     });
   }
@@ -39,12 +40,24 @@ export const getDaysInMonth = (date) => {
     const date = new Date(year, month + 1, i);
     days.push({
       date: i,
-      fullDate: date,
+      fullDate: new Date(date), // Fix: Create proper date object
       isCurrentMonth: false,
     });
   }
 
   return days;
+};
+
+export const getDaysDiff = (startDate, endDate) => {
+  // Fix: Use UTC dates to avoid timezone issues
+  const utcStart = new Date(
+    Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
+  );
+  const utcEnd = new Date(
+    Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate())
+  );
+  const timeDiff = utcEnd.getTime() - utcStart.getTime();
+  return Math.floor(timeDiff / (1000 * 3600 * 24)) + 1; // Fix: Use floor and add 1
 };
 
 export const isSameDay = (date1, date2) => {
@@ -141,11 +154,6 @@ export const formatTime = (hour, minute = 0) => {
 
 export const timeToMinutes = (hour, minute) => {
   return hour * 60 + minute;
-};
-
-export const getDaysDiff = (startDate, endDate) => {
-  const timeDiff = endDate.getTime() - startDate.getTime();
-  return Math.ceil(timeDiff / (1000 * 3600 * 24));
 };
 
 export const generateTimeSlots = () => {
@@ -531,54 +539,88 @@ export const ScheduleUtil = {
   },
 
   // Convert to API format
-  convertToApiFormat: (events, allDaysInRange) => {
-    const schedule = [];
+  convertToApiFormat: (events, dateRange, additionalData = {}) => {
+    if (!events || events.length === 0) return null;
 
-    allDaysInRange.forEach((day, index) => {
-      const dayEvents = events.filter(
-        (event) =>
-          event.startTime &&
-          (event.startTime.day === index ||
-            (event.endTime &&
-              event.startTime.day <= index &&
-              event.endTime.day >= index))
-      );
+    const allDays = dateRange.allDays || [];
 
-      schedule.push({
-        date: day.toISOString().split("T")[0],
-        dayIndex: index,
-        events: dayEvents.map((event) => ({
-          id: event.id,
-          type: event.type,
-          startTime: `${event.startTime.hour.toString().padStart(2, "0")}:${(
-            event.startTime.minute || 0
-          )
-            .toString()
-            .padStart(2, "0")}`,
-          endTime: `${event.endTime.hour.toString().padStart(2, "0")}:${(
-            event.endTime.minute || 0
-          )
-            .toString()
-            .padStart(2, "0")}`,
-          isMultiDay: event.isMultiDay || false,
-          duration: ScheduleUtil.formatDuration(event.startTime, event.endTime),
-        })),
-      });
+    // Group events by date
+    const eventsByDate = {};
+
+    events.forEach((event) => {
+      if (!event.startTime || !event.endTime) return;
+
+      const startDay = event.startTime.day;
+      const endDay = event.endTime.day;
+
+      // Handle multi-day events
+      for (let day = startDay; day <= endDay; day++) {
+        if (allDays[day]) {
+          const dateStr = allDays[day].toISOString().split("T")[0];
+
+          if (!eventsByDate[dateStr]) {
+            eventsByDate[dateStr] = [];
+          }
+
+          eventsByDate[dateStr].push({
+            start_time: `${event.startTime.hour.toString().padStart(2, "0")}:${(
+              event.startTime.minute || 0
+            )
+              .toString()
+              .padStart(2, "0")}`,
+            end_time: `${event.endTime.hour.toString().padStart(2, "0")}:${(
+              event.endTime.minute || 0
+            )
+              .toString()
+              .padStart(2, "0")}`,
+            ticket_structure_id: event.ticketType || 11,
+            ticket_set: event.ticketSet || "GOLD A1",
+            is_midnight:
+              event.endTime.hour < event.startTime.hour ? "true" : "false",
+          });
+        }
+      }
     });
 
+    // Convert to show_dates format
+    const showDates = Object.entries(eventsByDate).map(
+      ([dateStr, showTimes]) => ({
+        start_date: dateStr,
+        end_date: null,
+        show_times: showTimes,
+      })
+    );
+
+    // Sort by date
+    showDates.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+
+    const sortedDates = showDates.map((item) => item.start_date);
+
     return {
-      dateRange: {
-        start: allDaysInRange[0]?.toISOString().split("T")[0],
-        end: allDaysInRange[allDaysInRange.length - 1]
-          ?.toISOString()
-          .split("T")[0],
-        totalDays: allDaysInRange.length,
-      },
-      schedule,
-      summary: {
-        totalEvents: events.length,
-        eventsByType: ScheduleUtil.groupEventsByType(events),
-      },
+      start_date: sortedDates[0],
+      end_date: sortedDates[sortedDates.length - 1],
+      is_multi_date: sortedDates.length > 1,
+      show_dates: showDates,
+      ...additionalData,
     };
+  },
+
+  // Validate API structure
+  validateApiStructure: (data) => {
+    const required = ["start_date", "end_date", "show_dates"];
+    const missing = required.filter((field) => !data[field]);
+
+    if (missing.length > 0) {
+      return {
+        valid: false,
+        errors: [`Missing required fields: ${missing.join(", ")}`],
+      };
+    }
+
+    if (!Array.isArray(data.show_dates) || data.show_dates.length === 0) {
+      return { valid: false, errors: ["show_dates must be a non-empty array"] };
+    }
+
+    return { valid: true, errors: [] };
   },
 };

@@ -25,6 +25,7 @@ import {
   resetSchedule,
   setAddOnServie,
   setScheduleSelectTime,
+  setScheduleFormData, // Add this import
 } from "store/slices/scheduleSlice";
 import { setSelectedVenue } from "store/slices/locationSlice";
 import { EVENT_TYPES } from "constants/PageConstants";
@@ -38,7 +39,7 @@ import { AddOnsFoodTimeSlotes } from "./AddOnsFoodTimeSlotes";
 
 const { Option } = Select;
 
-const FormCard = ({ onSubmit, form }) => {
+const FormCard = ({ onSubmit, form, onCancel }) => {
   const dispatch = useDispatch();
 
   const {
@@ -46,38 +47,108 @@ const FormCard = ({ onSubmit, form }) => {
     loading,
     selectedEvent,
   } = useSelector((state) => state.event);
+
   const { availableTicketTyps, selectedTicketType } = useSelector(
     (state) => state.tickets
   );
+
   const { addOnServiceList } = useSelector((state) => state.payment);
 
-  const [allowMultipleDates, setAllowMultipleDates] = useState(false);
-  const [limitBookingsPerUser, setLimitBookingsPerUser] = useState(false);
-  const [isPaymentRequired, setIsPaymentRequired] = useState(false);
-  const [selectedAddOns, setSelectedAddOns] = useState([]);
+  // Get existing form data from Redux
+  const { scheduleFormData } = useSelector((state) => state.schedules);
+
+  const [allowMultipleDates, setAllowMultipleDates] = useState(
+    scheduleFormData?.is_multi_date || false
+  );
+  const [limitBookingsPerUser, setLimitBookingsPerUser] = useState(
+    scheduleFormData?.booking_limit_per_user_toggle || false
+  );
+  const [isPaymentRequired, setIsPaymentRequired] = useState(
+    scheduleFormData?.payment_required !== false // Default to true unless explicitly false
+  );
+  const [selectedAddOns, setSelectedAddOns] = useState(
+    scheduleFormData?.add_ons || []
+  );
+  const [searchValue, setSearchValue] = useState("");
+
+  // Initialize form with existing data
+  useEffect(() => {
+    if (scheduleFormData && Object.keys(scheduleFormData).length > 0) {
+      console.log(
+        "Initializing FormCard with existing data:",
+        scheduleFormData
+      );
+
+      // Set form fields
+      form.setFieldsValue({
+        name: scheduleFormData.name,
+        event_id: scheduleFormData.event_id,
+        venue_id: scheduleFormData.venue_id,
+        available_types: scheduleFormData.available_types,
+        max_ticket_per_booking: scheduleFormData.max_ticket_per_booking,
+        booking_limit_per_user: scheduleFormData.booking_limit_per_user,
+      });
+
+      // Set local states
+      setAllowMultipleDates(scheduleFormData.is_multi_date || false);
+      setLimitBookingsPerUser(
+        scheduleFormData.booking_limit_per_user_toggle || false
+      );
+      setIsPaymentRequired(scheduleFormData.payment_required !== false);
+      setSelectedAddOns(scheduleFormData.add_ons || []);
+
+      // If event_id exists, restore event selection
+      if (scheduleFormData.event_id) {
+        const event = filteredEvents.find(
+          (e) => e.id === scheduleFormData.event_id
+        );
+        if (event) {
+          dispatch(setSelectedEvent(event));
+        } else {
+          // If event not in current list, fetch it
+          dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
+        }
+      }
+    }
+  }, [scheduleFormData, form, dispatch, filteredEvents]);
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        console.log("Fetching initial events...");
         await dispatch(
           fetchAllEvent({ event_type: EVENT_TYPES.event })
         ).unwrap();
         dispatch(getPaymentAddOnService());
+        console.log("Initial events fetched successfully");
       } catch (error) {
+        console.error("Failed to fetch events:", error);
         message.error("Failed to load events");
       }
     };
     fetchEvents();
   }, [dispatch]);
 
+  // Enhanced debounced search with better error handling
   const debouncedSearch = useCallback(
-    debounce((value) => {
-      dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event, search: value }));
+    debounce(async (value) => {
+      console.log("Performing debounced search for:", value);
+      try {
+        const result = await dispatch(
+          fetchAllEvent({ event_type: EVENT_TYPES.event, search: value })
+        ).unwrap();
+        console.log("Search result:", result);
+      } catch (error) {
+        console.error("Search error:", error);
+        message.error("Failed to search events");
+      }
     }, 500),
     [dispatch]
   );
 
   const handleSelectEvent = (eventId) => {
+    console.log("Selecting event with ID:", eventId);
+
     if (!eventId) {
       dispatch(setSelectedEvent(null));
       form.resetFields(["venue_id", "available_types"]);
@@ -88,7 +159,12 @@ const FormCard = ({ onSubmit, form }) => {
     dispatch(getAvailableTicketsType({ event_id: eventId }));
 
     const event = filteredEvents.find((event) => event.id === eventId);
-    if (!event) return;
+    console.log("Found event:", event);
+
+    if (!event) {
+      console.error("Event not found in filteredEvents:", filteredEvents);
+      return;
+    }
 
     dispatch(setScheduleSelectTime(false));
     dispatch(setSelectedEvent(event));
@@ -102,23 +178,62 @@ const FormCard = ({ onSubmit, form }) => {
     });
 
     dispatch(resetSchedule());
+
+    // Save to Redux immediately
+    const currentFormData = form.getFieldsValue();
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        ...currentFormData,
+        event_id: eventId,
+        venue_id: venueId,
+      })
+    );
   };
 
   const handleSelectVenue = (venueId) => {
     if (!venueId) return;
 
+    console.log("Selecting venue with ID:", venueId);
     dispatch(setSelectedVenue(venueId));
     dispatch(resetSchedule());
+
+    // Save to Redux immediately
+    const currentFormData = form.getFieldsValue();
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        ...currentFormData,
+        venue_id: venueId,
+      })
+    );
   };
 
   const handleBookingTypeChange = (typeId) => {
+    console.log("Selecting booking type with ID:", typeId);
     dispatch(setSelectedTicketType(typeId));
+
+    // Save to Redux immediately
+    const currentFormData = form.getFieldsValue();
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        ...currentFormData,
+        available_types: typeId,
+      })
+    );
   };
 
+  // Enhanced search handler with debugging
   const handleSearch = (value) => {
+    console.log("Search input value:", value);
+    setSearchValue(value);
+
     if (value && value.trim()) {
-      debouncedSearch(value);
+      console.log("Triggering search for:", value.trim());
+      debouncedSearch(value.trim());
     } else {
+      console.log("Clearing search, fetching all events");
       dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
     }
   };
@@ -129,14 +244,41 @@ const FormCard = ({ onSubmit, form }) => {
     if (!enabled) {
       form.setFieldValue("booking_limit_per_user", undefined);
     }
+
+    // Save to Redux immediately
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        booking_limit_per_user_toggle: enabled,
+        booking_limit_per_user: enabled
+          ? scheduleFormData.booking_limit_per_user
+          : null,
+      })
+    );
   };
 
   const handleMultipleDatesToggle = (enabled) => {
     setAllowMultipleDates(enabled);
+
+    // Save to Redux immediately
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        is_multi_date: enabled,
+      })
+    );
   };
 
   const handlePaymentRequiredToggle = (enabled) => {
     setIsPaymentRequired(enabled);
+
+    // Save to Redux immediately
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        payment_required: enabled,
+      })
+    );
   };
 
   const handleAddOnsChange = (addonName, checked) => {
@@ -161,13 +303,39 @@ const FormCard = ({ onSubmit, form }) => {
 
     dispatch(setAddOnServie(addOnsData));
     form.setFieldValue("add_ons", updatedAddOns);
+
+    // Save to Redux immediately
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        add_ons: addOnsData,
+      })
+    );
+  };
+
+  // Enhanced form value change handler
+  const handleFormValueChange = (changedValues, allValues) => {
+    console.log("Form values changed:", changedValues);
+
+    // Save to Redux on every change
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        ...allValues,
+        is_multi_date: allowMultipleDates,
+        payment_required: isPaymentRequired,
+        booking_limit_per_user_toggle: limitBookingsPerUser,
+      })
+    );
   };
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      console.log("Form validation successful, values:", values);
 
       const finalData = {
+        ...scheduleFormData, // Include existing Redux data
         ...values,
         is_multi_date: allowMultipleDates,
         payment_required: isPaymentRequired,
@@ -175,9 +343,11 @@ const FormCard = ({ onSubmit, form }) => {
         add_ons: selectedAddOns,
       };
 
+      console.log("Final form data being submitted:", finalData);
       message.success("Form validation successful!");
       onSubmit(finalData);
     } catch (errorInfo) {
+      console.error("Form validation failed:", errorInfo);
       message.error("Please check the form fields and try again");
     }
   };
@@ -188,10 +358,25 @@ const FormCard = ({ onSubmit, form }) => {
     setAllowMultipleDates(false);
     setLimitBookingsPerUser(false);
     setIsPaymentRequired(false);
+    setSearchValue("");
     dispatch(setSelectedEvent(null));
     dispatch(resetSchedule());
+
+    if (onCancel) {
+      onCancel();
+    }
+
     message.info("Form has been reset");
   };
+
+  // Debug logs
+  console.log("FormCard render - Current state:", {
+    filteredEvents: filteredEvents.length,
+    loading,
+    selectedEvent: selectedEvent?.id,
+    searchValue,
+    scheduleFormData,
+  });
 
   return (
     <div className="max-w-full m-6 bg-white rounded-xl shadow-md border border-gray-200">
@@ -222,6 +407,7 @@ const FormCard = ({ onSubmit, form }) => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
+          onValuesChange={handleFormValueChange} // Add this to track changes
           scrollToFirstError
           requiredMark={false}
         >
@@ -280,16 +466,18 @@ const FormCard = ({ onSubmit, form }) => {
                       onChange={handleSelectEvent}
                       allowClear
                       suffixIcon={<SearchOutlined />}
+                      searchValue={searchValue} // Add this to control search value
+                      onClear={() => {
+                        setSearchValue("");
+                        dispatch(
+                          fetchAllEvent({ event_type: EVENT_TYPES.event })
+                        );
+                      }}
                       dropdownStyle={{
                         borderRadius: "8px",
                         boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
                       }}
-                      filterOption={(input, option) =>
-                        option?.children
-                          ?.toString()
-                          .toLowerCase()
-                          .includes(input.toLowerCase())
-                      }
+                      filterOption={false} // Disable client-side filtering since we're doing server-side search
                       notFoundContent={
                         loading ? (
                           <div className="text-center py-4">
@@ -298,25 +486,36 @@ const FormCard = ({ onSubmit, form }) => {
                               Loading events...
                             </div>
                           </div>
-                        ) : (
+                        ) : filteredEvents.length === 0 ? (
                           <Empty
-                            description="No events found"
+                            description={
+                              searchValue
+                                ? "No events found for your search"
+                                : "No events found"
+                            }
                             image={Empty.PRESENTED_IMAGE_SIMPLE}
                             className="py-4"
                           />
-                        )
+                        ) : null
                       }
                     >
-                      {filteredEvents.map((event) => (
-                        <Option key={event.id} value={event.id}>
-                          <div className="py-1">
-                            <div className="font-medium text-gray-900 flex items-center">
-                              <CalendarOutlined className="mr-2 text-blue-500" />
-                              {event.event_name}
+                      {filteredEvents.map((event) => {
+                        console.log(
+                          "Rendering event option:",
+                          event.id,
+                          event.event_name
+                        );
+                        return (
+                          <Option key={event.id} value={event.id}>
+                            <div className="py-1">
+                              <div className="font-medium text-gray-900 flex items-center">
+                                <CalendarOutlined className="mr-2 text-blue-500" />
+                                {event.event_name}
+                              </div>
                             </div>
-                          </div>
-                        </Option>
-                      ))}
+                          </Option>
+                        );
+                      })}
                     </Select>
                   </Form.Item>
 
@@ -484,6 +683,7 @@ const FormCard = ({ onSubmit, form }) => {
               )}
             </div>
 
+            {/* Right side panel remains the same */}
             <div className="col-span-4 space-y-6">
               <div>
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
@@ -729,6 +929,7 @@ const FormCard = ({ onSubmit, form }) => {
             </div>
           </div>
 
+          {/* Hidden form fields for state values */}
           <Form.Item name="is_multi_date" hidden>
             <Input />
           </Form.Item>

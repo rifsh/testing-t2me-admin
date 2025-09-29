@@ -67,31 +67,30 @@ const TimeSlotsSidebar = ({
     setDropdownOpen(dropdownOpen === timeKey ? null : timeKey);
   };
 
- // FIXED Enhanced Apply to All with confirmation modal
-const handleApplyToAll = (timeSlot) => {
-  // CRITICAL CHECK: Prevent multi-day apply when multi-date is disabled
-  const isMultiDay = timeSlot.startTime.day !== timeSlot.endTime.day;
-  
-  // Check if multiDateSelectionEnabled is available (should be passed as prop)
-  // For now, we'll check if any events in this slot are multi-day
-  const hasMultiDayEvents = timeSlot.events.some(event => 
-    event.startTime?.day !== event.endTime?.day
-  );
-  
-  if (hasMultiDayEvents || isMultiDay) {
-    message.error(
-      "Cannot apply multi-day time slot to all days. Enable multi-date selection first.",
-      4
+  // FIXED Enhanced Apply to All with confirmation modal
+  const handleApplyToAll = (timeSlot) => {
+    // CRITICAL CHECK: Prevent multi-day apply when multi-date is disabled
+    const isMultiDay = timeSlot.startTime.day !== timeSlot.endTime.day;
+
+    // Check if multiDateSelectionEnabled is available (should be passed as prop)
+    // For now, we'll check if any events in this slot are multi-day
+    const hasMultiDayEvents = timeSlot.events.some(
+      (event) => event.startTime?.day !== event.endTime?.day
     );
+
+    if (hasMultiDayEvents || isMultiDay) {
+      message.error(
+        "Cannot apply multi-day time slot to all days. Enable multi-date selection first.",
+        4
+      );
+      setDropdownOpen(null);
+      return;
+    }
+
+    setPendingApplySlot(timeSlot);
+    setShowApplyConfirmModal(true);
     setDropdownOpen(null);
-    return;
-  }
-
-  setPendingApplySlot(timeSlot);
-  setShowApplyConfirmModal(true);
-  setDropdownOpen(null);
-};
-
+  };
 
   const confirmApplyToAll = () => {
     if (!pendingApplySlot) return;
