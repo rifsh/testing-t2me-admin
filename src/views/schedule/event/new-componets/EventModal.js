@@ -95,7 +95,7 @@ const CustomDatePicker = ({
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 text-sm rounded-xl border-2 border-gray-200 bg-white 
+        className="w-full px-4 py-2 text-sm rounded-xl border-2 border-gray-200 bg-white 
           hover:border-blue-300 transition-all duration-200
           flex items-center justify-between
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
@@ -188,7 +188,7 @@ const CustomTimePicker = ({
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 text-sm rounded-xl border-2 border-gray-200 bg-white 
+        className="w-full px-4 py-2 text-sm rounded-xl border-2 border-gray-200 bg-white 
           hover:border-blue-300 transition-all duration-200
           flex items-center justify-between
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
@@ -280,7 +280,7 @@ const CustomSelect = ({
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-4 py-3 text-sm rounded-xl border-2 transition-all duration-200
+        className={`w-full px-4 py-2 text-sm rounded-xl border-2 transition-all duration-200
           flex items-center justify-between
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
           cursor-pointer
@@ -308,10 +308,10 @@ const CustomSelect = ({
       {isOpen && (
         <div
           ref={selectRef}
-          className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50 w-full max-h-60 overflow-y-auto"
+          className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-[99999] w-full max-h-60 overflow-y-auto"
         >
           {options.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-gray-500">
+            <div className="px-4 py-2 text-sm text-gray-500">
               No options available
             </div>
           ) : (
@@ -322,7 +322,7 @@ const CustomSelect = ({
                   onChange(option.value);
                   setIsOpen(false);
                 }}
-                className={`w-full px-4 py-3 text-sm text-left hover:bg-gray-100 transition-colors
+                className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-100 transition-colors
                   ${
                     value === option.value
                       ? "bg-blue-50 text-blue-700"
@@ -547,16 +547,13 @@ const EventModal = ({
   };
 
   const isFormValid = () => {
-    const requiredFields = [
-      "startDate",
-      "startTime",
-      "endTime",
-      "ticketType",
-      "ticketSet",
-    ];
+    const requiredFields = ["startDate", "startTime", "endTime"];
 
     if (selectedTicketType === 1) {
       requiredFields.push("seatStructure");
+    } else {
+      requiredFields.push("ticketSet");
+      requiredFields.push("ticketType");
     }
 
     return requiredFields.every(
@@ -575,15 +572,16 @@ const EventModal = ({
         message.error("Please fill in all required time fields");
         return;
       }
+      if (selectedTicketType !== 1) {
+        if (!formData.ticketType) {
+          message.error("Please select a ticket type");
+          return;
+        }
 
-      if (!formData.ticketType) {
-        message.error("Please select a ticket type");
-        return;
-      }
-
-      if (!formData.ticketSet) {
-        message.error("Please select a ticket set");
-        return;
+        if (!formData.ticketSet) {
+          message.error("Please select a ticket set");
+          return;
+        }
       }
 
       if (selectedTicketType === 1 && !formData.seatStructure) {
@@ -710,19 +708,10 @@ const EventModal = ({
                 slot and create a new one instead.
               </p>
               <div className="flex space-x-4">
-                <Button
-                  size="large"
-                  onClick={handleMultiDayWarningClose}
-                  className="flex-1"
-                >
+                <Button onClick={handleMultiDayWarningClose} className="flex-1">
                   Cancel
                 </Button>
-                <Button
-                  danger
-                  size="large"
-                  onClick={handleDelete}
-                  className="flex-1"
-                >
+                <Button danger onClick={handleDelete} className="flex-1">
                   Delete Slot
                 </Button>
               </div>
@@ -798,38 +787,7 @@ const EventModal = ({
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Tickets
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <CustomSelect
-                      label="Ticket Type"
-                      value={formData.ticketType}
-                      onChange={(value) => updateFormData("ticketType", value)}
-                      options={ticketOptions}
-                      placeholder="Select ticket type"
-                      icon={Ticket}
-                      required={true}
-                    />
-
-                    <CustomSelect
-                      label="Ticket Set"
-                      value={formData.ticketSet}
-                      onChange={(value) => updateFormData("ticketSet", value)}
-                      options={ticketSetOptions}
-                      placeholder={
-                        formData.ticketType
-                          ? "Select ticket set"
-                          : "Select ticket type first"
-                      }
-                      icon={Settings}
-                      required={true}
-                    />
-                  </div>
-                </div>
-
-                {selectedTicketType === 1 && (
+                {selectedTicketType === 1 ? (
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">
                       Seating
@@ -845,6 +803,39 @@ const EventModal = ({
                       icon={Users}
                       required={true}
                     />
+                  </div>
+                ) : (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                      Tickets
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <CustomSelect
+                        label="Ticket Type"
+                        value={formData.ticketType}
+                        onChange={(value) =>
+                          updateFormData("ticketType", value)
+                        }
+                        options={ticketOptions}
+                        placeholder="Select ticket type"
+                        icon={Ticket}
+                        required={true}
+                      />
+
+                      <CustomSelect
+                        label="Ticket Set"
+                        value={formData.ticketSet}
+                        onChange={(value) => updateFormData("ticketSet", value)}
+                        options={ticketSetOptions}
+                        placeholder={
+                          formData.ticketType
+                            ? "Select ticket set"
+                            : "Select ticket type first"
+                        }
+                        icon={Settings}
+                        required={true}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -921,41 +912,6 @@ const EventModal = ({
                   </div>
                 </div>
 
-                {(advertisementStartTime || bookingStartTime) && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                      Booking Schedule
-                    </h3>
-                    <div className="bg-green-50 rounded-2xl border border-green-100 p-4">
-                      <div className="space-y-3">
-                        {advertisementStartTime && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-green-700">
-                              Advertisement Start:
-                            </span>
-                            <span className="text-sm font-medium text-green-800">
-                              {new Date(
-                                advertisementStartTime
-                              ).toLocaleString()}
-                            </span>
-                          </div>
-                        )}
-
-                        {bookingStartTime && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-green-700">
-                              Booking Start:
-                            </span>
-                            <span className="text-sm font-medium text-green-800">
-                              {new Date(bookingStartTime).toLocaleString()}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {conflictWarning && (
                   <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
                     <div className="flex items-start space-x-3">
@@ -980,17 +936,12 @@ const EventModal = ({
               <div className="flex space-x-3">
                 <Button
                   danger
-                  size="large"
                   icon={<Trash2 size={18} />}
                   onClick={handleDelete}
                 >
                   Delete
                 </Button>
-                <Button
-                  size="large"
-                  icon={<Copy size={18} />}
-                  onClick={handleApplyToAll}
-                >
+                <Button icon={<Copy size={18} />} onClick={handleApplyToAll}>
                   Apply to All
                 </Button>
               </div>
@@ -999,12 +950,9 @@ const EventModal = ({
             )}
 
             <div className="flex space-x-3">
-              <Button size="large" onClick={onClose}>
-                Cancel
-              </Button>
+              <Button onClick={onClose}>Cancel</Button>
               <Button
                 type="primary"
-                size="large"
                 loading={loading}
                 onClick={handleSave}
                 disabled={!isFormValid() || !!conflictWarning}

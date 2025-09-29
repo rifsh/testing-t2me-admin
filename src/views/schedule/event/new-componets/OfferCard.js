@@ -1,15 +1,13 @@
 import React, { useState } from "react";
-import { Card, Button, DatePicker, Tag, Tooltip, Space } from "antd";
+import { Card, Button, DatePicker, Tag, Tooltip } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
   CalendarOutlined,
   TagOutlined,
-  CheckOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { OfferDateValidation } from "../utils/OfferDateValidation";
 
 const { RangePicker } = DatePicker;
 
