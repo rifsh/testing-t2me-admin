@@ -12,332 +12,14 @@ import {
   Ticket,
   Settings,
   Lock,
+  Move,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchEventDetails } from "store/slices/eventSlice";
 import { ScheduleUtil } from "../utils";
-
-const CustomDatePicker = ({
-  value,
-  onChange,
-  placeholder = "Select Date",
-  label,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [tempDate, setTempDate] = useState(value || new Date());
-  const pickerRef = useRef(null);
-  const buttonRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        pickerRef.current &&
-        !pickerRef.current.contains(event.target) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    if (value) {
-      setTempDate(new Date(value));
-    }
-  }, [value]);
-
-  const formatDisplayDate = (date) => {
-    if (!date) return placeholder;
-    const today = new Date();
-    const isToday = date.toDateString() === today.toDateString();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    const isTomorrow = date.toDateString() === tomorrow.toDateString();
-
-    if (isToday) return "Today";
-    if (isTomorrow) return "Tomorrow";
-
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const getCurrentDateString = () => {
-    const year = tempDate.getFullYear();
-    const month = String(tempDate.getMonth() + 1).padStart(2, "0");
-    const day = String(tempDate.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const handleDateChange = (e) => {
-    const newDate = new Date(e.target.value);
-    setTempDate(newDate);
-  };
-
-  const handleConfirm = () => {
-    onChange(tempDate);
-    setIsOpen(false);
-  };
-
-  return (
-    <div className="relative w-full">
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label}
-        </label>
-      )}
-
-      <button
-        ref={buttonRef}
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-2 text-sm rounded-xl border-2 border-gray-200 bg-white 
-          hover:border-blue-300 transition-all duration-200
-          flex items-center justify-between
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-          text-gray-800 cursor-pointer"
-      >
-        <div className="flex items-center">
-          <Calendar size={16} className="mr-2" />
-          <span>{formatDisplayDate(value)}</span>
-        </div>
-        <ChevronDown
-          size={16}
-          className={`text-gray-400 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-
-      {isOpen && (
-        <div
-          ref={pickerRef}
-          className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 p-4 z-50 w-full min-w-[280px]"
-        >
-          <input
-            type="date"
-            value={getCurrentDateString()}
-            onChange={handleDateChange}
-            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mb-4"
-          />
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="flex-1 py-2 px-4 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirm}
-              className="flex-1 py-2 px-4 text-sm font-medium text-white bg-blue-500 rounded-xl hover:bg-blue-600 transition-colors"
-            >
-              Confirm
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const CustomTimePicker = ({
-  value,
-  onChange,
-  placeholder = "Select Time",
-  label,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [tempTime, setTempTime] = useState(value || "09:00");
-  const pickerRef = useRef(null);
-  const buttonRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        pickerRef.current &&
-        !pickerRef.current.contains(event.target) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleConfirm = () => {
-    onChange(tempTime);
-    setIsOpen(false);
-  };
-
-  return (
-    <div className="relative w-full">
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label}
-        </label>
-      )}
-
-      <button
-        ref={buttonRef}
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-2 text-sm rounded-xl border-2 border-gray-200 bg-white 
-          hover:border-blue-300 transition-all duration-200
-          flex items-center justify-between
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-          text-gray-800 cursor-pointer"
-      >
-        <div className="flex items-center">
-          <Clock size={16} className="mr-2" />
-          <span>{value || placeholder}</span>
-        </div>
-        <ChevronDown
-          size={16}
-          className={`text-gray-400 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-
-      {isOpen && (
-        <div
-          ref={pickerRef}
-          className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 p-4 z-50 w-full min-w-[250px]"
-        >
-          <input
-            type="time"
-            value={tempTime}
-            onChange={(e) => setTempTime(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mb-4"
-          />
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="flex-1 py-2 px-4 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirm}
-              className="flex-1 py-2 px-4 text-sm font-medium text-white bg-blue-500 rounded-xl hover:bg-blue-600 transition-colors"
-            >
-              Confirm
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const CustomSelect = ({
-  value,
-  onChange,
-  options = [],
-  placeholder = "Select option",
-  label,
-  icon: IconComponent = Users,
-  required = false,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const selectRef = useRef(null);
-  const buttonRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        selectRef.current &&
-        !selectRef.current.contains(event.target) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const selectedOption = options.find((opt) => opt.value === value);
-
-  return (
-    <div className="relative w-full">
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-      )}
-
-      <button
-        ref={buttonRef}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-4 py-2 text-sm rounded-xl border-2 transition-all duration-200
-          flex items-center justify-between
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-          cursor-pointer
-          ${
-            required && !value
-              ? "border-red-300 bg-red-50 hover:border-red-400"
-              : "border-gray-200 bg-white hover:border-blue-300"
-          }
-          ${value ? "text-gray-800" : "text-gray-400"}`}
-      >
-        <div className="flex items-center min-w-0">
-          <IconComponent size={16} className="mr-2 flex-shrink-0" />
-          <span className="truncate">
-            {selectedOption?.label || placeholder}
-          </span>
-        </div>
-        <ChevronDown
-          size={16}
-          className={`text-gray-400 transition-transform flex-shrink-0 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-
-      {isOpen && (
-        <div
-          ref={selectRef}
-          className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-[99999] w-full max-h-60 overflow-y-auto"
-        >
-          {options.length === 0 ? (
-            <div className="px-4 py-2 text-sm text-gray-500">
-              No options available
-            </div>
-          ) : (
-            options.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => {
-                  onChange(option.value);
-                  setIsOpen(false);
-                }}
-                className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-100 transition-colors
-                  ${
-                    value === option.value
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-gray-800"
-                  }`}
-              >
-                <div className="truncate">{option.label}</div>
-              </button>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
+import CustomDatePicker from "./CustomDatePicker";
+import CustomTimePicker from "./CustomTimePicker";
+import CustomSelect from "./CustomSelect";
 
 const EventModal = ({
   isOpen,
@@ -354,13 +36,20 @@ const EventModal = ({
   const [conflictWarning, setConflictWarning] = useState(null);
   const [showMultiDayWarning, setShowMultiDayWarning] = useState(false);
 
+  // Enhanced dragging states - similar to CompactDateTimePicker
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const modalRef = useRef(null);
+
   const [formData, setFormData] = useState({
-    startDate: null,
-    startTime: "09:00",
-    endTime: "10:00",
-    ticketType: null,
-    ticketSet: null,
-    seatStructure: null,
+    start_date: null, // Fixed field name from startDate
+    start_time: "09:00", // Fixed field name from startTime
+    end_time: "10:00", // Fixed field name from endTime
+    ticket_structure_id: null, // Fixed field name from ticketType
+    ticket_set: null, // Already correct
+    seat_structure_id: null, // Fixed field name from seatStructure
   });
 
   const dispatch = useDispatch();
@@ -369,6 +58,57 @@ const EventModal = ({
     (state) => state.event || {}
   );
   const { selectedVenue } = useSelector((state) => state.locations || {});
+
+  // Enhanced dragging handlers - similar to CompactDateTimePicker
+  const handleMouseDown = (e) => {
+    if (e.target.closest(".drag-handle")) {
+      setIsDragging(true);
+      const rect = modalRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isDragging) {
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+
+      // Get modal dimensions for boundary constraints
+      const maxX = window.innerWidth - 600; // Modal width
+      const maxY = window.innerHeight - 700; // Approximate modal height
+
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY)),
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Enhanced dragging effect - similar to CompactDateTimePicker
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+    }
+  }, [isDragging, dragOffset]);
+
+  // Reset position when closing
+  const resetPosition = () => {
+    setPosition({ x: 0, y: 0 });
+  };
 
   useEffect(() => {
     const eventId = parentForm?.getFieldValue("event_id");
@@ -393,7 +133,7 @@ const EventModal = ({
   }, [eventDetails, selectedVenue]);
 
   const ticketSetOptions = React.useMemo(() => {
-    if (!eventDetails?.venue_ticket_structures || !formData.ticketType)
+    if (!eventDetails?.venue_ticket_structures || !formData.ticket_structure_id)
       return [];
 
     const venueTicketStructure = eventDetails.venue_ticket_structures.find(
@@ -403,7 +143,7 @@ const EventModal = ({
     if (!venueTicketStructure) return [];
 
     const selectedTicketStructure = venueTicketStructure.ticket_structures.find(
-      (structure) => structure.ticket_structure === formData.ticketType
+      (structure) => structure.ticket_structure === formData.ticket_structure_id
     );
 
     if (!selectedTicketStructure?.ticket_sets) return [];
@@ -412,7 +152,7 @@ const EventModal = ({
       value: set.id || set,
       label: set.name || `Ticket Set ${set}`,
     }));
-  }, [eventDetails, selectedVenue, formData.ticketType]);
+  }, [eventDetails, selectedVenue, formData.ticket_structure_id]);
 
   const availableSeats = React.useMemo(() => {
     if (!eventDetails?.event_venue_seat_structure) return [];
@@ -433,7 +173,7 @@ const EventModal = ({
   useEffect(() => {
     if (isOpen && event) {
       const isMultiDay =
-        event.isMultiDay ||
+        event.is_multi_date ||
         (event.originalStartDay !== undefined &&
           event.originalEndDay !== undefined &&
           event.originalStartDay !== event.originalEndDay) ||
@@ -449,7 +189,7 @@ const EventModal = ({
   useEffect(() => {
     if (isOpen && !showMultiDayWarning) {
       if (event) {
-        let startDate = null;
+        let start_date = null;
 
         if (allDays && allDays.length > 0) {
           const startDayIndex =
@@ -458,37 +198,37 @@ const EventModal = ({
               : event.startTime.day;
 
           if (startDayIndex >= 0 && startDayIndex < allDays.length) {
-            startDate = allDays[startDayIndex];
+            start_date = allDays[startDayIndex];
           }
         }
 
         setFormData({
-          startDate,
-          startTime: `${event.startTime.hour.toString().padStart(2, "0")}:${(
+          start_date,
+          start_time: `${event.startTime.hour.toString().padStart(2, "0")}:${(
             event.startTime.minute || 0
           )
             .toString()
             .padStart(2, "0")}`,
-          endTime: `${event.endTime.hour.toString().padStart(2, "0")}:${(
+          end_time: `${event.endTime.hour.toString().padStart(2, "0")}:${(
             event.endTime.minute || 0
           )
             .toString()
             .padStart(2, "0")}`,
-          ticketType: event.ticketType,
-          ticketSet: event.ticketSet,
-          seatStructure: event.seat_structure_id,
+          ticket_structure_id: event.ticket_structure_id,
+          ticket_set: event.ticket_set,
+          seat_structure_id: event.seat_structure_id,
         });
       } else {
         const defaultDate =
           allDays && allDays.length > 0 ? allDays[0] : new Date();
 
         setFormData({
-          startDate: defaultDate,
-          startTime: "09:00",
-          endTime: "10:00",
-          ticketType: null,
-          ticketSet: null,
-          seatStructure: null,
+          start_date: defaultDate,
+          start_time: "09:00",
+          end_time: "10:00",
+          ticket_structure_id: null,
+          ticket_set: null,
+          seat_structure_id: null,
         });
       }
     }
@@ -498,8 +238,8 @@ const EventModal = ({
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
 
-      if (field === "ticketType") {
-        updated.ticketSet = null;
+      if (field === "ticket_structure_id") {
+        updated.ticket_set = null;
       }
 
       return updated;
@@ -510,13 +250,13 @@ const EventModal = ({
   };
 
   const checkConflicts = (data) => {
-    if (!data.startDate || !data.startTime || !data.endTime || !allDays) {
+    if (!data.start_date || !data.start_time || !data.end_time || !allDays) {
       setConflictWarning(null);
       return;
     }
 
     const startDayIndex = allDays.findIndex(
-      (day) => day.toDateString() === data.startDate.toDateString()
+      (day) => day.toDateString() === data.start_date.toDateString()
     );
 
     if (startDayIndex === -1) {
@@ -524,8 +264,8 @@ const EventModal = ({
       return;
     }
 
-    const [startHour, startMinute] = data.startTime.split(":").map(Number);
-    const [endHour, endMinute] = data.endTime.split(":").map(Number);
+    const [startHour, startMinute] = data.start_time.split(":").map(Number);
+    const [endHour, endMinute] = data.end_time.split(":").map(Number);
 
     const testEvent = {
       id: event?.id || "test",
@@ -547,13 +287,13 @@ const EventModal = ({
   };
 
   const isFormValid = () => {
-    const requiredFields = ["startDate", "startTime", "endTime"];
+    const requiredFields = ["start_date", "start_time", "end_time"];
 
     if (selectedTicketType === 1) {
-      requiredFields.push("seatStructure");
+      requiredFields.push("seat_structure_id");
     } else {
-      requiredFields.push("ticketSet");
-      requiredFields.push("ticketType");
+      requiredFields.push("ticket_set");
+      requiredFields.push("ticket_structure_id");
     }
 
     return requiredFields.every(
@@ -568,23 +308,23 @@ const EventModal = ({
     try {
       setLoading(true);
 
-      if (!formData.startDate || !formData.startTime || !formData.endTime) {
+      if (!formData.start_date || !formData.start_time || !formData.end_time) {
         message.error("Please fill in all required time fields");
         return;
       }
       if (selectedTicketType !== 1) {
-        if (!formData.ticketType) {
+        if (!formData.ticket_structure_id) {
           message.error("Please select a ticket type");
           return;
         }
 
-        if (!formData.ticketSet) {
+        if (!formData.ticket_set) {
           message.error("Please select a ticket set");
           return;
         }
       }
 
-      if (selectedTicketType === 1 && !formData.seatStructure) {
+      if (selectedTicketType === 1 && !formData.seat_structure_id) {
         message.error("Please select a seat structure");
         return;
       }
@@ -595,7 +335,7 @@ const EventModal = ({
       }
 
       const startDayIndex = allDays.findIndex(
-        (day) => day.toDateString() === formData.startDate.toDateString()
+        (day) => day.toDateString() === formData.start_date.toDateString()
       );
 
       if (startDayIndex === -1) {
@@ -603,29 +343,31 @@ const EventModal = ({
         return;
       }
 
-      const [startHour, startMinute] = formData.startTime
+      const [startHour, startMinute] = formData.start_time
         .split(":")
         .map(Number);
-      const [endHour, endMinute] = formData.endTime.split(":").map(Number);
+      const [endHour, endMinute] = formData.end_time.split(":").map(Number);
 
-      const advertisementStartTime = parentForm?.getFieldValue(
-        "advertisement_start_time"
+      const ad_start_date_time =
+        parentForm?.getFieldValue("ad_start_date_time");
+      const booking_start_date_time = parentForm?.getFieldValue(
+        "booking_start_date_time"
       );
-      const bookingStartTime = parentForm?.getFieldValue("booking_start_time");
 
+      // Updated event data structure with correct field names
       const eventData = {
         id: event?.id || `temp-${Date.now()}`,
         type: "timeslot",
-        isMultiDay: false,
+        is_multi_date: false, // Changed from isMultiDay
         startTime: { day: startDayIndex, hour: startHour, minute: startMinute },
         endTime: { day: startDayIndex, hour: endHour, minute: endMinute },
         originalStartDay: startDayIndex,
         originalEndDay: startDayIndex,
-        ticketType: formData.ticketType,
-        ticketSet: formData.ticketSet,
-        seat_structure_id: formData.seatStructure,
-        advertisement_start_time: advertisementStartTime,
-        booking_start_time: bookingStartTime,
+        ticket_structure_id: formData.ticket_structure_id,
+        ticket_set: formData.ticket_set,
+        seat_structure_id: formData.seat_structure_id,
+        ad_start_date_time: ad_start_date_time,
+        booking_start_date_time: booking_start_date_time,
         event_id: parentForm?.getFieldValue("event_id"),
         venue_id: parentForm?.getFieldValue("venue_id"),
         max_ticket_per_booking: parentForm?.getFieldValue(
@@ -638,6 +380,7 @@ const EventModal = ({
 
       onSave(eventData);
       onClose();
+      resetPosition();
     } catch (error) {
       message.error("Please check your input and try again");
     } finally {
@@ -649,6 +392,7 @@ const EventModal = ({
     if (onDelete && event?.id) {
       onDelete(event.id);
       onClose();
+      resetPosition();
     }
   };
 
@@ -656,18 +400,25 @@ const EventModal = ({
     if (onApplyToAll && event) {
       onApplyToAll(event);
       onClose();
+      resetPosition();
     }
   };
 
   const handleMultiDayWarningClose = () => {
     setShowMultiDayWarning(false);
     onClose();
+    resetPosition();
+  };
+
+  const handleClose = () => {
+    onClose();
+    resetPosition();
   };
 
   useEffect(() => {
     const handleEscKey = (e) => {
       if (e.key === "Escape" && isOpen) {
-        onClose();
+        handleClose();
       }
     };
 
@@ -680,7 +431,7 @@ const EventModal = ({
       document.removeEventListener("keydown", handleEscKey);
       document.body.style.overflow = "unset";
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -691,7 +442,6 @@ const EventModal = ({
           className="fixed inset-0 bg-black bg-opacity-30 z-[999] flex items-center justify-center"
           onClick={handleMultiDayWarningClose}
         />
-
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md">
             <div className="p-8 text-center">
@@ -722,22 +472,50 @@ const EventModal = ({
     );
   }
 
-  const advertisementStartTime = parentForm?.getFieldValue(
-    "advertisement_start_time"
+  const ad_start_date_time = parentForm?.getFieldValue("ad_start_date_time");
+  const booking_start_date_time = parentForm?.getFieldValue(
+    "booking_start_date_time"
   );
-  const bookingStartTime = parentForm?.getFieldValue("booking_start_time");
+
+  // Check if modal is dragged
+  const isDragged = position.x !== 0 || position.y !== 0;
 
   return (
     <>
       <div
         className="fixed inset-0 bg-black bg-opacity-30 z-[999] flex items-center justify-center"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
-      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-4xl max-h-[90vh] overflow-hidden">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
+      <div
+        ref={modalRef}
+        onMouseDown={handleMouseDown}
+        className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-4xl max-h-[90vh] overflow-hidden"
+        style={{
+          ...(isDragged
+            ? {
+                position: "fixed",
+                left: position.x,
+                top: position.y,
+                zIndex: 1000,
+                userSelect: "none",
+                cursor: isDragging ? "grabbing" : "default",
+                pointerEvents: "auto",
+              }
+            : {
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1000,
+              }),
+        }}
+      >
+        {/* Draggable Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="drag-handle flex items-center space-x-2 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-100 transition-colors">
+              <Move size={16} className="text-gray-400" />
               <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                 <Clock className="w-6 h-6 text-blue-600" />
               </div>
@@ -745,227 +523,215 @@ const EventModal = ({
                 {event ? "Edit Time Slot" : "Create Time Slot"}
               </h2>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
-            >
-              <X className="w-6 h-6 text-gray-500" />
-            </button>
           </div>
-
-          <div
-            className="p-6 overflow-y-auto"
-            style={{ maxHeight: "calc(90vh - 140px)" }}
+          <button
+            onClick={handleClose}
+            className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Date & Time
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <CustomDatePicker
-                      label="Date"
-                      value={formData.startDate}
-                      onChange={(value) => updateFormData("startDate", value)}
-                      placeholder="Select date"
-                    />
+            <X className="w-6 h-6 text-gray-500" />
+          </button>
+        </div>
 
-                    <CustomTimePicker
-                      label="Start Time"
-                      value={formData.startTime}
-                      onChange={(value) => updateFormData("startTime", value)}
-                      placeholder="Start time"
-                    />
+        <div
+          className="p-6 overflow-y-auto"
+          style={{ maxHeight: "calc(90vh - 140px)" }}
+        >
+          <div className="grid  gap-8">
+            <div className="space-y-6">
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <CustomDatePicker
+                    label="Date"
+                    value={formData.start_date}
+                    onChange={(value) => updateFormData("start_date", value)}
+                    placeholder="Select date"
+                  />
 
-                    <CustomTimePicker
-                      label="End Time"
-                      value={formData.endTime}
-                      onChange={(value) => updateFormData("endTime", value)}
-                      placeholder="End time"
-                    />
-                  </div>
+                  <CustomTimePicker
+                    label="Start Time"
+                    value={formData.start_time}
+                    onChange={(value) => updateFormData("start_time", value)}
+                    placeholder="Start time"
+                  />
+
+                  <CustomTimePicker
+                    label="End Time"
+                    value={formData.end_time}
+                    onChange={(value) => updateFormData("end_time", value)}
+                    placeholder="End time"
+                  />
                 </div>
+              </div>
 
-                {selectedTicketType === 1 ? (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                      Seating
-                    </h3>
+              {selectedTicketType === 1 ? (
+                <div>
+                  <CustomSelect
+                    label="Seat Structure"
+                    value={formData.seat_structure_id}
+                    onChange={(value) =>
+                      updateFormData("seat_structure_id", value)
+                    }
+                    options={availableSeats}
+                    placeholder="Select seat structure"
+                    icon={Users}
+                    required={true}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <CustomSelect
-                      label="Seat Structure"
-                      value={formData.seatStructure}
+                      label="Ticket Type"
+                      value={formData.ticket_structure_id}
                       onChange={(value) =>
-                        updateFormData("seatStructure", value)
+                        updateFormData("ticket_structure_id", value)
                       }
-                      options={availableSeats}
-                      placeholder="Select seat structure"
-                      icon={Users}
+                      options={ticketOptions}
+                      placeholder="Select ticket type"
+                      icon={Ticket}
+                      required={true}
+                    />
+
+                    <CustomSelect
+                      label="Ticket Set"
+                      value={formData.ticket_set}
+                      onChange={(value) => updateFormData("ticket_set", value)}
+                      options={ticketSetOptions}
+                      placeholder={
+                        formData.ticket_structure_id
+                          ? "Select ticket set"
+                          : "Select ticket type first"
+                      }
+                      icon={Settings}
                       required={true}
                     />
                   </div>
-                ) : (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                      Tickets
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <CustomSelect
-                        label="Ticket Type"
-                        value={formData.ticketType}
-                        onChange={(value) =>
-                          updateFormData("ticketType", value)
-                        }
-                        options={ticketOptions}
-                        placeholder="Select ticket type"
-                        icon={Ticket}
-                        required={true}
-                      />
-
-                      <CustomSelect
-                        label="Ticket Set"
-                        value={formData.ticketSet}
-                        onChange={(value) => updateFormData("ticketSet", value)}
-                        options={ticketSetOptions}
-                        placeholder={
-                          formData.ticketType
-                            ? "Select ticket set"
-                            : "Select ticket type first"
-                        }
-                        icon={Settings}
-                        required={true}
-                      />
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mt-3 mb-3">
+                Event Details
+              </h3>
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-100 p-6">
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedEvent && (
+                    <div className="flex items-center space-x-3">
+                      <Calendar className="w-5 h-5 text-blue-600" />
+                      <span className="text-gray-700 font-medium">
+                        {selectedEvent.event_name}
+                      </span>
                     </div>
+                  )}
+
+                  <div className="flex items-center space-x-3">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    <span className="text-gray-700 font-medium">
+                      {formData.start_date
+                        ? formData.start_date.toLocaleDateString("en-US", {
+                            weekday: "long",
+                            month: "long",
+                            day: "numeric",
+                          })
+                        : "No date selected"}
+                    </span>
                   </div>
-                )}
+
+                  <div className="flex items-center space-x-3">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    <span className="text-gray-700 font-medium">
+                      {formData.start_time} - {formData.end_time}
+                    </span>
+                  </div>
+
+                  {formData.ticket_structure_id && (
+                    <div className="flex items-center space-x-3">
+                      <Ticket className="w-5 h-5 text-blue-600" />
+                      <span className="text-gray-700 font-medium">
+                        {ticketOptions.find(
+                          (opt) => opt.value === formData.ticket_structure_id
+                        )?.label || "Unknown Ticket Type"}
+                      </span>
+                    </div>
+                  )}
+
+                  {formData.ticket_set && (
+                    <div className="flex items-center space-x-3">
+                      <Settings className="w-5 h-5 text-blue-600" />
+                      <span className="text-gray-700 font-medium">
+                        {ticketSetOptions.find(
+                          (opt) => opt.value === formData.ticket_set
+                        )?.label || "Unknown Ticket Set"}
+                      </span>
+                    </div>
+                  )}
+
+                  {selectedTicketType === 1 && formData.seat_structure_id && (
+                    <div className="flex items-center space-x-3">
+                      <Users className="w-5 h-5 text-blue-600" />
+                      <span className="text-gray-700 font-medium">
+                        {availableSeats.find(
+                          (seat) => seat.value === formData.seat_structure_id
+                        )?.label || "Unknown Seat Structure"}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
+            </div>
 
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Event Details
-                  </h3>
-                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-100 p-6">
-                    <div className="space-y-4">
-                      {selectedEvent && (
-                        <div className="flex items-center space-x-3">
-                          <Calendar className="w-5 h-5 text-blue-600" />
-                          <span className="text-gray-700 font-medium">
-                            {selectedEvent.event_name}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center space-x-3">
-                        <Clock className="w-5 h-5 text-blue-600" />
-                        <span className="text-gray-700 font-medium">
-                          {formData.startDate
-                            ? formData.startDate.toLocaleDateString("en-US", {
-                                weekday: "long",
-                                month: "long",
-                                day: "numeric",
-                              })
-                            : "No date selected"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <Clock className="w-5 h-5 text-blue-600" />
-                        <span className="text-gray-700 font-medium">
-                          {formData.startTime} - {formData.endTime}
-                        </span>
-                      </div>
-
-                      {formData.ticketType && (
-                        <div className="flex items-center space-x-3">
-                          <Ticket className="w-5 h-5 text-blue-600" />
-                          <span className="text-gray-700 font-medium">
-                            {ticketOptions.find(
-                              (opt) => opt.value === formData.ticketType
-                            )?.label || "Unknown Ticket Type"}
-                          </span>
-                        </div>
-                      )}
-
-                      {formData.ticketSet && (
-                        <div className="flex items-center space-x-3">
-                          <Settings className="w-5 h-5 text-blue-600" />
-                          <span className="text-gray-700 font-medium">
-                            {ticketSetOptions.find(
-                              (opt) => opt.value === formData.ticketSet
-                            )?.label || "Unknown Ticket Set"}
-                          </span>
-                        </div>
-                      )}
-
-                      {selectedTicketType === 1 && formData.seatStructure && (
-                        <div className="flex items-center space-x-3">
-                          <Users className="w-5 h-5 text-blue-600" />
-                          <span className="text-gray-700 font-medium">
-                            {availableSeats.find(
-                              (seat) => seat.value === formData.seatStructure
-                            )?.label || "Unknown Seat Structure"}
-                          </span>
-                        </div>
-                      )}
+            {conflictWarning && (
+              <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+                <div className="flex items-start space-x-3">
+                  <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="font-semibold text-red-800">
+                      Conflict Detected
+                    </div>
+                    <div className="text-sm text-red-700 mt-1">
+                      {conflictWarning}
                     </div>
                   </div>
                 </div>
-
-                {conflictWarning && (
-                  <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
-                    <div className="flex items-start space-x-3">
-                      <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-semibold text-red-800">
-                          Conflict Detected
-                        </div>
-                        <div className="text-sm text-red-700 mt-1">
-                          {conflictWarning}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-            {event ? (
-              <div className="flex space-x-3">
-                <Button
-                  danger
-                  icon={<Trash2 size={18} />}
-                  onClick={handleDelete}
-                >
-                  Delete
-                </Button>
-                <Button icon={<Copy size={18} />} onClick={handleApplyToAll}>
-                  Apply to All
-                </Button>
-              </div>
-            ) : (
-              <div />
             )}
+          </div>
+        </div>
 
+        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+          {event ? (
             <div className="flex space-x-3">
-              <Button onClick={onClose}>Cancel</Button>
-              <Button
-                type="primary"
-                loading={loading}
-                onClick={handleSave}
-                disabled={!isFormValid() || !!conflictWarning}
-                className="px-8"
-              >
-                {event ? "Update" : "Create"}
+              <Button danger icon={<Trash2 size={18} />} onClick={handleDelete}>
+                Delete
               </Button>
             </div>
+          ) : (
+            <div />
+          )}
+
+          <div className="flex space-x-3">
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button
+              type="primary"
+              loading={loading}
+              onClick={handleSave}
+              disabled={!isFormValid() || !!conflictWarning}
+              className="px-8"
+            >
+              {event ? "Update" : "Create"}
+            </Button>
           </div>
         </div>
       </div>
     </>
   );
 };
+
+// Import these custom components
+// import CustomDatePicker from "./CustomDatePicker";
+// import CustomTimePicker from "./CustomTimePicker";
+// import CustomSelect from "./CustomSelect";
 
 export default EventModal;

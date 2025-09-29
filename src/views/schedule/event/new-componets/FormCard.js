@@ -25,7 +25,7 @@ import {
   resetSchedule,
   setAddOnServie,
   setScheduleSelectTime,
-  setScheduleFormData, // Add this import
+  setScheduleFormData,
 } from "store/slices/scheduleSlice";
 import { setSelectedVenue } from "store/slices/locationSlice";
 import { EVENT_TYPES } from "constants/PageConstants";
@@ -53,8 +53,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
   );
 
   const { addOnServiceList } = useSelector((state) => state.payment);
-
-  // Get existing form data from Redux
   const { scheduleFormData } = useSelector((state) => state.schedules);
 
   const [allowMultipleDates, setAllowMultipleDates] = useState(
@@ -64,14 +62,15 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
     scheduleFormData?.booking_limit_per_user_toggle || false
   );
   const [isPaymentRequired, setIsPaymentRequired] = useState(
-    scheduleFormData?.payment_required !== false // Default to true unless explicitly false
+    scheduleFormData?.payment_required !== false
   );
   const [selectedAddOns, setSelectedAddOns] = useState(
-    scheduleFormData?.add_ons || []
+    scheduleFormData?.add_ons?.map((addon) =>
+      typeof addon === "string" ? addon : addon.name
+    ) || []
   );
   const [searchValue, setSearchValue] = useState("");
 
-  // Initialize form with existing data
   useEffect(() => {
     if (scheduleFormData && Object.keys(scheduleFormData).length > 0) {
       console.log(
@@ -79,7 +78,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
         scheduleFormData
       );
 
-      // Set form fields
       form.setFieldsValue({
         name: scheduleFormData.name,
         event_id: scheduleFormData.event_id,
@@ -89,15 +87,18 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
         booking_limit_per_user: scheduleFormData.booking_limit_per_user,
       });
 
-      // Set local states
       setAllowMultipleDates(scheduleFormData.is_multi_date || false);
       setLimitBookingsPerUser(
         scheduleFormData.booking_limit_per_user_toggle || false
       );
       setIsPaymentRequired(scheduleFormData.payment_required !== false);
-      setSelectedAddOns(scheduleFormData.add_ons || []);
 
-      // If event_id exists, restore event selection
+      const addOnNames =
+        scheduleFormData.add_ons?.map((addon) =>
+          typeof addon === "string" ? addon : addon.name
+        ) || [];
+      setSelectedAddOns(addOnNames);
+
       if (scheduleFormData.event_id) {
         const event = filteredEvents.find(
           (e) => e.id === scheduleFormData.event_id
@@ -105,7 +106,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
         if (event) {
           dispatch(setSelectedEvent(event));
         } else {
-          // If event not in current list, fetch it
           dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
         }
       }
@@ -129,7 +129,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
     fetchEvents();
   }, [dispatch]);
 
-  // Enhanced debounced search with better error handling
   const debouncedSearch = useCallback(
     debounce(async (value) => {
       console.log("Performing debounced search for:", value);
@@ -179,7 +178,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
 
     dispatch(resetSchedule());
 
-    // Save to Redux immediately
     const currentFormData = form.getFieldsValue();
     dispatch(
       setScheduleFormData({
@@ -198,7 +196,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
     dispatch(setSelectedVenue(venueId));
     dispatch(resetSchedule());
 
-    // Save to Redux immediately
     const currentFormData = form.getFieldsValue();
     dispatch(
       setScheduleFormData({
@@ -213,7 +210,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
     console.log("Selecting booking type with ID:", typeId);
     dispatch(setSelectedTicketType(typeId));
 
-    // Save to Redux immediately
     const currentFormData = form.getFieldsValue();
     dispatch(
       setScheduleFormData({
@@ -224,7 +220,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
     );
   };
 
-  // Enhanced search handler with debugging
   const handleSearch = (value) => {
     console.log("Search input value:", value);
     setSearchValue(value);
@@ -245,7 +240,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
       form.setFieldValue("booking_limit_per_user", undefined);
     }
 
-    // Save to Redux immediately
     dispatch(
       setScheduleFormData({
         ...scheduleFormData,
@@ -260,7 +254,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
   const handleMultipleDatesToggle = (enabled) => {
     setAllowMultipleDates(enabled);
 
-    // Save to Redux immediately
     dispatch(
       setScheduleFormData({
         ...scheduleFormData,
@@ -272,7 +265,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
   const handlePaymentRequiredToggle = (enabled) => {
     setIsPaymentRequired(enabled);
 
-    // Save to Redux immediately
     dispatch(
       setScheduleFormData({
         ...scheduleFormData,
@@ -281,15 +273,26 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
     );
   };
 
-  const handleAddOnsChange = (addonName, checked) => {
+  const handleAddOnsChange = (addonName, shouldAdd) => {
+    console.log("handleAddOnsChange called:", {
+      addonName,
+      shouldAdd,
+      currentSelected: selectedAddOns,
+    });
+
     let updatedAddOns;
 
-    if (checked) {
-      updatedAddOns = [...selectedAddOns, addonName];
+    if (shouldAdd) {
+      if (!selectedAddOns.includes(addonName)) {
+        updatedAddOns = [...selectedAddOns, addonName];
+      } else {
+        updatedAddOns = [...selectedAddOns];
+      }
     } else {
       updatedAddOns = selectedAddOns.filter((addon) => addon !== addonName);
     }
 
+    console.log("Updated addons:", updatedAddOns);
     setSelectedAddOns(updatedAddOns);
 
     const addOnsData = (addOnServiceList?.available_add_ons || [])
@@ -301,23 +304,28 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
         price: addon.price,
       }));
 
+    console.log("AddOns data for Redux:", addOnsData);
+
     dispatch(setAddOnServie(addOnsData));
     form.setFieldValue("add_ons", updatedAddOns);
 
-    // Save to Redux immediately
     dispatch(
       setScheduleFormData({
         ...scheduleFormData,
         add_ons: addOnsData,
       })
     );
+
+    message.success(
+      shouldAdd
+        ? `${addonName} addon added successfully!`
+        : `${addonName} addon removed successfully!`
+    );
   };
 
-  // Enhanced form value change handler
   const handleFormValueChange = (changedValues, allValues) => {
     console.log("Form values changed:", changedValues);
 
-    // Save to Redux on every change
     dispatch(
       setScheduleFormData({
         ...scheduleFormData,
@@ -325,6 +333,7 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
         is_multi_date: allowMultipleDates,
         payment_required: isPaymentRequired,
         booking_limit_per_user_toggle: limitBookingsPerUser,
+        add_ons: selectedAddOns,
       })
     );
   };
@@ -334,13 +343,22 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
       const values = await form.validateFields();
       console.log("Form validation successful, values:", values);
 
+      const addOnsData = (addOnServiceList?.available_add_ons || [])
+        .filter((addon) => selectedAddOns.includes(addon.name))
+        .map((addon) => ({
+          name: addon.name,
+          status: true,
+          id: addon.id,
+          price: addon.price,
+        }));
+
       const finalData = {
-        ...scheduleFormData, // Include existing Redux data
+        ...scheduleFormData,
         ...values,
         is_multi_date: allowMultipleDates,
         payment_required: isPaymentRequired,
         booking_limit_per_user_toggle: limitBookingsPerUser,
-        add_ons: selectedAddOns,
+        add_ons: addOnsData,
       };
 
       console.log("Final form data being submitted:", finalData);
@@ -369,12 +387,12 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
     message.info("Form has been reset");
   };
 
-  // Debug logs
   console.log("FormCard render - Current state:", {
     filteredEvents: filteredEvents.length,
     loading,
     selectedEvent: selectedEvent?.id,
     searchValue,
+    selectedAddOns,
     scheduleFormData,
   });
 
@@ -407,7 +425,7 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          onValuesChange={handleFormValueChange} // Add this to track changes
+          onValuesChange={handleFormValueChange}
           scrollToFirstError
           requiredMark={false}
         >
@@ -466,7 +484,7 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
                       onChange={handleSelectEvent}
                       allowClear
                       suffixIcon={<SearchOutlined />}
-                      searchValue={searchValue} // Add this to control search value
+                      searchValue={searchValue}
                       onClear={() => {
                         setSearchValue("");
                         dispatch(
@@ -477,7 +495,7 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
                         borderRadius: "8px",
                         boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
                       }}
-                      filterOption={false} // Disable client-side filtering since we're doing server-side search
+                      filterOption={false}
                       notFoundContent={
                         loading ? (
                           <div className="text-center py-4">
@@ -683,7 +701,6 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
               )}
             </div>
 
-            {/* Right side panel remains the same */}
             <div className="col-span-4 space-y-6">
               <div>
                 <h2 className="text-lg font-medium text-gray-900 mb-4">
@@ -869,67 +886,82 @@ const FormCard = ({ onSubmit, form, onCancel }) => {
                   </Form.Item>
 
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {addOnServiceList?.available_add_ons?.map((addon) => (
-                      <div
-                        key={addon.id}
-                        onClick={() =>
-                          handleAddOnsChange(
-                            addon.name,
-                            !selectedAddOns.includes(addon.name)
-                          )
-                        }
-                        className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${
-                          selectedAddOns.includes(addon.name)
-                            ? "bg-yellow-50 border-2 border-yellow-200"
-                            : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className={`w-8 h-8 rounded flex items-center justify-center bg-yellow-500`}
-                          >
-                            <span className="text-white text-sm">
-                              {addon.name.charAt(0)}
-                            </span>
-                          </div>
-                          <div>
-                            <p
-                              className={`text-sm font-medium ${
-                                selectedAddOns.includes(addon.name)
-                                  ? "text-yellow-900"
-                                  : "text-gray-900"
+                    {addOnServiceList?.available_add_ons?.map((addon) => {
+                      const isSelected = selectedAddOns.includes(addon.name);
+
+                      return (
+                        <div
+                          key={addon.id}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log(
+                              `Clicked on ${addon.name}, currently selected:`,
+                              isSelected
+                            );
+                            handleAddOnsChange(addon.name, !isSelected);
+                          }}
+                          className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${
+                            isSelected
+                              ? "bg-yellow-50 border-2 border-yellow-200"
+                              : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`w-8 h-8 rounded flex items-center justify-center ${
+                                isSelected ? "bg-yellow-500" : "bg-gray-400"
                               }`}
                             >
-                              {addon.name}
-                            </p>
+                              <span className="text-white text-sm">
+                                {addon.name.charAt(0)}
+                              </span>
+                            </div>
+                            <div>
+                              <p
+                                className={`text-sm font-medium ${
+                                  isSelected
+                                    ? "text-yellow-900"
+                                    : "text-gray-900"
+                                }`}
+                              >
+                                {addon.name}
+                              </p>
+                              {addon.price && (
+                                <p className="text-xs text-gray-500">
+                                  ${addon.price}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {isSelected ? (
+                              <div className="w-5 h-5 bg-yellow-500 rounded flex items-center justify-center">
+                                <svg
+                                  className="w-3 h-3 text-white"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </div>
+                            ) : (
+                              <div className="w-5 h-5 border-2 border-gray-300 rounded"></div>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          {selectedAddOns.includes(addon.name) ? (
-                            <svg
-                              className="w-5 h-5 text-yellow-600"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          ) : (
-                            <div className="w-5 h-5 border-2 border-gray-300 rounded"></div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Hidden form fields for state values */}
           <Form.Item name="is_multi_date" hidden>
             <Input />
           </Form.Item>
