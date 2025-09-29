@@ -20,17 +20,18 @@ const CompactDateTimePicker = ({
   showClearButton = true,
   size = "default",
   label = null,
-  timezone = "",
+  timezone = "UTC",
   disablePastDates = true,
   disablePastTimes = true,
+  minDateTime = null,
+  maxDateTime = null,
 }) => {
-  // Helper function to validate timezone
   const isValidTimezone = (tz) => {
+    if (!tz || tz === "") return false;
     try {
       Intl.DateTimeFormat(undefined, { timeZone: tz });
       return true;
     } catch (error) {
-      console.error(`Invalid timezone: ${tz}`, error);
       return false;
     }
   };
@@ -39,14 +40,36 @@ const CompactDateTimePicker = ({
     return isValidTimezone(timezone) ? timezone : "UTC";
   }, [timezone]);
 
-  // FIXED: Get current time properly in the specified timezone
   const getCurrentTimeInTimezone = () => {
-    const now = new Date();
-    // Return the current time as-is, formatting will handle timezone display
-    return now;
+    if (!safeTimezone || safeTimezone === "UTC") {
+      return new Date();
+    }
+
+    try {
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const targetTime = new Date(
+        utc + getTimezoneOffset(safeTimezone) * 60000
+      );
+      return targetTime;
+    } catch (error) {
+      return new Date();
+    }
   };
 
-  // FIXED: Better timezone display name handling
+  const getTimezoneOffset = (tz) => {
+    try {
+      const now = new Date();
+      const utcDate = new Date(
+        now.toLocaleString("en-US", { timeZone: "UTC" })
+      );
+      const tzDate = new Date(now.toLocaleString("en-US", { timeZone: tz }));
+      return (tzDate.getTime() - utcDate.getTime()) / 60000;
+    } catch (error) {
+      return 0;
+    }
+  };
+
   const getTimezoneDisplayName = (tz) => {
     try {
       const formatter = new Intl.DateTimeFormat("en-US", {
@@ -57,7 +80,6 @@ const CompactDateTimePicker = ({
       const timezonePart = parts.find((part) => part.type === "timeZoneName");
       return timezonePart?.value || tz;
     } catch (error) {
-      console.error("Error getting timezone display name:", error);
       return tz;
     }
   };
@@ -71,18 +93,13 @@ const CompactDateTimePicker = ({
       const date = new Date(dateValue);
       return isNaN(date.getTime()) ? null : date;
     } catch (error) {
-      console.error("Invalid date value:", dateValue, error);
       return null;
     }
   };
 
   const getInitialDate = () => {
-    if (value) {
-      return safeToDate(value);
-    }
-    if (initialDateTime) {
-      return safeToDate(initialDateTime);
-    }
+    if (value) return safeToDate(value);
+    if (initialDateTime) return safeToDate(initialDateTime);
     return getCurrentTimeInTimezone();
   };
 
@@ -98,7 +115,6 @@ const CompactDateTimePicker = ({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isAM, setIsAM] = useState(true);
 
-  // Enhanced dragging states - similar to FloatingUploadWidget
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -106,14 +122,10 @@ const CompactDateTimePicker = ({
   const buttonRef = useRef(null);
   const widgetRef = useRef(null);
 
-  const currentTime = useMemo(() => getCurrentTimeInTimezone(), []);
-
-  // Update AM/PM based on tempDate
   useEffect(() => {
     setIsAM(tempDate.getHours() < 12);
   }, [tempDate]);
 
-  // Enhanced dragging handlers - exactly like FloatingUploadWidget
   const handleMouseDown = (e) => {
     if (e.target.closest(".drag-handle")) {
       setIsDragging(true);
@@ -131,10 +143,8 @@ const CompactDateTimePicker = ({
     if (isDragging) {
       const newX = e.clientX - dragOffset.x;
       const newY = e.clientY - dragOffset.y;
-
-      // Get modal dimensions for boundary constraints
-      const maxX = window.innerWidth - 420; // Modal width
-      const maxY = window.innerHeight - 500; // Approximate modal height
+      const maxX = window.innerWidth - 420;
+      const maxY = window.innerHeight - 500;
 
       setPosition({
         x: Math.max(0, Math.min(newX, maxX)),
@@ -147,7 +157,6 @@ const CompactDateTimePicker = ({
     setIsDragging(false);
   };
 
-  // Enhanced dragging effect - exactly like FloatingUploadWidget
   useEffect(() => {
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove);
@@ -159,16 +168,13 @@ const CompactDateTimePicker = ({
     }
   }, [isDragging, dragOffset]);
 
-  // Generate calendar days
   const generateCalendarDays = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
-
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
-
     const days = [];
 
     for (let i = 0; i < startingDayOfWeek; i++) {
@@ -182,132 +188,133 @@ const CompactDateTimePicker = ({
     return days;
   };
 
-  // FIXED: Better past date detection considering timezone
-  const isPastDate = (date) => {
-    if (!disablePastDates) return false;
+  const isDateDisabled = (date) => {
+    if (!date) return true;
 
-    // Create dates in the target timezone for comparison
-    const now = new Date();
-    const today = new Date(
-      now.toLocaleString("en-US", { timeZone: safeTimezone })
-    );
-    const compareDate = new Date(
-      date.toLocaleString("en-US", { timeZone: safeTimezone })
-    );
+    const currentInTz = getCurrentTimeInTimezone();
+    const dateToCheck = new Date(date);
 
-    const dateOnly = new Date(
-      compareDate.getFullYear(),
-      compareDate.getMonth(),
-      compareDate.getDate()
-    );
-    const todayOnly = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    );
-
-    return dateOnly < todayOnly;
-  };
-
-  // FIXED: Better past time detection considering timezone
-  const isPastTime = (date) => {
-    if (!disablePastTimes) return false;
-
-    const now = new Date();
-    const currentTimeInTz = new Date(
-      now.toLocaleString("en-US", { timeZone: safeTimezone })
-    );
-    const selectedTimeInTz = new Date(
-      date.toLocaleString("en-US", { timeZone: safeTimezone })
-    );
-
-    const dateOnly = new Date(
-      selectedTimeInTz.getFullYear(),
-      selectedTimeInTz.getMonth(),
-      selectedTimeInTz.getDate()
-    );
-    const todayOnly = new Date(
-      currentTimeInTz.getFullYear(),
-      currentTimeInTz.getMonth(),
-      currentTimeInTz.getDate()
-    );
-
-    if (dateOnly.getTime() === todayOnly.getTime()) {
-      return selectedTimeInTz < currentTimeInTz;
+    if (disablePastDates) {
+      const today = new Date(
+        currentInTz.getFullYear(),
+        currentInTz.getMonth(),
+        currentInTz.getDate()
+      );
+      const checkDate = new Date(
+        dateToCheck.getFullYear(),
+        dateToCheck.getMonth(),
+        dateToCheck.getDate()
+      );
+      if (checkDate < today) return true;
     }
+
+    if (minDateTime) {
+      const minDate = new Date(
+        minDateTime.getFullYear(),
+        minDateTime.getMonth(),
+        minDateTime.getDate()
+      );
+      const checkDate = new Date(
+        dateToCheck.getFullYear(),
+        dateToCheck.getMonth(),
+        dateToCheck.getDate()
+      );
+      if (checkDate < minDate) return true;
+    }
+
+    if (maxDateTime) {
+      const maxDate = new Date(
+        maxDateTime.getFullYear(),
+        maxDateTime.getMonth(),
+        maxDateTime.getDate()
+      );
+      const checkDate = new Date(
+        dateToCheck.getFullYear(),
+        dateToCheck.getMonth(),
+        dateToCheck.getDate()
+      );
+      if (checkDate > maxDate) return true;
+    }
+
     return false;
   };
 
-  // FIXED: Consistent date formatting functions with proper timezone handling
+  const isTimeDisabled = (date) => {
+    if (!date) return true;
+
+    const currentInTz = getCurrentTimeInTimezone();
+
+    if (disablePastTimes) {
+      const today = new Date(
+        currentInTz.getFullYear(),
+        currentInTz.getMonth(),
+        currentInTz.getDate()
+      );
+      const checkDate = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
+
+      if (checkDate.getTime() === today.getTime() && date < currentInTz) {
+        return true;
+      }
+    }
+
+    if (minDateTime && date < minDateTime) return true;
+    if (maxDateTime && date > maxDateTime) return true;
+
+    return false;
+  };
+
   const formatDisplayDate = (date) => {
     const safeDate = safeToDate(date);
     if (!safeDate) return placeholder;
 
     try {
-      return safeDate.toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-        timeZone: safeTimezone,
-      });
-    } catch (error) {
-      console.error("Error formatting display date:", error);
-      return placeholder;
-    }
-  };
-
-  // FIXED: Better compact date formatting with timezone consideration
-  const formatCompactDate = (date) => {
-    const safeDate = safeToDate(date);
-    if (!safeDate) return placeholder;
-
-    try {
-      const now = new Date();
-
-      // Get dates in the target timezone for comparison
-      const todayInTz = new Date(
-        now.toLocaleString("en-US", { timeZone: safeTimezone })
+      const currentInTz = getCurrentTimeInTimezone();
+      const today = new Date(
+        currentInTz.getFullYear(),
+        currentInTz.getMonth(),
+        currentInTz.getDate()
       );
-      const selectedInTz = new Date(
-        safeDate.toLocaleString("en-US", { timeZone: safeTimezone })
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+      const checkDate = new Date(
+        safeDate.getFullYear(),
+        safeDate.getMonth(),
+        safeDate.getDate()
       );
-
-      const tomorrow = new Date(todayInTz);
-      tomorrow.setDate(todayInTz.getDate() + 1);
-
-      const selectedDateStr = selectedInTz.toLocaleDateString("en-CA");
-      const todayStr = todayInTz.toLocaleDateString("en-CA");
-      const tomorrowStr = tomorrow.toLocaleDateString("en-CA");
 
       const timeString = safeDate.toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
-        timeZone: safeTimezone,
       });
 
-      if (selectedDateStr === todayStr) {
+      if (checkDate.getTime() === today.getTime()) {
         return `Today, ${timeString}`;
-      } else if (selectedDateStr === tomorrowStr) {
+      } else if (checkDate.getTime() === tomorrow.getTime()) {
         return `Tomorrow, ${timeString}`;
       } else {
-        return formatDisplayDate(safeDate);
+        return safeDate.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
       }
     } catch (error) {
-      console.error("Error formatting compact date:", error);
-      return formatDisplayDate(safeDate);
+      return placeholder;
     }
   };
 
-  // Reset position when closing
   const resetPosition = () => {
     setPosition({ x: 0, y: 0 });
   };
 
-  // Event handlers
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isDragging) return;
@@ -337,10 +344,10 @@ const CompactDateTimePicker = ({
       setSelectedDateTime(null);
       setTempDate(getCurrentTimeInTimezone());
     }
-  }, [value, safeTimezone]);
+  }, [value]);
 
   const handleDateSelect = (date) => {
-    if (date && !isPastDate(date)) {
+    if (date && !isDateDisabled(date)) {
       const updatedDate = new Date(tempDate);
       updatedDate.setFullYear(date.getFullYear());
       updatedDate.setMonth(date.getMonth());
@@ -349,7 +356,6 @@ const CompactDateTimePicker = ({
     }
   };
 
-  // Convert 12-hour format to 24-hour format
   const convertTo24Hour = (hour12, isAM) => {
     if (hour12 === 12) {
       return isAM ? 0 : 12;
@@ -357,7 +363,6 @@ const CompactDateTimePicker = ({
     return isAM ? hour12 : hour12 + 12;
   };
 
-  // Convert 24-hour format to 12-hour format
   const convertTo12Hour = (hour24) => {
     if (hour24 === 0) return 12;
     if (hour24 > 12) return hour24 - 12;
@@ -374,7 +379,7 @@ const CompactDateTimePicker = ({
       updatedDate.setMinutes(parseInt(value, 10));
     }
 
-    if (!isPastTime(updatedDate)) {
+    if (!isTimeDisabled(updatedDate)) {
       setTempDate(updatedDate);
     }
   };
@@ -389,7 +394,7 @@ const CompactDateTimePicker = ({
       updatedDate.setHours(currentHour - 12);
     }
 
-    if (!isPastTime(updatedDate)) {
+    if (!isTimeDisabled(updatedDate)) {
       setTempDate(updatedDate);
       setIsAM(!isAM);
     }
@@ -397,7 +402,7 @@ const CompactDateTimePicker = ({
 
   const handleConfirm = () => {
     const validDate = safeToDate(tempDate);
-    if (validDate && !isPastDate(validDate) && !isPastTime(validDate)) {
+    if (validDate && !isDateDisabled(validDate) && !isTimeDisabled(validDate)) {
       setSelectedDateTime(validDate);
       setIsOpen(false);
       resetPosition();
@@ -452,19 +457,16 @@ const CompactDateTimePicker = ({
   ];
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  // Check if modal is dragged
   const isDragged = position.x !== 0 || position.y !== 0;
 
   return (
     <div className={`relative ${fullWidth ? "w-full" : "w-auto"}`}>
-      {/* Label */}
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-2">
           {label}
         </label>
       )}
 
-      {/* Main Button */}
       <button
         ref={buttonRef}
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -490,7 +492,7 @@ const CompactDateTimePicker = ({
           </div>
           <span className="font-medium">
             {selectedDateTime
-              ? formatCompactDate(selectedDateTime)
+              ? formatDisplayDate(selectedDateTime)
               : placeholder}
           </span>
         </div>
@@ -519,7 +521,6 @@ const CompactDateTimePicker = ({
         </div>
       </button>
 
-      {/* Compact DateTime Picker Popup */}
       {isOpen && (
         <div
           ref={widgetRef}
@@ -547,8 +548,7 @@ const CompactDateTimePicker = ({
             padding: "10px",
           }}
         >
-          {/* Compact Draggable Handle */}
-          <div className="flex items-center justify-between px-3 py-2 bg-white-50 ">
+          <div className="flex items-center justify-between px-3 py-2 bg-white-50">
             <div className="flex items-center space-x-2">
               <div className="drag-handle flex items-center space-x-2 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-200 transition-colors">
                 <Move size={14} className="text-gray-400" />
@@ -570,7 +570,6 @@ const CompactDateTimePicker = ({
             </div>
           </div>
 
-          {/* Compact Tab Navigation */}
           <div className="flex border-b border-gray-100">
             <button
               onClick={() => setActiveTab("date")}
@@ -578,7 +577,7 @@ const CompactDateTimePicker = ({
                 flex-1 py-2 px-3 text-xs font-semibold transition-all duration-200 flex items-center justify-center space-x-1
                 ${
                   activeTab === "date"
-                    ? "bg-white text-blue-600  border-b-2 border-blue-500"
+                    ? "bg-white text-blue-600 border-b-2 border-blue-500"
                     : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
                 }
               `}
@@ -592,7 +591,7 @@ const CompactDateTimePicker = ({
                 flex-1 py-2 px-3 text-xs font-semibold transition-all duration-200 flex items-center justify-center space-x-1
                 ${
                   activeTab === "time"
-                    ? "bg-white text-blue-600  border-b-2 border-blue-500"
+                    ? "bg-white text-blue-600 border-b-2 border-blue-500"
                     : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
                 }
               `}
@@ -602,12 +601,9 @@ const CompactDateTimePicker = ({
             </button>
           </div>
 
-          {/* Compact Content */}
           <div className="p-4">
-            {/* Compact Calendar */}
             {activeTab === "date" && (
               <div className="space-y-3">
-                {/* Compact Calendar Header */}
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => navigateMonth(-1)}
@@ -629,7 +625,6 @@ const CompactDateTimePicker = ({
                   </button>
                 </div>
 
-                {/* Compact Day Names */}
                 <div className="grid grid-cols-7 gap-1 mb-2">
                   {dayNames.map((day) => (
                     <div
@@ -641,7 +636,6 @@ const CompactDateTimePicker = ({
                   ))}
                 </div>
 
-                {/* Compact Calendar Grid */}
                 <div className="grid grid-cols-7 gap-1">
                   {calendarDays.map((date, index) => {
                     if (!date) {
@@ -654,24 +648,26 @@ const CompactDateTimePicker = ({
                       date.getMonth() === tempDate.getMonth() &&
                       date.getFullYear() === tempDate.getFullYear();
 
-                    // FIXED: Better today detection with timezone
-                    const now = new Date();
-                    const todayInTz = new Date(
-                      now.toLocaleString("en-US", { timeZone: safeTimezone })
+                    const currentInTz = getCurrentTimeInTimezone();
+                    const today = new Date(
+                      currentInTz.getFullYear(),
+                      currentInTz.getMonth(),
+                      currentInTz.getDate()
                     );
-                    const dateInTz = new Date(
-                      date.toLocaleString("en-US", { timeZone: safeTimezone })
+                    const checkDate = new Date(
+                      date.getFullYear(),
+                      date.getMonth(),
+                      date.getDate()
                     );
-                    const isToday =
-                      todayInTz.toDateString() === dateInTz.toDateString();
+                    const isToday = today.getTime() === checkDate.getTime();
 
-                    const isPast = isPastDate(date);
+                    const isDisabled = isDateDisabled(date);
 
                     return (
                       <button
                         key={index}
                         onClick={() => handleDateSelect(date)}
-                        disabled={isPast}
+                        disabled={isDisabled}
                         className={`
                           h-8 w-full rounded-xl text-xs font-medium transition-all duration-200 relative
                           ${
@@ -679,7 +675,7 @@ const CompactDateTimePicker = ({
                               ? "bg-blue-500 text-white shadow-md transform scale-105"
                               : isToday
                               ? "bg-blue-50 text-blue-600 border border-blue-200"
-                              : isPast
+                              : isDisabled
                               ? "text-gray-300 cursor-not-allowed bg-gray-50"
                               : "text-gray-700 hover:bg-gray-100"
                           }
@@ -694,7 +690,6 @@ const CompactDateTimePicker = ({
                   })}
                 </div>
 
-                {/* Compact Quick Date Selection */}
                 <div className="pt-2 border-t border-gray-100">
                   <div className="text-xs font-medium text-gray-600 mb-2">
                     Quick Select:
@@ -718,27 +713,14 @@ const CompactDateTimePicker = ({
                     >
                       Tomorrow
                     </button>
-                    <button
-                      onClick={() => {
-                        const nextWeek = getCurrentTimeInTimezone();
-                        nextWeek.setDate(nextWeek.getDate() + 7);
-                        handleDateSelect(nextWeek);
-                      }}
-                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors"
-                    >
-                      Next Week
-                    </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Compact Time Picker */}
             {activeTab === "time" && (
               <div className="space-y-4">
-                {/* Compact Time Selectors */}
                 <div className="grid grid-cols-2 gap-4">
-                  {/* Compact Hours (1-12) */}
                   <div className="space-y-2">
                     <div className="text-center">
                       <h3 className="text-sm font-semibold text-gray-700">
@@ -752,39 +734,24 @@ const CompactDateTimePicker = ({
                           const hour12 = i + 1;
                           const hour24 = convertTo24Hour(hour12, isAM);
 
-                          // FIXED: Better past hour detection with timezone
-                          const now = new Date();
-                          const currentInTz = new Date(
-                            now.toLocaleString("en-US", {
-                              timeZone: safeTimezone,
-                            })
-                          );
-                          const selectedInTz = new Date(
-                            tempDate.toLocaleString("en-US", {
-                              timeZone: safeTimezone,
-                            })
-                          );
-
-                          const isPastHour =
-                            disablePastTimes &&
-                            selectedInTz.toDateString() ===
-                              currentInTz.toDateString() &&
-                            hour24 < currentInTz.getHours();
+                          const testTime = new Date(tempDate);
+                          testTime.setHours(hour24);
+                          const isDisabled = isTimeDisabled(testTime);
 
                           return (
                             <button
                               key={hour12}
                               onClick={() =>
-                                !isPastHour && handleTimeChange("hours", hour12)
+                                !isDisabled && handleTimeChange("hours", hour12)
                               }
-                              disabled={isPastHour}
+                              disabled={isDisabled}
                               className={`
                                 py-2 px-2 text-sm font-semibold rounded-xl transition-all duration-200
                                 ${
                                   convertTo12Hour(tempDate.getHours()) ===
                                   hour12
                                     ? "bg-blue-500 text-white shadow-md scale-105"
-                                    : isPastHour
+                                    : isDisabled
                                     ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                                     : "bg-gray-50 text-gray-700 hover:bg-blue-100 hover:text-blue-600"
                                 }
@@ -798,7 +765,6 @@ const CompactDateTimePicker = ({
                     </div>
                   </div>
 
-                  {/* Compact Minutes */}
                   <div className="space-y-2">
                     <div className="text-center">
                       <h3 className="text-sm font-semibold text-gray-700">
@@ -812,23 +778,22 @@ const CompactDateTimePicker = ({
                           (minute) => {
                             const testTime = new Date(tempDate);
                             testTime.setMinutes(minute);
-                            const isPastMinute =
-                              disablePastTimes && isPastTime(testTime);
+                            const isDisabled = isTimeDisabled(testTime);
 
                             return (
                               <button
                                 key={minute}
                                 onClick={() =>
-                                  !isPastMinute &&
+                                  !isDisabled &&
                                   handleTimeChange("minutes", minute)
                                 }
-                                disabled={isPastMinute}
+                                disabled={isDisabled}
                                 className={`
                                 py-2 px-2 text-sm font-semibold rounded-xl transition-all duration-200
                                 ${
                                   tempDate.getMinutes() === minute
                                     ? "bg-green-500 text-white shadow-md scale-105"
-                                    : isPastMinute
+                                    : isDisabled
                                     ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                                     : "bg-gray-50 text-gray-700 hover:bg-green-100 hover:text-green-600"
                                 }
@@ -844,7 +809,6 @@ const CompactDateTimePicker = ({
                   </div>
                 </div>
 
-                {/* Compact AM/PM Toggle */}
                 <div className="flex justify-center">
                   <div className="bg-gray-100 rounded-xl p-1 flex">
                     <button
@@ -884,20 +848,21 @@ const CompactDateTimePicker = ({
                   </div>
                 </div>
 
-                {/* FIXED: Compact Current Time Setter with proper timezone display */}
                 <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-sm font-semibold text-indigo-800">
-                        Current Time
+                        Current Time ({safeTimezone})
                       </h4>
                       <p className="text-xs text-indigo-600">
-                        {new Date().toLocaleTimeString("en-US", {
-                          hour: "numeric",
-                          minute: "2-digit",
-                          hour12: true,
-                          timeZone: safeTimezone,
-                        })}
+                        {getCurrentTimeInTimezone().toLocaleTimeString(
+                          "en-US",
+                          {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          }
+                        )}
                       </p>
                     </div>
                     <button
@@ -912,19 +877,17 @@ const CompactDateTimePicker = ({
                   </div>
                 </div>
 
-                {/* Compact Time Validation */}
-                {disablePastTimes && isPastTime(tempDate) && (
-                  <div className="bg-red-50  rounded-xl p-2 text-center">
+                {isTimeDisabled(tempDate) && (
+                  <div className="bg-red-50 rounded-xl p-2 text-center">
                     <div className="text-red-600 text-xs font-medium">
-                      ⚠️ Please select a future time
+                      ⚠️ Please select a valid time
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* FIXED: Preview section with proper timezone display */}
-            <div className="rounded-xl p-3  mt-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-gray-100">
+            <div className="rounded-xl p-3 mt-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-gray-100">
               <div className="text-xs text-gray-600 mb-1">
                 Selected DateTime:
               </div>
@@ -937,7 +900,6 @@ const CompactDateTimePicker = ({
             </div>
           </div>
 
-          {/* Compact Action Buttons */}
           <div className="flex border-t border-gray-100">
             {showClearButton && (
               <button
@@ -958,11 +920,11 @@ const CompactDateTimePicker = ({
             </button>
             <button
               onClick={handleConfirm}
-              disabled={isPastDate(tempDate) || isPastTime(tempDate)}
+              disabled={isDateDisabled(tempDate) || isTimeDisabled(tempDate)}
               className={`
                 flex-1 py-2 text-sm font-semibold transition-colors border-l border-gray-100 flex items-center justify-center space-x-1
                 ${
-                  isPastDate(tempDate) || isPastTime(tempDate)
+                  isDateDisabled(tempDate) || isTimeDisabled(tempDate)
                     ? "text-gray-400 cursor-not-allowed"
                     : "text-blue-600 hover:bg-blue-50"
                 }

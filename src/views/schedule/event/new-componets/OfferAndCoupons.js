@@ -396,9 +396,6 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-            <GiftOutlined className="w-6 h-6 text-white" />
-          </div>
           <div>
             <h1 className="text-xl font-semibold text-gray-900">
               Offers & Coupons
@@ -409,11 +406,7 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
           </div>
         </div>
         <div className="flex items-center space-x-3">
-          <Button
-            icon={<CloseOutlined />}
-            onClick={onBack}
-            className="flex items-center"
-          >
+          <Button onClick={onBack} className="flex items-center">
             Go Back
           </Button>
           <Button
@@ -421,9 +414,9 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
             icon={<SaveOutlined />}
             onClick={handleSubmit}
             loading={loading}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700"
+            // className="bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700"
           >
-            Save Configuration
+            Submit
           </Button>
         </div>
       </div>
@@ -551,17 +544,14 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
                                   <div className="font-medium text-gray-900">
                                     {offer.offer.name}
                                   </div>
-                                  <div className="text-xs text-gray-500">
-                                    {offer.offer.description}
-                                  </div>
                                 </div>
                               </div>
                               <div className="text-right">
-                                <div className="text-sm font-medium text-green-600">
+                                {/* <div className="text-sm font-medium text-green-600">
                                   {offer.offer.discounttype === "percentage"
                                     ? `${offer.offer.discountvalue}% OFF`
                                     : `$${offer.offer.discountvalue} OFF`}
-                                </div>
+                                </div> */}
                                 <div className="text-xs text-gray-500">
                                   {dayjs(offer.offer.startdate).format(
                                     "MMM DD"
@@ -649,15 +639,15 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
                                   <div className="font-medium text-gray-900">
                                     {coupon.coupons.name}
                                   </div>
-                                  <div className="text-xs text-gray-500">
+                                  {/* <div className="text-xs text-gray-500">
                                     Code: {coupon.coupons.code}
-                                  </div>
+                                  </div> */}
                                 </div>
                               </div>
                               <div className="text-right">
-                                <div className="text-sm font-medium text-blue-600">
+                                {/* <div className="text-sm font-medium text-blue-600">
                                   Max Uses: {coupon.coupons.maxuses}
-                                </div>
+                                </div> */}
                                 <div className="text-xs text-gray-500">
                                   {dayjs(coupon.coupons.startdate).format(
                                     "MMM DD"
