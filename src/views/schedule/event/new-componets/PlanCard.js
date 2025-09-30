@@ -660,7 +660,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
             <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 mt-4">
               <h4 className="text-sm font-medium text-blue-800 mb-2">
                 Schedule Summary
-              </h4>
+              </h4> 
               <div className="space-y-1 text-xs">
                 <div className="text-green-600">
                   ✓ Ad Start: {adStartDateTime?.toLocaleDateString()}{" "}
