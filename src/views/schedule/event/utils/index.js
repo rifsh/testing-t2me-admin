@@ -1,4 +1,6 @@
-// utils/index.js
+import dayjs from "dayjs";
+
+// All your existing utility functions remain the same...
 export const getDaysInMonth = (currentDate) => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -67,93 +69,6 @@ export const isDateInRange = (date, startDate, endDate) => {
   const end = new Date(endDate);
 
   return checkDate >= start && checkDate <= end;
-};
-
-export const ScheduleUtil = {
-  findConflictingEvents: (testEvent, existingEvents, excludeId = null) => {
-    return existingEvents.filter((existingEvent) => {
-      if (excludeId && existingEvent.id === excludeId) return false;
-
-      const testStart = testEvent.startTime;
-      const testEnd = testEvent.endTime;
-      const existingStart = existingEvent.startTime;
-      const existingEnd = existingEvent.endTime;
-
-      // Convert to minutes for easier comparison
-      const testStartMinutes =
-        testStart.day * 1440 + testStart.hour * 60 + (testStart.minute || 0);
-      const testEndMinutes =
-        testEnd.day * 1440 + testEnd.hour * 60 + (testEnd.minute || 0);
-      const existingStartMinutes =
-        existingStart.day * 1440 +
-        existingStart.hour * 60 +
-        (existingStart.minute || 0);
-      const existingEndMinutes =
-        existingEnd.day * 1440 +
-        existingEnd.hour * 60 +
-        (existingEnd.minute || 0);
-
-      // Check for overlap
-      return (
-        testStartMinutes < existingEndMinutes &&
-        testEndMinutes > existingStartMinutes
-      );
-    });
-  },
-
-  formatDuration: (startTime, endTime) => {
-    const startMinutes = startTime.hour * 60 + (startTime.minute || 0);
-    const endMinutes = endTime.hour * 60 + (endTime.minute || 0);
-    const durationMinutes = endMinutes - startMinutes;
-
-    const hours = Math.floor(durationMinutes / 60);
-    const minutes = durationMinutes % 60;
-
-    if (hours === 0) return `${minutes}min`;
-    if (minutes === 0) return `${hours}h`;
-    return `${hours}h ${minutes}min`;
-  },
-
-  convertEventDataToAPIFormat: (events, allDays) => {
-    const show_dates = [];
-    const eventsByDate = {};
-
-    // Group events by date
-    events.forEach((event) => {
-      const dayIndex = event.startTime.day;
-      if (dayIndex >= 0 && dayIndex < allDays.length) {
-        const dateKey = formatDateForAPI(allDays[dayIndex]);
-        if (!eventsByDate[dateKey]) {
-          eventsByDate[dateKey] = [];
-        }
-
-        eventsByDate[dateKey].push({
-          start_time: `${String(event.startTime.hour).padStart(
-            2,
-            "0"
-          )}:${String(event.startTime.minute || 0).padStart(2, "0")}`,
-          end_time: `${String(event.endTime.hour).padStart(2, "0")}:${String(
-            event.endTime.minute || 0
-          ).padStart(2, "0")}`,
-          ticket_structure_id: event.ticket_structure_id || event.ticketType,
-          ticket_set: event.ticket_set || event.ticketSet,
-          seat_structure_id: event.seat_structure_id || event.seatStructure,
-          is_midnight: "false",
-        });
-      }
-    });
-
-    // Convert to show_dates format
-    Object.keys(eventsByDate).forEach((dateKey) => {
-      show_dates.push({
-        start_date: dateKey,
-        end_date: null,
-        show_times: eventsByDate[dateKey],
-      });
-    });
-
-    return show_dates;
-  },
 };
 
 export const formatTime = (hour, minute = 0) => {
@@ -386,4 +301,234 @@ export const prepareEventDataForSubmission = (formData, scheduleFormData) => {
   }
 
   return normalizedData;
+};
+
+// FIXED: Enhanced ScheduleUtil with missing isTimeOverlapping method
+export const ScheduleUtil = {
+  // FIXED: Added the missing isTimeOverlapping method
+  isTimeOverlapping: (event1, event2) => {
+    if (
+      !event1?.startTime ||
+      !event1?.endTime ||
+      !event2?.startTime ||
+      !event2?.endTime
+    ) {
+      return false;
+    }
+
+    // Convert to minutes for easier comparison
+    const event1StartMinutes =
+      (event1.startTime.day || 0) * 1440 +
+      event1.startTime.hour * 60 +
+      (event1.startTime.minute || 0);
+
+    const event1EndMinutes =
+      (event1.endTime.day || 0) * 1440 +
+      event1.endTime.hour * 60 +
+      (event1.endTime.minute || 0);
+
+    const event2StartMinutes =
+      (event2.startTime.day || 0) * 1440 +
+      event2.startTime.hour * 60 +
+      (event2.startTime.minute || 0);
+
+    const event2EndMinutes =
+      (event2.endTime.day || 0) * 1440 +
+      event2.endTime.hour * 60 +
+      (event2.endTime.minute || 0);
+
+    // Check for overlap: events overlap if one starts before the other ends
+    return (
+      event1StartMinutes < event2EndMinutes &&
+      event2StartMinutes < event1EndMinutes
+    );
+  },
+
+  findConflictingEvents: (testEvent, existingEvents, excludeId = null) => {
+    return existingEvents.filter((existingEvent) => {
+      if (excludeId && existingEvent.id === excludeId) return false;
+
+      const testStart = testEvent?.startTime;
+      const testEnd = testEvent?.endTime;
+      const existingStart = existingEvent?.startTime;
+      const existingEnd = existingEvent?.endTime;
+
+      // Convert to minutes for easier comparison
+      const testStartMinutes =
+        testStart?.day * 1440 + testStart?.hour * 60 + (testStart?.minute || 0);
+      const testEndMinutes =
+        testEnd?.day * 1440 + testEnd?.hour * 60 + (testEnd?.minute || 0);
+      const existingStartMinutes =
+        existingStart?.day * 1440 +
+        existingStart?.hour * 60 +
+        (existingStart?.minute || 0);
+      const existingEndMinutes =
+        existingEnd?.day * 1440 +
+        existingEnd?.hour * 60 +
+        (existingEnd?.minute || 0);
+
+      // Check for overlap
+      return (
+        testStartMinutes < existingEndMinutes &&
+        testEndMinutes > existingStartMinutes
+      );
+    });
+  },
+
+  formatDuration: (startTime, endTime) => {
+    const startMinutes = startTime?.hour * 60 + (startTime?.minute || 0);
+    const endMinutes = endTime?.hour * 60 + (endTime?.minute || 0);
+    const durationMinutes = endMinutes - startMinutes;
+
+    const hours = Math.floor(durationMinutes / 60);
+    const minutes = durationMinutes % 60;
+
+    if (hours === 0) return `${minutes}min`;
+    if (minutes === 0) return `${hours}h`;
+    return `${hours}h ${minutes}min`;
+  },
+
+  convertEventDataToAPIFormat: (events, allDays) => {
+    const show_dates = [];
+    const eventsByDate = {};
+
+    // Group events by date
+    events.forEach((event) => {
+      const dayIndex = event?.startTime?.day;
+      if (dayIndex >= 0 && dayIndex < allDays.length) {
+        const dateKey = formatDateForAPI(allDays[dayIndex]);
+        if (!eventsByDate[dateKey]) {
+          eventsByDate[dateKey] = [];
+        }
+
+        eventsByDate[dateKey].push({
+          start_time: `${String(event?.startTime?.hour || 0).padStart(
+            2,
+            "0"
+          )}:${String(event?.startTime?.minute || 0).padStart(2, "0")}`,
+          end_time: `${String(event?.endTime?.hour || 0).padStart(
+            2,
+            "0"
+          )}:${String(event?.endTime?.minute || 0).padStart(2, "0")}`,
+          ticket_structure_id:
+            event?.ticket_structure_id || event?.ticketType || null,
+          ticket_set: event?.ticket_set || event?.ticketSet || "",
+          seat_structure_id:
+            event?.seat_structure_id || event?.seatStructure || null,
+          is_midnight: "false",
+        });
+      }
+    });
+
+    // Convert to show_dates format
+    Object.keys(eventsByDate).forEach((dateKey) => {
+      show_dates.push({
+        start_date: dateKey,
+        end_date: null,
+        show_times: eventsByDate[dateKey],
+      });
+    });
+
+    return show_dates;
+  },
+
+  restructuredScheduleDetails: (data) => {
+    return {
+      // Event Basic Info
+      id: data?.id || null,
+      name: data?.name || "",
+      status: data?.status || false,
+      event_id: data?.event?.id || null,
+      event_name: data?.event?.event_name || "",
+
+      // Schedule Dates
+      start_date: data?.start_date || null,
+      end_date: data?.end_date || null,
+      ad_start_date_time: data?.ad_start_date_time || null,
+      booking_start_date_time: data?.booking_start_date_time || null,
+
+      // Venue Info
+      venue_id: data?.venue_id || null,
+      venue_name: data?.venue?.name || "",
+      venue_description: data?.venue?.description || "",
+
+      // Location Details
+      place_id: data?.venue?.place?.id || null,
+      place_name: data?.venue?.place?.name || "",
+      country_name: data?.venue?.place?.country?.name || "",
+      time_zone: data?.venue?.place?.country?.time_zone || "",
+      currency_code: data?.venue?.place?.country?.currency_code || "",
+
+      // Show Time Details
+      show_date_id: data?.show_dates?.[0]?.id || null,
+      show_time_id: data?.show_dates?.[0]?.show_times?.[0]?.id || null,
+      show_start_time:
+        data?.show_dates?.[0]?.show_times?.[0]?.start_time || null,
+      show_end_time: data?.show_dates?.[0]?.show_times?.[0]?.end_time || null,
+
+      // Ticket Structure
+      ticket_structure_id:
+        data?.show_dates?.[0]?.show_times?.[0]?.event_ticket_structures?.id ||
+        null,
+      ticket_structure_name:
+        data?.show_dates?.[0]?.show_times?.[0]?.event_ticket_structures
+          ?.ticket_structure?.name || "",
+      ticket_set:
+        data?.show_dates?.[0]?.show_times?.[0]?.event_ticket_structures
+          ?.ticket_set || "",
+
+      // Show Time Ticket Types (List)
+      show_time_ticket_types:
+        data?.show_dates?.[0]?.show_times?.[0]?.show_time_ticket_types || [],
+      booking_type: data?.show_seat_details?.length > 0 ? "SEAT" : "TICKET",
+      // Additional Settings
+      is_multi_date: data?.is_multi_date || false,
+      max_ticket_per_booking: data?.max_ticket_per_booking || 0,
+      available_types: data?.available_types || "",
+
+      // New Fields from JSON
+      offer_schedule: data?.offer_schedule || [],
+      coupon_schedule: data?.coupon_schedule || [],
+      schedule_status: data?.schedule_status || null,
+      show_seat_details: data?.show_seat_details || [],
+      show_dates: data?.show_dates || [],
+
+      // Fields for formValues Compatibility
+      payment_required: data?.payment_required || false,
+      add_ons: data?.add_ons || [],
+    };
+  },
+
+  createFormValues: (scheduleDetails) => {
+    const scheduleData =
+      ScheduleUtil.restructuredScheduleDetails(scheduleDetails);
+    return {
+      event_id: scheduleData.event_id || null,
+      name: scheduleData.name || "",
+      start_date: scheduleData.start_date
+        ? dayjs(scheduleData.start_date)
+        : null,
+      venue_id: scheduleData.venue_id || null,
+      booking_type: scheduleData.booking_type,
+      max_ticket_per_booking: scheduleData.max_ticket_per_booking || 0,
+      is_multi_date: scheduleData.is_multi_date || false,
+      end_date: scheduleData.end_date ? dayjs(scheduleData.end_date) : null,
+      booking_limit_per_user: scheduleData.max_ticket_per_booking || 1,
+      booking_limit_per_user_toggle: !!scheduleData.max_ticket_per_booking,
+      payment_required: scheduleData.payment_required || false,
+      booking_start_date_time: scheduleData.booking_start_date_time
+        ? dayjs(scheduleData.booking_start_date_time)
+        : null,
+      ad_start_date_time: scheduleData.ad_start_date_time
+        ? dayjs(scheduleData.ad_start_date_time)
+        : null,
+      add_ons: scheduleData.add_ons?.map((item) => item.name) || [],
+      show_time_ticket_types:
+        scheduleData.show_time_ticket_types?.map((ticket) => ({
+          id: ticket.id,
+          ticket_type_id: ticket.ticket_type_id,
+          ticket_used_count: ticket.ticket_used_count,
+        })) || [],
+    };
+  },
 };
