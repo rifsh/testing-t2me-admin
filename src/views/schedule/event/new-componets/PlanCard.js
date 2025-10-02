@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Calendar, Plus } from "lucide-react";
 import { Modal, message } from "antd";
 import { useSelector, useDispatch } from "react-redux";
@@ -10,14 +10,14 @@ import EventModal from "./EventModal";
 import { getDaysDiff, ScheduleUtil } from "../utils";
 import CompactDateTimePicker from "./CompactDateTimePicker";
 import TimeSlotsSidebar from "./TimeSlotsSidebar";
+import dayjs from "dayjs";
 
-// FIXED: Helper function to format date for API
+// Helper function to format date for API
 const formatDateForAPI = (date) => {
   if (!date) return null;
   if (typeof date === "string") {
-    // If it's already a string, ensure it's in YYYY-MM-DD format
     const dateObj = new Date(date);
-    if (isNaN(dateObj.getTime())) return date; // Return as-is if invalid
+    if (isNaN(dateObj.getTime())) return date;
     return dateObj.toISOString().split("T")[0];
   }
 
@@ -38,15 +38,38 @@ const formatDateTime = (date) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
+// FIXED: Helper to parse "10:00 AM" format to hour and minute
+const parseTimeString = (timeStr) => {
+  if (!timeStr) return { hour: 0, minute: 0 };
+
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return { hour: 0, minute: 0 };
+
+  let hour = parseInt(match[1]);
+  const minute = parseInt(match[2]);
+  const period = match[3].toUpperCase();
+
+  if (period === "PM" && hour !== 12) {
+    hour += 12;
+  } else if (period === "AM" && hour === 12) {
+    hour = 0;
+  }
+
+  return { hour, minute };
+};
+
 const CalendarViewCard = ({ form, onSubmit, onBack }) => {
   const dispatch = useDispatch();
   const { eventDetails } = useSelector((state) => state.event || {});
-  const { scheduleFormData } = useSelector((state) => state.schedules);
+  const { scheduleFormData, scheduleDetails } = useSelector(
+    (state) => state.schedules
+  );
 
   // ==================== REFS ====================
   const lastSavedData = useRef(null);
   const saveTimeout = useRef(null);
   const scrollContainerRef = useRef(null);
+  const hasLoadedEditData = useRef(false);
 
   // ==================== CONSTANTS ====================
   const timeSlotColors = [
@@ -123,6 +146,135 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
   const [pendingDateChange, setPendingDateChange] = useState(null);
 
+  // FIXED: Load edit mode data from scheduleFormData
+  useEffect(() => {
+    if (scheduleFormData?.timeSlots && !hasLoadedEditData.current) {
+      console.log("===== LOADING TIME SLOTS IN CALENDAR VIEW =====");
+      console.log("Schedule Form Data:", scheduleFormData);
+
+      try {
+        // Load dates
+        if (scheduleFormData.ad_start_date_time) {
+          setAdStartDateTime(new Date(scheduleFormData.ad_start_date_time));
+        }
+        if (scheduleFormData.booking_start_date_time) {
+          setBookingStartDateTime(
+            new Date(scheduleFormData.booking_start_date_time)
+          );
+        }
+        if (scheduleFormData.start_date && scheduleFormData.end_date) {
+          setDateRange({
+            startDate: new Date(scheduleFormData.start_date),
+            endDate: new Date(scheduleFormData.end_date),
+            isSelecting: false,
+          });
+        }
+
+        // FIXED: Convert timeSlots object to events array
+        if (
+          scheduleFormData.timeSlots &&
+          typeof scheduleFormData.timeSlots === "object"
+        ) {
+          const loadedEvents = [];
+          let eventIdCounter = 0;
+
+          Object.entries(scheduleFormData.timeSlots).forEach(
+            ([dateStr, slots]) => {
+              if (!Array.isArray(slots)) return;
+
+              slots.forEach((slot, slotIndex) => {
+                // Get the day index relative to start date
+                const slotDate = new Date(dateStr);
+                const startDate = new Date(scheduleFormData.start_date);
+                const daysDiff = Math.floor(
+                  (slotDate - startDate) / (1000 * 60 * 60 * 24)
+                );
+
+                // Parse start and end times
+                let startTime, endTime;
+
+                if (slot.start_time?.$d) {
+                  // If dayjs object
+                  const startDayjs = dayjs(slot.start_time);
+                  startTime = {
+                    day: daysDiff,
+                    hour: startDayjs.hour(),
+                    minute: startDayjs.minute(),
+                  };
+                } else if (typeof slot.start_time === "string") {
+                  // Parse time string
+                  const parsed = parseTimeString(slot.start_time);
+                  startTime = {
+                    day: daysDiff,
+                    hour: parsed.hour,
+                    minute: parsed.minute,
+                  };
+                } else {
+                  startTime = {
+                    day: daysDiff,
+                    hour: 0,
+                    minute: 0,
+                  };
+                }
+
+                if (slot.end_time?.$d) {
+                  const endDayjs = dayjs(slot.end_time);
+                  endTime = {
+                    day: slot.is_midnight ? daysDiff + 1 : daysDiff,
+                    hour: endDayjs.hour(),
+                    minute: endDayjs.minute(),
+                  };
+                } else if (typeof slot.end_time === "string") {
+                  const parsed = parseTimeString(slot.end_time);
+                  endTime = {
+                    day: slot.is_midnight ? daysDiff + 1 : daysDiff,
+                    hour: parsed.hour,
+                    minute: parsed.minute,
+                  };
+                } else {
+                  endTime = {
+                    day: slot.is_midnight ? daysDiff + 1 : daysDiff,
+                    hour: 23,
+                    minute: 59,
+                  };
+                }
+
+                const colorClass =
+                  timeSlotColors[daysDiff % timeSlotColors.length];
+
+                const event = {
+                  id: `loaded-${eventIdCounter++}`,
+                  startTime,
+                  endTime,
+                  ticketType: slot.ticketType,
+                  seat_structure_id: slot.seat_structure_id,
+                  ticket_set: slot.ticket_set,
+                  ticket_structure_id: slot.ticketType,
+                  is_midnight_passed: slot.is_midnight || false,
+                  show_end_date: slot.show_end_date || null,
+                  show_time_ticket_types: slot.show_time_ticket_types || [],
+                  color: colorClass,
+                  timezone: timezone,
+                };
+
+                loadedEvents.push(event);
+                console.log(`Loaded event ${eventIdCounter}:`, event);
+              });
+            }
+          );
+
+          setAllEvents(loadedEvents);
+          hasLoadedEditData.current = true;
+          console.log(`===== LOADED ${loadedEvents.length} TIME SLOTS =====`);
+          message.success(`Loaded ${loadedEvents.length} existing time slots`);
+        }
+      } catch (error) {
+        console.error("Error loading edit data in calendar view:", error);
+        message.error("Failed to load time slots");
+      }
+    }
+  }, [scheduleFormData, timezone]);
+
   // ==================== VALIDATION FUNCTIONS ====================
   const isAllDatesValid = () => {
     if (
@@ -134,12 +286,10 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       return false;
     }
 
-    // Rule 1: Ad date must be before booking date
     if (adStartDateTime >= bookingStartDateTime) {
       return false;
     }
 
-    // Rule 2: Event dates must be AFTER booking date
     const bookingDate = new Date(bookingStartDateTime);
     bookingDate.setHours(23, 59, 59, 999);
 
@@ -150,7 +300,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       return false;
     }
 
-    // FIXED: Must have at least one time slot
     if (!allEvents || allEvents.length === 0) {
       return false;
     }
@@ -158,7 +307,14 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     return true;
   };
 
-  // ==================== RESET FUNCTIONS ====================
+  // ... (Keep all the rest of your existing functions: resetToDefaults, handleAdStartTimeChange,
+  // handleBookingStartTimeChange, handleDateRangeChange, debouncedSave, getAllDaysInRange,
+  // generateShowDatesFromEvents, handleCreateEvent, handleEventSave, getVisibleDays,
+  // getVisibleEvents, getBookingMinDate, getEventMinDate, etc.)
+
+  // Just copy all your existing handler functions here from the original file
+  // I'm not repeating them to keep this response concise, but they should all remain the same
+
   const resetToDefaults = () => {
     const newDefaults = getDefaultDates();
     setAdStartDateTime(newDefaults.adStartTime);
@@ -170,6 +326,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     });
     setAllEvents([]);
     setCurrentWeekStart(0);
+    hasLoadedEditData.current = false;
 
     form?.setFieldValue("ad_start_date_time", newDefaults.adStartTime);
     form?.setFieldValue(
@@ -185,14 +342,13 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         start_date: formatDateForAPI(newDefaults.eventStartDate),
         end_date: formatDateForAPI(newDefaults.eventEndDate),
         show_dates: [],
+        timeSlots: {},
       })
     );
   };
 
-  // ==================== EVENT HANDLERS ====================
   const handleAdStartTimeChange = (date) => {
     if (!date) {
-      // FIXED: Reset to defaults instead of nulls
       resetToDefaults();
       message.warning(
         "Advertisement date cleared. All dates have been reset to defaults."
@@ -203,7 +359,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     setAdStartDateTime(date);
     form?.setFieldValue("ad_start_date_time", date);
 
-    // Auto-reset if invalid
     if (bookingStartDateTime && date >= bookingStartDateTime) {
       const newDefaults = getDefaultDates();
       setBookingStartDateTime(newDefaults.bookingStartTime);
@@ -233,7 +388,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
 
   const handleBookingStartTimeChange = (date) => {
     if (!date) {
-      // FIXED: Reset booking and event dates to defaults
       const newDefaults = getDefaultDates();
       setBookingStartDateTime(newDefaults.bookingStartTime);
       setDateRange({
@@ -256,7 +410,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     setBookingStartDateTime(date);
     form?.setFieldValue("booking_start_date_time", date);
 
-    // Auto-reset if event dates are invalid
     if (dateRange.startDate) {
       const bookingDate = new Date(date);
       bookingDate.setHours(23, 59, 59, 999);
@@ -286,10 +439,8 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     );
   };
 
-  // FIXED: Enhanced date range change with proper validation
   const handleDateRangeChange = (range) => {
     if (!range.startDate || !range.endDate) {
-      // FIXED: Reset to defaults instead of nulls
       const newDefaults = getDefaultDates();
       setDateRange({
         startDate: newDefaults.eventStartDate,
@@ -303,7 +454,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       return;
     }
 
-    // FIXED: Validate that event dates are after booking date
     if (bookingStartDateTime) {
       const bookingDate = new Date(bookingStartDateTime);
       bookingDate.setHours(23, 59, 59, 999);
@@ -315,16 +465,15 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         message.error(
           "Event start date must be after the booking date. Please select a later date."
         );
-        return; // Don't update the range
+        return;
       }
     }
 
-    // FIXED: Validate that start date is before end date
     if (range.startDate >= range.endDate) {
       message.error(
         "End date must be after start date. Please select a valid date range."
       );
-      return; // Don't update the range
+      return;
     }
 
     const hasExistingTimeSlots = allEvents && allEvents.length > 0;
@@ -348,13 +497,13 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         start_date: formatDateForAPI(range.startDate),
         end_date: formatDateForAPI(range.endDate),
         show_dates: [],
+        timeSlots: {},
       })
     );
 
     message.success("Event dates updated successfully.");
   };
 
-  // ==================== UTILITY FUNCTIONS ====================
   const debouncedSave = useCallback(
     (dataToSave) => {
       if (saveTimeout.current) {
@@ -382,7 +531,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     });
   };
 
-  // FIXED: Enhanced show dates generation with CORRECT midnight handling
   const generateShowDatesFromEvents = (events, currentDateRange) => {
     if (
       !events ||
@@ -405,7 +553,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       let endDay = event.endTime.day;
 
       if (event.is_midnight_passed) {
-        endDay = startDay; // Keep on same day but mark as midnight
+        endDay = startDay;
       }
 
       for (let day = startDay; day <= endDay; day++) {
@@ -441,12 +589,10 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       }
     });
 
-    // FIXED: Convert to proper show_dates format with CORRECTED midnight handling
     const showDates = Object.entries(eventsByDate).map(
       ([dateStr, showTimes]) => {
         let endDate = null;
 
-        // FIXED: For midnight events, end_date must be DIFFERENT from start_date
         const hasMidnightEvent = showTimes.some(
           (st) => st.is_midnight === "true"
         );
@@ -457,17 +603,14 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
           );
 
           if (midnightEvent && midnightEvent.show_end_date) {
-            // Use the specified show_end_date
             endDate = midnightEvent.show_end_date;
           } else {
-            // FIXED: MUST be next day for midnight events - API requirement
             const startDate = new Date(dateStr);
             const nextDay = new Date(startDate);
             nextDay.setDate(startDate.getDate() + 1);
             endDate = formatDateForAPI(nextDay);
           }
 
-          // CRITICAL FIX: Ensure end_date is NEVER same as start_date for midnight events
           if (endDate === dateStr) {
             const startDate = new Date(dateStr);
             const nextDay = new Date(startDate);
@@ -483,7 +626,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
 
         return {
           start_date: dateStr,
-          end_date: endDate, // FIXED: Will be null for regular events, NEXT DAY for midnight events
+          end_date: endDate,
           show_times: showTimes,
           timezone: timezone,
         };
@@ -492,16 +635,13 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
 
     showDates.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
-    // FIXED: Log final show_dates for debugging
     console.log("📊 FINAL SHOW_DATES:", JSON.stringify(showDates, null, 2));
 
     return showDates;
   };
 
-  // FIXED: Enhanced create event with API error handling
   const handleCreateEvent = async () => {
     try {
-      // FIXED: Validate time slots exist
       if (!allEvents || allEvents.length === 0) {
         message.error(
           "Please add at least one time slot before saving the schedule."
@@ -524,15 +664,12 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
 
       console.log("💾 SUBMITTING SCHEDULE DATA:", finalData);
 
-      // FIXED: Call onSubmit and handle potential API errors
       const result = await onSubmit(finalData);
 
-      // If we get here, submission was successful
       message.success("Schedule saved successfully!");
     } catch (error) {
       console.error("❌ SCHEDULE SUBMISSION ERROR:", error);
 
-      // FIXED: Handle specific API error format
       if (error?.response?.data?.status?.message) {
         message.error(error.response.data.status.message);
       } else if (error?.response?.data?.server_error) {
@@ -551,7 +688,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
 
   const handleEventSave = (eventData) => {
     if (eventData.id && eventData.id.startsWith("temp-")) {
-      // CREATE NEW EVENT
       const eventDayIndex = eventData.startTime.day + currentWeekStart;
       const colorClass = getColorForDay(eventDayIndex);
 
@@ -583,7 +719,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       });
       message.success("Time slot created successfully!");
     } else {
-      // UPDATE EXISTING EVENT
       const eventDayIndex =
         eventData.originalStartDay !== undefined
           ? eventData.originalStartDay
@@ -671,7 +806,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
     return new Date(Date.now() + 24 * 60 * 60 * 1000);
   };
 
-  // FIXED: Event dates must be AFTER booking date (not same day)
   const getEventMinDate = () => {
     if (bookingStartDateTime) {
       const minDate = new Date(bookingStartDateTime);

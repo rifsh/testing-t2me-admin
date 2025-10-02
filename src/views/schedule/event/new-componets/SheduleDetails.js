@@ -70,46 +70,25 @@ const ScheduleDetails = ({ mode, id }) => {
     return updatedData;
   };
 
-  const formatDateForDayjs = (date) => {
-    return date ? dayjs(date) : null;
-  };
-
-  const prepareEditFormData = (scheduleData) => {
-    return {
-      event_id: scheduleData.event_id || null,
-      name: scheduleData.name || "",
-      start_date: formatDateForDayjs(scheduleData.start_date),
-      venue_id: scheduleData.venue_id,
-      end_date: formatDateForDayjs(scheduleData.end_date),
-      booking_limit_per_user: scheduleData.max_ticket_per_booking || 1,
-      booking_limit_per_user_toggle: !!scheduleData.max_ticket_per_booking,
-      payment_required: scheduleData.payment_required || false,
-      booking_start_date_time: formatDateForDayjs(
-        scheduleData.booking_start_date_time
-      ),
-      ad_start_date_time: formatDateForDayjs(scheduleData.ad_start_date_time),
-      add_ons: scheduleData.add_ons?.map((item) => item.name) || [],
-      show_time_ticket_types:
-        scheduleData.show_time_ticket_types?.map((ticket) => ({
-          id: ticket.id,
-          ticket_type_id: ticket.ticket_type_id,
-          ticket_used_count: ticket.ticket_used_count,
-        })) || [],
-      is_multi_date: scheduleData.is_multi_date || false,
-      max_ticket_per_booking: scheduleData.max_ticket_per_booking || 1,
-      available_types: scheduleData.available_types || 2,
-    };
-  };
-
   const setupEditTimeSlots = (showDates) => {
     if (!showDates?.length) return {};
 
-    const newDates = showDates.map((sd) => sd.date);
+    const newDates = showDates.map((sd) => sd.start_date);
     const formattedTimeSlots = showDates.reduce((acc, showDate) => {
-      acc[showDate.date] = showDate.show_times.map((time) => ({
-        start_time: dayjs(`${showDate.date} ${time.start_time}`),
-        end_time: dayjs(`${showDate.date} ${time.end_time}`),
-        ticketType: time.event_ticket_structures?.[0]?.id,
+      acc[showDate.start_date] = showDate.show_times.map((time) => ({
+        start_time: dayjs(
+          `${showDate.start_date} ${time.start_time}`,
+          "YYYY-MM-DD hh:mm A"
+        ),
+        end_time: dayjs(
+          `${showDate.start_date} ${time.end_time}`,
+          "YYYY-MM-DD hh:mm A"
+        ),
+        ticketType: time.event_ticket_structures?.id,
+        seat_structure_id: time.event_ticket_structures?.ticket_structure?.id,
+        ticket_set: time.event_ticket_structures?.ticket_set,
+        is_midnight: time.is_midnight || false,
+        show_time_ticket_types: time.show_time_ticket_types || [],
       }));
       return acc;
     }, {});
@@ -128,7 +107,6 @@ const ScheduleDetails = ({ mode, id }) => {
   // Initialize component ONLY ONCE
   useEffect(() => {
     const initializeComponent = async () => {
-      // Prevent multiple initializations for the same edit ID
       if (
         isEditMode &&
         editId &&
@@ -138,13 +116,11 @@ const ScheduleDetails = ({ mode, id }) => {
         console.log("Initializing edit mode for ID:", editId);
 
         try {
-          // Mark as initializing to prevent re-runs
           isInitialized.current = true;
           lastEditId.current = editId;
 
-          // Fetch required data only once
           const fetchPromises = [
-            dispatch(fetchSingleSchedules({ id: editId })),
+            dispatch(fetchSingleSchedules({ id: editId })).unwrap(),
           ];
 
           if (!checkedscheduleDetails) {
@@ -159,9 +135,9 @@ const ScheduleDetails = ({ mode, id }) => {
           console.error("Failed to initialize edit mode:", error);
           isInitialized.current = false;
           lastEditId.current = null;
+          message.error("Failed to load schedule data");
         }
       } else if (!isEditMode && !isInitialized.current) {
-        // For create mode, just mark as initialized
         isInitialized.current = true;
         console.log("Create mode initialized");
       }
@@ -169,10 +145,8 @@ const ScheduleDetails = ({ mode, id }) => {
 
     initializeComponent();
 
-    // Cleanup function
     return () => {
       if (isEditMode && editId !== lastEditId.current) {
-        // Only reset if we're changing to a different edit ID or leaving edit mode
         dispatch(resetSchedule());
         dispatch(resetState());
         dispatch(setCurrentStep(1));
@@ -181,26 +155,32 @@ const ScheduleDetails = ({ mode, id }) => {
         lastEditId.current = null;
       }
     };
-  }, [dispatch, isEditMode, editId]); // Only depend on stable values
+  }, [dispatch, isEditMode, editId, checkedscheduleDetails]);
 
-  // Handle edit mode data setup ONLY ONCE per schedule
+  // FIXED: Handle edit mode data setup - using scheduleDetails directly as dependency
   useEffect(() => {
-    if (
+    // More robust condition checking
+    const shouldLoadEditData =
       isEditMode &&
       scheduleDetails &&
-      isInitialized.current &&
-      !hasLoadedEditData.current &&
-      scheduleDetails.id === editId
-    ) {
-      console.log("Setting up edit data for schedule:", scheduleDetails.id);
+      scheduleDetails.id &&
+      editId &&
+      String(scheduleDetails.id) === String(editId) &&
+      !hasLoadedEditData.current;
+
+    if (shouldLoadEditData) {
+      console.log("===== SETTING UP EDIT DATA =====");
+      console.log("Schedule Details:", scheduleDetails);
+      console.log("Edit ID:", editId);
 
       try {
-        const scheduleData =
-          ScheduleUtil.restructuredScheduleDetails(scheduleDetails);
-        const formValues = prepareEditFormData(scheduleData);
+        // Use the ScheduleUtil.createFormValues utility
+        const formValues = ScheduleUtil.createFormValues(scheduleDetails);
+        console.log("Form Values from ScheduleUtil:", formValues);
 
         // Setup time slots if available
         const timeSlotData = setupEditTimeSlots(scheduleDetails.show_dates);
+        console.log("Time Slot Data:", timeSlotData);
 
         // Combine all data
         const finalFormValues = {
@@ -208,31 +188,37 @@ const ScheduleDetails = ({ mode, id }) => {
           ...timeSlotData,
         };
 
-        // Update store and form
+        console.log("Final Form Values to be set:", finalFormValues);
+
+        // Update store first
         dispatch(setScheduleFormData(finalFormValues));
-        form.setFieldsValue(finalFormValues);
+
+        // Use setTimeout to ensure Redux state updates before setting form values
+        setTimeout(() => {
+          // Set form values
+          form.setFieldsValue(finalFormValues);
+
+          // Force form to recognize the values
+          form.validateFields().catch(() => {
+            // Ignore validation errors on initial load
+          });
+
+          console.log("Form values after setting:", form.getFieldsValue());
+        }, 100);
 
         // Mark as loaded to prevent re-runs
         hasLoadedEditData.current = true;
-        console.log("Edit mode setup completed successfully");
+        console.log("===== EDIT MODE SETUP COMPLETED =====");
       } catch (error) {
         console.error("Error setting up edit data:", error);
         hasLoadedEditData.current = false;
+        message.error("Failed to load form data");
       }
     }
-  }, [scheduleDetails, isEditMode, editId, isInitialized.current]); // Minimal dependencies
+  }, [scheduleDetails, isEditMode, editId, dispatch, form]);
 
-  // Sync form with store changes - but only when needed
-  useEffect(() => {
-    if (
-      scheduleFormData &&
-      Object.keys(scheduleFormData).length > 0 &&
-      !hasLoadedEditData.current
-    ) {
-      console.log("Syncing form with store data");
-      form.setFieldsValue(scheduleFormData);
-    }
-  }, [scheduleFormData, form, hasLoadedEditData.current]);
+  // REMOVED: The sync effect that was conflicting with edit mode
+  // This was causing the form to be reset after being populated
 
   // Validation functions
   const validateTimeSlots = (values) => {
@@ -365,7 +351,7 @@ const ScheduleDetails = ({ mode, id }) => {
     return {
       start_date: startDate,
       end_date: endDate,
-      available_types: values.available_types || 2,
+      available_types: values.available_types || "ticket_structure",
       max_ticket_per_booking: String(values.max_ticket_per_booking || 23),
       is_multi_date: Boolean(values.is_multi_date),
       booking_start_date_time: dayjs(values.booking_start_date_time).format(
@@ -481,7 +467,6 @@ const ScheduleDetails = ({ mode, id }) => {
     message.info("Form has been reset");
   };
 
-  // Debug logging
   console.log("ScheduleDetails render:", {
     mode,
     id: editId,
@@ -489,6 +474,8 @@ const ScheduleDetails = ({ mode, id }) => {
     isInitialized: isInitialized.current,
     hasLoadedEditData: hasLoadedEditData.current,
     lastEditId: lastEditId.current,
+    scheduleDetailsId: scheduleDetails?.id,
+    formValues: form.getFieldsValue(),
   });
 
   return (
@@ -524,7 +511,7 @@ const ScheduleDetails = ({ mode, id }) => {
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={addSchedule}
-        navigationPath={`${APP_PREFIX_PATH}/schedule/list`}
+        navigationPath={`${APP_PREFIX_PATH}/schedule/list`} 
         responseMessage={responseMessage}
         mode={mode}
         form={form}

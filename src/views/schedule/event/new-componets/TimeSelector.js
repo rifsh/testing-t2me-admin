@@ -24,12 +24,14 @@ const TimeSelector = ({
   ticketSetOptionsMap = {},
   seatStructureOptionsMap = {},
   eventDateRange = null,
+  selectedEventId = null, // NEW PROP for selected event
 }) => {
   const timeSlots = generateTimeSlots();
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState(null);
   const [dragEnd, setDragEnd] = useState(null);
   const [overlapMessage, setOverlapMessage] = useState(null);
+  const [activeEventId, setActiveEventId] = useState(null); // NEW STATE for clicked event
 
   // FIXED: Enhanced monitoring for midnight events
   const logMidnightEvent = (event, context = "") => {
@@ -553,6 +555,11 @@ const TimeSelector = ({
     });
   }
 
+  // NEW: Check if event is selected
+  const isEventSelected = (event) => {
+    return activeEventId === event.id || selectedEventId === event.id;
+  };
+
   return (
     <div
       ref={scrollContainerRef}
@@ -644,31 +651,40 @@ const TimeSelector = ({
                       !isOutsideRange && handleMouseEnter(dayIndex, slotIndex)
                     }
                   >
-                    {/* FIXED: Enhanced event display for midnight events */}
+                    {/* FIXED: Enhanced event display with SELECTION STATE */}
                     {event && eventInfo.show && (
                       <div
-                        className="absolute inset-x-1 top-0 cursor-pointer hover:opacity-90 transition-opacity z-10 flex"
+                        className={`absolute inset-x-1 top-0 cursor-pointer transition-all duration-200 z-10 flex ${
+                          isEventSelected(event)
+                            ? "ring-4 ring-blue-400 ring-opacity-70 shadow-2xl scale-105"
+                            : "hover:opacity-90 hover:shadow-lg"
+                        }`}
                         style={{
                           height: Math.max(1, eventInfo.height) * 64 + "px",
                           minHeight: "64px",
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
+                          setActiveEventId(event.id); // SET ACTIVE EVENT
                           onEventClick(event, e);
                         }}
                         title={getEventTooltip(event)}
                       >
                         <div
-                          className={`w-1 rounded-l ${
+                          className={`rounded-l transition-all ${
                             getEventColors(event, dayIndex).main
-                          }`}
+                          } ${isEventSelected(event) ? "w-2" : "w-1"}`}
                         ></div>
                         <div
                           className={`flex-1 ${
                             getEventColors(event, dayIndex).light
                           } ${
                             getEventColors(event, dayIndex).border
-                          } border-l-0 border rounded-r p-2 overflow-hidden relative`}
+                          } border-l-0 border rounded-r p-2 overflow-hidden relative transition-all ${
+                            isEventSelected(event)
+                              ? "bg-opacity-100 border-2 border-blue-400"
+                              : ""
+                          }`}
                         >
                           {/* FIXED: Add midnight indicator with day info */}
                           {event.is_midnight_passed && (
@@ -776,7 +792,7 @@ const TimeSelector = ({
                 );
               })}
             </div>
-          ))}
+          ))}{" "}
         </div>
       </div>
 
