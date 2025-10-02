@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Calendar, Plus } from "lucide-react";
 import { Modal, message } from "antd";
 import { useSelector, useDispatch } from "react-redux";
@@ -7,12 +7,20 @@ import { setScheduleFormData } from "store/slices/scheduleSlice";
 import CalendarWidget from "./CalendarWidget";
 import TimeSelector from "./TimeSelector";
 import EventModal from "./EventModal";
-import { getDaysDiff, getTypeColor, ScheduleUtil } from "../utils";
+import { getDaysDiff, ScheduleUtil } from "../utils";
 import CompactDateTimePicker from "./CompactDateTimePicker";
 import TimeSlotsSidebar from "./TimeSlotsSidebar";
 
+// FIXED: Helper function to format date for API
 const formatDateForAPI = (date) => {
   if (!date) return null;
+  if (typeof date === "string") {
+    // If it's already a string, ensure it's in YYYY-MM-DD format
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return date; // Return as-is if invalid
+    return dateObj.toISOString().split("T")[0];
+  }
+
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -35,12 +43,12 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
   const { eventDetails } = useSelector((state) => state.event || {});
   const { scheduleFormData } = useSelector((state) => state.schedules);
 
-  // Move useRef to the top level - FIXED
+  // ==================== REFS ====================
   const lastSavedData = useRef(null);
   const saveTimeout = useRef(null);
-  const isInitialized = useRef(false);
-  const scrollContainerRef = useRef(null); // Fixed: moved to top level
+  const scrollContainerRef = useRef(null);
 
+  // ==================== CONSTANTS ====================
   const timeSlotColors = [
     "bg-red-500 border-red-600",
     "bg-blue-500 border-blue-600",
@@ -53,329 +61,272 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
 
   const weekDayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
-  // Get timezone from event details
   const timezone =
     eventDetails?.venue_events?.[0]?.venue?.place?.country?.time_zone || "UTC";
 
-  const getTimezoneTime = (offsetDays = 0) => {
+  // ==================== HELPER FUNCTIONS ====================
+  const getDefaultDates = () => {
     const now = new Date();
-    if (timezone === "UTC") {
-      const result = new Date(now);
-      result.setDate(result.getDate() + offsetDays);
-      return result;
-    }
+    const adStart = new Date(now);
+    adStart.setDate(now.getDate() + 1);
+    adStart.setHours(9, 0, 0, 0);
 
-    try {
-      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-      const tzTime = new Date(utc + getTimezoneOffset(timezone) * 60000);
-      tzTime.setDate(tzTime.getDate() + offsetDays);
-      return tzTime;
-    } catch (error) {
-      const result = new Date(now);
-      result.setDate(result.getDate() + offsetDays);
-      return result;
-    }
-  };
+    const bookingStart = new Date(now);
+    bookingStart.setDate(now.getDate() + 2);
+    bookingStart.setHours(10, 0, 0, 0);
 
-  const getTimezoneOffset = (tz) => {
-    try {
-      const now = new Date();
-      const utcDate = new Date(
-        now.toLocaleString("en-US", { timeZone: "UTC" })
-      );
-      const tzDate = new Date(now.toLocaleString("en-US", { timeZone: tz }));
-      return (tzDate.getTime() - utcDate.getTime()) / 60000;
-    } catch (error) {
-      return 0;
-    }
-  };
+    const eventStart = new Date(bookingStart);
+    eventStart.setDate(bookingStart.getDate() + 2);
+    eventStart.setHours(11, 0, 0, 0);
 
-  const getDefaultTimes = () => {
-    const tomorrow = getTimezoneTime(1);
-    tomorrow.setHours(9, 0, 0, 0);
-
-    const dayAfterTomorrow = getTimezoneTime(2);
-    dayAfterTomorrow.setHours(10, 0, 0, 0);
-
-    const eventStartDate = getTimezoneTime(9);
-    eventStartDate.setHours(11, 0, 0, 0);
-
-    const eventEndDate = new Date(eventStartDate);
-    eventEndDate.setDate(eventStartDate.getDate() + 6);
-    eventEndDate.setHours(23, 59, 59, 999);
+    const eventEnd = new Date(eventStart);
+    eventEnd.setDate(eventStart.getDate() + 6);
+    eventEnd.setHours(23, 59, 59, 999);
 
     return {
-      adStartTime: tomorrow,
-      bookingStartTime: dayAfterTomorrow,
-      eventStartDate,
-      eventEndDate,
+      adStartTime: adStart,
+      bookingStartTime: bookingStart,
+      eventStartDate: eventStart,
+      eventEndDate: eventEnd,
     };
   };
 
-  const [dateRange, setDateRange] = useState(() => {
-    if (scheduleFormData?.start_date && scheduleFormData?.end_date) {
-      return {
-        startDate: new Date(scheduleFormData.start_date),
-        endDate: new Date(scheduleFormData.end_date),
-        isSelecting: false,
-      };
-    }
+  // ==================== STATE INITIALIZATION ====================
+  const defaults = getDefaultDates();
 
-    const defaults = getDefaultTimes();
-    return {
-      startDate: defaults.eventStartDate,
-      endDate: defaults.eventEndDate,
-      isSelecting: false,
-    };
+  const [adStartDateTime, setAdStartDateTime] = useState(
+    scheduleFormData?.ad_start_date_time
+      ? new Date(scheduleFormData.ad_start_date_time)
+      : defaults.adStartTime
+  );
+
+  const [bookingStartDateTime, setBookingStartDateTime] = useState(
+    scheduleFormData?.booking_start_date_time
+      ? new Date(scheduleFormData.booking_start_date_time)
+      : defaults.bookingStartTime
+  );
+
+  const [dateRange, setDateRange] = useState({
+    startDate: scheduleFormData?.start_date
+      ? new Date(scheduleFormData.start_date)
+      : defaults.eventStartDate,
+    endDate: scheduleFormData?.end_date
+      ? new Date(scheduleFormData.end_date)
+      : defaults.eventEndDate,
+    isSelecting: false,
   });
 
   const [allEvents, setAllEvents] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [currentWeekStart, setCurrentWeekStart] = useState(0);
-  const [multiDateSelectionEnabled, setMultiDateSelectionEnabled] = useState(
-    scheduleFormData?.is_multi_date || true
-  );
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
   const [pendingDateChange, setPendingDateChange] = useState(null);
 
-  // Time states for validation
-  const [adStartDateTime, setAdStartDateTime] = useState(() => {
-    if (scheduleFormData?.ad_start_date_time) {
-      return new Date(scheduleFormData.ad_start_date_time);
+  // ==================== VALIDATION FUNCTIONS ====================
+  const isAllDatesValid = () => {
+    if (
+      !adStartDateTime ||
+      !bookingStartDateTime ||
+      !dateRange.startDate ||
+      !dateRange.endDate
+    ) {
+      return false;
     }
-    return getDefaultTimes().adStartTime;
-  });
 
-  const [bookingStartDateTime, setBookingStartDateTime] = useState(() => {
-    if (scheduleFormData?.booking_start_date_time) {
-      return new Date(scheduleFormData.booking_start_date_time);
+    // Rule 1: Ad date must be before booking date
+    if (adStartDateTime >= bookingStartDateTime) {
+      return false;
     }
-    return getDefaultTimes().bookingStartTime;
-  });
 
-  useEffect(() => {
-    if (scheduleFormData && !isInitialized.current) {
-      if (scheduleFormData.ad_start_date_time) {
-        const adStartDate = new Date(scheduleFormData.ad_start_date_time);
-        setAdStartDateTime(adStartDate);
-        form.setFieldValue("ad_start_date_time", adStartDate);
-      } else {
-        const defaultAd = getDefaultTimes().adStartTime;
-        setAdStartDateTime(defaultAd);
-        form.setFieldValue("ad_start_date_time", defaultAd);
-      }
+    // Rule 2: Event dates must be AFTER booking date
+    const bookingDate = new Date(bookingStartDateTime);
+    bookingDate.setHours(23, 59, 59, 999);
 
-      if (scheduleFormData.booking_start_date_time) {
-        const bookingStartDate = new Date(
-          scheduleFormData.booking_start_date_time
-        );
-        setBookingStartDateTime(bookingStartDate);
-        form.setFieldValue("booking_start_date_time", bookingStartDate);
-      } else {
-        const defaultBooking = getDefaultTimes().bookingStartTime;
-        setBookingStartDateTime(defaultBooking);
-        form.setFieldValue("booking_start_date_time", defaultBooking);
-      }
+    const eventStart = new Date(dateRange.startDate);
+    eventStart.setHours(0, 0, 0, 0);
 
-      if (scheduleFormData.is_multi_date !== undefined) {
-        setMultiDateSelectionEnabled(scheduleFormData.is_multi_date);
-      }
-
-      isInitialized.current = true;
+    if (eventStart <= bookingDate) {
+      return false;
     }
-  }, [scheduleFormData, form]);
 
-  const resetAllTimeslotsAndDates = () => {
+    // FIXED: Must have at least one time slot
+    if (!allEvents || allEvents.length === 0) {
+      return false;
+    }
+
+    return true;
+  };
+
+  // ==================== RESET FUNCTIONS ====================
+  const resetToDefaults = () => {
+    const newDefaults = getDefaultDates();
+    setAdStartDateTime(newDefaults.adStartTime);
+    setBookingStartDateTime(newDefaults.bookingStartTime);
+    setDateRange({
+      startDate: newDefaults.eventStartDate,
+      endDate: newDefaults.eventEndDate,
+      isSelecting: false,
+    });
     setAllEvents([]);
     setCurrentWeekStart(0);
 
-    const defaults = getDefaultTimes();
-    const newDateRange = {
-      startDate: defaults.eventStartDate,
-      endDate: defaults.eventEndDate,
-      isSelecting: false,
-    };
+    form?.setFieldValue("ad_start_date_time", newDefaults.adStartTime);
+    form?.setFieldValue(
+      "booking_start_date_time",
+      newDefaults.bookingStartTime
+    );
 
-    setDateRange(newDateRange);
-
-    const updatedData = {
-      ...scheduleFormData,
-      start_date: formatDateForAPI(defaults.eventStartDate),
-      end_date: formatDateForAPI(defaults.eventEndDate),
-      show_dates: [],
-    };
-
-    dispatch(setScheduleFormData(updatedData));
-    message.success("All dates and time slots have been reset to defaults");
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        ad_start_date_time: formatDateTime(newDefaults.adStartTime),
+        booking_start_date_time: formatDateTime(newDefaults.bookingStartTime),
+        start_date: formatDateForAPI(newDefaults.eventStartDate),
+        end_date: formatDateForAPI(newDefaults.eventEndDate),
+        show_dates: [],
+      })
+    );
   };
 
-  const handleAdStartTimeChange = useCallback(
-    (date) => {
-      if (!date) return;
-
-      setAdStartDateTime(date);
-      form.setFieldValue("ad_start_date_time", date);
-
-      if (bookingStartDateTime && date >= bookingStartDateTime) {
-        message.warning(
-          "Advertisement time overlaps with booking time. Resetting all time slots."
-        );
-        resetAllTimeslotsAndDates();
-
-        const newBookingTime = new Date(date);
-        newBookingTime.setHours(date.getHours() + 1);
-        setBookingStartDateTime(newBookingTime);
-        form.setFieldValue("booking_start_date_time", newBookingTime);
-      }
-
-      const updatedData = {
-        ...scheduleFormData,
-        ad_start_date_time: formatDateTime(date),
-      };
-
-      dispatch(setScheduleFormData(updatedData));
-    },
-    [bookingStartDateTime, scheduleFormData, form, dispatch]
-  );
-
-  const handleBookingStartTimeChange = useCallback(
-    (date) => {
-      if (!date) return;
-
-      setBookingStartDateTime(date);
-      form.setFieldValue("booking_start_date_time", date);
-
-      if (dateRange.startDate) {
-        const eventStartDate = new Date(dateRange.startDate);
-        eventStartDate.setHours(0, 0, 0, 0);
-        const bookingDate = new Date(date);
-        bookingDate.setHours(0, 0, 0, 0);
-
-        if (bookingDate >= eventStartDate) {
-          message.warning(
-            "Booking time overlaps with event dates. Resetting all time slots."
-          );
-          resetAllTimeslotsAndDates();
-          return;
-        }
-      }
-
-      const updatedData = {
-        ...scheduleFormData,
-        booking_start_date_time: formatDateTime(date),
-      };
-
-      dispatch(setScheduleFormData(updatedData));
-    },
-    [dateRange.startDate, scheduleFormData, form, dispatch]
-  );
-
-  const generateShowDatesFromEvents = useCallback(
-    (events, currentDateRange) => {
-      if (
-        !events ||
-        events.length === 0 ||
-        !currentDateRange.startDate ||
-        !currentDateRange.endDate
-      ) {
-        return [];
-      }
-
-      const allDaysInRange = getAllDaysInRange();
-      const eventsByDate = {};
-
-      events.forEach((event) => {
-        if (!event.startTime || !event.endTime) return;
-
-        const startDay = event.startTime.day;
-        const endDay = event.endTime.day;
-
-        for (let day = startDay; day <= endDay; day++) {
-          if (allDaysInRange[day]) {
-            const dateStr = formatDateForAPI(allDaysInRange[day]);
-
-            if (!eventsByDate[dateStr]) {
-              eventsByDate[dateStr] = [];
-            }
-
-            eventsByDate[dateStr].push({
-              start_time: `${event.startTime.hour
-                .toString()
-                .padStart(2, "0")}:${(event.startTime.minute || 0)
-                .toString()
-                .padStart(2, "0")}`,
-              end_time: `${event.endTime.hour.toString().padStart(2, "0")}:${(
-                event.endTime.minute || 0
-              )
-                .toString()
-                .padStart(2, "0")}`,
-              ticket_structure_id: event.ticket_structure_id || 11,
-              ticket_set: event.ticket_set || "GOLD A1",
-              seat_structure_id: event.seat_structure_id,
-              is_midnight:
-                event.endTime.hour < event.startTime.hour ? "true" : "false",
-            });
-          }
-        }
-      });
-
-      const showDates = Object.entries(eventsByDate).map(
-        ([dateStr, showTimes]) => ({
-          start_date: dateStr,
-          end_date: null,
-          show_times: showTimes,
-        })
+  // ==================== EVENT HANDLERS ====================
+  const handleAdStartTimeChange = (date) => {
+    if (!date) {
+      // FIXED: Reset to defaults instead of nulls
+      resetToDefaults();
+      message.warning(
+        "Advertisement date cleared. All dates have been reset to defaults."
       );
-
-      showDates.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-      return showDates;
-    },
-    []
-  );
-
-  const debouncedSave = useCallback(
-    (dataToSave) => {
-      if (saveTimeout.current) {
-        clearTimeout(saveTimeout.current);
-      }
-
-      saveTimeout.current = setTimeout(() => {
-        const dataString = JSON.stringify(dataToSave);
-        const lastDataString = JSON.stringify(lastSavedData.current);
-
-        if (dataString !== lastDataString) {
-          dispatch(setScheduleFormData(dataToSave));
-          lastSavedData.current = { ...dataToSave };
-        }
-      }, 1000);
-    },
-    [dispatch]
-  );
-
-  const getAllDaysInRange = () => {
-    if (!dateRange.startDate || !dateRange.endDate) {
-      const defaults = getDefaultTimes();
-      const daysDiff = getDaysDiff(
-        defaults.eventStartDate,
-        defaults.eventEndDate
-      );
-      return Array.from({ length: daysDiff }, (_, i) => {
-        const day = new Date(defaults.eventStartDate);
-        day.setUTCDate(defaults.eventStartDate.getUTCDate() + i);
-        return new Date(day);
-      });
+      return;
     }
 
-    const daysDiff = getDaysDiff(dateRange.startDate, dateRange.endDate);
-    return Array.from({ length: daysDiff }, (_, i) => {
-      const day = new Date(dateRange.startDate);
-      day.setUTCDate(dateRange.startDate.getUTCDate() + i);
-      return new Date(day);
-    });
+    setAdStartDateTime(date);
+    form?.setFieldValue("ad_start_date_time", date);
+
+    // Auto-reset if invalid
+    if (bookingStartDateTime && date >= bookingStartDateTime) {
+      const newDefaults = getDefaultDates();
+      setBookingStartDateTime(newDefaults.bookingStartTime);
+      setDateRange({
+        startDate: newDefaults.eventStartDate,
+        endDate: newDefaults.eventEndDate,
+        isSelecting: false,
+      });
+      setAllEvents([]);
+      form?.setFieldValue(
+        "booking_start_date_time",
+        newDefaults.bookingStartTime
+      );
+
+      message.warning(
+        "Booking and event dates have been reset due to invalid advertisement date."
+      );
+    }
+
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        ad_start_date_time: formatDateTime(date),
+      })
+    );
   };
 
+  const handleBookingStartTimeChange = (date) => {
+    if (!date) {
+      // FIXED: Reset booking and event dates to defaults
+      const newDefaults = getDefaultDates();
+      setBookingStartDateTime(newDefaults.bookingStartTime);
+      setDateRange({
+        startDate: newDefaults.eventStartDate,
+        endDate: newDefaults.eventEndDate,
+        isSelecting: false,
+      });
+      setAllEvents([]);
+      form?.setFieldValue(
+        "booking_start_date_time",
+        newDefaults.bookingStartTime
+      );
+
+      message.warning(
+        "Booking date cleared. Booking and event dates have been reset to defaults."
+      );
+      return;
+    }
+
+    setBookingStartDateTime(date);
+    form?.setFieldValue("booking_start_date_time", date);
+
+    // Auto-reset if event dates are invalid
+    if (dateRange.startDate) {
+      const bookingDate = new Date(date);
+      bookingDate.setHours(23, 59, 59, 999);
+
+      const eventStart = new Date(dateRange.startDate);
+      eventStart.setHours(0, 0, 0, 0);
+
+      if (eventStart <= bookingDate) {
+        const newDefaults = getDefaultDates();
+        setDateRange({
+          startDate: newDefaults.eventStartDate,
+          endDate: newDefaults.eventEndDate,
+          isSelecting: false,
+        });
+        setAllEvents([]);
+        message.warning(
+          "Event dates have been reset because they must be after the booking date."
+        );
+      }
+    }
+
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        booking_start_date_time: formatDateTime(date),
+      })
+    );
+  };
+
+  // FIXED: Enhanced date range change with proper validation
   const handleDateRangeChange = (range) => {
+    if (!range.startDate || !range.endDate) {
+      // FIXED: Reset to defaults instead of nulls
+      const newDefaults = getDefaultDates();
+      setDateRange({
+        startDate: newDefaults.eventStartDate,
+        endDate: newDefaults.eventEndDate,
+        isSelecting: false,
+      });
+      setAllEvents([]);
+      message.warning(
+        "Event dates cleared. Dates have been reset to defaults."
+      );
+      return;
+    }
+
+    // FIXED: Validate that event dates are after booking date
+    if (bookingStartDateTime) {
+      const bookingDate = new Date(bookingStartDateTime);
+      bookingDate.setHours(23, 59, 59, 999);
+
+      const eventStart = new Date(range.startDate);
+      eventStart.setHours(0, 0, 0, 0);
+
+      if (eventStart <= bookingDate) {
+        message.error(
+          "Event start date must be after the booking date. Please select a later date."
+        );
+        return; // Don't update the range
+      }
+    }
+
+    // FIXED: Validate that start date is before end date
+    if (range.startDate >= range.endDate) {
+      message.error(
+        "End date must be after start date. Please select a valid date range."
+      );
+      return; // Don't update the range
+    }
+
     const hasExistingTimeSlots = allEvents && allEvents.length > 0;
 
     if (hasExistingTimeSlots) {
@@ -387,48 +338,211 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
   };
 
   const proceedWithDateRangeChange = (range) => {
-    if (bookingStartDateTime && range.startDate) {
-      const eventStartDate = new Date(range.startDate);
-      eventStartDate.setHours(0, 0, 0, 0);
-      const bookingDate = new Date(bookingStartDateTime);
-      bookingDate.setHours(0, 0, 0, 0);
-
-      if (bookingDate >= eventStartDate) {
-        message.error("Event start date must be after booking start time");
-        return;
-      }
-    }
-
     setDateRange(range);
     setCurrentWeekStart(0);
     setAllEvents([]);
 
-    const updatedData = {
-      ...scheduleFormData,
-      start_date: formatDateForAPI(range.startDate),
-      end_date: formatDateForAPI(range.endDate),
-      show_dates: [],
-    };
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        start_date: formatDateForAPI(range.startDate),
+        end_date: formatDateForAPI(range.endDate),
+        show_dates: [],
+      })
+    );
 
-    dispatch(setScheduleFormData(updatedData));
-    message.success("Date range changed and all time slots have been reset");
+    message.success("Event dates updated successfully.");
   };
 
-  const handleCreateEvent = () => {
-    const currentFormData = form.getFieldsValue();
+  // ==================== UTILITY FUNCTIONS ====================
+  const debouncedSave = useCallback(
+    (dataToSave) => {
+      if (saveTimeout.current) {
+        clearTimeout(saveTimeout.current);
+      }
 
-    const finalData = {
-      ...scheduleFormData,
-      ...currentFormData,
-      start_date: formatDateForAPI(dateRange.startDate),
-      end_date: formatDateForAPI(dateRange.endDate),
-      is_multi_date: multiDateSelectionEnabled,
-      ad_start_date_time: formatDateTime(adStartDateTime),
-      booking_start_date_time: formatDateTime(bookingStartDateTime),
-      show_dates: generateShowDatesFromEvents(allEvents, dateRange),
-    };
+      saveTimeout.current = setTimeout(() => {
+        dispatch(setScheduleFormData(dataToSave));
+        lastSavedData.current = { ...dataToSave };
+      }, 1000);
+    },
+    [dispatch]
+  );
 
-    onSubmit(finalData);
+  const getAllDaysInRange = () => {
+    if (!dateRange.startDate || !dateRange.endDate) {
+      return [];
+    }
+
+    const daysDiff = getDaysDiff(dateRange.startDate, dateRange.endDate);
+    return Array.from({ length: daysDiff }, (_, i) => {
+      const day = new Date(dateRange.startDate);
+      day.setUTCDate(dateRange.startDate.getUTCDate() + i);
+      return new Date(day);
+    });
+  };
+
+  // FIXED: Enhanced show dates generation with CORRECT midnight handling
+  const generateShowDatesFromEvents = (events, currentDateRange) => {
+    if (
+      !events ||
+      events.length === 0 ||
+      !currentDateRange.startDate ||
+      !currentDateRange.endDate
+    ) {
+      return [];
+    }
+
+    console.log("🌙 GENERATING show dates with timezone:", timezone);
+
+    const allDaysInRange = getAllDaysInRange();
+    const eventsByDate = {};
+
+    events.forEach((event) => {
+      if (!event.startTime || !event.endTime) return;
+
+      const startDay = event.startTime.day;
+      let endDay = event.endTime.day;
+
+      if (event.is_midnight_passed) {
+        endDay = startDay; // Keep on same day but mark as midnight
+      }
+
+      for (let day = startDay; day <= endDay; day++) {
+        if (allDaysInRange[day]) {
+          const dateStr = formatDateForAPI(allDaysInRange[day]);
+
+          if (!eventsByDate[dateStr]) {
+            eventsByDate[dateStr] = [];
+          }
+
+          eventsByDate[dateStr].push({
+            start_time: `${event.startTime.hour.toString().padStart(2, "0")}:${(
+              event.startTime.minute || 0
+            )
+              .toString()
+              .padStart(2, "0")}`,
+            end_time: `${event.endTime.hour.toString().padStart(2, "0")}:${(
+              event.endTime.minute || 0
+            )
+              .toString()
+              .padStart(2, "0")}`,
+            ticket_structure_id: event.ticket_structure_id || 11,
+            ticket_set: event.ticket_set || "GOLD A1",
+            seat_structure_id: event.seat_structure_id,
+            is_midnight: event.is_midnight_passed ? "true" : "false",
+            show_end_date:
+              event.is_midnight_passed && event.show_end_date
+                ? event.show_end_date
+                : null,
+            timezone: timezone,
+          });
+        }
+      }
+    });
+
+    // FIXED: Convert to proper show_dates format with CORRECTED midnight handling
+    const showDates = Object.entries(eventsByDate).map(
+      ([dateStr, showTimes]) => {
+        let endDate = null;
+
+        // FIXED: For midnight events, end_date must be DIFFERENT from start_date
+        const hasMidnightEvent = showTimes.some(
+          (st) => st.is_midnight === "true"
+        );
+
+        if (hasMidnightEvent) {
+          const midnightEvent = showTimes.find(
+            (st) => st.is_midnight === "true"
+          );
+
+          if (midnightEvent && midnightEvent.show_end_date) {
+            // Use the specified show_end_date
+            endDate = midnightEvent.show_end_date;
+          } else {
+            // FIXED: MUST be next day for midnight events - API requirement
+            const startDate = new Date(dateStr);
+            const nextDay = new Date(startDate);
+            nextDay.setDate(startDate.getDate() + 1);
+            endDate = formatDateForAPI(nextDay);
+          }
+
+          // CRITICAL FIX: Ensure end_date is NEVER same as start_date for midnight events
+          if (endDate === dateStr) {
+            const startDate = new Date(dateStr);
+            const nextDay = new Date(startDate);
+            nextDay.setDate(startDate.getDate() + 1);
+            endDate = formatDateForAPI(nextDay);
+
+            console.log("🚨 FIXED midnight end_date:", {
+              startDate: dateStr,
+              correctedEndDate: endDate,
+            });
+          }
+        }
+
+        return {
+          start_date: dateStr,
+          end_date: endDate, // FIXED: Will be null for regular events, NEXT DAY for midnight events
+          show_times: showTimes,
+          timezone: timezone,
+        };
+      }
+    );
+
+    showDates.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+
+    // FIXED: Log final show_dates for debugging
+    console.log("📊 FINAL SHOW_DATES:", JSON.stringify(showDates, null, 2));
+
+    return showDates;
+  };
+
+  // FIXED: Enhanced create event with API error handling
+  const handleCreateEvent = async () => {
+    try {
+      // FIXED: Validate time slots exist
+      if (!allEvents || allEvents.length === 0) {
+        message.error(
+          "Please add at least one time slot before saving the schedule."
+        );
+        return;
+      }
+
+      const currentFormData = form?.getFieldsValue() || {};
+
+      const finalData = {
+        ...scheduleFormData,
+        ...currentFormData,
+        start_date: formatDateForAPI(dateRange.startDate),
+        end_date: formatDateForAPI(dateRange.endDate),
+        ad_start_date_time: formatDateTime(adStartDateTime),
+        booking_start_date_time: formatDateTime(bookingStartDateTime),
+        show_dates: generateShowDatesFromEvents(allEvents, dateRange),
+        timezone: timezone,
+      };
+
+      console.log("💾 SUBMITTING SCHEDULE DATA:", finalData);
+
+      // FIXED: Call onSubmit and handle potential API errors
+      const result = await onSubmit(finalData);
+
+      // If we get here, submission was successful
+      message.success("Schedule saved successfully!");
+    } catch (error) {
+      console.error("❌ SCHEDULE SUBMISSION ERROR:", error);
+
+      // FIXED: Handle specific API error format
+      if (error?.response?.data?.status?.message) {
+        message.error(error.response.data.status.message);
+      } else if (error?.response?.data?.server_error) {
+        message.error(error.response.data.server_error);
+      } else if (error?.message) {
+        message.error(error.message);
+      } else {
+        message.error("Failed to save schedule. Please try again.");
+      }
+    }
   };
 
   const getColorForDay = (dayIndex) => {
@@ -437,6 +551,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
 
   const handleEventSave = (eventData) => {
     if (eventData.id && eventData.id.startsWith("temp-")) {
+      // CREATE NEW EVENT
       const eventDayIndex = eventData.startTime.day + currentWeekStart;
       const colorClass = getColorForDay(eventDayIndex);
 
@@ -444,13 +559,16 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         ...eventData,
         id: Date.now().toString(),
         color: colorClass,
+        timezone: timezone,
         startTime: {
           ...eventData.startTime,
           day: eventDayIndex,
         },
         endTime: {
           ...eventData.endTime,
-          day: eventData.endTime.day + currentWeekStart,
+          day: eventData.is_midnight_passed
+            ? eventDayIndex
+            : eventData.endTime.day + currentWeekStart,
         },
       };
 
@@ -459,11 +577,13 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         debouncedSave({
           ...scheduleFormData,
           show_dates: generateShowDatesFromEvents(updated, dateRange),
+          timezone: timezone,
         });
         return updated;
       });
-      message.success("Event created successfully!");
+      message.success("Time slot created successfully!");
     } else {
+      // UPDATE EXISTING EVENT
       const eventDayIndex =
         eventData.originalStartDay !== undefined
           ? eventData.originalStartDay
@@ -473,6 +593,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       const updatedEvent = {
         ...eventData,
         color: colorClass,
+        timezone: timezone,
         startTime: {
           ...eventData.startTime,
           day:
@@ -482,10 +603,13 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         },
         endTime: {
           ...eventData.endTime,
-          day:
-            eventData.originalEndDay !== undefined
-              ? eventData.originalEndDay
-              : eventData.endTime.day + currentWeekStart,
+          day: eventData.is_midnight_passed
+            ? eventData.originalStartDay !== undefined
+              ? eventData.originalStartDay
+              : eventData.startTime.day + currentWeekStart
+            : eventData.originalEndDay !== undefined
+            ? eventData.originalEndDay
+            : eventData.endTime.day + currentWeekStart,
         },
       };
 
@@ -496,10 +620,11 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         debouncedSave({
           ...scheduleFormData,
           show_dates: generateShowDatesFromEvents(updated, dateRange),
+          timezone: timezone,
         });
         return updated;
       });
-      message.success("Event updated successfully!");
+      message.success("Time slot updated successfully!");
     }
   };
 
@@ -510,18 +635,19 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
   };
 
   const getVisibleEvents = () => {
+    const visibleDays = getVisibleDays();
     const visibleEvents = allEvents.filter((event) => {
       if (!event.startTime || !event.endTime) return false;
 
       const eventStartDay = event.startTime.day;
       const eventEndDay = event.endTime.day;
       const weekStart = currentWeekStart;
-      const weekEnd = currentWeekStart + getVisibleDays().length - 1;
+      const weekEnd = currentWeekStart + visibleDays.length - 1;
 
       return !(eventEndDay < weekStart || eventStartDay > weekEnd);
     });
 
-    const mappedEvents = visibleEvents.map((event) => ({
+    return visibleEvents.map((event) => ({
       ...event,
       startTime: {
         ...event.startTime,
@@ -534,17 +660,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       originalStartDay: event.startTime.day,
       originalEndDay: event.endTime.day,
     }));
-
-    return mappedEvents;
   };
-
-  const allDaysInRange = getAllDaysInRange();
-  const visibleDays = getVisibleDays();
-  const totalDays = allDaysInRange.length;
-  const canNavigateNext = currentWeekStart + 7 < totalDays;
-  const canNavigatePrev = currentWeekStart > 0;
-
-  const hasValidDateRange = dateRange.startDate && dateRange.endDate;
 
   const getBookingMinDate = () => {
     if (adStartDateTime) {
@@ -552,56 +668,68 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       minDate.setMinutes(minDate.getMinutes() + 1);
       return minDate;
     }
-    return getTimezoneTime(1);
+    return new Date(Date.now() + 24 * 60 * 60 * 1000);
   };
 
+  // FIXED: Event dates must be AFTER booking date (not same day)
   const getEventMinDate = () => {
     if (bookingStartDateTime) {
       const minDate = new Date(bookingStartDateTime);
       minDate.setDate(minDate.getDate() + 1);
+      minDate.setHours(0, 0, 0, 0);
       return minDate;
     }
-    return getTimezoneTime(2);
+    return new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
   };
 
+  // ==================== COMPUTED VALUES ====================
+  const allDaysInRange = getAllDaysInRange();
+  const visibleDays = getVisibleDays();
+  const totalDays = allDaysInRange.length;
+  const canNavigateNext = currentWeekStart + 7 < totalDays;
+  const canNavigatePrev = currentWeekStart > 0;
+  const hasValidDateRange = dateRange.startDate && dateRange.endDate;
+
+  const isAdDateDisabled = false;
+  const isBookingDateDisabled = !adStartDateTime;
+  const isEventDateDisabled = !bookingStartDateTime || !adStartDateTime;
+
+  // ==================== RENDER ====================
   return (
     <div className="max-w-full mx-auto bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+      {/* HEADER SECTION */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Event Schedule</h1>
             <p className="text-gray-600">
               {hasValidDateRange
-                ? "Manage your time slots for the selected dates"
-                : "Select dates to start scheduling"}
+                ? `Manage your time slots for the selected dates (${timezone})`
+                : `Select dates to start scheduling (${timezone})`}
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={multiDateSelectionEnabled}
-                onChange={(e) => {
-                  setMultiDateSelectionEnabled(e.target.checked);
-                  debouncedSave({
-                    ...scheduleFormData,
-                    is_multi_date: e.target.checked,
-                  });
-                }}
-                className="rounded"
-              />
-              <span className="text-sm text-gray-600">
-                Allow Multi-date Selection
-              </span>
-            </label>
             <div className="text-sm text-gray-500">
               Events: {allEvents.length} | Days: {allDaysInRange.length}
             </div>
           </div>
         </div>
+
+        {/* FIXED: Show validation messages */}
+        {!isAllDatesValid() && hasValidDateRange && (
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-amber-800 text-sm">
+              {allEvents.length === 0
+                ? "⚠️ Please add at least one time slot to save the schedule."
+                : "⚠️ Please check your date configuration."}
+            </p>
+          </div>
+        )}
       </div>
 
+      {/* MAIN GRID */}
       <div className="grid grid-cols-12 gap-6">
+        {/* LEFT SIDEBAR */}
         <div className="col-span-3 space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
@@ -613,16 +741,14 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                 label=""
                 fullWidth={true}
                 size="default"
-                minDateTime={getTimezoneTime(1)}
+                minDateTime={new Date(Date.now() + 60 * 60 * 1000)}
                 showClearButton={true}
                 value={adStartDateTime}
                 timezone={timezone}
                 disablePastDates={true}
                 disablePastTimes={true}
+                disabled={isAdDateDisabled}
               />
-              <div className="text-xs text-gray-500">
-                Default: Tomorrow at 9:00 AM
-              </div>
             </div>
 
             <div className="space-y-2">
@@ -640,51 +766,27 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                 timezone={timezone}
                 disablePastDates={true}
                 disablePastTimes={true}
+                disabled={isBookingDateDisabled}
               />
-              <div className="text-xs text-gray-500">
-                Default: Day after tomorrow at 10:00 AM
-              </div>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Event Dates
+              Event Dates *
             </label>
-            <CalendarWidget
-              onDateRangeChange={handleDateRangeChange}
-              initialStartDate={dateRange.startDate}
-              initialEndDate={dateRange.endDate}
-              minDate={getEventMinDate()}
-            />
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 mt-4">
-              <h4 className="text-sm font-medium text-blue-800 mb-2">
-                Schedule Summary
-              </h4> 
-              <div className="space-y-1 text-xs">
-                <div className="text-green-600">
-                  ✓ Ad Start: {adStartDateTime?.toLocaleDateString()}{" "}
-                  {adStartDateTime?.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-                <div className="text-blue-600">
-                  ✓ Booking Start: {bookingStartDateTime?.toLocaleDateString()}{" "}
-                  {bookingStartDateTime?.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-                <div className="text-purple-600">
-                  ✓ Event Period: {dateRange.startDate?.toLocaleDateString()} -{" "}
-                  {dateRange.endDate?.toLocaleDateString()}
-                </div>
-                <div className="text-orange-600 mt-2">
-                  Total Days: {allDaysInRange.length} | Time Slots:{" "}
-                  {allEvents.length}
-                </div>
-              </div>
+            <div
+              className={
+                isEventDateDisabled ? "opacity-50 pointer-events-none" : ""
+              }
+            >
+              <CalendarWidget
+                onDateRangeChange={handleDateRangeChange}
+                initialStartDate={dateRange.startDate}
+                initialEndDate={dateRange.endDate}
+                minDate={getEventMinDate()}
+                disabled={isEventDateDisabled}
+              />
             </div>
           </div>
 
@@ -708,7 +810,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                   });
                   return updated;
                 });
-                message.success("Event deleted successfully!");
+                message.success("Time slot deleted successfully!");
               }}
               onEventUpdate={(event) => {
                 setSelectedEvent(event);
@@ -718,17 +820,10 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                 const newEvents = [];
                 allDaysInRange.forEach((_, dayIndex) => {
                   const hasConflict = allEvents.some((event) => {
-                    return (
-                      event.startTime.day === dayIndex &&
-                      (event.startTime.hour < templateEvent.endTime.hour ||
-                        (event.startTime.hour === templateEvent.endTime.hour &&
-                          event.startTime.minute <
-                            templateEvent.endTime.minute)) &&
-                      (event.endTime.hour > templateEvent.startTime.hour ||
-                        (event.endTime.hour === templateEvent.startTime.hour &&
-                          event.endTime.minute >
-                            templateEvent.startTime.minute))
-                    );
+                    return ScheduleUtil.isTimeOverlapping(event, {
+                      startTime: { ...templateEvent.startTime, day: dayIndex },
+                      endTime: { ...templateEvent.endTime, day: dayIndex },
+                    });
                   });
 
                   if (!hasConflict) {
@@ -737,14 +832,9 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                       ...templateEvent,
                       id: `applied-${Date.now()}-${dayIndex}`,
                       color: colorClass,
-                      startTime: {
-                        ...templateEvent.startTime,
-                        day: dayIndex,
-                      },
-                      endTime: {
-                        ...templateEvent.endTime,
-                        day: dayIndex,
-                      },
+                      timezone: timezone,
+                      startTime: { ...templateEvent.startTime, day: dayIndex },
+                      endTime: { ...templateEvent.endTime, day: dayIndex },
                     });
                   }
                 });
@@ -758,6 +848,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                         updated,
                         dateRange
                       ),
+                      timezone: timezone,
                     });
                     return updated;
                   });
@@ -771,34 +862,32 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                 }
               }}
               allDaysInRange={allDaysInRange}
+              timezone={timezone}
             />
           )}
         </div>
 
+        {/* MAIN CONTENT AREA */}
         <div className="col-span-9">
           {hasValidDateRange ? (
             <div>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-4">
                   <button
-                    onClick={() => {
-                      const newStart = currentWeekStart - 7;
-                      if (newStart >= 0) {
-                        setCurrentWeekStart(Math.max(0, newStart));
-                      }
-                    }}
+                    onClick={() =>
+                      setCurrentWeekStart(Math.max(0, currentWeekStart - 7))
+                    }
                     disabled={!canNavigatePrev}
                     className="p-2 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft size={20} className="text-gray-600" />
                   </button>
                   <button
-                    onClick={() => {
-                      const newStart = currentWeekStart + 7;
-                      if (newStart < totalDays) {
-                        setCurrentWeekStart(newStart);
-                      }
-                    }}
+                    onClick={() =>
+                      setCurrentWeekStart(
+                        Math.min(currentWeekStart + 7, totalDays - 7)
+                      )
+                    }
                     disabled={!canNavigateNext}
                     className="p-2 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -825,9 +914,22 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                   >
                     <span>Go Back</span>
                   </button>
+                  {/* FIXED: Enhanced save button with better validation */}
                   <button
                     onClick={handleCreateEvent}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-medium transition-colors flex items-center space-x-2"
+                    className={`px-4 py-2 rounded-xl font-medium transition-colors flex items-center space-x-2 ${
+                      isAllDatesValid()
+                        ? "bg-blue-500 hover:bg-blue-600 text-white"
+                        : "bg-gray-300 cursor-not-allowed text-gray-500"
+                    }`}
+                    disabled={!isAllDatesValid()}
+                    title={
+                      !isAllDatesValid()
+                        ? allEvents.length === 0
+                          ? "Please add at least one time slot"
+                          : "Please check your configuration"
+                        : "Save schedule"
+                    }
                   >
                     <Plus size={16} />
                     <span>Save Schedule</span>
@@ -876,35 +978,16 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                     setSelectedEvent({ ...eventData, clickPosition });
                     setModalOpen(true);
                   }}
-                  scrollContainerRef={scrollContainerRef} // Fixed: now uses the ref declared at top level
+                  scrollContainerRef={scrollContainerRef}
                   blockedSlots={[]}
-                  onMultiDateTimeSlot={(timeSlotData) => {
-                    const newMultiEvent = {
-                      ...timeSlotData,
-                      id: `multi-${Date.now()}`,
-                      type: "blocked",
-                      is_multi_date: true,
-                      color: "bg-orange-500 border-orange-600",
-                    };
-                    setAllEvents((prev) => {
-                      const updated = [...prev, newMultiEvent];
-                      debouncedSave({
-                        ...scheduleFormData,
-                        show_dates: generateShowDatesFromEvents(
-                          updated,
-                          dateRange
-                        ),
-                      });
-                      return updated;
-                    });
-                    message.success(
-                      "Multi-day time slot created successfully!"
-                    );
-                  }}
-                  multiDateSelectionEnabled={multiDateSelectionEnabled}
                   dayColors={timeSlotColors}
                   getColorForDay={getColorForDay}
                   onOverlapWarning={(msg) => message.warning(msg)}
+                  eventDateRange={dateRange}
+                  ticketOptionsMap={{}}
+                  ticketSetOptionsMap={{}}
+                  seatStructureOptionsMap={{}}
+                  timezone={timezone}
                 />
               </div>
             </div>
@@ -917,7 +1000,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                 </h3>
                 <p className="text-gray-500">
                   Set your advertisement time, booking time, and event dates to
-                  start scheduling
+                  start scheduling (Timezone: {timezone})
                 </p>
               </div>
             </div>
@@ -925,6 +1008,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         </div>
       </div>
 
+      {/* EVENT MODAL */}
       <EventModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -936,16 +1020,20 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
             debouncedSave({
               ...scheduleFormData,
               show_dates: generateShowDatesFromEvents(updated, dateRange),
+              timezone: timezone,
             });
             return updated;
           });
-          message.success("Event deleted successfully!");
+          message.success("Time slot deleted successfully!");
         }}
         allDays={allDaysInRange}
         existingEvents={allEvents}
         form={form}
+        eventDateRange={dateRange}
+        timezone={timezone}
       />
 
+      {/* RESET CONFIRMATION MODAL */}
       <Modal
         title="Reset All Time Slots"
         open={showResetConfirmModal}

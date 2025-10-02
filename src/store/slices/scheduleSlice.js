@@ -27,6 +27,7 @@ export const initialState = {
   scrollPosition: 0,
   pagination: { size: 10, page: 1 },
   scheduleFormData: {},
+  checkedscheduleDetails: null,
 };
 
 export const fetchAllSchedules = createAsyncThunk(
@@ -58,6 +59,19 @@ export const fetchSingleSchedules = createAsyncThunk(
         const response = await ScheduleService.getSingleSchedule(pageData);
         return response.data[0];
       }
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching schedules"
+      );
+    }
+  }
+);
+export const checkScheduleEdit = createAsyncThunk(
+  "schedule/checkScheduleEdit",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response = await ScheduleService.checkScheduleEdit(params);
+      return response.data[0];
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Error fetching schedules"
@@ -399,6 +413,18 @@ const scheduleSlice = createSlice({
         state.scheduleDetails = action.payload;
       })
       .addCase(fetchSingleSchedules.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(checkScheduleEdit.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(checkScheduleEdit.fulfilled, (state, action) => {
+        state.loading = false;
+        state.checkedscheduleDetails = action.payload;
+      })
+      .addCase(checkScheduleEdit.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
