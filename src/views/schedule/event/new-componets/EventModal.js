@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, message, Switch } from "antd";
+import { Alert, Button, message, Switch } from "antd";
 import {
   Clock,
   Calendar,
@@ -32,6 +32,7 @@ const EventModal = ({
   existingEvents,
   form: parentForm,
   eventDateRange,
+  isBlocked,
 }) => {
   const [loading, setLoading] = useState(false);
   const [conflictWarning, setConflictWarning] = useState(null);
@@ -670,7 +671,16 @@ const EventModal = ({
   }, [isOpen]);
 
   if (!isOpen) return null;
-
+  if (isBlocked) {
+    return (
+      <Alert
+        message="Time Slot Locked"
+        description="Has active bookings"
+        type="error"
+        showIcon
+      />
+    );
+  }
   // Multi-day warning modal (same as before)
   if (showMultiDayWarning) {
     return (

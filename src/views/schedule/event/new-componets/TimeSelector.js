@@ -25,6 +25,7 @@ const TimeSelector = ({
   seatStructureOptionsMap = {},
   eventDateRange = null,
   selectedEventId = null, // NEW PROP for selected event
+  blockedEventIds = new Set(),
 }) => {
   const timeSlots = generateTimeSlots();
   const [isSelecting, setIsSelecting] = useState(false);
@@ -32,7 +33,9 @@ const TimeSelector = ({
   const [dragEnd, setDragEnd] = useState(null);
   const [overlapMessage, setOverlapMessage] = useState(null);
   const [activeEventId, setActiveEventId] = useState(null); // NEW STATE for clicked event
-
+  const isEventBlocked = (eventId) => {
+    return blockedEventIds.has(eventId);
+  };
   // FIXED: Enhanced monitoring for midnight events
   const logMidnightEvent = (event, context = "") => {
     if (event.is_midnight_passed) {
@@ -468,36 +471,26 @@ const TimeSelector = ({
     const eventStartMinute = event.startTime.minute || 0;
     const eventStartSlot = eventStartHour;
 
-    // Log event info calculation
+    // Check if event is blocked
+    const blocked = isEventBlocked(event.id);
+
     logMidnightEvent(
       event,
       `calculating display info for day ${dayIndex}, slot ${slotIndex}`
     );
 
     if (event.is_midnight_passed) {
-      // FIXED: Display midnight events across two days
-
       // Day 1: Show from start time to midnight
       if (dayIndex === eventStartDay && slotIndex === eventStartSlot) {
         const duration = calculateDayOneDuration(event);
         const heightSlots = Math.max(1, Math.ceil(duration / 60));
-
-        console.log(`🌙 DAY 1 DISPLAY:`, {
-          dayIndex,
-          slotIndex,
-          duration,
-          heightSlots,
-          startTime: `${eventStartHour}:${String(eventStartMinute).padStart(
-            2,
-            "0"
-          )}`,
-        });
 
         return {
           show: true,
           height: heightSlots,
           type: "midnight-day1",
           duration: duration,
+          blocked: blocked, // Add blocked flag
         };
       }
 
@@ -507,21 +500,12 @@ const TimeSelector = ({
         if (duration > 0) {
           const heightSlots = Math.max(1, Math.ceil(duration / 60));
 
-          console.log(`🌙 DAY 2 DISPLAY:`, {
-            dayIndex,
-            slotIndex,
-            duration,
-            heightSlots,
-            endTime: `${event.endTime.hour}:${String(
-              event.endTime.minute || 0
-            ).padStart(2, "0")}`,
-          });
-
           return {
             show: true,
             height: heightSlots,
             type: "midnight-day2",
             duration: duration,
+            blocked: blocked, // Add blocked flag
           };
         }
       }
@@ -538,7 +522,12 @@ const TimeSelector = ({
         );
         const durationMinutes = eventEndMinutes - eventStartMinutes;
         const heightSlots = Math.max(1, Math.ceil(durationMinutes / 60));
-        return { show: true, height: heightSlots, type: "regular" };
+        return {
+          show: true,
+          height: heightSlots,
+          type: "regular",
+          blocked: blocked, // Add blocked flag
+        };
       }
     }
 
@@ -655,7 +644,9 @@ const TimeSelector = ({
                     {event && eventInfo.show && (
                       <div
                         className={`absolute inset-x-1 top-0 cursor-pointer transition-all duration-200 z-10 flex ${
-                          isEventSelected(event)
+                          eventInfo.blocked
+                            ? "opacity-75 cursor-not-allowed" // Blocked styling
+                            : isEventSelected(event)
                             ? "ring-4 ring-blue-400 ring-opacity-70 shadow-2xl scale-105"
                             : "hover:opacity-90 hover:shadow-lg"
                         }`}
@@ -665,39 +656,78 @@ const TimeSelector = ({
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setActiveEventId(event.id); // SET ACTIVE EVENT
+                          if (eventInfo.blocked) {
+                            message.warning(
+                              "This time slot has active bookings and cannot be modified"
+                            );
+                            return;
+                          }
+                          setActiveEventId(event.id);
                           onEventClick(event, e);
                         }}
-                        title={getEventTooltip(event)}
+                        title={
+                          eventInfo.blocked
+                            ? "🔒 Locked - Has active bookings"
+                            : getEventTooltip(event)
+                        }
                       >
+                        {/* Color bar with lock indication */}
                         <div
                           className={`rounded-l transition-all ${
-                            getEventColors(event, dayIndex).main
+                            eventInfo.blocked
+                              ? "bg-gray-400" // Blocked color
+                              : getEventColors(event, dayIndex).main
                           } ${isEventSelected(event) ? "w-2" : "w-1"}`}
                         ></div>
+
+                        {/* Event content with lock overlay */}
                         <div
                           className={`flex-1 ${
-                            getEventColors(event, dayIndex).light
+                            eventInfo.blocked
+                              ? "bg-gray-50 border-gray-300" // Blocked styling
+                              : getEventColors(event, dayIndex).light
                           } ${
-                            getEventColors(event, dayIndex).border
+                            eventInfo.blocked
+                              ? "border-gray-300"
+                              : getEventColors(event, dayIndex).border
                           } border-l-0 border rounded-r p-2 overflow-hidden relative transition-all ${
                             isEventSelected(event)
                               ? "bg-opacity-100 border-2 border-blue-400"
                               : ""
                           }`}
                         >
-                          {/* FIXED: Add midnight indicator with day info */}
-                          {event.is_midnight_passed && (
+                          {/* LOCK BADGE FOR BLOCKED EVENTS */}
+                          {eventInfo.blocked && (
+                            <div className="absolute top-1 right-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1 shadow-md z-20">
+                              <svg
+                                className="w-3 h-3"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              <span>LOCKED</span>
+                            </div>
+                          )}
+
+                          {/* Midnight indicator */}
+                          {event.is_midnight_passed && !eventInfo.blocked && (
                             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 to-orange-600"></div>
                           )}
 
+                          {/* Event title */}
                           <div
                             className={`font-medium truncate text-sm leading-tight ${
-                              getEventColors(event, dayIndex).text
+                              eventInfo.blocked
+                                ? "text-gray-600"
+                                : getEventColors(event, dayIndex).text
                             }`}
                           >
                             {getEventDisplayText(event)}
-                            {/* FIXED: Show which part of midnight event */}
                             {event.is_midnight_passed && (
                               <span className="text-xs ml-1 opacity-75">
                                 {eventInfo.type === "midnight-day1"
@@ -709,9 +739,12 @@ const TimeSelector = ({
                             )}
                           </div>
 
+                          {/* Event time */}
                           <div
                             className={`opacity-75 truncate text-xs leading-tight mt-1 ${
-                              getEventColors(event, dayIndex).text
+                              eventInfo.blocked
+                                ? "text-gray-500"
+                                : getEventColors(event, dayIndex).text
                             }`}
                           >
                             {eventInfo.type === "midnight-day1" && (
@@ -742,10 +775,13 @@ const TimeSelector = ({
                             )}
                           </div>
 
+                          {/* Duration info */}
                           {eventInfo.height > 1 && (
                             <div
                               className={`opacity-75 text-xs mt-1 ${
-                                getEventColors(event, dayIndex).text
+                                eventInfo.blocked
+                                  ? "text-gray-500"
+                                  : getEventColors(event, dayIndex).text
                               }`}
                             >
                               {event.is_midnight_passed ? (
@@ -776,11 +812,18 @@ const TimeSelector = ({
                               )}
                             </div>
                           )}
+
+                          {/* Blocked message overlay */}
+                          {eventInfo.blocked && eventInfo.height > 2 && (
+                            <div className="absolute bottom-2 left-2 right-2 bg-red-50 border border-red-200 rounded px-2 py-1">
+                              <p className="text-xs text-red-700 font-medium">
+                                Has active bookings
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
-
-                    {/* Show blocked overlay for outside event range */}
                     {isOutsideRange && (
                       <div className="absolute inset-0 flex items-center justify-center">
                         <span className="text-xs text-gray-400 font-medium">
@@ -792,7 +835,7 @@ const TimeSelector = ({
                 );
               })}
             </div>
-          ))}{" "}
+          ))}
         </div>
       </div>
 

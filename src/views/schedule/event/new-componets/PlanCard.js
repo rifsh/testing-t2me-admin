@@ -58,12 +58,13 @@ const parseTimeString = (timeStr) => {
   return { hour, minute };
 };
 
-const CalendarViewCard = ({ form, onSubmit, onBack }) => {
+const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
   const dispatch = useDispatch();
   const { eventDetails } = useSelector((state) => state.event || {});
   const { scheduleFormData, scheduleDetails } = useSelector(
     (state) => state.schedules
   );
+  const [blockedEventIds, setBlockedEventIds] = useState(new Set());
 
   // ==================== REFS ====================
   const lastSavedData = useRef(null);
@@ -146,6 +147,39 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
   const [pendingDateChange, setPendingDateChange] = useState(null);
 
+  useEffect(() => {
+    if (scheduleFormData?.timeSlots && blockingInfo) {
+      const blockedIds = new Set();
+
+      // Check each time slot against blocking info
+      Object.entries(scheduleFormData.timeSlots).forEach(([dateStr, slots]) => {
+        if (!Array.isArray(slots)) return;
+
+        slots.forEach((slot) => {
+          const showDateId = slot.show_date_id;
+          const showTimeId = slot.show_time_id;
+
+          // Check if this date is blocked
+          if (blockingInfo.blockedDates?.has(showDateId)) {
+            // Generate event ID to block
+            const eventId = `loaded-${showDateId}-${showTimeId}`;
+            blockedIds.add(eventId);
+          }
+          // Check if this specific time slot is blocked
+          else if (
+            blockingInfo.blockedTimeSlots?.has(showDateId) &&
+            blockingInfo.blockedTimeSlots.get(showDateId).has(showTimeId)
+          ) {
+            const eventId = `loaded-${showDateId}-${showTimeId}`;
+            blockedIds.add(eventId);
+          }
+        });
+      });
+
+      setBlockedEventIds(blockedIds);
+      console.log("Blocked Event IDs:", Array.from(blockedIds));
+    }
+  }, [scheduleFormData?.timeSlots, blockingInfo]);
   // FIXED: Load edit mode data from scheduleFormData
   useEffect(() => {
     if (scheduleFormData?.timeSlots && !hasLoadedEditData.current) {
@@ -649,6 +683,19 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         return;
       }
 
+      // Check if any events are on blocked dates
+      const hasBlockedEvents = allEvents.some((event) => {
+        const eventId = event.id;
+        return blockedEventIds.has(eventId);
+      });
+
+      if (hasBlockedEvents && blockingInfo?.isScheduleBlocked) {
+        message.error(
+          "Cannot save: schedule has locked time slots with active bookings"
+        );
+        return;
+      }
+
       const currentFormData = form?.getFieldsValue() || {};
 
       const finalData = {
@@ -681,12 +728,18 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
       }
     }
   };
-
   const getColorForDay = (dayIndex) => {
     return timeSlotColors[dayIndex % timeSlotColors.length];
   };
 
   const handleEventSave = (eventData) => {
+    if (blockedEventIds.has(eventData.id)) {
+      message.error(
+        "This time slot has active bookings and cannot be modified"
+      );
+      return;
+    }
+
     if (eventData.id && eventData.id.startsWith("temp-")) {
       const eventDayIndex = eventData.startTime.day + currentWeekStart;
       const colorClass = getColorForDay(eventDayIndex);
@@ -928,6 +981,12 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
             <TimeSlotsSidebar
               allEvents={allEvents}
               onEventClick={(eventData, clickEvent) => {
+                if (blockedEventIds.has(eventData.id)) {
+                  message.warning(
+                    "This time slot has active bookings and cannot be modified"
+                  );
+                  return;
+                }
                 const clickPosition = {
                   x: clickEvent?.clientX || 0,
                   y: clickEvent?.clientY || 0,
@@ -936,6 +995,13 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                 setModalOpen(true);
               }}
               onEventDelete={(eventId) => {
+                if (blockedEventIds.has(eventId)) {
+                  message.error(
+                    "This time slot has active bookings and cannot be deleted"
+                  );
+                  return;
+                }
+
                 setAllEvents((prevEvents) => {
                   const updated = prevEvents.filter((e) => e.id !== eventId);
                   debouncedSave({
@@ -947,6 +1013,12 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                 message.success("Time slot deleted successfully!");
               }}
               onEventUpdate={(event) => {
+                if (blockedEventIds.has(event.id)) {
+                  message.warning(
+                    "This time slot has active bookings and cannot be modified"
+                  );
+                  return;
+                }
                 setSelectedEvent(event);
                 setModalOpen(true);
               }}
@@ -1105,6 +1177,13 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                   }}
                   events={getVisibleEvents()}
                   onEventClick={(eventData, clickEvent) => {
+                    // Check if event is blocked before allowing click
+                    if (blockedEventIds.has(eventData.id)) {
+                      message.warning(
+                        "This time slot has active bookings and cannot be modified"
+                      );
+                      return;
+                    }
                     const clickPosition = {
                       x: clickEvent?.clientX || 0,
                       y: clickEvent?.clientY || 0,
@@ -1122,6 +1201,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
                   ticketSetOptionsMap={{}}
                   seatStructureOptionsMap={{}}
                   timezone={timezone}
+                  blockedEventIds={blockedEventIds} // NEW PROP
                 />
               </div>
             </div>
@@ -1149,6 +1229,14 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         event={selectedEvent}
         onSave={handleEventSave}
         onDelete={(eventId) => {
+          // Check if event is blocked
+          if (blockedEventIds.has(eventId)) {
+            message.error(
+              "This time slot has active bookings and cannot be deleted"
+            );
+            return;
+          }
+
           setAllEvents((prevEvents) => {
             const updated = prevEvents.filter((e) => e.id !== eventId);
             debouncedSave({
@@ -1165,6 +1253,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack }) => {
         form={form}
         eventDateRange={dateRange}
         timezone={timezone}
+        isBlocked={selectedEvent && blockedEventIds.has(selectedEvent.id)} // NEW PROP
       />
 
       {/* RESET CONFIRMATION MODAL */}
