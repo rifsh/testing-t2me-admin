@@ -22,6 +22,7 @@ const PaymentLogoForm = () => {
             name="app_logo"
             valuePropName="fileList"
             getValueFromEvent={normFile}
+            rules={[{ required: true, message: "Logo is required" }]}
           >
             <Upload
               name="app_logo"
@@ -41,9 +42,9 @@ const PaymentLogoForm = () => {
             {(fields, { add, remove }) => (
               <>
                 {fields.map(({ key, name, fieldKey, ...restField }, index) => (
-                  <Card 
-                    key={key} 
-                    size="small" 
+                  <Card
+                    key={key}
+                    size="small"
                     title={`Payment Method ${index + 1}`}
                     style={{ marginBottom: 16 }}
                     extra={
@@ -85,9 +86,9 @@ const PaymentLogoForm = () => {
                     </div>
                   </Card>
                 ))}
-                <Button 
-                  type="dashed" 
-                  onClick={() => add()} 
+                <Button
+                  type="dashed"
+                  onClick={() => add()}
                   block
                   style={{ marginTop: 16 }}
                 >
