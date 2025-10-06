@@ -481,12 +481,13 @@ export const ScheduleUtil = {
       show_time_ticket_types:
         data?.show_dates?.[0]?.show_times?.[0]?.show_time_ticket_types || [],
       booking_type: data?.show_seat_details?.length > 0 ? "SEAT" : "TICKET",
+
       // Additional Settings
       is_multi_date: data?.is_multi_date || false,
       max_ticket_per_booking: data?.max_ticket_per_booking || 0,
-      available_types: data?.available_types || "",
+      available_types: data?.available_types || "ticket_structure",
 
-      // New Fields from JSON
+      // Offers and Coupons
       offer_schedule: data?.offer_schedule || [],
       coupon_schedule: data?.coupon_schedule || [],
       schedule_status: data?.schedule_status || null,
@@ -495,7 +496,11 @@ export const ScheduleUtil = {
 
       // Fields for formValues Compatibility
       payment_required: data?.payment_required || false,
+      booking_limit_per_user_toggle:
+        data?.booking_limit_per_user_toggle || false,
+      booking_limit_per_user: data?.booking_limit_per_user || null,
       add_ons: data?.add_ons || [],
+      add_ons_slim: data?.add_ons_slim || [],
     };
   },
 
@@ -513,8 +518,9 @@ export const ScheduleUtil = {
       max_ticket_per_booking: scheduleData.max_ticket_per_booking || 0,
       is_multi_date: scheduleData.is_multi_date || false,
       end_date: scheduleData.end_date ? dayjs(scheduleData.end_date) : null,
-      booking_limit_per_user: scheduleData.max_ticket_per_booking || 1,
-      booking_limit_per_user_toggle: !!scheduleData.max_ticket_per_booking,
+      booking_limit_per_user: scheduleData.booking_limit_per_user || 1,
+      booking_limit_per_user_toggle:
+        scheduleData.booking_limit_per_user_toggle || false,
       payment_required: scheduleData.payment_required || false,
       booking_start_date_time: scheduleData.booking_start_date_time
         ? dayjs(scheduleData.booking_start_date_time)
@@ -522,13 +528,14 @@ export const ScheduleUtil = {
       ad_start_date_time: scheduleData.ad_start_date_time
         ? dayjs(scheduleData.ad_start_date_time)
         : null,
-      add_ons: scheduleData.add_ons?.map((item) => item.name) || [],
+      add_ons: scheduleData.add_ons_slim?.map((item) => item.name) || [],
       show_time_ticket_types:
         scheduleData.show_time_ticket_types?.map((ticket) => ({
           id: ticket.id,
           ticket_type_id: ticket.ticket_type_id,
           ticket_used_count: ticket.ticket_used_count,
         })) || [],
+      available_types: scheduleData.available_types || "ticket_structure",
     };
   },
 };
