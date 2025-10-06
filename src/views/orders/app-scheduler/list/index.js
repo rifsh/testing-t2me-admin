@@ -480,6 +480,8 @@ const AppSchedulerList = () => {
 
 
     const handleRefresh = () => {
+        setSelectedType('all');
+        setSelectedEventType('all');
         dispatch(fetchAllApschedulerLogs(DEFAULT_PAGE_SIZE));
     };
 
@@ -733,10 +735,9 @@ const AppSchedulerList = () => {
                             style={{ width: 180 }}
                             options={[
                                 { value: "all", label: "All" },
-                                { value: "ticket_type", label: "Ticket Type" },
-                                // { value: "event_type", label: "Event Type" },
-                                { value: "event_seat", label: "Event Seat Type" },
-                                { value: "event_movie", label: "Movie Type" },
+                                { value: "ticket", label: "Ticket Type" },
+                                { value: "seat", label: "Event Seat Type" },
+                                { value: "movie", label: "Movie Type" },
                             ]}
                         />
                     </Space>
