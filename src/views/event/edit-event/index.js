@@ -4,6 +4,7 @@ import MultyStepEventForm from '../components/MultyStepForm';
 import MultyStepEventFormOrganizer from 'views/track-team/event-organizer/components/MultyStepForm';
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { getCurrentUser } from "configs/UserAccessConfig";
+import EventForm from '../new-components/EventForm';
 
 
 const EditEvent = () => {
@@ -17,7 +18,7 @@ const EditEvent = () => {
     );
   } else {
     return (
-      <MultyStepEventForm eventId={id} mode="EDIT" />
+      <EventForm eventId={id} mode="EDIT" />
     );
   }
 

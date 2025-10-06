@@ -44,7 +44,13 @@ export const R2_SECRET_ACCESS_KEY =
   "38e3d09460954fba58b4984a1c04e867950f07740b6e19f786b0aca872506d6e";
 export const UNAUTHENTICATED_ENTRY = "/login";
 export const ENABLE_RESOLUTIONS = false;
-export const MAIN_LAYOUT_COMPONENT = ['/qr-scanner','/qr-scanner/event','/qr-scanner/add-ons']
+
+export const MAIN_LAYOUT_COMPONENT = [
+  "/qr-scanner",
+  "/qr-scanner/event",
+  "/qr-scanner/add-ons",
+  // "/schedule/add",
+];
 
 export const THEME_CONFIG = {
   navCollapsed: false,
@@ -86,8 +92,8 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
           venue: { enabled: true },
           tax: { enabled: true },
           category: { enabled: true },
-          offer: { enabled: false },
-          coupon: { enabled: false },
+          offer: { enabled: true },
+          coupon: { enabled: true },
           seat: { enabled: false },
           payment: { enabled: true },
         },
@@ -98,7 +104,7 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
         items: {
           event_type: { enabled: true },
           ticket: { enabled: true },
-          seat: { enabled: false },
+          seat: { enabled: true },
           event: { enabled: true },
           schedule: { enabled: true },
         },

@@ -59,13 +59,15 @@ import { transformFormDataForAPI } from "../utils/formDataTransformer";
 import { EVENT_TYPES } from "constants/PageConstants";
 import DraftSystem from "drafts/components/DraftSystem";
 import { getRoleBasedEventSections } from "configs/UserAccessConfig";
+import { getSingleLeadEvents, addLeadEvent } from "store/slices/leadEventSlice";
 
 const { Step } = Steps;
 
 export default function EventForm({ eventId, mode = "add" }) {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const isInitialized = useRef(false); // Track if component has been initialized
+  const isInitialized = useRef(false);
+  const [imagesResetWarning, setImagesResetWarning] = useState(false);
 
   const {
     formData,
@@ -88,11 +90,45 @@ export default function EventForm({ eventId, mode = "add" }) {
     eventType,
   } = useSelector((state) => state.event);
 
+  // Add LEAD mode state
+  const { singleLeadEvent, error: leadError } = useSelector(
+    (state) => state.leadEvents
+  );
+
   const { selectedTax } = useSelector((state) => state.tax);
   const { selectedVenueList } = useSelector((state) => state.locations);
-  const { ticketTypes, availableSeats } = useSelector((state) => state.tickets);
+  const { ticketTypes, availableSeats, availableTicketTyps } = useSelector(
+    (state) => state.tickets
+  );
 
   const completedSectionsSet = new Set(completedSections);
+
+  // Helper function to preserve images when resetting form
+  const preserveImages = (currentFormData) => {
+    const currentValues = form.getFieldsValue();
+    return {
+      thumbnail_image:
+        currentValues.thumbnail_image || currentFormData.thumbnail_image || [],
+      banner_images:
+        currentValues.banner_images || currentFormData.banner_images || [],
+      event_images:
+        currentValues.event_images || currentFormData.event_images || [],
+    };
+  };
+
+  // Show warning message when images are reset
+  const showImageResetWarning = () => {
+    setImagesResetWarning(true);
+    message.warning({
+      content: "Images have been reset. Please select them again.",
+      duration: 5,
+      key: "image-reset-warning",
+    });
+
+    setTimeout(() => {
+      setImagesResetWarning(false);
+    }, 10000);
+  };
 
   // Initial cleanup - only once per component mount
   useEffect(() => {
@@ -101,9 +137,9 @@ export default function EventForm({ eventId, mode = "add" }) {
 
       if (mode === "add") {
         form.resetFields();
-
         dispatch(resetEventForm());
         dispatch(clearAllTicketData());
+
         const initialValues = {
           event_name: "",
           description: "",
@@ -120,14 +156,16 @@ export default function EventForm({ eventId, mode = "add" }) {
           coupon: [],
           thumbnail_image: [],
           banner_images: [],
+          event_images: [],
         };
 
         form.setFieldsValue(initialValues);
         dispatch(setEventFormData(initialValues));
-
         console.log("✅ ADD mode initialization complete");
       } else if (mode === "edit" && eventId) {
         console.log("📝 EDIT mode - will load event data");
+      } else if (mode === "LEAD" && eventId) {
+        console.log("🎯 LEAD mode - will load lead event data");
       }
 
       isInitialized.current = true;
@@ -140,7 +178,48 @@ export default function EventForm({ eventId, mode = "add" }) {
     }
   }, [dispatch, eventType.length]);
 
-  // Handle edit mode data loading - separate from initialization
+  // NEW: Fetch lead event data when in LEAD mode
+  useEffect(() => {
+    if (mode === "LEAD" && eventId && !singleLeadEvent) {
+      console.log("📥 Fetching lead event data:", eventId);
+      dispatch(getSingleLeadEvents(eventId));
+    }
+  }, [dispatch, mode, eventId, singleLeadEvent]);
+
+  // NEW: Populate form with lead event data
+  useEffect(() => {
+    if (
+      mode === "LEAD" &&
+      singleLeadEvent &&
+      isInitialized.current &&
+      !selectedOffers.length &&
+      !selectedCoupons.length
+    ) {
+      console.log("🎯 Populating form with lead event details");
+
+      const formValues = {
+        event_name: singleLeadEvent.event_name || "",
+        description: singleLeadEvent.description || "",
+        // Add other fields from singleLeadEvent as needed
+        // Note: Venues handling is commented out in original code
+        // Uncomment and adapt if venue data should be loaded from lead
+      };
+
+      form.setFieldsValue(formValues);
+      dispatch(setEventFormData(formValues));
+
+      console.log("✅ Lead mode form population complete");
+    }
+  }, [
+    singleLeadEvent,
+    mode,
+    form,
+    dispatch,
+    selectedOffers.length,
+    selectedCoupons.length,
+  ]);
+
+  // Handle edit mode data loading
   useEffect(() => {
     if (eventId && mode === "edit" && isInitialized.current) {
       console.log("📥 Loading event details for edit mode");
@@ -192,6 +271,13 @@ export default function EventForm({ eventId, mode = "add" }) {
               url: `${CDN_PATH}/${image.media_url}`,
             }))
           : [],
+        event_images:
+          eventDetails.event_images?.map((image, index) => ({
+            uid: `-${index + 2}`,
+            name: image.media_url.split("/").pop(),
+            status: "done",
+            url: `${CDN_PATH}/${image.media_url}`,
+          })) || [],
       };
 
       form.setFieldsValue(formValues);
@@ -254,10 +340,12 @@ export default function EventForm({ eventId, mode = "add" }) {
     selectedCoupons.length,
   ]);
 
-  // Update form when formData changes (but not on initial load for add mode)
+  // Update form when formData changes (but preserve images)
   useEffect(() => {
-    if (isInitialized.current && mode === "edit") {
-      form.setFieldsValue(formData);
+    if (isInitialized.current && (mode === "edit" || mode === "LEAD")) {
+      const currentImages = preserveImages(formData);
+      const updatedFormData = { ...formData, ...currentImages };
+      form.setFieldsValue(updatedFormData);
     }
   }, [form, formData, mode]);
 
@@ -265,7 +353,6 @@ export default function EventForm({ eventId, mode = "add" }) {
   useEffect(() => {
     return () => {
       console.log("🧹 Cleaning up EventForm on unmount");
-      // Optionally clear states on unmount if needed
     };
   }, []);
 
@@ -301,11 +388,17 @@ export default function EventForm({ eventId, mode = "add" }) {
     dispatch(setLoading(true));
 
     try {
-      const currentValues = await form.validateFields();
+      const values = await form.validateFields();
+      console.log("Form Values:", values);
+
       const currentSection = getRoleBasedEventSections()[currentStep];
 
+      // Preserve images when updating section data
+      const preservedImages = preserveImages(formData);
+      const dataWithImages = { ...values, ...preservedImages };
+
       dispatch(
-        updateSectionData({ section: currentSection.key, data: currentValues })
+        updateSectionData({ section: currentSection.key, data: dataWithImages })
       );
 
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -360,27 +453,46 @@ export default function EventForm({ eventId, mode = "add" }) {
     const currentValues = form.getFieldsValue();
     const currentSection = getRoleBasedEventSections()[currentStep];
 
+    // Preserve images when updating section data
+    const preservedImages = preserveImages(formData);
+    const dataWithImages = { ...currentValues, ...preservedImages };
+
     dispatch(
       updateSectionData({
         section: currentSection.key,
-        data: currentValues,
+        data: dataWithImages,
       })
     );
-  }, [form, currentStep, dispatch]);
+  }, [form, currentStep, dispatch, formData]);
 
   const handlePrev = () => {
     if (currentStep > 0) {
       const currentValues = form.getFieldsValue();
       const currentSection = getRoleBasedEventSections()[currentStep];
 
+      const preservedImages = preserveImages(formData);
+      const dataWithImages = { ...currentValues, ...preservedImages };
+
       dispatch(
         updateSectionData({
           section: currentSection.key,
-          data: currentValues,
+          data: dataWithImages,
         })
       );
 
       dispatch(setCurrentStep(currentStep - 1));
+
+      const targetSection = getRoleBasedEventSections()[currentStep - 1];
+      if (targetSection?.key === "basic") {
+        const hasImages =
+          dataWithImages.thumbnail_image?.length > 0 ||
+          dataWithImages.banner_images?.length > 0 ||
+          dataWithImages.event_images?.length > 0;
+
+        if (!hasImages && mode === "edit") {
+          showImageResetWarning();
+        }
+      }
     }
   };
 
@@ -389,30 +501,47 @@ export default function EventForm({ eventId, mode = "add" }) {
       const currentValues = form.getFieldsValue();
       const currentSection = getRoleBasedEventSections()[currentStep];
 
+      const preservedImages = preserveImages(formData);
+      const dataWithImages = { ...currentValues, ...preservedImages };
+
       dispatch(
         updateSectionData({
           section: currentSection.key,
-          data: currentValues,
+          data: dataWithImages,
         })
       );
 
       dispatch(setCurrentStep(step));
+
+      const targetSection = getRoleBasedEventSections()[step];
+      if (targetSection?.key === "basic") {
+        const hasImages =
+          dataWithImages.thumbnail_image?.length > 0 ||
+          dataWithImages.banner_images?.length > 0 ||
+          dataWithImages.event_images?.length > 0;
+
+        if (!hasImages && mode === "edit") {
+          showImageResetWarning();
+        }
+      }
     } else {
       message.warning("Please use the Next button to proceed to the next step");
     }
   };
 
   const handleSubmit = async () => {
-    console.log("🚀 handleSubmit triggered");
+    console.log("🚀 handleSubmit triggered - Mode:", mode);
     dispatch(setLoading(true));
 
     try {
       const finalValues = await form.validateFields();
       console.log("✅ Form validation successful");
 
+      const preservedImages = preserveImages(formData);
       const completeFormData = {
         ...formData,
         ...finalValues,
+        ...preservedImages,
         event_type_id: eventType.find((item) => item.name === EVENT_TYPES.event)
           ?.id,
       };
@@ -421,7 +550,8 @@ export default function EventForm({ eventId, mode = "add" }) {
         console.log("🔧 Submission mode: EDIT");
         await handleEditModeSubmission(completeFormData);
       } else {
-        console.log("➕ Submission mode: CREATE");
+        // Handles both "add" and "LEAD" modes
+        console.log(`➕ Submission mode: ${mode.toUpperCase()}`);
         await handleCreateModeSubmission(completeFormData);
       }
 
@@ -500,7 +630,7 @@ export default function EventForm({ eventId, mode = "add" }) {
   };
 
   const handleCreateModeSubmission = async (completeFormData) => {
-    console.log("➕ handleCreateModeSubmission started");
+    console.log(`➕ handleCreateModeSubmission started - Mode: ${mode}`);
 
     const selectedOffersSafe = selectedOffers || [];
     const selectedCouponsSafe = selectedCoupons || [];
@@ -515,8 +645,13 @@ export default function EventForm({ eventId, mode = "add" }) {
         selectedVenueList: selectedVenueListSafe,
         ticketTypes: ticketTypesSafe,
         availableSeats: availableSeatsSafe,
-        eventId: eventId,
+        eventId: mode === "LEAD" ? eventId : undefined, // Pass lead_id for LEAD mode
       });
+
+      // Add lead_id for LEAD mode
+      if (mode === "LEAD") {
+        transformedData.lead_id = eventId;
+      }
 
       console.log("✅ Data transformation completed");
 
@@ -535,7 +670,7 @@ export default function EventForm({ eventId, mode = "add" }) {
           return;
         } else if (response.data && response.data[0]?.validation_status) {
           dispatch(setSelectedSubmitItem(transformedData));
-          console.log("✅ Event data set for submission");
+          console.log(`✅ Event data set for submission - Mode: ${mode}`);
         } else {
           throw new Error("Offer/coupon validation failed");
         }
@@ -612,6 +747,60 @@ export default function EventForm({ eventId, mode = "add" }) {
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white">
+      <h2 className="text-2xl font-bold mb-4">
+        {mode === "edit"
+          ? "Edit Event"
+          : mode === "LEAD"
+          ? "Create Event from Lead"
+          : "Create Event"}
+      </h2>
+
+      {/* Image Reset Warning Banner */}
+      {imagesResetWarning && (
+        <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-orange-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-orange-800 font-medium">
+                ⚠️ Images have been reset. Please select them again.
+              </p>
+            </div>
+            <div className="ml-auto pl-3">
+              <button
+                type="button"
+                className="text-orange-400 hover:text-orange-600"
+                onClick={() => setImagesResetWarning(false)}
+              >
+                <span className="sr-only">Dismiss</span>
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg mb-4">
         <DraftSystem
           form={form}
@@ -619,27 +808,32 @@ export default function EventForm({ eventId, mode = "add" }) {
           mode={mode}
           recordId={eventId}
           titleField="event_name"
-          excludeFromDraft={["id", "created_at"]}
+          excludeFromDraft={[
+            "id",
+            "created_at",
+            "thumbnail_image",
+            "banner_images",
+            "event_images",
+          ]}
           style={{ marginRight: 12, display: "inline-block" }}
-          enableAutoSave={mode !== "edit"}
-          externalFormData={formData} // Pass Redux formData
+          enableAutoSave={mode !== "edit"} // Enable for both "add" and "LEAD"
+          externalFormData={formData}
           onGetCompleteData={() => {
-            // This function returns complete data from all steps
             const currentValues = form.getFieldsValue();
+            const preservedImages = preserveImages(formData);
             return {
-              ...formData, // All previous steps data
-              ...currentValues, // Current step data
+              ...formData,
+              ...currentValues,
+              ...preservedImages,
             };
           }}
           onDraftLoaded={(draft) => {
             console.log("📥 Draft loaded, merging with Redux state");
 
-            // Ensure file objects are extensible before setting state
             const clonedFormValues = JSON.parse(
               JSON.stringify(draft.formValues)
             );
 
-            // Make file arrays extensible
             ["thumbnail_image", "banner_images", "event_images"].forEach(
               (field) => {
                 if (
@@ -653,14 +847,27 @@ export default function EventForm({ eventId, mode = "add" }) {
               }
             );
 
-            // Merge with existing Redux state, don't replace
             const currentFormData = formData || {};
             const mergedData = {
-              ...currentFormData, // Preserve existing Redux data
-              ...clonedFormValues, // Add/update with draft data
+              ...currentFormData,
+              ...clonedFormValues,
             };
 
             dispatch(setEventFormData(mergedData));
+
+            const hasImages =
+              mergedData.thumbnail_image?.length > 0 ||
+              mergedData.banner_images?.length > 0 ||
+              mergedData.event_images?.length > 0;
+
+            if (
+              !hasImages &&
+              (draft.formValues.thumbnail_image?.length > 0 ||
+                draft.formValues.banner_images?.length > 0 ||
+                draft.formValues.event_images?.length > 0)
+            ) {
+              showImageResetWarning();
+            }
           }}
         />
 
@@ -705,9 +912,13 @@ export default function EventForm({ eventId, mode = "add" }) {
             {isLoading
               ? mode === "edit"
                 ? "Updating..."
+                : mode === "LEAD"
+                ? "Creating from Lead..."
                 : "Creating..."
               : mode === "edit"
               ? "Update Event"
+              : mode === "LEAD"
+              ? "Create from Lead"
               : "Create Event"}
           </Button>
         )}

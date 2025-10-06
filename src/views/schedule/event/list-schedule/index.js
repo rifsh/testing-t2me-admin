@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
-import { Badge, Button, Card, Menu, Table } from "antd";
+import { Badge, Button, Card, Menu, message, Modal, Table } from "antd";
 import Flex from "components/shared-components/Flex";
 import { EditOutlined, EyeOutlined, FormOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  checkScheduleEdit,
   editSchedule,
   fetchAllSchedules,
   fetchSingleSchedules,
@@ -20,14 +21,19 @@ import usePaginationHook from "utils/hooks/usePaginationHandler";
 import usePermissions from "utils/hooks/usePermissions";
 import { PERMISSIONS } from "constants/RolesPermissionConstants";
 
-
 const ScheduleList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { filteredSchedules, message, pagination, editable_status, loading } =
-    useSelector((state) => state.schedules);
+  const {
+    filteredSchedules,
+    checkedscheduleDetails,
+    message: scheduleMessage,
+    pagination,
+    editable_status,
+    loading,
+  } = useSelector((state) => state.schedules);
   // const [form] = Form.useForm();
-  const { hasPermission, hasAnyPermission } = usePermissions()
+  const { hasPermission, hasAnyPermission } = usePermissions();
   useEffect(() => {
     dispatch(fetchAllSchedules(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
@@ -46,17 +52,40 @@ const ScheduleList = () => {
     navigate(`${APP_PREFIX_PATH}/schedule/${id}`);
   };
   const handleEditSchedule = async (id) => {
-    await dispatch(fetchSingleSchedules({ id: id }));
-    navigate(`${APP_PREFIX_PATH}/schedule/edit/${id}`);
+    try {
+      const result = await dispatch(
+        checkScheduleEdit({ schedule_id: id })
+      ).unwrap();
+
+      if (result?.editable === true) {
+        navigate(`${APP_PREFIX_PATH}/schedule/edit/${id}`);
+      } else {
+        Modal.error({
+          content:
+            "Sorry, this event already has bookings in all time slots. You cannot edit this schedule.",
+        });
+      }
+    } catch (error) {
+      console.error("Error checking schedule edit:", error);
+      Modal.error({
+        content: "Something went wrong while checking the schedule.",
+      });
+    }
   };
+
   const dropdownMenu = (row) => (
     <Menu>
-      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.GET_EVENT_SCHEDULE_DETAILS) && <Menu.Item>
-        <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
-      </Menu.Item>}
+      {hasPermission(
+        PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE
+          .GET_EVENT_SCHEDULE_DETAILS
+      ) && (
+        <Menu.Item>
+          <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+            <EyeOutlined />
+            <span className="ml-2">View Details</span>
+          </Flex>
+        </Menu.Item>
+      )}
       <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditSchedule(row.id)}>
           <EditOutlined />
@@ -121,13 +150,15 @@ const ScheduleList = () => {
     {
       title: "",
       dataIndex: "actions",
-      render: (_, elm) => (
-        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.GET_EVENT_SCHEDULE_DETAILS]) ? (
+      render: (_, elm) =>
+        hasAnyPermission([
+          PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE
+            .GET_EVENT_SCHEDULE_DETAILS,
+        ]) ? (
           <div className="text-right">
             <EllipsisDropdown menu={dropdownMenu(elm)} />
           </div>
-        ) : null
-      ),
+        ) : null,
     },
   ];
 
@@ -135,13 +166,28 @@ const ScheduleList = () => {
     <Card>
       <Flex alignItems="center" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={fetchAllSchedules} />
-        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.ADD_EVENT_SCHEDULES) && <Button
-          type="primary"
-          icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/schedule/add`)}
-        >
-          Add Schedule
-        </Button>}
+        {hasPermission(
+          PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.ADD_EVENT_SCHEDULES
+        ) && (
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/schedule/new/add`)}
+          >
+            Add Schedule (New)
+          </Button>
+        )}
+        {hasPermission(
+          PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.ADD_EVENT_SCHEDULES
+        ) && (
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/schedule/add`)}
+          >
+            Add Schedule
+          </Button>
+        )}
       </Flex>
       <div>
         <Table
@@ -159,7 +205,7 @@ const ScheduleList = () => {
       </div>
 
       <UpdateStatusModal
-        responseMessage={message}
+        responseMessage={scheduleMessage}
         editable_status={editable_status}
         editFunction={editSchedule}
         getAllFunction={(pageData) => fetchAllSchedules(pageData)}
