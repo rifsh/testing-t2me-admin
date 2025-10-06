@@ -258,6 +258,26 @@ const ALL_NAVIGATION_ITEMS = {
     },
     category: FEATURE_CATEGORIES.REPORTS,
   },
+  "reports.logs": {
+    key: "super-admin.logs",
+    path: `${APP_PREFIX_PATH}/super-admin/reports`,
+    title: "sidenav.logs",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    get submenu() {
+      const allSubmenuItems = [
+        {
+          key: "reports.batchrun.appscheduler",
+          path: `${APP_PREFIX_PATH}/reports/orders/app-scheduler`,
+          title: "sidenav.order.appscheduler",
+          icon: DashboardOutlined,
+          breadcrumb: false,
+          submenu: [],
+        },
+      ];
+      return buildDynamicSubmenu("orders", null, allSubmenuItems);
+    }, category: FEATURE_CATEGORIES.REPORTS,
+  },
   "organizer.reports.dashboard": {
     key: "organizer.reports",
     path: `${APP_PREFIX_PATH}/organizer/reports`,
@@ -736,7 +756,9 @@ const ROLE_NAVIGATION_ACCESS = {
   [UserRoleConstants.superAdminRoleId]: [
     // Reports
     "reports.dashboard",
+    "reports.logs",
     "reports.orders",
+    "reports.batchrun",
 
     // General Services
     "general.place",

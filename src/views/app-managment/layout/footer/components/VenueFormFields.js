@@ -111,9 +111,9 @@ const FooterFormFields = ({ mode }) => {
         availability: availability
       };
 
-      console.log(values.payment_logos.length, "PAYMENT LOGO LENGTHI");
+      console.log(values?.payment_logos?.length, "PAYMENT LOGO LENGTHI");
 
-      if (values.payment_logos && values.payment_logos.length > 0) {
+      if (values?.payment_logos && values?.payment_logos?.length > 0) {
         data.payment_logos = values.payment_logos;
       }
 

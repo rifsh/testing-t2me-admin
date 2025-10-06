@@ -79,6 +79,12 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
       movie: { enabled: false },
     },
   },
+  batchrun: {
+    enabled: true,
+    subitems: {
+      appscheduler: { enabled: true },
+    },
+  },
 
   // Services category
   services: {

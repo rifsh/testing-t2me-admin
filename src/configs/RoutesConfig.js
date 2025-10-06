@@ -84,6 +84,13 @@ const ALL_PROTECTED_ROUTES = {
     category: "orders",
     subcategory: "event",
   },
+  "reports.orders.appscheduler": {
+    key: "reports.orders.appscheduler",
+    path: `${APP_PREFIX_PATH}/reports/orders/app-scheduler`,
+    component: React.lazy(() => import("views/orders/app-scheduler/list")),
+    category: "orders",
+    subcategory: "event",
+  },
   "reports.orders.event.user": {
     key: "reports.orders.event.details.user",
     path: `${APP_PREFIX_PATH}/reports/orders/event/user/details/:schedule_id/:date_id/:time_id/:user_id`,
