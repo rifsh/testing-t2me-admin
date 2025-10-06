@@ -25,6 +25,7 @@ import {
   resetSchedule,
   setAddOnServie,
   setScheduleSelectTime,
+  setScheduleFormData,
 } from "store/slices/scheduleSlice";
 import { setSelectedVenue } from "store/slices/locationSlice";
 import { EVENT_TYPES } from "constants/PageConstants";
@@ -35,89 +36,209 @@ import {
 } from "store/slices/ticketSlice";
 import { getPaymentAddOnService } from "store/slices/paymentSlice";
 import { AddOnsFoodTimeSlotes } from "./AddOnsFoodTimeSlotes";
+import { EDIT } from "constants/AppConstants";
 
 const { Option } = Select;
 
-const FormCard = ({ onSubmit, form }) => {
+const FormCard = ({ onSubmit, form, onCancel, mode }) => {
   const dispatch = useDispatch();
 
+  // Consolidated selectors with default values to prevent undefined errors
   const {
     filteredEvents = [],
-    loading,
-    selectedEvent,
-  } = useSelector((state) => state.event);
-  const { availableTicketTyps, selectedTicketType } = useSelector(
-    (state) => state.tickets
+    loading = false,
+    selectedEvent = null,
+  } = useSelector((state) => state.event || {});
+
+  const { availableTicketTyps = {}, selectedTicketType = null } = useSelector(
+    (state) => state.tickets || {}
   );
-  const { addOnServiceList } = useSelector((state) => state.payment);
 
-  const [allowMultipleDates, setAllowMultipleDates] = useState(false);
-  const [limitBookingsPerUser, setLimitBookingsPerUser] = useState(false);
-  const [isPaymentRequired, setIsPaymentRequired] = useState(false);
-  const [selectedAddOns, setSelectedAddOns] = useState([]);
+  const { addOnServiceList = {} } = useSelector((state) => state.payment || {});
 
+  const { scheduleFormData = {} } = useSelector(
+    (state) => state.schedules || {}
+  );
+
+  // State management with proper initialization
+  const [allowMultipleDates, setAllowMultipleDates] = useState(
+    scheduleFormData?.is_multi_date || false
+  );
+  const [limitBookingsPerUser, setLimitBookingsPerUser] = useState(
+    scheduleFormData?.booking_limit_per_user_toggle || false
+  );
+  const [isPaymentRequired, setIsPaymentRequired] = useState(
+    scheduleFormData?.payment_required !== false
+  );
+  const [selectedAddOns, setSelectedAddOns] = useState(() => {
+    if (scheduleFormData?.add_ons?.length > 0) {
+      return scheduleFormData.add_ons.map((addon) =>
+        typeof addon === "string" ? addon : addon.name
+      );
+    }
+    return [];
+  });
+  const [searchValue, setSearchValue] = useState("");
+
+  // Safe access to nested properties
+  const availableTypes = availableTicketTyps?.available_types || [];
+  const availableAddOns = addOnServiceList?.available_add_ons || [];
+
+  // Initialize form with existing data
   useEffect(() => {
-    const fetchEvents = async () => {
+    if (scheduleFormData && Object.keys(scheduleFormData).length > 0) {
+      console.log(
+        "Initializing FormCard with existing data:",
+        scheduleFormData
+      );
+
+      const formValues = {
+        name: scheduleFormData.name || "",
+        event_id: scheduleFormData.event_id || null,
+        venue_id: scheduleFormData.venue_id || null,
+        available_types: scheduleFormData.available_types || null,
+        max_ticket_per_booking: scheduleFormData.max_ticket_per_booking || null,
+        booking_limit_per_user: scheduleFormData.booking_limit_per_user || null,
+      };
+
+      form.setFieldsValue(formValues);
+
+      // Update state variables
+      setAllowMultipleDates(scheduleFormData.is_multi_date || false);
+      setLimitBookingsPerUser(
+        scheduleFormData.booking_limit_per_user_toggle || false
+      );
+      setIsPaymentRequired(scheduleFormData.payment_required !== false);
+
+      // Handle add-ons safely
+      if (scheduleFormData.add_ons?.length > 0) {
+        const addOnNames = scheduleFormData.add_ons.map((addon) =>
+          typeof addon === "string" ? addon : addon.name
+        );
+        setSelectedAddOns(addOnNames);
+      }
+
+      // Find and set selected event if event_id exists
+      if (scheduleFormData.event_id && filteredEvents.length > 0) {
+        const event = filteredEvents.find(
+          (e) => e.id === scheduleFormData.event_id
+        );
+        if (event) {
+          dispatch(setSelectedEvent(event));
+        }
+      }
+    }
+  }, [scheduleFormData, form, dispatch, filteredEvents]);
+
+  // Fetch initial data
+  useEffect(() => {
+    const fetchInitialData = async () => {
       try {
-        await dispatch(
-          fetchAllEvent({ event_type: EVENT_TYPES.event })
-        ).unwrap();
-        dispatch(getPaymentAddOnService());
+        console.log("Fetching initial data...");
+        await Promise.all([
+          dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event })).unwrap(),
+          dispatch(getPaymentAddOnService()),
+        ]);
+        console.log("Initial data fetched successfully");
       } catch (error) {
-        message.error("Failed to load events");
+        console.error("Failed to fetch initial data:", error);
+        message.error("Failed to load initial data");
       }
     };
-    fetchEvents();
+
+    fetchInitialData();
   }, [dispatch]);
 
+  // Debounced search function
   const debouncedSearch = useCallback(
-    debounce((value) => {
-      dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event, search: value }));
+    debounce(async (value) => {
+      if (!value?.trim()) return;
+
+      console.log("Performing debounced search for:", value);
+      try {
+        await dispatch(
+          fetchAllEvent({ event_type: EVENT_TYPES.event, search: value })
+        ).unwrap();
+      } catch (error) {
+        console.error("Search error:", error);
+        message.error("Failed to search events");
+      }
     }, 500),
     [dispatch]
   );
 
+  // Event handlers
+  const updateFormData = (updates) => {
+    const updatedData = {
+      ...scheduleFormData,
+      ...form.getFieldsValue(),
+      ...updates,
+    };
+    dispatch(setScheduleFormData(updatedData));
+  };
+
   const handleSelectEvent = (eventId) => {
+    console.log("Selecting event with ID:", eventId);
+
     if (!eventId) {
       dispatch(setSelectedEvent(null));
-      form.resetFields(["venue_id", "available_types"]);
+      form.setFieldsValue({ venue_id: null, available_types: null });
       dispatch(resetSchedule());
       return;
     }
 
-    dispatch(getAvailableTicketsType({ event_id: eventId }));
-
+    // Find the selected event
     const event = filteredEvents.find((event) => event.id === eventId);
-    if (!event) return;
+    if (!event) {
+      console.error("Event not found in filteredEvents");
+      return;
+    }
 
+    // Get available ticket types for this event
+    dispatch(getAvailableTicketsType({ event_id: eventId }));
     dispatch(setScheduleSelectTime(false));
     dispatch(setSelectedEvent(event));
 
+    // Set venue if available
     const venueId = event.venues?.[0]?.id || null;
-    dispatch(setSelectedVenue(venueId));
+    if (venueId) {
+      dispatch(setSelectedVenue(venueId));
+    }
 
+    // Update form
     form.setFieldsValue({
       venue_id: venueId,
-      available_types: undefined,
+      available_types: null,
     });
 
     dispatch(resetSchedule());
+    updateFormData({
+      event_id: eventId,
+      venue_id: venueId,
+    });
   };
 
   const handleSelectVenue = (venueId) => {
     if (!venueId) return;
 
+    console.log("Selecting venue with ID:", venueId);
     dispatch(setSelectedVenue(venueId));
     dispatch(resetSchedule());
+    updateFormData({ venue_id: venueId });
   };
 
   const handleBookingTypeChange = (typeId) => {
+    console.log("Selecting booking type with ID:", typeId);
     dispatch(setSelectedTicketType(typeId));
+    updateFormData({ available_types: typeId });
   };
 
   const handleSearch = (value) => {
-    if (value && value.trim()) {
-      debouncedSearch(value);
+    console.log("Search input value:", value);
+    setSearchValue(value);
+
+    if (value?.trim()) {
+      debouncedSearch(value.trim());
     } else {
       dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
     }
@@ -127,30 +248,48 @@ const FormCard = ({ onSubmit, form }) => {
     setLimitBookingsPerUser(enabled);
 
     if (!enabled) {
-      form.setFieldValue("booking_limit_per_user", undefined);
+      form.setFieldValue("booking_limit_per_user", null);
     }
+
+    updateFormData({
+      booking_limit_per_user_toggle: enabled,
+      booking_limit_per_user: enabled
+        ? scheduleFormData.booking_limit_per_user
+        : null,
+    });
   };
 
   const handleMultipleDatesToggle = (enabled) => {
     setAllowMultipleDates(enabled);
+    updateFormData({ is_multi_date: enabled });
   };
 
   const handlePaymentRequiredToggle = (enabled) => {
     setIsPaymentRequired(enabled);
+    updateFormData({ payment_required: enabled });
   };
 
-  const handleAddOnsChange = (addonName, checked) => {
-    let updatedAddOns;
+  const handleAddOnsChange = (addonName, shouldAdd) => {
+    console.log("handleAddOnsChange called:", {
+      addonName,
+      shouldAdd,
+      currentSelected: selectedAddOns,
+    });
 
-    if (checked) {
-      updatedAddOns = [...selectedAddOns, addonName];
+    let updatedAddOns;
+    if (shouldAdd) {
+      updatedAddOns = selectedAddOns.includes(addonName)
+        ? [...selectedAddOns]
+        : [...selectedAddOns, addonName];
     } else {
       updatedAddOns = selectedAddOns.filter((addon) => addon !== addonName);
     }
 
+    console.log("Updated addons:", updatedAddOns);
     setSelectedAddOns(updatedAddOns);
 
-    const addOnsData = (addOnServiceList?.available_add_ons || [])
+    // Create add-ons data for Redux
+    const addOnsData = availableAddOns
       .filter((addon) => updatedAddOns.includes(addon.name))
       .map((addon) => ({
         name: addon.name,
@@ -159,25 +298,60 @@ const FormCard = ({ onSubmit, form }) => {
         price: addon.price,
       }));
 
+    console.log("AddOns data for Redux:", addOnsData);
+
     dispatch(setAddOnServie(addOnsData));
     form.setFieldValue("add_ons", updatedAddOns);
+    updateFormData({ add_ons: addOnsData });
+
+    message.success(
+      shouldAdd
+        ? `${addonName} addon added successfully!`
+        : `${addonName} addon removed successfully!`
+    );
+  };
+
+  const handleFormValueChange = (changedValues, allValues) => {
+    console.log("Form values changed:", changedValues);
+
+    updateFormData({
+      ...allValues,
+      is_multi_date: allowMultipleDates,
+      payment_required: isPaymentRequired,
+      booking_limit_per_user_toggle: limitBookingsPerUser,
+      add_ons: selectedAddOns,
+    });
   };
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      console.log("Form validation successful, values:", values);
+
+      // Prepare add-ons data
+      const addOnsData = availableAddOns
+        .filter((addon) => selectedAddOns.includes(addon.name))
+        .map((addon) => ({
+          name: addon.name,
+          status: true,
+          id: addon.id,
+          price: addon.price,
+        }));
 
       const finalData = {
+        ...scheduleFormData,
         ...values,
         is_multi_date: allowMultipleDates,
         payment_required: isPaymentRequired,
         booking_limit_per_user_toggle: limitBookingsPerUser,
-        add_ons: selectedAddOns,
+        add_ons: addOnsData,
       };
 
+      console.log("Final form data being submitted:", finalData);
       message.success("Form validation successful!");
       onSubmit(finalData);
     } catch (errorInfo) {
+      console.error("Form validation failed:", errorInfo);
       message.error("Please check the form fields and try again");
     }
   };
@@ -188,10 +362,26 @@ const FormCard = ({ onSubmit, form }) => {
     setAllowMultipleDates(false);
     setLimitBookingsPerUser(false);
     setIsPaymentRequired(false);
+    setSearchValue("");
     dispatch(setSelectedEvent(null));
     dispatch(resetSchedule());
+
+    if (onCancel) {
+      onCancel();
+    }
+
     message.info("Form has been reset");
   };
+
+  console.log("FormCard render - Current state:", {
+    filteredEventsCount: filteredEvents.length,
+    loading,
+    selectedEventId: selectedEvent?.id,
+    searchValue,
+    selectedAddOns,
+    availableTypesCount: availableTypes.length,
+    availableAddOnsCount: availableAddOns.length,
+  });
 
   return (
     <div className="max-w-full m-6 bg-white rounded-xl shadow-md border border-gray-200">
@@ -222,6 +412,7 @@ const FormCard = ({ onSubmit, form }) => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
+          onValuesChange={handleFormValueChange}
           scrollToFirstError
           requiredMark={false}
         >
@@ -280,16 +471,18 @@ const FormCard = ({ onSubmit, form }) => {
                       onChange={handleSelectEvent}
                       allowClear
                       suffixIcon={<SearchOutlined />}
+                      searchValue={searchValue}
+                      onClear={() => {
+                        setSearchValue("");
+                        dispatch(
+                          fetchAllEvent({ event_type: EVENT_TYPES.event })
+                        );
+                      }}
                       dropdownStyle={{
                         borderRadius: "8px",
                         boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
                       }}
-                      filterOption={(input, option) =>
-                        option?.children
-                          ?.toString()
-                          .toLowerCase()
-                          .includes(input.toLowerCase())
-                      }
+                      filterOption={false}
                       notFoundContent={
                         loading ? (
                           <div className="text-center py-4">
@@ -298,13 +491,17 @@ const FormCard = ({ onSubmit, form }) => {
                               Loading events...
                             </div>
                           </div>
-                        ) : (
+                        ) : filteredEvents.length === 0 ? (
                           <Empty
-                            description="No events found"
+                            description={
+                              searchValue
+                                ? "No events found for your search"
+                                : "No events found"
+                            }
                             image={Empty.PRESENTED_IMAGE_SIMPLE}
                             className="py-4"
                           />
-                        )
+                        ) : null
                       }
                     >
                       {filteredEvents.map((event) => (
@@ -353,7 +550,7 @@ const FormCard = ({ onSubmit, form }) => {
                     </Form.Item>
                   )}
 
-                  {availableTicketTyps?.available_types?.length > 0 && (
+                  {(availableTypes.length > 0 || mode === EDIT) && (
                     <Form.Item
                       name="available_types"
                       label={
@@ -377,7 +574,7 @@ const FormCard = ({ onSubmit, form }) => {
                           boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
                         }}
                       >
-                        {availableTicketTyps.available_types.map((type) => (
+                        {availableTypes.map((type) => (
                           <Option key={type.id} value={type.id}>
                             <div className="flex items-center">
                               <TagsOutlined className="mr-2 text-purple-500" />
@@ -658,7 +855,7 @@ const FormCard = ({ onSubmit, form }) => {
                 </div>
               </div>
 
-              {addOnServiceList?.available_add_ons && (
+              {availableAddOns.length > 0 && (
                 <div>
                   <h2 className="text-lg font-medium text-gray-900 mb-4">
                     Add On Services
@@ -669,66 +866,83 @@ const FormCard = ({ onSubmit, form }) => {
                   </Form.Item>
 
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {addOnServiceList?.available_add_ons?.map((addon) => (
-                      <div
-                        key={addon.id}
-                        onClick={() =>
-                          handleAddOnsChange(
-                            addon.name,
-                            !selectedAddOns.includes(addon.name)
-                          )
-                        }
-                        className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${
-                          selectedAddOns.includes(addon.name)
-                            ? "bg-yellow-50 border-2 border-yellow-200"
-                            : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div
-                            className={`w-8 h-8 rounded flex items-center justify-center bg-yellow-500`}
-                          >
-                            <span className="text-white text-sm">
-                              {addon.name.charAt(0)}
-                            </span>
-                          </div>
-                          <div>
-                            <p
-                              className={`text-sm font-medium ${
-                                selectedAddOns.includes(addon.name)
-                                  ? "text-yellow-900"
-                                  : "text-gray-900"
+                    {availableAddOns.map((addon) => {
+                      const isSelected = selectedAddOns.includes(addon.name);
+
+                      return (
+                        <div
+                          key={addon.id}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log(
+                              `Clicked on ${addon.name}, currently selected:`,
+                              isSelected
+                            );
+                            handleAddOnsChange(addon.name, !isSelected);
+                          }}
+                          className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${
+                            isSelected
+                              ? "bg-yellow-50 border-2 border-yellow-200"
+                              : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`w-8 h-8 rounded flex items-center justify-center ${
+                                isSelected ? "bg-yellow-500" : "bg-gray-400"
                               }`}
                             >
-                              {addon.name}
-                            </p>
+                              <span className="text-white text-sm">
+                                {addon.name.charAt(0)}
+                              </span>
+                            </div>
+                            <div>
+                              <p
+                                className={`text-sm font-medium ${
+                                  isSelected
+                                    ? "text-yellow-900"
+                                    : "text-gray-900"
+                                }`}
+                              >
+                                {addon.name}
+                              </p>
+                              {addon.price && (
+                                <p className="text-xs text-gray-500">
+                                  ${addon.price}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {isSelected ? (
+                              <div className="w-5 h-5 bg-yellow-500 rounded flex items-center justify-center">
+                                <svg
+                                  className="w-3 h-3 text-white"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </div>
+                            ) : (
+                              <div className="w-5 h-5 border-2 border-gray-300 rounded"></div>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          {selectedAddOns.includes(addon.name) ? (
-                            <svg
-                              className="w-5 h-5 text-yellow-600"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          ) : (
-                            <div className="w-5 h-5 border-2 border-gray-300 rounded"></div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </div>
           </div>
 
+          {/* Hidden form fields */}
           <Form.Item name="is_multi_date" hidden>
             <Input />
           </Form.Item>

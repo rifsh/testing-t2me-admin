@@ -1,158 +1,433 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Calendar, Clock, ChevronDown, X } from "lucide-react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import {
+  Calendar,
+  Clock,
+  ChevronDown,
+  X,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Move,
+} from "lucide-react";
 
 const CompactDateTimePicker = ({
   onDateTimeChange,
   initialDateTime = null,
+  value = null,
   placeholder = "Select Date & Time",
-  fullWidth = true, // New prop to control width
+  fullWidth = true,
   disabled = false,
-  minDate = null,
-  maxDate = null,
   showClearButton = true,
-  size = "default", // "small", "default", "large"
+  size = "default",
   label = null,
+  timezone = "UTC",
+  disablePastDates = true,
+  disablePastTimes = true,
+  minDateTime = null,
+  maxDateTime = null,
 }) => {
-  const [selectedDateTime, setSelectedDateTime] = useState(initialDateTime);
+  const isValidTimezone = (tz) => {
+    if (!tz || tz === "") return false;
+    try {
+      Intl.DateTimeFormat(undefined, { timeZone: tz });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const safeTimezone = useMemo(() => {
+    return isValidTimezone(timezone) ? timezone : "UTC";
+  }, [timezone]);
+
+  const getCurrentTimeInTimezone = () => {
+    if (!safeTimezone || safeTimezone === "UTC") {
+      return new Date();
+    }
+
+    try {
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const targetTime = new Date(
+        utc + getTimezoneOffset(safeTimezone) * 60000
+      );
+      return targetTime;
+    } catch (error) {
+      return new Date();
+    }
+  };
+
+  const getTimezoneOffset = (tz) => {
+    try {
+      const now = new Date();
+      const utcDate = new Date(
+        now.toLocaleString("en-US", { timeZone: "UTC" })
+      );
+      const tzDate = new Date(now.toLocaleString("en-US", { timeZone: tz }));
+      return (tzDate.getTime() - utcDate.getTime()) / 60000;
+    } catch (error) {
+      return 0;
+    }
+  };
+
+  const getTimezoneDisplayName = (tz) => {
+    try {
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZoneName: "shortGeneric",
+        timeZone: tz,
+      });
+      const parts = formatter.formatToParts(new Date());
+      const timezonePart = parts.find((part) => part.type === "timeZoneName");
+      return timezonePart?.value || tz;
+    } catch (error) {
+      return tz;
+    }
+  };
+
+  const safeToDate = (dateValue) => {
+    if (!dateValue) return null;
+    if (dateValue instanceof Date) {
+      return isNaN(dateValue.getTime()) ? null : dateValue;
+    }
+    try {
+      const date = new Date(dateValue);
+      return isNaN(date.getTime()) ? null : date;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const getInitialDate = () => {
+    if (value) return safeToDate(value);
+    if (initialDateTime) return safeToDate(initialDateTime);
+    return getCurrentTimeInTimezone();
+  };
+
+  const initialDate = getInitialDate();
+  const [selectedDateTime, setSelectedDateTime] = useState(
+    initialDateTime || value ? initialDate : null
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("date");
   const [tempDate, setTempDate] = useState(
-    selectedDateTime ? new Date(selectedDateTime) : new Date()
+    initialDate || getCurrentTimeInTimezone()
   );
-  const pickerRef = useRef(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isAM, setIsAM] = useState(true);
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
   const buttonRef = useRef(null);
+  const widgetRef = useRef(null);
+
+  useEffect(() => {
+    setIsAM(tempDate.getHours() < 12);
+  }, [tempDate]);
+
+  const handleMouseDown = (e) => {
+    if (e.target.closest(".drag-handle")) {
+      setIsDragging(true);
+      const rect = widgetRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isDragging) {
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+      const maxX = window.innerWidth - 420;
+      const maxY = window.innerHeight - 500;
+
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY)),
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+    }
+  }, [isDragging, dragOffset]);
+
+  const generateCalendarDays = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    const days = [];
+
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(new Date(year, month, day));
+    }
+
+    return days;
+  };
+
+  const isDateDisabled = (date) => {
+    if (!date) return true;
+
+    const currentInTz = getCurrentTimeInTimezone();
+    const dateToCheck = new Date(date);
+
+    if (disablePastDates) {
+      const today = new Date(
+        currentInTz.getFullYear(),
+        currentInTz.getMonth(),
+        currentInTz.getDate()
+      );
+      const checkDate = new Date(
+        dateToCheck.getFullYear(),
+        dateToCheck.getMonth(),
+        dateToCheck.getDate()
+      );
+      if (checkDate < today) return true;
+    }
+
+    if (minDateTime) {
+      const minDate = new Date(
+        minDateTime.getFullYear(),
+        minDateTime.getMonth(),
+        minDateTime.getDate()
+      );
+      const checkDate = new Date(
+        dateToCheck.getFullYear(),
+        dateToCheck.getMonth(),
+        dateToCheck.getDate()
+      );
+      if (checkDate < minDate) return true;
+    }
+
+    if (maxDateTime) {
+      const maxDate = new Date(
+        maxDateTime.getFullYear(),
+        maxDateTime.getMonth(),
+        maxDateTime.getDate()
+      );
+      const checkDate = new Date(
+        dateToCheck.getFullYear(),
+        dateToCheck.getMonth(),
+        dateToCheck.getDate()
+      );
+      if (checkDate > maxDate) return true;
+    }
+
+    return false;
+  };
+
+  const isTimeDisabled = (date) => {
+    if (!date) return true;
+
+    const currentInTz = getCurrentTimeInTimezone();
+
+    if (disablePastTimes) {
+      const today = new Date(
+        currentInTz.getFullYear(),
+        currentInTz.getMonth(),
+        currentInTz.getDate()
+      );
+      const checkDate = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
+
+      if (checkDate.getTime() === today.getTime() && date < currentInTz) {
+        return true;
+      }
+    }
+
+    if (minDateTime && date < minDateTime) return true;
+    if (maxDateTime && date > maxDateTime) return true;
+
+    return false;
+  };
+
+  const formatDisplayDate = (date) => {
+    const safeDate = safeToDate(date);
+    if (!safeDate) return placeholder;
+
+    try {
+      const currentInTz = getCurrentTimeInTimezone();
+      const today = new Date(
+        currentInTz.getFullYear(),
+        currentInTz.getMonth(),
+        currentInTz.getDate()
+      );
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+      const checkDate = new Date(
+        safeDate.getFullYear(),
+        safeDate.getMonth(),
+        safeDate.getDate()
+      );
+
+      const timeString = safeDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+
+      if (checkDate.getTime() === today.getTime()) {
+        return `Today, ${timeString}`;
+      } else if (checkDate.getTime() === tomorrow.getTime()) {
+        return `Tomorrow, ${timeString}`;
+      } else {
+        return safeDate.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
+      }
+    } catch (error) {
+      return placeholder;
+    }
+  };
+
+  const resetPosition = () => {
+    setPosition({ x: 0, y: 0 });
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (isDragging) return;
+
       if (
-        pickerRef.current &&
-        !pickerRef.current.contains(event.target) &&
+        widgetRef.current &&
+        !widgetRef.current.contains(event.target) &&
         buttonRef.current &&
         !buttonRef.current.contains(event.target)
       ) {
         setIsOpen(false);
+        resetPosition();
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isDragging]);
 
   useEffect(() => {
-    if (initialDateTime) {
-      setSelectedDateTime(initialDateTime);
-      setTempDate(new Date(initialDateTime));
+    const newDate = safeToDate(value);
+    if (newDate) {
+      setSelectedDateTime(newDate);
+      setTempDate(new Date(newDate));
+      setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth()));
+    } else if (value === null || value === undefined) {
+      setSelectedDateTime(null);
+      setTempDate(getCurrentTimeInTimezone());
     }
-  }, [initialDateTime]);
+  }, [value]);
 
-  const formatDisplayDate = (date) => {
-    if (!date) return placeholder;
-    const options = {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    };
-    return date.toLocaleDateString("en-US", options);
-  };
-
-  const formatCompactDate = (date) => {
-    if (!date) return placeholder;
-    const today = new Date();
-    const isToday = date.toDateString() === today.toDateString();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    const isTomorrow = date.toDateString() === tomorrow.toDateString();
-
-    if (isToday) {
-      return `Today, ${date.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })}`;
-    } else if (isTomorrow) {
-      return `Tomorrow, ${date.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })}`;
-    } else {
-      return formatDisplayDate(date);
+  const handleDateSelect = (date) => {
+    if (date && !isDateDisabled(date)) {
+      const updatedDate = new Date(tempDate);
+      updatedDate.setFullYear(date.getFullYear());
+      updatedDate.setMonth(date.getMonth());
+      updatedDate.setDate(date.getDate());
+      setTempDate(updatedDate);
     }
   };
 
-  const handleDateChange = (e) => {
-    const newDate = new Date(e.target.value);
-    const updatedDate = new Date(tempDate);
-    updatedDate.setFullYear(newDate.getFullYear());
-    updatedDate.setMonth(newDate.getMonth());
-    updatedDate.setDate(newDate.getDate());
-    setTempDate(updatedDate);
+  const convertTo24Hour = (hour12, isAM) => {
+    if (hour12 === 12) {
+      return isAM ? 0 : 12;
+    }
+    return isAM ? hour12 : hour12 + 12;
   };
 
-  const handleTimeChange = (e) => {
-    const [hours, minutes] = e.target.value.split(":");
+  const convertTo12Hour = (hour24) => {
+    if (hour24 === 0) return 12;
+    if (hour24 > 12) return hour24 - 12;
+    return hour24;
+  };
+
+  const handleTimeChange = (field, value) => {
     const updatedDate = new Date(tempDate);
-    updatedDate.setHours(parseInt(hours));
-    updatedDate.setMinutes(parseInt(minutes));
-    setTempDate(updatedDate);
+
+    if (field === "hours") {
+      const hour24 = convertTo24Hour(parseInt(value, 10), isAM);
+      updatedDate.setHours(hour24);
+    } else if (field === "minutes") {
+      updatedDate.setMinutes(parseInt(value, 10));
+    }
+
+    if (!isTimeDisabled(updatedDate)) {
+      setTempDate(updatedDate);
+    }
+  };
+
+  const handleAMPMToggle = () => {
+    const updatedDate = new Date(tempDate);
+    const currentHour = updatedDate.getHours();
+
+    if (isAM && currentHour < 12) {
+      updatedDate.setHours(currentHour + 12);
+    } else if (!isAM && currentHour >= 12) {
+      updatedDate.setHours(currentHour - 12);
+    }
+
+    if (!isTimeDisabled(updatedDate)) {
+      setTempDate(updatedDate);
+      setIsAM(!isAM);
+    }
   };
 
   const handleConfirm = () => {
-    setSelectedDateTime(tempDate);
-    setIsOpen(false);
-    if (onDateTimeChange) {
-      onDateTimeChange(tempDate);
+    const validDate = safeToDate(tempDate);
+    if (validDate && !isDateDisabled(validDate) && !isTimeDisabled(validDate)) {
+      setSelectedDateTime(validDate);
+      setIsOpen(false);
+      resetPosition();
+      if (onDateTimeChange) {
+        onDateTimeChange(validDate);
+      }
     }
   };
 
   const handleClear = () => {
     setSelectedDateTime(null);
-    setTempDate(new Date());
+    setTempDate(getCurrentTimeInTimezone());
     setIsOpen(false);
+    resetPosition();
     if (onDateTimeChange) {
       onDateTimeChange(null);
     }
   };
 
-  const handleQuickSelect = (hoursToAdd) => {
-    const newDate = new Date();
-    newDate.setHours(newDate.getHours() + hoursToAdd);
-    setTempDate(newDate);
+  const navigateMonth = (direction) => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(currentMonth.getMonth() + direction);
+    setCurrentMonth(newMonth);
   };
 
-  const getCurrentDateString = () => {
-    const year = tempDate.getFullYear();
-    const month = String(tempDate.getMonth() + 1).padStart(2, "0");
-    const day = String(tempDate.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const getCurrentTimeString = () => {
-    const hours = String(tempDate.getHours()).padStart(2, "0");
-    const minutes = String(tempDate.getMinutes()).padStart(2, "0");
-    return `${hours}:${minutes}`;
-  };
-
-  const getMinDateString = () => {
-    if (!minDate) return null;
-    const year = minDate.getFullYear();
-    const month = String(minDate.getMonth() + 1).padStart(2, "0");
-    const day = String(minDate.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const getMaxDateString = () => {
-    if (!maxDate) return null;
-    const year = maxDate.getFullYear();
-    const month = String(maxDate.getMonth() + 1).padStart(2, "0");
-    const day = String(maxDate.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  // Size classes
   const sizeClasses = {
     small: "px-3 py-2 text-sm",
     default: "px-4 py-3 text-sm",
@@ -165,14 +440,33 @@ const CompactDateTimePicker = ({
     large: 18,
   };
 
+  const calendarDays = generateCalendarDays();
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const isDragged = position.x !== 0 || position.y !== 0;
+
   return (
     <div className={`relative ${fullWidth ? "w-full" : "w-auto"}`}>
-      {/* Label */}
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-2">
           {label}
         </label>
       )}
+
       <button
         ref={buttonRef}
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -194,11 +488,11 @@ const CompactDateTimePicker = ({
       >
         <div className="flex items-center">
           <div className="flex items-center mr-3">
-            <Calendar size={iconSizes[size]} className="mr-1" />
+            <Calendar size={iconSizes[size]} className="mr-1 text-blue-500" />
           </div>
           <span className="font-medium">
             {selectedDateTime
-              ? formatCompactDate(selectedDateTime)
+              ? formatDisplayDate(selectedDateTime)
               : placeholder}
           </span>
         </div>
@@ -212,7 +506,10 @@ const CompactDateTimePicker = ({
               }}
               className="mr-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
             >
-              <X size={iconSizes[size] - 2} className="text-gray-400" />
+              <X
+                size={iconSizes[size] - 2}
+                className="text-gray-400 hover:text-red-500"
+              />
             </button>
           )}
           <ChevronDown
@@ -224,200 +521,417 @@ const CompactDateTimePicker = ({
         </div>
       </button>
 
-      {/* DateTime Picker Popup */}
       {isOpen && (
         <div
-          ref={pickerRef}
-          className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 p-4 z-50 w-96"
+          ref={widgetRef}
+          onMouseDown={handleMouseDown}
+          className="bg-white rounded-3xl border-0 overflow-hidden w-[420px] min-w-[420px] max-w-[90vw]"
+          style={{
+            ...(isDragged
+              ? {
+                  position: "fixed",
+                  left: position.x,
+                  top: position.y,
+                  zIndex: 1000,
+                  userSelect: "none",
+                  cursor: isDragging ? "grabbing" : "default",
+                  pointerEvents: "auto",
+                }
+              : {
+                  position: "absolute",
+                  top: "calc(100% + 8px)",
+                  left: 0,
+                  zIndex: 1000,
+                }),
+            boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
+            borderRadius: "25px",
+            padding: "10px",
+          }}
         >
-          {/* Tab Navigation */}
-          <div className="flex mb-4 bg-gray-100 rounded-xl p-1">
+          <div className="flex items-center justify-between px-3 py-2 bg-white-50">
+            <div className="flex items-center space-x-2">
+              <div className="drag-handle flex items-center space-x-2 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-200 transition-colors">
+                <Move size={14} className="text-gray-400" />
+                <span className="text-xs text-gray-500 font-medium select-none">
+                  {isDragging ? "Dragging..." : "Select Date & Time"}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  resetPosition();
+                }}
+                className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                <X size={14} className="text-gray-400 hover:text-gray-600" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex border-b border-gray-100">
             <button
               onClick={() => setActiveTab("date")}
               className={`
-                flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors
+                flex-1 py-2 px-3 text-xs font-semibold transition-all duration-200 flex items-center justify-center space-x-1
                 ${
                   activeTab === "date"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-800"
+                    ? "bg-white text-blue-600 border-b-2 border-blue-500"
+                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
                 }
               `}
             >
-              <Calendar size={16} className="inline mr-2" />
-              Date
+              <Calendar size={12} />
+              <span>Date</span>
             </button>
             <button
               onClick={() => setActiveTab("time")}
               className={`
-                flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors
+                flex-1 py-2 px-3 text-xs font-semibold transition-all duration-200 flex items-center justify-center space-x-1
                 ${
                   activeTab === "time"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-800"
+                    ? "bg-white text-blue-600 border-b-2 border-blue-500"
+                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
                 }
               `}
             >
-              <Clock size={16} className="inline mr-2" />
-              Time
+              <Clock size={12} />
+              <span>Time</span>
             </button>
           </div>
 
-          {/* Date Picker */}
-          {activeTab === "date" && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Date
-              </label>
-              <input
-                type="date"
-                value={getCurrentDateString()}
-                onChange={handleDateChange}
-                min={getMinDateString()}
-                max={getMaxDateString()}
-                className="w-full p-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              />
+          <div className="p-4">
+            {activeTab === "date" && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => navigateMonth(-1)}
+                    className="p-1 rounded-xl hover:bg-gray-100 transition-colors"
+                  >
+                    <ChevronLeft size={16} className="text-gray-600" />
+                  </button>
 
-              {/* Quick Date Selection */}
-              <div className="mt-3">
-                <div className="text-xs text-gray-600 mb-2">Quick Select:</div>
-                <div className="grid grid-cols-3 gap-2">
+                  <h3 className="text-base font-semibold text-gray-800">
+                    {monthNames[currentMonth.getMonth()]}{" "}
+                    {currentMonth.getFullYear()}
+                  </h3>
+
                   <button
-                    onClick={() => {
-                      const today = new Date();
-                      const updated = new Date(tempDate);
-                      updated.setFullYear(today.getFullYear());
-                      updated.setMonth(today.getMonth());
-                      updated.setDate(today.getDate());
-                      setTempDate(updated);
-                    }}
-                    className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+                    onClick={() => navigateMonth(1)}
+                    className="p-1 rounded-xl hover:bg-gray-100 transition-colors"
                   >
-                    Today
+                    <ChevronRight size={16} className="text-gray-600" />
                   </button>
-                  <button
-                    onClick={() => {
-                      const tomorrow = new Date();
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      const updated = new Date(tempDate);
-                      updated.setFullYear(tomorrow.getFullYear());
-                      updated.setMonth(tomorrow.getMonth());
-                      updated.setDate(tomorrow.getDate());
-                      setTempDate(updated);
-                    }}
-                    className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200 transition-colors"
-                  >
-                    Tomorrow
-                  </button>
-                  <button
-                    onClick={() => {
-                      const nextWeek = new Date();
-                      nextWeek.setDate(nextWeek.getDate() + 7);
-                      const updated = new Date(tempDate);
-                      updated.setFullYear(nextWeek.getFullYear());
-                      updated.setMonth(nextWeek.getMonth());
-                      updated.setDate(nextWeek.getDate());
-                      setTempDate(updated);
-                    }}
-                    className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200 transition-colors"
-                  >
-                    Next Week
-                  </button>
+                </div>
+
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {dayNames.map((day) => (
+                    <div
+                      key={day}
+                      className="text-center text-xs font-medium text-gray-500 py-1"
+                    >
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarDays.map((date, index) => {
+                    if (!date) {
+                      return <div key={index} className="h-8"></div>;
+                    }
+
+                    const isSelected =
+                      tempDate &&
+                      date.getDate() === tempDate.getDate() &&
+                      date.getMonth() === tempDate.getMonth() &&
+                      date.getFullYear() === tempDate.getFullYear();
+
+                    const currentInTz = getCurrentTimeInTimezone();
+                    const today = new Date(
+                      currentInTz.getFullYear(),
+                      currentInTz.getMonth(),
+                      currentInTz.getDate()
+                    );
+                    const checkDate = new Date(
+                      date.getFullYear(),
+                      date.getMonth(),
+                      date.getDate()
+                    );
+                    const isToday = today.getTime() === checkDate.getTime();
+
+                    const isDisabled = isDateDisabled(date);
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleDateSelect(date)}
+                        disabled={isDisabled}
+                        className={`
+                          h-8 w-full rounded-xl text-xs font-medium transition-all duration-200 relative
+                          ${
+                            isSelected
+                              ? "bg-blue-500 text-white shadow-md transform scale-105"
+                              : isToday
+                              ? "bg-blue-50 text-blue-600 border border-blue-200"
+                              : isDisabled
+                              ? "text-gray-300 cursor-not-allowed bg-gray-50"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }
+                        `}
+                      >
+                        {date.getDate()}
+                        {isToday && !isSelected && (
+                          <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-2 border-t border-gray-100">
+                  <div className="text-xs font-medium text-gray-600 mb-2">
+                    Quick Select:
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() =>
+                        handleDateSelect(getCurrentTimeInTimezone())
+                      }
+                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors"
+                    >
+                      Today
+                    </button>
+                    <button
+                      onClick={() => {
+                        const tomorrow = getCurrentTimeInTimezone();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        handleDateSelect(tomorrow);
+                      }}
+                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors"
+                    >
+                      Tomorrow
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Time Picker */}
-          {activeTab === "time" && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Time
-              </label>
-              <input
-                type="time"
-                value={getCurrentTimeString()}
-                onChange={handleTimeChange}
-                className="w-full p-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              />
+            {activeTab === "time" && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="text-center">
+                      <h3 className="text-sm font-semibold text-gray-700">
+                        Hours
+                      </h3>
+                    </div>
 
-              {/* Quick Time Selection */}
-              <div className="mt-3">
-                <div className="text-xs text-gray-600 mb-2">
-                  Quick Select (from now):
+                    <div className="bg-white rounded-xl border border-gray-200 p-2 max-h-48 overflow-y-auto">
+                      <div className="grid grid-cols-3 gap-1">
+                        {Array.from({ length: 12 }, (_, i) => {
+                          const hour12 = i + 1;
+                          const hour24 = convertTo24Hour(hour12, isAM);
+
+                          const testTime = new Date(tempDate);
+                          testTime.setHours(hour24);
+                          const isDisabled = isTimeDisabled(testTime);
+
+                          return (
+                            <button
+                              key={hour12}
+                              onClick={() =>
+                                !isDisabled && handleTimeChange("hours", hour12)
+                              }
+                              disabled={isDisabled}
+                              className={`
+                                py-2 px-2 text-sm font-semibold rounded-xl transition-all duration-200
+                                ${
+                                  convertTo12Hour(tempDate.getHours()) ===
+                                  hour12
+                                    ? "bg-blue-500 text-white shadow-md scale-105"
+                                    : isDisabled
+                                    ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                    : "bg-gray-50 text-gray-700 hover:bg-blue-100 hover:text-blue-600"
+                                }
+                              `}
+                            >
+                              {hour12}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-center">
+                      <h3 className="text-sm font-semibold text-gray-700">
+                        Minutes
+                      </h3>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-gray-200 p-2 max-h-48 overflow-y-auto">
+                      <div className="grid grid-cols-3 gap-1">
+                        {Array.from({ length: 12 }, (_, i) => i * 5).map(
+                          (minute) => {
+                            const testTime = new Date(tempDate);
+                            testTime.setMinutes(minute);
+                            const isDisabled = isTimeDisabled(testTime);
+
+                            return (
+                              <button
+                                key={minute}
+                                onClick={() =>
+                                  !isDisabled &&
+                                  handleTimeChange("minutes", minute)
+                                }
+                                disabled={isDisabled}
+                                className={`
+                                py-2 px-2 text-sm font-semibold rounded-xl transition-all duration-200
+                                ${
+                                  tempDate.getMinutes() === minute
+                                    ? "bg-green-500 text-white shadow-md scale-105"
+                                    : isDisabled
+                                    ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                    : "bg-gray-50 text-gray-700 hover:bg-green-100 hover:text-green-600"
+                                }
+                              `}
+                              >
+                                {String(minute).padStart(2, "0")}
+                              </button>
+                            );
+                          }
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-4 gap-2">
-                  <button
-                    onClick={() => handleQuickSelect(1)}
-                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                  >
-                    +1h
-                  </button>
-                  <button
-                    onClick={() => handleQuickSelect(2)}
-                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                  >
-                    +2h
-                  </button>
-                  <button
-                    onClick={() => handleQuickSelect(24)}
-                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                  >
-                    +1d
-                  </button>
-                  <button
-                    onClick={() => {
-                      const now = new Date();
-                      const updated = new Date(tempDate);
-                      updated.setHours(now.getHours());
-                      updated.setMinutes(now.getMinutes());
-                      setTempDate(updated);
-                    }}
-                    className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
-                  >
-                    Now
-                  </button>
+
+                <div className="flex justify-center">
+                  <div className="bg-gray-100 rounded-xl p-1 flex">
+                    <button
+                      onClick={() => {
+                        if (!isAM) {
+                          handleAMPMToggle();
+                        }
+                      }}
+                      className={`
+                        px-4 py-2 text-sm font-bold rounded-xl transition-all duration-200
+                        ${
+                          isAM
+                            ? "bg-white text-blue-600 shadow-sm"
+                            : "text-gray-600 hover:text-gray-800"
+                        }
+                      `}
+                    >
+                      AM
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (isAM) {
+                          handleAMPMToggle();
+                        }
+                      }}
+                      className={`
+                        px-4 py-2 text-sm font-bold rounded-xl transition-all duration-200
+                        ${
+                          !isAM
+                            ? "bg-white text-blue-600 shadow-sm"
+                            : "text-gray-600 hover:text-gray-800"
+                        }
+                      `}
+                    >
+                      PM
+                    </button>
+                  </div>
                 </div>
+
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-semibold text-indigo-800">
+                        Current Time ({safeTimezone})
+                      </h4>
+                      <p className="text-xs text-indigo-600">
+                        {getCurrentTimeInTimezone().toLocaleTimeString(
+                          "en-US",
+                          {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          }
+                        )}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const now = getCurrentTimeInTimezone();
+                        setTempDate(new Date(now));
+                      }}
+                      className="px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-medium rounded-xl transition-all duration-200"
+                    >
+                      Set Now
+                    </button>
+                  </div>
+                </div>
+
+                {isTimeDisabled(tempDate) && (
+                  <div className="bg-red-50 rounded-xl p-2 text-center">
+                    <div className="text-red-600 text-xs font-medium">
+                      ⚠️ Please select a valid time
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Enhanced Preview */}
-          <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
-            <div className="text-sm text-gray-600 mb-1">Selected DateTime:</div>
-            <div className="text-sm font-semibold text-gray-800">
-              {formatDisplayDate(tempDate)}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">
-              {tempDate.toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+            <div className="rounded-xl p-3 mt-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-gray-100">
+              <div className="text-xs text-gray-600 mb-1">
+                Selected DateTime:
+              </div>
+              <div className="text-sm font-semibold text-gray-800">
+                {formatDisplayDate(tempDate)}
+              </div>
+              <div className="text-xs text-blue-600 mt-1">
+                {safeTimezone} ({getTimezoneDisplayName(safeTimezone)})
+              </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2">
+          <div className="flex border-t border-gray-100">
             {showClearButton && (
               <button
                 onClick={handleClear}
-                className="flex-1 py-2 px-3 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                className="flex-1 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 Clear
               </button>
             )}
             <button
-              onClick={() => setIsOpen(false)}
-              className="flex-1 py-2 px-3 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+              onClick={() => {
+                setIsOpen(false);
+                resetPosition();
+              }}
+              className="flex-1 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors border-l border-gray-100"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirm}
-              className="flex-1 py-2 px-3 text-sm font-medium text-white bg-blue-500 rounded-xl hover:bg-blue-600 transition-colors"
+              disabled={isDateDisabled(tempDate) || isTimeDisabled(tempDate)}
+              className={`
+                flex-1 py-2 text-sm font-semibold transition-colors border-l border-gray-100 flex items-center justify-center space-x-1
+                ${
+                  isDateDisabled(tempDate) || isTimeDisabled(tempDate)
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-blue-600 hover:bg-blue-50"
+                }
+              `}
             >
-              Confirm
+              <Check size={14} />
+              <span>Confirm</span>
             </button>
           </div>
         </div>

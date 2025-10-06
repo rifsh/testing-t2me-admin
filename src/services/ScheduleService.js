@@ -5,7 +5,6 @@ import { handleAction } from "utils/api/warning-submit-util";
 
 const ScheduleService = {};
 
-
 ScheduleService.addSchedule = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
@@ -34,6 +33,13 @@ ScheduleService.getSingleSchedule = function (pageData) {
     url: ApiConstant.SINGLE_SCHEDULE_URL,
     method: "get",
     params: Utils.filterParams(pageData),
+  });
+};
+ScheduleService.checkScheduleEdit = function (params) {
+  return fetch({
+    url: ApiConstant.CHECK_SCHEDULE_EDIT_URL,
+    method: "get",
+    params: Utils.filterParams(params),
   });
 };
 export default ScheduleService;

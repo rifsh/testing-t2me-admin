@@ -5,6 +5,7 @@ import MultyStepEventForm from "../../event/components/MultyStepForm"
 import MultyStepEventFormOrganizer from 'views/track-team/event-organizer/components/MultyStepForm';
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { getCurrentUser } from "configs/UserAccessConfig";
+import EventForm from 'views/event/new-components/EventForm';
 
 const LeadAddEvent = () => {
 	const currentUser = getCurrentUser();
@@ -14,7 +15,7 @@ const LeadAddEvent = () => {
 	return (
 		
 
-		<MultyStepEventForm eventId={id} mode="LEAD" />
+		<EventForm eventId={id} mode="LEAD" />
 	)
 }
 

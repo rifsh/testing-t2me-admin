@@ -26,6 +26,8 @@ export const initialState = {
   slotStatus: {},
   scrollPosition: 0,
   pagination: { size: 10, page: 1 },
+  scheduleFormData: {},
+  checkedscheduleDetails: null,
 };
 
 export const fetchAllSchedules = createAsyncThunk(
@@ -64,6 +66,19 @@ export const fetchSingleSchedules = createAsyncThunk(
     }
   }
 );
+export const checkScheduleEdit = createAsyncThunk(
+  "schedule/checkScheduleEdit",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response = await ScheduleService.checkScheduleEdit(params);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Error fetching schedules"
+      );
+    }
+  }
+);
 
 export const addSchedule = createAsyncThunk(
   "schedule/add",
@@ -93,6 +108,31 @@ const scheduleSlice = createSlice({
   name: "schedules",
   initialState,
   reducers: {
+    setScheduleFormData: (state, action) => {
+      // Deep merge to handle nested objects properly
+      state.scheduleFormData = {
+        ...state.scheduleFormData,
+        ...action.payload,
+        // Ensure arrays are properly handled
+        show_dates:
+          action.payload.show_dates || state.scheduleFormData.show_dates || [],
+        add_ons: action.payload.add_ons || state.scheduleFormData.add_ons || [],
+        food_slots:
+          action.payload.food_slots || state.scheduleFormData.food_slots || [],
+        offer_ids:
+          action.payload.offer_ids || state.scheduleFormData.offer_ids || [],
+        coupon_ids:
+          action.payload.coupon_ids || state.scheduleFormData.coupon_ids || [],
+      };
+    },
+    resetScheduleData: (state) => {
+      state.scheduleFormData = initialState.scheduleFormData;
+    },
+    updateScheduleField: (state, action) => {
+      const { field, value } = action.payload;
+      state.scheduleFormData[field] = value;
+    },
+
     setTimeSlots: (state, action) => {
       state.timeSlots = action.payload;
     },
@@ -375,6 +415,18 @@ const scheduleSlice = createSlice({
       .addCase(fetchSingleSchedules.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(checkScheduleEdit.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(checkScheduleEdit.fulfilled, (state, action) => {
+        state.loading = false;
+        state.checkedscheduleDetails = action.payload;
+      })
+      .addCase(checkScheduleEdit.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
@@ -393,6 +445,9 @@ export const {
   setActiveTab,
   setDates,
   setSlotStatus,
+  setScheduleFormData,
+  resetScheduleData,
+  updateScheduleField,
   addTimeSlot,
   removeTimeSlot,
   updateTimeSlot,

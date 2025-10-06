@@ -9,42 +9,110 @@ import {
 import { message } from "antd";
 
 const TimeSelector = ({
-  days,
+  days = [],
   selectedTimeSlot,
   onTimeSlotSelect,
-  events,
+  events = [],
   onEventClick,
   scrollContainerRef,
   onApplyToAll,
   onOverlapWarning,
   blockedSlots = [],
-  onBlockTimeSlot,
-  multiDateSelectionEnabled = false,
-  onMultiDateTimeSlot = null,
   dayColors = [],
   getColorForDay,
   ticketOptionsMap = {},
   ticketSetOptionsMap = {},
   seatStructureOptionsMap = {},
+  eventDateRange = null,
+  selectedEventId = null, // NEW PROP for selected event
+  blockedEventIds = new Set(),
 }) => {
   const timeSlots = generateTimeSlots();
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState(null);
   const [dragEnd, setDragEnd] = useState(null);
   const [overlapMessage, setOverlapMessage] = useState(null);
+  const [activeEventId, setActiveEventId] = useState(null); // NEW STATE for clicked event
+  const isEventBlocked = (eventId) => {
+    return blockedEventIds.has(eventId);
+  };
+  // FIXED: Enhanced monitoring for midnight events
+  const logMidnightEvent = (event, context = "") => {
+    if (event.is_midnight_passed) {
+      console.log(`🌙 MIDNIGHT EVENT ${context}:`, {
+        id: event.id,
+        startDay: event.startTime.day,
+        endDay: event.endTime.day,
+        startTime: `${event.startTime.hour}:${String(
+          event.startTime.minute || 0
+        ).padStart(2, "0")}`,
+        endTime: `${event.endTime.hour}:${String(
+          event.endTime.minute || 0
+        ).padStart(2, "0")}`,
+        show_end_date: event.show_end_date,
+        totalDuration: calculateMidnightDuration(event),
+        dayOneDuration: calculateDayOneDuration(event),
+        dayTwoDuration: calculateDayTwoDuration(event),
+      });
+    }
+  };
+
+  // FIXED: Calculate total midnight event duration
+  const calculateMidnightDuration = (event) => {
+    if (!event.is_midnight_passed) return 0;
+
+    const startMinutes = timeToMinutes(
+      event.startTime.hour,
+      event.startTime.minute || 0
+    );
+    const endMinutes = timeToMinutes(
+      event.endTime.hour,
+      event.endTime.minute || 0
+    );
+
+    // Day 1: from start time to midnight (24:00)
+    const dayOneDuration = 24 * 60 - startMinutes;
+
+    // Day 2: from midnight (00:00) to end time
+    const dayTwoDuration = endMinutes;
+
+    return {
+      total: dayOneDuration + dayTwoDuration,
+      dayOne: dayOneDuration,
+      dayTwo: dayTwoDuration,
+      startMinutes,
+      endMinutes,
+    };
+  };
+
+  // FIXED: Calculate day one duration (start time to midnight)
+  const calculateDayOneDuration = (event) => {
+    if (!event.is_midnight_passed) return 0;
+    const startMinutes = timeToMinutes(
+      event.startTime.hour,
+      event.startTime.minute || 0
+    );
+    return 24 * 60 - startMinutes; // Minutes from start to midnight
+  };
+
+  // FIXED: Calculate day two duration (midnight to end time)
+  const calculateDayTwoDuration = (event) => {
+    if (!event.is_midnight_passed) return 0;
+    return timeToMinutes(event.endTime.hour, event.endTime.minute || 0);
+  };
 
   const getDaySpecificColors = (dayIndex) => {
     const colorSets = [
       {
         main: "bg-red-500",
-        light: "bg-red-50", 
+        light: "bg-red-50",
         border: "border-red-200",
         text: "text-red-700",
       },
       {
         main: "bg-blue-500",
         light: "bg-blue-50",
-        border: "border-blue-200", 
+        border: "border-blue-200",
         text: "text-blue-700",
       },
       {
@@ -54,7 +122,7 @@ const TimeSelector = ({
         text: "text-green-700",
       },
       {
-        main: "bg-yellow-500", 
+        main: "bg-yellow-500",
         light: "bg-yellow-50",
         border: "border-yellow-200",
         text: "text-yellow-700",
@@ -67,23 +135,22 @@ const TimeSelector = ({
       },
       {
         main: "bg-pink-500",
-        light: "bg-pink-50", 
+        light: "bg-pink-50",
         border: "border-pink-200",
         text: "text-pink-700",
       },
       {
         main: "bg-indigo-500",
         light: "bg-indigo-50",
-        border: "border-indigo-200", 
+        border: "border-indigo-200",
         text: "text-indigo-700",
       },
     ];
-
     return colorSets[dayIndex % colorSets.length];
   };
 
   const getEventColors = (event, dayIndex) => {
-    if (event.isBlocked || event.type === "blocked" || event.isMultiDay) {
+    if (event.is_midnight_passed) {
       return {
         main: "bg-orange-500",
         light: "bg-orange-50",
@@ -91,7 +158,6 @@ const TimeSelector = ({
         text: "text-orange-700",
       };
     }
-
     return getDaySpecificColors(dayIndex);
   };
 
@@ -99,61 +165,70 @@ const TimeSelector = ({
     if (event.ticketType && ticketOptionsMap[event.ticketType]) {
       return ticketOptionsMap[event.ticketType];
     }
-    
     if (event.ticketSet && ticketSetOptionsMap[event.ticketSet]) {
       return ticketSetOptionsMap[event.ticketSet];
     }
-
-    if (event.seat_structure_id && seatStructureOptionsMap[event.seat_structure_id]) {
+    if (
+      event.seat_structure_id &&
+      seatStructureOptionsMap[event.seat_structure_id]
+    ) {
       return seatStructureOptionsMap[event.seat_structure_id];
     }
-
-    if (event.ticketType) {
-      return `Ticket: ${event.ticketType}`;
-    }
-    
-    if (event.ticketSet) {
-      return `Set: ${event.ticketSet}`;
-    }
-
-    if (event.seat_structure_id) {
-      return `Seat: ${event.seat_structure_id}`;
-    }
-
-    if (event.isMultiDay) return "Multi-day";
-    if (event.type === "blocked") return "Blocked";
-    
+    if (event.ticketType) return `Ticket ${event.ticketType}`;
+    if (event.ticketSet) return `Set ${event.ticketSet}`;
+    if (event.seat_structure_id) return `Seat ${event.seat_structure_id}`;
+    if (event.is_midnight_passed) return "Midnight Event";
     return event.type || "Time Slot";
   };
 
   const getEventTooltip = (event) => {
     const details = [];
-    
+
     if (event.ticketType) {
       const name = ticketOptionsMap[event.ticketType] || event.ticketType;
       details.push(`Ticket Type: ${name}`);
     }
-    
     if (event.ticketSet) {
       const name = ticketSetOptionsMap[event.ticketSet] || event.ticketSet;
       details.push(`Ticket Set: ${name}`);
     }
-    
     if (event.seat_structure_id) {
-      const name = seatStructureOptionsMap[event.seat_structure_id] || event.seat_structure_id;
+      const name =
+        seatStructureOptionsMap[event.seat_structure_id] ||
+        event.seat_structure_id;
       details.push(`Seats: ${name}`);
     }
-    
+
     const timeRange = `${formatTime(
       event.startTime.hour,
       event.startTime.minute || 0
-    )} to ${formatTime(
-      event.endTime.hour,
-      event.endTime.minute || 0
-    )}`;
+    )} to ${formatTime(event.endTime.hour, event.endTime.minute || 0)}`;
     details.push(timeRange);
-    
-    return details.join(' | ');
+
+    if (event.is_midnight_passed) {
+      const duration = calculateMidnightDuration(event);
+      details.push(
+        `Crosses Midnight (${Math.floor(duration.total / 60)}h ${
+          duration.total % 60
+        }m total)`
+      );
+    }
+
+    return details.join(" • ");
+  };
+
+  // Check if slot is outside event date range
+  const isSlotOutsideEventRange = (dayIndex) => {
+    if (!eventDateRange || !days[dayIndex]) return false;
+
+    const currentDate = days[dayIndex];
+    const eventStart = new Date(eventDateRange.startDate);
+    const eventEnd = new Date(eventDateRange.endDate);
+
+    eventStart.setHours(0, 0, 0, 0);
+    eventEnd.setHours(23, 59, 59, 999);
+
+    return currentDate < eventStart || currentDate > eventEnd;
   };
 
   const getSlotFromPosition = (dayIndex, slotIndex) => {
@@ -162,12 +237,18 @@ const TimeSelector = ({
     return { day: dayIndex, hour, minute };
   };
 
+  // Simplified mouse handlers - No auto midnight detection
   const handleMouseDown = (dayIndex, slotIndex) => {
     if (!days[dayIndex]) return;
 
-    setOverlapMessage(null);
+    if (isSlotOutsideEventRange(dayIndex)) {
+      message.error("Cannot create time slots outside the event date range");
+      return;
+    }
 
+    setOverlapMessage(null);
     const slotTime = getSlotFromPosition(dayIndex, slotIndex);
+
     if (getEventInSlot(dayIndex, slotTime.hour, slotTime.minute)) {
       return;
     }
@@ -180,6 +261,8 @@ const TimeSelector = ({
 
   const handleMouseEnter = (dayIndex, slotIndex) => {
     if (!days[dayIndex] || !isSelecting) return;
+
+    if (isSlotOutsideEventRange(dayIndex)) return;
 
     const potentialEnd = getSlotFromPosition(dayIndex, slotIndex);
 
@@ -196,152 +279,66 @@ const TimeSelector = ({
         endTime.hour = endTime.hour % 24;
       }
 
-      const wouldBeMultiDay = startTime.day !== endTime.day;
+      const isValidSelection = potentialEnd.day === selectionStart.day;
 
-      if (wouldBeMultiDay && !multiDateSelectionEnabled) {
-        setOverlapMessage({
-          type: "warning",
-          message:
-            "Multi-day selection disabled. Enable multi-date selection to span multiple days.",
-        });
-        return;
-      } else {
-        if (overlapMessage && overlapMessage.type === "warning") {
+      if (isValidSelection) {
+        const potentialEvent = {
+          startTime,
+          endTime,
+          id: "temp-drag-preview",
+        };
+
+        const conflictingEvents = ScheduleUtil.findConflictingEvents(
+          potentialEvent,
+          events
+        );
+        if (conflictingEvents.length > 0) {
+          setOverlapMessage({
+            type: "warning",
+            message: `Selection would overlap with ${conflictingEvents.length} existing events`,
+          });
+        } else if (overlapMessage?.message.includes("overlap")) {
           setOverlapMessage(null);
         }
+
+        setDragEnd(potentialEnd);
       }
-
-      const potentialEvent = {
-        startTime: startTime.day <= endTime.day ? startTime : endTime,
-        endTime: startTime.day <= endTime.day ? endTime : startTime,
-        id: "temp-drag-preview",
-      };
-
-      const conflictingEvents = ScheduleUtil.findConflictingEvents(
-        potentialEvent,
-        events
-      );
-
-      if (conflictingEvents.length > 0) {
-        setOverlapMessage({
-          type: "warning",
-          message: `Selection would overlap with ${conflictingEvents.length} existing event(s)`,
-        });
-      } else if (overlapMessage && overlapMessage.message.includes("overlap")) {
-        setOverlapMessage(null);
-      }
-    }
-
-    if (multiDateSelectionEnabled || potentialEnd.day === selectionStart?.day) {
-      setDragEnd(potentialEnd);
     }
   };
 
   const handleMouseUp = () => {
     if (isSelecting && selectionStart && dragEnd) {
       let startTime = { ...selectionStart };
-      let endTime = {
-        day: dragEnd.day,
-        hour: dragEnd.hour + 1,
-        minute: 0,
-      };
+      let endTime = { day: dragEnd.day, hour: dragEnd.hour + 1, minute: 0 };
 
       if (endTime.hour >= 24) {
         endTime.day += Math.floor(endTime.hour / 24);
         endTime.hour = endTime.hour % 24;
       }
 
-      const startMinutes =
-        startTime.day * 1440 + timeToMinutes(startTime.hour, startTime.minute);
-      const endMinutes =
-        endTime.day * 1440 + timeToMinutes(endTime.hour, endTime.minute);
-
-      if (startMinutes >= endMinutes) {
-        const temp = { ...startTime };
-        startTime = { ...endTime };
-        endTime = { ...temp };
-      }
-
-      const isMultiDay = startTime.day !== endTime.day;
-
-      if (isMultiDay && !multiDateSelectionEnabled) {
-        setOverlapMessage({
-          type: "error",
-          message:
-            "Multi-day selections are disabled. Enable multi-date selection to create events spanning multiple days.",
-        });
-
-        if (onOverlapWarning) {
-          onOverlapWarning(
-            "Cannot create multi-day event: Multi-date selection is disabled",
-            []
-          );
-        }
-
-        setIsSelecting(false);
-        setSelectionStart(null);
-        setDragEnd(null);
-        setTimeout(() => setOverlapMessage(null), 4000);
-        return;
-      }
-
       const newEvent = {
         startTime,
         endTime,
         id: `temp-${Date.now()}`,
+        is_midnight_passed: false, // Default to false, user can toggle in modal
       };
 
-      if (isMultiDay && multiDateSelectionEnabled) {
-        newEvent.isMultiDay = true;
-        newEvent.type = "blocked";
-
-        const conflictingEvents = ScheduleUtil.findConflictingEvents(
-          newEvent,
-          events
-        );
-
-        if (conflictingEvents.length > 0) {
-          const conflictMessage = `Cannot create multi-day event: overlaps with ${conflictingEvents.length} existing event(s) across multiple days`;
-          setOverlapMessage({
-            type: "error",
-            message: conflictMessage,
-          });
-
-          if (onOverlapWarning) {
-            onOverlapWarning(conflictMessage, conflictingEvents);
-          }
-
-          setTimeout(() => setOverlapMessage(null), 4000);
-        } else {
-          if (onMultiDateTimeSlot) {
-            onMultiDateTimeSlot(newEvent);
-          } else {
-            onTimeSlotSelect(newEvent);
-          }
-          message.success("Multi-day time slot created successfully!");
-        }
+      const conflictingEvents = ScheduleUtil.findConflictingEvents(
+        newEvent,
+        events
+      );
+      if (conflictingEvents.length > 0) {
+        const conflictMessage = `Cannot create event: overlaps with ${conflictingEvents.length} existing events`;
+        setOverlapMessage({
+          type: "error",
+          message: conflictMessage,
+        });
+        if (onOverlapWarning)
+          onOverlapWarning(conflictMessage, conflictingEvents);
+        setTimeout(() => setOverlapMessage(null), 4000);
       } else {
-        const conflictingEvents = ScheduleUtil.findConflictingEvents(
-          newEvent,
-          events
-        );
-
-        if (conflictingEvents.length > 0) {
-          const conflictMessage = `Cannot create event: overlaps with ${conflictingEvents.length} existing event(s)`;
-          setOverlapMessage({
-            type: "error",
-            message: conflictMessage,
-          });
-
-          if (onOverlapWarning) {
-            onOverlapWarning(conflictMessage, conflictingEvents);
-          }
-
-          setTimeout(() => setOverlapMessage(null), 4000);
-        } else {
-          onTimeSlotSelect(newEvent);
-          message.success("Time slot selected successfully!");
-        }
+        onTimeSlotSelect(newEvent);
+        message.success("Time slot selected successfully!");
       }
     }
 
@@ -352,29 +349,22 @@ const TimeSelector = ({
 
   const getSelectionColor = (dayIndex) => {
     const colors = getDaySpecificColors(dayIndex);
-    return colors.light.replace('bg-', 'bg-').replace('-50', '-200');
+    return colors.light.replace("bg-", "bg-").replace("-50", "-200");
   };
 
+  // Simple slot selection - only on same day
   const isSlotSelected = (dayIndex, slotIndex) => {
-    if (!selectionStart || !dragEnd || !isSelecting) {
-      return false;
-    }
+    if (!selectionStart || !dragEnd || !isSelecting) return false;
+    if (dayIndex !== selectionStart.day) return false;
 
-    if (!multiDateSelectionEnabled && dayIndex !== selectionStart.day) {
-      return false;
-    }
+    const currentSlot = slotIndex;
+    const startSlot = selectionStart.hour;
+    const endSlot = dragEnd.hour;
 
-    const currentMinutes = dayIndex * 1440 + slotIndex * 60;
-    const startMinutes =
-      selectionStart.day * 1440 +
-      selectionStart.hour * 60 +
-      selectionStart.minute;
-    const endMinutes = dragEnd.day * 1440 + dragEnd.hour * 60 + dragEnd.minute;
+    const minSlot = Math.min(startSlot, endSlot);
+    const maxSlot = Math.max(startSlot, endSlot);
 
-    const minMinutes = Math.min(startMinutes, endMinutes);
-    const maxMinutes = Math.max(startMinutes, endMinutes + 60);
-
-    return currentMinutes >= minMinutes && currentMinutes < maxMinutes;
+    return currentSlot >= minSlot && currentSlot <= maxSlot;
   };
 
   const isSlotInConflict = (dayIndex, slotIndex) => {
@@ -385,8 +375,8 @@ const TimeSelector = ({
       let endTime = { ...dragEnd, hour: dragEnd.hour + 1 };
 
       const potentialEvent = {
-        startTime: startTime.day <= endTime.day ? startTime : endTime,
-        endTime: startTime.day <= endTime.day ? endTime : startTime,
+        startTime,
+        endTime,
         id: "temp-conflict-check",
       };
 
@@ -400,9 +390,13 @@ const TimeSelector = ({
   };
 
   const isSlotBlocked = (dayIndex, slotIndex) => {
+    if (isSlotOutsideEventRange(dayIndex)) return true;
+
     const currentMinutes = dayIndex * 1440 + slotIndex * 60;
+
     return blockedSlots.some((blocked) => {
       if (!blocked.startTime || !blocked.endTime) return false;
+
       const startMinutes =
         blocked.startTime.day * 1440 +
         blocked.startTime.hour * 60 +
@@ -411,10 +405,12 @@ const TimeSelector = ({
         blocked.endTime.day * 1440 +
         blocked.endTime.hour * 60 +
         (blocked.endTime.minute || 0);
+
       return currentMinutes >= startMinutes && currentMinutes < endMinutes;
     });
   };
 
+  // FIXED: Enhanced event finder for midnight events - supports multiple days
   const getEventInSlot = (dayIndex, hour, minute) => {
     const validEvents = events.filter((event) => {
       const isValid =
@@ -426,13 +422,11 @@ const TimeSelector = ({
         typeof event.startTime.hour === "number" &&
         typeof event.endTime.day === "number" &&
         typeof event.endTime.hour === "number";
-
       return isValid;
     });
 
     const visibleEvent = validEvents.find((event) => {
       const eventStartDay = event.startTime.day;
-      const eventEndDay = event.endTime.day;
       const eventStartMinutes = timeToMinutes(
         event.startTime.hour,
         event.startTime.minute || 0
@@ -443,81 +437,97 @@ const TimeSelector = ({
       );
       const slotMinutes = timeToMinutes(hour, minute);
 
-      if (dayIndex < eventStartDay || dayIndex > eventEndDay) return false;
+      // Log midnight event for debugging
+      logMidnightEvent(event, `checking slot ${dayIndex}:${hour}:${minute}`);
 
-      if (eventStartDay === eventEndDay) {
-        return (
-          dayIndex === eventStartDay &&
-          slotMinutes >= eventStartMinutes &&
-          slotMinutes < eventEndMinutes
-        );
-      } else {
+      if (event.is_midnight_passed) {
+        // FIXED: Midnight events span two days
         if (dayIndex === eventStartDay) {
+          // Day 1: Show from start time to end of day
           return slotMinutes >= eventStartMinutes;
-        } else if (dayIndex === eventEndDay) {
+        } else if (dayIndex === eventStartDay + 1) {
+          // Day 2: Show from start of day to end time
           return slotMinutes < eventEndMinutes;
-        } else {
-          return dayIndex > eventStartDay && dayIndex < eventEndDay;
         }
+        return false;
+      } else {
+        // Regular same-day events
+        if (dayIndex !== eventStartDay) return false;
+        return (
+          slotMinutes >= eventStartMinutes && slotMinutes < eventEndMinutes
+        );
       }
     });
 
     return visibleEvent;
   };
 
+  // FIXED: Enhanced event display calculation for midnight events
   const getEventDisplayInfo = (event, dayIndex, slotIndex) => {
     if (!event || !event.startTime || !event.endTime) return null;
 
     const eventStartDay = event.startTime.day;
-    const eventEndDay = event.endTime.day;
     const eventStartHour = event.startTime.hour;
     const eventStartMinute = event.startTime.minute || 0;
     const eventStartSlot = eventStartHour;
 
-    if (dayIndex === eventStartDay && slotIndex === eventStartSlot) {
-      let durationMinutes = 0;
+    // Check if event is blocked
+    const blocked = isEventBlocked(event.id);
 
-      if (eventStartDay === eventEndDay) {
-        const eventEndMinutes = timeToMinutes(
-          event.endTime.hour,
-          event.endTime.minute || 0
-        );
-        const eventStartMinutes = timeToMinutes(
-          eventStartHour,
-          eventStartMinute
-        );
-        durationMinutes = eventEndMinutes - eventStartMinutes;
-      } else {
-        const endOfDayMinutes = timeToMinutes(23, 59);
-        const eventStartMinutes = timeToMinutes(
-          eventStartHour,
-          eventStartMinute
-        );
-        durationMinutes = endOfDayMinutes - eventStartMinutes;
+    logMidnightEvent(
+      event,
+      `calculating display info for day ${dayIndex}, slot ${slotIndex}`
+    );
+
+    if (event.is_midnight_passed) {
+      // Day 1: Show from start time to midnight
+      if (dayIndex === eventStartDay && slotIndex === eventStartSlot) {
+        const duration = calculateDayOneDuration(event);
+        const heightSlots = Math.max(1, Math.ceil(duration / 60));
+
+        return {
+          show: true,
+          height: heightSlots,
+          type: "midnight-day1",
+          duration: duration,
+          blocked: blocked, // Add blocked flag
+        };
       }
 
-      const heightSlots = Math.max(1, Math.ceil(durationMinutes / 60));
+      // Day 2: Show from midnight to end time
+      if (dayIndex === eventStartDay + 1 && slotIndex === 0) {
+        const duration = calculateDayTwoDuration(event);
+        if (duration > 0) {
+          const heightSlots = Math.max(1, Math.ceil(duration / 60));
 
-      return {
-        show: true,
-        height: heightSlots,
-      };
-    }
-
-    if (
-      event.isMultiDay &&
-      dayIndex > eventStartDay &&
-      dayIndex <= eventEndDay
-    ) {
-      if (dayIndex < eventEndDay) {
-        return { show: true, height: 24 };
-      } else if (dayIndex === eventEndDay && slotIndex === 0) {
+          return {
+            show: true,
+            height: heightSlots,
+            type: "midnight-day2",
+            duration: duration,
+            blocked: blocked, // Add blocked flag
+          };
+        }
+      }
+    } else {
+      // Regular event display
+      if (dayIndex === eventStartDay && slotIndex === eventStartSlot) {
         const eventEndMinutes = timeToMinutes(
           event.endTime.hour,
           event.endTime.minute || 0
         );
-        const heightSlots = Math.max(1, Math.ceil(eventEndMinutes / 60));
-        return { show: true, height: heightSlots };
+        const eventStartMinutes = timeToMinutes(
+          eventStartHour,
+          eventStartMinute
+        );
+        const durationMinutes = eventEndMinutes - eventStartMinutes;
+        const heightSlots = Math.max(1, Math.ceil(durationMinutes / 60));
+        return {
+          show: true,
+          height: heightSlots,
+          type: "regular",
+          blocked: blocked, // Add blocked flag
+        };
       }
     }
 
@@ -534,6 +544,11 @@ const TimeSelector = ({
     });
   }
 
+  // NEW: Check if event is selected
+  const isEventSelected = (event) => {
+    return activeEventId === event.id || selectedEventId === event.id;
+  };
+
   return (
     <div
       ref={scrollContainerRef}
@@ -546,6 +561,7 @@ const TimeSelector = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
+      {/* Overlap message */}
       {overlapMessage && (
         <div
           className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-50 p-3 rounded-lg shadow-lg border flex items-center space-x-2 ${
@@ -559,137 +575,268 @@ const TimeSelector = ({
         </div>
       )}
 
-      <div className="absolute top-4 right-4 z-40 bg-blue-50 border border-blue-200 rounded-lg p-2">
-        <div className="text-xs text-blue-700 font-medium">
-          {multiDateSelectionEnabled
-            ? "📅 Multi-day Selection Enabled"
-            : "📅 Single Day Selection Only"}
+      <div>
+        {/* Time column */}
+        <div className="sticky left-0 z-20 w-20 bg-gray-50 border-r border-gray-200 float-left">
+          {displaySlots.map((slot, i) => (
+            <div
+              key={`time-${i}`}
+              className="h-16 flex items-center justify-center text-xs text-gray-600 font-medium border-b border-gray-300 bg-gray-50"
+              style={{ minHeight: "64px" }}
+            >
+              {slot.time12}
+            </div>
+          ))}
         </div>
-      </div>
 
-      <div className="sticky left-0 z-20 w-20 bg-gray-50 border-r border-gray-200 float-left">
-        {displaySlots.map((slot, i) => (
-          <div
-            key={`time-${i}`}
-            className="h-16 flex items-center justify-center text-xs text-gray-600 font-medium border-b border-gray-300 bg-gray-50"
-            style={{ minHeight: "64px" }}
-          >
-            {slot.time12}
-          </div>
-        ))}
-      </div>
+        {/* Days grid */}
+        <div
+          className="ml-20 grid min-h-full"
+          style={{
+            gridTemplateColumns: `repeat(${Math.max(days.length, 1)}, 1fr)`,
+            minHeight: `${displaySlots.length * 64}px`,
+          }}
+        >
+          {days.map((day, dayIndex) => (
+            <div
+              key={`day-${dayIndex}`}
+              className="border-r border-gray-100 last:border-r-0 relative"
+            >
+              {displaySlots.map((slot, slotIndex) => {
+                const event = getEventInSlot(dayIndex, slot.hour, slot.minute);
+                const isSelected = isSlotSelected(dayIndex, slotIndex);
+                const isBlocked = isSlotBlocked(dayIndex, slotIndex);
+                const isOccupied = !!event || isBlocked;
+                const eventInfo = event
+                  ? getEventDisplayInfo(event, dayIndex, slotIndex)
+                  : { show: false };
+                const isOutsideRange = isSlotOutsideEventRange(dayIndex);
 
-      <div
-        className="ml-20 grid min-h-full"
-        style={{
-          gridTemplateColumns: `repeat(${Math.max(days.length, 1)}, 1fr)`,
-          minHeight: `${displaySlots.length * 64}px`,
-        }}
-      >
-        {days.map((day, dayIndex) => (
-          <div
-            key={`day-${dayIndex}`}
-            className="border-r border-gray-100 last:border-r-0 relative"
-          >
-            {displaySlots.map((slot, slotIndex) => {
-              const event = getEventInSlot(dayIndex, slot.hour, slot.minute);
-              const isSelected = isSlotSelected(dayIndex, slotIndex);
-              const isBlocked = isSlotBlocked(dayIndex, slotIndex);
-              const isOccupied = !!event || isBlocked;
-              const eventInfo = event
-                ? getEventDisplayInfo(event, dayIndex, slotIndex)
-                : { show: false };
+                const selectionColorClass = isSelected
+                  ? isSlotInConflict(dayIndex, slotIndex)
+                    ? "bg-red-200 border-2 border-red-400 cursor-not-allowed"
+                    : `${getSelectionColor(dayIndex)} cursor-pointer border-2 ${
+                        getDaySpecificColors(dayIndex).border
+                      }`
+                  : "";
 
-              const selectionColorClass = isSelected 
-                ? isSlotInConflict(dayIndex, slotIndex)
-                  ? "bg-red-200 border-2 border-red-400 cursor-not-allowed"
-                  : getSelectionColor(dayIndex) + " cursor-pointer border-2 " + getDaySpecificColors(dayIndex).border
-                : "";
-
-              return (
-                <div
-                  key={`slot-${dayIndex}-${slotIndex}`}
-                  className={`h-16 border-b border-gray-50 relative transition-colors select-none ${
-                    isOccupied
-                      ? "cursor-not-allowed"
-                      : isSelected
-                      ? selectionColorClass
-                      : "hover:bg-gray-50 cursor-pointer"
-                  }`}
-                  style={{ minHeight: "64px" }}
-                  onMouseDown={() => handleMouseDown(dayIndex, slotIndex)}
-                  onMouseEnter={() => handleMouseEnter(dayIndex, slotIndex)}
-                >
-                  {event && eventInfo.show && (
-                    <div
-                      className="absolute inset-x-1 top-0 cursor-pointer hover:opacity-90 transition-opacity z-10 flex"
-                      style={{
-                        height: `${Math.max(1, eventInfo.height) * 64}px`,
-                        minHeight: "64px",
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEventClick(event);
-                      }}
-                      title={getEventTooltip(event)}
-                    >
+                return (
+                  <div
+                    key={`slot-${dayIndex}-${slotIndex}`}
+                    className={`h-16 border-b border-gray-50 relative transition-colors select-none ${
+                      isOutsideRange
+                        ? "bg-gray-100 cursor-not-allowed opacity-50"
+                        : isOccupied
+                        ? "cursor-not-allowed"
+                        : isSelected
+                        ? selectionColorClass
+                        : "hover:bg-gray-50 cursor-pointer"
+                    }`}
+                    style={{ minHeight: "64px" }}
+                    onMouseDown={() =>
+                      !isOutsideRange && handleMouseDown(dayIndex, slotIndex)
+                    }
+                    onMouseEnter={() =>
+                      !isOutsideRange && handleMouseEnter(dayIndex, slotIndex)
+                    }
+                  >
+                    {/* FIXED: Enhanced event display with SELECTION STATE */}
+                    {event && eventInfo.show && (
                       <div
-                        className={`w-1 rounded-l ${
-                          getEventColors(event, dayIndex).main
+                        className={`absolute inset-x-1 top-0 cursor-pointer transition-all duration-200 z-10 flex ${
+                          eventInfo.blocked
+                            ? "opacity-75 cursor-not-allowed" // Blocked styling
+                            : isEventSelected(event)
+                            ? "ring-4 ring-blue-400 ring-opacity-70 shadow-2xl scale-105"
+                            : "hover:opacity-90 hover:shadow-lg"
                         }`}
-                      />
-                      <div
-                        className={`flex-1 ${getEventColors(event, dayIndex).light} ${
-                          getEventColors(event, dayIndex).border
-                        } border-l-0 border rounded-r p-2 overflow-hidden`}
+                        style={{
+                          height: Math.max(1, eventInfo.height) * 64 + "px",
+                          minHeight: "64px",
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (eventInfo.blocked) {
+                            message.warning(
+                              "This time slot has active bookings and cannot be modified"
+                            );
+                            return;
+                          }
+                          setActiveEventId(event.id);
+                          onEventClick(event, e);
+                        }}
+                        title={
+                          eventInfo.blocked
+                            ? "🔒 Locked - Has active bookings"
+                            : getEventTooltip(event)
+                        }
                       >
+                        {/* Color bar with lock indication */}
                         <div
-                          className={`font-medium truncate text-sm leading-tight ${
-                            getEventColors(event, dayIndex).text
+                          className={`rounded-l transition-all ${
+                            eventInfo.blocked
+                              ? "bg-gray-400" // Blocked color
+                              : getEventColors(event, dayIndex).main
+                          } ${isEventSelected(event) ? "w-2" : "w-1"}`}
+                        ></div>
+
+                        {/* Event content with lock overlay */}
+                        <div
+                          className={`flex-1 ${
+                            eventInfo.blocked
+                              ? "bg-gray-50 border-gray-300" // Blocked styling
+                              : getEventColors(event, dayIndex).light
+                          } ${
+                            eventInfo.blocked
+                              ? "border-gray-300"
+                              : getEventColors(event, dayIndex).border
+                          } border-l-0 border rounded-r p-2 overflow-hidden relative transition-all ${
+                            isEventSelected(event)
+                              ? "bg-opacity-100 border-2 border-blue-400"
+                              : ""
                           }`}
                         >
-                          {getEventDisplayText(event)}
-                        </div>
-                        
-                        <div
-                          className={`opacity-75 truncate text-xs leading-tight mt-1 ${
-                            getEventColors(event, dayIndex).text
-                          }`}
-                        >
-                          {formatTime(
-                            event.startTime.hour,
-                            event.startTime.minute || 0
+                          {/* LOCK BADGE FOR BLOCKED EVENTS */}
+                          {eventInfo.blocked && (
+                            <div className="absolute top-1 right-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1 shadow-md z-20">
+                              <svg
+                                className="w-3 h-3"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              <span>LOCKED</span>
+                            </div>
                           )}
-                        </div>
-                        
-                        {eventInfo.height > 1 && (
+
+                          {/* Midnight indicator */}
+                          {event.is_midnight_passed && !eventInfo.blocked && (
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 to-orange-600"></div>
+                          )}
+
+                          {/* Event title */}
                           <div
-                            className={`opacity-75 text-xs mt-1 ${
-                              getEventColors(event, dayIndex).text
+                            className={`font-medium truncate text-sm leading-tight ${
+                              eventInfo.blocked
+                                ? "text-gray-600"
+                                : getEventColors(event, dayIndex).text
                             }`}
                           >
-                            {event.ticketType && event.ticketSet && ticketSetOptionsMap[event.ticketSet] ? (
-                              <div className="truncate">
-                                {ticketSetOptionsMap[event.ticketSet]}
-                              </div>
-                            ) : (
-                              <div>
-                                {ScheduleUtil.formatDuration(
-                                  event.startTime,
-                                  event.endTime
-                                )}
-                              </div>
+                            {getEventDisplayText(event)}
+                            {event.is_midnight_passed && (
+                              <span className="text-xs ml-1 opacity-75">
+                                {eventInfo.type === "midnight-day1"
+                                  ? "(Day 1)"
+                                  : eventInfo.type === "midnight-day2"
+                                  ? "(Day 2)"
+                                  : ""}
+                              </span>
                             )}
                           </div>
-                        )}
+
+                          {/* Event time */}
+                          <div
+                            className={`opacity-75 truncate text-xs leading-tight mt-1 ${
+                              eventInfo.blocked
+                                ? "text-gray-500"
+                                : getEventColors(event, dayIndex).text
+                            }`}
+                          >
+                            {eventInfo.type === "midnight-day1" && (
+                              <span>
+                                {formatTime(
+                                  event.startTime.hour,
+                                  event.startTime.minute || 0
+                                )}{" "}
+                                → Midnight
+                              </span>
+                            )}
+                            {eventInfo.type === "midnight-day2" && (
+                              <span>
+                                Midnight →{" "}
+                                {formatTime(
+                                  event.endTime.hour,
+                                  event.endTime.minute || 0
+                                )}
+                              </span>
+                            )}
+                            {eventInfo.type === "regular" && (
+                              <span>
+                                {formatTime(
+                                  event.startTime.hour,
+                                  event.startTime.minute || 0
+                                )}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Duration info */}
+                          {eventInfo.height > 1 && (
+                            <div
+                              className={`opacity-75 text-xs mt-1 ${
+                                eventInfo.blocked
+                                  ? "text-gray-500"
+                                  : getEventColors(event, dayIndex).text
+                              }`}
+                            >
+                              {event.is_midnight_passed ? (
+                                <div className="space-y-1">
+                                  <div className="text-orange-600 font-medium text-xs">
+                                    {eventInfo.type === "midnight-day1"
+                                      ? `${Math.floor(
+                                          eventInfo.duration / 60
+                                        )}h ${
+                                          eventInfo.duration % 60
+                                        }m to midnight`
+                                      : eventInfo.type === "midnight-day2"
+                                      ? `${Math.floor(
+                                          eventInfo.duration / 60
+                                        )}h ${
+                                          eventInfo.duration % 60
+                                        }m from midnight`
+                                      : "Midnight Event"}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  {ScheduleUtil.formatDuration(
+                                    event.startTime,
+                                    event.endTime
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Blocked message overlay */}
+                          {eventInfo.blocked && eventInfo.height > 2 && (
+                            <div className="absolute bottom-2 left-2 right-2 bg-red-50 border border-red-200 rounded px-2 py-1">
+                              <p className="text-xs text-red-700 font-medium">
+                                Has active bookings
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                    )}
+                    {isOutsideRange && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs text-gray-400 font-medium">
+                          Outside Event Range
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
 
       <style jsx>{`

@@ -59,6 +59,7 @@ import { transformFormDataForAPI } from "../utils/formDataTransformer";
 import { EVENT_TYPES } from "constants/PageConstants";
 import DraftSystem from "drafts/components/DraftSystem";
 import { getRoleBasedEventSections } from "configs/UserAccessConfig";
+import { getSingleLeadEvents, addLeadEvent } from "store/slices/leadEventSlice";
 
 const { Step } = Steps;
 
@@ -66,7 +67,7 @@ export default function EventForm({ eventId, mode = "add" }) {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const isInitialized = useRef(false);
-  const [imagesResetWarning, setImagesResetWarning] = useState(false); // Track if images were reset
+  const [imagesResetWarning, setImagesResetWarning] = useState(false);
 
   const {
     formData,
@@ -89,9 +90,16 @@ export default function EventForm({ eventId, mode = "add" }) {
     eventType,
   } = useSelector((state) => state.event);
 
+  // Add LEAD mode state
+  const { singleLeadEvent, error: leadError } = useSelector(
+    (state) => state.leadEvents
+  );
+
   const { selectedTax } = useSelector((state) => state.tax);
   const { selectedVenueList } = useSelector((state) => state.locations);
-  const { ticketTypes, availableSeats } = useSelector((state) => state.tickets);
+  const { ticketTypes, availableSeats, availableTicketTyps } = useSelector(
+    (state) => state.tickets
+  );
 
   const completedSectionsSet = new Set(completedSections);
 
@@ -117,7 +125,6 @@ export default function EventForm({ eventId, mode = "add" }) {
       key: "image-reset-warning",
     });
 
-    // Auto-hide after 10 seconds
     setTimeout(() => {
       setImagesResetWarning(false);
     }, 10000);
@@ -130,9 +137,9 @@ export default function EventForm({ eventId, mode = "add" }) {
 
       if (mode === "add") {
         form.resetFields();
-
         dispatch(resetEventForm());
         dispatch(clearAllTicketData());
+
         const initialValues = {
           event_name: "",
           description: "",
@@ -154,10 +161,11 @@ export default function EventForm({ eventId, mode = "add" }) {
 
         form.setFieldsValue(initialValues);
         dispatch(setEventFormData(initialValues));
-
         console.log("✅ ADD mode initialization complete");
       } else if (mode === "edit" && eventId) {
         console.log("📝 EDIT mode - will load event data");
+      } else if (mode === "LEAD" && eventId) {
+        console.log("🎯 LEAD mode - will load lead event data");
       }
 
       isInitialized.current = true;
@@ -170,7 +178,48 @@ export default function EventForm({ eventId, mode = "add" }) {
     }
   }, [dispatch, eventType.length]);
 
-  // Handle edit mode data loading - separate from initialization
+  // NEW: Fetch lead event data when in LEAD mode
+  useEffect(() => {
+    if (mode === "LEAD" && eventId && !singleLeadEvent) {
+      console.log("📥 Fetching lead event data:", eventId);
+      dispatch(getSingleLeadEvents(eventId));
+    }
+  }, [dispatch, mode, eventId, singleLeadEvent]);
+
+  // NEW: Populate form with lead event data
+  useEffect(() => {
+    if (
+      mode === "LEAD" &&
+      singleLeadEvent &&
+      isInitialized.current &&
+      !selectedOffers.length &&
+      !selectedCoupons.length
+    ) {
+      console.log("🎯 Populating form with lead event details");
+
+      const formValues = {
+        event_name: singleLeadEvent.event_name || "",
+        description: singleLeadEvent.description || "",
+        // Add other fields from singleLeadEvent as needed
+        // Note: Venues handling is commented out in original code
+        // Uncomment and adapt if venue data should be loaded from lead
+      };
+
+      form.setFieldsValue(formValues);
+      dispatch(setEventFormData(formValues));
+
+      console.log("✅ Lead mode form population complete");
+    }
+  }, [
+    singleLeadEvent,
+    mode,
+    form,
+    dispatch,
+    selectedOffers.length,
+    selectedCoupons.length,
+  ]);
+
+  // Handle edit mode data loading
   useEffect(() => {
     if (eventId && mode === "edit" && isInitialized.current) {
       console.log("📥 Loading event details for edit mode");
@@ -293,7 +342,7 @@ export default function EventForm({ eventId, mode = "add" }) {
 
   // Update form when formData changes (but preserve images)
   useEffect(() => {
-    if (isInitialized.current && mode === "edit") {
+    if (isInitialized.current && (mode === "edit" || mode === "LEAD")) {
       const currentImages = preserveImages(formData);
       const updatedFormData = { ...formData, ...currentImages };
       form.setFieldsValue(updatedFormData);
@@ -339,12 +388,14 @@ export default function EventForm({ eventId, mode = "add" }) {
     dispatch(setLoading(true));
 
     try {
-      const currentValues = await form.validateFields();
+      const values = await form.validateFields();
+      console.log("Form Values:", values);
+
       const currentSection = getRoleBasedEventSections()[currentStep];
 
       // Preserve images when updating section data
       const preservedImages = preserveImages(formData);
-      const dataWithImages = { ...currentValues, ...preservedImages };
+      const dataWithImages = { ...values, ...preservedImages };
 
       dispatch(
         updateSectionData({ section: currentSection.key, data: dataWithImages })
@@ -419,7 +470,6 @@ export default function EventForm({ eventId, mode = "add" }) {
       const currentValues = form.getFieldsValue();
       const currentSection = getRoleBasedEventSections()[currentStep];
 
-      // Preserve images when going back
       const preservedImages = preserveImages(formData);
       const dataWithImages = { ...currentValues, ...preservedImages };
 
@@ -432,7 +482,6 @@ export default function EventForm({ eventId, mode = "add" }) {
 
       dispatch(setCurrentStep(currentStep - 1));
 
-      // Check if we're going back to basic details and images are empty
       const targetSection = getRoleBasedEventSections()[currentStep - 1];
       if (targetSection?.key === "basic") {
         const hasImages =
@@ -452,7 +501,6 @@ export default function EventForm({ eventId, mode = "add" }) {
       const currentValues = form.getFieldsValue();
       const currentSection = getRoleBasedEventSections()[currentStep];
 
-      // Preserve images when clicking steps
       const preservedImages = preserveImages(formData);
       const dataWithImages = { ...currentValues, ...preservedImages };
 
@@ -465,7 +513,6 @@ export default function EventForm({ eventId, mode = "add" }) {
 
       dispatch(setCurrentStep(step));
 
-      // Check if we're navigating to basic details and images are empty
       const targetSection = getRoleBasedEventSections()[step];
       if (targetSection?.key === "basic") {
         const hasImages =
@@ -483,14 +530,13 @@ export default function EventForm({ eventId, mode = "add" }) {
   };
 
   const handleSubmit = async () => {
-    console.log("🚀 handleSubmit triggered");
+    console.log("🚀 handleSubmit triggered - Mode:", mode);
     dispatch(setLoading(true));
 
     try {
       const finalValues = await form.validateFields();
       console.log("✅ Form validation successful");
 
-      // Preserve images in final submission
       const preservedImages = preserveImages(formData);
       const completeFormData = {
         ...formData,
@@ -504,7 +550,8 @@ export default function EventForm({ eventId, mode = "add" }) {
         console.log("🔧 Submission mode: EDIT");
         await handleEditModeSubmission(completeFormData);
       } else {
-        console.log("➕ Submission mode: CREATE");
+        // Handles both "add" and "LEAD" modes
+        console.log(`➕ Submission mode: ${mode.toUpperCase()}`);
         await handleCreateModeSubmission(completeFormData);
       }
 
@@ -583,7 +630,7 @@ export default function EventForm({ eventId, mode = "add" }) {
   };
 
   const handleCreateModeSubmission = async (completeFormData) => {
-    console.log("➕ handleCreateModeSubmission started");
+    console.log(`➕ handleCreateModeSubmission started - Mode: ${mode}`);
 
     const selectedOffersSafe = selectedOffers || [];
     const selectedCouponsSafe = selectedCoupons || [];
@@ -598,8 +645,13 @@ export default function EventForm({ eventId, mode = "add" }) {
         selectedVenueList: selectedVenueListSafe,
         ticketTypes: ticketTypesSafe,
         availableSeats: availableSeatsSafe,
-        eventId: eventId,
+        eventId: mode === "LEAD" ? eventId : undefined, // Pass lead_id for LEAD mode
       });
+
+      // Add lead_id for LEAD mode
+      if (mode === "LEAD") {
+        transformedData.lead_id = eventId;
+      }
 
       console.log("✅ Data transformation completed");
 
@@ -618,7 +670,7 @@ export default function EventForm({ eventId, mode = "add" }) {
           return;
         } else if (response.data && response.data[0]?.validation_status) {
           dispatch(setSelectedSubmitItem(transformedData));
-          console.log("✅ Event data set for submission");
+          console.log(`✅ Event data set for submission - Mode: ${mode}`);
         } else {
           throw new Error("Offer/coupon validation failed");
         }
@@ -695,6 +747,14 @@ export default function EventForm({ eventId, mode = "add" }) {
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white">
+      <h2 className="text-2xl font-bold mb-4">
+        {mode === "edit"
+          ? "Edit Event"
+          : mode === "LEAD"
+          ? "Create Event from Lead"
+          : "Create Event"}
+      </h2>
+
       {/* Image Reset Warning Banner */}
       {imagesResetWarning && (
         <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
@@ -748,9 +808,15 @@ export default function EventForm({ eventId, mode = "add" }) {
           mode={mode}
           recordId={eventId}
           titleField="event_name"
-          excludeFromDraft={["id", "created_at"]}
+          excludeFromDraft={[
+            "id",
+            "created_at",
+            "thumbnail_image",
+            "banner_images",
+            "event_images",
+          ]}
           style={{ marginRight: 12, display: "inline-block" }}
-          enableAutoSave={mode !== "edit"}
+          enableAutoSave={mode !== "edit"} // Enable for both "add" and "LEAD"
           externalFormData={formData}
           onGetCompleteData={() => {
             const currentValues = form.getFieldsValue();
@@ -789,7 +855,6 @@ export default function EventForm({ eventId, mode = "add" }) {
 
             dispatch(setEventFormData(mergedData));
 
-            // Show warning if images were cleared during draft load
             const hasImages =
               mergedData.thumbnail_image?.length > 0 ||
               mergedData.banner_images?.length > 0 ||
@@ -847,9 +912,13 @@ export default function EventForm({ eventId, mode = "add" }) {
             {isLoading
               ? mode === "edit"
                 ? "Updating..."
+                : mode === "LEAD"
+                ? "Creating from Lead..."
                 : "Creating..."
               : mode === "edit"
               ? "Update Event"
+              : mode === "LEAD"
+              ? "Create from Lead"
               : "Create Event"}
           </Button>
         )}
