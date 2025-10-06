@@ -109,7 +109,9 @@ const EventsList = () => {
 
   const handleVerifyEvent = (data) => {
     dispatch(setScannerType(SCANNER_TYPES.event));
-    navigate(`${APP_PREFIX_PATH}/qr-scanner/${SCANNER_TYPES.event}`);
+    // navigate(`${APP_PREFIX_PATH}/qr-scanner/${SCANNER_TYPES.event}`);
+    navigate(`${APP_PREFIX_PATH}/qr-scanner/${SCANNER_TYPES.event}/${data?.id}`);
+
   };
 
   const handleVerifyAddon = (data) => {

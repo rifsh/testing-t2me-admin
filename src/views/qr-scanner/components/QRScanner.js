@@ -131,7 +131,7 @@ const QRScanner = (props) => {
     const addonListValidation = async () => {
         try {
             const result = await dispatch(
-                fetchTcketAddon({ booking_ticket_id: scanned?.booking_ticket_id })
+                fetchTcketAddon({ booking_ticket_id: scanned?.booking_ticket_id, event_id: eventId })
             ).unwrap();
             setScanStatus('success');
             setTimeout(() => {
@@ -148,6 +148,15 @@ const QRScanner = (props) => {
         }
     };
 
+    const normalEventValidation = async () => {
+        try {
+            console.log(scanned);
+
+        } catch (error) {
+
+        }
+    }
+
     useEffect(() => {
         if (!scanned || scanStatus !== 'scanning') return;
 
@@ -158,7 +167,7 @@ const QRScanner = (props) => {
                 addonListValidation();
             }
         } else {
-            message.warning('Event validation')
+            normalEventValidation()
             setScanStatus('idle');
         }
     }, [serviceType, scannerType, scanned, dispatch, scanStatus]);
