@@ -35,12 +35,22 @@ export const cosnumeTicketUsers = createAsyncThunk(
         }
     }
 );
-
 export const fetchTcketAddon = createAsyncThunk(
     "qr/fetchTcketAddon",
     async (pageData, { rejectWithValue }) => {
         try {
             const response = await QrVerificationService.getFoodData(pageData);
+            return response.data[0];
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Error");
+        }
+    }
+);
+export const verifyEventBooking = createAsyncThunk(
+    "qr/verifyEventBooking",
+    async ({ bookingType, bookingTicketId, eventId }, { rejectWithValue }) => {
+        try {
+            const response = await QrVerificationService.verifyEvenetBooking(bookingType, bookingTicketId, eventId);
             return response.data[0];
         } catch (err) {
             return rejectWithValue(err.response?.data?.message || "Error");

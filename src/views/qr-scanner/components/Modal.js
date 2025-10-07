@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, Tag, Card, Image, Divider } from 'antd';
 import {
     CalendarOutlined,
@@ -17,12 +17,14 @@ const AddOnsModal = ({ visible, onClose, eventData }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    // Fallback image in case of null/invalid URL
-    const fallbackImage = `${CDN_PATH}/default-placeholder.png`; // 👈 change to your actual placeholder asset
+    const fallbackImage = `${CDN_PATH}/default-placeholder.png`;
     const [imageSrc, setImageSrc] = useState(
         eventData?.thumbnail_image ? `${CDN_PATH}/${eventData.thumbnail_image}` : fallbackImage
     );
 
+    useEffect(() => {
+        setImageSrc(eventData?.thumbnail_image ? `${CDN_PATH}/${eventData.thumbnail_image}` : fallbackImage)
+    }, [eventData])
     if (!eventData) return null;
 
     const handleAddonClick = (addOn) => {
@@ -32,9 +34,9 @@ const AddOnsModal = ({ visible, onClose, eventData }) => {
     };
 
     const handleImageError = () => {
-        // Replace broken or invalid image URL with fallback
-        setImageSrc(fallbackImage);
+        // setImageSrc(fallbackImage);
     };
+
 
     return (
         <Modal
@@ -116,7 +118,6 @@ const AddOnsModal = ({ visible, onClose, eventData }) => {
                                             </div>
                                             <div>
                                                 <h4 className="font-medium text-gray-800">{addOn.name}</h4>
-                                                <p className="text-xs text-gray-500">ID: {addOn.id}</p>
                                             </div>
                                         </div>
                                     </Card>

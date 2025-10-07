@@ -2,6 +2,7 @@ import fetch from "auth/FetchInterceptor";
 import { ApiConstant } from "constants/ApiConstant";
 import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
+import { verifyEventBookingUtil } from "utils/qrScannerUtil";
 
 const QrVerificationService = {};
 
@@ -34,6 +35,16 @@ QrVerificationService.consumeUsers = function (data, bookingTicketId) {
         params,
         data: data,
     });
+};
+QrVerificationService.verifyEvenetBooking = async function (bookingType, bookingTicketId, eventId) {
+    return await verifyEventBookingUtil(bookingType, bookingTicketId, eventId);
+
+    // return fetch({
+    //     url: `${ApiConstant.CONSUME_USER_LIST}`,
+    //     method: "put",
+    //     params,
+    //     data: data,
+    // });
 };
 
 export default QrVerificationService;
