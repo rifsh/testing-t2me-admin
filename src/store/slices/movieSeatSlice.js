@@ -342,7 +342,7 @@ const movieSeatSlice = createSlice({
       const typeIndex = state.seatTypes.findIndex((type) => type.id === id);
       if (typeIndex !== -1) {
         state.seatTypes[typeIndex] = { id, label, basePrice, color };
-        
+
         // Update prices of all seats that use this seat type
         const newSeats = JSON.parse(JSON.stringify(state.seats));
         newSeats.forEach((row, rowIndex) => {
@@ -353,7 +353,7 @@ const movieSeatSlice = createSlice({
           });
         });
         state.seats = newSeats;
-        
+
         // Update used seat types
         state.usedSeatTypes = Utils.updateUsedSeatTypes(newSeats, state.seatTypes);
       }
@@ -625,8 +625,9 @@ const movieSeatSlice = createSlice({
             seatTypes: data.seat_data.seatTypes,
           },
         };
-        console.log(restructuredData, "restructuredData");
+        console.log(restructuredData?.seat_data?.seatTypes, "restructuredData");
         state.singleSeatStructure = restructuredData;
+        state.seatTypes = restructuredData?.seat_data?.seatTypes;
       })
       .addCase(getEventSeatStructureDetails.rejected, (state, action) => {
         state.loading = false;

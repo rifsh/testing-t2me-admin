@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addSeatType,
@@ -159,6 +159,11 @@ const TypeManager = () => {
     dispatch(setSelectedSeatType(typeId));
   };
 
+  useEffect(() => {
+    console.log("seatTypesTesting", seatTypes);
+
+  }, [seatTypes])
+
   const columns = [
     {
       title: "Type",
@@ -187,12 +192,12 @@ const TypeManager = () => {
       title: "Price",
       dataIndex: "basePrice",
       key: "basePrice",
-      render: (price, record) => (
+      render: (basePrice, record) => (
         <div
           className="cursor-pointer"
           onClick={() => handleSelectSeatType(record.id)}
         >
-          ${price.toFixed(2)}
+          {record?.venue?.name} {record?.basePrice.toFixed(2)}
         </div>
       ),
     },

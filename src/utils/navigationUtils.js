@@ -55,6 +55,7 @@ export const isFeatureEnabled = (featureFlag) => {
   
   const legacyMapping = {
     'is_reports_enabled': () => isCategoryEnabled('orders'),
+    'is_batchrun_enabled': () => isCategoryEnabled('batchrun'),
     'is_general_enabled': () => isSubcategoryEnabled('services', 'general'),
     'is_event_enabled': () => isSubcategoryEnabled('services', 'event'),
     'is_movie_enabled': () => isSubcategoryEnabled('services', 'movie'),

@@ -138,7 +138,7 @@ const MovieSeatList = () => {
     {
       title: "Seat Types",
       dataIndex: ["seat_data", "seatTypes"],
-      render: (seatTypes) => {
+      render: (seatTypes, seat_data) => {
         if (!seatTypes || !seatTypes.length) return "No seat types";
 
         return (
@@ -160,7 +160,7 @@ const MovieSeatList = () => {
                       />
                       {type.label}
                     </div>
-                    <div>Base Price: ${type.basePrice}</div>
+                    <div>Base Price: {seat_data?.venue?.place?.country?.currency_code} {type.basePrice}</div>
                   </div>
                 ),
               })),

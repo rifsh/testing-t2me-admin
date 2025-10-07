@@ -253,11 +253,9 @@ export default function SeatDetailsPage() {
                             key={seat.id || `${rowIndex}-${seatIndex}`}
                             className="w-8 h-8 flex items-center justify-center rounded-md text-xs font-medium text-white shadow-sm"
                             style={{ backgroundColor: seatType.color }}
-                            title={`${seat.rowLabel || ""}${
-                              seat.number || ""
-                            } - ${seatType.label} - $${
-                              seat.price || seatType.basePrice || 0
-                            }`}
+                            title={`${seat.rowLabel || ""}${seat.number || ""
+                              } - ${seatType.label} - $${seat.price || seatType.basePrice || 0
+                              }`}
                           >
                             {seat.number || ""}
                           </div>
@@ -282,7 +280,7 @@ export default function SeatDetailsPage() {
                   style={{ backgroundColor: type.color }}
                 ></div>
                 <span className="font-medium">
-                  {type.label} - ${type.basePrice || 0}
+                  {type.label} - {venue?.place?.country?.currency_code} {type.basePrice || 0}
                 </span>
               </div>
             ))}
