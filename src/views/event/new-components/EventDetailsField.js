@@ -94,7 +94,7 @@ const EventDetailsField = ({ mode }) => {
                 <ResizedImgePicker
                   maxCount={1}
                   targetResolution={ThumbnailImageResolutions.EVENT}
-                  beforeUpload={() => false} // Prevent auto upload
+                  beforeUpload={() => true} // Prevent auto upload
                 />
               </antd.Form.Item>
               <Text type="secondary" style={{ fontSize: 11 }}>
