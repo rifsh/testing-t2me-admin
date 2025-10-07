@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, Tag, Card, Image, Divider } from 'antd';
 import {
     CalendarOutlined,
     EnvironmentOutlined,
     TagOutlined,
-    InfoCircleOutlined
+    InfoCircleOutlined,
+    PictureOutlined
 } from '@ant-design/icons';
 import { APP_PREFIX_PATH, CDN_PATH } from 'configs/AppConfig';
 import { useNavigate } from 'react-router-dom';
@@ -16,13 +17,26 @@ const AddOnsModal = ({ visible, onClose, eventData }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
+    const fallbackImage = `${CDN_PATH}/default-placeholder.png`;
+    const [imageSrc, setImageSrc] = useState(
+        eventData?.thumbnail_image ? `${CDN_PATH}/${eventData.thumbnail_image}` : fallbackImage
+    );
+
+    useEffect(() => {
+        setImageSrc(eventData?.thumbnail_image ? `${CDN_PATH}/${eventData.thumbnail_image}` : fallbackImage)
+    }, [eventData])
     if (!eventData) return null;
 
-    const handleAddonClikc = () => {
+    const handleAddonClick = (addOn) => {
         dispatch(setServiceType(ENTRY_TYPES.addon));
         dispatch(setScannerType(SCANNER_TYPES.addon));
         navigate(`${APP_PREFIX_PATH}/qr-scanner/${SCANNER_TYPES.addon}/${eventData?.id}`);
-    }
+    };
+
+    const handleImageError = () => {
+        // setImageSrc(fallbackImage);
+    };
+
 
     return (
         <Modal
@@ -36,34 +50,49 @@ const AddOnsModal = ({ visible, onClose, eventData }) => {
             <div className="flex flex-col md:flex-row gap-6">
                 {/* Event Image */}
                 <div className="w-full md:w-2/5">
-                    <Image
-                        src={`${CDN_PATH}/${eventData.thumbnail_image}`}
-                        alt={eventData.event_name}
-                        className="rounded-lg object-cover h-48 w-full"
-                        preview={false}
-                    />
+                    <div className="rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center h-48">
+                        {imageSrc ? (
+                            <Image
+                                src={imageSrc}
+                                alt={eventData.event_name}
+                                className="object-cover h-48 w-full"
+                                preview={false}
+                                onError={handleImageError}
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center text-gray-400">
+                                <PictureOutlined className="text-3xl mb-2" />
+                                <p className="text-sm">No image available</p>
+                            </div>
+                        )}
+                    </div>
 
                     <div className="mt-4 space-y-2">
                         <div className="flex items-center text-gray-600">
                             <CalendarOutlined className="mr-2" />
-                            <span>Created: {new Date(eventData.created_at).toLocaleDateString()}</span>
+                            <span>
+                                Created:{" "}
+                                {eventData.created_at
+                                    ? new Date(eventData.created_at).toLocaleDateString()
+                                    : "N/A"}
+                            </span>
                         </div>
 
                         <div className="flex items-center text-gray-600">
                             <EnvironmentOutlined className="mr-2" />
-                            <span>Venue: {eventData.venues[0]?.name}</span>
+                            <span>Venue: {eventData.venues?.[0]?.name || "N/A"}</span>
                         </div>
 
                         <div className="flex items-center text-gray-600">
                             <TagOutlined className="mr-2" />
-                            <span>Category: {eventData.category.name}</span>
+                            <span>Category: {eventData.category?.name || "N/A"}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Event Details */}
                 <div className="w-full md:w-3/5">
-                    <p className="text-gray-700 mb-4">{eventData.description}</p>
+                    <p className="text-gray-700 mb-4">{eventData.description || "No description available."}</p>
 
                     <Divider className="my-4" />
 
@@ -71,7 +100,7 @@ const AddOnsModal = ({ visible, onClose, eventData }) => {
                     <div>
                         <h3 className="text-lg font-semibold flex items-center mb-3">
                             <InfoCircleOutlined className="mr-2 text-blue-500" />
-                            Choose a Add-On
+                            Choose an Add-On
                         </h3>
 
                         {eventData.jsonb_add_ons && eventData.jsonb_add_ons.length > 0 ? (
@@ -81,7 +110,7 @@ const AddOnsModal = ({ visible, onClose, eventData }) => {
                                         key={index}
                                         size="small"
                                         className="border-blue-100 hover:border-blue-300 transition-colors shadow-sm cursor-pointer"
-                                        onClick={() => handleAddonClikc(addOn)}
+                                        onClick={() => handleAddonClick(addOn)}
                                     >
                                         <div className="flex items-center">
                                             <div className="bg-blue-100 p-2 rounded-full mr-3">
@@ -89,7 +118,6 @@ const AddOnsModal = ({ visible, onClose, eventData }) => {
                                             </div>
                                             <div>
                                                 <h4 className="font-medium text-gray-800">{addOn.name}</h4>
-                                                <p className="text-xs text-gray-500">ID: {addOn.id}</p>
                                             </div>
                                         </div>
                                     </Card>

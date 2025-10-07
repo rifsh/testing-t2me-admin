@@ -322,4 +322,9 @@ export const ApiConstant = {
     "/api/v1/event/add_on/secured/authorize/event/booking_ticket/addon_user_and_food/user",
   ADDON_LIST:
     "/api/v1/event/add_on/secured/scan/event/booking_ticket/addon_user_and_food/food",
+
+  //Event-booking-verification
+  EVENT_TICKET_BOOKNG_VERIFICATION: "/api/v1/event/booking/ticket/public/booking/scan/verify",
+  EVENT_SEAT_BOOKNG_VERIFICATION: "/api/v1/event/booking/seat/public/booking/scan/verify",
+  MOVIE_BOOKNG_VERIFICATION: "/api/v1/movie/booking/public/theatre/booking/scan/verify",
 };
