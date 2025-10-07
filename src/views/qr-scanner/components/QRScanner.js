@@ -193,7 +193,6 @@ const QRScanner = (props) => {
             if (scannedData?.booking_qr_uuid && scannedData?.booking_ticket_id) {
                 const bookingTicketId = scannedData?.booking_ticket_id;
                 const bookingType = scannedData?.booking_qr_uuid.split('-')[0];
-
                 const response = await dispatch(
                     verifyEventBooking({ bookingType, bookingTicketId, eventId })
                 ).unwrap();

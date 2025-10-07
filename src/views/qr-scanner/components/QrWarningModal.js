@@ -25,9 +25,6 @@ const QrWarningModal = ({ isVisible, onClose, onRetry, errorMessage }) => {
                     <Button type="primary" icon={<ReloadOutlined />} onClick={onRetry}>
                         Scan Again
                     </Button>
-                    <Button onClick={onClose}>
-                        Cancel
-                    </Button>
                 </div>
             </div>
         </Modal>

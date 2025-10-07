@@ -53,6 +53,7 @@ export const verifyEventBooking = createAsyncThunk(
             const response = await QrVerificationService.verifyEvenetBooking(bookingType, bookingTicketId, eventId);
             return response.data[0];
         } catch (err) {
+            console.log("API_ERROR",err);
             return rejectWithValue(err.response?.data?.message || "Error");
         }
     }
@@ -105,6 +106,19 @@ const qrVerificationSlice = createSlice({
             })
             .addCase(cosnumeTicketUsers.rejected, (state, action) => {
                 state.message = action.payload;
+                state.submitLoading = false;
+            })
+            .addCase(verifyEventBooking.pending, (state) => {
+                state.submitLoading = true;
+            })
+            .addCase(verifyEventBooking.fulfilled, (state, action) => {
+                state.submitLoading = false;
+                state.response = action.payload;
+            })
+            .addCase(verifyEventBooking.rejected, (state, action) => {
+                state.message = action.payload;
+                console.log("action.payload", action.payload);
+
                 state.submitLoading = false;
             })
     }
