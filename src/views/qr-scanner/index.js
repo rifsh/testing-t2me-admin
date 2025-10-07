@@ -2,14 +2,16 @@ import { useState, useRef, useEffect } from "react";
 import jsQR from "jsqr";
 import LeftContentSection from "./components/LeftContentSection";
 import RightScannerSection from "./components/RightScannerSection";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { PiTrayArrowUpDuotone } from "react-icons/pi";
 import { setScannerType } from "store/slices/qrVerificationSlice";
 import { useDispatch } from "react-redux";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 
 const ScannerApp = () => {
     const dispatch = useDispatch();
     const { type, eventId } = useParams();
+    const navigate = useNavigate();
     const [processing, setProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
     const [extractedData, setExtractedData] = useState({
@@ -119,6 +121,10 @@ const ScannerApp = () => {
         dispatch(setScannerType(type));
     }, [type])
 
+    const handleBackBtn = () => {
+        navigate(`${APP_PREFIX_PATH}/event/list`)
+    }
+
     return (
         <div className="min-h-screen p-5 flex justify-center items-center" style={backgroundGradientStyle}>
             {/* Hidden canvas for QR code processing */}
@@ -134,7 +140,7 @@ const ScannerApp = () => {
                     handleFileUpload={handleFileUpload}
                     handleDataChange={handleDataChange}
                     error={error}
-
+                    onBack={handleBackBtn}
                 />
 
                 <RightScannerSection

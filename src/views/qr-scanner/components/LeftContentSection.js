@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
 import { ENTRY_TYPES, SCANNER_TYPES } from 'constants/QrConstants';
 import { useDispatch, useSelector } from 'react-redux';
 import { setServiceType } from 'store/slices/qrVerificationSlice';
@@ -11,7 +12,8 @@ const LeftContentSection = ({
     extractedData,
     uploadedFile,
     handleFileUpload,
-    handleDataChange
+    handleDataChange,
+    onBack
 }) => {
     const dispatch = useDispatch();
     const { serviceType } = useSelector((state) => state.qr);
@@ -64,12 +66,32 @@ const LeftContentSection = ({
 
     return (
         <motion.div
-            className="flex-1 p-10 flex flex-col justify-center"
+            className="flex-1 p-10 flex flex-col justify-center relative"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
         >
-            <motion.div className="flex items-center justify-start mb-4" variants={itemVariants}>
+            {/* Attractive Back Button */}
+            <motion.button
+                onClick={onBack}
+                className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md hover:shadow-xl border border-gray-200 group transition-all duration-300"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                whileTap={{ scale: 0.95 }}
+            >
+                <motion.div
+                    className="w-6 h-6 rounded-full bg-gradient-to-r from-[#f20c32] to-[#ff3a54] flex items-center justify-center"
+                    transition={{ duration: 0.6 }}
+                >
+                    <ArrowLeft className="w-4 h-4 text-white" />
+                </motion.div>
+                <span className="text-sm font-semibold text-gray-700 group-hover:text-[#f20c32] transition-colors duration-300">
+                    Back
+                </span>
+            </motion.button>
+
+            <motion.div className="flex items-center justify-start mb-4 mt-8" variants={itemVariants}>
                 <motion.img
                     src="/img/logos/C_cropped_V Logo-8.png"
                     className="w-20 h-10 mr-3"
@@ -81,7 +103,7 @@ const LeftContentSection = ({
             </motion.div>
 
             {/* Modern Service Type Toggle */}
-            {scannerType === SCANNER_TYPES.addon && < motion.div className="mb-8" variants={itemVariants}>
+            {scannerType === SCANNER_TYPES.addon && <motion.div className="mb-8" variants={itemVariants}>
                 <label className="block text-gray-700 text-sm font-bold mb-4 text-center">
                     Select Service Type
                 </label>
@@ -152,7 +174,6 @@ const LeftContentSection = ({
                             ? 'Scanning for event entry validation'
                             : 'Scanning to unlock add-on services and experiences'}
                     </p>
-
                 </AnimatePresence>
             </motion.div>}
 
@@ -162,37 +183,6 @@ const LeftContentSection = ({
             >
                 Scan QR code to extract attendee data and unlock <b>add-on services</b> during events.
             </motion.p>
-
-            {/* File Upload Section */}
-            {/* <motion.div className="mb-6" variants={itemVariants}>
-                <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Upload QR Code Image
-                </label>
-                <div className="relative">
-                    <motion.input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#feebee] file:text-[#f20c32] hover:file:bg-[#fcc6cf] file:cursor-pointer"
-                        disabled={processing}
-                        whileHover={{ scale: 1.01 }}
-                        whileFocus={{ scale: 1.01 }}
-                    />
-                </div>
-                <AnimatePresence>
-                    {uploadedFile && (
-                        <motion.p
-                            className="text-sm text-gray-600 mt-1"
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            Uploaded: {uploadedFile.name}
-                        </motion.p>
-                    )}
-                </AnimatePresence>
-            </motion.div> */}
 
             {/* Processing Progress */}
             <AnimatePresence>
@@ -219,7 +209,7 @@ const LeftContentSection = ({
                     </motion.div>
                 )}
             </AnimatePresence>
-        </motion.div >
+        </motion.div>
     );
 };
 
