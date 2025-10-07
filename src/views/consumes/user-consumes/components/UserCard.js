@@ -45,40 +45,44 @@ const UserCard = ({ user, bookingIndex, userIndex, toggleAttendance }) => {
                                 </div>
                             )}
                         </div>
-                        {/* {user.user_id && (
-                            <div className="text-xs text-gray-500 mt-1">
-                                User ID: {user.user_id}
-                            </div>
-                        )} */}
                     </div>
                 </div>
 
-                {/* Button / Status */}
+                {/* Checkbox / Status */}
                 {isLocked ? (
-                    <div className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium bg-green-500 text-white">
+                    <div className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium bg-green-600 text-white">
                         <CheckCircle2 className="w-4 h-4" />
-                        <span>Verified</span>
+                        <span>Consumed</span>
                     </div>
                 ) : (
-                    <button
-                        onClick={() => toggleAttendance(bookingIndex, userIndex)}
-                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${isPresent
-                            ? 'bg-green-500 hover:bg-green-600 text-white'
-                            : 'bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:brightness-110'
-                            }`}
-                    >
-                        {isPresent ? (
-                            <>
-                                <CheckCircle2 className="w-4 h-4" />
-                                <span>Present</span>
-                            </>
-                        ) : (
-                            <>
-                                <Clock className="w-4 h-4" />
-                                <span>Mark Present</span>
-                            </>
-                        )}
-                    </button>
+                    <label className="relative flex items-center cursor-pointer group">
+                        <input
+                            type="checkbox"
+                            checked={isPresent}
+                            onChange={() => toggleAttendance(bookingIndex, userIndex)}
+                            className="absolute opacity-0 w-0 h-0"
+                            disabled={isLocked}
+                        />
+                        <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 transform group-hover:scale-110 ${isPresent
+                                    ? 'bg-green-500 shadow-lg shadow-green-500/30'
+                                    : ' border-2 border-[#8c0a1f]'
+                                }`}
+                        >
+                            {isPresent ? (
+                                <Check className="w-5 h-5 text-white font-bold" />
+                            ) : (
+                                <div className="w-5 h-5 bg-white/20 rounded-md flex items-center justify-center">
+                                    <div className="w-3 h-3 bg-white rounded-sm opacity-80"></div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Tooltip */}
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                            {isPresent ? 'Mark Absent' : 'Mark Present'}
+                        </div>
+                    </label>
                 )}
             </div>
 
@@ -91,6 +95,5 @@ const UserCard = ({ user, bookingIndex, userIndex, toggleAttendance }) => {
         </div>
     );
 };
-
 
 export default UserCard;

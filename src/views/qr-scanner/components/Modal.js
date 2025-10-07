@@ -118,6 +118,7 @@ const AddOnsModal = ({ visible, onClose, eventData }) => {
                                             </div>
                                             <div>
                                                 <h4 className="font-medium text-gray-800">{addOn.name}</h4>
+                                                <p className="text-xs text-gray-500">Name: {addOn.schedule_name}</p>
                                             </div>
                                         </div>
                                     </Card>
