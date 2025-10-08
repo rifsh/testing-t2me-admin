@@ -1,6 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Select, Input, Button, Menu, message, Collapse, Tooltip, Space, } from "antd";
-import { EyeOutlined, FormOutlined, EditOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import {
+  Card,
+  Table,
+  Select,
+  Input,
+  Button,
+  Menu,
+  message,
+  Collapse,
+  Tooltip,
+  Space,
+  Modal,
+} from "antd";
+import {
+  EyeOutlined,
+  FormOutlined,
+  EditOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,6 +28,7 @@ import {
   setDialogVisible,
   setEditItemId,
   editEventStatus,
+  checkEventEditAvailability,
 } from "store/slices/eventSlice";
 import { setDialogVisible as setStatusDialogVisible } from "store/slices/modalSlice";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
@@ -26,12 +44,16 @@ import { UserRoleConstants } from "constants/UserRoleConstant";
 import { TextConstants } from "constants/TextConstant";
 import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
-import { resetSearchValue, setGlobalSearchValue } from "store/slices/fliterSlice";
+import {
+  resetSearchValue,
+  setGlobalSearchValue,
+} from "store/slices/fliterSlice";
 import { PERMISSIONS, ROLES } from "constants/RolesPermissionConstants";
 import usePermissions from "utils/hooks/usePermissions";
 import AddOnsModal from "views/qr-scanner/components/Modal";
 import { setScannerType } from "store/slices/qrVerificationSlice";
 import { SCANNER_TYPES } from "constants/QrConstants";
+import { checkScheduleEdit } from "store/slices/scheduleSlice";
 const { Panel } = Collapse;
 
 const { Option } = Select;
@@ -54,14 +76,14 @@ const EventsList = () => {
     editItemId,
     responseImpactData,
   } = useSelector((state) => state.event);
-  console.log(pagination, 'pag');
+  console.log(pagination, "pag");
 
   const { responseData } = useSelector((state) => state.modalSlice);
   const eventParams = {
     size: DEFAULT_PAGE_SIZE.size,
     page: DEFAULT_PAGE_SIZE.page,
     event_type: EVENT_TYPES.event,
-  }
+  };
   const handlePagination = usePaginationHook(fetchAllEvent);
   const { hasPermission, hasAnyPermission } = usePermissions();
   const [modalVisible, setModalVisible] = useState(false);
@@ -96,7 +118,25 @@ const EventsList = () => {
       }
     }
     dispatch(setEditItemId(id));
-    dispatch(setDialogVisible(true));
+    try {
+      const result = await dispatch(
+        checkEventEditAvailability({ event_id: id })
+      ).unwrap();
+
+      if (result?.editable === true) {
+        navigate(`${APP_PREFIX_PATH}/schedule/edit/${id}`);
+      } else {
+        Modal.error({
+          content:
+            "Sorry, this event already has bookings in all time slots. You cannot edit this schedule.",
+        });
+      }
+    } catch (error) {
+      console.error("Error checking schedule edit:", error);
+      Modal.error({
+        content: "Something went wrong while checking the schedule.",
+      });
+    }
   };
 
   const handleUpdateStatus = (item) => {
@@ -110,8 +150,9 @@ const EventsList = () => {
   const handleVerifyEvent = (data) => {
     dispatch(setScannerType(SCANNER_TYPES.event));
     // navigate(`${APP_PREFIX_PATH}/qr-scanner/${SCANNER_TYPES.event}`);
-    navigate(`${APP_PREFIX_PATH}/qr-scanner/${SCANNER_TYPES.event}/${data?.id}`);
-
+    navigate(
+      `${APP_PREFIX_PATH}/qr-scanner/${SCANNER_TYPES.event}/${data?.id}`
+    );
   };
 
   const handleVerifyAddon = (data) => {
@@ -123,7 +164,6 @@ const EventsList = () => {
     setSelectedEvent(event);
     setModalVisible(true);
   };
-
 
   const handleModalSubmit = async () => {
     dispatch(setModalLoading(true));
@@ -137,18 +177,26 @@ const EventsList = () => {
   };
   const dropdownMenu = (row) => (
     <Menu>
-      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.GET_EVENT_DETAIL) && <Menu.Item>
-        <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
-          <EyeOutlined />
-          <span className="ml-2">View Details</span>
-        </Flex>
-      </Menu.Item>}
-      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT) && <Menu.Item>
-        <Flex alignItems="center" onClick={() => handleEditEvent(row.id)}>
-          <EditOutlined />
-          <span className="ml-2">Edit Event</span>
-        </Flex>
-      </Menu.Item>}
+      {hasPermission(
+        PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.GET_EVENT_DETAIL
+      ) && (
+        <Menu.Item>
+          <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+            <EyeOutlined />
+            <span className="ml-2">View Details</span>
+          </Flex>
+        </Menu.Item>
+      )}
+      {hasPermission(
+        PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT
+      ) && (
+        <Menu.Item>
+          <Flex alignItems="center" onClick={() => handleEditEvent(row.id)}>
+            <EditOutlined />
+            <span className="ml-2">Edit Event</span>
+          </Flex>
+        </Menu.Item>
+      )}
       {/* {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT) && <Menu.Item>
         <Flex alignItems="center" onClick={() => {
           navigate(`${APP_PREFIX_PATH}/qr-scanner`);
@@ -215,40 +263,41 @@ const EventsList = () => {
       title: "",
       dataIndex: "qrHandler",
       width: 200,
-      align: 'center',
+      align: "center",
       render: (_, elm) => (
-        <Space size={'small'} className="text-right">
+        <Space size={"small"} className="text-right">
           {/* Verify Event Button */}
-          {currentUser?.role_id === ROLES.EVENT_ORGANIZER && elm?.jsonb_add_ons?.length > 0 && (
-            <>
-              <Tooltip title="Verify Event">
-                <Button
-                  type="primary"
-                  size="small"
-                  icon={<CheckCircleOutlined />}
-                  onClick={() => handleVerifyEvent(elm)}
-                  style={{
-                    borderRadius: '6px',
-                    background: '#52c41a',
-                    borderColor: '#52c41a'
-                  }}
-                >
-                  Verify
-                </Button>
-              </Tooltip>
+          {currentUser?.role_id === ROLES.EVENT_ORGANIZER &&
+            elm?.jsonb_add_ons?.length > 0 && (
+              <>
+                <Tooltip title="Verify Event">
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<CheckCircleOutlined />}
+                    onClick={() => handleVerifyEvent(elm)}
+                    style={{
+                      borderRadius: "6px",
+                      background: "#52c41a",
+                      borderColor: "#52c41a",
+                    }}
+                  >
+                    Verify
+                  </Button>
+                </Tooltip>
 
-              <Tooltip title="Verify Addon">
-                <Button
-                  size="small"
-                  icon={<CheckCircleOutlined />}
-                  onClick={() => handleVerifyAddon(elm)}
-                  style={{ borderRadius: '6px' }}
-                >
-                  Verify Addon
-                </Button>
-              </Tooltip>
-            </>
-          )}
+                <Tooltip title="Verify Addon">
+                  <Button
+                    size="small"
+                    icon={<CheckCircleOutlined />}
+                    onClick={() => handleVerifyAddon(elm)}
+                    style={{ borderRadius: "6px" }}
+                  >
+                    Verify Addon
+                  </Button>
+                </Tooltip>
+              </>
+            )}
         </Space>
       ),
     },
@@ -278,7 +327,7 @@ const EventsList = () => {
           page: 1,
           size: 10,
           active: activeStatus,
-          event_type: EVENT_TYPES.event
+          event_type: EVENT_TYPES.event,
         })
       );
     }
@@ -293,7 +342,13 @@ const EventsList = () => {
       console.log("is empty search");
       dispatch(resetSearchValue());
       dispatch(
-        fetchAllEvent({ search: null, page: 1, size: 10, active: activeStatus, event_type: EVENT_TYPES.event })
+        fetchAllEvent({
+          search: null,
+          page: 1,
+          size: 10,
+          active: activeStatus,
+          event_type: EVENT_TYPES.event,
+        })
       );
     }
   };
@@ -301,7 +356,13 @@ const EventsList = () => {
   const handleShowStatus = (status) => {
     setactiveStatus(status);
     dispatch(
-      fetchAllEvent({ search: searchTerm, page: 1, size: 10, active: status, event_type: EVENT_TYPES.event })
+      fetchAllEvent({
+        search: searchTerm,
+        page: 1,
+        size: 10,
+        active: status,
+        event_type: EVENT_TYPES.event,
+      })
     );
     // dispatch(filterEvent({ searchTerm: null, status }));
   };
@@ -321,7 +382,6 @@ const EventsList = () => {
       })
     );
   };
-
 
   return (
     <Card>
@@ -356,7 +416,9 @@ const EventsList = () => {
           </div>
         </Flex>
         <div>
-          {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.ADD_EVENT) &&
+          {hasPermission(
+            PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.ADD_EVENT
+          ) && (
             <Button
               type="primary"
               icon={<FormOutlined />}
@@ -364,7 +426,8 @@ const EventsList = () => {
               onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
             >
               Add Event
-            </Button>}
+            </Button>
+          )}
         </div>
       </Flex>
       <div className="table-responsive">
@@ -377,7 +440,8 @@ const EventsList = () => {
             current: pagination.page,
             pageSize: pagination.size,
             total: pagination.total,
-            onChange: (page, pageSize) => handlePagination(page, pageSize, EVENT_TYPES.event),
+            onChange: (page, pageSize) =>
+              handlePagination(page, pageSize, EVENT_TYPES.event),
           }}
         />
       </div>
@@ -444,7 +508,10 @@ const EventsList = () => {
         .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-header {
           padding: 8px 12px !important;
         }
-        .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
+        .ant-collapse-ghost
+          > .ant-collapse-item
+          > .ant-collapse-content
+          > .ant-collapse-content-box {
           padding: 8px 12px !important;
         }
       `}</style>
