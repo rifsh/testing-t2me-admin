@@ -791,8 +791,18 @@ class Utils {
           formData.append("additional_booking_details", JSON.stringify(value));
           return;
         }
+        if (key === "seat_structure") {
+          formData.append("seat_structure", JSON.stringify(value));
+          return;
+        }
+
         if (key === "event_seat_structure_id") {
-          formData.append("event_seat_structure_id", JSON.stringify(value));
+          // Append each seat ID individually for FastAPI to parse as List[int]
+          if (Array.isArray(value) && value.length > 0) {
+            value.forEach((id) =>
+              formData.append("event_seat_structure_id", id)
+            );
+          }
           return;
         }
         if (key === "add_on_services") {
