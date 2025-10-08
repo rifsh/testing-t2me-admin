@@ -99,6 +99,8 @@ export const editSchedule = createAsyncThunk(
       const response = await ScheduleService.editSchedule(data, action);
       return response.status;
     } catch (error) {
+      console.log("errortesting", error);
+
       return rejectWithValue(error.message || "Failed to edit event");
     }
   }
