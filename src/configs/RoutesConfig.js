@@ -1360,7 +1360,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "food.consumes": {
     key: "food.consumes.list",
-    path: `${APP_PREFIX_PATH}/food/consumes/:id`,
+    path: `${APP_PREFIX_PATH}/food/consumes/:id/:eventId`,
     component: React.lazy(() =>
       import(
         "views/consumes/food-consumes/list-food"

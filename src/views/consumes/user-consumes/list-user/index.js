@@ -12,7 +12,6 @@ const ConsumeUserList = () => {
     const dispatch = useDispatch();
     const { id, eventId } = useParams();
     const { loading, submitLoading, response } = useSelector((state) => state.qr);
-
     const [attendanceData, setAttendanceData] = useState([]);
 
     useEffect(() => {
@@ -46,10 +45,10 @@ const ConsumeUserList = () => {
                     ? {
                         ...booking,
                         jsonb_data: booking.jsonb_data.map((user, uIndex) =>
-                            uIndex === userIndex && !user.consumed // allow toggle only if not permanently consumed
+                            uIndex === userIndex && !user.consumed 
                                 ? {
                                     ...user,
-                                    tempConsumed: !user.tempConsumed, // flip only temp field
+                                    tempConsumed: !user.tempConsumed,
                                 }
                                 : user
                         ),
@@ -90,8 +89,7 @@ const ConsumeUserList = () => {
                     bookingTicketId: booking.booking_ticket_id,
                 })
             ).unwrap();
-
-            console.log("Submitted Attendance Data:", response);
+            dispatch(fetchTcketUsers({ booking_ticket_id: id, event_id: eventId }));
         } catch (error) {
             console.log('Somthing went wrong', error);
         }

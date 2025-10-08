@@ -11,7 +11,7 @@ import QrWarningModal from './QrWarningModal';
 
 const QRScanner = (props) => {
     const dispatch = useDispatch();
-    const { eventId } = useParams();
+    const { type, eventId } = useParams();
     const navigate = useNavigate();
     const videoElementRef = useRef(null);
     const [scanned, setScannedText] = useState('');
@@ -19,13 +19,13 @@ const QRScanner = (props) => {
     const [showWarningModal, setShowWarningModal] = useState(false);
     const [hasPermission, setHasPermission] = useState(null);
     const [cameraError, setCameraError] = useState(null);
-    const [scanStatus, setScanStatus] = useState('idle'); // 'idle', 'scanning', 'success', 'error'
+    const [scanStatus, setScanStatus] = useState('idle');
     const [errorMessage, setErrorMessage] = useState('');
     const qrScannerRef = useRef(null);
-    const isProcessingRef = useRef(false); // Prevent multiple simultaneous scans
+    const isProcessingRef = useRef(false);
     const { serviceType, scannerType } = useSelector((state) => state.qr);
+    const serviceTypeRef = useRef(serviceType);
 
-    // Initialize scanner only once
     useEffect(() => {
         const video = videoElementRef.current;
         if (!video) return;
@@ -82,7 +82,11 @@ const QRScanner = (props) => {
                 qrScannerRef.current = null;
             }
         };
-    }, []); // Only run once on mount
+    }, []);
+
+    useEffect(() => {
+        serviceTypeRef.current = serviceType;
+    }, [serviceType]);
 
     // Handle QR scan result
     const handleQRScan = (result) => {
@@ -127,8 +131,8 @@ const QRScanner = (props) => {
     // Process scanned data based on scanner type
     const processScannedData = async (scannedData) => {
         try {
-            if (scannerType === SCANNER_TYPES.addon) {
-                if (serviceType === ENTRY_TYPES.user) {
+            if (type === SCANNER_TYPES.addon) {
+                if (serviceTypeRef.current === ENTRY_TYPES.user) {
                     await userListValidation(scannedData);
                 } else {
                     await addonListValidation(scannedData);
@@ -136,7 +140,11 @@ const QRScanner = (props) => {
             } else {
                 await normalEventValidation(scannedData);
             }
+            console.log('AddonChecking', scannedData);
+
         } catch (error) {
+            console.log('AddonChecking', scannedData);
+
             console.error('Error processing scan:', error);
             setScanStatus('error');
             setErrorMessage(error.message || "Processing failed");
@@ -181,7 +189,7 @@ const QRScanner = (props) => {
             message.success("Ticket verified successfully!");
 
             setTimeout(() => {
-                navigate(`${APP_PREFIX_PATH}/food/consumes/${scannedData?.booking_ticket_id}`);
+                navigate(`${APP_PREFIX_PATH}/food/consumes/${scannedData?.booking_ticket_id}/${eventId}`);
             }, 1000);
         } catch (err) {
             throw err;
@@ -196,7 +204,7 @@ const QRScanner = (props) => {
                 const response = await dispatch(
                     verifyEventBooking({ bookingType, bookingTicketId, eventId })
                 ).unwrap();
-                console.log("eventValidationTest",response);
+                console.log("eventValidationTest", response);
 
                 setScanStatus('success');
                 message.success("Ticket verified successfully!");
