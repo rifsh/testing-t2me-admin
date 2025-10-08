@@ -84,7 +84,8 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
   const availableTypes = availableTicketTyps?.available_types || [];
   const availableAddOns = addOnServiceList?.available_add_ons || [];
 
-  // Initialize form with existing data
+  // In FormCard.jsx - Update the useEffect that initializes form data
+
   useEffect(() => {
     if (scheduleFormData && Object.keys(scheduleFormData).length > 0) {
       console.log(
@@ -110,12 +111,48 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
       );
       setIsPaymentRequired(scheduleFormData.payment_required !== false);
 
-      // Handle add-ons safely
-      if (scheduleFormData.add_ons?.length > 0) {
-        const addOnNames = scheduleFormData.add_ons.map((addon) =>
-          typeof addon === "string" ? addon : addon.name
-        );
-        setSelectedAddOns(addOnNames);
+      // FIXED: Handle add-ons properly - check both formats
+      if (scheduleFormData.add_ons) {
+        let addOnNames = [];
+
+        if (Array.isArray(scheduleFormData.add_ons)) {
+          addOnNames = scheduleFormData.add_ons
+            .map((addon) => {
+              // Handle both string format and object format
+              if (typeof addon === "string") {
+                return addon;
+              } else if (addon && addon.name) {
+                return addon.name;
+              } else if (addon && typeof addon === "object") {
+                // Try to extract name from various possible structures
+                return addon.name || addon.addon_name || null;
+              }
+              return null;
+            })
+            .filter(Boolean);
+        }
+
+        console.log("📌 Setting add-ons from scheduleFormData:", addOnNames);
+        console.log("📌 Original add_ons data:", scheduleFormData.add_ons);
+
+        if (addOnNames.length > 0) {
+          setSelectedAddOns(addOnNames);
+
+          // CRITICAL: Also dispatch to Redux
+          const addOnsData = availableAddOns
+            ?.filter((addon) => addOnNames.includes(addon.name))
+            .map((addon) => ({
+              name: addon.name,
+              status: true,
+              id: addon.id,
+              price: addon.price,
+            }));
+
+          if (addOnsData && addOnsData.length > 0) {
+            console.log("📌 Dispatching add-ons to Redux:", addOnsData);
+            dispatch(setAddOnServie(addOnsData));
+          }
+        }
       }
 
       // Find and set selected event if event_id exists
@@ -128,7 +165,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
         }
       }
     }
-  }, [scheduleFormData, form, dispatch, filteredEvents]);
+  }, [scheduleFormData, form, dispatch, filteredEvents, availableAddOns]);
 
   // Fetch initial data
   useEffect(() => {

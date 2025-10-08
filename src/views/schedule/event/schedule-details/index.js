@@ -30,6 +30,8 @@ import {
   FaCalendarDay,
   FaPercent,
   FaRupeeSign,
+  FaUtensils,
+  FaPuzzlePiece,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSingleSchedules } from "store/slices/scheduleSlice";
@@ -51,6 +53,7 @@ const ScheduleDetails = () => {
   const { scheduleDetails, loading } = useSelector((state) => state.schedules);
   const [rows, setRows] = useState(2);
   const [expanded, setExpanded] = useState(false);
+
   useEffect(() => {
     if (scheduleId) {
       dispatch(fetchSingleSchedules({ id: scheduleId }));
@@ -134,19 +137,12 @@ const ScheduleDetails = () => {
 
   const offerColumns = [
     {
-      title: "Offersssss",
+      title: "Offer",
       dataIndex: ["offer", "name"],
       key: "name",
       render: (text, record) => (
         <div className="flex items-center">
           {record.offer.thumbnail_image && (
-            // <Image
-            //   src={`${CDN_PATH}/${record.offer.thumbnail_image}`}
-            //   width={40}
-            //   height={40}
-            //   className="rounded mr-2"
-            //   preview={false}
-            // />
             <CDNImage
               src={record.offer.thumbnail_image}
               alt={`Image Thumbnail`}
@@ -154,7 +150,14 @@ const ScheduleDetails = () => {
               width={80}
             />
           )}
-          <Text strong>{text}</Text>
+          <div className="ml-2">
+            <Text strong>{text}</Text>
+            {record.offer.id && (
+              <Text className="block text-gray-500 text-xs">
+                ID: {record.offer.id}
+              </Text>
+            )}
+          </div>
         </div>
       ),
     },
@@ -184,6 +187,80 @@ const ScheduleDetails = () => {
       dataIndex: ["offer", "status"],
       key: "status",
       render: (status, record) => (
+        <Tag color={status ? "green" : "red"}>
+          {status ? "Active" : "Inactive"}
+        </Tag>
+      ),
+    },
+  ];
+
+  // Add-ons table columns
+  const addonsColumns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      render: (text) => <Text strong>{text}</Text>,
+    },
+    {
+      title: "Code",
+      dataIndex: "code",
+      key: "code",
+      render: (text) => <Text code>{text || "N/A"}</Text>,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Tag color={status ? "green" : "red"}>
+          {status ? "Active" : "Inactive"}
+        </Tag>
+      ),
+    },
+  ];
+
+  // Food slots table columns
+  const foodSlotsColumns = [
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      render: (text) => <Text code>{text}</Text>,
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      render: (text) => <Text strong>{text}</Text>,
+    },
+    {
+      title: "Time Slot",
+      key: "timeSlot",
+      render: (_, record) => (
+        <div className="flex items-center">
+          <FaClock className="mr-2 text-blue-500" />
+          <Text>
+            {record.start_time} - {record.end_time}
+          </Text>
+        </div>
+      ),
+    },
+    {
+      title: "Number of Tickets",
+      dataIndex: "num_of_tickets",
+      key: "num_of_tickets",
+      render: (text) => (
+        <Tag color="blue" className="text-center">
+          {text}
+        </Tag>
+      ),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
         <Tag color={status ? "green" : "red"}>
           {status ? "Active" : "Inactive"}
         </Tag>
@@ -234,8 +311,14 @@ const ScheduleDetails = () => {
                 className="h-full"
               >
                 <Descriptions bordered column={1} size="middle">
+                  <Descriptions.Item label="Schedule ID">
+                    <Text code>{id || "N/A"}</Text>
+                  </Descriptions.Item>
                   <Descriptions.Item label="Event Name">
                     <Text strong>{event?.event_name || "N/A"}</Text>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Event ID">
+                    <Text code>{event?.id || "N/A"}</Text>
                   </Descriptions.Item>
                   <Descriptions.Item label="Schedule Dates">
                     <div className="flex items-center">
@@ -257,6 +340,46 @@ const ScheduleDetails = () => {
                       <Text>{formatDateTime(ad_start_date_time)}</Text>
                     </div>
                   </Descriptions.Item>
+                  <Descriptions.Item label="Available Types">
+                    <Tag
+                      color={
+                        available_types === "seat_structure" ? "blue" : "cyan"
+                      }
+                    >
+                      {available_types === "seat_structure"
+                        ? "Seat Structure"
+                        : "Ticket Structure"}
+                    </Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Status">
+                    <Tag
+                      color={processedScheduleDetails.status ? "green" : "red"}
+                    >
+                      {processedScheduleDetails.status ? "Active" : "Inactive"}
+                    </Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Payment Required">
+                    <Tag
+                      color={
+                        processedScheduleDetails.payment_required
+                          ? "orange"
+                          : "default"
+                      }
+                    >
+                      {processedScheduleDetails.payment_required ? "Yes" : "No"}
+                    </Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="User Booking Limit">
+                    {processedScheduleDetails.booking_limit_per_user_toggle ? (
+                      <Tag color="purple">
+                        {processedScheduleDetails.booking_limit_per_user ||
+                          "N/A"}{" "}
+                        bookings per user
+                      </Tag>
+                    ) : (
+                      <Tag color="default">No Limit</Tag>
+                    )}
+                  </Descriptions.Item>
                 </Descriptions>
               </Card>
             </Col>
@@ -274,15 +397,23 @@ const ScheduleDetails = () => {
               >
                 {venue ? (
                   <>
+                    <Descriptions
+                      bordered
+                      column={1}
+                      size="middle"
+                      className="mb-4"
+                    >
+                      <Descriptions.Item label="Venue ID">
+                        <Text code>{venue.id}</Text>
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Venue Name">
+                        <Text strong>{venue.name}</Text>
+                      </Descriptions.Item>
+                    </Descriptions>
+
+                    <Divider orientation="left">Place Details</Divider>
                     <div className="flex mb-4">
                       {venue.place?.thumbnail_image && (
-                        // <Image
-                        //   src={`${CDN_PATH}/${venue.place.thumbnail_image}`}
-                        //   alt={venue.name}
-                        //   width={120}
-                        //   className="rounded-lg"
-                        //   preview={true}
-                        // />
                         <CDNImage
                           src={venue.place.thumbnail_image}
                           alt={`Image Thumbnail`}
@@ -291,39 +422,47 @@ const ScheduleDetails = () => {
                           preview={true}
                         />
                       )}
-                      <div className="ms-4">
+                      <div className="ms-4 flex-1">
                         <Title level={5} className="mb-1">
-                          {venue.name}
+                          {venue.place?.name}
                         </Title>
                         <Text className="block text-gray-600">
-                          {venue.place?.name}, {venue.place?.country?.name}
+                          Place ID: <Text code>{venue.place?.id}</Text>
+                        </Text>
+                        <Text className="block text-gray-600">
+                          Country: {venue.place?.country?.name}
                         </Text>
                         <Text className="block text-gray-500">
                           {venue.place?.country?.currency_code} •{" "}
                           {venue.place?.country?.time_zone}
                         </Text>
+                        <Text className="block text-gray-500">
+                          Country ID:{" "}
+                          <Text code>{venue.place?.country?.id}</Text> • Schema:{" "}
+                          <Text code className="text-xs">
+                            {venue.place?.country?.schema_name}
+                          </Text>
+                        </Text>
                       </div>
                     </div>
+
+                    <Divider orientation="left">Venue Description</Divider>
                     <div
                       className="prose max-w-none text-gray-700"
                       dangerouslySetInnerHTML={{ __html: venue.description }}
                     />
-                    {/* <div className="ant-typography">
-                      <Typography.Paragraph
-                        ellipsis={{
-                          rows,
-                          expandable: 'collapsible',
-                          expanded,
-                          onExpand: (_, info) => setExpanded(info.expanded),
-                        }}
-                        copyable
-                      >
+
+                    {venue.place?.description && (
+                      <>
+                        <Divider orientation="left">Place Description</Divider>
                         <div
                           className="prose max-w-none text-gray-700"
-                          dangerouslySetInnerHTML={{ __html: venue.description }}
+                          dangerouslySetInnerHTML={{
+                            __html: venue.place.description,
+                          }}
                         />
-                      </Typography.Paragraph>
-                    </div> */}
+                      </>
+                    )}
                   </>
                 ) : (
                   <Empty description="No venue information available" />
@@ -348,39 +487,95 @@ const ScheduleDetails = () => {
 
         {/* Coupons Tab */}
         <TabPane tab="Coupons" key="4">
-          {/* <Card className="mt-4">
-            {coupon_schedule?.length > 0 ? (
-              <List
-                grid={{ gutter: 16, xs: 1, sm: 2, md: 3 }}
-                dataSource={coupon_schedule}
-                renderItem={(coupon) => (
-                  <List.Item>
-                    <Card
-                      title={coupon.coupon?.name || "Coupon"}
-                      extra={
-                        <Tag color={coupon.coupon?.status ? "green" : "red"}>
-                          {coupon.coupon?.status ? "Active" : "Inactive"}
-                        </Tag>
-                      }
-                    >
-                      <div className="mb-2">
-                        <Text type="secondary">Valid for event:</Text>
-                        <Text strong block>
-                          {formatDate(coupon.valid_from)} - {formatDate(coupon.valid_to)}
-                        </Text>
-                      </div>
-                      {coupon.coupon?.valid_from === "1970-01-01" && (
-                        <Tag color="orange">Legacy Coupon</Tag>
-                      )}
-                    </Card>
-                  </List.Item>
-                )}
-              />
-            ) : (
-              <Empty description="No coupons available for this event" />
-            )}
-          </Card> */}
           <CouponDetailsTable coupon_schedule={coupon_schedule} />
+        </TabPane>
+
+        {/* Additional Info Tab */}
+        <TabPane tab="Additional Info" key="5">
+          <Row gutter={[24, 24]} className="mt-4">
+            {/* Add-ons Section */}
+            <Col span={24}>
+              <Card
+                title={
+                  <span className="flex items-center">
+                    <FaPuzzlePiece className="mr-2 text-purple-500" />
+                    Add-ons Configuration
+                  </span>
+                }
+              >
+                {processedScheduleDetails.add_ons_slim?.length > 0 ? (
+                  <Table
+                    dataSource={processedScheduleDetails.add_ons_slim}
+                    columns={addonsColumns}
+                    pagination={false}
+                    rowKey={(record) => record.name}
+                    bordered
+                  />
+                ) : (
+                  <Empty
+                    description="No add-ons configured for this schedule"
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  />
+                )}
+              </Card>
+            </Col>
+
+            {/* Food Slots Section */}
+            <Col span={24}>
+              <Card
+                title={
+                  <span className="flex items-center">
+                    <FaUtensils className="mr-2 text-orange-500" />
+                    Food Slots Configuration
+                  </span>
+                }
+              >
+                {processedScheduleDetails.food_slots_slim?.length > 0 ? (
+                  <Table
+                    dataSource={processedScheduleDetails.food_slots_slim}
+                    columns={foodSlotsColumns}
+                    pagination={false}
+                    rowKey={(record) => record.id}
+                    bordered
+                  />
+                ) : (
+                  <Empty
+                    description="No food slots configured for this schedule"
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  />
+                )}
+              </Card>
+            </Col>
+
+            {/* Schedule Status Section */}
+            <Col span={24}>
+              <Card
+                title={
+                  <span className="flex items-center">
+                    <FaInfoCircle className="mr-2 text-blue-500" />
+                    Schedule Status Details
+                  </span>
+                }
+              >
+                {processedScheduleDetails.schedule_status ? (
+                  <pre className="bg-gray-50 p-4 rounded-lg overflow-auto border border-gray-200">
+                    <code className="text-sm">
+                      {JSON.stringify(
+                        processedScheduleDetails.schedule_status,
+                        null,
+                        2
+                      )}
+                    </code>
+                  </pre>
+                ) : (
+                  <Empty
+                    description="No schedule status information available"
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  />
+                )}
+              </Card>
+            </Col>
+          </Row>
         </TabPane>
       </Tabs>
 
@@ -396,9 +591,9 @@ const ScheduleDetails = () => {
                 {available_types === "seat_structure"
                   ? show_seat_details?.length || 0
                   : show_dates?.reduce(
-                    (total, date) => total + (date.show_times?.length || 0),
-                    0
-                  ) || 0}
+                      (total, date) => total + (date.show_times?.length || 0),
+                      0
+                    ) || 0}
               </Title>
             </div>
           </Col>
