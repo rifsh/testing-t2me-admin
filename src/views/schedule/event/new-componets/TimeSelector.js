@@ -24,7 +24,7 @@ const TimeSelector = ({
   ticketSetOptionsMap = {},
   seatStructureOptionsMap = {},
   eventDateRange = null,
-  selectedEventId = null, // NEW PROP for selected event
+  selectedEventId = null,
   blockedEventIds = new Set(),
 }) => {
   const timeSlots = generateTimeSlots();
@@ -32,11 +32,11 @@ const TimeSelector = ({
   const [selectionStart, setSelectionStart] = useState(null);
   const [dragEnd, setDragEnd] = useState(null);
   const [overlapMessage, setOverlapMessage] = useState(null);
-  const [activeEventId, setActiveEventId] = useState(null); // NEW STATE for clicked event
+  const [activeEventId, setActiveEventId] = useState(null);
   const isEventBlocked = (eventId) => {
     return blockedEventIds.has(eventId);
   };
-  // FIXED: Enhanced monitoring for midnight events
+  
   const logMidnightEvent = (event, context = "") => {
     if (event.is_midnight_passed) {
       console.log(`🌙 MIDNIGHT EVENT ${context}:`, {
