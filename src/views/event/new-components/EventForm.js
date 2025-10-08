@@ -390,13 +390,13 @@ export default function EventForm({ eventId, mode = "add" }) {
     try {
       const values = await form.validateFields();
       console.log("Form Values:", values);
-
+      console.warn("formData in handleNext:", formData);
       const currentSection = getRoleBasedEventSections()[currentStep];
 
       // Preserve images when updating section data
       const preservedImages = preserveImages(formData);
       const dataWithImages = { ...values, ...preservedImages };
-
+      console.warn("completedSections", completedSections);
       dispatch(
         updateSectionData({ section: currentSection.key, data: dataWithImages })
       );
@@ -852,7 +852,7 @@ export default function EventForm({ eventId, mode = "add" }) {
               ...currentFormData,
               ...clonedFormValues,
             };
-
+            console.log("🔍 Merged Data:", mergedData);
             dispatch(setEventFormData(mergedData));
 
             const hasImages =

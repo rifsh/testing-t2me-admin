@@ -30,7 +30,7 @@ export const ValidationRules = {
   },
 
   ticket: {
-    venue_id: [{ required: true, message: "Please select venues first" }],
+    // venue_id: [{ required: true, message: "Please select venues first" }],
   },
 
   pricing: {},
@@ -306,72 +306,97 @@ const validateTicketSection = async (values) => {
   const errors = [];
   const venues = values.venue_id;
 
-  if (!venues || venues.length === 0) {
+  // Check if venues exist and is a valid array
+  if (!venues || !Array.isArray(venues) || venues.length === 0) {
     errors.push(makeFieldError(["venue_id"], "Please select venues first"));
-    return {
-      isValid: false,
-      errors,
-      message: "Please select venues first",
-    };
+    return { isValid: false, errors, message: "Please select venues first" };
   }
 
-  // Check each venue for ticket/seat configuration
+  // Check if at least ONE venue has tickets or seats configured
+  let hasAtLeastOneVenueConfigured = false;
+
   for (const venueId of venues) {
-    const selectedSeats = values.selected_seats?.[venueId] || {};
-    const selectedTicketTypes = values.selected_ticket_types?.[venueId] || [];
-    const ticketSets = values.ticket_sets?.[venueId] || {};
+    // FIXED: Convert venueId to string for accessing nested objects
+    const venueIdStr = String(venueId);
+
+    const selectedSeats = values.selected_seats?.[venueIdStr];
+    const selectedTicketTypes = values.selected_ticket_types?.[venueIdStr];
+    const ticketSets = values.ticket_sets?.[venueIdStr];
+
+    console.log(
+      `Venue ${venueId} - Seats:`,
+      selectedSeats,
+      "Tickets:",
+      selectedTicketTypes
+    );
 
     // Check if at least seats or ticket types are selected
-    const hasSeats = Object.values(selectedSeats).some(
-      (selected) => selected === true
-    );
+    const hasSeats =
+      selectedSeats && typeof selectedSeats === "object"
+        ? Object.values(selectedSeats).some((selected) => selected === true)
+        : false;
+
     const hasTicketTypes =
       Array.isArray(selectedTicketTypes) && selectedTicketTypes.length > 0;
 
-    if (!hasSeats && !hasTicketTypes) {
-      errors.push(
-        makeFieldError(
-          ["venue_configuration", venueId],
-          `Please select either ticket types or seat types for venue ${venueId}`
-        )
-      );
-      continue;
-    }
+    console.log(
+      `Venue ${venueId} - hasSeats:`,
+      hasSeats,
+      "hasTicketTypes:",
+      hasTicketTypes
+    );
 
-    // If ticket types are selected, validate that ticket sets are also selected
-    if (hasTicketTypes) {
-      let hasAllTicketSets = true;
+    // If this venue has either seats or tickets, mark as configured
+    if (hasSeats || hasTicketTypes) {
+      hasAtLeastOneVenueConfigured = true;
 
-      for (const ticketTypeId of selectedTicketTypes) {
-        const setsForTicketType = ticketSets[ticketTypeId];
-        if (
-          !setsForTicketType ||
-          !Array.isArray(setsForTicketType) ||
-          setsForTicketType.length === 0
-        ) {
-          hasAllTicketSets = false;
-          break;
+      // If ticket types are selected, validate that ticket sets are also selected
+      if (hasTicketTypes) {
+        let hasAllTicketSets = true;
+        for (const ticketTypeId of selectedTicketTypes) {
+          const ticketTypeIdStr = String(ticketTypeId);
+          const setsForTicketType = ticketSets?.[ticketTypeIdStr];
+
+          if (
+            !setsForTicketType ||
+            !Array.isArray(setsForTicketType) ||
+            setsForTicketType.length === 0
+          ) {
+            hasAllTicketSets = false;
+            break;
+          }
+        }
+        if (!hasAllTicketSets) {
+          errors.push(
+            makeFieldError(
+              ["ticket_sets", venueId],
+              `Please select ticket sets for all selected ticket types in venue ${venueId}`
+            )
+          );
         }
       }
-
-      if (!hasAllTicketSets) {
-        errors.push(
-          makeFieldError(
-            ["ticket_sets", venueId],
-            `Please select ticket sets for all selected ticket types in venue ${venueId}`
-          )
-        );
-      }
     }
+  }
+
+  console.log(
+    "Has at least one venue configured:",
+    hasAtLeastOneVenueConfigured
+  );
+
+  // Only error if NO venues have configuration
+  if (!hasAtLeastOneVenueConfigured) {
+    errors.push(
+      makeFieldError(
+        ["venue_configuration"],
+        `Please select either ticket types or seat types for at least one venue`
+      )
+    );
   }
 
   return {
     isValid: errors.length === 0,
     errors,
-    message:
-      errors.length > 0
-        ? "Please complete ticket configuration for all venues"
-        : "",
+    message: errors.length > 0 ? "Please complete ticket configuration" : "",
   };
 };
 

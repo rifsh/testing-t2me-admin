@@ -75,7 +75,7 @@ const TicketSelectionField = ({ form, currentValues }) => {
         : [];
 
       const venueSeatStructures = Array.isArray(allSeats)
-        ? allSeats.filter((seat) => seat.venue_id === venueId)
+        ? allSeats.filter((seat) => seat.venue.id === venueId)
         : [];
 
       if (venueTickets.length > 0 || venueSeatStructures.length > 0) {
@@ -218,7 +218,7 @@ const TicketSelectionField = ({ form, currentValues }) => {
             <List.Item>
               <Checkbox
                 checked={selectedSeats[venueId]?.[seat.id] || false}
-                disabled={!seat.available}
+                // disabled={!seat.available}
                 onChange={(e) =>
                   handleSeatSelection(venueId, seat.id, e.target.checked)
                 }
@@ -233,7 +233,7 @@ const TicketSelectionField = ({ form, currentValues }) => {
                         {type.label}
                       </Text>
                     ))}
-                  {!seat.available && <Text type="danger">(Unavailable)</Text>}
+                  {/* {!seat.available && <Text type="danger">(Unavailable)</Text>} */}
                 </Space>
               </Checkbox>
             </List.Item>
@@ -437,28 +437,6 @@ const TicketSelectionField = ({ form, currentValues }) => {
 
     return (
       <div>
-        <Row gutter={16} style={{ marginBottom: 16 }}>
-          <Col span={24}>
-            <Card size="small">
-              <Space>
-                <Text strong>Configuration Status:</Text>
-                <Text type={hasSeats ? "success" : "secondary"}>
-                  Seats: {hasSeats ? "Selected" : "None"}
-                </Text>
-                <Text type={hasTicketTypes ? "success" : "secondary"}>
-                  Ticket Types:{" "}
-                  {hasTicketTypes
-                    ? selectedTicketTypes[venue.id].length
-                    : "None"}
-                </Text>
-                <Text type={hasTicketSets ? "success" : "secondary"}>
-                  Ticket Sets: {hasTicketSets ? "Configured" : "None"}
-                </Text>
-              </Space>
-            </Card>
-          </Col>
-        </Row>
-
         {renderSeatSelection(venue.id)}
         {renderTicketTypeSelection(venue.id)}
 
