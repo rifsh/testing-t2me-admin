@@ -8,11 +8,12 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   checkScheduleEdit,
   editSchedule,
+  editScheduleStatus,
   fetchAllSchedules,
   fetchSingleSchedules,
 } from "store/slices/scheduleSlice";
 import UpdateStatusModal from "components/util-components/ModalItems/UpdateStatusModal";
-import { setSelectedItem } from "store/slices/modalSlice";
+import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
 import Utils from "utils";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
@@ -44,7 +45,9 @@ const ScheduleList = () => {
   // };
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
-    const data = { status: newStatus, id: item.id };
+    const data = { status: newStatus, schedule_id: Number(item.id) };
+    console.log(item);
+    dispatch(setDialogVisible(true));
     dispatch(setSelectedItem(data));
   };
   const handleViewDetails = async (id) => {
@@ -79,13 +82,13 @@ const ScheduleList = () => {
         PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE
           .GET_EVENT_SCHEDULE_DETAILS
       ) && (
-        <Menu.Item>
-          <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
-            <EyeOutlined />
-            <span className="ml-2">View Details</span>
-          </Flex>
-        </Menu.Item>
-      )}
+          <Menu.Item>
+            <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+              <EyeOutlined />
+              <span className="ml-2">View Details</span>
+            </Flex>
+          </Menu.Item>
+        )}
       <Menu.Item>
         <Flex alignItems="center" onClick={() => handleEditSchedule(row.id)}>
           <EditOutlined />
@@ -169,25 +172,25 @@ const ScheduleList = () => {
         {hasPermission(
           PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.ADD_EVENT_SCHEDULES
         ) && (
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            onClick={() => navigate(`${APP_PREFIX_PATH}/schedule/new/add`)}
-          >
-            Add Schedule (New)
-          </Button>
-        )}
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              onClick={() => navigate(`${APP_PREFIX_PATH}/schedule/new/add`)}
+            >
+              Add Schedule (New)
+            </Button>
+          )}
         {hasPermission(
           PERMISSIONS.APPLICATIONS.SERVICES.EVENT.SCHEDULE.ADD_EVENT_SCHEDULES
         ) && (
-          <Button
-            type="primary"
-            icon={<FormOutlined />}
-            onClick={() => navigate(`${APP_PREFIX_PATH}/schedule/add`)}
-          >
-            Add Schedule
-          </Button>
-        )}
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              onClick={() => navigate(`${APP_PREFIX_PATH}/schedule/add`)}
+            >
+              Add Schedule
+            </Button>
+          )}
       </Flex>
       <div>
         <Table
@@ -207,7 +210,7 @@ const ScheduleList = () => {
       <UpdateStatusModal
         responseMessage={scheduleMessage}
         editable_status={editable_status}
-        editFunction={editSchedule}
+        editFunction={editScheduleStatus}
         getAllFunction={(pageData) => fetchAllSchedules(pageData)}
         pageData={{ page: 1, size: 10 }}
       />
