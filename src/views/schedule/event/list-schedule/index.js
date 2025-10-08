@@ -51,7 +51,7 @@ const ScheduleList = () => {
     dispatch(setSelectedItem(data));
   };
   const handleViewDetails = async (id) => {
-    await dispatch(fetchSingleSchedules({ id: id }));
+    // await dispatch(fetchSingleSchedules({ id: id }));
     navigate(`${APP_PREFIX_PATH}/schedule/${id}`);
   };
   const handleEditSchedule = async (id) => {

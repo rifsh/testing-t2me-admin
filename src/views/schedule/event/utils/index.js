@@ -134,7 +134,6 @@ export const validateEventData = (eventData) => {
     "name",
     "event_id",
     "venue_id",
-    "show_dates",
   ];
 
   const errors = [];
@@ -149,8 +148,22 @@ export const validateEventData = (eventData) => {
     }
   }
 
-  // Validate show_dates structure
-  if (eventData.show_dates && Array.isArray(eventData.show_dates)) {
+  // UPDATED: Validate based on booking type
+  const hasShowDates =
+    eventData.show_dates &&
+    Array.isArray(eventData.show_dates) &&
+    eventData.show_dates.length > 0;
+  const hasShowSeatDetails =
+    eventData.show_seat_details &&
+    Array.isArray(eventData.show_seat_details) &&
+    eventData.show_seat_details.length > 0;
+
+  if (!hasShowDates && !hasShowSeatDetails) {
+    errors.push("Either show_dates or show_seat_details is required");
+  }
+
+  // Validate show_dates structure if present
+  if (hasShowDates) {
     eventData.show_dates.forEach((showDate, index) => {
       if (!showDate.start_date) {
         errors.push(`show_dates[${index}].start_date is required`);
@@ -176,6 +189,24 @@ export const validateEventData = (eventData) => {
           });
         });
       }
+    });
+  }
+
+  // ADDED: Validate show_seat_details structure if present
+  if (hasShowSeatDetails) {
+    eventData.show_seat_details.forEach((seatDetail, index) => {
+      const requiredSeatFields = [
+        "start_date",
+        "start_time",
+        "end_time",
+        "event_seat_id",
+      ];
+
+      requiredSeatFields.forEach((field) => {
+        if (!seatDetail[field] && seatDetail[field] !== 0) {
+          errors.push(`show_seat_details[${index}].${field} is required`);
+        }
+      });
     });
   }
 
@@ -205,6 +236,7 @@ export const normalizeEventData = (eventData) => {
     eventId: "event_id",
     venueId: "venue_id",
     showDates: "show_dates",
+    showSeatDetails: "show_seat_details",
     offerIds: "offer_ids",
     couponIds: "coupon_ids",
     // Time slot specific mappings
@@ -213,7 +245,9 @@ export const normalizeEventData = (eventData) => {
     ticketType: "ticket_structure_id",
     ticketSet: "ticket_set",
     seatStructure: "seat_structure_id",
+    eventSeatId: "event_seat_id",
     isMultiDay: "is_multi_date",
+    isMidnight: "is_midnight",
   };
 
   Object.keys(fieldMappings).forEach((camelCase) => {
@@ -239,7 +273,7 @@ export const formatDateTimeForAPI = (dateTime) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-// Updated data preparation function
+// UPDATED: Enhanced data preparation function to handle both ticket and seat booking
 export const prepareEventDataForSubmission = (formData, scheduleFormData) => {
   const baseData = {
     start_date: formatDateForAPI(
@@ -260,25 +294,16 @@ export const prepareEventDataForSubmission = (formData, scheduleFormData) => {
     booking_limit_per_user_toggle: Boolean(
       formData.booking_limit_per_user_toggle
     ),
-    add_ons: formData.add_ons || [
-      {
-        name: "USER_AND_FOOD",
-        status: true,
-      },
-    ],
-    food_slots: formData.food_slots || [
-      {
-        id: 1,
-        name: "Default Food Slot",
-        start_time: "01:00",
-        end_time: "06:00",
-        num_of_tickets: 23,
-      },
-    ],
+    add_ons: formData.add_ons || [],
+    food_slots: formData.food_slots || [],
     name: formData.name || "",
     event_id: formData.event_id,
     venue_id: formData.venue_id,
+
+    // UPDATED: Include both show_dates and show_seat_details
     show_dates: formData.show_dates || [],
+    show_seat_details: formData.show_seat_details || [],
+
     offer_ids: (formData.offer_ids || []).map((offer) => ({
       offer_id: offer.offer_id,
       valid_from: offer.valid_from,
@@ -303,9 +328,8 @@ export const prepareEventDataForSubmission = (formData, scheduleFormData) => {
   return normalizedData;
 };
 
-// FIXED: Enhanced ScheduleUtil with missing isTimeOverlapping method
+// Enhanced ScheduleUtil with proper support for both booking types
 export const ScheduleUtil = {
-  // FIXED: Added the missing isTimeOverlapping method
   isTimeOverlapping: (event1, event2) => {
     if (
       !event1?.startTime ||
@@ -388,11 +412,41 @@ export const ScheduleUtil = {
     return `${hours}h ${minutes}min`;
   },
 
-  convertEventDataToAPIFormat: (events, allDays) => {
+  // UPDATED: Enhanced to handle both ticket and seat-based events
+  convertEventDataToAPIFormat: (events, allDays, bookingType = "TICKET") => {
+    if (bookingType === "SEAT") {
+      // Handle seat-based booking
+      const show_seat_details = [];
+
+      events.forEach((event) => {
+        const dayIndex = event?.startTime?.day;
+        if (dayIndex >= 0 && dayIndex < allDays.length) {
+          const dateKey = formatDateForAPI(allDays[dayIndex]);
+
+          show_seat_details.push({
+            start_date: dateKey,
+            start_time: `${String(event?.startTime?.hour || 0).padStart(
+              2,
+              "0"
+            )}:${String(event?.startTime?.minute || 0).padStart(2, "0")}`,
+            end_time: `${String(event?.endTime?.hour || 0).padStart(
+              2,
+              "0"
+            )}:${String(event?.endTime?.minute || 0).padStart(2, "0")}`,
+            event_seat_id:
+              event?.event_seat_id || event?.seatStructureId || null,
+            is_midnight: event?.is_midnight || false,
+          });
+        }
+      });
+
+      return { show_seat_details };
+    }
+
+    // Handle ticket-based booking (original logic)
     const show_dates = [];
     const eventsByDate = {};
 
-    // Group events by date
     events.forEach((event) => {
       const dayIndex = event?.startTime?.day;
       if (dayIndex >= 0 && dayIndex < allDays.length) {
@@ -415,7 +469,7 @@ export const ScheduleUtil = {
           ticket_set: event?.ticket_set || event?.ticketSet || "",
           seat_structure_id:
             event?.seat_structure_id || event?.seatStructure || null,
-          is_midnight: "false",
+          is_midnight: event?.is_midnight || false,
         });
       }
     });
@@ -429,10 +483,13 @@ export const ScheduleUtil = {
       });
     });
 
-    return show_dates;
+    return { show_dates };
   },
 
+  // UPDATED: Enhanced restructuring to handle both booking types
   restructuredScheduleDetails: (data) => {
+    const bookingType = data?.show_seat_details?.length > 0 ? "SEAT" : "TICKET";
+
     return {
       // Event Basic Info
       id: data?.id || null,
@@ -459,14 +516,17 @@ export const ScheduleUtil = {
       time_zone: data?.venue?.place?.country?.time_zone || "",
       currency_code: data?.venue?.place?.country?.currency_code || "",
 
-      // Show Time Details
+      // Booking Type
+      booking_type: bookingType,
+
+      // Show Time Details (for ticket-based)
       show_date_id: data?.show_dates?.[0]?.id || null,
       show_time_id: data?.show_dates?.[0]?.show_times?.[0]?.id || null,
       show_start_time:
         data?.show_dates?.[0]?.show_times?.[0]?.start_time || null,
       show_end_time: data?.show_dates?.[0]?.show_times?.[0]?.end_time || null,
 
-      // Ticket Structure
+      // Ticket Structure (for ticket-based)
       ticket_structure_id:
         data?.show_dates?.[0]?.show_times?.[0]?.event_ticket_structures?.id ||
         null,
@@ -480,7 +540,10 @@ export const ScheduleUtil = {
       // Show Time Ticket Types (List)
       show_time_ticket_types:
         data?.show_dates?.[0]?.show_times?.[0]?.show_time_ticket_types || [],
-      booking_type: data?.show_seat_details?.length > 0 ? "SEAT" : "TICKET",
+
+      // Seat Details (for seat-based)
+      show_seat_details: data?.show_seat_details || [],
+      show_dates: data?.show_dates || [],
 
       // Additional Settings
       is_multi_date: data?.is_multi_date || false,
@@ -491,22 +554,45 @@ export const ScheduleUtil = {
       offer_schedule: data?.offer_schedule || [],
       coupon_schedule: data?.coupon_schedule || [],
       schedule_status: data?.schedule_status || null,
-      show_seat_details: data?.show_seat_details || [],
-      show_dates: data?.show_dates || [],
 
-      // Fields for formValues Compatibility
+      // Add-ons and Food Slots
       payment_required: data?.payment_required || false,
       booking_limit_per_user_toggle:
         data?.booking_limit_per_user_toggle || false,
       booking_limit_per_user: data?.booking_limit_per_user || null,
       add_ons: data?.add_ons || [],
       add_ons_slim: data?.add_ons_slim || [],
+      food_slots: data?.food_slots || [],
+      food_slots_slim: data?.food_slots_slim || [],
     };
   },
 
+  // In your utils file - Update createFormValues
   createFormValues: (scheduleDetails) => {
     const scheduleData =
       ScheduleUtil.restructuredScheduleDetails(scheduleDetails);
+
+    // FIXED: Transform add_ons properly
+    let addOnsArray = [];
+    if (scheduleData.add_ons_slim && Array.isArray(scheduleData.add_ons_slim)) {
+      addOnsArray = scheduleData.add_ons_slim
+        .filter((item) => item && item.name && item.status === true)
+        .map((item) => item.name);
+    } else if (scheduleData.add_ons && Array.isArray(scheduleData.add_ons)) {
+      addOnsArray = scheduleData.add_ons
+        .map((item) => {
+          if (typeof item === "string") return item;
+          if (item && item.name) return item.name;
+          return null;
+        })
+        .filter(Boolean);
+    }
+
+    console.log("🔧 createFormValues - add_ons transformation:", {
+      input: scheduleData.add_ons_slim || scheduleData.add_ons,
+      output: addOnsArray,
+    });
+
     return {
       event_id: scheduleData.event_id || null,
       name: scheduleData.name || "",
@@ -528,14 +614,43 @@ export const ScheduleUtil = {
       ad_start_date_time: scheduleData.ad_start_date_time
         ? dayjs(scheduleData.ad_start_date_time)
         : null,
-      add_ons: scheduleData.add_ons_slim?.map((item) => item.name) || [],
+
+      // FIXED: Return array of addon names
+      add_ons: addOnsArray,
+
+      // Include food_slots
+      food_slots: scheduleData.food_slots_slim || [],
+
       show_time_ticket_types:
         scheduleData.show_time_ticket_types?.map((ticket) => ({
           id: ticket.id,
           ticket_type_id: ticket.ticket_type_id,
           ticket_used_count: ticket.ticket_used_count,
         })) || [],
+
       available_types: scheduleData.available_types || "ticket_structure",
+
+      // Include offer and coupon schedules
+      offer_ids: scheduleData.offer_schedule || [],
+      coupon_ids: scheduleData.coupon_schedule || [],
     };
   },
+};
+
+// Export all utilities
+export default {
+  getDaysInMonth,
+  isSameDay,
+  isDateInRange,
+  formatTime,
+  timeToMinutes,
+  generateTimeSlots,
+  getDaysDiff,
+  getTypeColor,
+  formatDateForAPI,
+  validateEventData,
+  normalizeEventData,
+  formatDateTimeForAPI,
+  prepareEventDataForSubmission,
+  ScheduleUtil,
 };

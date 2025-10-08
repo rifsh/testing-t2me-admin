@@ -73,6 +73,13 @@ EventsService.fetchEventDetails = function (eventId) {
     params: Utils.filterParams({ event_id: eventId }),
   });
 };
+EventsService.checkEventEditAvailblily = function (params) {
+  return fetch({
+    url: ApiConstant.CHECK_EVENT_EDIT_URL,
+    method: "get",
+    params: Utils.filterParams(params),
+  });
+};
 
 EventsService.fetchEventTypeDetails = function (typeId) {
   return fetch({
@@ -167,7 +174,6 @@ EventsService.editEventStatus = function (
     params: Utils.filterParams({ ...pageData, action: encodedAction }),
   });
 };
-
 
 // tested
 EventsService.editEventTypeStatus = function (

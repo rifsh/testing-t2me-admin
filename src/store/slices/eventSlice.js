@@ -41,6 +41,7 @@ const initialState = {
   editable_status: null,
   eventsupport: null,
   pagination: { size: 10, page: 1 },
+  event_edit_availability: null,
   formData: {
     // Basic Info
     event_name: "",
@@ -84,6 +85,18 @@ export const fetchEventDetails = createAsyncThunk(
         const response = await EventService.fetchEventDetails(eventId);
         return response.data;
       }
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+
+export const checkEventEditAvailability = createAsyncThunk(
+  "event/checkEventEditAvailblily",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response = await EventService.checkEventEditAvailblily(params);
+       return response.data[0];
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch event details");
     }
@@ -675,6 +688,18 @@ const eventSlice = createSlice({
         state.eventDetails = eventData;
       })
       .addCase(fetchEventDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(checkEventEditAvailability.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(checkEventEditAvailability.fulfilled, (state, action) => {
+        state.loading = false;
+        state.event_edit_availability = action.payload;
+      })
+      .addCase(checkEventEditAvailability.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
