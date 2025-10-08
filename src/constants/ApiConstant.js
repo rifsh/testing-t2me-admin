@@ -35,6 +35,7 @@ export const ApiConstant = {
   LEAD_EVENT_URL: "/api/v1/event/events/secured/lead_event/creation",
   EVENT_VALIDATION_URL: "/api/v1/event/events/secured/validation_event",
   EVENT_DETAILS_URL: "/api/v1/event/events/secured/events/detail",
+  CHECK_EVENT_EDIT_URL: "/api/v1/event/events/secured/event/edit/check",
   EVENT_TYPE_OPTION_URL: "/api/v1/shared/event_type/secured/event_type/options",
   EVENT_TYPE_URL: "/api/v1/shared/event_type/secured/event_type",
   EVENT_TYPE_DETAILS_URL: "/api/v1/shared/event_type/secured/event_type/detail",
@@ -324,7 +325,10 @@ export const ApiConstant = {
     "/api/v1/event/add_on/secured/scan/event/booking_ticket/addon_user_and_food/food",
 
   //Event-booking-verification
-  EVENT_TICKET_BOOKNG_VERIFICATION: "/api/v1/event/booking/ticket/public/booking/scan/verify",
-  EVENT_SEAT_BOOKNG_VERIFICATION: "/api/v1/event/booking/seat/public/booking/scan/verify",
-  MOVIE_BOOKNG_VERIFICATION: "/api/v1/movie/booking/public/theatre/booking/scan/verify",
+  EVENT_TICKET_BOOKNG_VERIFICATION:
+    "/api/v1/event/booking/ticket/public/booking/scan/verify",
+  EVENT_SEAT_BOOKNG_VERIFICATION:
+    "/api/v1/event/booking/seat/public/booking/scan/verify",
+  MOVIE_BOOKNG_VERIFICATION:
+    "/api/v1/movie/booking/public/theatre/booking/scan/verify",
 };
