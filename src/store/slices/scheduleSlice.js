@@ -106,6 +106,20 @@ export const editSchedule = createAsyncThunk(
   }
 );
 
+export const editScheduleStatus = createAsyncThunk(
+  "schedule/editScheduleStatus",
+  async ({ data, action }, { rejectWithValue }) => {
+    try {
+      const response = await ScheduleService.editScheduleStatus(data, action);
+      return response.status;
+    } catch (error) {
+      console.log("errortesting", error);
+
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+
 const scheduleSlice = createSlice({
   name: "schedules",
   initialState,
@@ -375,6 +389,21 @@ const scheduleSlice = createSlice({
         }
       })
       .addCase(editSchedule.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to edit event";
+      })
+      .addCase(editScheduleStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editScheduleStatus.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+          state.editable_status = payload.editable_status;
+        }
+      })
+      .addCase(editScheduleStatus.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to edit event";
       })

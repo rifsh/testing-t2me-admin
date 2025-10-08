@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   checkScheduleEdit,
   editSchedule,
+  editScheduleStatus,
   fetchAllSchedules,
   fetchSingleSchedules,
 } from "store/slices/scheduleSlice";
@@ -44,7 +45,7 @@ const ScheduleList = () => {
   // };
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
-    const data = { status: newStatus, id: item.id };
+    const data = { status: newStatus, schedule_id: Number(item.id) };
     console.log(item);
     dispatch(setDialogVisible(true));
     dispatch(setSelectedItem(data));
@@ -209,7 +210,7 @@ const ScheduleList = () => {
       <UpdateStatusModal
         responseMessage={scheduleMessage}
         editable_status={editable_status}
-        editFunction={editSchedule}
+        editFunction={editScheduleStatus}
         getAllFunction={(pageData) => fetchAllSchedules(pageData)}
         pageData={{ page: 1, size: 10 }}
       />
