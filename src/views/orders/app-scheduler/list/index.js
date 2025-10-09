@@ -586,7 +586,7 @@ const AppSchedulerList = () => {
             ) : (
                 <Text type="secondary">N/A</Text>
             ),
-            width: "30%",
+            width: "20%",
         },
         {
             title: "Details",
@@ -594,7 +594,7 @@ const AppSchedulerList = () => {
             render: (text, record) => (
                 <BatchDetailsDisplay details={text} type={record.types} eventType={record.event_type} />
             ),
-            width: "60%",
+            width: "50%",
         },
         {
             title: "Created At",
@@ -613,11 +613,12 @@ const AppSchedulerList = () => {
                 if (!a.created_at || !b.created_at) return 0;
                 return new Date(a.created_at) - new Date(b.created_at);
             },
-            width: "25%",
+            width: "15%",
         },
         {
             title: "Status",
             dataIndex: "scheduler_status",
+            width: "15%",
             render: (status) => (
                 <Space>
                     {status ? (
