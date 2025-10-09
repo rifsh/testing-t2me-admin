@@ -24,7 +24,7 @@ ScheduleService.editSchedule = function (data, action) {
 ScheduleService.editScheduleStatus = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.SCHEDULE_STATUS_EDIT_URL}?action=${encodedAction}`,
+    url: `${ApiConstant.SCHEDULE_STATUS_EDIT_URL}/${data.schedule_id}?action=${encodedAction}`,
     method: "put",
     data: data,
   });
