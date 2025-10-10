@@ -400,8 +400,7 @@ const scheduleSlice = createSlice({
         state.loading = false;
         if (payload.status) {
           state.message = payload.status.message;
-          // console.log("sampleeditcheck", payload?.data?.status);
-          state.editable_status = payload?.data?.status;
+          state.editable_status = payload?.status?.editable_status;
         }
       })
       .addCase(editScheduleStatus.rejected, (state, { payload }) => {
