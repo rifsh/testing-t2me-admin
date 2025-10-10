@@ -111,7 +111,7 @@ export const editScheduleStatus = createAsyncThunk(
   async ({ data, action }, { rejectWithValue }) => {
     try {
       const response = await ScheduleService.editScheduleStatus(data, action);
-      return response.status;
+      return response;
     } catch (error) {
       console.log("errortesting", error);
 
@@ -398,9 +398,9 @@ const scheduleSlice = createSlice({
       })
       .addCase(editScheduleStatus.fulfilled, (state, { payload }) => {
         state.loading = false;
-        if (payload.message) {
-          state.message = payload.message;
-          state.editable_status = payload.editable_status;
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.editable_status = payload?.status?.editable_status;
         }
       })
       .addCase(editScheduleStatus.rejected, (state, { payload }) => {

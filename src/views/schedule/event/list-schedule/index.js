@@ -21,6 +21,8 @@ import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
 import usePermissions from "utils/hooks/usePermissions";
 import { PERMISSIONS } from "constants/RolesPermissionConstants";
+import StatusSubmitAndConfirmModal from "components/util-components/ModalItems/StatusSubmitModal";
+import { TextConstants } from "constants/TextConstant";
 
 const ScheduleList = () => {
   const navigate = useNavigate();
@@ -33,16 +35,13 @@ const ScheduleList = () => {
     editable_status,
     loading,
   } = useSelector((state) => state.schedules);
-  // const [form] = Form.useForm();
+  const { responseData } = useSelector((state) => state.modalSlice);
   const { hasPermission, hasAnyPermission } = usePermissions();
   useEffect(() => {
     dispatch(fetchAllSchedules(DEFAULT_PAGE_SIZE));
   }, [dispatch]);
   const handlePagination = usePaginationHook(fetchAllSchedules);
 
-  // const handlePagination = (page, size) => {
-  //   dispatch(fetchAllSchedules({ page: page, size: size }));
-  // };
   const handleUpdateStatus = (item) => {
     const newStatus = !item.status;
     const data = { status: newStatus, schedule_id: Number(item.id) };
@@ -207,6 +206,15 @@ const ScheduleList = () => {
         />
       </div>
 
+      <StatusSubmitAndConfirmModal
+        editFunction={editScheduleStatus}
+        getAllFunction={(pageData) => fetchAllSchedules(pageData)}
+        responseData={responseData}
+        responseMessage={scheduleMessage}
+        pageData={DEFAULT_PAGE_SIZE}
+        onSubmitMessage={TextConstants.StatusUpdatedSuccess}
+        onCloseMessage={TextConstants.StatusUpdateCanceled}
+      />
       <UpdateStatusModal
         responseMessage={scheduleMessage}
         editable_status={editable_status}
