@@ -128,7 +128,7 @@ const EventsList = () => {
       } else {
         Modal.error({
           content:
-            "Sorry, this event already has bookings in all time slots. You cannot edit this schedule.",
+            "Sorry, this event already has bookings in all time slots. You cannot edit this event.",
         });
       }
     } catch (error) {

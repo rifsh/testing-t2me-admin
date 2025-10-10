@@ -25,6 +25,8 @@ const CompactDateTimePicker = ({
   disablePastTimes = true,
   minDateTime = null,
   maxDateTime = null,
+  blockedDates = new Set(), // NEW: Set of blocked dates
+  isScheduleBlocked = false, // NEW: Global blocking flag
 }) => {
   const isValidTimezone = (tz) => {
     if (!tz || tz === "") return false;
@@ -97,6 +99,22 @@ const CompactDateTimePicker = ({
     }
   };
 
+  // Format date as YYYY-MM-DD for comparison
+  const formatDateForAPI = (date) => {
+    if (!date) return null;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Check if a date is blocked
+  const isDateBlocked = (date) => {
+    if (!date) return false;
+    const dateStr = formatDateForAPI(date);
+    return blockedDates.has(dateStr);
+  };
+
   const getInitialDate = () => {
     if (value) return safeToDate(value);
     if (initialDateTime) return safeToDate(initialDateTime);
@@ -112,7 +130,13 @@ const CompactDateTimePicker = ({
   const [tempDate, setTempDate] = useState(
     initialDate || getCurrentTimeInTimezone()
   );
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  // FIXED: Initialize currentMonth based on the selected/initial date
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const dateToShow = initialDate || getCurrentTimeInTimezone();
+    return new Date(dateToShow.getFullYear(), dateToShow.getMonth(), 1);
+  });
+
   const [isAM, setIsAM] = useState(true);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -191,6 +215,11 @@ const CompactDateTimePicker = ({
   const isDateDisabled = (date) => {
     if (!date) return true;
 
+    // FIXED: Check if date is blocked first
+    if (isDateBlocked(date) || isScheduleBlocked) {
+      return true;
+    }
+
     const currentInTz = getCurrentTimeInTimezone();
     const dateToCheck = new Date(date);
 
@@ -241,6 +270,11 @@ const CompactDateTimePicker = ({
 
   const isTimeDisabled = (date) => {
     if (!date) return true;
+
+    // FIXED: Check if date is blocked
+    if (isDateBlocked(date) || isScheduleBlocked) {
+      return true;
+    }
 
     const currentInTz = getCurrentTimeInTimezone();
 
@@ -334,20 +368,22 @@ const CompactDateTimePicker = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isDragging]);
 
+  // FIXED: Update currentMonth when value changes
   useEffect(() => {
     const newDate = safeToDate(value);
     if (newDate) {
       setSelectedDateTime(newDate);
       setTempDate(new Date(newDate));
-      setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth()));
+      setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
     } else if (value === null || value === undefined) {
       setSelectedDateTime(null);
       setTempDate(getCurrentTimeInTimezone());
+      setCurrentMonth(new Date());
     }
   }, [value]);
 
   const handleDateSelect = (date) => {
-    if (date && !isDateDisabled(date)) {
+    if (date && !isDateDisabled(date) && !isDateBlocked(date)) {
       const updatedDate = new Date(tempDate);
       updatedDate.setFullYear(date.getFullYear());
       updatedDate.setMonth(date.getMonth());
@@ -379,7 +415,7 @@ const CompactDateTimePicker = ({
       updatedDate.setMinutes(parseInt(value, 10));
     }
 
-    if (!isTimeDisabled(updatedDate)) {
+    if (!isTimeDisabled(updatedDate) && !isDateBlocked(updatedDate)) {
       setTempDate(updatedDate);
     }
   };
@@ -394,7 +430,7 @@ const CompactDateTimePicker = ({
       updatedDate.setHours(currentHour - 12);
     }
 
-    if (!isTimeDisabled(updatedDate)) {
+    if (!isTimeDisabled(updatedDate) && !isDateBlocked(updatedDate)) {
       setTempDate(updatedDate);
       setIsAM(!isAM);
     }
@@ -402,7 +438,12 @@ const CompactDateTimePicker = ({
 
   const handleConfirm = () => {
     const validDate = safeToDate(tempDate);
-    if (validDate && !isDateDisabled(validDate) && !isTimeDisabled(validDate)) {
+    if (
+      validDate &&
+      !isDateDisabled(validDate) &&
+      !isTimeDisabled(validDate) &&
+      !isDateBlocked(validDate)
+    ) {
       setSelectedDateTime(validDate);
       setIsOpen(false);
       resetPosition();
@@ -413,8 +454,12 @@ const CompactDateTimePicker = ({
   };
 
   const handleClear = () => {
+    if (isScheduleBlocked) {
+      return;
+    }
     setSelectedDateTime(null);
     setTempDate(getCurrentTimeInTimezone());
+    setCurrentMonth(new Date());
     setIsOpen(false);
     resetPosition();
     if (onDateTimeChange) {
@@ -469,8 +514,8 @@ const CompactDateTimePicker = ({
 
       <button
         ref={buttonRef}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        disabled={disabled}
+        onClick={() => !disabled && !isScheduleBlocked && setIsOpen(!isOpen)}
+        disabled={disabled || isScheduleBlocked}
         className={`
           ${fullWidth ? "w-full" : "w-auto"} 
           ${sizeClasses[size]}
@@ -480,7 +525,7 @@ const CompactDateTimePicker = ({
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
           ${selectedDateTime ? "text-gray-800" : "text-gray-400"}
           ${
-            disabled
+            disabled || isScheduleBlocked
               ? "opacity-50 cursor-not-allowed hover:border-gray-200"
               : "cursor-pointer"
           }
@@ -495,10 +540,13 @@ const CompactDateTimePicker = ({
               ? formatDisplayDate(selectedDateTime)
               : placeholder}
           </span>
+          {isScheduleBlocked && (
+            <span className="ml-2 text-xs text-red-600">🔒 Locked</span>
+          )}
         </div>
 
         <div className="flex items-center">
-          {selectedDateTime && showClearButton && (
+          {selectedDateTime && showClearButton && !isScheduleBlocked && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -662,12 +710,13 @@ const CompactDateTimePicker = ({
                     const isToday = today.getTime() === checkDate.getTime();
 
                     const isDisabled = isDateDisabled(date);
+                    const isBlocked = isDateBlocked(date);
 
                     return (
                       <button
                         key={index}
                         onClick={() => handleDateSelect(date)}
-                        disabled={isDisabled}
+                        disabled={isDisabled || isBlocked}
                         className={`
                           h-8 w-full rounded-xl text-xs font-medium transition-all duration-200 relative
                           ${
@@ -675,6 +724,8 @@ const CompactDateTimePicker = ({
                               ? "bg-blue-500 text-white shadow-md transform scale-105"
                               : isToday
                               ? "bg-blue-50 text-blue-600 border border-blue-200"
+                              : isBlocked
+                              ? "bg-red-100 text-red-400 line-through cursor-not-allowed"
                               : isDisabled
                               ? "text-gray-300 cursor-not-allowed bg-gray-50"
                               : "text-gray-700 hover:bg-gray-100"
@@ -685,10 +736,27 @@ const CompactDateTimePicker = ({
                         {isToday && !isSelected && (
                           <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
                         )}
+                        {isBlocked && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-red-500 text-xs">🔒</span>
+                          </div>
+                        )}
                       </button>
                     );
                   })}
                 </div>
+
+                {/* Blocked dates warning */}
+                {blockedDates.size > 0 && (
+                  <div className="pt-2 border-t border-gray-100">
+                    <div className="bg-red-50 rounded-xl p-2">
+                      <p className="text-xs text-red-700">
+                        🔒 {blockedDates.size} date(s) are locked and cannot be
+                        selected
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="pt-2 border-t border-gray-100">
                   <div className="text-xs font-medium text-gray-600 mb-2">
@@ -696,10 +764,14 @@ const CompactDateTimePicker = ({
                   </div>
                   <div className="flex space-x-2">
                     <button
-                      onClick={() =>
-                        handleDateSelect(getCurrentTimeInTimezone())
-                      }
-                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors"
+                      onClick={() => {
+                        const today = getCurrentTimeInTimezone();
+                        if (!isDateBlocked(today)) {
+                          handleDateSelect(today);
+                        }
+                      }}
+                      disabled={isDateBlocked(getCurrentTimeInTimezone())}
+                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Today
                     </button>
@@ -707,9 +779,16 @@ const CompactDateTimePicker = ({
                       onClick={() => {
                         const tomorrow = getCurrentTimeInTimezone();
                         tomorrow.setDate(tomorrow.getDate() + 1);
-                        handleDateSelect(tomorrow);
+                        if (!isDateBlocked(tomorrow)) {
+                          handleDateSelect(tomorrow);
+                        }
                       }}
-                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors"
+                      disabled={(() => {
+                        const tomorrow = getCurrentTimeInTimezone();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return isDateBlocked(tomorrow);
+                      })()}
+                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Tomorrow
                     </button>
@@ -868,19 +947,24 @@ const CompactDateTimePicker = ({
                     <button
                       onClick={() => {
                         const now = getCurrentTimeInTimezone();
-                        setTempDate(new Date(now));
+                        if (!isDateBlocked(now)) {
+                          setTempDate(new Date(now));
+                        }
                       }}
-                      className="px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-medium rounded-xl transition-all duration-200"
+                      disabled={isDateBlocked(getCurrentTimeInTimezone())}
+                      className="px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-medium rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Set Now
                     </button>
                   </div>
                 </div>
 
-                {isTimeDisabled(tempDate) && (
+                {(isTimeDisabled(tempDate) || isDateBlocked(tempDate)) && (
                   <div className="bg-red-50 rounded-xl p-2 text-center">
                     <div className="text-red-600 text-xs font-medium">
-                      ⚠️ Please select a valid time
+                      {isDateBlocked(tempDate)
+                        ? "🔒 This date is locked and cannot be selected"
+                        : "⚠️ Please select a valid time"}
                     </div>
                   </div>
                 )}
@@ -901,7 +985,7 @@ const CompactDateTimePicker = ({
           </div>
 
           <div className="flex border-t border-gray-100">
-            {showClearButton && (
+            {showClearButton && !isScheduleBlocked && (
               <button
                 onClick={handleClear}
                 className="flex-1 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
@@ -920,11 +1004,17 @@ const CompactDateTimePicker = ({
             </button>
             <button
               onClick={handleConfirm}
-              disabled={isDateDisabled(tempDate) || isTimeDisabled(tempDate)}
+              disabled={
+                isDateDisabled(tempDate) ||
+                isTimeDisabled(tempDate) ||
+                isDateBlocked(tempDate)
+              }
               className={`
                 flex-1 py-2 text-sm font-semibold transition-colors border-l border-gray-100 flex items-center justify-center space-x-1
                 ${
-                  isDateDisabled(tempDate) || isTimeDisabled(tempDate)
+                  isDateDisabled(tempDate) ||
+                  isTimeDisabled(tempDate) ||
+                  isDateBlocked(tempDate)
                     ? "text-gray-400 cursor-not-allowed"
                     : "text-blue-600 hover:bg-blue-50"
                 }

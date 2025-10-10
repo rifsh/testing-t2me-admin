@@ -210,6 +210,18 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
       ...scheduleFormData,
       ...form.getFieldsValue(),
       ...updates,
+      is_multi_date:
+        updates.is_multi_date !== undefined
+          ? updates.is_multi_date
+          : scheduleFormData.is_multi_date,
+      booking_limit_per_user_toggle:
+        updates.booking_limit_per_user_toggle !== undefined
+          ? updates.booking_limit_per_user_toggle
+          : scheduleFormData.booking_limit_per_user_toggle,
+      payment_required:
+        updates.payment_required !== undefined
+          ? updates.payment_required
+          : scheduleFormData.payment_required,
     };
     dispatch(setScheduleFormData(updatedData));
   };
@@ -281,29 +293,59 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
     }
   };
 
-  const handleBookingLimitToggle = (enabled) => {
+  // Update all three toggle handlers with proper event handling
+
+  const handleMultipleDatesToggle = (e, enabled) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    console.log("Toggle Multiple Dates:", enabled);
+    setAllowMultipleDates(enabled);
+
+    // Update form data independently - don't affect other toggles
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        is_multi_date: enabled,
+      })
+    );
+  };
+  const handleBookingLimitToggle = (e, enabled) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    console.log("Toggle Booking Limit:", enabled);
     setLimitBookingsPerUser(enabled);
 
     if (!enabled) {
       form.setFieldValue("booking_limit_per_user", null);
     }
 
-    updateFormData({
-      booking_limit_per_user_toggle: enabled,
-      booking_limit_per_user: enabled
-        ? scheduleFormData.booking_limit_per_user
-        : null,
-    });
+    // Update form data independently - don't affect other toggles
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        booking_limit_per_user_toggle: enabled,
+        booking_limit_per_user: enabled
+          ? scheduleFormData.booking_limit_per_user
+          : null,
+      })
+    );
   };
+  const handlePaymentRequiredToggle = (e, enabled) => {
+    e?.preventDefault();
+    e?.stopPropagation();
 
-  const handleMultipleDatesToggle = (enabled) => {
-    setAllowMultipleDates(enabled);
-    updateFormData({ is_multi_date: enabled });
-  };
-
-  const handlePaymentRequiredToggle = (enabled) => {
+    console.log("Toggle Payment Required:", enabled);
     setIsPaymentRequired(enabled);
-    updateFormData({ payment_required: enabled });
+
+    // Update form data independently - don't affect other toggles
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        payment_required: enabled,
+      })
+    );
   };
 
   const handleAddOnsChange = (addonName, shouldAdd) => {
@@ -353,13 +395,13 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
 
     updateFormData({
       ...allValues,
+      // Explicitly preserve all toggle states
       is_multi_date: allowMultipleDates,
       payment_required: isPaymentRequired,
       booking_limit_per_user_toggle: limitBookingsPerUser,
       add_ons: selectedAddOns,
     });
   };
-
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -725,9 +767,11 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                 </h2>
                 <div className="space-y-3">
                   <div
-                    onClick={() =>
-                      handleMultipleDatesToggle(!allowMultipleDates)
-                    }
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleMultipleDatesToggle(e, !allowMultipleDates);
+                    }}
                     className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${
                       allowMultipleDates
                         ? "bg-red-50 border-2 border-red-200"
@@ -781,9 +825,11 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                   </div>
 
                   <div
-                    onClick={() =>
-                      handleBookingLimitToggle(!limitBookingsPerUser)
-                    }
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleBookingLimitToggle(e, !limitBookingsPerUser);
+                    }}
                     className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${
                       limitBookingsPerUser
                         ? "bg-blue-50 border-2 border-blue-200"
@@ -837,9 +883,11 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                   </div>
 
                   <div
-                    onClick={() =>
-                      handlePaymentRequiredToggle(!isPaymentRequired)
-                    }
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handlePaymentRequiredToggle(e, !isPaymentRequired);
+                    }}
                     className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${
                       isPaymentRequired
                         ? "bg-green-50 border-2 border-green-200"
