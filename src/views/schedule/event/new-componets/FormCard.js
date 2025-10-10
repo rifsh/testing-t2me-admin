@@ -84,8 +84,63 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
   const availableTypes = availableTicketTyps?.available_types || [];
   const availableAddOns = addOnServiceList?.available_add_ons || [];
 
-  // In FormCard.jsx - Update the useEffect that initializes form data
+  // UPDATED: Fetch initial data and handle edit mode
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        console.log("Fetching initial data...");
+        await Promise.all([
+          dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event })).unwrap(),
+          dispatch(getPaymentAddOnService()),
+        ]);
+        console.log("Initial data fetched successfully");
+      } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+        message.error("Failed to load initial data");
+      }
+    };
 
+    fetchInitialData();
+  }, [dispatch]);
+
+  // UPDATED: Handle edit mode - fetch available tickets and set event data
+  useEffect(() => {
+    if (
+      mode === EDIT &&
+      scheduleFormData?.event_id &&
+      filteredEvents.length > 0
+    ) {
+      console.log(
+        "Setting up edit mode data for event:",
+        scheduleFormData.event_id
+      );
+
+      // Find the event
+      const event = filteredEvents.find(
+        (e) => e.id === scheduleFormData.event_id
+      );
+
+      if (event) {
+        console.log("Found event, dispatching required actions...");
+
+        // Dispatch all required actions for edit mode
+        dispatch(
+          getAvailableTicketsType({ event_id: scheduleFormData.event_id })
+        );
+        dispatch(setScheduleSelectTime(false));
+        dispatch(setSelectedEvent(event));
+
+        // Set venue if available
+        if (scheduleFormData.venue_id) {
+          dispatch(setSelectedVenue(scheduleFormData.venue_id));
+        }
+
+        console.log("Edit mode setup completed");
+      }
+    }
+  }, [mode, scheduleFormData?.event_id, filteredEvents, dispatch]);
+
+  // UPDATED: Initialize form data with edit mode handling
   useEffect(() => {
     if (scheduleFormData && Object.keys(scheduleFormData).length > 0) {
       console.log(
@@ -166,25 +221,6 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
       }
     }
   }, [scheduleFormData, form, dispatch, filteredEvents, availableAddOns]);
-
-  // Fetch initial data
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        console.log("Fetching initial data...");
-        await Promise.all([
-          dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event })).unwrap(),
-          dispatch(getPaymentAddOnService()),
-        ]);
-        console.log("Initial data fetched successfully");
-      } catch (error) {
-        console.error("Failed to fetch initial data:", error);
-        message.error("Failed to load initial data");
-      }
-    };
-
-    fetchInitialData();
-  }, [dispatch]);
 
   // Debounced search function
   const debouncedSearch = useCallback(
@@ -293,8 +329,6 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
     }
   };
 
-  // Update all three toggle handlers with proper event handling
-
   const handleMultipleDatesToggle = (e, enabled) => {
     e?.preventDefault();
     e?.stopPropagation();
@@ -302,7 +336,6 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
     console.log("Toggle Multiple Dates:", enabled);
     setAllowMultipleDates(enabled);
 
-    // Update form data independently - don't affect other toggles
     dispatch(
       setScheduleFormData({
         ...scheduleFormData,
@@ -310,6 +343,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
       })
     );
   };
+
   const handleBookingLimitToggle = (e, enabled) => {
     e?.preventDefault();
     e?.stopPropagation();
@@ -321,7 +355,6 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
       form.setFieldValue("booking_limit_per_user", null);
     }
 
-    // Update form data independently - don't affect other toggles
     dispatch(
       setScheduleFormData({
         ...scheduleFormData,
@@ -332,6 +365,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
       })
     );
   };
+
   const handlePaymentRequiredToggle = (e, enabled) => {
     e?.preventDefault();
     e?.stopPropagation();
@@ -339,7 +373,6 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
     console.log("Toggle Payment Required:", enabled);
     setIsPaymentRequired(enabled);
 
-    // Update form data independently - don't affect other toggles
     dispatch(
       setScheduleFormData({
         ...scheduleFormData,
@@ -395,13 +428,13 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
 
     updateFormData({
       ...allValues,
-      // Explicitly preserve all toggle states
       is_multi_date: allowMultipleDates,
       payment_required: isPaymentRequired,
       booking_limit_per_user_toggle: limitBookingsPerUser,
       add_ons: selectedAddOns,
     });
   };
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -547,6 +580,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                       placeholder="Search and select event"
                       loading={loading}
                       onSearch={handleSearch}
+                      disabled={mode === EDIT}
                       onChange={handleSelectEvent}
                       allowClear
                       suffixIcon={<SearchOutlined />}
@@ -648,6 +682,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                         placeholder="Select booking type"
                         onChange={handleBookingTypeChange}
                         allowClear
+                        disabled={mode === EDIT}
                         dropdownStyle={{
                           borderRadius: "8px",
                           boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
@@ -779,9 +814,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                     }`}
                   >
                     <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-8 h-8 rounded flex items-center justify-center bg-red-500`}
-                      >
+                      <div className="w-8 h-8 rounded flex items-center justify-center bg-red-500">
                         <CalendarOutlined className="text-white text-sm" />
                       </div>
                       <div>
@@ -837,9 +870,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                     }`}
                   >
                     <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-8 h-8 rounded flex items-center justify-center bg-blue-500`}
-                      >
+                      <div className="w-8 h-8 rounded flex items-center justify-center bg-blue-500">
                         <UserOutlined className="text-white text-sm" />
                       </div>
                       <div>
