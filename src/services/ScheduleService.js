@@ -21,6 +21,14 @@ ScheduleService.editSchedule = function (data, action) {
     data: data,
   });
 };
+ScheduleService.editScheduleStatus = function (data, action) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  return fetch({
+    url: `${ApiConstant.SCHEDULE_STATUS_EDIT_URL}/${data.schedule_id}?action=${encodedAction}`,
+    method: "put",
+    data: data,
+  });
+};
 ScheduleService.getAllSchedule = function (pageData) {
   return fetch({
     url: ApiConstant.SCHEDULE_URL,

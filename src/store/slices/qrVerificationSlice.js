@@ -35,6 +35,17 @@ export const cosnumeTicketUsers = createAsyncThunk(
         }
     }
 );
+export const cosnumeAddons = createAsyncThunk(
+    "qr/cosnumeAddons",
+    async ({ pageData, bookingTicketId }, { rejectWithValue }) => {
+        try {
+            const response = await QrVerificationService.consumeAddons(pageData, bookingTicketId);
+            return response.data[0];
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Error");
+        }
+    }
+);
 export const fetchTcketAddon = createAsyncThunk(
     "qr/fetchTcketAddon",
     async (pageData, { rejectWithValue }) => {
@@ -53,7 +64,7 @@ export const verifyEventBooking = createAsyncThunk(
             const response = await QrVerificationService.verifyEvenetBooking(bookingType, bookingTicketId, eventId);
             return response.data[0];
         } catch (err) {
-            console.log("API_ERROR",err);
+            console.log("API_ERROR", err);
             return rejectWithValue(err.response?.data?.message || "Error");
         }
     }
@@ -90,7 +101,7 @@ const qrVerificationSlice = createSlice({
             })
             .addCase(fetchTcketAddon.fulfilled, (state, action) => {
                 state.loading = false;
-                state.response = action.payload?.items;
+                state.response = action.payload;
                 state.pagination = action.payload;
             })
             .addCase(fetchTcketAddon.rejected, (state, action) => {
@@ -105,6 +116,17 @@ const qrVerificationSlice = createSlice({
                 state.response = action.payload;
             })
             .addCase(cosnumeTicketUsers.rejected, (state, action) => {
+                state.message = action.payload;
+                state.submitLoading = false;
+            })
+            .addCase(cosnumeAddons.pending, (state) => {
+                state.submitLoading = true;
+            })
+            .addCase(cosnumeAddons.fulfilled, (state, action) => {
+                state.submitLoading = false;
+                state.response = action.payload;
+            })
+            .addCase(cosnumeAddons.rejected, (state, action) => {
                 state.message = action.payload;
                 state.submitLoading = false;
             })

@@ -36,6 +36,15 @@ QrVerificationService.consumeUsers = function (data, bookingTicketId) {
         data: data,
     });
 };
+QrVerificationService.consumeAddons = function (data, bookingTicketId) {
+    const params = { booking_ticket_id: bookingTicketId }
+    return fetch({
+        url: `${ApiConstant.CONSUME_ADDON_LIST}`,
+        method: "put",
+        params,
+        data: data,
+    });
+};
 QrVerificationService.verifyEvenetBooking = async function (bookingType, bookingTicketId, eventId) {
     return await verifyEventBookingUtil(bookingType, bookingTicketId, eventId);
 
