@@ -118,11 +118,7 @@ EventsService.fetchEventSupportAvailable = function (eventId) {
   });
 };
 
-EventsService.updateEvent = function (
-  data,
-  action,
-  pageData = { page: 1, size: 10 }
-) {
+EventsService.updateEvent = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   const formData = Utils.createFormData(data, {
     fileKeys: ["thumbnail_image"],
@@ -133,7 +129,7 @@ EventsService.updateEvent = function (
     url: `${ApiConstant.EDIT_EVENT_URL}/${data.id}`,
     method: "put",
     data: formData,
-    params: Utils.filterParams({ ...pageData, action: encodedAction }),
+    params: Utils.filterParams({ action: encodedAction }),
     headers: {
       "Content-Type": "multipart/form-data",
     },

@@ -124,7 +124,7 @@ const EventsList = () => {
       ).unwrap();
 
       if (result?.editable === true) {
-        navigate(`${APP_PREFIX_PATH}/schedule/edit/${id}`);
+        navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
       } else {
         Modal.error({
           content:
