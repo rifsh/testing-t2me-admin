@@ -39,6 +39,7 @@ const TicketSelectionField = ({ form, currentValues }) => {
   const [activeTicketTypeTab, setActiveTicketTypeTab] = useState({});
   const [fetchedVenues, setFetchedVenues] = useState(new Set());
   const [venueData, setVenueData] = useState({});
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const { filteredTickets, loading: ticketLoading } = useSelector(
     (state) => state.tickets
@@ -47,6 +48,54 @@ const TicketSelectionField = ({ form, currentValues }) => {
     (state) => state.movieSeatSlice
   );
   const { filteredVenues } = useSelector((state) => state.locations);
+  const { eventDetails } = useSelector((state) => state.event);
+
+  // Load ticket structure data into form fields on mount
+  useEffect(() => {
+    if (
+      eventDetails?.venue_ticket_structures &&
+      !dataLoaded &&
+      venues.length > 0
+    ) {
+      const selectedTicketTypesData = {};
+      const ticketSetsData = {};
+
+      eventDetails.venue_ticket_structures.forEach((vts) => {
+        const venueId = vts.venue.id;
+        const ticketStructures = vts.ticket_structures || [];
+
+        if (ticketStructures.length > 0) {
+          selectedTicketTypesData[venueId] = ticketStructures.map(
+            (ts) => ts.ticket_structure
+          );
+
+          ticketSetsData[venueId] = {};
+          ticketStructures.forEach((ts) => {
+            if (ts.ticket_sets && Array.isArray(ts.ticket_sets)) {
+              ticketSetsData[venueId][ts.ticket_structure] = ts.ticket_sets;
+            }
+          });
+        }
+      });
+
+      // Update form with loaded data
+      form.setFieldValue("selected_ticket_types", selectedTicketTypesData);
+      form.setFieldValue("ticket_sets", ticketSetsData);
+      form.setFieldValue("selected_seats", {});
+      form.setFieldValue("ticket_quantities", {});
+
+      dispatch(
+        setEventFormData({
+          selected_ticket_types: selectedTicketTypesData,
+          ticket_sets: ticketSetsData,
+          selected_seats: {},
+          ticket_quantities: {},
+        })
+      );
+
+      setDataLoaded(true);
+    }
+  }, [eventDetails, dataLoaded, venues, form, dispatch]);
 
   useEffect(() => {
     const currentFormValues = form.getFieldsValue();
@@ -218,7 +267,6 @@ const TicketSelectionField = ({ form, currentValues }) => {
             <List.Item>
               <Checkbox
                 checked={selectedSeats[venueId]?.[seat.id] || false}
-                // disabled={!seat.available}
                 onChange={(e) =>
                   handleSeatSelection(venueId, seat.id, e.target.checked)
                 }
@@ -233,7 +281,6 @@ const TicketSelectionField = ({ form, currentValues }) => {
                         {type.label}
                       </Text>
                     ))}
-                  {/* {!seat.available && <Text type="danger">(Unavailable)</Text>} */}
                 </Space>
               </Checkbox>
             </List.Item>
@@ -421,20 +468,6 @@ const TicketSelectionField = ({ form, currentValues }) => {
   };
 
   const renderVenueTab = (venue) => {
-    const hasSeats =
-      selectedSeats[venue.id] &&
-      Object.values(selectedSeats[venue.id]).some(
-        (selected) => selected === true
-      );
-    const hasTicketTypes =
-      selectedTicketTypes[venue.id] && selectedTicketTypes[venue.id].length > 0;
-    const hasTicketSets =
-      hasTicketTypes &&
-      selectedTicketTypes[venue.id].some((typeId) => {
-        const sets = ticketSets[venue.id]?.[typeId];
-        return Array.isArray(sets) && sets.length > 0;
-      });
-
     return (
       <div>
         {renderSeatSelection(venue.id)}

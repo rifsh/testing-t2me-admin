@@ -17,6 +17,7 @@ import {
   setSlotStatus,
   setTimeSlots,
   checkScheduleEdit,
+  editSchedule,
 } from "store/slices/scheduleSlice";
 import { setCurrentStep, resetState } from "store/slices/eventSlice";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
@@ -28,12 +29,7 @@ import dayjs from "dayjs";
 import Utils from "utils";
 import { ScheduleUtil } from "../utils";
 
-// ==================== BLOCKING UTILITY FUNCTIONS ====================
 
-const isScheduleBlocked = (checkedScheduleDetails) => {
-  if (!checkedScheduleDetails) return false;
-  return checkedScheduleDetails.editable === false;
-};
 
 const getBlockingInfo = (checkedScheduleDetails) => {
   if (!checkedScheduleDetails) {
@@ -574,6 +570,7 @@ const ScheduleDetails = ({ mode, id }) => {
       show_dates: values.show_dates || [],
       offer_ids: transformOffersCoupons(selectedOffers, "offer"),
       coupon_ids: transformOffersCoupons(selectedCoupons, "coupons"),
+      id: values.id || undefined,
     };
   };
 
@@ -629,17 +626,22 @@ const ScheduleDetails = ({ mode, id }) => {
 
   const handleFinalSubmit = async (finalData = null) => {
     try {
+      console.warn(scheduleDetails.id, "idsss");
       const dataToSubmit = finalData || {
         ...scheduleFormData,
         ...form.getFieldsValue(),
       };
-      const submitData = transformSubmitData(dataToSubmit);
-      const cleanedSubmitData = cleanScheduleData(submitData);
+      const finalSubmitData = {
+        ...dataToSubmit,
+        id: scheduleDetails.id || undefined,
+      };
+      const submitData = transformSubmitData(finalSubmitData);
 
-      dispatch(setScheduleSubmitData(cleanedSubmitData));
-      dispatch(setSelectedSubmitItem(cleanedSubmitData));
+      dispatch(setScheduleSubmitData(submitData));
 
-      console.log("Final submit data:", cleanedSubmitData);
+      dispatch(setSelectedSubmitItem(submitData));
+
+      console.log("Final submit data:", submitData);
       message.success("Schedule data prepared for submission!");
     } catch (error) {
       console.error("Final submit error:", error);
@@ -748,7 +750,7 @@ const ScheduleDetails = ({ mode, id }) => {
 
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={addSchedule}
+        addFunction={mode === EDIT ? editSchedule : addSchedule}
         navigationPath={`${APP_PREFIX_PATH}/schedule/list`}
         responseMessage={responseMessage}
         mode={mode}

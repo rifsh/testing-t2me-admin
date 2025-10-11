@@ -17,7 +17,7 @@ import { AddOnsFoodTimeSlotValidator } from "utils/validation/addOnsFoodTimeVali
 
 export function AddOnsFoodTimeSlotes({ form }) {
   const dispatch = useDispatch();
-  const { foodTimeSlots: reduxTimeSlots } = useSelector(
+  const { foodTimeSlots: reduxTimeSlots, scheduleFormData } = useSelector(
     (state) => state.schedules
   );
 
@@ -31,14 +31,56 @@ export function AddOnsFoodTimeSlotes({ form }) {
     },
   ]);
 
+  // FIXED: Initialize from both Redux and scheduleFormData
   useEffect(() => {
+    let initialSlots = null;
+
+    // First priority: Check Redux foodTimeSlots
     if (reduxTimeSlots && Object.keys(reduxTimeSlots).length > 0) {
-      const slotsArray = Object.values(reduxTimeSlots).flat();
+      const slotsArray = Array.isArray(reduxTimeSlots)
+        ? reduxTimeSlots
+        : Object.values(reduxTimeSlots).flat();
       if (slotsArray.length > 0) {
-        setLocalTimeSlots(slotsArray);
+        initialSlots = slotsArray;
       }
     }
-  }, [reduxTimeSlots]);
+
+    // Second priority: Check scheduleFormData.food_slots_slim (from edit mode)
+    if (!initialSlots && scheduleFormData?.food_slots_slim?.length > 0) {
+      initialSlots = scheduleFormData.food_slots_slim.map((slot) => ({
+        id: slot.id || 1,
+        name: slot.name || "",
+        start_time: slot.start_time || null,
+        end_time: slot.end_time || null,
+        num_of_tickets: slot.num_of_tickets || null,
+      }));
+    }
+
+    // Third priority: Check scheduleFormData.food_slots
+    if (!initialSlots && scheduleFormData?.food_slots?.length > 0) {
+      initialSlots = scheduleFormData.food_slots.map((slot) => ({
+        id: slot.id || 1,
+        name: slot.name || "",
+        start_time: slot.start_time || null,
+        end_time: slot.end_time || null,
+        num_of_tickets: slot.num_of_tickets || null,
+      }));
+    }
+
+    // If we found slots, update both local state and Redux
+    if (initialSlots && initialSlots.length > 0) {
+      console.log("📌 Initializing food time slots:", initialSlots);
+      setLocalTimeSlots(initialSlots);
+      dispatch(setFoodTimeSlots(initialSlots));
+      form.setFieldsValue({ time_slots: initialSlots });
+    }
+  }, [
+    reduxTimeSlots,
+    scheduleFormData?.food_slots_slim,
+    scheduleFormData?.food_slots,
+    dispatch,
+    form,
+  ]);
 
   const addTimeSlot = () => {
     const newId =

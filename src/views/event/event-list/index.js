@@ -124,11 +124,11 @@ const EventsList = () => {
       ).unwrap();
 
       if (result?.editable === true) {
-        navigate(`${APP_PREFIX_PATH}/schedule/edit/${id}`);
+        navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
       } else {
         Modal.error({
           content:
-            "Sorry, this event already has bookings in all time slots. You cannot edit this schedule.",
+            "Sorry, this event already has bookings in all time slots. You cannot edit this event.",
         });
       }
     } catch (error) {
