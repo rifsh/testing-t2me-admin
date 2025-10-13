@@ -436,6 +436,8 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                   show_time_ticket_types: slot.show_time_ticket_types || [],
                   show_date_id: slot.show_date_id,
                   show_time_id: slot.show_time_id,
+                  offer_ids: slot.offer_ids || [],
+                  coupon_ids: slot.coupon_ids || [],
                   color: colorClass,
                   timezone: timezone,
                 };
@@ -798,8 +800,10 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
             )
               .toString()
               .padStart(2, "0")}`,
-            ticket_structure_id: event.ticket_structure_id || 11,
-            ticket_set: event.ticket_set || "GOLD A1",
+            ticket_structure_id: event.ticket_structure_id,
+            offer_ids: event.offer_ids || [],
+            coupon_ids: event.coupon_ids || [],
+            ticket_set: event.ticket_set ,
             seat_structure_id: event.seat_structure_id,
             is_midnight: event.is_midnight_passed ? "true" : "false",
             show_end_date:

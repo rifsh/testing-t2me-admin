@@ -17,12 +17,23 @@ import {
   toggleSelectedOffer,
 } from "store/slices/eventSlice";
 
-const { Row, Col, Card, Form, Select, Typography, Button, Alert, List, Space } =
-  antd;
+const {
+  Row,
+  Col,
+  Card,
+  Form,
+  Select,
+  Typography,
+  Button,
+  Alert,
+  List,
+  Space,
+  message,
+} = antd;
 const { Option } = Select;
 const { Text } = Typography;
 
-const OfferField = ({ mode, form }) => {
+const OfferField = ({ mode, form, eventDetails }) => {
   const dispatch = useDispatch();
 
   // State from Redux
@@ -31,7 +42,7 @@ const OfferField = ({ mode, form }) => {
     loading: offerLoading,
     ValidateData,
     offerCouponValidationDialogVisible,
-    message,
+    message: validationMessage,
   } = useSelector((state) => state.offers);
   const { selectedOffers, selectedCoupons } = useSelector(
     (state) => state.event
@@ -45,13 +56,22 @@ const OfferField = ({ mode, form }) => {
     dispatch(fetchAllCoupons({}));
   }, [dispatch]);
 
-  const handleCouponSelect = (couponId) => {
-    const selectedCoupon = filteredCoupons.find(
-      (coupon) => coupon.id === couponId
-    );
-    if (selectedCoupon) {
-      dispatch(toggleSelectedCoupon(selectedCoupon));
+  // Helper function to check if offer was already submitted
+  const isSubmittedOffer = (offerId) => {
+    if (mode === "EDIT" && eventDetails?.event_offers) {
+      return eventDetails.event_offers.some((eo) => eo.offer?.id === offerId);
     }
+    return false;
+  };
+
+  // Helper function to check if coupon was already submitted
+  const isSubmittedCoupon = (couponId) => {
+    if (mode === "EDIT" && eventDetails?.event_coupons) {
+      return eventDetails.event_coupons.some(
+        (ec) => ec.coupon?.id === couponId
+      );
+    }
+    return false;
   };
 
   const handleOfferSelect = (offerId) => {
@@ -61,12 +81,65 @@ const OfferField = ({ mode, form }) => {
     }
   };
 
+  const handleCouponSelect = (couponId) => {
+    const selectedCoupon = filteredCoupons.find(
+      (coupon) => coupon.id === couponId
+    );
+    if (selectedCoupon) {
+      dispatch(toggleSelectedCoupon(selectedCoupon));
+    }
+  };
+
+  const handleOfferDeselect = (offerId) => {
+    if (isSubmittedOffer(offerId)) {
+      message.error(
+        "This offer is already submitted and cannot be removed. You are only allowed to add offers."
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const handleCouponDeselect = (couponId) => {
+    if (isSubmittedCoupon(couponId)) {
+      message.error("This coupon is already submitted and cannot be removed");
+      return false;
+    }
+    return true;
+  };
+
   const handleDeleteOffer = (offer) => {
+    if (!handleOfferDeselect(offer.id)) {
+      return;
+    }
     dispatch(toggleSelectedOffer(offer));
   };
 
   const handleDeleteCoupon = (coupon) => {
+    if (!handleCouponDeselect(coupon.id)) {
+      return;
+    }
     dispatch(toggleSelectedCoupon(coupon));
+  };
+
+  const handleOfferClear = () => {
+    if (selectedOffers.length > 0) {
+      const offer = selectedOffers[0];
+      if (!handleOfferDeselect(offer.id)) {
+        return;
+      }
+      dispatch(toggleSelectedOffer(offer));
+    }
+  };
+
+  const handleCouponClear = () => {
+    if (selectedCoupons.length > 0) {
+      const coupon = selectedCoupons[0];
+      if (!handleCouponDeselect(coupon.id)) {
+        return;
+      }
+      dispatch(toggleSelectedCoupon(coupon));
+    }
   };
 
   const handleValidationModalCancel = () => {
@@ -89,13 +162,31 @@ const OfferField = ({ mode, form }) => {
                       selectedOffers.length ? selectedOffers[0].id : undefined
                     }
                     onChange={handleOfferSelect}
+                    onClear={handleOfferClear}
+                    onDeselect={handleOfferClear}
                     allowClear
                   >
-                    {filteredOffer.map((offer) => (
-                      <Option key={offer.id} value={offer.id}>
-                        {offer.name}
-                      </Option>
-                    ))}
+                    {filteredOffer.map((offer) => {
+                      const isSubmitted = isSubmittedOffer(offer.id);
+                      const isSelected = selectedOffers.some(
+                        (o) => o.id === offer.id
+                      );
+
+                      return (
+                        <Option
+                          key={offer.id}
+                          value={offer.id}
+                          disabled={isSubmitted && isSelected}
+                        >
+                          <Space>
+                            <Text>{offer.name}</Text>
+                            {isSubmitted && isSelected && (
+                              <Text type="warning">(Submitted)</Text>
+                            )}
+                          </Space>
+                        </Option>
+                      );
+                    })}
                   </Select>
                 </Form.Item>
               </Col>
@@ -108,13 +199,31 @@ const OfferField = ({ mode, form }) => {
                       selectedCoupons.length ? selectedCoupons[0].id : undefined
                     }
                     onChange={handleCouponSelect}
+                    onClear={handleCouponClear}
+                    onDeselect={handleCouponClear}
                     allowClear
                   >
-                    {filteredCoupons.map((coupon) => (
-                      <Option key={coupon.id} value={coupon.id}>
-                        {coupon.name}
-                      </Option>
-                    ))}
+                    {filteredCoupons.map((coupon) => {
+                      const isSubmitted = isSubmittedCoupon(coupon.id);
+                      const isSelected = selectedCoupons.some(
+                        (c) => c.id === coupon.id
+                      );
+
+                      return (
+                        <Option
+                          key={coupon.id}
+                          value={coupon.id}
+                          disabled={isSubmitted && isSelected}
+                        >
+                          <Space>
+                            <Text>{coupon.name}</Text>
+                            {isSubmitted && isSelected && (
+                              <Text type="warning">(Submitted)</Text>
+                            )}
+                          </Space>
+                        </Option>
+                      );
+                    })}
                   </Select>
                 </Form.Item>
               </Col>
@@ -141,43 +250,67 @@ const OfferField = ({ mode, form }) => {
                   <List
                     size="small"
                     dataSource={selectedOffers}
-                    renderItem={(offer) => (
-                      <List.Item
-                        actions={
-                          mode !== "EDIT"
-                            ? [
-                                <Button
-                                  type="text"
-                                  danger
-                                  size="small"
-                                  icon={<CloseCircleOutlined />}
-                                  onClick={() => handleDeleteOffer(offer)}
-                                />,
-                              ]
-                            : []
-                        }
-                      >
-                        <List.Item.Meta
-                          title={offer.name}
-                          description={
-                            <Space direction="vertical" size={2}>
-                              <Text type="secondary" style={{ fontSize: 12 }}>
-                                Max Uses: {offer.max_uses}
-                              </Text>
-                              {offer.date_required ? (
-                                <Text type="secondary" style={{ fontSize: 11 }}>
-                                  {offer.start_date} - {offer.end_date}
-                                </Text>
-                              ) : (
-                                <Text type="warning" style={{ fontSize: 11 }}>
-                                  Date can be specified during scheduling
-                                </Text>
-                              )}
-                            </Space>
+                    renderItem={(offer) => {
+                      const isSubmitted = isSubmittedOffer(offer.id);
+
+                      return (
+                        <List.Item
+                          actions={
+                            mode !== "EDIT"
+                              ? [
+                                  <Button
+                                    type="text"
+                                    danger
+                                    size="small"
+                                    icon={<CloseCircleOutlined />}
+                                    onClick={() => handleDeleteOffer(offer)}
+                                  />,
+                                ]
+                              : isSubmitted
+                              ? [
+                                  <Button
+                                    type="text"
+                                    disabled
+                                    size="small"
+                                    icon={<CloseCircleOutlined />}
+                                    title="Cannot delete submitted offer"
+                                  />,
+                                ]
+                              : []
                           }
-                        />
-                      </List.Item>
-                    )}
+                        >
+                          <List.Item.Meta
+                            title={
+                              <Space>
+                                <Text>{offer.name}</Text>
+                                {isSubmitted && (
+                                  <Text type="warning">(Submitted)</Text>
+                                )}
+                              </Space>
+                            }
+                            description={
+                              <Space direction="vertical" size={2}>
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                  Max Uses: {offer.max_uses}
+                                </Text>
+                                {offer.date_required ? (
+                                  <Text
+                                    type="secondary"
+                                    style={{ fontSize: 11 }}
+                                  >
+                                    {offer.start_date} - {offer.end_date}
+                                  </Text>
+                                ) : (
+                                  <Text type="warning" style={{ fontSize: 11 }}>
+                                    Date can be specified during scheduling
+                                  </Text>
+                                )}
+                              </Space>
+                            }
+                          />
+                        </List.Item>
+                      );
+                    }}
                   />
                 ) : (
                   <Text type="secondary">No offers selected</Text>
@@ -193,33 +326,50 @@ const OfferField = ({ mode, form }) => {
                   <List
                     size="small"
                     dataSource={selectedCoupons}
-                    renderItem={(coupon) => (
-                      <List.Item
-                        actions={[
-                          <Button
-                            type="text"
-                            danger
-                            size="small"
-                            icon={<CloseCircleOutlined />}
-                            onClick={() => handleDeleteCoupon(coupon)}
-                          />,
-                        ]}
-                      >
-                        <List.Item.Meta
-                          title={coupon.name}
-                          description={
-                            <Space direction="vertical" size={2}>
-                              <Text type="secondary" style={{ fontSize: 12 }}>
-                                Max Uses: {coupon.max_uses}
-                              </Text>
-                              <Text type="secondary" style={{ fontSize: 11 }}>
-                                {coupon.start_date} - {coupon.end_date}
-                              </Text>
-                            </Space>
-                          }
-                        />
-                      </List.Item>
-                    )}
+                    renderItem={(coupon) => {
+                      const isSubmitted = isSubmittedCoupon(coupon.id);
+
+                      return (
+                        <List.Item
+                          actions={[
+                            <Button
+                              type="text"
+                              danger={!isSubmitted}
+                              disabled={isSubmitted}
+                              size="small"
+                              icon={<CloseCircleOutlined />}
+                              onClick={() => handleDeleteCoupon(coupon)}
+                              title={
+                                isSubmitted
+                                  ? "Cannot delete submitted coupon"
+                                  : ""
+                              }
+                            />,
+                          ]}
+                        >
+                          <List.Item.Meta
+                            title={
+                              <Space>
+                                <Text>{coupon.name}</Text>
+                                {isSubmitted && (
+                                  <Text type="warning">(Submitted)</Text>
+                                )}
+                              </Space>
+                            }
+                            description={
+                              <Space direction="vertical" size={2}>
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                  Max Uses: {coupon.max_uses}
+                                </Text>
+                                <Text type="secondary" style={{ fontSize: 11 }}>
+                                  {coupon.start_date} - {coupon.end_date}
+                                </Text>
+                              </Space>
+                            }
+                          />
+                        </List.Item>
+                      );
+                    }}
                   />
                 ) : (
                   <Text type="secondary">No coupons selected</Text>
@@ -242,7 +392,7 @@ const OfferField = ({ mode, form }) => {
       <ValidationModal
         visible={offerCouponValidationDialogVisible}
         data={ValidateData?.errors}
-        statusMessage={message}
+        statusMessage={validationMessage}
         onClose={handleValidationModalCancel}
       />
     </>

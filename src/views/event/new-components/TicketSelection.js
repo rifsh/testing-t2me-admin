@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllTickets } from "store/slices/ticketSlice";
 import { getEventAllSeatStructures } from "store/slices/movieSeatSlice";
 import { setEventFormData } from "store/slices/eventSlice";
+import { EDIT } from "constants/AppConstants";
 
 const {
   Row,
@@ -24,7 +25,7 @@ const { Option } = Select;
 const { Text, Title } = Typography;
 const { TabPane } = Tabs;
 
-const TicketSelectionField = ({ form, currentValues }) => {
+const TicketSelectionField = ({ form, currentValues, mode }) => {
   const dispatch = useDispatch();
 
   const venues = currentValues.venue_id || [];
@@ -167,6 +168,60 @@ const TicketSelectionField = ({ form, currentValues }) => {
     setActiveVenueTab(activeKey);
   }, []);
 
+  // Helper function to check if seat was already submitted
+  const isSubmittedSeat = (venueId, seatId) => {
+    if (mode === EDIT && eventDetails?.venue_ticket_structures) {
+      const venueStructure = eventDetails.venue_ticket_structures.find(
+        (vts) => vts.venue.id === venueId
+      );
+
+      if (venueStructure?.ticket_structures) {
+        const submittedSeats = venueStructure.ticket_structures.flatMap(
+          (ts) => ts.submitted_seats || []
+        );
+
+        return submittedSeats.includes(seatId);
+      }
+    }
+    return false;
+  };
+
+  // Helper function to check if ticket set was already submitted
+  const isSubmittedTicketSet = (venueId, ticketSetId) => {
+    if (mode === EDIT && eventDetails?.venue_ticket_structures) {
+      const venueStructure = eventDetails.venue_ticket_structures.find(
+        (vts) => vts.venue.id === venueId
+      );
+
+      if (venueStructure?.ticket_structures) {
+        const submittedSets = venueStructure.ticket_structures.flatMap((ts) =>
+          ts.ticket_sets ? ts.ticket_sets.map((set) => set) : []
+        );
+
+        return submittedSets.includes(ticketSetId);
+      }
+    }
+    return false;
+  };
+
+  // Helper function to check if ticket type was already submitted
+  const isSubmittedTicketType = (venueId, ticketTypeId) => {
+    if (mode === EDIT && eventDetails?.venue_ticket_structures) {
+      const venueStructure = eventDetails.venue_ticket_structures.find(
+        (vts) => vts.venue.id === venueId
+      );
+
+      if (venueStructure?.ticket_structures) {
+        const submittedIds = venueStructure.ticket_structures.map(
+          (ts) => ts.ticket_structure
+        );
+
+        return submittedIds.includes(ticketTypeId);
+      }
+    }
+    return false;
+  };
+
   const handleSeatSelection = (venueId, seatId, checked) => {
     const currentSeats = form.getFieldValue("selected_seats") || {};
     const venueSeats = currentSeats[venueId] || {};
@@ -181,6 +236,14 @@ const TicketSelectionField = ({ form, currentValues }) => {
 
     form.setFieldValue("selected_seats", updatedSeats);
     dispatch(setEventFormData({ selected_seats: updatedSeats }));
+  };
+
+  const handleSeatDeselect = (venueId, seatId) => {
+    if (isSubmittedSeat(venueId, seatId)) {
+      message.error("This seat is already submitted and cannot be removed");
+      return false;
+    }
+    return true;
   };
 
   const handleTicketTypeSelection = (venueId, selectedTypes) => {
@@ -263,28 +326,43 @@ const TicketSelectionField = ({ form, currentValues }) => {
       <Card title="Seat Selection" size="small" style={{ marginBottom: 16 }}>
         <List
           dataSource={venueSeatData}
-          renderItem={(seat) => (
-            <List.Item>
-              <Checkbox
-                checked={selectedSeats[venueId]?.[seat.id] || false}
-                onChange={(e) =>
-                  handleSeatSelection(venueId, seat.id, e.target.checked)
-                }
-              >
-                <Space>
-                  <Text strong>{seat.name}</Text>
-                  <Text>Total Seats: {seat.total_seats}</Text>
-                  {seat.seat_data?.seatTypes &&
-                    Array.isArray(seat.seat_data.seatTypes) &&
-                    seat.seat_data.seatTypes.map((type) => (
-                      <Text key={type.value} type="secondary">
-                        {type.label}
-                      </Text>
-                    ))}
-                </Space>
-              </Checkbox>
-            </List.Item>
-          )}
+          renderItem={(seat) => {
+            const isSubmitted = isSubmittedSeat(venueId, seat.id);
+            const isChecked = selectedSeats[venueId]?.[seat.id] || false;
+
+            return (
+              <List.Item>
+                <Checkbox
+                  checked={isChecked}
+                  disabled={isSubmitted && isChecked}
+                  onChange={(e) => {
+                    if (
+                      !e.target.checked &&
+                      !handleSeatDeselect(venueId, seat.id)
+                    ) {
+                      return;
+                    }
+                    handleSeatSelection(venueId, seat.id, e.target.checked);
+                  }}
+                >
+                  <Space>
+                    <Text strong>{seat.name}</Text>
+                    <Text>Total Seats: {seat.total_seats}</Text>
+                    {isSubmitted && isChecked && (
+                      <Text type="warning">(Submitted)</Text>
+                    )}
+                    {seat.seat_data?.seatTypes &&
+                      Array.isArray(seat.seat_data.seatTypes) &&
+                      seat.seat_data.seatTypes.map((type) => (
+                        <Text key={type.value} type="secondary">
+                          {type.label}
+                        </Text>
+                      ))}
+                  </Space>
+                </Checkbox>
+              </List.Item>
+            );
+          }}
         />
       </Card>
     );
@@ -318,34 +396,85 @@ const TicketSelectionField = ({ form, currentValues }) => {
             mode="multiple"
             placeholder="Select ticket sets"
             style={{ width: "100%" }}
-            onChange={(value) =>
-              handleTicketSetSelection(venueId, ticketTypeId, value)
-            }
+            onChange={(value) => {
+              const currentValue = ticketSets[venueId]?.[ticketTypeId] || [];
+
+              if (value.length < currentValue.length) {
+                const removed = currentValue.find(
+                  (item) => !value.includes(item)
+                );
+
+                if (
+                  removed &&
+                  !handleTicketSetDeselect(venueId, removed, ticketTypeId)
+                ) {
+                  form.setFieldValue(
+                    ["ticket_sets", venueId, ticketTypeId],
+                    currentValue
+                  );
+                  return;
+                }
+              }
+
+              handleTicketSetSelection(venueId, ticketTypeId, value);
+            }}
+            onDeselect={(deselectedValue) => {
+              if (
+                !handleTicketSetDeselect(venueId, deselectedValue, ticketTypeId)
+              ) {
+                return;
+              }
+            }}
             value={ticketSets[venueId]?.[ticketTypeId] || []}
           >
-            {ticketSetsForType.map((setData, index) => (
-              <Option
-                key={`${setData.ticket_set}-${index}`}
-                value={setData.ticket_set}
-              >
-                <Space>
-                  <Text>{setData.ticket_set}</Text>
-                  <Text type="secondary">
-                    {Array.isArray(setData.tickets)
-                      ? setData.tickets.length
-                      : 0}{" "}
-                    tickets
-                  </Text>
-                  <Text type="secondary">
-                    Price: {setData.tickets?.[0]?.price || "N/A"}
-                  </Text>
-                </Space>
-              </Option>
-            ))}
+            {ticketSetsForType.map((setData, index) => {
+              const isSubmitted = isSubmittedTicketSet(
+                venueId,
+                setData.ticket_set
+              );
+              const isSelected =
+                ticketSets[venueId]?.[ticketTypeId]?.includes(
+                  setData.ticket_set
+                ) || false;
+
+              return (
+                <Option
+                  key={`${setData.ticket_set}-${index}`}
+                  value={setData.ticket_set}
+                  disabled={isSubmitted && isSelected}
+                >
+                  <Space>
+                    <Text>{setData.ticket_set}</Text>
+                    <Text type="secondary">
+                      {Array.isArray(setData.tickets)
+                        ? setData.tickets.length
+                        : 0}{" "}
+                      tickets
+                    </Text>
+                    <Text type="secondary">
+                      Price: {setData.tickets?.[0]?.price || "N/A"}
+                    </Text>
+                    {isSubmitted && isSelected && (
+                      <Text type="warning">(Submitted)</Text>
+                    )}
+                  </Space>
+                </Option>
+              );
+            })}
           </Select>
         </Form.Item>
       </Card>
     );
+  };
+
+  const handleTicketSetDeselect = (venueId, deselectedValue, ticketTypeId) => {
+    if (isSubmittedTicketSet(venueId, deselectedValue)) {
+      message.error(
+        "This ticket set is already submitted and cannot be removed"
+      );
+      return false;
+    }
+    return true;
   };
 
   const renderTicketTypeTabs = (venueId) => {
@@ -441,30 +570,66 @@ const TicketSelectionField = ({ form, currentValues }) => {
             placeholder="Select ticket types"
             style={{ width: "100%" }}
             onChange={(value) => {
-              const currentTypes =
-                form.getFieldValue("selected_ticket_types") || {};
-              const updatedTypes = {
-                ...currentTypes,
-                [venueId]: value,
-              };
-              form.setFieldValue("selected_ticket_types", updatedTypes);
+              const currentValue = selectedTicketTypes[venueId] || [];
+
+              if (value.length < currentValue.length) {
+                const removed = currentValue.find(
+                  (item) => !value.includes(item)
+                );
+
+                if (removed && !handleTicketTypeDeselect(venueId, removed)) {
+                  form.setFieldValue(
+                    ["selected_ticket_types", venueId],
+                    currentValue
+                  );
+                  return;
+                }
+              }
+
+              handleTicketTypeSelection(venueId, value);
+            }}
+            onDeselect={(deselectedValue) => {
+              if (!handleTicketTypeDeselect(venueId, deselectedValue)) {
+                return;
+              }
             }}
             value={selectedTicketTypes[venueId] || []}
           >
-            {venueTicketTypes.map((ticketType) => (
-              <Option key={ticketType.id} value={ticketType.id}>
-                <Space>
-                  <Text>{ticketType.name}</Text>
-                  <Text type="secondary">
-                    {ticketType.description || "General Admission"}
-                  </Text>
-                </Space>
-              </Option>
-            ))}
+            {venueTicketTypes.map((ticketType) => {
+              const isSubmitted = isSubmittedTicketType(venueId, ticketType.id);
+              const isSelected =
+                selectedTicketTypes[venueId]?.includes(ticketType.id) || false;
+
+              return (
+                <Option
+                  key={ticketType.id}
+                  value={ticketType.id}
+                  disabled={isSubmitted && isSelected}
+                >
+                  <Space>
+                    <Text>{ticketType.name}</Text>
+                    <Text type="secondary">{ticketType.description}</Text>
+                    {isSubmitted && isSelected && (
+                      <Text type="warning">(Submitted)</Text>
+                    )}
+                  </Space>
+                </Option>
+              );
+            })}
           </Select>
         </Form.Item>
       </Card>
     );
+  };
+
+  const handleTicketTypeDeselect = (venueId, deselectedValue) => {
+    if (isSubmittedTicketType(venueId, deselectedValue)) {
+      message.error(
+        "This ticket type is already submitted and cannot be removed"
+      );
+      return false;
+    }
+    return true;
   };
 
   const renderVenueTab = (venue) => {

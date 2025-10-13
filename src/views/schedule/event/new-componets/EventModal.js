@@ -12,6 +12,8 @@ import {
   Lock,
   Move,
   Moon,
+  BadgePercent,
+  Tag,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchEventDetails } from "store/slices/eventSlice";
@@ -20,6 +22,8 @@ import CustomDatePicker from "./CustomDatePicker";
 import CustomTimePicker from "./CustomTimePicker";
 import CustomSelect from "./CustomSelect";
 import dayjs from "dayjs";
+import { RiCoupon2Line } from "react-icons/ri";
+import { LocalOfferOutlined } from "@mui/icons-material";
 
 const EventModal = ({
   isOpen,
@@ -56,6 +60,8 @@ const EventModal = ({
     ticket_structure_id: null,
     ticket_set: null,
     seat_structure_id: null,
+    offer_ids: null,
+    coupon_ids: null,
   });
 
   const dispatch = useDispatch();
@@ -161,6 +167,22 @@ const EventModal = ({
       label: seat.seat_structure_name || `Seat Structure ${seat.id}`,
     }));
   }, [eventDetails, selectedVenue]);
+
+  const availableOffers = React.useMemo(() => {
+    if (!eventDetails?.offers) return [];
+    return eventDetails.offers.map((offer) => ({
+      value: offer.id,
+      label: `${offer.name}`,
+    }));
+  }, [eventDetails]);
+
+  const availableCoupons = React.useMemo(() => {
+    if (!eventDetails?.coupons) return [];
+    return eventDetails.coupons.map((coupon) => ({
+      value: coupon.id,
+      label: `${coupon.name}`,
+    }));
+  }, [eventDetails]);
 
   // FIXED: Enhanced date validation function with proper midnight logic
   const validateDates = (data) => {
@@ -346,6 +368,16 @@ const EventModal = ({
           ticket_set: event.ticket_set || event.ticketSet || null,
           seat_structure_id:
             event.seat_structure_id || event.seatStructure || null,
+          offer_ids: Array.isArray(event.offer_ids)
+            ? event.offer_ids
+            : event.offer_ids
+            ? [event.offer_ids]
+            : [],
+          coupon_ids: Array.isArray(event.coupon_ids)
+            ? event.coupon_ids
+            : event.coupon_ids
+            ? [event.coupon_ids]
+            : [],
         });
       } else {
         const defaultDate =
@@ -359,6 +391,8 @@ const EventModal = ({
           ticket_structure_id: null,
           ticket_set: null,
           seat_structure_id: null,
+          offer_ids: [],
+          coupon_ids: [],
         });
       }
     }
@@ -582,6 +616,28 @@ const EventModal = ({
         }
       }
 
+      const validFromDate = dayjs(formData.start_date).format("YYYY-MM-DD");
+
+      // FIXED: Determine valid_to based on midnight passed
+      const validToDate =
+        formData.is_midnight_passed && showEndDate
+          ? showEndDate
+          : validFromDate; // Same date if not midnight passed
+
+      // FIXED: Build offer_ids array with proper structure
+      const formattedOfferIds = formData.offer_ids.map((offerId) => ({
+        offer_id: offerId,
+        valid_from: validFromDate,
+        valid_to: validToDate,
+      }));
+
+      // FIXED: Build coupon_ids array with proper structure
+      const formattedCouponIds = formData.coupon_ids.map((couponId) => ({
+        coupon_id: couponId,
+        valid_from: validFromDate,
+        valid_to: validToDate,
+      }));
+
       const eventData = {
         id: event?.id || `temp-${Date.now()}`,
         type: "timeslot",
@@ -606,20 +662,10 @@ const EventModal = ({
         booking_limit_per_user: parentForm?.getFieldValue(
           "booking_limit_per_user"
         ),
+        // FIXED: Use formatted arrays with date ranges
+        offer_ids: formattedOfferIds,
+        coupon_ids: formattedCouponIds,
       };
-
-      // FIXED: Log midnight event data for debugging
-      if (formData.is_midnight_passed) {
-        console.log("🌙 MIDNIGHT EVENT SAVE:", {
-          startDay: startDayIndex,
-          endDay: endDayIndex,
-          showEndDate: showEndDate,
-          startTime: `${startHour}:${String(startMinute).padStart(2, "0")}`,
-          endTime: `${endHour}:${String(endMinute).padStart(2, "0")}`,
-          startDate: formData.start_date.toISOString(),
-          endDateSelected: formData.show_end_date?.toISOString(),
-        });
-      }
 
       onSave(eventData);
       onClose();
@@ -742,8 +788,8 @@ const EventModal = ({
           left: isDragged ? position.x : "50%",
           top: isDragged ? position.y : "50%",
           transform: isDragged ? "none" : "translate(-50%, -50%)",
-          width: "900px",
-          maxWidth: "95vw",
+          minWidth: "1200px",
+          maxWidth: "150vw",
           height: "auto",
           zIndex: 1000,
           userSelect: isDragging ? "none" : "auto",
@@ -860,7 +906,7 @@ const EventModal = ({
                     required={true}
                   />
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 mb-3">
                     <CustomSelect
                       label="Ticket Type"
                       value={formData.ticket_structure_id}
@@ -887,6 +933,28 @@ const EventModal = ({
                     />
                   </div>
                 )}
+                <div className="grid grid-cols-2 gap-3">
+                  <CustomSelect
+                    label="Offer"
+                    value={formData.offer_ids}
+                    mode="multiple"
+                    onChange={(value) => updateFormData("offer_ids", value)}
+                    options={availableOffers}
+                    placeholder="Select offer"
+                    icon={BadgePercent}
+                    required={false}
+                  />
+                  <CustomSelect
+                    label="Coupon"
+                    mode="multiple"
+                    value={formData.coupon_ids}
+                    onChange={(value) => updateFormData("coupon_ids", value)}
+                    options={availableCoupons}
+                    placeholder={"Select coupon"}
+                    icon={Tag}
+                    required={false}
+                  />
+                </div>
               </div>
             </div>
 
@@ -929,10 +997,10 @@ const EventModal = ({
                   <Calendar className="w-4 h-4" />
                   Details
                 </h3>
-                <div className="space-y-3 text-sm">
-                  {/* Show event date range */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                  {/* Show event date range - full width */}
                   {minDate && maxDate && (
-                    <div>
+                    <div className="col-span-2">
                       <div className="text-xs text-gray-500 mb-1">
                         Event Period
                       </div>
@@ -944,13 +1012,14 @@ const EventModal = ({
                   )}
 
                   {selectedEvent && (
-                    <div>
+                    <div className="col-span-2">
                       <div className="text-xs text-gray-500 mb-1">Event</div>
                       <div className="text-gray-900 font-medium">
                         {selectedEvent.event_name}
                       </div>
                     </div>
                   )}
+
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Date</div>
                     <div className="text-gray-900">
@@ -964,6 +1033,7 @@ const EventModal = ({
                         : "Not selected"}
                     </div>
                   </div>
+
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Time</div>
                     <div className="text-gray-900">
@@ -975,8 +1045,9 @@ const EventModal = ({
                       )}
                     </div>
                   </div>
+
                   {formData.is_midnight_passed && formData.show_end_date && (
-                    <div>
+                    <div className="col-span-2">
                       <div className="text-xs text-gray-500 mb-1">
                         Show End Date
                       </div>
@@ -1002,6 +1073,7 @@ const EventModal = ({
                       </div>
                     </div>
                   )}
+
                   {formData.ticket_set && (
                     <div>
                       <div className="text-xs text-gray-500 mb-1">
@@ -1014,6 +1086,7 @@ const EventModal = ({
                       </div>
                     </div>
                   )}
+
                   {selectedTicketType === 1 && formData.seat_structure_id && (
                     <div>
                       <div className="text-xs text-gray-500 mb-1">
@@ -1023,6 +1096,38 @@ const EventModal = ({
                         {availableSeats.find(
                           (seat) => seat.value === formData.seat_structure_id
                         )?.label || "Unknown"}
+                      </div>
+                    </div>
+                  )}
+
+                  {formData.offer_ids && formData.offer_ids.length > 0 && (
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Offers</div>
+                      <div className="text-gray-900">
+                        {formData.offer_ids
+                          .map(
+                            (id) =>
+                              availableOffers.find((opt) => opt.value === id)
+                                ?.label
+                          )
+                          .filter(Boolean)
+                          .join(", ") || "Unknown"}
+                      </div>
+                    </div>
+                  )}
+
+                  {formData.coupon_ids && formData.coupon_ids.length > 0 && (
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Coupons</div>
+                      <div className="text-gray-900">
+                        {formData.coupon_ids
+                          .map(
+                            (id) =>
+                              availableCoupons.find((opt) => opt.value === id)
+                                ?.label
+                          )
+                          .filter(Boolean)
+                          .join(", ") || "Unknown"}
                       </div>
                     </div>
                   )}

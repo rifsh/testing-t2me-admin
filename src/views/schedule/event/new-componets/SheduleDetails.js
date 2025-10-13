@@ -29,8 +29,6 @@ import dayjs from "dayjs";
 import Utils from "utils";
 import { ScheduleUtil } from "../utils";
 
-
-
 const getBlockingInfo = (checkedScheduleDetails) => {
   if (!checkedScheduleDetails) {
     return {
@@ -358,6 +356,9 @@ const ScheduleDetails = ({ mode, id }) => {
         ticketType: time.event_ticket_structures?.id,
         seat_structure_id: time.event_ticket_structures?.ticket_structure?.id,
         ticket_set: time.event_ticket_structures?.ticket_set,
+        offer_ids: time.offer_ids || [],
+        coupon_ids: time.coupon_ids || [],
+        id: time.id,
         is_midnight: time.is_midnight || false,
         show_time_ticket_types: time.show_time_ticket_types || [],
         show_date_id: showDate.id,
@@ -475,11 +476,6 @@ const ScheduleDetails = ({ mode, id }) => {
   const validateTimeSlots = (values) => {
     // Your existing validation code
     return true;
-  };
-
-  const cleanScheduleData = (data) => {
-    // Your existing code
-    return data;
   };
 
   const getDefaultAddOns = () => [{ name: "USER_AND_FOOD", status: true }];
