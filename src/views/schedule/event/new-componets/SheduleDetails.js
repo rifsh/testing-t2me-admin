@@ -597,27 +597,196 @@ const ScheduleDetails = ({ mode, id }) => {
   };
 
   const handleOfferSubmit = (formData) => {
-    const updatedData = updateStoreAndForm({
-      ...formData,
-      offer_ids:
-        formData.selectedoffers?.map((offer) => ({
-          offer_id: offer.offer.id,
-          valid_from: offer.offer.startdate,
-          valid_to: offer.offer.enddate,
-        })) ||
-        scheduleFormData.offer_ids ||
-        [],
-      coupon_ids:
-        formData.selectedcoupons?.map((coupon) => ({
-          coupon_id: coupon.id,
-          valid_from: coupon.coupons.startdate,
-          valid_to: coupon.coupons.enddate,
-        })) ||
-        scheduleFormData.coupon_ids ||
-        [],
-    });
+    try {
+      console.log("=== OFFER SUBMIT STARTED ===");
+      console.log("Received formData:", formData);
+      console.log("Received offer_ids:", formData.offer_ids);
 
-    handleFinalSubmit(updatedData);
+      // Get actual show_dates (dates that have time slots)
+      const existingShowDates = (scheduleFormData.show_dates || []).map(
+        (sd) => sd.start_date
+      );
+
+      console.log(
+        "Existing show dates from scheduleFormData:",
+        existingShowDates
+      );
+
+      // Process offers with smart distribution
+      const processedOffers = (formData.offer_ids || []).map((offer) => {
+        const selectedDates = offer.selected_dates || [];
+
+        console.log(`\n--- Processing Offer ${offer.offer_id} ---`);
+        console.log("offer.selected_dates:", selectedDates);
+        console.log("existingShowDates:", existingShowDates);
+        console.log("selectedDates length:", selectedDates.length);
+        console.log("existingShowDates length:", existingShowDates.length);
+
+        // Check if ALL existing show_dates are selected
+        const datesMatch = existingShowDates.every((date) =>
+          selectedDates.includes(date)
+        );
+        console.log(
+          "Do all existingShowDates exist in selectedDates?",
+          datesMatch
+        );
+
+        const allShowDatesSelected =
+          selectedDates.length === existingShowDates.length &&
+          selectedDates.length > 0 &&
+          existingShowDates.length > 0 &&
+          datesMatch;
+
+        const isScheduleLevel =
+          selectedDates.length === 0 || allShowDatesSelected;
+
+        console.log("allShowDatesSelected:", allShowDatesSelected);
+        console.log("isScheduleLevel:", isScheduleLevel);
+
+        return {
+          offer_id: offer.offer_id,
+          valid_from: offer.valid_from,
+          valid_to: offer.valid_to,
+          selected_dates: selectedDates,
+          is_schedule_level: isScheduleLevel,
+        };
+      });
+
+      // Process coupons
+      const processedCoupons = (formData.coupon_ids || []).map((coupon) => {
+        const selectedDates = coupon.selected_dates || [];
+
+        const datesMatch = existingShowDates.every((date) =>
+          selectedDates.includes(date)
+        );
+
+        const allShowDatesSelected =
+          selectedDates.length === existingShowDates.length &&
+          selectedDates.length > 0 &&
+          existingShowDates.length > 0 &&
+          datesMatch;
+
+        const isScheduleLevel =
+          selectedDates.length === 0 || allShowDatesSelected;
+
+        return {
+          coupon_id: coupon.coupon_id,
+          valid_from: coupon.valid_from,
+          valid_to: coupon.valid_to,
+          selected_dates: selectedDates,
+          is_schedule_level: isScheduleLevel,
+        };
+      });
+
+      // Separate by level
+      const scheduleLevelOffers = processedOffers.filter(
+        (o) => o.is_schedule_level
+      );
+      const dateLevelOffers = processedOffers.filter(
+        (o) => !o.is_schedule_level
+      );
+
+      const scheduleLevelCoupons = processedCoupons.filter(
+        (c) => c.is_schedule_level
+      );
+      const dateLevelCoupons = processedCoupons.filter(
+        (c) => !c.is_schedule_level
+      );
+
+      console.log("\n=== DISTRIBUTION RESULTS ===");
+      console.log("Schedule-level offers:", scheduleLevelOffers);
+      console.log("Date-level offers:", dateLevelOffers);
+      console.log("Schedule-level coupons:", scheduleLevelCoupons);
+      console.log("Date-level coupons:", dateLevelCoupons);
+
+      // Update show_dates - preserve structure
+      const updatedShowDates = (scheduleFormData.show_dates || []).map(
+        (showDate) => {
+          const dateStr = showDate.start_date;
+
+          // For date-level offers/coupons
+          const dateOffers = dateLevelOffers
+            .filter((o) => o.selected_dates.includes(dateStr))
+            .map((o) => ({
+              offer_id: o.offer_id,
+              valid_from: dateStr,
+              valid_to: dateStr,
+            }));
+
+          const dateCoupons = dateLevelCoupons
+            .filter((c) => c.selected_dates.includes(dateStr))
+            .map((c) => ({
+              coupon_id: c.coupon_id,
+              valid_from: dateStr,
+              valid_to: dateStr,
+            }));
+
+          // For schedule-level offers/coupons, add them to every date
+          const scheduleOffers = scheduleLevelOffers.map((o) => ({
+            offer_id: o.offer_id,
+            valid_from: dateStr,
+            valid_to: dateStr,
+          }));
+
+          const scheduleCoupons = scheduleLevelCoupons.map((c) => ({
+            coupon_id: c.coupon_id,
+            valid_from: dateStr,
+            valid_to: dateStr,
+          }));
+
+          // Combine all offers and coupons for this date
+          const allDateOffers = [...dateOffers, ...scheduleOffers];
+          const allDateCoupons = [...dateCoupons, ...scheduleCoupons];
+
+          // Update show_times with combined offers/coupons
+          const updatedShowTimes = (showDate.show_times || []).map(
+            (showTime) => ({
+              ...showTime,
+              offer_ids: allDateOffers,
+              coupon_ids: allDateCoupons,
+            })
+          );
+
+          return {
+            ...showDate,
+            offer_ids: allDateOffers,
+            coupon_ids: allDateCoupons,
+            show_times: updatedShowTimes,
+          };
+        }
+      );
+// const finalooferids=formData.offer_ids.map(oo=>(oo.offer_id))
+      // Build final data
+      const finalData = {
+        ...scheduleFormData,
+        ...formData,
+        // Schedule-level offers/coupons - empty array means applies to ALL dates
+        offer_ids: scheduleLevelOffers.map((o) => ({
+          offer_id: o.offer_id,
+          valid_from: o.valid_from,
+          valid_to: o.valid_to,
+          selected_dates: [], // Empty = schedule-level (applies to all)
+        })),
+        coupon_ids: scheduleLevelCoupons.map((c) => ({
+          coupon_id: c.coupon_id,
+          valid_from: c.valid_from,
+          valid_to: c.valid_to,
+          selected_dates: [], // Empty = schedule-level (applies to all)
+        })),
+        show_dates: updatedShowDates,
+      };
+
+      console.log("\n=== FINAL SUBMIT DATA ===");
+      console.log(JSON.stringify(finalData, null, 2));
+
+      const updatedData = updateStoreAndForm(finalData);
+      handleFinalSubmit(updatedData);
+
+      message.success("Offers and coupons configured successfully!");
+    } catch (error) {
+      console.error("Error in handleOfferSubmit:", error);
+      message.error("Failed to process offers and coupons");
+    }
   };
 
   const handleFinalSubmit = async (finalData = null) => {

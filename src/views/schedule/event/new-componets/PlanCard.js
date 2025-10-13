@@ -686,10 +686,10 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
 
     if (bookingStartDateTime) {
       const bookingDate = new Date(bookingStartDateTime);
-      bookingDate.setHours(0, 0, 0, 0); // Start of booking day
+      bookingDate.setHours(0, 0, 0, 0);
 
       const eventStart = new Date(range.startDate);
-      eventStart.setHours(0, 0, 0, 0); // Start of event day
+      eventStart.setHours(0, 0, 0, 0);
 
       if (eventStart < bookingDate) {
         message.error(

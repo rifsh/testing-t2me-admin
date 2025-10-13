@@ -5,59 +5,516 @@ import {
   Button,
   message,
   DatePicker,
-  Card,
   Tag,
   Tooltip,
   Empty,
   Spin,
+  Alert,
 } from "antd";
 import {
   TagOutlined,
   PercentageOutlined,
   GiftOutlined,
-  CalendarOutlined,
   SaveOutlined,
-  CloseOutlined,
-  DeleteOutlined,
-  EditOutlined,
   CheckOutlined,
+  InfoCircleOutlined,
   ExclamationCircleOutlined,
-  CopyOutlined,
+  CloseCircleOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { debounce } from "lodash";
 import dayjs from "dayjs";
-import OfferCard from "./OfferCard";
-import CouponCard from "./CouponCard";
+import isBetween from "dayjs/plugin/isBetween";
+
+dayjs.extend(isBetween);
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
-// Main OfferAndCoupons component - UPDATED to preserve selected data
-const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
-  const dispatch = useDispatch();
+// Helper function to generate date list ONLY for dates with show_times
+const getAvailableShowDates = (startDate, endDate, existingShowDates) => {
+  const dates = [];
 
-  // Redux state
-  const { eventDetails, loading } = useSelector((state) => state.event);
-  const { selectedOffers = [], selectedCoupons = [] } = useSelector(
-    (state) => state.schedules
+  // Only include dates that have show_times configured
+  existingShowDates.forEach((dateStr) => {
+    const dateObj = dayjs(dateStr);
+    if (
+      dateObj.isSameOrAfter(dayjs(startDate), "day") &&
+      dateObj.isSameOrBefore(dayjs(endDate), "day")
+    ) {
+      dates.push({
+        date: dateStr,
+        display: dateObj.format("MMM DD"),
+        dayName: dateObj.format("ddd"),
+        dayNumber: dateObj.date(),
+      });
+    }
+  });
+
+  return dates.sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
+};
+
+// Simplified Offer Card Component
+const SimplifiedOfferCard = ({
+  item,
+  onRemove,
+  onDateChange,
+  onDatesChange,
+  scheduleStartDate,
+  scheduleEndDate,
+  existingShowDates, // NEW: Pass existing show dates
+}) => {
+  const itemData = item.offer;
+
+  // FIXED: Only show dates that have show_times configured
+  const availableDates = getAvailableShowDates(
+    itemData.start_date,
+    itemData.end_date,
+    existingShowDates
   );
 
-  // Local state - Initialize with data from Redux/initialData
+  const selectedDatesCount = itemData.selected_dates?.length || 0;
+  const totalDatesCount = availableDates.length;
+  const isScheduleLevel =
+    selectedDatesCount === 0 || selectedDatesCount === totalDatesCount;
+
+  const handleDateToggle = (dateStr) => {
+    const currentDates = itemData.selected_dates || [];
+    const newDates = currentDates.includes(dateStr)
+      ? currentDates.filter((d) => d !== dateStr)
+      : [...currentDates, dateStr].sort();
+
+    onDatesChange(itemData.id, newDates);
+  };
+
+  const handleSelectAll = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const allDates = availableDates.map((d) => d.date);
+    console.log("Select All clicked:", allDates);
+    onDatesChange(itemData.id, allDates);
+  };
+
+  const handleClearAll = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDatesChange(itemData.id, []);
+  };
+
+  const getDisabledDate = (current) => {
+    const schedStart = dayjs(scheduleStartDate);
+    const schedEnd = dayjs(scheduleEndDate);
+    return (
+      current &&
+      (current.isBefore(schedStart, "day") || current.isAfter(schedEnd, "day"))
+    );
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 border-2 border-orange-200 hover:border-orange-300 transition-all">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+            <TagOutlined className="text-white text-sm" />
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900 text-sm">
+              {itemData.name}
+            </p>
+            {itemData.discount_percentage_amount && (
+              <p className="text-xs text-orange-600 font-medium">
+                {itemData.discount_percentage_amount}% OFF
+              </p>
+            )}
+          </div>
+        </div>
+        <Tooltip title="Remove offer">
+          <Button
+            type="text"
+            danger
+            size="small"
+            icon={<CloseCircleOutlined />}
+            onClick={() => onRemove(itemData.id)}
+            className="hover:bg-red-100"
+          />
+        </Tooltip>
+      </div>
+
+      <div className="mb-3">
+        {isScheduleLevel ? (
+          <div className="bg-blue-100 border border-blue-300 rounded-lg px-3 py-1.5">
+            <p className="text-xs text-blue-800 font-medium flex items-center">
+              <CheckOutlined className="mr-1" />
+              Schedule Level - Applies to all {totalDatesCount} date(s)
+            </p>
+          </div>
+        ) : (
+          <div className="bg-purple-100 border border-purple-300 rounded-lg px-3 py-1.5">
+            <p className="text-xs text-purple-800 font-medium flex items-center">
+              <CalendarOutlined className="mr-1" />
+              Date Level - {selectedDatesCount} specific date(s)
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-3">
+        <label className="text-xs text-gray-600 mb-1 block flex items-center">
+          <CalendarOutlined className="mr-1" />
+          Valid Period
+        </label>
+        <RangePicker
+          size="small"
+          value={[dayjs(itemData.start_date), dayjs(itemData.end_date)]}
+          onChange={(dates) => onDateChange(itemData.id, dates)}
+          disabledDate={getDisabledDate}
+          className="w-full"
+          format="MMM DD, YYYY"
+          suffixIcon={null}
+        />
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-xs text-gray-600 flex items-center">
+            Select Active Dates{" "}
+            <span className="ml-1 text-orange-600 font-medium">
+              ({selectedDatesCount}/{totalDatesCount})
+            </span>
+          </label>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              className="text-xs h-auto px-2 py-0.5 text-orange-600 hover:text-orange-700 hover:underline cursor-pointer"
+            >
+              All
+            </button>
+            <span className="text-gray-300">|</span>
+            <button
+              type="button"
+              onClick={handleClearAll}
+              className="text-xs h-auto px-2 py-0.5 text-gray-500 hover:text-gray-700 hover:underline cursor-pointer"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        {availableDates.length > 0 ? (
+          <div className="bg-white rounded-lg p-2 border border-orange-200 max-h-48 overflow-y-auto">
+            <div className="grid grid-cols-7 gap-1">
+              {availableDates.map((dateObj) => {
+                const isSelected =
+                  itemData.selected_dates &&
+                  itemData.selected_dates.includes(dateObj.date);
+                return (
+                  <button
+                    key={dateObj.date}
+                    type="button"
+                    onClick={() => handleDateToggle(dateObj.date)}
+                    className={`relative flex flex-col items-center justify-center py-2 rounded-md text-xs font-medium transition-all ${
+                      isSelected
+                        ? "bg-orange-500 text-white shadow-md"
+                        : "bg-gray-50 text-gray-700 border border-gray-200 hover:border-orange-300 hover:bg-orange-50"
+                    }`}
+                  >
+                    <span className="text-[10px] opacity-70">
+                      {dateObj.dayName}
+                    </span>
+                    <span className="text-sm font-bold">
+                      {dateObj.dayNumber}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+            <p className="text-xs text-yellow-800">
+              No dates with time slots configured yet
+            </p>
+          </div>
+        )}
+
+        {isScheduleLevel && selectedDatesCount > 0 && (
+          <p className="text-xs text-blue-600 mt-2 italic text-center font-medium">
+            ✓ All available dates selected - Applies at schedule level
+          </p>
+        )}
+
+        {selectedDatesCount === 0 && availableDates.length > 0 && (
+          <p className="text-xs text-gray-500 mt-2 italic text-center">
+            No dates selected - Click "All" to select all dates with time slots
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Simplified Coupon Card Component (same changes)
+const SimplifiedCouponCard = ({
+  item,
+  onRemove,
+  onDateChange,
+  onDatesChange,
+  scheduleStartDate,
+  scheduleEndDate,
+  existingShowDates,
+}) => {
+  const itemData = item.coupons;
+
+  const availableDates = getAvailableShowDates(
+    itemData.start_date,
+    itemData.end_date,
+    existingShowDates
+  );
+
+  const selectedDatesCount = itemData.selected_dates?.length || 0;
+  const totalDatesCount = availableDates.length;
+  const isScheduleLevel =
+    selectedDatesCount === 0 || selectedDatesCount === totalDatesCount;
+
+  const handleDateToggle = (dateStr) => {
+    const currentDates = itemData.selected_dates || [];
+    const newDates = currentDates.includes(dateStr)
+      ? currentDates.filter((d) => d !== dateStr)
+      : [...currentDates, dateStr].sort();
+    onDatesChange(itemData.id, newDates);
+  };
+
+  const handleSelectAll = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const allDates = availableDates.map((d) => d.date);
+    onDatesChange(itemData.id, allDates);
+  };
+
+  const handleClearAll = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDatesChange(itemData.id, []);
+  };
+
+  const handleCopyCode = () => {
+    if (itemData.key_words && itemData.key_words.length > 0) {
+      navigator.clipboard.writeText(itemData.key_words[0]);
+      message.success("Coupon code copied!");
+    }
+  };
+
+  const getDisabledDate = (current) => {
+    const schedStart = dayjs(scheduleStartDate);
+    const schedEnd = dayjs(scheduleEndDate);
+    return (
+      current &&
+      (current.isBefore(schedStart, "day") || current.isAfter(schedEnd, "day"))
+    );
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 hover:border-green-300 transition-all">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+            <PercentageOutlined className="text-white text-sm" />
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900 text-sm">
+              {itemData.name}
+            </p>
+            {itemData.discount_percentage_amount && (
+              <p className="text-xs text-green-600 font-medium">
+                {itemData.discount_percentage_amount}% OFF
+              </p>
+            )}
+          </div>
+        </div>
+        <Tooltip title="Remove coupon">
+          <Button
+            type="text"
+            danger
+            size="small"
+            icon={<CloseCircleOutlined />}
+            onClick={() => onRemove(itemData.id)}
+            className="hover:bg-red-100"
+          />
+        </Tooltip>
+      </div>
+
+      <div className="mb-3">
+        {isScheduleLevel ? (
+          <div className="bg-blue-100 border border-blue-300 rounded-lg px-3 py-1.5">
+            <p className="text-xs text-blue-800 font-medium flex items-center">
+              <CheckOutlined className="mr-1" />
+              Schedule Level - Applies to all {totalDatesCount} date(s)
+            </p>
+          </div>
+        ) : (
+          <div className="bg-purple-100 border border-purple-300 rounded-lg px-3 py-1.5">
+            <p className="text-xs text-purple-800 font-medium flex items-center">
+              <CalendarOutlined className="mr-1" />
+              Date Level - {selectedDatesCount} specific date(s)
+            </p>
+          </div>
+        )}
+      </div>
+
+      {itemData.key_words && itemData.key_words.length > 0 && (
+        <div className="mb-3">
+          <label className="text-xs text-gray-600 mb-1 block">
+            Coupon Code
+          </label>
+          <div className="bg-white rounded-lg p-2 border border-green-200 flex items-center justify-between">
+            <span className="font-mono text-sm font-bold text-green-800">
+              {itemData.key_words[0]}
+            </span>
+            <Button
+              type="link"
+              size="small"
+              onClick={handleCopyCode}
+              className="text-green-600 text-xs"
+            >
+              Copy
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="mb-3">
+        <label className="text-xs text-gray-600 mb-1 block flex items-center">
+          <CalendarOutlined className="mr-1" />
+          Valid Period
+        </label>
+        <RangePicker
+          size="small"
+          value={[dayjs(itemData.start_date), dayjs(itemData.end_date)]}
+          onChange={(dates) => onDateChange(itemData.id, dates)}
+          disabledDate={getDisabledDate}
+          className="w-full"
+          format="MMM DD, YYYY"
+          suffixIcon={null}
+        />
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-xs text-gray-600 flex items-center">
+            Select Active Dates{" "}
+            <span className="ml-1 text-green-600 font-medium">
+              ({selectedDatesCount}/{totalDatesCount})
+            </span>
+          </label>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              className="text-xs h-auto px-2 py-0.5 text-green-600 hover:text-green-700 hover:underline cursor-pointer"
+            >
+              All
+            </button>
+            <span className="text-gray-300">|</span>
+            <button
+              type="button"
+              onClick={handleClearAll}
+              className="text-xs h-auto px-2 py-0.5 text-gray-500 hover:text-gray-700 hover:underline cursor-pointer"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        {availableDates.length > 0 ? (
+          <div className="bg-white rounded-lg p-2 border border-green-200 max-h-48 overflow-y-auto">
+            <div className="grid grid-cols-7 gap-1">
+              {availableDates.map((dateObj) => {
+                const isSelected =
+                  itemData.selected_dates &&
+                  itemData.selected_dates.includes(dateObj.date);
+                return (
+                  <button
+                    key={dateObj.date}
+                    type="button"
+                    onClick={() => handleDateToggle(dateObj.date)}
+                    className={`relative flex flex-col items-center justify-center py-2 rounded-md text-xs font-medium transition-all ${
+                      isSelected
+                        ? "bg-green-500 text-white shadow-md"
+                        : "bg-gray-50 text-gray-700 border border-gray-200 hover:border-green-300 hover:bg-green-50"
+                    }`}
+                  >
+                    <span className="text-[10px] opacity-70">
+                      {dateObj.dayName}
+                    </span>
+                    <span className="text-sm font-bold">
+                      {dateObj.dayNumber}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+            <p className="text-xs text-yellow-800">
+              No dates with time slots configured yet
+            </p>
+          </div>
+        )}
+
+        {isScheduleLevel && selectedDatesCount > 0 && (
+          <p className="text-xs text-blue-600 mt-2 italic text-center font-medium">
+            ✓ All available dates selected - Applies at schedule level
+          </p>
+        )}
+
+        {selectedDatesCount === 0 && availableDates.length > 0 && (
+          <p className="text-xs text-gray-500 mt-2 italic text-center">
+            No dates selected - Click "All" to select all dates with time slots
+          </p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-green-200">
+        <div className="text-center">
+          <p className="text-lg font-bold text-gray-900">{itemData.max_uses}</p>
+          <p className="text-xs text-gray-600">Max Uses</p>
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-bold text-gray-900">
+            {itemData.used_count || 0}
+          </p>
+          <p className="text-xs text-gray-600">Used</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main Component
+const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
+  const dispatch = useDispatch();
+  const { eventDetails, loading } = useSelector((state) => state.event);
+
   const [selectedOfferItems, setSelectedOfferItems] = useState([]);
   const [selectedCouponItems, setSelectedCouponItems] = useState([]);
   const [offerSearchValue, setOfferSearchValue] = useState("");
   const [couponSearchValue, setCouponSearchValue] = useState("");
 
-  // Initialize selected items from initialData or Redux state
+  useEffect(() => {
+    console.log("=== STATE UPDATE ===");
+    console.log("Selected Offers:", selectedOfferItems);
+    console.log("Selected Coupons:", selectedCouponItems);
+  }, [selectedOfferItems, selectedCouponItems]);
+
   useEffect(() => {
     if (initialData) {
-      // Restore previously selected offers
       if (initialData.offer_ids && initialData.offer_ids.length > 0) {
         const restoredOffers = initialData.offer_ids
           .map((offerData) => {
-            // Find the full offer data from available offers
-            const fullOffer = eventDetails?.eventoffers?.find(
+            const fullOffer = eventDetails?.event_offers?.find(
               (offer) => offer.offer.id === offerData.offer_id
             );
 
@@ -66,8 +523,9 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
                 ...fullOffer,
                 offer: {
                   ...fullOffer.offer,
-                  startdate: offerData.valid_from,
-                  enddate: offerData.valid_to,
+                  start_date: offerData.valid_from,
+                  end_date: offerData.valid_to,
+                  selected_dates: offerData.selected_dates || [],
                 },
               };
             }
@@ -78,13 +536,11 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
         setSelectedOfferItems(restoredOffers);
       }
 
-      // Restore previously selected coupons
       if (initialData.coupon_ids && initialData.coupon_ids.length > 0) {
         const restoredCoupons = initialData.coupon_ids
           .map((couponData) => {
-            // Find the full coupon data from available coupons
-            const fullCoupon = eventDetails?.eventcoupons?.find(
-              (coupon) => coupon.id === couponData.coupon_id
+            const fullCoupon = eventDetails?.event_coupons?.find(
+              (coupon) => coupon.coupons.id === couponData.coupon_id
             );
 
             if (fullCoupon) {
@@ -92,8 +548,9 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
                 ...fullCoupon,
                 coupons: {
                   ...fullCoupon.coupons,
-                  startdate: couponData.valid_from,
-                  enddate: couponData.valid_to,
+                  start_date: couponData.valid_from,
+                  end_date: couponData.valid_to,
+                  selected_dates: couponData.selected_dates || [],
                 },
               };
             }
@@ -106,15 +563,12 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
     }
   }, [initialData, eventDetails]);
 
-  // Get available offers and coupons
   const availableOffers = eventDetails?.event_offers || [];
   const availableCoupons = eventDetails?.event_coupons || [];
 
-  // Get schedule dates from form fields or initialData
   const getScheduleDates = () => {
     const formValues = form.getFieldsValue();
 
-    // Try to get dates from multiple possible sources
     const scheduleStartDate =
       formValues.start_date ||
       initialData?.start_date ||
@@ -131,71 +585,48 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
       formValues.scheduleenddate ||
       formValues.dateRange?.[1];
 
-    const adStartDate =
-      formValues.ad_start_date_time ||
-      initialData?.ad_start_date_time ||
-      formValues.adstartdate ||
-      formValues.advertisementstarttime ||
-      formValues.adstarttime;
-
-    const bookingStartDate =
-      formValues.booking_start_date_time ||
-      initialData?.booking_start_date_time ||
-      formValues.bookingstartdate ||
-      formValues.bookingstarttime;
-
     return {
       scheduleStartDate,
       scheduleEndDate,
-      adStartDate,
-      bookingStartDate,
     };
   };
 
-  const { scheduleStartDate, scheduleEndDate, adStartDate, bookingStartDate } =
-    getScheduleDates();
+  const { scheduleStartDate, scheduleEndDate } = getScheduleDates();
 
-  // Enhanced date validation function (keep existing logic)
-  const validateItemDates = (startDate, endDate, itemName) => {
+  // Get existing show dates (dates with configured time slots)
+  const existingShowDates = (initialData?.show_dates || []).map(
+    (sd) => sd.start_date
+  );
+
+  const validateItemDates = (offerStart, offerEnd, itemName) => {
     if (!scheduleStartDate || !scheduleEndDate) {
-      message.error("Please set schedule dates first in the previous steps");
+      message.error("Please set schedule dates first");
       return false;
     }
 
-    // Basic validation
-    const start = dayjs(startDate);
-    const end = dayjs(endDate);
+    const offerStartDate = dayjs(offerStart);
+    const offerEndDate = dayjs(offerEnd);
     const schedStart = dayjs(scheduleStartDate);
     const schedEnd = dayjs(scheduleEndDate);
 
-    if (start.isBefore(schedStart, "day") || end.isAfter(schedEnd, "day")) {
-      message.error(`${itemName} dates must be within the schedule period`);
+    const isScheduleStartValid = schedStart.isSameOrAfter(
+      offerStartDate,
+      "day"
+    );
+    const isScheduleEndValid = schedEnd.isSameOrBefore(offerEndDate, "day");
+
+    if (!isScheduleStartValid || !isScheduleEndValid) {
+      message.error(
+        `${itemName} period must cover your schedule dates (${schedStart.format(
+          "MMM DD"
+        )} - ${schedEnd.format("MMM DD")})`
+      );
       return false;
     }
 
-    return { isValid: true, wasAdjusted: false, message: "Valid dates" };
+    return true;
   };
 
-  // Enhanced disabled date function
-  const getDisabledDate = (current) => {
-    if (!scheduleStartDate || !scheduleEndDate) return true;
-
-    const scheduleStart = dayjs(scheduleStartDate);
-    const scheduleEnd = dayjs(scheduleEndDate);
-
-    // Block dates outside the main schedule range
-    if (
-      current &&
-      (current.isBefore(scheduleStart, "day") ||
-        current.isAfter(scheduleEnd, "day"))
-    ) {
-      return true;
-    }
-
-    return false;
-  };
-
-  // Filter functions
   const filteredOffers = availableOffers.filter((offer) =>
     offer.offer.name.toLowerCase().includes(offerSearchValue.toLowerCase())
   );
@@ -204,7 +635,6 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
     coupon.coupons.name.toLowerCase().includes(couponSearchValue.toLowerCase())
   );
 
-  // Debounced search
   const debouncedOfferSearch = useCallback(
     debounce((value) => setOfferSearchValue(value), 300),
     []
@@ -215,7 +645,6 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
     []
   );
 
-  // Handler functions with enhanced validation (keep existing logic but update state properly)
   const handleOfferSelect = (offerId) => {
     const selectedOffer = availableOffers.find(
       (offer) => offer.offer.id === offerId
@@ -228,8 +657,8 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
     }
 
     const validation = validateItemDates(
-      selectedOffer.offer.startdate,
-      selectedOffer.offer.enddate,
+      selectedOffer.offer.start_date,
+      selectedOffer.offer.end_date,
       "Offer"
     );
 
@@ -239,34 +668,34 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
       ...selectedOffer,
       offer: {
         ...selectedOffer.offer,
-        startdate:
-          validation.adjustedDates?.startdate || selectedOffer.offer.startdate,
-        enddate:
-          validation.adjustedDates?.enddate || selectedOffer.offer.enddate,
-        originalstartdate: selectedOffer.offer.startdate,
-        originalenddate: selectedOffer.offer.enddate,
-        wasAdjusted: validation.wasAdjusted,
+        start_date: scheduleStartDate,
+        end_date: scheduleEndDate,
+        selected_dates: [],
+        original_start_date: selectedOffer.offer.start_date,
+        original_end_date: selectedOffer.offer.end_date,
       },
     };
 
     setSelectedOfferItems((prev) => [...prev, adjustedOffer]);
-    message.success(`Offer "${selectedOffer.offer.name}" added successfully`);
+    message.success(
+      `"${selectedOffer.offer.name}" added. Select specific dates or click "All".`
+    );
   };
 
   const handleCouponSelect = (couponId) => {
     const selectedCoupon = availableCoupons.find(
-      (coupon) => coupon.id === couponId
+      (coupon) => coupon.coupons.id === couponId
     );
     if (!selectedCoupon) return;
 
-    if (selectedCouponItems.some((item) => item.id === couponId)) {
+    if (selectedCouponItems.some((item) => item.coupons.id === couponId)) {
       message.warning("This coupon is already selected");
       return;
     }
 
     const validation = validateItemDates(
-      selectedCoupon.coupons.startdate,
-      selectedCoupon.coupons.enddate,
+      selectedCoupon.coupons.start_date,
+      selectedCoupon.coupons.end_date,
       "Coupon"
     );
 
@@ -276,20 +705,17 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
       ...selectedCoupon,
       coupons: {
         ...selectedCoupon.coupons,
-        startdate:
-          validation.adjustedDates?.startdate ||
-          selectedCoupon.coupons.startdate,
-        enddate:
-          validation.adjustedDates?.enddate || selectedCoupon.coupons.enddate,
-        originalstartdate: selectedCoupon.coupons.startdate,
-        originalenddate: selectedCoupon.coupons.enddate,
-        wasAdjusted: validation.wasAdjusted,
+        start_date: scheduleStartDate,
+        end_date: scheduleEndDate,
+        selected_dates: [],
+        original_start_date: selectedCoupon.coupons.start_date,
+        original_end_date: selectedCoupon.coupons.end_date,
       },
     };
 
     setSelectedCouponItems((prev) => [...prev, adjustedCoupon]);
     message.success(
-      `Coupon "${selectedCoupon.coupons.name}" added successfully`
+      `"${selectedCoupon.coupons.name}" added. Select specific dates or click "All".`
     );
   };
 
@@ -297,14 +723,14 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
     setSelectedOfferItems((prev) =>
       prev.filter((item) => item.offer.id !== offerId)
     );
-    message.success("Offer removed successfully");
+    message.success("Offer removed");
   };
 
   const handleCouponRemove = (couponId) => {
     setSelectedCouponItems((prev) =>
-      prev.filter((item) => item.id !== couponId)
+      prev.filter((item) => item.coupons.id !== couponId)
     );
-    message.success("Coupon removed successfully");
+    message.success("Coupon removed");
   };
 
   const handleOfferDateChange = (offerId, dateRange) => {
@@ -313,9 +739,6 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
     const startDate = dateRange[0].format("YYYY-MM-DD");
     const endDate = dateRange[1].format("YYYY-MM-DD");
 
-    const validation = validateItemDates(startDate, endDate, "Offer");
-    if (!validation) return;
-
     setSelectedOfferItems((prev) =>
       prev.map((item) =>
         item.offer.id === offerId
@@ -323,446 +746,441 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
               ...item,
               offer: {
                 ...item.offer,
-                startdate: validation.adjustedDates?.startdate || startDate,
-                enddate: validation.adjustedDates?.enddate || endDate,
-                wasAdjusted: validation.wasAdjusted,
+                start_date: startDate,
+                end_date: endDate,
+                selected_dates: [],
               },
             }
           : item
       )
     );
-
-    message.success("Offer dates updated successfully");
   };
 
   const handleCouponDateChange = (couponId, dateRange) => {
-    if (!dateRange || !dateRange[0] || !dateRange[1]) return;
+    if (!dateRange || !dateRange[1]) return;
 
     const startDate = dateRange[0].format("YYYY-MM-DD");
     const endDate = dateRange[1].format("YYYY-MM-DD");
 
-    const validation = validateItemDates(startDate, endDate, "Coupon");
-    if (!validation) return;
-
     setSelectedCouponItems((prev) =>
       prev.map((item) =>
-        item.id === couponId
+        item.coupons.id === couponId
           ? {
               ...item,
               coupons: {
                 ...item.coupons,
-                startdate: validation.adjustedDates?.startdate || startDate,
-                enddate: validation.adjustedDates?.enddate || endDate,
-                wasAdjusted: validation.wasAdjusted,
+                start_date: startDate,
+                end_date: endDate,
+                selected_dates: [],
               },
             }
           : item
       )
     );
+  };
 
-    message.success("Coupon dates updated successfully");
+  const handleOfferDatesChange = (offerId, selectedDates) => {
+    console.log("handleOfferDatesChange:", { offerId, selectedDates });
+
+    setSelectedOfferItems((prevItems) => {
+      return prevItems.map((item) => {
+        if (item.offer.id === offerId) {
+          const updatedItem = {
+            ...item,
+            offer: {
+              ...item.offer,
+              selected_dates: [...selectedDates],
+            },
+          };
+          console.log("Updated offer item:", updatedItem);
+          return updatedItem;
+        }
+        return item;
+      });
+    });
+  };
+
+  const handleCouponDatesChange = (couponId, selectedDates) => {
+    console.log("handleCouponDatesChange:", { couponId, selectedDates });
+
+    setSelectedCouponItems((prevItems) => {
+      return prevItems.map((item) => {
+        if (item.coupons.id === couponId) {
+          const updatedItem = {
+            ...item,
+            coupons: {
+              ...item.coupons,
+              selected_dates: [...selectedDates],
+            },
+          };
+          console.log("Updated coupon item:", updatedItem);
+          return updatedItem;
+        }
+        return item;
+      });
+    });
   };
 
   const handleSubmit = async () => {
     try {
-      const values = await form.validateFields();
+      console.log("=== SUBMIT STARTED ===");
+      console.log("Current offers:", selectedOfferItems);
+      console.log("Current coupons:", selectedCouponItems);
 
       const finalData = {
-        ...values,
-        selectedoffers: selectedOfferItems,
-        selectedcoupons: selectedCouponItems,
+        offer_ids: selectedOfferItems.map((item) => ({
+          offer_id: item.offer.id,
+          valid_from: item.offer.start_date,
+          valid_to: item.offer.end_date,
+          selected_dates: item.offer.selected_dates || [],
+        })),
+        coupon_ids: selectedCouponItems.map((item) => ({
+          coupon_id: item.coupons.id,
+          valid_from: item.coupons.start_date,
+          valid_to: item.coupons.end_date,
+          selected_dates: item.coupons.selected_dates || [],
+        })),
       };
 
+      console.log("=== FINAL DATA TO SUBMIT ===");
+      console.log(JSON.stringify(finalData, null, 2));
+
       message.success("Offers and coupons saved successfully!");
+
       onSubmit(finalData);
     } catch (errorInfo) {
-      message.error("Please check the form fields and try again");
+      console.error("Submit error:", errorInfo);
+      message.error("Please check the form fields");
     }
   };
 
-  const handleCancel = () => {
-    setSelectedOfferItems([]);
-    setSelectedCouponItems([]);
-    setOfferSearchValue("");
-    setCouponSearchValue("");
-    message.info("Form has been reset");
-  };
-
-  // Rest of the component JSX remains the same as your original code
-  // Just make sure to use the updated handler functions above
-
   return (
-    <div className="max-w-full m-6 bg-white rounded-xl shadow-md border border-gray-200">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-200">
-        <div className="flex items-center space-x-3">
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
               Offers & Coupons
             </h1>
             <p className="text-sm text-gray-600">
-              Manage promotional offers and discount coupons for your event
+              Select offers/coupons for dates with configured time slots
             </p>
           </div>
-        </div>
-        <div className="flex items-center space-x-3">
-          <Button onClick={onBack} className="flex items-center">
-            Go Back
-          </Button>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            onClick={handleSubmit}
-            loading={loading}
-            // className="bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700"
-          >
-            Submit
-          </Button>
+          <div className="flex items-center space-x-3">
+            <Button onClick={onBack} size="large">
+              Go Back
+            </Button>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              onClick={handleSubmit}
+              loading={loading}
+              size="large"
+            >
+              Save & Continue
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="p-6">
-        <Form form={form} layout="vertical" requiredMark={false}>
-          <div className="grid grid-cols-12 gap-6">
-            {/* Left Section - Selection */}
-            <div className="col-span-8 space-y-8">
-              {/* Enhanced Schedule Date Info */}
-              {scheduleStartDate && scheduleEndDate ? (
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <CalendarOutlined className="text-blue-600" />
-                    <span className="text-sm font-medium text-blue-800">
-                      Schedule Period Constraints
-                    </span>
-                  </div>
-                  <div className="space-y-1 text-sm text-blue-700">
-                    <p>
-                      <strong>Main Schedule:</strong>{" "}
-                      {dayjs(scheduleStartDate).format("MMM DD, YYYY")} -{" "}
-                      {dayjs(scheduleEndDate).format("MMM DD, YYYY")}
-                    </p>
-                    {adStartDate && (
-                      <p>
-                        <strong>Ad Period Start:</strong>{" "}
-                        {dayjs(adStartDate).format("MMM DD, YYYY")}
-                      </p>
-                    )}
-                    {bookingStartDate && (
-                      <p>
-                        <strong>Booking Start:</strong>{" "}
-                        {dayjs(bookingStartDate).format("MMM DD, YYYY")}
-                      </p>
-                    )}
-                  </div>
-                  <p className="text-xs text-blue-600 mt-2">
-                    All offers and coupons will be constrained to these date
-                    ranges
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <ExclamationCircleOutlined className="text-orange-600" />
-                    <span className="text-sm font-medium text-orange-800">
-                      Schedule Dates Required
-                    </span>
-                  </div>
-                  <p className="text-sm text-orange-700">
-                    Please go back to previous steps and set your event schedule
-                    dates before configuring offers and coupons.
-                  </p>
-                </div>
-              )}
+      {scheduleStartDate && scheduleEndDate ? (
+        <Alert
+          message={
+            <span>
+              <strong>Schedule Period:</strong>{" "}
+              {dayjs(scheduleStartDate).format("MMM DD, YYYY")} -{" "}
+              {dayjs(scheduleEndDate).format("MMM DD, YYYY")} (
+              {existingShowDates.length} dates with time slots)
+            </span>
+          }
+          description="Only dates with configured time slots will be shown for selection."
+          type="info"
+          icon={<InfoCircleOutlined />}
+          showIcon
+          className="mb-6"
+        />
+      ) : (
+        <Alert
+          message="Schedule Dates Required"
+          description="Please go back and set your event schedule dates first."
+          type="warning"
+          icon={<ExclamationCircleOutlined />}
+          showIcon
+          className="mb-6"
+        />
+      )}
 
-              {/* Offers Section */}
-              <div>
-                <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                  <TagOutlined className="mr-2 text-orange-500" />
-                  Available Offers
-                </h2>
+      <Form form={form} layout="vertical">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Offers Column */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <TagOutlined className="mr-2 text-orange-500" />
+                Add Offers
+              </h2>
 
-                <div className="grid grid-cols-1 gap-4">
-                  <Form.Item
-                    name="selectedoffer"
-                    label={
-                      <span className="text-sm font-medium text-gray-700">
-                        Select Offer
-                      </span>
-                    }
-                  >
-                    <Select
-                      showSearch
-                      placeholder={
-                        scheduleStartDate && scheduleEndDate
-                          ? "Search and select offers"
-                          : "Set schedule dates first"
-                      }
-                      loading={loading}
-                      onSearch={debouncedOfferSearch}
-                      onChange={handleOfferSelect}
-                      allowClear
-                      size="large"
-                      disabled={!scheduleStartDate || !scheduleEndDate}
-                      dropdownStyle={{
-                        borderRadius: "12px",
-                        boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-                      }}
-                      filterOption={(input, option) =>
-                        option?.label
-                          ?.toLowerCase()
-                          .includes(input.toLowerCase())
-                      }
-                      notFoundContent={
-                        loading ? (
-                          <div className="text-center py-4">
-                            <Spin size="small" />
-                            <div className="mt-2 text-gray-500">
-                              Loading offers...
-                            </div>
-                          </div>
-                        ) : (
-                          <Empty
-                            description="No offers found"
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          />
-                        )
-                      }
+              <Select
+                showSearch
+                placeholder="Search and select an offer..."
+                loading={loading}
+                onSearch={debouncedOfferSearch}
+                onChange={handleOfferSelect}
+                value={null}
+                allowClear
+                size="large"
+                disabled={!scheduleStartDate || !scheduleEndDate}
+                className="w-full"
+                filterOption={false}
+                notFoundContent={
+                  loading ? (
+                    <div className="text-center py-4">
+                      <Spin size="small" />
+                    </div>
+                  ) : (
+                    <Empty
+                      description="No offers available"
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    />
+                  )
+                }
+              >
+                {filteredOffers.map((offer) => {
+                  const offerStart = dayjs(offer.offer.start_date);
+                  const offerEnd = dayjs(offer.offer.end_date);
+                  const schedStart = dayjs(scheduleStartDate);
+                  const schedEnd = dayjs(scheduleEndDate);
+
+                  const isValid =
+                    schedStart.isSameOrAfter(offerStart, "day") &&
+                    schedEnd.isSameOrBefore(offerEnd, "day");
+
+                  const isAlreadySelected = selectedOfferItems.some(
+                    (item) => item.offer.id === offer.offer.id
+                  );
+
+                  return (
+                    <Option
+                      key={offer.offer.id}
+                      value={offer.offer.id}
+                      disabled={!isValid || isAlreadySelected}
                     >
-                      {filteredOffers.map((offer) => (
-                        <Option
-                          key={offer.offer.id}
-                          value={offer.offer.id}
-                          label={offer.offer.name}
-                        >
-                          <div className="py-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                                  <TagOutlined className="text-orange-600 text-sm" />
-                                </div>
-                                <div>
-                                  <div className="font-medium text-gray-900">
-                                    {offer.offer.name}
-                                  </div>
-                                </div>
+                      <div className="py-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`w-10 h-10 ${
+                                isValid && !isAlreadySelected
+                                  ? "bg-orange-100"
+                                  : "bg-gray-100"
+                              } rounded-lg flex items-center justify-center`}
+                            >
+                              <TagOutlined
+                                className={`${
+                                  isValid && !isAlreadySelected
+                                    ? "text-orange-600"
+                                    : "text-gray-400"
+                                }`}
+                              />
+                            </div>
+                            <div>
+                              <div
+                                className={`font-medium ${
+                                  isValid && !isAlreadySelected
+                                    ? "text-gray-900"
+                                    : "text-gray-400"
+                                }`}
+                              >
+                                {offer.offer.name}
                               </div>
-                              <div className="text-right">
-                                {/* <div className="text-sm font-medium text-green-600">
-                                  {offer.offer.discounttype === "percentage"
-                                    ? `${offer.offer.discountvalue}% OFF`
-                                    : `$${offer.offer.discountvalue} OFF`}
-                                </div> */}
-                                <div className="text-xs text-gray-500">
-                                  {dayjs(offer.offer.startdate).format(
-                                    "MMM DD"
-                                  )}{" "}
-                                  -{" "}
-                                  {dayjs(offer.offer.enddate).format("MMM DD")}
-                                </div>
+                              <div className="text-xs text-gray-500">
+                                {offerStart.format("MMM DD")} -{" "}
+                                {offerEnd.format("MMM DD, YYYY")}
                               </div>
                             </div>
                           </div>
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </div>
-              </div>
-
-              {/* Coupons Section */}
-              <div>
-                <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                  <PercentageOutlined className="mr-2 text-green-500" />
-                  Available Coupons
-                </h2>
-
-                <div className="grid grid-cols-1 gap-4">
-                  <Form.Item
-                    name="selectedcoupon"
-                    label={
-                      <span className="text-sm font-medium text-gray-700">
-                        Select Coupon
-                      </span>
-                    }
-                  >
-                    <Select
-                      showSearch
-                      placeholder={
-                        scheduleStartDate && scheduleEndDate
-                          ? "Search and select coupons"
-                          : "Set schedule dates first"
-                      }
-                      loading={loading}
-                      onSearch={debouncedCouponSearch}
-                      onChange={handleCouponSelect}
-                      allowClear
-                      size="large"
-                      disabled={!scheduleStartDate || !scheduleEndDate}
-                      dropdownStyle={{
-                        borderRadius: "12px",
-                        boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-                      }}
-                      filterOption={(input, option) =>
-                        option?.label
-                          ?.toLowerCase()
-                          .includes(input.toLowerCase())
-                      }
-                      notFoundContent={
-                        loading ? (
-                          <div className="text-center py-4">
-                            <Spin size="small" />
-                            <div className="mt-2 text-gray-500">
-                              Loading coupons...
-                            </div>
+                          <div>
+                            {isAlreadySelected ? (
+                              <Tag color="blue">Added</Tag>
+                            ) : isValid ? (
+                              <Tag color="green">Valid</Tag>
+                            ) : (
+                              <Tag color="red">Invalid</Tag>
+                            )}
                           </div>
-                        ) : (
-                          <Empty
-                            description="No coupons found"
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          />
-                        )
-                      }
-                    >
-                      {filteredCoupons.map((coupon) => (
-                        <Option
-                          key={coupon.id}
-                          value={coupon.id}
-                          label={coupon.coupons.name}
-                        >
-                          <div className="py-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                                  <PercentageOutlined className="text-green-600 text-sm" />
-                                </div>
-                                <div>
-                                  <div className="font-medium text-gray-900">
-                                    {coupon.coupons.name}
-                                  </div>
-                                  {/* <div className="text-xs text-gray-500">
-                                    Code: {coupon.coupons.code}
-                                  </div> */}
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                {/* <div className="text-sm font-medium text-blue-600">
-                                  Max Uses: {coupon.coupons.maxuses}
-                                </div> */}
-                                <div className="text-xs text-gray-500">
-                                  {dayjs(coupon.coupons.startdate).format(
-                                    "MMM DD"
-                                  )}{" "}
-                                  -{" "}
-                                  {dayjs(coupon.coupons.enddate).format(
-                                    "MMM DD"
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </div>
-              </div>
-            </div>
+                        </div>
+                      </div>
+                    </Option>
+                  );
+                })}
+              </Select>
 
-            {/* Right Section - Selected Items */}
-            <div className="col-span-4 space-y-6">
-              {/* Selected Offers */}
               {selectedOfferItems.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                    <CheckOutlined className="mr-2 text-green-500" />
+                <div className="mt-4 space-y-3">
+                  <h3 className="text-sm font-medium text-gray-700 flex items-center">
+                    <CheckOutlined className="mr-1.5 text-green-500" />
                     Selected Offers ({selectedOfferItems.length})
                   </h3>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {selectedOfferItems.map((item) => (
-                      <OfferCard
-                        key={item.offer.id}
-                        item={item}
-                        type="offer"
-                        onRemove={handleOfferRemove}
-                        onDateChange={handleOfferDateChange}
-                        getDisabledDate={getDisabledDate}
-                        scheduleStartDate={scheduleStartDate}
-                        scheduleEndDate={scheduleEndDate}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Selected Coupons */}
-              {selectedCouponItems.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                    <CheckOutlined className="mr-2 text-green-500" />
-                    Selected Coupons ({selectedCouponItems.length})
-                  </h3>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {selectedCouponItems.map((item) => (
-                      <CouponCard
-                        key={item.id}
-                        item={item}
-                        type="coupon"
-                        onRemove={handleCouponRemove}
-                        onDateChange={handleCouponDateChange}
-                        getDisabledDate={getDisabledDate}
-                        scheduleStartDate={scheduleStartDate}
-                        scheduleEndDate={scheduleEndDate}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Empty State */}
-              {selectedOfferItems.length === 0 &&
-                selectedCouponItems.length === 0 && (
-                  <div className="text-center py-8">
-                    <GiftOutlined className="text-4xl text-gray-300 mb-4" />
-                    <p className="text-gray-500 mb-2">No items selected</p>
-                    <p className="text-sm text-gray-400">
-                      {scheduleStartDate && scheduleEndDate
-                        ? "Select offers and coupons from the left panel"
-                        : "Set schedule dates first to enable selection"}
-                    </p>
-                  </div>
-                )}
-
-              {/* Summary */}
-              {(selectedOfferItems.length > 0 ||
-                selectedCouponItems.length > 0) && (
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                  <h4 className="text-sm font-medium text-gray-800 mb-3">
-                    Selection Summary
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total Offers:</span>
-                      <span className="font-medium">
-                        {selectedOfferItems.length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total Coupons:</span>
-                      <span className="font-medium">
-                        {selectedCouponItems.length}
-                      </span>
-                    </div>
-                  </div>
+                  {selectedOfferItems.map((item) => (
+                    <SimplifiedOfferCard
+                      key={item.offer.id}
+                      item={item}
+                      onRemove={handleOfferRemove}
+                      onDateChange={handleOfferDateChange}
+                      onDatesChange={handleOfferDatesChange}
+                      scheduleStartDate={scheduleStartDate}
+                      scheduleEndDate={scheduleEndDate}
+                      existingShowDates={existingShowDates}
+                    />
+                  ))}
                 </div>
               )}
             </div>
           </div>
-        </Form>
-      </div>
+
+          {/* Coupons Column */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <PercentageOutlined className="mr-2 text-green-500" />
+                Add Coupons
+              </h2>
+
+              <Select
+                showSearch
+                placeholder="Search and select a coupon..."
+                loading={loading}
+                onSearch={debouncedCouponSearch}
+                onChange={handleCouponSelect}
+                value={null}
+                allowClear
+                size="large"
+                disabled={!scheduleStartDate || !scheduleEndDate}
+                className="w-full"
+                filterOption={false}
+                notFoundContent={
+                  loading ? (
+                    <div className="text-center py-4">
+                      <Spin size="small" />
+                    </div>
+                  ) : (
+                    <Empty
+                      description="No coupons available"
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    />
+                  )
+                }
+              >
+                {filteredCoupons.map((coupon) => {
+                  const couponStart = dayjs(coupon.coupons.start_date);
+                  const couponEnd = dayjs(coupon.coupons.end_date);
+                  const schedStart = dayjs(scheduleStartDate);
+                  const schedEnd = dayjs(scheduleEndDate);
+
+                  const isValid =
+                    schedStart.isSameOrAfter(couponStart, "day") &&
+                    schedEnd.isSameOrBefore(couponEnd, "day");
+
+                  const isAlreadySelected = selectedCouponItems.some(
+                    (item) => item.coupons.id === coupon.coupons.id
+                  );
+
+                  return (
+                    <Option
+                      key={coupon.coupons.id}
+                      value={coupon.coupons.id}
+                      disabled={!isValid || isAlreadySelected}
+                    >
+                      <div className="py-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className={`w-10 h-10 ${
+                                isValid && !isAlreadySelected
+                                  ? "bg-green-100"
+                                  : "bg-gray-100"
+                              } rounded-lg flex items-center justify-center`}
+                            >
+                              <PercentageOutlined
+                                className={`${
+                                  isValid && !isAlreadySelected
+                                    ? "text-green-600"
+                                    : "text-gray-400"
+                                }`}
+                              />
+                            </div>
+                            <div>
+                              <div
+                                className={`font-medium ${
+                                  isValid && !isAlreadySelected
+                                    ? "text-gray-900"
+                                    : "text-gray-400"
+                                }`}
+                              >
+                                {coupon.coupons.name}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {couponStart.format("MMM DD")} -{" "}
+                                {couponEnd.format("MMM DD, YYYY")}
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            {isAlreadySelected ? (
+                              <Tag color="blue">Added</Tag>
+                            ) : isValid ? (
+                              <Tag color="green">Valid</Tag>
+                            ) : (
+                              <Tag color="red">Invalid</Tag>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </Option>
+                  );
+                })}
+              </Select>
+
+              {selectedCouponItems.length > 0 && (
+                <div className="mt-4 space-y-3">
+                  <h3 className="text-sm font-medium text-gray-700 flex items-center">
+                    <CheckOutlined className="mr-1.5 text-green-500" />
+                    Selected Coupons ({selectedCouponItems.length})
+                  </h3>
+                  {selectedCouponItems.map((item) => (
+                    <SimplifiedCouponCard
+                      key={item.coupons.id}
+                      item={item}
+                      onRemove={handleCouponRemove}
+                      onDateChange={handleCouponDateChange}
+                      onDatesChange={handleCouponDatesChange}
+                      scheduleStartDate={scheduleStartDate}
+                      scheduleEndDate={scheduleEndDate}
+                      existingShowDates={existingShowDates}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </Form>
+
+      {selectedOfferItems.length === 0 && selectedCouponItems.length === 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center mt-6">
+          <GiftOutlined className="text-5xl text-gray-300 mb-4" />
+          <p className="text-gray-600 text-lg mb-2">
+            No offers or coupons selected yet
+          </p>
+          <p className="text-gray-400">
+            {existingShowDates.length > 0
+              ? `Select from the dropdowns above. ${existingShowDates.length} dates with time slots available.`
+              : "Configure time slots in the previous step first."}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
-
-// OfferCard and CouponCard components remain the same as in your original code
 
 export default OfferAndCoupons;
