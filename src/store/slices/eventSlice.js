@@ -9,7 +9,7 @@ import EventMockData from "mock/data/eventData";
 import EventService from "services/EventService";
 const initialState = {
   availableSeats: [],
-  eventDetails: {},
+  eventDetails: null,
   eventTypeDetails: null,
   events: [],
   eventType: [],

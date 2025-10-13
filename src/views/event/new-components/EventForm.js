@@ -235,133 +235,133 @@ export default function EventForm({ eventId, mode = "add" }) {
   };
 
   useEffect(() => {
-  if (
-    mode === EDIT &&
-    eventDetails &&
-    isInitialized.current &&
-    !selectedOffers.length &&
-    !selectedCoupons.length
-  ) {
-    console.log("📝 Populating form with event details");
+    if (
+      mode === EDIT &&
+      eventDetails &&
+      isInitialized.current &&
+      !selectedOffers.length &&
+      !selectedCoupons.length
+    ) {
+      console.log("📝 Populating form with event details");
 
-    // Extract venue IDs from venue_ticket_structures
-    const venueIds = eventDetails.venue_ticket_structures?.map(
-      (vts) => vts.venue.id
-    ) || [];
+      // Extract venue IDs from venue_ticket_structures
+      const venueIds =
+        eventDetails.venue_ticket_structures?.map((vts) => vts.venue.id) || [];
 
-    // Extract ticket structure info from venue_ticket_structures
-    const ticketStructureInfo = eventDetails.venue_ticket_structures?.[0];
+      // Extract ticket structure info from venue_ticket_structures
+      const ticketStructureInfo = eventDetails.venue_ticket_structures?.[0];
 
-    // Get place info from the first venue_events
-    const firstVenueEvent = eventDetails.venue_events?.[0];
-    const placeInfo = firstVenueEvent?.venue?.place;
+      // Get place info from the first venue_events
+      const firstVenueEvent = eventDetails.venue_events?.[0];
+      const placeInfo = firstVenueEvent?.venue?.place;
 
-    const formValues = {
-      event_name: eventDetails.event_name,
-      description: eventDetails.description,
-      category_id: eventDetails.category?.id,
-      sub_category_id: eventDetails.sub_category?.id,
-      place: placeInfo?.id ?? placeInfo?.name,
-      place_id: placeInfo?.id ?? placeInfo?.name,
-      venue_id: venueIds,
-      tax_ids: eventDetails.taxs?.map((tax) => tax.id) || [],
-      available_types: eventDetails.available_types,
-      max_capacity: eventDetails.max_capacity || 0,
-      event_type_id: eventDetails.event_type_id,
-      ticket_structure_id: ticketStructureInfo?.ticket_structures?.[0]?.ticket_structure,
-      offer: eventDetails.event_offers?.map((offer) => offer.offer.id) || [],
-      coupon: eventDetails.event_coupons?.map((coupon) => coupon.coupons.id) || [],
-      banner_images: eventDetails.media
-        ? eventDetails.media.map((image, index) => ({
-            uid: `-${index + 1}`,
-            name: safeGetFileName(image.media_url),
-            status: "done",
-            url: `${CDN_PATH}/${image.media_url}`,
-          }))
-        : [],
-      event_images: eventDetails.event_images?.map((image, index) => ({
-        uid: `-${index + 2}`,
-        name: safeGetFileName(image.image),
-        status: "done",
-        url: `${CDN_PATH}/${image.image}`,
-      })) || [],
-      thumbnail_image: eventDetails.thumbnail_image
-        ? [
-            {
-              uid: "-1",
-              name: safeGetFileName(eventDetails.thumbnail_image),
+      const formValues = {
+        event_name: eventDetails.event_name,
+        description: eventDetails.description,
+        category_id: eventDetails.category?.id,
+        sub_category_id: eventDetails.sub_category?.id,
+        place: placeInfo?.id ?? placeInfo?.name,
+        place_id: placeInfo?.id ?? placeInfo?.name,
+        venue_id: venueIds,
+        tax_ids: eventDetails.taxs?.map((tax) => tax.id) || [],
+        available_types: eventDetails.available_types,
+        max_capacity: eventDetails.max_capacity || 0,
+        event_type_id: eventDetails.event_type_id,
+        ticket_structure_id:
+          ticketStructureInfo?.ticket_structures?.[0]?.ticket_structure,
+        offer: eventDetails.event_offers?.map((offer) => offer.offer.id) || [],
+        coupon:
+          eventDetails.event_coupons?.map((coupon) => coupon.coupons.id) || [],
+        banner_images: eventDetails.media
+          ? eventDetails.media.map((image, index) => ({
+              uid: `-${index + 1}`,
+              name: safeGetFileName(image.media_url),
               status: "done",
-              url: `${CDN_PATH}/${eventDetails.thumbnail_image}`,
-            },
-          ]
-        : [],
-    };
+              url: `${CDN_PATH}/${image.media_url}`,
+            }))
+          : [],
+        event_images:
+          eventDetails.event_images?.map((image, index) => ({
+            uid: `-${index + 2}`,
+            name: safeGetFileName(image.image),
+            status: "done",
+            url: `${CDN_PATH}/${image.image}`,
+          })) || [],
+        thumbnail_image: eventDetails.thumbnail_image
+          ? [
+              {
+                uid: "-1",
+                name: safeGetFileName(eventDetails.thumbnail_image),
+                status: "done",
+                url: `${CDN_PATH}/${eventDetails.thumbnail_image}`,
+              },
+            ]
+          : [],
+      };
 
-    form.setFieldsValue(formValues);
-    dispatch(setEventFormData(formValues));
+      form.setFieldsValue(formValues);
+      dispatch(setEventFormData(formValues));
 
-    // Load related data
-    if (eventDetails.taxs && eventDetails.taxs.length > 0) {
-      dispatch(setSelectedTaxDetails(eventDetails.taxs));
+      // Load related data
+      if (eventDetails.taxs && eventDetails.taxs.length > 0) {
+        dispatch(setSelectedTaxDetails(eventDetails.taxs));
+      }
+
+      if (eventDetails.category?.id) {
+        dispatch(fetchSubcategories({ category_id: eventDetails.category.id }));
+      }
+
+      if (placeInfo?.id) {
+        dispatch(getVenues({ place_id: placeInfo.id }));
+      }
+
+      if (ticketStructureInfo?.ticket_structures?.[0]?.ticket_structure) {
+        dispatch(fetchAllTickets({ venue_id: ticketStructureInfo.venue.id }));
+      }
+
+      dispatch(getAvailableTicketsType());
+
+      // Load selected offers
+      if (eventDetails.event_offers && eventDetails.event_offers.length > 0) {
+        eventDetails.event_offers.forEach((eventOffer) => {
+          dispatch(
+            toggleSelectedOffer({
+              id: eventOffer.offer.id,
+              name: eventOffer.offer.name,
+              max_uses: eventOffer.offer.max_uses,
+              date_required: eventOffer.offer.date_required,
+              start_date: eventOffer.offer.start_date,
+              end_date: eventOffer.offer.end_date,
+            })
+          );
+        });
+      }
+
+      // Load selected coupons
+      if (eventDetails.event_coupons && eventDetails.event_coupons.length > 0) {
+        eventDetails.event_coupons.forEach((eventCoupon) => {
+          dispatch(
+            toggleSelectedCoupon({
+              id: eventCoupon.coupons.id,
+              name: eventCoupon.coupons.name,
+              max_uses: eventCoupon.coupons.max_uses,
+              start_date: eventCoupon.coupons.start_date,
+              end_date: eventCoupon.coupons.end_date,
+            })
+          );
+        });
+      }
+
+      console.log("✅ Edit mode form population complete");
     }
-
-    if (eventDetails.category?.id) {
-      dispatch(fetchSubcategories({ category_id: eventDetails.category.id }));
-    }
-
-    if (placeInfo?.id) {
-      dispatch(getVenues({ place_id: placeInfo.id }));
-    }
-
-    if (ticketStructureInfo?.ticket_structures?.[0]?.ticket_structure) {
-      dispatch(
-        fetchAllTickets({ venue_id: ticketStructureInfo.venue.id })
-      );
-    }
-
-    dispatch(getAvailableTicketsType());
-
-    // Load selected offers
-    if (eventDetails.event_offers && eventDetails.event_offers.length > 0) {
-      eventDetails.event_offers.forEach((eventOffer) => {
-        dispatch(
-          toggleSelectedOffer({
-            id: eventOffer.offer.id,
-            name: eventOffer.offer.name,
-            max_uses: eventOffer.offer.max_uses,
-            date_required: eventOffer.offer.date_required,
-            start_date: eventOffer.offer.start_date,
-            end_date: eventOffer.offer.end_date,
-          })
-        );
-      });
-    }
-
-    // Load selected coupons
-    if (eventDetails.event_coupons && eventDetails.event_coupons.length > 0) {
-      eventDetails.event_coupons.forEach((eventCoupon) => {
-        dispatch(
-          toggleSelectedCoupon({
-            id: eventCoupon.coupons.id,
-            name: eventCoupon.coupons.name,
-            max_uses: eventCoupon.coupons.max_uses,
-            start_date: eventCoupon.coupons.start_date,
-            end_date: eventCoupon.coupons.end_date,
-          })
-        );
-      });
-    }
-
-    console.log("✅ Edit mode form population complete");
-  }
-}, [
-  eventDetails,
-  mode,
-  form,
-  dispatch,
-  selectedOffers.length,
-  selectedCoupons.length,
-]);
+  }, [
+    eventDetails,
+    mode,
+    form,
+    dispatch,
+    selectedOffers.length,
+    selectedCoupons.length,
+  ]);
 
   // Update form when formData changes (but preserve images)
   useEffect(() => {
@@ -753,7 +753,7 @@ export default function EventForm({ eventId, mode = "add" }) {
       case "location":
         return <LocationDetailsField {...commonProps} />;
       case "ticket":
-        return <TicketSelection {...commonProps} />;
+        return <TicketSelection {...commonProps} mode={mode} />;
       case "pricing":
         return <OfferField {...commonProps} mode={mode} />;
       case "additionalinfo":
