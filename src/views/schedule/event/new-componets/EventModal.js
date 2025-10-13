@@ -616,6 +616,28 @@ const EventModal = ({
         }
       }
 
+      const validFromDate = dayjs(formData.start_date).format("YYYY-MM-DD");
+
+      // FIXED: Determine valid_to based on midnight passed
+      const validToDate =
+        formData.is_midnight_passed && showEndDate
+          ? showEndDate
+          : validFromDate; // Same date if not midnight passed
+
+      // FIXED: Build offer_ids array with proper structure
+      const formattedOfferIds = formData.offer_ids.map((offerId) => ({
+        offer_id: offerId,
+        valid_from: validFromDate,
+        valid_to: validToDate,
+      }));
+
+      // FIXED: Build coupon_ids array with proper structure
+      const formattedCouponIds = formData.coupon_ids.map((couponId) => ({
+        coupon_id: couponId,
+        valid_from: validFromDate,
+        valid_to: validToDate,
+      }));
+
       const eventData = {
         id: event?.id || `temp-${Date.now()}`,
         type: "timeslot",
@@ -640,8 +662,9 @@ const EventModal = ({
         booking_limit_per_user: parentForm?.getFieldValue(
           "booking_limit_per_user"
         ),
-        offer_ids: formData.offer_ids,
-        coupon_ids: formData.coupon_ids,
+        // FIXED: Use formatted arrays with date ranges
+        offer_ids: formattedOfferIds,
+        coupon_ids: formattedCouponIds,
       };
 
       onSave(eventData);
