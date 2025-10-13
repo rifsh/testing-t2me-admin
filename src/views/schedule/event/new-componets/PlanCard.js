@@ -594,11 +594,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       });
       setAllEvents([]);
       blockingChecked.current = false;
-      form?.setFieldValue(
-        "booking_start_date_time",
-        newDefaults.bookingStartTime
-      );
-
+      form?.setFieldValue("bookingstartdatetime", newDefaults.bookingStartTime);
       message.warning(
         "Booking date cleared. Booking and event dates have been reset to defaults."
       );
@@ -606,16 +602,18 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     }
 
     setBookingStartDateTime(date);
-    form?.setFieldValue("booking_start_date_time", date);
+    form?.setFieldValue("bookingstartdatetime", date);
 
+    // FIXED: Changed <= to < to allow same day
     if (dateRange.startDate) {
       const bookingDate = new Date(date);
-      bookingDate.setHours(23, 59, 59, 999);
+      bookingDate.setHours(0, 0, 0, 0); // Set to start of day
 
       const eventStart = new Date(dateRange.startDate);
-      eventStart.setHours(0, 0, 0, 0);
+      eventStart.setHours(0, 0, 0, 0); // Set to start of day
 
-      if (eventStart <= bookingDate) {
+      // Changed from <= to < (allow same day)
+      if (eventStart < bookingDate) {
         const newDefaults = getDefaultDates();
         setDateRange({
           startDate: newDefaults.eventStartDate,
@@ -625,7 +623,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
         setAllEvents([]);
         blockingChecked.current = false;
         message.warning(
-          "Event dates have been reset because they must be after the booking date."
+          "Event dates have been reset because they must be on or after the booking date."
         );
       }
     }
@@ -633,7 +631,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     dispatch(
       setScheduleFormData({
         ...scheduleFormData,
-        booking_start_date_time: formatDateTime(date),
+        bookingstartdatetime: formatDateTime(date),
       })
     );
   };
@@ -649,7 +647,16 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       return;
     }
 
+    // FIXED: Don't treat incomplete selection as clearing dates in edit mode
     if (!range.startDate || !range.endDate) {
+      // If user is still selecting (isSelecting = true), don't reset
+      if (range.isSelecting) {
+        // Just update the partial selection without resetting
+        setDateRange(range);
+        return;
+      }
+
+      // Only reset if both dates are explicitly null/undefined AND not selecting
       const newDefaults = getDefaultDates();
       setDateRange({
         startDate: newDefaults.eventStartDate,
@@ -679,14 +686,14 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
 
     if (bookingStartDateTime) {
       const bookingDate = new Date(bookingStartDateTime);
-      bookingDate.setHours(23, 59, 59, 999);
+      bookingDate.setHours(0, 0, 0, 0); // Start of booking day
 
       const eventStart = new Date(range.startDate);
-      eventStart.setHours(0, 0, 0, 0);
+      eventStart.setHours(0, 0, 0, 0); // Start of event day
 
-      if (eventStart <= bookingDate) {
+      if (eventStart < bookingDate) {
         message.error(
-          "Event start date must be after the booking date. Please select a later date."
+          "Event start date must be on or after the booking date. Please select a valid date."
         );
         return;
       }
@@ -701,7 +708,28 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
 
     const hasExistingTimeSlots = allEvents && allEvents.length > 0;
 
-    if (hasExistingTimeSlots) {
+    // FIXED: Check if date range actually CHANGED (not just re-selected same dates)
+    const isDateRangeChanged =
+      !dateRange.startDate ||
+      !dateRange.endDate ||
+      dateRange.startDate.getTime() !== range.startDate.getTime() ||
+      dateRange.endDate.getTime() !== range.endDate.getTime();
+
+    // FIXED: Only show confirmation modal if dates CHANGED and we have events
+    if (hasExistingTimeSlots && isDateRangeChanged) {
+      // ADDITIONAL FIX: In edit mode with blocked dates, only extending end date shouldn't trigger reset
+      const isExtendingEndDate =
+        dateRange.startDate &&
+        dateRange.endDate &&
+        range.startDate.getTime() === dateRange.startDate.getTime() &&
+        range.endDate > dateRange.endDate;
+
+      if (isExtendingEndDate) {
+        // Just extend without confirmation
+        proceedWithDateRangeChange(range);
+        return;
+      }
+
       setPendingDateChange({ type: "dateRange", range });
       setShowResetConfirmModal(true);
     } else {
@@ -803,7 +831,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
             ticket_structure_id: event.ticket_structure_id,
             offer_ids: event.offer_ids || [],
             coupon_ids: event.coupon_ids || [],
-            ticket_set: event.ticket_set ,
+            ticket_set: event.ticket_set,
             seat_structure_id: event.seat_structure_id,
             is_midnight: event.is_midnight_passed ? "true" : "false",
             show_end_date:
@@ -1103,7 +1131,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
   const getEventMinDate = () => {
     if (bookingStartDateTime) {
       const minDate = new Date(bookingStartDateTime);
-      minDate.setDate(minDate.getDate() + 1);
+      minDate.setDate(minDate.getDate());
       minDate.setHours(0, 0, 0, 0);
       return minDate;
     }
@@ -1293,8 +1321,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                 onDateRangeChange={handleDateRangeChange}
                 initialStartDate={dateRange.startDate}
                 initialEndDate={dateRange.endDate}
-                minDate={getEventMinDate()}
-                disabled={isEventDateDisabled}
+                minDate={getEventMinDate()} // Already calculated in your code
                 blockedDates={getBlockedDatesSet(
                   scheduleFormData,
                   blockingInfo,

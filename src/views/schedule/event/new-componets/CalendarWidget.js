@@ -6,11 +6,12 @@ const CalendarWidget = ({
   onDateRangeChange,
   initialStartDate = null,
   initialEndDate = null,
-  blockedDates = new Set(), // Set of blocked date strings (YYYY-MM-DD)
-  isScheduleBlocked = false, // Global blocking flag
-  isEditMode = false, // NEW: Indicates if we're in edit mode
+  blockedDates = new Set(),
+  isScheduleBlocked = false,
+  isEditMode = false,
+  minDate = null,
+  bookingEndDate = null,
 }) => {
-  // Initialize currentDate to show the initial selected date's month
   const [currentDate, setCurrentDate] = useState(() => {
     if (initialStartDate) {
       return new Date(initialStartDate);
@@ -21,7 +22,6 @@ const CalendarWidget = ({
   const [selectedStartDate, setSelectedStartDate] = useState(initialStartDate);
   const [selectedEndDate, setSelectedEndDate] = useState(initialEndDate);
 
-  // Update currentDate when initialStartDate changes
   useEffect(() => {
     if (initialStartDate) {
       const startDate = new Date(initialStartDate);
@@ -61,21 +61,6 @@ const CalendarWidget = ({
     });
   };
 
-  // Check if a date is blocked
-  const isDateBlocked = (date) => {
-    if (!date) return false;
-
-    const dateStr = formatDateForAPI(date);
-
-    // Check if this specific date string is blocked
-    if (blockedDates.has(dateStr)) {
-      return true;
-    }
-
-    return false;
-  };
-
-  // Format date as YYYY-MM-DD for comparison
   const formatDateForAPI = (date) => {
     if (!date) return null;
     const year = date.getFullYear();
@@ -84,7 +69,37 @@ const CalendarWidget = ({
     return `${year}-${month}-${day}`;
   };
 
-  // Check if there are any blocked dates in the current range
+  const isDateBlocked = (date) => {
+    if (!date) return false;
+    const dateStr = formatDateForAPI(date);
+    return blockedDates.has(dateStr);
+  };
+
+  // FIXED: Changed <= to < so same day is allowed
+  const isBeforeBookingDate = (date) => {
+    if (!minDate || !date) return false;
+
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+
+    const minDateTime = new Date(minDate);
+    minDateTime.setHours(0, 0, 0, 0);
+
+    return checkDate < minDateTime;
+  };
+
+  const isBeforeStartDate = (date) => {
+    if (!selectedStartDate || !date) return false;
+
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+
+    const startDate = new Date(selectedStartDate);
+    startDate.setHours(0, 0, 0, 0);
+
+    return checkDate < startDate;
+  };
+
   const hasBlockedDatesInRange = () => {
     if (!selectedStartDate || !selectedEndDate) return false;
 
@@ -100,78 +115,68 @@ const CalendarWidget = ({
   };
 
   const handleDateClick = (day) => {
-    // Prevent any selection if schedule is globally blocked
     if (isScheduleBlocked) {
       return;
     }
 
     const clickedDate = day.fullDate;
 
-    // Prevent selection of blocked dates
     if (isDateBlocked(clickedDate)) {
+      return;
+    }
+
+    if (isBeforeBookingDate(clickedDate)) {
       return;
     }
 
     let newStartDate, newEndDate;
 
-    // FIXED: In edit mode with blocked dates, only allow extending end date
     if (isEditMode && hasBlockedDatesInRange()) {
-      // Only allow selecting dates after current end date
       if (!selectedEndDate || clickedDate <= selectedEndDate) {
-        // Don't allow changing start date or selecting dates before/equal to current end
         return;
       }
 
-      // Extend end date - keep start date unchanged
       newStartDate = selectedStartDate;
       newEndDate = clickedDate;
 
-      // Check if any date in the NEW range is blocked
       const start = new Date(selectedEndDate);
-      start.setDate(start.getDate() + 1); // Start checking from day after current end
+      start.setDate(start.getDate() + 1);
       const end = new Date(clickedDate);
       let hasBlockedDates = false;
 
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        if (isDateBlocked(d)) {
+        if (isDateBlocked(d) || (minDate && isBeforeBookingDate(d))) {
           hasBlockedDates = true;
           break;
         }
       }
 
-      // If new range contains blocked dates, don't allow selection
       if (hasBlockedDates) {
         return;
       }
     } else {
-      // Normal mode: allow full date range selection
       if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
-        // Start new selection
         newStartDate = clickedDate;
         newEndDate = null;
       } else if (selectedStartDate && !selectedEndDate) {
-        // Complete the range
         if (clickedDate < selectedStartDate) {
-          newEndDate = selectedStartDate;
-          newStartDate = clickedDate;
-        } else {
-          newStartDate = selectedStartDate;
-          newEndDate = clickedDate;
+          return;
         }
 
-        // Check if any date in the range is blocked
+        newStartDate = selectedStartDate;
+        newEndDate = clickedDate;
+
         const start = new Date(newStartDate);
         const end = new Date(newEndDate);
         let hasBlockedDates = false;
 
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          if (isDateBlocked(d)) {
+          if (isDateBlocked(d) || (minDate && isBeforeBookingDate(d))) {
             hasBlockedDates = true;
             break;
           }
         }
 
-        // If range contains blocked dates, don't allow selection
         if (hasBlockedDates) {
           return;
         }
@@ -244,8 +249,14 @@ const CalendarWidget = ({
           );
           const isToday = isSameDay(day.fullDate, new Date());
           const isBlocked = isDateBlocked(day.fullDate);
+          const isBeforeBooking = minDate
+            ? isBeforeBookingDate(day.fullDate)
+            : false;
+          const isBeforeStart =
+            selectedStartDate && !selectedEndDate
+              ? isBeforeStartDate(day.fullDate)
+              : false;
 
-          // FIXED: Check if this date should be disabled for edit mode
           const isDisabledForEdit =
             isEditMode &&
             hasBlockedDatesInRange() &&
@@ -255,6 +266,8 @@ const CalendarWidget = ({
           const isDisabled =
             !day.isCurrentMonth ||
             isBlocked ||
+            isBeforeBooking ||
+            isBeforeStart ||
             isScheduleBlocked ||
             isDisabledForEdit;
 
@@ -270,6 +283,10 @@ const CalendarWidget = ({
                     ? "text-gray-300 cursor-not-allowed"
                     : isBlocked
                     ? "bg-red-100 text-red-400 cursor-not-allowed line-through"
+                    : isBeforeBooking
+                    ? "bg-orange-50 text-orange-300 cursor-not-allowed"
+                    : isBeforeStart
+                    ? "bg-gray-50 text-gray-300 cursor-not-allowed"
                     : isDisabledForEdit
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                     : isScheduleBlocked
@@ -279,14 +296,23 @@ const CalendarWidget = ({
                 ${
                   isSelected
                     ? "bg-blue-500 text-white shadow-md"
-                    : isInRange && !isBlocked
+                    : isInRange && !isBlocked && !isBeforeBooking
                     ? "bg-blue-100 text-blue-700"
-                    : !isBlocked && !isDisabledForEdit && day.isCurrentMonth
+                    : !isBlocked &&
+                      !isBeforeBooking &&
+                      !isBeforeStart &&
+                      !isDisabledForEdit &&
+                      day.isCurrentMonth
                     ? "hover:bg-gray-100"
                     : ""
                 }
                 ${
-                  isToday && !isSelected && !isInRange && !isBlocked
+                  isToday &&
+                  !isSelected &&
+                  !isInRange &&
+                  !isBlocked &&
+                  !isBeforeBooking &&
+                  !isBeforeStart
                     ? "bg-blue-50 text-blue-600 font-semibold"
                     : ""
                 }
@@ -295,6 +321,10 @@ const CalendarWidget = ({
               title={
                 isBlocked
                   ? "This date is locked and cannot be selected"
+                  : isBeforeBooking
+                  ? "Event dates must be on or after the booking date"
+                  : isBeforeStart
+                  ? "End date must be after start date"
                   : isDisabledForEdit
                   ? "Only dates after the current end date can be selected"
                   : ""
@@ -311,7 +341,7 @@ const CalendarWidget = ({
         })}
       </div>
 
-      {/* Blocked dates indicator */}
+      {/* Warning messages */}
       {blockedDates.size > 0 && (
         <div className="mt-3 p-2 bg-red-50 rounded-lg border border-red-200">
           <p className="text-xs text-red-700 flex items-center">
@@ -321,7 +351,28 @@ const CalendarWidget = ({
         </div>
       )}
 
-      {/* Edit mode indicator */}
+      {minDate && (
+        <div className="mt-2 p-2 bg-orange-50 rounded-lg border border-orange-200">
+          <p className="text-xs text-orange-700 flex items-center">
+            <span className="mr-1">⚠️</span>
+            Event dates must be from {new Date(
+              minDate
+            ).toLocaleDateString()}{" "}
+            onwards
+          </p>
+        </div>
+      )}
+
+      {selectedStartDate && !selectedEndDate && (
+        <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-xs text-blue-700 flex items-center">
+            <span className="mr-1">📅</span>
+            Select end date from {selectedStartDate.toLocaleDateString()}{" "}
+            onwards
+          </p>
+        </div>
+      )}
+
       {isEditMode && hasBlockedDatesInRange() && (
         <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-xs text-blue-700 flex items-center">
