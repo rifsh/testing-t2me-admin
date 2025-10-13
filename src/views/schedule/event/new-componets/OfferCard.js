@@ -1,18 +1,36 @@
 import React, { useState } from "react";
-import { Card, Button, DatePicker, Tag, Tooltip } from "antd";
+import { Card, Button, DatePicker, Tag, Tooltip, Checkbox, Space } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
   CalendarOutlined,
   TagOutlined,
-  ExclamationCircleOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const { RangePicker } = DatePicker;
 
-const OfferCard = ({ item, type, onRemove, onDateChange, getDisabledDate }) => {
+const DAYS_OF_WEEK = [
+  { value: 0, label: "Sun" },
+  { value: 1, label: "Mon" },
+  { value: 2, label: "Tue" },
+  { value: 3, label: "Wed" },
+  { value: 4, label: "Thu" },
+  { value: 5, label: "Fri" },
+  { value: 6, label: "Sat" },
+];
+
+const OfferCard = ({
+  item,
+  type,
+  onRemove,
+  onDateChange,
+  onDaysChange,
+  getDisabledDate,
+}) => {
   const [isEditingDate, setIsEditingDate] = useState(false);
+  const [isEditingDays, setIsEditingDays] = useState(false);
   const itemData = type === "offer" ? item.offer : item.coupons;
 
   const handleDateRangeChange = (dates) => {
@@ -22,35 +40,26 @@ const OfferCard = ({ item, type, onRemove, onDateChange, getDisabledDate }) => {
     }
   };
 
-  const getStatusColor = () => {
-    if (itemData.wasAdjusted) return "orange";
-    return "green";
-  };
-
-  const getStatusText = () => {
-    if (itemData.wasAdjusted) return "Dates Adjusted";
-    return "Valid";
+  const handleDaysChange = (checkedValues) => {
+    onDaysChange(itemData.id, checkedValues);
   };
 
   return (
     <Card
       size="small"
       className="hover:shadow-md transition-shadow duration-200 border border-gray-200 rounded-xl"
-      bodyStyle={{ padding: "16px" }}
+      bodyStyle={{ padding: "12px" }}
     >
       <div className="space-y-3">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-              <TagOutlined className="text-orange-600 text-sm" />
+            <div className="w-7 h-7 bg-orange-100 rounded-lg flex items-center justify-center">
+              <TagOutlined className="text-orange-600 text-xs" />
             </div>
             <div>
-              <p className="font-medium text-gray-900 text-sm truncate">
+              <p className="font-medium text-gray-900 text-xs truncate">
                 {itemData.name}
-              </p>
-              <p className="text-xs text-gray-500">
-                {type === "offer" ? "Offer" : "Coupon"}
               </p>
             </div>
           </div>
@@ -77,23 +86,6 @@ const OfferCard = ({ item, type, onRemove, onDateChange, getDisabledDate }) => {
           </div>
         </div>
 
-        {/* Status */}
-        <div className="flex items-center justify-between">
-          <Tag color={getStatusColor()} size="small" className="rounded">
-            {itemData.wasAdjusted && (
-              <ExclamationCircleOutlined className="mr-1" />
-            )}
-            {getStatusText()}
-          </Tag>
-          {type === "offer" && (
-            <Tag color="green" size="small">
-              {itemData.discount_type === "percentage"
-                ? `${itemData.discount_value}% OFF`
-                : `$${itemData.discount_value} OFF`}
-            </Tag>
-          )}
-        </div>
-
         {/* Date Range */}
         {isEditingDate ? (
           <div className="space-y-2">
@@ -105,66 +97,85 @@ const OfferCard = ({ item, type, onRemove, onDateChange, getDisabledDate }) => {
               className="w-full"
               format="MMM DD, YYYY"
             />
-            <div className="flex justify-end space-x-2">
-              <Button size="small" onClick={() => setIsEditingDate(false)}>
-                Cancel
-              </Button>
-            </div>
+            <Button size="small" block onClick={() => setIsEditingDate(false)}>
+              Cancel
+            </Button>
           </div>
         ) : (
           <div className="bg-gray-50 rounded-lg p-2">
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center space-x-1">
                 <CalendarOutlined className="text-gray-500" />
-                <span className="text-gray-600">Start:</span>
-                <span className="font-medium">
+                <span className="text-gray-600">
                   {dayjs(itemData.start_date).format("MMM DD")}
                 </span>
               </div>
-              <div className="flex items-center space-x-1">
-                <span className="text-gray-600">End:</span>
-                <span className="font-medium">
-                  {dayjs(itemData.end_date).format("MMM DD")}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Additional Info */}
-        {type === "offer" && itemData.description && (
-          <p className="text-xs text-gray-500 truncate">
-            {itemData.description}
-          </p>
-        )}
-
-        {type === "coupon" && (
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-gray-600">
-              Code:{" "}
-              <span className="font-mono bg-gray-100 px-1 rounded">
-                {itemData.code}
+              <span className="text-gray-400">to</span>
+              <span className="text-gray-600">
+                {dayjs(itemData.end_date).format("MMM DD")}
               </span>
-            </span>
-            <span className="text-gray-600">Max: {itemData.max_uses}</span>
+            </div>
           </div>
         )}
 
-        {/* Warning for adjusted dates */}
-        {itemData.wasAdjusted && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-2">
-            <div className="flex items-start space-x-2">
-              <ExclamationCircleOutlined className="text-orange-500 text-xs mt-0.5" />
-              <div className="text-xs">
-                <p className="text-orange-800 font-medium">Dates Adjusted</p>
-                <p className="text-orange-700">
-                  Original:{" "}
-                  {dayjs(itemData.original_start_date).format("MMM DD")} -{" "}
-                  {dayjs(itemData.original_end_date).format("MMM DD")}
-                </p>
-              </div>
+        {/* Day Selection Section */}
+        <div className="bg-blue-50 rounded-lg p-2 border border-blue-100">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-1">
+              <ClockCircleOutlined className="text-blue-600 text-xs" />
+              <span className="text-xs font-medium text-blue-800">
+                Active Days
+              </span>
             </div>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => setIsEditingDays(!isEditingDays)}
+              className="text-xs h-auto p-0"
+            >
+              {isEditingDays ? "Done" : "Edit"}
+            </Button>
           </div>
+
+          {isEditingDays ? (
+            <Checkbox.Group
+              value={itemData.selected_days || []}
+              onChange={handleDaysChange}
+              className="w-full"
+            >
+              <Space direction="vertical" size="small" className="w-full">
+                {DAYS_OF_WEEK.map((day) => (
+                  <Checkbox key={day.value} value={day.value}>
+                    <span className="text-xs">{day.label}</span>
+                  </Checkbox>
+                ))}
+              </Space>
+            </Checkbox.Group>
+          ) : (
+            <div className="flex flex-wrap gap-1">
+              {itemData.selected_days && itemData.selected_days.length > 0 ? (
+                itemData.selected_days.map((dayValue) => {
+                  const day = DAYS_OF_WEEK.find((d) => d.value === dayValue);
+                  return (
+                    <Tag key={dayValue} color="blue" className="text-xs m-0">
+                      {day?.label}
+                    </Tag>
+                  );
+                })
+              ) : (
+                <span className="text-xs text-gray-500 italic">
+                  All days (click Edit to select specific days)
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Discount Info */}
+        {itemData.discount_percentage_amount && (
+          <Tag color="green" className="w-full text-center">
+            {itemData.discount_percentage_amount}% OFF
+          </Tag>
         )}
       </div>
     </Card>
