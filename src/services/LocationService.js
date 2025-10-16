@@ -46,14 +46,12 @@ LocationService.addPlace = function (data, action) {
   return fetch({
     url: ApiConstant.PLACE_URL,
     method: "POST",
-    data: formData,
+    data: data,
     params: {
       country_id: data.country_id,
       action: encodedAction,
     },
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+   
   });
 };
 
@@ -200,13 +198,13 @@ LocationService.placeWithCountry = function (place) {
   return fetch({
     url: ApiConstant.PLACE_WITH_COUNTRY_URL,
     method: "get",
-    params: { place }
+    params: { place },
   });
 };
 LocationService.TenantCountry = function () {
   return fetch({
     url: ApiConstant.TENANT_COUNTRY_URL,
-    method: "get"
+    method: "get",
   });
 };
 LocationService.getVenues = function (pageData) {
