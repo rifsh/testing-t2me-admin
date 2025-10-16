@@ -5,6 +5,7 @@ import OfferService from "services/OfferService";
 
 export const initialState = {
   loading: false,
+  availableOfferDays: [],
   offers: [],
   filteredOffers: [],
   isDateRequired: false,
@@ -41,6 +42,17 @@ export const fetchAllOffers = createAsyncThunk(
   }
 );
 
+export const getAvailableOfferDays = createAsyncThunk(
+  "offer/getAvailableOfferDays",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response = await OfferService.getAvailableOfferDays(params);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Error fetching offers");
+    }
+  }
+);
 export const validateOfferCoupon = createAsyncThunk(
   "offer/validate",
   async ({ offers, coupons }, { rejectWithValue }) => {
@@ -96,7 +108,11 @@ export const makeChangeOffer = createAsyncThunk(
   async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
       console.log(data, "DATA IN SERVICE");
-      const response = await OfferService.makeChangeOffer(data, action, pageData);
+      const response = await OfferService.makeChangeOffer(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -251,6 +267,18 @@ const offerSlice = createSlice({
       .addCase(editOfferStatus.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to edit event";
+      })
+      .addCase(getAvailableOfferDays.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getAvailableOfferDays.fulfilled, (state, action) => {
+        state.loading = false;
+        state.availableOfferDays = action.payload;
+      })
+      .addCase(getAvailableOfferDays.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
       .addCase(fetchAllOffers.pending, (state) => {
         state.loading = true;
