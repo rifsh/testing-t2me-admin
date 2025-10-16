@@ -25,7 +25,10 @@ import { ActionType } from "utils/api/warning-submit-util";
 import LoadingOverlay from "components/util-components/Loader/index";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
-import { setComment, setCommentModalVisibility } from "store/slices/EventOrganizerSlice";
+import {
+  setComment,
+  setCommentModalVisibility,
+} from "store/slices/EventOrganizerSlice";
 import { isOrganizer } from "configs/UserAccessConfig";
 
 // const EDIT = "EDIT";
@@ -44,6 +47,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
     warningPagination,
     submitPagination,
     message: warningMessage,
+    availableOfferDays,
   } = useSelector((state) => state.offers);
   const {
     singleOrganizerUpdate,
@@ -51,7 +55,9 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
     isCommentModalVisible,
     comment,
     actionType,
-    responseDataEvent, responseMessageEvent } = useSelector((state) => state.organizerUpdates);
+    responseDataEvent,
+    responseMessageEvent,
+  } = useSelector((state) => state.organizerUpdates);
 
   const [form] = Form.useForm();
   const dispatch = useDispatch();
@@ -73,16 +79,19 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
         max_uses: offer.max_uses,
         date_required: offer.date_required,
         key_words: offer.key_words,
+        applicable_days:
+          offer.mapped_offer_weekdays?.map((day) => day.code) || [],
+
         thumbnail_image:
           offer.thumbnail_image && offer.thumbnail_image !== "images"
             ? [
-              {
-                uid: "-1",
-                name: offer.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: `${CDN_PATH}/${offer.thumbnail_image}`,
-              },
-            ]
+                {
+                  uid: "-1",
+                  name: offer.thumbnail_image.split("/").pop(),
+                  status: "done",
+                  url: `${CDN_PATH}/${offer.thumbnail_image}`,
+                },
+              ]
             : [],
       };
 
@@ -102,14 +111,22 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
     console.log("Form Values:", values);
 
     try {
-      if (mode === "EDIT") {
-        if (isDateRequired) {
-          values.start_date = Utils.formatDate(values.start_date);
-          values.end_date = Utils.formatDate(values.end_date);
-        }
-        values.key_words = values.key_words ?? [];
-        values.date_required = values.date_required ?? isDateRequired;
+      // Format dates if required
+      if (isDateRequired) {
+        values.start_date = Utils.formatDate(values.start_date);
+        values.end_date = Utils.formatDate(values.end_date);
+      }
 
+      values.key_words = values.key_words ?? [];
+      values.date_required = values.date_required ?? isDateRequired;
+
+      // Map the applicable days to full weekday objects
+      values.mapped_offer_weekdays =
+        availableOfferDays?.filter((day) =>
+          values.applicable_days.includes(day.code)
+        ) ?? [];
+
+      if (mode === "EDIT") {
         if (isOrganizer() && isMakeChange) {
           dispatch(setCommentModalVisibility(true));
           return;
@@ -132,12 +149,6 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
           dispatch(setOfferDialogVisible(true));
         }
       } else {
-        if (isDateRequired) {
-          values.start_date = Utils.formatDate(values.start_date);
-          values.end_date = Utils.formatDate(values.end_date);
-        }
-        values.key_words = values.key_words ?? [];
-        values.date_required = values.date_required ?? isDateRequired;
         const formData = {
           ...values,
         };
@@ -195,7 +206,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
         offer_id: offer.id,
       };
 
-      console.log("editData", editData)
+      console.log("editData", editData);
       const resultAction = await dispatch(
         makeChangeOffer({ data: editData, action: ActionType.SUBMIT, pageData })
       );
@@ -293,8 +304,10 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
         responseData={responseData}
         // addFunction={mode === "EDIT" ? editOffer : addOffer}
         addFunction={
-          mode === 'EDIT'
-            ? (isMakeChange ? makeChangeOffer : editOffer)
+          mode === "EDIT"
+            ? isMakeChange
+              ? makeChangeOffer
+              : editOffer
             : addOffer
         }
         navigationPath={`${APP_PREFIX_PATH}/offer/list/${type}`}
@@ -311,7 +324,9 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
         loading={organizerLoading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Comment`}
+        title={`${
+          actionType.charAt(0).toUpperCase() + actionType.slice(1)
+        } Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />
     </>
