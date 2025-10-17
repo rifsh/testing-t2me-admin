@@ -55,15 +55,30 @@ export const SubmitAndConfirmModal = ({
 
   // Debug: Monitor uploadFailed state changes
   useEffect(() => {
-    console.log("uploadFailed state changed:", uploadFailed);
-    console.log("Current state:", {
+    console.log("=== UPLOAD FAILED STATE CHANGED ===", {
       uploadFailed,
       uploadError,
       responseDialogVisible,
-      originalFiles,
-      uploadFieldConfigs,
+      hasOriginalFiles: !!originalFiles,
+      hasUploadConfigs: uploadFieldConfigs.length > 0,
     });
-  }, [uploadFailed]);
+  }, [uploadFailed, uploadError, responseDialogVisible]);
+
+  // Reset upload failed state when modal closes
+  useEffect(() => {
+    console.log("=== MODAL VISIBILITY CHANGED ===", {
+      responseDialogVisible,
+      uploadFailed,
+      isProcessing,
+    });
+
+    if (!responseDialogVisible) {
+      console.log("Modal closed - resetting states");
+      setUploadFailed(false);
+      setUploadError(null);
+      setIsProcessing(false);
+    }
+  }, [responseDialogVisible]);
 
   useEffect(() => {
     if (selectedSubmitItem) {
@@ -116,15 +131,22 @@ export const SubmitAndConfirmModal = ({
 
         hideLoading();
         console.log("All images uploaded successfully to S3");
+
+        // Reset failure states on success
         setUploadFailed(false);
         setUploadError(null);
+
         return true;
       } catch (uploadError) {
         hideLoading();
         console.error("S3 Upload error:", uploadError);
         console.log("Setting uploadFailed to true");
+
+        // Set failure states
         setUploadFailed(true);
         setUploadError(uploadError.message || "Upload failed");
+
+        // Re-throw to let caller handle it
         throw uploadError;
       }
     }
@@ -139,8 +161,10 @@ export const SubmitAndConfirmModal = ({
         setIsUploading(true);
       }
 
+      // Try to upload - this will throw if it fails
       await handleS3Upload();
 
+      // Only reach here if upload was successful
       message.success("Images uploaded successfully!");
       setUploadFailed(false);
       setUploadError(null);
@@ -150,7 +174,16 @@ export const SubmitAndConfirmModal = ({
       dispatch(resetStatusModalState());
       navigate(navigationPath);
     } catch (error) {
+      console.error("Retry upload failed:", error);
+
+      // Keep uploadFailed as true
+      setUploadFailed(true);
+      setUploadError(error.message || "Upload failed. Please try again.");
+
+      // Show error message
       message.error("Retry failed. Please try again.");
+
+      // CRITICAL: Don't navigate, keep modal open for another retry
     } finally {
       setIsRetrying(false);
       if (setIsUploading) {
@@ -160,6 +193,12 @@ export const SubmitAndConfirmModal = ({
   };
 
   const handleModalSubmit = async () => {
+    // Prevent multiple submissions
+    if (isProcessing) {
+      console.log("Already processing, ignoring submit");
+      return;
+    }
+
     try {
       if (!selectedSubmitItem) {
         message.error(TextConstants.NoItemSelected);
@@ -189,44 +228,65 @@ export const SubmitAndConfirmModal = ({
       if (addFunction.fulfilled.match(resultAction)) {
         // After successful confirmation, upload images to S3
         try {
-          await handleS3Upload();
+          console.log("=== STARTING POST-CONFIRMATION UPLOAD ===");
+          const uploadResult = await handleS3Upload();
+          console.log("=== POST-CONFIRMATION UPLOAD SUCCESS ===", uploadResult);
+
+          // Success path - clear failure states, close modal and navigate
+          setUploadFailed(false);
+          setUploadError(null);
+
           message.success(onSubmitMessage);
           deleteDraft();
           dispatch(resetStatusModalState());
           navigate(navigationPath);
         } catch (uploadError) {
-          // Show warning with retry option
-          console.log("Upload failed, setting uploadFailed to true");
+          // Upload failed - keep modal open with retry button
+          console.log("=== POST-CONFIRMATION UPLOAD FAILED ===", uploadError);
+          console.log("Error message:", uploadError?.message);
+
+          // Set upload failed state BEFORE resetting loading states
           setUploadFailed(true);
+          setUploadError(uploadError.message || "Upload failed");
+
+          // Reset loading states but keep modal open
+          setIsProcessing(false);
+          dispatch(setModalLoading(false));
+
+          if (setIsUploading) {
+            setIsUploading(false);
+          }
+
+          // Show warning message
           message.warning(
             "Record created successfully, but image upload failed. Use retry button to upload images.",
             5
           );
-          // IMPORTANT: Don't reset modal state, keep it open for retry
-          setIsProcessing(false);
-          dispatch(setModalLoading(false));
-          if (setIsUploading) {
-            setIsUploading(false);
-          }
-          return; // Exit early, don't close modal
+
+          // CRITICAL: Return early to prevent modal from closing
+          return;
         }
       } else {
         message.error(TextConstants.FailedToConfirmItem);
+        // Reset on failure
+        setIsProcessing(false);
+        dispatch(setModalLoading(false));
+        if (setIsUploading) {
+          setIsUploading(false);
+        }
       }
     } catch (error) {
       console.error(TextConstants.ConfirmationError, error);
       message.error(TextConstants.ConfirmationError);
-    } finally {
-      // Only reset if upload didn't fail
-      if (!uploadFailed) {
-        setIsProcessing(false);
-        dispatch(setModalLoading(false));
-        dispatch(setResponseDialogVisible(false));
-        dispatch(resetStatusModalState());
 
-        if (setIsUploading) {
-          setIsUploading(false);
-        }
+      // Reset on error
+      setIsProcessing(false);
+      dispatch(setModalLoading(false));
+      dispatch(setResponseDialogVisible(false));
+      dispatch(resetStatusModalState());
+
+      if (setIsUploading) {
+        setIsUploading(false);
       }
     }
   };
@@ -240,6 +300,7 @@ export const SubmitAndConfirmModal = ({
       if (confirmLeave) {
         setUploadFailed(false);
         setUploadError(null);
+        deleteDraft();
         dispatch(resetStatusModalState());
         navigate(navigationPath);
       }

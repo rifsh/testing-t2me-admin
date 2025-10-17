@@ -177,7 +177,7 @@ const ResponseShowModal = ({
   }, [scheduleData]);
 
   const renderFooter = () => {
-    console.log("Rendering footer with showRetry:", showRetry);
+    // console.log("Rendering footer with showRetry:", showRetry);
 
     const buttons = [];
 
@@ -264,7 +264,7 @@ const ResponseShowModal = ({
           </Text>
         )}
 
-        {jsonData && (
+        {jsonData && !showRetry && (
           <div>
             <Title level={5} style={{ marginBottom: 16 }}>
               Submission Details
