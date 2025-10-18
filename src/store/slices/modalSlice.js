@@ -31,6 +31,9 @@ const modalSlice = createSlice({
     setModalLoading: (state, action) => {
       state.modalLoading = action.payload;
     },
+    setOriginalFiles: (state, action) => {
+      state.originalFiles = action.payload;
+    },
     setResponseData: (state, action) => {
       state.responseData = action.payload;
     },
@@ -43,7 +46,7 @@ export const {
   setModalLoading,
   setResponseDialogVisible,
   setSelectedItem,
-  setSelectedSubmitItem,
+  setSelectedSubmitItem,setOriginalFiles,
   setResponseData,
 } = modalSlice.actions;
 

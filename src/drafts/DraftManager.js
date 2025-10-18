@@ -16,7 +16,7 @@ class DraftManager {
 
       request.onsuccess = () => {
         this.db = request.result;
-        console.log("✅ IndexedDB opened successfully");
+        // console.log("✅ IndexedDB opened successfully");
         resolve(this.db);
       };
 
@@ -40,7 +40,7 @@ class DraftManager {
           unique: false,
         });
 
-        console.log("✅ IndexedDB store created with indexes");
+        // console.log("✅ IndexedDB store created with indexes");
       };
     });
   }
@@ -57,11 +57,11 @@ class DraftManager {
         updatedAt: new Date().toISOString(),
       };
 
-      console.log("💾 Saving draft to IndexedDB:", draftToSave.id);
+      // console.log("💾 Saving draft to IndexedDB:", draftToSave.id);
 
       const request = store.put(draftToSave);
       request.onsuccess = () => {
-        console.log("✅ Draft saved successfully:", draftToSave.id);
+        // console.log("✅ Draft saved successfully:", draftToSave.id);
         resolve(request.result);
       };
       request.onerror = () => {
@@ -96,11 +96,11 @@ class DraftManager {
         // Sort by updatedAt (most recent first)
         results.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
-        console.log(
-          `📊 Retrieved ${results.length} drafts for ${formType}${
-            category ? ` (${category})` : ""
-          }`
-        );
+        // console.log(
+        //   `📊 Retrieved ${results.length} drafts for ${formType}${
+        //     category ? ` (${category})` : ""
+        //   }`
+        // );
         resolve(results);
       };
 
@@ -118,11 +118,11 @@ class DraftManager {
       const transaction = this.db.transaction(["drafts"], "readwrite");
       const store = transaction.objectStore("drafts");
 
-      console.log("🗑️ Deleting draft:", id);
+      // console.log("🗑️ Deleting draft:", id);
 
       const request = store.delete(id);
       request.onsuccess = () => {
-        console.log("✅ Draft deleted successfully:", id);
+        // console.log("✅ Draft deleted successfully:", id);
         resolve();
       };
       request.onerror = () => {
@@ -137,11 +137,11 @@ class DraftManager {
       const drafts = await this.getDrafts(formType, category);
       const promises = drafts.map((draft) => this.deleteDraft(draft.id));
       await Promise.all(promises);
-      console.log(
-        `🧹 Cleared ${drafts.length} drafts for ${formType}${
-          category ? ` (${category})` : ""
-        }`
-      );
+      // console.log(
+      //   `🧹 Cleared ${drafts.length} drafts for ${formType}${
+      //     category ? ` (${category})` : ""
+      //   }`
+      // );
     } catch (error) {
       console.error("❌ Error clearing drafts:", error);
       throw error;
@@ -170,7 +170,7 @@ class DraftManager {
           stats[key].totalFields += draft.metadata?.fieldCount || 0;
         });
 
-        console.log("📊 Draft statistics:", stats);
+        // console.log("📊 Draft statistics:", stats);
         resolve(stats);
       };
 

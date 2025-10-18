@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { Modal, Button, Typography, Table, Space, Row, Col } from "antd";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { Modal, Button, Typography, Table, Space, Alert } from "antd";
+import { ExclamationCircleOutlined, SyncOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -17,7 +17,23 @@ const ResponseShowModal = ({
   jsonData = null,
   pagination,
   onPaginationChange = () => {},
+  // NEW PROPS for retry functionality
+  showRetry = false,
+  onRetry,
+  retryLoading = false,
 }) => {
+  // Debug: Log props
+  React.useEffect(() => {
+    console.log("ResponseShowModal props:", {
+      visible,
+      showRetry,
+      retryLoading,
+      loading,
+      title,
+      cancelText,
+    });
+  }, [visible, showRetry, retryLoading, loading, title, cancelText]);
+
   const formatValue = (value) => {
     if (value === null || value === undefined) return "N/A";
     if (Array.isArray(value)) return value.length ? value.join(", ") : "N/A";
@@ -25,6 +41,7 @@ const ResponseShowModal = ({
       return Object.keys(value).length ? JSON.stringify(value) : "N/A";
     return value.toString();
   };
+
   const tableData = useMemo(() => {
     if (!jsonData) return [];
 
@@ -100,6 +117,7 @@ const ResponseShowModal = ({
       ),
     },
   ];
+
   const scheduleColumns = useMemo(() => {
     if (!scheduleData.length) return [];
 
@@ -158,39 +176,95 @@ const ResponseShowModal = ({
     return [...baseColumns, ...dynamicColumns];
   }, [scheduleData]);
 
-  return (
-    <Modal
-      open={visible}
-      width={800}
-      title={
-        <Space align="center">
-          <ExclamationCircleOutlined style={{ color: "#faad14" }} />
-          <span>{title}</span>
-        </Space>
-      }
-      onCancel={onCancel}
-      footer={[
-        <Button key="cancel" onClick={onCancel}>
-          {cancelText}
-        </Button>,
+  const renderFooter = () => {
+    // console.log("Rendering footer with showRetry:", showRetry);
+
+    const buttons = [];
+
+    // Cancel/Skip button
+    buttons.push(
+      <Button
+        key="cancel"
+        onClick={onCancel}
+        disabled={loading || retryLoading}
+      >
+        {cancelText}
+      </Button>
+    );
+
+    // Retry button (only shown when upload fails)
+    if (showRetry && onRetry) {
+      console.log("Adding retry button");
+      buttons.push(
+        <Button
+          key="retry"
+          type="default"
+          icon={<SyncOutlined spin={retryLoading} />}
+          onClick={onRetry}
+          loading={retryLoading}
+          disabled={loading}
+        >
+          Retry Upload
+        </Button>
+      );
+    }
+
+    // Confirm/Submit button (hide when showing retry)
+    if (!showRetry) {
+      console.log("Adding submit button");
+      buttons.push(
         <Button
           key="submit"
           type="primary"
           danger
           loading={loading}
           onClick={onSubmit}
+          disabled={retryLoading}
         >
           {confirmText}
-        </Button>,
-      ]}
+        </Button>
+      );
+    }
+
+    console.log("Footer buttons:", buttons.length);
+    return buttons;
+  };
+
+  return (
+    <Modal
+      open={visible}
+      width={800}
+      title={
+        <Space align="center">
+          <ExclamationCircleOutlined
+            style={{ color: showRetry ? "#ff4d4f" : "#faad14" }}
+          />
+          <span>{showRetry ? "Upload Failed" : title}</span>
+        </Space>
+      }
+      onCancel={onCancel}
+      footer={renderFooter()}
+      closable={!loading && !retryLoading}
+      maskClosable={false}
     >
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-        {details && (
+        {/* Show error alert when upload fails */}
+        {showRetry && (
+          <Alert
+            message="S3 Upload Failed"
+            description="The record was created successfully, but image upload to S3 failed. Please retry uploading the images or skip to continue without images."
+            type="error"
+            showIcon
+          />
+        )}
+
+        {details && !showRetry && (
           <Text type="secondary" style={{ whiteSpace: "pre-wrap" }}>
             {details}
           </Text>
         )}
-        {jsonData && (
+
+        {jsonData && !showRetry && (
           <div>
             <Title level={5} style={{ marginBottom: 16 }}>
               Submission Details
@@ -204,6 +278,7 @@ const ResponseShowModal = ({
             />
           </div>
         )}
+
         {scheduleData.length > 0 && (
           <>
             <Title level={5} style={{ marginTop: 16 }}>
@@ -223,12 +298,15 @@ const ResponseShowModal = ({
             />
           </>
         )}
-        <Text
-          strong
-          style={{ color: "#fa541c", display: "block", marginTop: 16 }}
-        >
-          {warningMessage}
-        </Text>
+
+        {warningMessage && !showRetry && (
+          <Text
+            strong
+            style={{ color: "#fa541c", display: "block", marginTop: 16 }}
+          >
+            {warningMessage}
+          </Text>
+        )}
       </Space>
     </Modal>
   );

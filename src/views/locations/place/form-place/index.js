@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
-import { Tabs, Form, Button, message as antdMessage, message } from "antd";
+import { Tabs, Form, Button, message as antdMessage } from "antd";
 import Flex from "components/shared-components/Flex";
 import CountryFormFields from "../components/CountryFormFields";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,20 +21,19 @@ import WarningModal from "components/util-components/ModalItems/WarningModal";
 import {
   setSelectedItem,
   setSelectedSubmitItem,
+  setOriginalFiles,
 } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import LoadingOverlay from "components/util-components/Loader/index";
 import DraftSystem from "drafts/components/DraftSystem";
-import { useDraft } from "drafts/hooks/useDraftManager";
-
-// Update with actual path
-import BackButton from "components/Buttons/BackPageButoon";
+import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil";
 
 const CountryForm = ({ mode, placeId }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     loading,
@@ -54,20 +53,25 @@ const CountryForm = ({ mode, placeId }) => {
     message: warningMessage,
   } = useSelector((state) => state.locations);
 
-  useEffect(() => {
-    console.log("FETCHING SINGLE PLACE");
+  // Define which fields to include in confirmation request
+  const FIELDS_TO_CONFIRM = [
+    "name",
+    "description",
+    "thumbnail_image",
+    "thumbnail_image_upload_url",
+    "banner_images",
+    "banner_images_upload_url",
+    "country_id",
+  ];
 
+  useEffect(() => {
     if (placeId) {
       dispatch(getSinglePlace(placeId));
     }
   }, [dispatch, placeId]);
 
   useEffect(() => {
-    console.log(singlePlace, "_________________single place");
-
     if (singlePlace) {
-      console.log(singlePlace, "PLACEEEEEEEEEEEEsss");
-
       if (mode === "EDIT") {
         form.setFieldsValue({
           country_id: singlePlace.country.name,
@@ -95,10 +99,8 @@ const CountryForm = ({ mode, placeId }) => {
           description: singlePlace.description,
         });
       }
-    } else {
-      console.warn(`No place found with ID: ${placeId}`);
     }
-  }, [singlePlace, form]);
+  }, [singlePlace, form, mode]);
 
   useEffect(() => {
     if (error) {
@@ -109,40 +111,51 @@ const CountryForm = ({ mode, placeId }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      console.log({ values });
 
+      // Extract original file objects for later S3 upload
+      const originalFiles = extractFileObjects(values);
+
+      // Store original files in Redux for use in confirmation
+      dispatch(setOriginalFiles(originalFiles));
+
+      // Transform the data to extract file names
       const data = {
         ...values,
+        thumbnail_image: {
+          file_name:
+            values.thumbnail_image?.[0]?.name ||
+            values.thumbnail_image?.[0]?.file_name ||
+            null,
+          media_type: "image",
+        },
+        banner_images:
+          values.banner_images?.map((img) => ({
+            file_name: img.name || img.file_name,
+            media_type: "image",
+          })) || [],
       };
 
-      console.log(data, "THIS IS THE DATA");
-
       if (!placeId) {
-        dispatch(setSelectedSubmitItem(values));
+        dispatch(setSelectedSubmitItem(data));
         const resultAction = await dispatch(
-          createPlace({ values, action: ActionType.SUBMIT })
+          createPlace({ values: data, action: ActionType.SUBMIT })
         );
 
         if (createPlace.fulfilled.match(resultAction)) {
-          antdMessage.success(`Place ${values.name} added successfully`);
-          navigate(`${APP_PREFIX_PATH}/place/list`);
+          // Modal will handle the rest
         }
       } else {
-        console.log("ITS AN EDITTTTTTTTTTTTT");
-
-        // If placeId exists, it's an edit (Edit mode)
-        const data = {
-          ...values,
+        const editData = {
+          ...data,
           id: placeId,
         };
-        console.log("Edit Data:", data);
 
         const resultAction = await dispatch(
-          editPlace({ data, action: ActionType.WARNING })
+          editPlace({ data: editData, action: ActionType.WARNING })
         );
 
         if (editPlace.fulfilled.match(resultAction)) {
-          dispatch(setSelectedPlace(data));
+          dispatch(setSelectedPlace(editData));
           dispatch(setLocationDialogVisible(true));
         }
       }
@@ -150,11 +163,8 @@ const CountryForm = ({ mode, placeId }) => {
       console.error("Validation Failed:", errorInfo);
     }
   };
+
   const handleWarningPagination = (page, size) => {
-    console.log("------------------------");
-
-    console.log("CHANIGN...........");
-
     dispatch(
       editPlace({
         data: selectedPlace,
@@ -172,6 +182,7 @@ const CountryForm = ({ mode, placeId }) => {
 
     dispatch(setLocationModalLoading(false));
     dispatch(setLocationDialogVisible(false));
+
     if (editPlace.fulfilled.match(resultAction)) {
       dispatch(setSelectedSubmitItem(selectedPlace));
     }
@@ -203,10 +214,9 @@ const CountryForm = ({ mode, placeId }) => {
               alignItems="center"
             >
               <h2 className="mb-3 font-semibold">
-                {!placeId ? "Add New Place" : `Edit Place`}{" "}
+                {!placeId ? "Add New Place" : `Edit Place`}
               </h2>
               <div className="mb-3 flex">
-                {/* Add Draft Integration Component */}
                 <DraftSystem
                   form={form}
                   formType="place"
@@ -216,13 +226,12 @@ const CountryForm = ({ mode, placeId }) => {
                   style={{ marginRight: 12, display: "inline-block" }}
                   enableAutoSave={mode !== "EDIT"}
                 />
-
                 <DiscardButton form={form} />
                 <Button
                   type="primary"
                   onClick={onFinish}
                   htmlType="submit"
-                  loading={createPlaceLoading}
+                  loading={createPlaceLoading || isUploading}
                 >
                   {!placeId ? "Add" : `Save`}
                 </Button>
@@ -231,10 +240,11 @@ const CountryForm = ({ mode, placeId }) => {
           </div>
         </PageHeaderAlt>
         <div className="container pt-20">
-          <CountryFormFields mode={mode} form={form} />,
+          <CountryFormFields mode={mode} form={form} />
         </div>
       </Form>
-      <LoadingOverlay loading={createPlaceLoading} />
+
+      <LoadingOverlay loading={createPlaceLoading || isUploading} />
 
       <WarningModal
         visible={dialogVisible}
@@ -255,6 +265,7 @@ const CountryForm = ({ mode, placeId }) => {
         pagination={warningPagination}
         onPaginationChange={handleWarningPagination}
       />
+
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? editPlace : createPlace}
@@ -263,6 +274,11 @@ const CountryForm = ({ mode, placeId }) => {
         mode={mode}
         form={form}
         formType={"place"}
+        setIsUploading={setIsUploading}
+        // NEW PROPS: Specify which fields to include in confirmation
+        fieldsToConfirm={FIELDS_TO_CONFIRM}
+        // NEW PROPS: Specify upload field configurations
+        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.PLACE}
       />
     </>
   );

@@ -478,7 +478,7 @@ const ScheduleDetails = ({ mode, id }) => {
     return true;
   };
 
-  const getDefaultAddOns = () => [{ name: "USER_AND_FOOD", status: true }];
+  const getDefaultAddOns = () => [{}];
 
   const getDefaultFoodSlots = () => [
     {
@@ -755,7 +755,7 @@ const ScheduleDetails = ({ mode, id }) => {
           };
         }
       );
-const finalooferids=formData.offer_ids.map(oo=>(oo.offer_id))
+      const finalooferids = formData.offer_ids.map((oo) => oo.offer_id);
       // Build final data
       const finalData = {
         ...scheduleFormData,
