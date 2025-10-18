@@ -49,16 +49,16 @@ const EventDetails = () => {
   const { eventId } = useParams();
   const dispatch = useDispatch();
   const { eventDetails, loading, error } = useSelector((state) => state.event);
-  const mediaImages = eventDetails.media?.map((item) => item.media_url) || [];
+  const mediaImages = eventDetails?.media?.map((item) => item.media_url) || [];
   const [form] = Form.useForm();
   const [enrollModalVisible, setEnrollModalVisible] = useState(false);
   const currentUser = getCurrentUser();
 
   // Check if thumbnail image is missing or contains a default value
   const isNoImage =
-    !eventDetails.thumbnail_image ||
-    eventDetails.thumbnail_image === "images" ||
-    eventDetails.thumbnail_image === "";
+    !eventDetails?.thumbnail_image ||
+    eventDetails?.thumbnail_image === "images" ||
+    eventDetails?.thumbnail_image === "";
 
   useEffect(() => {
     if (eventId) {
@@ -139,7 +139,7 @@ const EventDetails = () => {
                   >
                     <Image
                       alt={`media image ${index + 1}`}
-                      src={`${CDN_PATH}/${url}`}
+                      src={`${url}`}
                       height={400}
                       width="100%"
                       style={{

@@ -11,6 +11,6 @@ export const ENTRY_TYPES = {
 
 export const BOOKING_TYPE = {
     etb: 'ETB',
-    ebs: 'EBS',
+    ebs: 'ESB',
     ebm: 'EBM',
 }

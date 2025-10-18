@@ -45,8 +45,8 @@ QrVerificationService.consumeAddons = function (data, bookingTicketId) {
         data: data,
     });
 };
-QrVerificationService.verifyEvenetBooking = async function (bookingType, bookingTicketId, eventId) {
-    return await verifyEventBookingUtil(bookingType, bookingTicketId, eventId);
+QrVerificationService.verifyEvenetBooking = async function (bookingType, bookingTicketId, eventId, showSeatId, userId) {
+    return await verifyEventBookingUtil(bookingType, bookingTicketId, eventId, showSeatId, userId);
 
     // return fetch({
     //     url: `${ApiConstant.CONSUME_USER_LIST}`,

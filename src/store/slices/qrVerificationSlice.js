@@ -59,13 +59,13 @@ export const fetchTcketAddon = createAsyncThunk(
 );
 export const verifyEventBooking = createAsyncThunk(
     "qr/verifyEventBooking",
-    async ({ bookingType, bookingTicketId, eventId }, { rejectWithValue }) => {
+    async ({ bookingType, bookingTicketId, eventId, showSeatId, userId }, { rejectWithValue }) => {
         try {
-            const response = await QrVerificationService.verifyEvenetBooking(bookingType, bookingTicketId, eventId);
+            const response = await QrVerificationService.verifyEvenetBooking(bookingType, bookingTicketId, eventId, showSeatId, userId);
             return response.data[0];
         } catch (err) {
             console.log("API_ERROR", err);
-            return rejectWithValue(err.response?.data?.message || "Error");
+            return rejectWithValue(err || "Error");
         }
     }
 );
@@ -138,9 +138,7 @@ const qrVerificationSlice = createSlice({
                 state.response = action.payload;
             })
             .addCase(verifyEventBooking.rejected, (state, action) => {
-                state.message = action.payload;
-                console.log("action.payload", action.payload);
-
+                state.message = action.payload?.data?.status?.message;
                 state.submitLoading = false;
             })
     }
