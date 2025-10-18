@@ -51,7 +51,6 @@ LocationService.addPlace = function (data, action) {
       country_id: data.country_id,
       action: encodedAction,
     },
-   
   });
 };
 
@@ -62,22 +61,22 @@ LocationService.editPlace = function (
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
 
   return fetch({
     url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}`,
     method: "put",
-    data: formData,
+    data: data,
     params: {
       ...Utils.filterParams(pageData),
       action: encodedAction,
     },
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
   });
 };
 
