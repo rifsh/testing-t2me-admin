@@ -85,8 +85,10 @@ export const ApiConstant = {
   AVAILABLE_TICKET_TYPE_URL: "/api/v1/event/schedule/secured/available_types",
   SCHEDULE_URL: "/api/v1/event/schedule/secured/schedules",
   SINGLE_SCHEDULE_URL: "/api/v1/event/schedule/secured/schedules/details",
-  CHECK_SCHEDULE_EDIT_URL: "/api/v1/event/schedule/secured/schedules/edit/check",
-  SCHEDULE_STATUS_EDIT_URL: "/api/v1/event/schedule/secured/schedules/status_change",
+  CHECK_SCHEDULE_EDIT_URL:
+    "/api/v1/event/schedule/secured/schedules/edit/check",
+  SCHEDULE_STATUS_EDIT_URL:
+    "/api/v1/event/schedule/secured/schedules/status_change",
   STATICS_EVENT_LIST: "/api/v1/shared/statics/secured/events",
   STATICS_USER_LIST: "/api/v1/shared/statics/secured/users",
   STATICS_SCHEDULES_LIST: "/api/v1/shared/statics/secured/schedules",
@@ -215,6 +217,7 @@ export const ApiConstant = {
     "/api/v1/shared/validation/secured/validate_offer_coupon",
   ADCATEGORY_VALIDATE_URL:
     "/api/v1/shared/validation/secured/validate_ad_category",
+  OFFER_AVAILABLE_DAYS_URL: "/api/v1/shared/offers/secured/offers/weekdays",
 
   // FOOTER URLS
 
@@ -313,14 +316,20 @@ export const ApiConstant = {
   BOOKING_LIST: "/api/v1/event/orders/secured/orders/list",
   BOOKING_DETAILS: "/api/v1/event/orders/secured/orders/details",
 
+  //activity
+  ACTIVITY_LOGGER_URL: "/api/v1/shared/batch/secured/activity/log",
   //apscheduler
   APSCHEDULER_LOGGER_URL: "/api/v1/shared/scheduler/secured/activity/log",
 
   //addon-qr-validations
-  USER_LIST: "/api/v1/event/add_on/secured/scan/event/booking_ticket/addon_user_and_food/user",
-  CONSUME_USER_LIST: "/api/v1/event/add_on/secured/authorize/event/booking_ticket/addon_user_and_food/user",
-  ADDON_LIST: "/api/v1/event/add_on/secured/scan/event/booking_ticket/addon_user_and_food/food",
-  CONSUME_ADDON_LIST: "/api/v1/event/add_on/secured/authorize/event/booking_ticket/addon_user_and_food/food",
+  USER_LIST:
+    "/api/v1/event/add_on/secured/scan/event/booking_ticket/addon_user_and_food/user",
+  CONSUME_USER_LIST:
+    "/api/v1/event/add_on/secured/authorize/event/booking_ticket/addon_user_and_food/user",
+  ADDON_LIST:
+    "/api/v1/event/add_on/secured/scan/event/booking_ticket/addon_user_and_food/food",
+  CONSUME_ADDON_LIST:
+    "/api/v1/event/add_on/secured/authorize/event/booking_ticket/addon_user_and_food/food",
 
   //Event-booking-verification
   EVENT_TICKET_BOOKNG_VERIFICATION:

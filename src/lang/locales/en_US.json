@@ -10,6 +10,7 @@
   "sidenav.order.booking": "By Booking",
   "sidenav.logs": "Avtivity Log",
   "sidenav.order.appscheduler": "APScheduler Logs",
+  "sidenav.activity.logger": "Batch Run Logs",
   "sidenav.apps.admin.reports.batchrun": "Activity Log",
   "sidenav.order.event": "By Event",
   "sidenav.event.add": "add",

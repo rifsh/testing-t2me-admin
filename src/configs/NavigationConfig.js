@@ -267,6 +267,14 @@ const ALL_NAVIGATION_ITEMS = {
     get submenu() {
       const allSubmenuItems = [
         {
+          key: "reports.batchrun.loger",
+          path: `${APP_PREFIX_PATH}/reports/activity/logs`,
+          title: "sidenav.activity.logger",
+          icon: DashboardOutlined,
+          breadcrumb: false,
+          submenu: [],
+        },
+        {
           key: "reports.batchrun.appscheduler",
           path: `${APP_PREFIX_PATH}/reports/orders/app-scheduler`,
           title: "sidenav.order.appscheduler",

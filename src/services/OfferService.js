@@ -1,5 +1,9 @@
 import fetch from "auth/FetchInterceptor";
-import { getCurrentUser, getUserRole, isOrganizer } from "configs/UserAccessConfig";
+import {
+  getCurrentUser,
+  getUserRole,
+  isOrganizer,
+} from "configs/UserAccessConfig";
 import { ApiConstant } from "constants/ApiConstant";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import Utils from "utils";
@@ -30,11 +34,7 @@ OfferService.addOffer = function (data, action) {
   });
 };
 
-OfferService.editOffer = function (
-  data,
-  action,
-  pageData,
-) {
+OfferService.editOffer = function (data, action, pageData) {
   console.log(data, "DATA IN SERVICE");
 
   const encodedAction = encodeURIComponent(handleAction(action));
@@ -67,11 +67,7 @@ OfferService.editOffer = function (
   });
 };
 
-OfferService.makeChangeOffer = function (
-  data,
-  action,
-  pageData,
-) {
+OfferService.makeChangeOffer = function (data, action, pageData) {
   console.log(data, "DATA IN SERVICE");
 
   const encodedAction = encodeURIComponent(handleAction(action));
@@ -97,7 +93,6 @@ OfferService.makeChangeOffer = function (
     },
   });
 };
-
 
 // OfferService.editOfferStatus = function (
 //   data,
@@ -187,6 +182,13 @@ OfferService.validateOfferCoupon = function (offers, coupons) {
     url: ApiConstant.OFFER_COUPON_VALIDATE_URL,
     method: "get",
     params: params,
+  });
+};
+OfferService.getAvailableOfferDays = function (params) {
+  return fetch({
+    url: ApiConstant.OFFER_AVAILABLE_DAYS_URL,
+    method: "get",
+    params: Utils.filterParams(params),
   });
 };
 

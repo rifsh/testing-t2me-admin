@@ -84,10 +84,17 @@ const ALL_PROTECTED_ROUTES = {
     category: "orders",
     subcategory: "event",
   },
+  "reports.batchrun.loger": {
+    key: "reports.orders.appscheduler",
+    path: `${APP_PREFIX_PATH}/reports/activity/logs`,
+    component: React.lazy(() => import("views/logger/batch-run/list")),
+    category: "orders",
+    subcategory: "event",
+  },
   "reports.orders.appscheduler": {
     key: "reports.orders.appscheduler",
     path: `${APP_PREFIX_PATH}/reports/orders/app-scheduler`,
-    component: React.lazy(() => import("views/orders/app-scheduler/list")),
+    component: React.lazy(() => import("views/logger/app-scheduler/list")),
     category: "orders",
     subcategory: "event",
   },
