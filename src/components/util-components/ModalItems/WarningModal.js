@@ -126,10 +126,10 @@ const WarningModal = ({
     );
   }
 
-  console.log(pagination?.total, "TOTALLLLLLLLLLLL");
-  console.log(pagination?.size, "SIZEEEEEEEEEE");
-  console.log(pagination?.page, "PAGEEEEEEEEEEE");
-  console.log(visible, "visible");
+  // console.log(pagination?.total, "TOTALLLLLLLLLLLL");
+  // console.log(pagination?.size, "SIZEEEEEEEEEE");
+  // console.log(pagination?.page, "PAGEEEEEEEEEEE");
+  // console.log(visible, "visible");
 
   return (
     <Modal

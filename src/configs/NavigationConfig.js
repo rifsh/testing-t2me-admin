@@ -1046,33 +1046,33 @@ const isNavigationFeatureEnabled = (featureCategory, featureItem = null) => {
  * @returns {Object[]} - Array of filtered navigation items
  */
 const getFilteredNavigationItems = (allowedKeys) => {
-  console.log('=== NAVIGATION FILTERING DEBUG ===');
-  console.log('Allowed keys for role:', allowedKeys);
+  // console.log('=== NAVIGATION FILTERING DEBUG ===');
+  // console.log('Allowed keys for role:', allowedKeys);
 
   const filteredResults = allowedKeys
     .map((key) => {
       const item = ALL_NAVIGATION_ITEMS[key];
       if (!item) {
-        console.log(`❌ Item not found: ${key}`);
+        // console.log(`❌ Item not found: ${key}`);
         return null;
       }
 
       // Check if the feature category and specific item are enabled
       const isFeatureEnabled = isNavigationFeatureEnabled(item.category, item.featureItem);
 
-      console.log(`🔍 Checking ${key}:`, {
-        category: item.category,
-        featureItem: item.featureItem,
-        isFeatureEnabled: isFeatureEnabled,
-        title: item.title
-      });
+      // console.log(`🔍 Checking ${key}:`, {
+      //   category: item.category,
+      //   featureItem: item.featureItem,
+      //   isFeatureEnabled: isFeatureEnabled,
+      //   title: item.title
+      // });
 
       if (!isFeatureEnabled) {
-        console.log(`🚫 Filtered out: ${key} (feature disabled)`);
+        // console.log(`🚫 Filtered out: ${key} (feature disabled)`);
         return null;
       }
 
-      console.log(`✅ Included: ${key}`);
+      // console.log(`✅ Included: ${key}`);
       return item;
     })
     .filter(Boolean)
@@ -1084,8 +1084,8 @@ const getFilteredNavigationItems = (allowedKeys) => {
       };
     });
 
-  console.log('=== FILTERING RESULTS ===');
-  console.log('Total items after filtering:', filteredResults.length);
+  // console.log('=== FILTERING RESULTS ===');
+  // console.log('Total items after filtering:', filteredResults.length);
 
   // Group by category for debugging
   const debugGroups = filteredResults.reduce((groups, item) => {
@@ -1095,7 +1095,7 @@ const getFilteredNavigationItems = (allowedKeys) => {
     return groups;
   }, {});
 
-  console.log('Items by category:', debugGroups);
+  // console.log('Items by category:', debugGroups);
 
   return filteredResults;
 };
@@ -1363,12 +1363,12 @@ const buildNavigationTree = (items) => {
   }
 
   // Debug logging - remove in production
-  console.log("Navigation Debug Info:", {
-    appManagementItems: groupedItems[FEATURE_CATEGORIES.APP_MANAGEMENT],
-    appManagementEnabled:
-      groupedItems[FEATURE_CATEGORIES.APP_MANAGEMENT]?.length > 0,
-    totalNavigationItems: navigationTree.length,
-  });
+  // console.log("Navigation Debug Info:", {
+  //   appManagementItems: groupedItems[FEATURE_CATEGORIES.APP_MANAGEMENT],
+  //   appManagementEnabled:
+  //     groupedItems[FEATURE_CATEGORIES.APP_MANAGEMENT]?.length > 0,
+  //   totalNavigationItems: navigationTree.length,
+  // });
 
   return navigationTree;
 };
@@ -1421,13 +1421,13 @@ const navigationConfig = () => {
     // Build and return the navigation tree
     const navigationTree = buildNavigationTree(filteredItems);
 
-    console.log(`Navigation tree built successfully for role: ${userRoleId}`, {
-      totalItems: filteredItems.length,
-      treeNodes: navigationTree.length,
-      enabledCategories: Object.keys(NAVIGATION_BAR_FEATURE_FLAGS).filter(
-        (category) => isCategoryEnabled(category)
-      ),
-    });
+    // console.log(`Navigation tree built successfully for role: ${userRoleId}`, {
+    //   totalItems: filteredItems.length,
+    //   treeNodes: navigationTree.length,
+    //   enabledCategories: Object.keys(NAVIGATION_BAR_FEATURE_FLAGS).filter(
+    //     (category) => isCategoryEnabled(category)
+    //   ),
+    // });
 
     return navigationTree;
   } catch (error) {

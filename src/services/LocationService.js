@@ -46,13 +46,10 @@ LocationService.addPlace = function (data, action) {
   return fetch({
     url: ApiConstant.PLACE_URL,
     method: "POST",
-    data: formData,
+    data: data,
     params: {
       country_id: data.country_id,
       action: encodedAction,
-    },
-    headers: {
-      "Content-Type": "multipart/form-data",
     },
   });
 };
@@ -64,22 +61,22 @@ LocationService.editPlace = function (
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
 
   return fetch({
     url: `${ApiConstant.EDIT_PLACE_URL}/${data.id}`,
     method: "put",
-    data: formData,
+    data: data,
     params: {
       ...Utils.filterParams(pageData),
       action: encodedAction,
     },
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
   });
 };
 
@@ -200,13 +197,13 @@ LocationService.placeWithCountry = function (place) {
   return fetch({
     url: ApiConstant.PLACE_WITH_COUNTRY_URL,
     method: "get",
-    params: { place }
+    params: { place },
   });
 };
 LocationService.TenantCountry = function () {
   return fetch({
     url: ApiConstant.TENANT_COUNTRY_URL,
-    method: "get"
+    method: "get",
   });
 };
 LocationService.getVenues = function (pageData) {

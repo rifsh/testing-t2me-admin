@@ -36,7 +36,7 @@ const useDraft = ({
           await draftManagerRef.current.init();
         }
         setIsReady(true);
-        console.log(`✅ IndexedDB initialized for ${formType}`);
+        // console.log(`✅ IndexedDB initialized for ${formType}`);
       } catch (error) {
         console.error("❌ Error initializing IndexedDB:", error);
         message.error("Failed to initialize draft storage");
@@ -50,10 +50,10 @@ const useDraft = ({
     if (!isReady || !draftManagerRef.current) return;
 
     try {
-      console.log(
-        `📥 Loading drafts for ${formType} with category:`,
-        draftCategory
-      );
+      // console.log(
+      //   `📥 Loading drafts for ${formType} with category:`,
+      //   draftCategory
+      // );
 
       const storedDrafts = await draftManagerRef.current.getDrafts(
         formType.toLowerCase(),
@@ -68,7 +68,7 @@ const useDraft = ({
       );
 
       setDrafts(filteredDrafts);
-      console.log(`📊 Loaded ${filteredDrafts.length} drafts for ${formType}`);
+      // console.log(`📊 Loaded ${filteredDrafts.length} drafts for ${formType}`);
 
       if (filteredDrafts.length > 0) {
         setCurrentDraftId(filteredDrafts[0].id);
@@ -83,7 +83,7 @@ const useDraft = ({
   const saveDraft = useCallback(
     async (formValues, isManual = false) => {
       if (!isReady || !draftManagerRef.current) {
-        console.log("⏳ Draft manager not ready yet");
+        // console.log("⏳ Draft manager not ready yet");
         return { success: false, reason: "not_ready" };
       }
 
@@ -93,20 +93,20 @@ const useDraft = ({
         // Get complete data from all steps
         if (onGetCompleteData && typeof onGetCompleteData === "function") {
           completeFormData = onGetCompleteData();
-          console.log(
-            "📊 Using complete data from onGetCompleteData:",
-            Object.keys(completeFormData)
-          );
+          // console.log(
+          //   "📊 Using complete data from onGetCompleteData:",
+          //   Object.keys(completeFormData)
+          // );
         } else if (externalFormData) {
           const currentValues = form.getFieldsValue();
           completeFormData = {
             ...externalFormData,
             ...currentValues,
           };
-          console.log("📊 Merged external data with current values");
+          // console.log("📊 Merged external data with current values");
         } else {
           completeFormData = formValues || form.getFieldsValue();
-          console.log("📊 Using current form values only");
+          // console.log("📊 Using current form values only");
         }
 
         // Get existing draft for intelligent merging
@@ -117,9 +117,9 @@ const useDraft = ({
             draftCategory
           );
           existingDraft = existingDrafts.length > 0 ? existingDrafts[0] : null;
-          console.log("📋 Found existing draft:", existingDraft ? "YES" : "NO");
+          // console.log("📋 Found existing draft:", existingDraft ? "YES" : "NO");
         } catch (error) {
-          console.log("📋 No existing draft found or error:", error.message);
+          // console.log("📋 No existing draft found or error:", error.message);
         }
 
         // 🔥 HELPER FUNCTION: Check if incoming value should replace existing
@@ -134,9 +134,9 @@ const useDraft = ({
         // 🔥 REVERSE MERGE LOGIC: Incoming data overwrites if not empty, else preserve existing
         let finalFormData;
         if (existingDraft && existingDraft.formValues) {
-          console.log(
-            "🔄 Reverse merging: incoming overwrites existing when not empty..."
-          );
+          // console.log(
+          //   "🔄 Reverse merging: incoming overwrites existing when not empty..."
+          // );
           finalFormData = { ...existingDraft.formValues }; // Start with existing
 
           // Replace with incoming data if incoming field has value
@@ -144,25 +144,25 @@ const useDraft = ({
             if (shouldReplace(incomingValue)) {
               // Incoming has data - REPLACE existing
               finalFormData[key] = incomingValue;
-              console.log(`✅ Replaced field with incoming data: ${key}`);
+              // console.log(`✅ Replaced field with incoming data: ${key}`);
             } else {
               // Incoming is empty - KEEP existing (already in finalFormData)
-              console.log(
-                `⏭️ Preserved existing field (incoming empty): ${key}`
-              );
+              // console.log(
+              //   `⏭️ Preserved existing field (incoming empty): ${key}`
+              // );
             }
           });
 
-          console.log("📊 Reverse merge summary:", {
-            existingFields: Object.keys(existingDraft.formValues).length,
-            incomingFields: Object.keys(completeFormData).length,
-            finalFields: Object.keys(finalFormData).length,
-            replacedFields: Object.keys(completeFormData).filter((key) =>
-              shouldReplace(completeFormData[key])
-            ).length,
-          });
+          // console.log("📊 Reverse merge summary:", {
+          //   existingFields: Object.keys(existingDraft.formValues).length,
+          //   incomingFields: Object.keys(completeFormData).length,
+          //   finalFields: Object.keys(finalFormData).length,
+          //   replacedFields: Object.keys(completeFormData).filter((key) =>
+          //     shouldReplace(completeFormData[key])
+          //   ).length,
+          // });
         } else {
-          console.log("🆕 Creating new draft (no existing draft found)");
+          // console.log("🆕 Creating new draft (no existing draft found)");
           finalFormData = completeFormData;
         }
 
@@ -184,7 +184,7 @@ const useDraft = ({
         });
 
         if (Object.keys(cleanValues).length === 0) {
-          console.log("📝 No data to save for draft");
+          // console.log("📝 No data to save for draft");
           return { success: false, reason: "empty" };
         }
 
@@ -226,24 +226,24 @@ const useDraft = ({
           updatedAt: new Date().toISOString(),
         };
 
-        console.log(
-          `💾 Saving ${
-            existingDraft ? "reverse-merged" : "new"
-          } draft for ${formType}:`,
-          {
-            id: draftId,
-            fieldCount: Object.keys(cleanValues).length,
-            fields: Object.keys(cleanValues),
-            mergeStrategy: draftData.metadata.mergeStrategy,
-          }
-        );
+        // console.log(
+        //   `💾 Saving ${
+        //     existingDraft ? "reverse-merged" : "new"
+        //   } draft for ${formType}:`,
+        //   {
+        //     id: draftId,
+        //     fieldCount: Object.keys(cleanValues).length,
+        //     fields: Object.keys(cleanValues),
+        //     mergeStrategy: draftData.metadata.mergeStrategy,
+        //   }
+        // );
 
         // Delete existing draft first if it exists
         if (existingDraft) {
           await draftManagerRef.current.deleteDraft(existingDraft.id);
-          console.log(
-            "🗑️ Deleted old draft before saving reverse-merged version"
-          );
+          // console.log(
+          //   "🗑️ Deleted old draft before saving reverse-merged version"
+          // );
         }
 
         // Save new/merged draft
@@ -290,7 +290,7 @@ const useDraft = ({
     async (draft) => {
       setIsLoading(true);
       try {
-        console.log(`📂 Starting to load draft:`, draft.id);
+        // console.log(`📂 Starting to load draft:`, draft.id);
 
         if (
           !draft.formType ||
@@ -309,10 +309,10 @@ const useDraft = ({
 
         // Get current form values to preserve
         const currentFormValues = form.getFieldsValue();
-        console.log(
-          "📋 Current form values before loading:",
-          Object.keys(currentFormValues)
-        );
+        // console.log(
+        //   "📋 Current form values before loading:",
+        //   Object.keys(currentFormValues)
+        // );
 
         // Process draft values
         const draftValues = JSON.parse(JSON.stringify(draft.formValues));
@@ -329,7 +329,7 @@ const useDraft = ({
           }
         });
 
-        console.log("📂 Draft values to load:", Object.keys(draftValues));
+        // console.log("📂 Draft values to load:", Object.keys(draftValues));
 
         // Intelligent field updates - Only update non-empty draft fields
         const fieldsToUpdate = {};
@@ -351,24 +351,24 @@ const useDraft = ({
           }
         });
 
-        console.log(
-          "🔧 Fields to update from draft:",
-          Object.keys(fieldsToUpdate)
-        );
-        console.log(
-          "🔒 Fields to preserve:",
-          Object.keys(currentFormValues).filter((key) => !fieldsToUpdate[key])
-        );
+        // console.log(
+        //   "🔧 Fields to update from draft:",
+        //   Object.keys(fieldsToUpdate)
+        // );
+        // console.log(
+        //   "🔒 Fields to preserve:",
+        //   Object.keys(currentFormValues).filter((key) => !fieldsToUpdate[key])
+        // );
 
         // Update fields individually
         Object.entries(fieldsToUpdate).forEach(([fieldName, fieldValue]) => {
-          console.log(`🔧 Setting field: ${fieldName}`, fieldValue);
+          // console.log(`🔧 Setting field: ${fieldName}`, fieldValue);
           form.setFieldValue(fieldName, fieldValue);
         });
 
         setCurrentDraftId(draft.id);
 
-        console.log("✅ Draft loaded successfully");
+        // console.log("✅ Draft loaded successfully");
 
         // Create merged data for callback
         const mergedData = {
@@ -397,10 +397,10 @@ const useDraft = ({
     if (!isReady || !draftManagerRef.current) return;
 
     try {
-      console.log(
-        `🗑️ Deleting drafts for ${formType} with category:`,
-        draftCategory
-      );
+      // console.log(
+      //   `🗑️ Deleting drafts for ${formType} with category:`,
+      //   draftCategory
+      // );
 
       await draftManagerRef.current.clearAllDrafts(
         formType.toLowerCase(),
@@ -412,7 +412,7 @@ const useDraft = ({
 
       // Only here we clear the entire form
       form.resetFields();
-      console.log("🧹 Form completely cleared after draft deletion");
+      // console.log("🧹 Form completely cleared after draft deletion");
 
       message.success(
         `${
