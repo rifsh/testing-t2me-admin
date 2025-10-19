@@ -316,6 +316,8 @@ export const ApiConstant = {
   BOOKING_LIST: "/api/v1/event/orders/secured/orders/list",
   BOOKING_DETAILS: "/api/v1/event/orders/secured/orders/details",
 
+  //activity
+  ACTIVITY_LOGGER_URL: "/api/v1/shared/batch/secured/activity/log",
   //apscheduler
   APSCHEDULER_LOGGER_URL: "/api/v1/shared/scheduler/secured/activity/log",
 

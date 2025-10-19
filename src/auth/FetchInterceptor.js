@@ -270,6 +270,7 @@ service.interceptors.response.use(
               "An unexpected error occurred. Please try again or contact support if the issue persists.";
         }
       }
+
     } else {
       notificationParam.message = "Network Error";
       notificationParam.description =
@@ -280,8 +281,9 @@ service.interceptors.response.use(
     if (!error.config.url.includes("/logout")) {
       notification.error(notificationParam);
     }
-
-    return Promise.reject(error);
+    console.log("samplerrorchecking", error.response);
+    
+    return Promise.reject(error.response);
   }
 );
 

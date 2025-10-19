@@ -17,5 +17,17 @@ apschedulerService.getAllapschedulerLogs = function (pageData = {}) {
         params: Utils.filterParams(defaultParams),
     });
 };
+apschedulerService.getAllActivityLogs = function (pageData = {}) {
+    const defaultParams = {
+        page: pageData.page || 1,
+        size: pageData.size || 10,
+        ...pageData,
+    };
+    return fetch({
+        url: ApiConstant.ACTIVITY_LOGGER_URL,
+        method: "get",
+        params: Utils.filterParams(defaultParams),
+    });
+};
 
 export default apschedulerService;

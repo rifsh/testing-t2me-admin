@@ -23,7 +23,7 @@ const QRScanner = (props) => {
     const [errorMessage, setErrorMessage] = useState('');
     const qrScannerRef = useRef(null);
     const isProcessingRef = useRef(false);
-    const { serviceType, scannerType } = useSelector((state) => state.qr);
+    const { serviceType, message } = useSelector((state) => state.qr);
     const serviceTypeRef = useRef(serviceType);
 
     useEffect(() => {
@@ -144,10 +144,8 @@ const QRScanner = (props) => {
 
         } catch (error) {
             console.log('AddonChecking', scannedData);
-
-            console.error('Error processing scan:', error);
             setScanStatus('error');
-            setErrorMessage(error.message || "Processing failed");
+            setErrorMessage(error?.data?.status?.message || "Processing failed");
             setShowWarningModal(true);
             setTimeout(() => {
                 setScanStatus('idle');
@@ -200,9 +198,11 @@ const QRScanner = (props) => {
         try {
             if (scannedData?.booking_qr_uuid && scannedData?.booking_ticket_id) {
                 const bookingTicketId = scannedData?.booking_ticket_id;
+                const showSeatId = scannedData?.show_seats_id;
+                const userId = scannedData?.user_id;
                 const bookingType = scannedData?.booking_qr_uuid.split('-')[0];
                 const response = await dispatch(
-                    verifyEventBooking({ bookingType, bookingTicketId, eventId })
+                    verifyEventBooking({ bookingType, bookingTicketId, eventId, showSeatId, userId })
                 ).unwrap();
                 console.log("eventValidationTest", response);
 
@@ -217,6 +217,8 @@ const QRScanner = (props) => {
                 throw new Error("Invalid QR code format");
             }
         } catch (error) {
+            console.log("responserror", error);
+
             throw error;
         }
     };

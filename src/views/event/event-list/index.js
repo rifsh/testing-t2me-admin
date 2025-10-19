@@ -180,23 +180,23 @@ const EventsList = () => {
       {hasPermission(
         PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.GET_EVENT_DETAIL
       ) && (
-        <Menu.Item>
-          <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
-            <EyeOutlined />
-            <span className="ml-2">View Details</span>
-          </Flex>
-        </Menu.Item>
-      )}
+          <Menu.Item>
+            <Flex alignItems="center" onClick={() => handleViewDetails(row.id)}>
+              <EyeOutlined />
+              <span className="ml-2">View Details</span>
+            </Flex>
+          </Menu.Item>
+        )}
       {hasPermission(
         PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT
       ) && (
-        <Menu.Item>
-          <Flex alignItems="center" onClick={() => handleEditEvent(row.id)}>
-            <EditOutlined />
-            <span className="ml-2">Edit Event</span>
-          </Flex>
-        </Menu.Item>
-      )}
+          <Menu.Item>
+            <Flex alignItems="center" onClick={() => handleEditEvent(row.id)}>
+              <EditOutlined />
+              <span className="ml-2">Edit Event</span>
+            </Flex>
+          </Menu.Item>
+        )}
       {/* {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.EDIT_EVENT) && <Menu.Item>
         <Flex alignItems="center" onClick={() => {
           navigate(`${APP_PREFIX_PATH}/qr-scanner`);
@@ -265,41 +265,40 @@ const EventsList = () => {
       width: 200,
       align: "center",
       render: (_, elm) => (
-        <Space size={"small"} className="text-right">
-          {/* Verify Event Button */}
-          {currentUser?.role_id === ROLES.EVENT_ORGANIZER &&
-            elm?.jsonb_add_ons?.length > 0 && (
-              <>
-                <Tooltip title="Verify Event">
-                  <Button
-                    type="primary"
-                    size="small"
-                    icon={<CheckCircleOutlined />}
-                    onClick={() => handleVerifyEvent(elm)}
-                    style={{
-                      borderRadius: "6px",
-                      background: "#52c41a",
-                      borderColor: "#52c41a",
-                    }}
-                  >
-                    Verify
-                  </Button>
-                </Tooltip>
+        <Space size="small" className="text-right">
+          {currentUser?.role_id === ROLES.EVENT_ORGANIZER && (
+            <Tooltip title="Verify Event">
+              <Button
+                type="primary"
+                size="small"
+                icon={<CheckCircleOutlined />}
+                onClick={() => handleVerifyEvent(elm)}
+                style={{
+                  borderRadius: "6px",
+                  background: "#52c41a",
+                  borderColor: "#52c41a",
+                }}
+              >
+                Verify
+              </Button>
+            </Tooltip>
+          )}
 
-                <Tooltip title="Verify Addon">
-                  <Button
-                    size="small"
-                    icon={<CheckCircleOutlined />}
-                    onClick={() => handleVerifyAddon(elm)}
-                    style={{ borderRadius: "6px" }}
-                  >
-                    Verify Addon
-                  </Button>
-                </Tooltip>
-              </>
-            )}
+          {elm?.jsonb_add_ons?.length > 0 && (
+            <Tooltip title="Verify Addon">
+              <Button
+                size="small"
+                icon={<CheckCircleOutlined />}
+                onClick={() => handleVerifyAddon(elm)}
+                style={{ borderRadius: "6px" }}
+              >
+                Verify Addon
+              </Button>
+            </Tooltip>
+          )}
         </Space>
       ),
+
     },
     {
       title: "",
@@ -419,15 +418,15 @@ const EventsList = () => {
           {hasPermission(
             PERMISSIONS.APPLICATIONS.SERVICES.EVENT.EVENT.ADD_EVENT
           ) && (
-            <Button
-              type="primary"
-              icon={<FormOutlined />}
-              block
-              onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
-            >
-              Add Event
-            </Button>
-          )}
+              <Button
+                type="primary"
+                icon={<FormOutlined />}
+                block
+                onClick={() => navigate(`${APP_PREFIX_PATH}/event/add`)}
+              >
+                Add Event
+              </Button>
+            )}
         </div>
       </Flex>
       <div className="table-responsive">
