@@ -75,7 +75,7 @@ const apschedulerSlice = createSlice({
             })
             .addCase(fetchAllActivityLogs.fulfilled, (state, action) => {
                 state.loading = false;
-                state.coupons = action.payload.items;
+                state.coupons = action.payload.items; 
                 state.allActivityLogs = action.payload.data.items;
                 state.pagination = action.payload.data;
                 state.countsByTypes = action.payload.counts_by_types;

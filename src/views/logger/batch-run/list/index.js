@@ -746,8 +746,8 @@ const ActivityLogsList = () => {
                             style={{ width: 180 }}
                             options={[
                                 { value: "all", label: "All" },
-                                { value: "booking ticket", label: "Booking Ticket" },
-                                { value: "event schedule", label: "Event Schedule" },
+                                { value: "event_seat", label: "Event Seat" },
+                                { value: "event_ticket", label: "Event Ticket" },
                                 { value: "movie", label: "Ad Schedule" },
                             ]}
                         />
