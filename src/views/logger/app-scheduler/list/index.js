@@ -621,9 +621,9 @@ const AppSchedulerList = () => {
             width: "15%",
             render: (status) => (
                 <Space>
-                    <Tag>
+                    <Text>
                         {status}
-                    </Tag>
+                    </Text>
                 </Space>
             ),
             sorter: (a, b) => {
