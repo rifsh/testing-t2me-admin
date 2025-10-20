@@ -472,8 +472,7 @@ const ActivityLogsList = () => {
             size: size,
             search: searchTerm,
             type: selectedType === 'all' ? null : selectedType,
-            event_type: selectedEventType === 'all' ? null : selectedEventType
-
+            filters: selectedEventType === 'all' ? null : selectedEventType
         }));
     };
 
@@ -576,7 +575,7 @@ const ActivityLogsList = () => {
             size: 10,
             search: searchTerm,
             type: selectedType === 'all' ? null : selectedType,
-            event_type: selectedEventType === 'all' ? null : selectedEventType
+            filters: selectedEventType === 'all' ? null : selectedEventType
         }));
 
     }, [searchTerm, selectedEventType, selectedType])
