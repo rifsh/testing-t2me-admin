@@ -472,8 +472,7 @@ const ActivityLogsList = () => {
             size: size,
             search: searchTerm,
             type: selectedType === 'all' ? null : selectedType,
-            event_type: selectedEventType === 'all' ? null : selectedEventType
-
+            filters: selectedEventType === 'all' ? null : selectedEventType
         }));
     };
 
@@ -496,6 +495,7 @@ const ActivityLogsList = () => {
 
     const handleRefresh = () => {
         setSelectedType('all');
+        setSelectedEventType('all');
         dispatch(fetchAllActivityLogs(DEFAULT_PAGE_SIZE));
     };
 
@@ -575,7 +575,7 @@ const ActivityLogsList = () => {
             size: 10,
             search: searchTerm,
             type: selectedType === 'all' ? null : selectedType,
-            event_type: selectedEventType === 'all' ? null : selectedEventType
+            filters: selectedEventType === 'all' ? null : selectedEventType
         }));
 
     }, [searchTerm, selectedEventType, selectedType])
@@ -746,9 +746,10 @@ const ActivityLogsList = () => {
                             style={{ width: 180 }}
                             options={[
                                 { value: "all", label: "All" },
-                                { value: "ticket", label: "Ticket Type" },
-                                { value: "seat", label: "Event Seat Type" },
-                                { value: "movie", label: "Movie Type" },
+                                { value: "event_seat", label: "Event Seat" },
+                                { value: "event_ticket", label: "Event Ticket" },
+                                { value: "event_schedule", label: "Event Schedule" },
+                                { value: "advertisement_schedule", label: "Ad Schedule" },
                             ]}
                         />
                     </Space>
