@@ -748,7 +748,8 @@ const ActivityLogsList = () => {
                                 { value: "all", label: "All" },
                                 { value: "event_seat", label: "Event Seat" },
                                 { value: "event_ticket", label: "Event Ticket" },
-                                { value: "movie", label: "Ad Schedule" },
+                                { value: "event_schedule", label: "Event Schedule" },
+                                { value: "advertisement_schedule", label: "Ad Schedule" },
                             ]}
                         />
                     </Space>
