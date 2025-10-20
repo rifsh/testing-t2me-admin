@@ -736,9 +736,9 @@ const AppSchedulerList = () => {
                             style={{ width: 180 }}
                             options={[
                                 { value: "all", label: "All" },
-                                { value: "ticket", label: "Ticket Type" },
-                                { value: "seat", label: "Event Seat Type" },
-                                { value: "movie", label: "Movie Type" },
+                                { value: "event_ticket", label: "Event Ticket Type" },
+                                { value: "event_seat", label: "Event Seat Type" },
+                                { value: "movie_seat", label: "Movie Type" },
                             ]}
                         />
                     </Space>
@@ -752,10 +752,10 @@ const AppSchedulerList = () => {
                                 style={{ width: 180 }}
                                 options={[
                                     { value: "all", label: "All" },
-                                    ...uniqueTypes.map((type) => ({
-                                        value: type,
-                                        label: formatTypeString(type),
-                                    })),
+                                    { value: "scheduled", label: "Scheduled" },
+                                    { value: "failed", label: "Failed" },
+                                    { value: "cancelled", label: "Cancelled" },
+                                    { value: "completed", label: "Completed" },
                                 ]}
                             />
                         </Space>
