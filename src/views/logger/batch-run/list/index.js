@@ -496,6 +496,7 @@ const ActivityLogsList = () => {
 
     const handleRefresh = () => {
         setSelectedType('all');
+        setSelectedEventType('all');
         dispatch(fetchAllActivityLogs(DEFAULT_PAGE_SIZE));
     };
 
@@ -746,9 +747,9 @@ const ActivityLogsList = () => {
                             style={{ width: 180 }}
                             options={[
                                 { value: "all", label: "All" },
-                                { value: "ticket", label: "Ticket Type" },
-                                { value: "seat", label: "Event Seat Type" },
-                                { value: "movie", label: "Movie Type" },
+                                { value: "booking ticket", label: "Booking Ticket" },
+                                { value: "event schedule", label: "Event Schedule" },
+                                { value: "movie", label: "Ad Schedule" },
                             ]}
                         />
                     </Space>
