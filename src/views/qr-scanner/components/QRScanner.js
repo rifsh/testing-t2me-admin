@@ -23,7 +23,7 @@ const QRScanner = (props) => {
     const [errorMessage, setErrorMessage] = useState('');
     const qrScannerRef = useRef(null);
     const isProcessingRef = useRef(false);
-    const { serviceType, message } = useSelector((state) => state.qr);
+    const { serviceType, message: qrMessage } = useSelector((state) => state.qr);
     const serviceTypeRef = useRef(serviceType);
 
     useEffect(() => {
