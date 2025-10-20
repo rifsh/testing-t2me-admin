@@ -9,7 +9,12 @@ const PaymentLogoForm = () => {
     if (Array.isArray(e)) {
       return e;
     }
-    return e?.fileList;
+
+    if (e && e.fileList) {
+      return e.fileList;
+    }
+
+    return [];
   };
 
   return (
@@ -56,15 +61,15 @@ const PaymentLogoForm = () => {
                     <div style={{ display: "flex", gap: 16 }}>
                       <Form.Item
                         {...restField}
-                        name={[name, "logo"]}
-                        fieldKey={[fieldKey, "logo"]}
+                        name={[name, "method_logo"]}
+                        fieldKey={[fieldKey, "method_logo"]}
                         valuePropName="fileList"
                         getValueFromEvent={normFile}
                         rules={[{ required: true, message: "Upload required" }]}
                         style={{ flex: 2 }}
                       >
                         <Upload
-                          name="payment_logo"
+                          name="method_logo"
                           listType="picture"
                           maxCount={1}
                           beforeUpload={() => false}
@@ -74,8 +79,8 @@ const PaymentLogoForm = () => {
                       </Form.Item>
                       <Form.Item
                         {...restField}
-                        name={[name, "name"]}
-                        fieldKey={[fieldKey, "name"]}
+                        name={[name, "method_name"]}
+                        fieldKey={[fieldKey, "method_name"]}
                         rules={[
                           { required: true, message: "Enter payment name" },
                         ]}
