@@ -54,6 +54,7 @@ import AddOnsModal from "views/qr-scanner/components/Modal";
 import { setScannerType } from "store/slices/qrVerificationSlice";
 import { SCANNER_TYPES } from "constants/QrConstants";
 import { checkScheduleEdit } from "store/slices/scheduleSlice";
+import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 const { Panel } = Collapse;
 
 const { Option } = Select;
@@ -390,7 +391,7 @@ const EventsList = () => {
         mobileFlex={false}
       >
         <Flex className="mb-1" mobileFlex={false}>
-          <div className="mr-md-3 mb-3">
+          {/* <div className="mr-md-3 mb-3">
             <Search
               placeholder="Search Event"
               onChange={(e) => handleSearchIsEmpty(e.target.value)}
@@ -409,10 +410,24 @@ const EventsList = () => {
               <Option value={true}>Active</Option>
               <Option value={false}>Inactive</Option>
             </Select>
-          </div>
-          <div className="mb-3">
+          </div> */}
+          <SearchBarWithStatus
+            fetchFunction={fetchAllEvent}
+          // additionalFilters={[
+          //   {
+          //     options: detailedCountryList,
+          //     placeholder: "Please choose a country",
+          //     formName: "country_id",
+          //     isAutoComplete: true,
+          //     onClick: () => {
+          //       dispatch(getCoutryDetails());
+          //     },
+          //   },
+          // ]}
+          />
+          {/* <div className="mb-3">
             <Button onClick={handleClearFilters}>Clear</Button>
-          </div>
+          </div> */}
         </Flex>
         <div>
           {hasPermission(

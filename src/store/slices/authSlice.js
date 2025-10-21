@@ -33,7 +33,7 @@ export const signIn = createAsyncThunk(
         return rejectWithValue("Authentication failed, no token received.");
       }
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Error");
+      return rejectWithValue(err?.data?.status?.message || "Error");
     }
   }
 );
