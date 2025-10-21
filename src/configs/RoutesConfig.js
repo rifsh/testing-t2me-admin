@@ -1217,6 +1217,16 @@ const ALL_PROTECTED_ROUTES = {
     subcategory: "layout",
     item: "footer",
   },
+    "app.footer.edit": {
+    key: "app.management.layout.footer.edit",
+    path: `${APP_PREFIX_PATH}/app/management/layout/footer/edit`,
+    component: React.lazy(() =>
+      import("views/app-managment/layout/footer/edit-footer")
+    ),
+    category: "app_management",
+    subcategory: "layout",
+    item: "footer",
+  },
   "app.faq": {
     key: "app.management.layout.faq.list",
     path: `${APP_PREFIX_PATH}/app/management/layout/faq/list`,

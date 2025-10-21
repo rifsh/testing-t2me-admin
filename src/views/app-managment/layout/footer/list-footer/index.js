@@ -37,6 +37,8 @@ const FooterList = () => {
     dispatch(fetchFooterData());
   }, [dispatch]);
 
+  console.log("FOOTER DATA", footerData);
+
   // const handlePagination = (page, size) => {
   //   // dispatch(fetchAllFooter({ page: page, size: size }));
   // };
@@ -44,7 +46,16 @@ const FooterList = () => {
   const dropdownMenu = (row) => (
     <Menu>
       <Menu.Item>
-        <Flex alignItems="center">
+        <Flex
+          alignItems="center"
+          onClick={() =>
+            navigate(`${APP_PREFIX_PATH}/app/management/layout/footer/edit`, {
+              state: {
+                footerId: row.key,
+              },
+            })
+          }
+        >
           <EditOutlined />
           <span className="ml-2">Edit Footer</span>
         </Flex>
