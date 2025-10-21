@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect, useMemo } from "react";
 import {
   Form,
   Select,
@@ -26,6 +26,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { debounce } from "lodash";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
+import { ADD } from "constants/AppConstants";
 
 dayjs.extend(isBetween);
 
@@ -63,11 +64,10 @@ const SimplifiedOfferCard = ({
   onDatesChange,
   scheduleStartDate,
   scheduleEndDate,
-  existingShowDates, // NEW: Pass existing show dates
+  existingShowDates,
 }) => {
   const itemData = item.offer;
 
-  // FIXED: Only show dates that have show_times configured
   const availableDates = getAvailableShowDates(
     itemData.start_date,
     itemData.end_date,
@@ -255,7 +255,7 @@ const SimplifiedOfferCard = ({
   );
 };
 
-// Simplified Coupon Card Component (same changes)
+// Simplified Coupon Card Component
 const SimplifiedCouponCard = ({
   item,
   onRemove,
@@ -494,7 +494,7 @@ const SimplifiedCouponCard = ({
 };
 
 // Main Component
-const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
+const OfferAndCoupons = ({ onSubmit, form, onBack, initialData, mode }) => {
   const dispatch = useDispatch();
   const { eventDetails, loading } = useSelector((state) => state.event);
 
@@ -566,32 +566,34 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
   const availableOffers = eventDetails?.event_offers || [];
   const availableCoupons = eventDetails?.event_coupons || [];
 
-  const getScheduleDates = () => {
-    const formValues = form.getFieldsValue();
+  // Memoized schedule dates with proper dayjs conversion and validation
+  const { scheduleStartDate, scheduleEndDate, schedStart, schedEnd } =
+    useMemo(() => {
+      const formValues = form.getFieldsValue();
 
-    const scheduleStartDate =
-      formValues.start_date ||
-      initialData?.start_date ||
-      formValues.startdate ||
-      formValues.eventstartdate ||
-      formValues.schedulestartdate ||
-      formValues.dateRange?.[0];
+      const startDate =
+        formValues.start_date ||
+        initialData?.start_date ||
+        formValues.startdate ||
+        formValues.eventstartdate ||
+        formValues.schedulestartdate ||
+        formValues.dateRange?.[0];
 
-    const scheduleEndDate =
-      formValues.end_date ||
-      initialData?.end_date ||
-      formValues.enddate ||
-      formValues.eventenddate ||
-      formValues.scheduleenddate ||
-      formValues.dateRange?.[1];
+      const endDate =
+        formValues.end_date ||
+        initialData?.end_date ||
+        formValues.enddate ||
+        formValues.eventenddate ||
+        formValues.scheduleenddate ||
+        formValues.dateRange?.[1];
 
-    return {
-      scheduleStartDate,
-      scheduleEndDate,
-    };
-  };
-
-  const { scheduleStartDate, scheduleEndDate } = getScheduleDates();
+      return {
+        scheduleStartDate: startDate,
+        scheduleEndDate: endDate,
+        schedStart: startDate ? dayjs(startDate) : null,
+        schedEnd: endDate ? dayjs(endDate) : null,
+      };
+    }, [form, initialData]);
 
   // Get existing show dates (dates with configured time slots)
   const existingShowDates = (initialData?.show_dates || []).map(
@@ -599,15 +601,18 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
   );
 
   const validateItemDates = (offerStart, offerEnd, itemName) => {
-    if (!scheduleStartDate || !scheduleEndDate) {
-      message.error("Please set schedule dates first");
+    if (
+      !schedStart ||
+      !schedEnd ||
+      !schedStart.isValid() ||
+      !schedEnd.isValid()
+    ) {
+      message.error("Please set valid schedule dates first");
       return false;
     }
 
     const offerStartDate = dayjs(offerStart);
     const offerEndDate = dayjs(offerEnd);
-    const schedStart = dayjs(scheduleStartDate);
-    const schedEnd = dayjs(scheduleEndDate);
 
     const isScheduleStartValid = schedStart.isSameOrAfter(
       offerStartDate,
@@ -634,6 +639,10 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
   const filteredCoupons = availableCoupons.filter((coupon) =>
     coupon.coupons.name.toLowerCase().includes(couponSearchValue.toLowerCase())
   );
+
+  // Validation helper
+  const areDatesValid =
+    schedStart && schedEnd && schedStart.isValid() && schedEnd.isValid();
 
   const debouncedOfferSearch = useCallback(
     debounce((value) => setOfferSearchValue(value), 300),
@@ -757,7 +766,7 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
   };
 
   const handleCouponDateChange = (couponId, dateRange) => {
-    if (!dateRange || !dateRange[1]) return;
+    if (!dateRange || !dateRange[0] || !dateRange[1]) return;
 
     const startDate = dateRange[0].format("YYYY-MM-DD");
     const endDate = dateRange[1].format("YYYY-MM-DD");
@@ -948,10 +957,11 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
                 {filteredOffers.map((offer) => {
                   const offerStart = dayjs(offer.offer.start_date);
                   const offerEnd = dayjs(offer.offer.end_date);
-                  const schedStart = dayjs(scheduleStartDate);
-                  const schedEnd = dayjs(scheduleEndDate);
 
+                  // Check if dates are valid before comparison
                   const isValid =
+                    mode === ADD &&
+                    areDatesValid &&
                     schedStart.isSameOrAfter(offerStart, "day") &&
                     schedEnd.isSameOrBefore(offerEnd, "day");
 
@@ -1074,10 +1084,11 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData }) => {
                 {filteredCoupons.map((coupon) => {
                   const couponStart = dayjs(coupon.coupons.start_date);
                   const couponEnd = dayjs(coupon.coupons.end_date);
-                  const schedStart = dayjs(scheduleStartDate);
-                  const schedEnd = dayjs(scheduleEndDate);
 
+                  // Check if dates are valid before comparison
                   const isValid =
+                    mode === ADD &&
+                    areDatesValid &&
                     schedStart.isSameOrAfter(couponStart, "day") &&
                     schedEnd.isSameOrBefore(couponEnd, "day");
 

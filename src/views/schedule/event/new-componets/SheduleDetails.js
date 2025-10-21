@@ -18,13 +18,18 @@ import {
   setTimeSlots,
   checkScheduleEdit,
   editSchedule,
+  setScheduleDialogVisible,
+  setScheduleModalLoading,
+  setSelectedSchedule,
 } from "store/slices/scheduleSlice";
 import { setCurrentStep, resetState } from "store/slices/eventSlice";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import LoadingOverlay from "components/util-components/Loader/index";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { BOOKING_ADDON_TYPE, EDIT } from "constants/AppConstants";
+import { ActionType } from "utils/api/warning-submit-util";
 import dayjs from "dayjs";
 import Utils from "utils";
 import { ScheduleUtil } from "../utils";
@@ -33,7 +38,7 @@ const getBlockingInfo = (checkedScheduleDetails) => {
   if (!checkedScheduleDetails) {
     return {
       isScheduleBlocked: false,
-      blockedDates: [],
+      blockedDates: new Set(),
       blockedTimeSlots: new Map(),
       blockingTicketIds: [],
       blockingSeatIds: [],
@@ -45,7 +50,7 @@ const getBlockingInfo = (checkedScheduleDetails) => {
   }
 
   const blockedDates = new Set();
-  const blockedTimeSlots = new Map(); // Map<dateId, Set<timeSlotId>>
+  const blockedTimeSlots = new Map();
 
   if (checkedScheduleDetails.show_dates) {
     checkedScheduleDetails.show_dates.forEach((dateInfo) => {
@@ -113,8 +118,6 @@ const getBlockingMessage = (blockingInfo) => {
 
   return null;
 };
-
-// ==================== BLOCKING WARNING MODAL ====================
 
 const BlockingWarningModal = ({ visible, blockingInfo, onOk, onCancel }) => {
   const blockingMessage = getBlockingMessage(blockingInfo);
@@ -241,21 +244,17 @@ const BlockingWarningModal = ({ visible, blockingInfo, onOk, onCancel }) => {
   );
 };
 
-// ==================== MAIN COMPONENT ====================
-
 const ScheduleDetails = ({ mode, id }) => {
   const [tab, setTab] = useState(1);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Refs
   const isInitialized = useRef(false);
   const hasLoadedEditData = useRef(false);
   const lastEditId = useRef(null);
   const hasShownBlockingModal = useRef(false);
 
-  // Blocking state
   const [showBlockingModal, setShowBlockingModal] = useState(false);
   const [blockingInfo, setBlockingInfo] = useState({
     isScheduleBlocked: false,
@@ -265,7 +264,6 @@ const ScheduleDetails = ({ mode, id }) => {
     blockingSeatIds: [],
   });
 
-  // Selectors
   const {
     scheduleFormData,
     scheduleDetails,
@@ -277,6 +275,12 @@ const ScheduleDetails = ({ mode, id }) => {
     foodTimeSlots,
     selectedAddOnServiceList,
     checkedscheduleDetails,
+    dialogVisible,
+    editable_status,
+    selectedSchedule,
+    responseImpactData,
+    warningPagination,
+    message: warningMessage,
   } = useSelector((state) => state.schedules);
 
   const { eventDetails, submitLoading } = useSelector((state) => state.event);
@@ -287,7 +291,7 @@ const ScheduleDetails = ({ mode, id }) => {
   const isEditMode = useMemo(() => mode === EDIT, [mode]);
   const editId = useMemo(() => id, [id]);
 
-  // ==================== BLOCKING CHECK EFFECT ====================
+  // Blocking check effect
   useEffect(() => {
     if (
       isEditMode &&
@@ -299,36 +303,57 @@ const ScheduleDetails = ({ mode, id }) => {
 
       console.log("Blocking Info:", info);
 
-      // Show modal if schedule is completely blocked
       if (info.isScheduleBlocked) {
         setShowBlockingModal(true);
         hasShownBlockingModal.current = true;
-      }
-      // Show info modal for partial blocking
-      else if (info.blockedDates.size > 0 || info.blockedTimeSlots.size > 0) {
+      } else if (info.blockedDates.size > 0 || info.blockedTimeSlots.size > 0) {
         setShowBlockingModal(true);
         hasShownBlockingModal.current = true;
       }
     }
   }, [isEditMode, checkedscheduleDetails]);
 
-  // ==================== BLOCKING MODAL HANDLERS ====================
+  // Blocking modal handlers
   const handleBlockingModalOk = () => {
     if (blockingInfo.isScheduleBlocked) {
-      // If schedule is completely blocked, navigate back
       navigate(`${APP_PREFIX_PATH}/schedule/list`);
     } else {
-      // For partial blocking, allow user to continue
       setShowBlockingModal(false);
     }
   };
 
   const handleBlockingModalCancel = () => {
-    // Navigate back to list
     navigate(`${APP_PREFIX_PATH}/schedule/list`);
   };
 
-  // ==================== UTILITY FUNCTIONS ====================
+  // Warning modal handlers (matching OfferForm pattern)
+  const handleWarningPagination = (page, size) => {
+    dispatch(
+      editSchedule({
+        data: selectedSchedule,
+        action: ActionType.WARNING,
+        pageData: { page, size },
+      })
+    );
+  };
+
+  const handleModalSubmit = async () => {
+    dispatch(setScheduleModalLoading(true));
+    const resultAction = await dispatch(
+      editSchedule({ data: selectedSchedule, action: ActionType.SUBMIT })
+    );
+    dispatch(setScheduleModalLoading(false));
+    dispatch(setScheduleDialogVisible(false));
+    if (editSchedule.fulfilled.match(resultAction)) {
+      dispatch(setSelectedSubmitItem(selectedSchedule));
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setScheduleDialogVisible(false));
+  };
+
+  // Utility functions
   const updateStoreAndForm = (data) => {
     const updatedData = {
       ...scheduleFormData,
@@ -377,7 +402,7 @@ const ScheduleDetails = ({ mode, id }) => {
     return { timeSlots: formattedTimeSlots, show_dates: showDates };
   };
 
-  // ==================== INITIALIZATION ====================
+  // Initialization
   useEffect(() => {
     const initializeComponent = async () => {
       if (
@@ -431,7 +456,7 @@ const ScheduleDetails = ({ mode, id }) => {
     };
   }, [dispatch, isEditMode, editId, checkedscheduleDetails]);
 
-  // ==================== LOAD EDIT DATA ====================
+  // Load edit data
   useEffect(() => {
     const shouldLoadEditData =
       isEditMode &&
@@ -470,11 +495,8 @@ const ScheduleDetails = ({ mode, id }) => {
     }
   }, [scheduleDetails, isEditMode, editId, dispatch, form]);
 
-  // ==================== VALIDATION & HANDLERS ====================
-  // (Keep all your existing validation and handler functions unchanged)
-
+  // Validation & handlers
   const validateTimeSlots = (values) => {
-    // Your existing validation code
     return true;
   };
 
@@ -491,7 +513,6 @@ const ScheduleDetails = ({ mode, id }) => {
   ];
 
   const transformAddOns = (addOns) => {
-    // Your existing code
     if (selectedAddOnServiceList?.length > 0) {
       return selectedAddOnServiceList;
     }
@@ -504,7 +525,6 @@ const ScheduleDetails = ({ mode, id }) => {
   };
 
   const transformFoodSlots = () => {
-    // Your existing code
     if (foodTimeSlots && Object.keys(foodTimeSlots).length > 0) {
       return Object.entries(foodTimeSlots).map(([key, slot]) => ({
         id: slot.id || parseInt(key) + 1,
@@ -518,7 +538,6 @@ const ScheduleDetails = ({ mode, id }) => {
   };
 
   const transformOffersCoupons = (items, type) => {
-    // Your existing code
     if (!items?.length) return [];
     return items.map((item) => ({
       [`${type}_id`]: item[type]?.id || item.id,
@@ -602,7 +621,6 @@ const ScheduleDetails = ({ mode, id }) => {
       console.log("Received formData:", formData);
       console.log("Received offer_ids:", formData.offer_ids);
 
-      // Get actual show_dates (dates that have time slots)
       const existingShowDates = (scheduleFormData.show_dates || []).map(
         (sd) => sd.start_date
       );
@@ -612,7 +630,6 @@ const ScheduleDetails = ({ mode, id }) => {
         existingShowDates
       );
 
-      // Process offers with smart distribution
       const processedOffers = (formData.offer_ids || []).map((offer) => {
         const selectedDates = offer.selected_dates || [];
 
@@ -622,7 +639,6 @@ const ScheduleDetails = ({ mode, id }) => {
         console.log("selectedDates length:", selectedDates.length);
         console.log("existingShowDates length:", existingShowDates.length);
 
-        // Check if ALL existing show_dates are selected
         const datesMatch = existingShowDates.every((date) =>
           selectedDates.includes(date)
         );
@@ -652,7 +668,6 @@ const ScheduleDetails = ({ mode, id }) => {
         };
       });
 
-      // Process coupons
       const processedCoupons = (formData.coupon_ids || []).map((coupon) => {
         const selectedDates = coupon.selected_dates || [];
 
@@ -678,7 +693,6 @@ const ScheduleDetails = ({ mode, id }) => {
         };
       });
 
-      // Separate by level
       const scheduleLevelOffers = processedOffers.filter(
         (o) => o.is_schedule_level
       );
@@ -699,12 +713,10 @@ const ScheduleDetails = ({ mode, id }) => {
       console.log("Schedule-level coupons:", scheduleLevelCoupons);
       console.log("Date-level coupons:", dateLevelCoupons);
 
-      // Update show_dates - preserve structure
       const updatedShowDates = (scheduleFormData.show_dates || []).map(
         (showDate) => {
           const dateStr = showDate.start_date;
 
-          // For date-level offers/coupons
           const dateOffers = dateLevelOffers
             .filter((o) => o.selected_dates.includes(dateStr))
             .map((o) => ({
@@ -721,7 +733,6 @@ const ScheduleDetails = ({ mode, id }) => {
               valid_to: dateStr,
             }));
 
-          // For schedule-level offers/coupons, add them to every date
           const scheduleOffers = scheduleLevelOffers.map((o) => ({
             offer_id: o.offer_id,
             valid_from: dateStr,
@@ -734,11 +745,9 @@ const ScheduleDetails = ({ mode, id }) => {
             valid_to: dateStr,
           }));
 
-          // Combine all offers and coupons for this date
           const allDateOffers = [...dateOffers, ...scheduleOffers];
           const allDateCoupons = [...dateCoupons, ...scheduleCoupons];
 
-          // Update show_times with combined offers/coupons
           const updatedShowTimes = (showDate.show_times || []).map(
             (showTime) => ({
               ...showTime,
@@ -755,23 +764,21 @@ const ScheduleDetails = ({ mode, id }) => {
           };
         }
       );
-      const finalooferids = formData.offer_ids.map((oo) => oo.offer_id);
-      // Build final data
+
       const finalData = {
         ...scheduleFormData,
         ...formData,
-        // Schedule-level offers/coupons - empty array means applies to ALL dates
         offer_ids: scheduleLevelOffers.map((o) => ({
           offer_id: o.offer_id,
           valid_from: o.valid_from,
           valid_to: o.valid_to,
-          selected_dates: [], // Empty = schedule-level (applies to all)
+          selected_dates: [],
         })),
         coupon_ids: scheduleLevelCoupons.map((c) => ({
           coupon_id: c.coupon_id,
           valid_from: c.valid_from,
           valid_to: c.valid_to,
-          selected_dates: [], // Empty = schedule-level (applies to all)
+          selected_dates: [],
         })),
         show_dates: updatedShowDates,
       };
@@ -791,23 +798,48 @@ const ScheduleDetails = ({ mode, id }) => {
 
   const handleFinalSubmit = async (finalData = null) => {
     try {
-      console.warn(scheduleDetails.id, "idsss");
-      const dataToSubmit = finalData || {
-        ...scheduleFormData,
-        ...form.getFieldsValue(),
-      };
-      const finalSubmitData = {
-        ...dataToSubmit,
-        id: scheduleDetails.id || undefined,
-      };
-      const submitData = transformSubmitData(finalSubmitData);
+      if (mode === EDIT) {
+        const dataToSubmit = finalData || {
+          ...scheduleFormData,
+          ...form.getFieldsValue(),
+        };
+        const finalSubmitData = {
+          ...dataToSubmit,
+          id: scheduleDetails.id || undefined,
+        };
 
-      dispatch(setScheduleSubmitData(submitData));
+        const editData = transformSubmitData(finalSubmitData);
+        const pageData = {
+          schedule_id: scheduleDetails.id,
+        };
 
-      dispatch(setSelectedSubmitItem(submitData));
+        console.log("Edit Data:", editData);
+        const resultAction = await dispatch(
+          editSchedule({ data: editData, action: ActionType.WARNING, pageData })
+        );
 
-      console.log("Final submit data:", submitData);
-      message.success("Schedule data prepared for submission!");
+        if (editSchedule.fulfilled.match(resultAction)) {
+          dispatch(setSelectedSchedule(editData));
+          dispatch(setScheduleDialogVisible(true));
+        }
+      } else {
+        console.warn(scheduleDetails.id, "idsss");
+        const dataToSubmit = finalData || {
+          ...scheduleFormData,
+          ...form.getFieldsValue(),
+        };
+        const finalSubmitData = {
+          ...dataToSubmit,
+          id: scheduleDetails.id || undefined,
+        };
+        const submitData = transformSubmitData(finalSubmitData);
+
+        dispatch(setScheduleSubmitData(submitData));
+        dispatch(setSelectedSubmitItem(submitData));
+
+        console.log("Final submit data:", submitData);
+        message.success("Schedule data prepared for submission!");
+      }
     } catch (error) {
       console.error("Final submit error:", error);
       message.error(
@@ -844,7 +876,6 @@ const ScheduleDetails = ({ mode, id }) => {
     formValues: form.getFieldsValue(),
   });
 
-  // If schedule is completely blocked, show overlay
   if (blockingInfo.isScheduleBlocked) {
     return (
       <div className="relative">
@@ -876,7 +907,6 @@ const ScheduleDetails = ({ mode, id }) => {
     <div>
       <LoadingOverlay loading={loading} />
 
-      {/* Blocking Warning Modal */}
       <BlockingWarningModal
         visible={showBlockingModal}
         blockingInfo={blockingInfo}
@@ -912,6 +942,26 @@ const ScheduleDetails = ({ mode, id }) => {
           blockingInfo={blockingInfo}
         />
       )}
+
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={warningMessage}
+        responseData={responseImpactData}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={loading}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "items",
+        }}
+        editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
+      />
 
       <SubmitAndConfirmModal
         responseData={responseData}
