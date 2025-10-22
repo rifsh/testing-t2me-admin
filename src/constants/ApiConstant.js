@@ -84,6 +84,7 @@ export const ApiConstant = {
   TICKET_URL: "/api/v1/event/tickets/secured/ticketstructure",
   AVAILABLE_TICKET_TYPE_URL: "/api/v1/event/schedule/secured/available_types",
   SCHEDULE_URL: "/api/v1/event/schedule/secured/schedules",
+  EDIT_SCHEDULE_URL: "/api/v2/event/schedule/secured/schedules/",
   SINGLE_SCHEDULE_URL: "/api/v1/event/schedule/secured/schedules/details",
   CHECK_SCHEDULE_EDIT_URL:
     "/api/v1/event/schedule/secured/schedules/edit/check",

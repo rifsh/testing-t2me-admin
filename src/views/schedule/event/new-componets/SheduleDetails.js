@@ -364,35 +364,81 @@ const ScheduleDetails = ({ mode, id }) => {
     return updatedData;
   };
 
-  const setupEditTimeSlots = (showDates) => {
-    if (!showDates?.length) return {};
+  const setupEditTimeSlots = (scheduleDetails) => {
+    if (!scheduleDetails) return;
 
-    const newDates = showDates.map((sd) => sd.start_date);
-    const formattedTimeSlots = showDates.reduce((acc, showDate) => {
-      acc[showDate.start_date] = showDate.show_times.map((time) => ({
-        start_time: dayjs(
-          `${showDate.start_date} ${time.start_time}`,
-          "YYYY-MM-DD hh:mm A"
-        ),
-        end_time: dayjs(
-          `${showDate.start_date} ${time.end_time}`,
-          "YYYY-MM-DD hh:mm A"
-        ),
-        ticketType: time.event_ticket_structures?.id, // ✅ KEEP AS IS
-        seat_structure_id: time.event_ticket_structures?.ticket_structure?.id, // ✅ KEEP AS IS
-        ticket_set: time.event_ticket_structures?.ticket_set, // ✅ KEEP AS IS
-        offer_ids: time.offer_ids || [],
-        coupon_ids: time.coupon_ids || [],
-        id: time.id,
-        is_midnight: time.is_midnight || false,
-        show_time_ticket_types: time.show_time_ticket_types || [],
-        // ⭐ ADD ONLY THESE 3 LINES:
-        show_date_id: showDate.id,
-        show_time_id: time.id,
-        ticket_structure_id: time.event_ticket_structures?.id,
-      }));
-      return acc;
-    }, {});
+    // Determine booking type
+    const isSeatBased = scheduleDetails.available_types === "seat_structure";
+    const sourceData = isSeatBased
+      ? scheduleDetails.show_seat_details
+      : scheduleDetails.show_dates;
+
+    if (!sourceData?.length) return;
+
+    const newDates = sourceData.map((item) => item.start_date);
+
+    const formattedTimeSlots = {};
+
+    if (isSeatBased) {
+      // Handle seat-based booking - each item is a date with single time slot
+      sourceData.forEach((seatDetail) => {
+        if (!formattedTimeSlots[seatDetail.start_date]) {
+          formattedTimeSlots[seatDetail.start_date] = [];
+        }
+
+        formattedTimeSlots[seatDetail.start_date].push({
+          start_time: dayjs(
+            `${seatDetail.start_date} ${seatDetail.start_time}`,
+            "YYYY-MM-DD hh:mm A"
+          ),
+          end_time: dayjs(
+            `${seatDetail.start_date} ${seatDetail.end_time}`,
+            "YYYY-MM-DD hh:mm A"
+          ),
+          seatStructureId: seatDetail.event_seats?.event_seatstructures?.id,
+          seat_structure_id: seatDetail.event_seats?.event_seatstructures?.id,
+          seatStructureName: seatDetail.event_seats?.event_seatstructures?.name,
+          totalSeats: seatDetail.event_seats?.event_seatstructures?.total_seats,
+          offer_ids: seatDetail.offer_ids || [],
+          coupon_ids: seatDetail.coupon_ids || [],
+          id: seatDetail.id,
+          is_midnight: seatDetail.is_midnight || false,
+          // Store IDs for payload
+          show_date_id: seatDetail.id,
+          show_time_id: seatDetail.id,
+          event_seat_id: seatDetail.event_seats?.event_seatstructures?.id,
+        });
+      });
+    } else {
+      // Handle ticket-based booking - original logic
+      sourceData.forEach((showDate) => {
+        formattedTimeSlots[showDate.start_date] = showDate.show_times.map(
+          (time) => ({
+            start_time: dayjs(
+              `${showDate.start_date} ${time.start_time}`,
+              "YYYY-MM-DD hh:mm A"
+            ),
+            end_time: dayjs(
+              `${showDate.start_date} ${time.end_time}`,
+              "YYYY-MM-DD hh:mm A"
+            ),
+            ticketType: time.event_ticket_structures?.id,
+            seat_structure_id:
+              time.event_ticket_structures?.ticket_structure?.id,
+            ticket_set: time.event_ticket_structures?.ticket_set,
+            offer_ids: time.offer_ids || [],
+            coupon_ids: time.coupon_ids || [],
+            id: time.id,
+            is_midnight: time.is_midnight || false,
+            show_time_ticket_types: time.show_time_ticket_types || [],
+            // Store IDs for payload
+            show_date_id: showDate.id,
+            show_time_id: time.id,
+            ticket_structure_id: time.event_ticket_structures?.id,
+          })
+        );
+      });
+    }
 
     if (newDates.length > 0) {
       dispatch(setDates(newDates));
@@ -401,7 +447,11 @@ const ScheduleDetails = ({ mode, id }) => {
       dispatch(setTimeSlots(formattedTimeSlots));
     }
 
-    return { timeSlots: formattedTimeSlots, show_dates: showDates };
+    return {
+      timeSlots: formattedTimeSlots,
+      show_dates: isSeatBased ? [] : sourceData,
+      show_seat_details: isSeatBased ? sourceData : [],
+    };
   };
 
   // Initialization
@@ -469,11 +519,10 @@ const ScheduleDetails = ({ mode, id }) => {
       !hasLoadedEditData.current;
 
     if (shouldLoadEditData) {
-      console.log("===== SETTING UP EDIT DATA =====");
-
       try {
         const formValues = ScheduleUtil.createFormValues(scheduleDetails);
-        const timeSlotData = setupEditTimeSlots(scheduleDetails.show_dates);
+        // ✅ FIX: Pass the entire scheduleDetails object, not just show_dates
+        const timeSlotData = setupEditTimeSlots(scheduleDetails);
 
         const finalFormValues = {
           ...formValues,
@@ -488,7 +537,6 @@ const ScheduleDetails = ({ mode, id }) => {
         }, 100);
 
         hasLoadedEditData.current = true;
-        console.log("===== EDIT MODE SETUP COMPLETED =====");
       } catch (error) {
         console.error("Error setting up edit data:", error);
         hasLoadedEditData.current = false;
@@ -560,23 +608,65 @@ const ScheduleDetails = ({ mode, id }) => {
     const startDate = dayjs(values.start_date).format("YYYY-MM-DD");
     const endDate = dayjs(values.end_date).format("YYYY-MM-DD");
 
-    // ⭐ ADD ID preservation for show_dates
-    const transformedShowDates = (values.show_dates || []).map((showDate) => {
-      const transformedShowTimes = (showDate.show_times || []).map(
-        (showTime) => ({
-          ...showTime,
-          id: showTime.show_time_id || showTime.id, // ⭐ ADD THIS LINE
-        })
-      );
+    const isSeatBased = values.available_types === "seat_structure";
 
-      return {
-        ...showDate,
-        id: showDate.show_date_id || showDate.id, // ⭐ ADD THIS LINE
-        show_times: transformedShowTimes,
-      };
-    });
+    let transformedShowDates = [];
+
+    if (isSeatBased) {
+      // ✅ For seat-based: Convert seat_details into show_dates with show_times structure
+      const groupedByDate = {};
+
+      (values.show_seat_details || []).forEach((seatDetail) => {
+        if (!groupedByDate[seatDetail.start_date]) {
+          groupedByDate[seatDetail.start_date] = {
+            id: seatDetail.show_date_id || seatDetail.id,
+            start_date: seatDetail.start_date,
+            show_times: [],
+          };
+        }
+
+        groupedByDate[seatDetail.start_date].show_times.push({
+          id: seatDetail.show_time_id || seatDetail.id,
+          start_time: seatDetail.start_time,
+          end_time: seatDetail.end_time,
+          is_midnight: seatDetail.is_midnight || false,
+          event_seat_id: seatDetail.event_seat_id || seatDetail.seatStructureId,
+          offer_ids: seatDetail.offer_ids || [],
+          coupon_ids: seatDetail.coupon_ids || [],
+        });
+      });
+
+      transformedShowDates = Object.values(groupedByDate);
+    } else {
+      // ✅ For ticket-based: show_dates contains nested show_times array
+      transformedShowDates = (values.show_dates || []).map((showDate) => {
+        const transformedShowTimes = (showDate.show_times || []).map(
+          (showTime) => ({
+            id: showTime.show_time_id || showTime.id,
+            start_time: showTime.start_time,
+            end_time: showTime.end_time,
+            is_midnight: String(showTime.is_midnight),
+            ticket_structure_id: showTime.ticket_structure_id,
+            ticket_set: showTime.ticket_set,
+            seat_structure_id: showTime.seat_structure_id,
+            offer_ids: showTime.offer_ids || [],
+            coupon_ids: showTime.coupon_ids || [],
+          })
+        );
+
+        return {
+          id: showDate.show_date_id || showDate.id,
+          start_date: showDate.start_date,
+          end_date: showDate.end_date,
+          offer_ids: showDate.offer_ids || [],
+          coupon_ids: showDate.coupon_ids || [],
+          show_times: transformedShowTimes,
+        };
+      });
+    }
 
     return {
+      id: values.id !== undefined ? values.id : undefined,
       start_date: startDate,
       end_date: endDate,
       available_types: values.available_types || "ticket_structure",
@@ -597,13 +687,12 @@ const ScheduleDetails = ({ mode, id }) => {
       ),
       add_ons: transformAddOns(values.add_ons),
       food_slots: transformFoodSlots(),
-      name: values.name || "",
+      name: values.name,
       event_id: values.event_id,
       venue_id: values.venue_id,
-      show_dates: transformedShowDates, // ⭐ USE TRANSFORMED VERSION
+      show_dates: transformedShowDates,
       offer_ids: transformOffersCoupons(selectedOffers, "offer"),
       coupon_ids: transformOffersCoupons(selectedCoupons, "coupons"),
-      id: values.id || undefined, // ⭐ ADD SCHEDULE ID
     };
   };
 
@@ -635,14 +724,11 @@ const ScheduleDetails = ({ mode, id }) => {
 
   const handleOfferSubmit = (formData) => {
     try {
-      console.log("OFFER SUBMIT STARTED");
-      console.log("Received formData:", formData);
-
       const existingShowDates = scheduleFormData.show_dates.map(
         (sd) => sd.start_date
       );
 
-      // Process offers and coupons (existing logic)
+      // Process offers and coupons
       const processedOffers = formData.offer_ids.map((offer) => {
         const selectedDates = offer.selected_dates;
         const datesMatch = existingShowDates.every((date) =>
@@ -700,7 +786,7 @@ const ScheduleDetails = ({ mode, id }) => {
         (c) => !c.is_schedule_level
       );
 
-      // Update show_dates while preserving IDs
+      // Update show_dates with date-level offers/coupons
       const updatedShowDates = scheduleFormData.show_dates.map((showDate) => {
         const dateStr = showDate.start_date;
 
@@ -720,39 +806,25 @@ const ScheduleDetails = ({ mode, id }) => {
             valid_to: dateStr,
           }));
 
-        const scheduleOffers = scheduleLevelOffers.map((o) => ({
-          offer_id: o.offer_id,
-          valid_from: dateStr,
-          valid_to: dateStr,
-        }));
-
-        const scheduleCoupons = scheduleLevelCoupons.map((c) => ({
-          coupon_id: c.coupon_id,
-          valid_from: dateStr,
-          valid_to: dateStr,
-        }));
-
-        const allDateOffers = [...dateOffers, ...scheduleOffers];
-        const allDateCoupons = [...dateCoupons, ...scheduleCoupons];
-
         const updatedShowTimes = (showDate.show_times || []).map(
           (showTime) => ({
             ...showTime,
-            offer_ids: allDateOffers,
-            coupon_ids: allDateCoupons,
-            id: showTime.show_time_id || showTime.id, 
+            offer_ids: dateOffers,
+            coupon_ids: dateCoupons,
+            id: showTime.show_time_id || showTime.id,
           })
         );
 
         return {
           ...showDate,
-          offer_ids: allDateOffers,
-          coupon_ids: allDateCoupons,
+          offer_ids: dateOffers,
+          coupon_ids: dateCoupons,
           show_times: updatedShowTimes,
           id: showDate.show_date_id || showDate.id,
         };
       });
 
+      // ✅ FIX: Schedule-level offers/coupons go to ROOT level (empty selected_dates array)
       const finalData = {
         ...scheduleFormData,
         ...formData,
@@ -760,19 +832,14 @@ const ScheduleDetails = ({ mode, id }) => {
           offer_id: o.offer_id,
           valid_from: o.valid_from,
           valid_to: o.valid_to,
-          selected_dates: [],
         })),
         coupon_ids: scheduleLevelCoupons.map((c) => ({
           coupon_id: c.coupon_id,
           valid_from: c.valid_from,
           valid_to: c.valid_to,
-          selected_dates: [],
         })),
         show_dates: updatedShowDates,
       };
-
-      console.log("FINAL SUBMIT DATA");
-      console.log(JSON.stringify(finalData, null, 2));
 
       const updatedData = updateStoreAndForm(finalData);
       handleFinalSubmit(updatedData);

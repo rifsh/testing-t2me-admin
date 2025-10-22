@@ -511,6 +511,7 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData, mode }) => {
 
   useEffect(() => {
     if (initialData) {
+      // Load existing offers (both schedule and date level)
       if (initialData.offer_ids && initialData.offer_ids.length > 0) {
         const restoredOffers = initialData.offer_ids
           .map((offerData) => {
@@ -536,6 +537,36 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData, mode }) => {
         setSelectedOfferItems(restoredOffers);
       }
 
+      //✅ ADD: Load schedule-level offers from offer_schedule
+      else if (
+        initialData.offer_schedule &&
+        initialData.offer_schedule.length > 0
+      ) {
+        const scheduleOffers = initialData.offer_schedule
+          .map((offerScheduleItem) => {
+            const fullOffer = eventDetails?.event_offers?.find(
+              (offer) => offer.offer.id === offerScheduleItem.offer.id
+            );
+
+            if (fullOffer) {
+              return {
+                ...fullOffer,
+                offer: {
+                  ...fullOffer.offer,
+                  start_date: offerScheduleItem.valid_from,
+                  end_date: offerScheduleItem.valid_to,
+                  selected_dates: [], // Empty means schedule-level
+                },
+              };
+            }
+            return null;
+          })
+          .filter(Boolean);
+
+        setSelectedOfferItems(scheduleOffers);
+      }
+
+      // Load existing coupons (both schedule and date level)
       if (initialData.coupon_ids && initialData.coupon_ids.length > 0) {
         const restoredCoupons = initialData.coupon_ids
           .map((couponData) => {
@@ -559,6 +590,35 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData, mode }) => {
           .filter(Boolean);
 
         setSelectedCouponItems(restoredCoupons);
+      }
+
+      // ✅ ADD: Load schedule-level coupons from coupon_schedule
+      else if (
+        initialData.coupon_schedule &&
+        initialData.coupon_schedule.length > 0
+      ) {
+        const scheduleCoupons = initialData.coupon_schedule
+          .map((couponScheduleItem) => {
+            const fullCoupon = eventDetails?.event_coupons?.find(
+              (coupon) => coupon.coupons.id === couponScheduleItem.coupons.id
+            );
+
+            if (fullCoupon) {
+              return {
+                ...fullCoupon,
+                coupons: {
+                  ...fullCoupon.coupons,
+                  start_date: couponScheduleItem.valid_from,
+                  end_date: couponScheduleItem.valid_to,
+                  selected_dates: [], // Empty means schedule-level
+                },
+              };
+            }
+            return null;
+          })
+          .filter(Boolean);
+
+        setSelectedCouponItems(scheduleCoupons);
       }
     }
   }, [initialData, eventDetails]);
