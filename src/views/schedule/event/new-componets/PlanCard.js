@@ -794,8 +794,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       return [];
     }
 
-    console.log("🌙 GENERATING show dates with timezone:", timezone);
-
     const allDaysInRange = getAllDaysInRange();
     const eventsByDate = {};
 
@@ -814,10 +812,16 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
           const dateStr = formatDateForAPI(allDaysInRange[day]);
 
           if (!eventsByDate[dateStr]) {
-            eventsByDate[dateStr] = [];
+            // FIX: Store show_date_id in the structure
+            eventsByDate[dateStr] = {
+              show_date_id: event.show_date_id,
+              show_times: [],
+            };
           }
 
-          eventsByDate[dateStr].push({
+          eventsByDate[dateStr].show_times.push({
+            // FIX: Include show_time ID
+            id: event.show_time_id,
             start_time: `${event.startTime.hour.toString().padStart(2, "0")}:${(
               event.startTime.minute || 0
             )
@@ -828,6 +832,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
             )
               .toString()
               .padStart(2, "0")}`,
+            // FIX: Include ticket_structure_id and other fields
             ticket_structure_id: event.ticket_structure_id,
             offer_ids: event.offer_ids || [],
             coupon_ids: event.coupon_ids || [],
@@ -845,18 +850,17 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     });
 
     const showDates = Object.entries(eventsByDate).map(
-      ([dateStr, showTimes]) => {
+      ([dateStr, dateData]) => {
         let endDate = null;
 
-        const hasMidnightEvent = showTimes.some(
+        const hasMidnightEvent = dateData.show_times.some(
           (st) => st.is_midnight === "true"
         );
 
         if (hasMidnightEvent) {
-          const midnightEvent = showTimes.find(
+          const midnightEvent = dateData.show_times.find(
             (st) => st.is_midnight === "true"
           );
-
           if (midnightEvent && midnightEvent.show_end_date) {
             endDate = midnightEvent.show_end_date;
           } else {
@@ -865,32 +869,22 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
             nextDay.setDate(startDate.getDate() + 1);
             endDate = formatDateForAPI(nextDay);
           }
-
-          if (endDate === dateStr) {
-            const startDate = new Date(dateStr);
-            const nextDay = new Date(startDate);
-            nextDay.setDate(startDate.getDate() + 1);
-            endDate = formatDateForAPI(nextDay);
-
-            console.log("🚨 FIXED midnight end_date:", {
-              startDate: dateStr,
-              correctedEndDate: endDate,
-            });
-          }
         }
 
         return {
+          // FIX: Include show_date ID
+          id: dateData.show_date_id,
           start_date: dateStr,
           end_date: endDate,
-          show_times: showTimes,
+          show_times: dateData.show_times,
+          offer_ids: [],
+          coupon_ids: [],
           timezone: timezone,
         };
       }
     );
 
     showDates.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-
-    console.log("📊 FINAL SHOW_DATES:", JSON.stringify(showDates, null, 2));
 
     return showDates;
   };

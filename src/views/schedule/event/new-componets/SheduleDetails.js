@@ -378,16 +378,18 @@ const ScheduleDetails = ({ mode, id }) => {
           `${showDate.start_date} ${time.end_time}`,
           "YYYY-MM-DD hh:mm A"
         ),
-        ticketType: time.event_ticket_structures?.id,
-        seat_structure_id: time.event_ticket_structures?.ticket_structure?.id,
-        ticket_set: time.event_ticket_structures?.ticket_set,
+        ticketType: time.event_ticket_structures?.id, // ✅ KEEP AS IS
+        seat_structure_id: time.event_ticket_structures?.ticket_structure?.id, // ✅ KEEP AS IS
+        ticket_set: time.event_ticket_structures?.ticket_set, // ✅ KEEP AS IS
         offer_ids: time.offer_ids || [],
         coupon_ids: time.coupon_ids || [],
         id: time.id,
         is_midnight: time.is_midnight || false,
         show_time_ticket_types: time.show_time_ticket_types || [],
+        // ⭐ ADD ONLY THESE 3 LINES:
         show_date_id: showDate.id,
         show_time_id: time.id,
+        ticket_structure_id: time.event_ticket_structures?.id,
       }));
       return acc;
     }, {});
@@ -558,6 +560,22 @@ const ScheduleDetails = ({ mode, id }) => {
     const startDate = dayjs(values.start_date).format("YYYY-MM-DD");
     const endDate = dayjs(values.end_date).format("YYYY-MM-DD");
 
+    // ⭐ ADD ID preservation for show_dates
+    const transformedShowDates = (values.show_dates || []).map((showDate) => {
+      const transformedShowTimes = (showDate.show_times || []).map(
+        (showTime) => ({
+          ...showTime,
+          id: showTime.show_time_id || showTime.id, // ⭐ ADD THIS LINE
+        })
+      );
+
+      return {
+        ...showDate,
+        id: showDate.show_date_id || showDate.id, // ⭐ ADD THIS LINE
+        show_times: transformedShowTimes,
+      };
+    });
+
     return {
       start_date: startDate,
       end_date: endDate,
@@ -582,10 +600,10 @@ const ScheduleDetails = ({ mode, id }) => {
       name: values.name || "",
       event_id: values.event_id,
       venue_id: values.venue_id,
-      show_dates: values.show_dates || [],
+      show_dates: transformedShowDates, // ⭐ USE TRANSFORMED VERSION
       offer_ids: transformOffersCoupons(selectedOffers, "offer"),
       coupon_ids: transformOffersCoupons(selectedCoupons, "coupons"),
-      id: values.id || undefined,
+      id: values.id || undefined, // ⭐ ADD SCHEDULE ID
     };
   };
 
@@ -617,47 +635,26 @@ const ScheduleDetails = ({ mode, id }) => {
 
   const handleOfferSubmit = (formData) => {
     try {
-      console.log("=== OFFER SUBMIT STARTED ===");
+      console.log("OFFER SUBMIT STARTED");
       console.log("Received formData:", formData);
-      console.log("Received offer_ids:", formData.offer_ids);
 
-      const existingShowDates = (scheduleFormData.show_dates || []).map(
+      const existingShowDates = scheduleFormData.show_dates.map(
         (sd) => sd.start_date
       );
 
-      console.log(
-        "Existing show dates from scheduleFormData:",
-        existingShowDates
-      );
-
-      const processedOffers = (formData.offer_ids || []).map((offer) => {
-        const selectedDates = offer.selected_dates || [];
-
-        console.log(`\n--- Processing Offer ${offer.offer_id} ---`);
-        console.log("offer.selected_dates:", selectedDates);
-        console.log("existingShowDates:", existingShowDates);
-        console.log("selectedDates length:", selectedDates.length);
-        console.log("existingShowDates length:", existingShowDates.length);
-
+      // Process offers and coupons (existing logic)
+      const processedOffers = formData.offer_ids.map((offer) => {
+        const selectedDates = offer.selected_dates;
         const datesMatch = existingShowDates.every((date) =>
           selectedDates.includes(date)
         );
-        console.log(
-          "Do all existingShowDates exist in selectedDates?",
-          datesMatch
-        );
-
         const allShowDatesSelected =
           selectedDates.length === existingShowDates.length &&
           selectedDates.length > 0 &&
           existingShowDates.length > 0 &&
           datesMatch;
-
         const isScheduleLevel =
           selectedDates.length === 0 || allShowDatesSelected;
-
-        console.log("allShowDatesSelected:", allShowDatesSelected);
-        console.log("isScheduleLevel:", isScheduleLevel);
 
         return {
           offer_id: offer.offer_id,
@@ -668,19 +665,16 @@ const ScheduleDetails = ({ mode, id }) => {
         };
       });
 
-      const processedCoupons = (formData.coupon_ids || []).map((coupon) => {
-        const selectedDates = coupon.selected_dates || [];
-
+      const processedCoupons = formData.coupon_ids.map((coupon) => {
+        const selectedDates = coupon.selected_dates;
         const datesMatch = existingShowDates.every((date) =>
           selectedDates.includes(date)
         );
-
         const allShowDatesSelected =
           selectedDates.length === existingShowDates.length &&
           selectedDates.length > 0 &&
           existingShowDates.length > 0 &&
           datesMatch;
-
         const isScheduleLevel =
           selectedDates.length === 0 || allShowDatesSelected;
 
@@ -699,7 +693,6 @@ const ScheduleDetails = ({ mode, id }) => {
       const dateLevelOffers = processedOffers.filter(
         (o) => !o.is_schedule_level
       );
-
       const scheduleLevelCoupons = processedCoupons.filter(
         (c) => c.is_schedule_level
       );
@@ -707,63 +700,58 @@ const ScheduleDetails = ({ mode, id }) => {
         (c) => !c.is_schedule_level
       );
 
-      console.log("\n=== DISTRIBUTION RESULTS ===");
-      console.log("Schedule-level offers:", scheduleLevelOffers);
-      console.log("Date-level offers:", dateLevelOffers);
-      console.log("Schedule-level coupons:", scheduleLevelCoupons);
-      console.log("Date-level coupons:", dateLevelCoupons);
+      // Update show_dates while preserving IDs
+      const updatedShowDates = scheduleFormData.show_dates.map((showDate) => {
+        const dateStr = showDate.start_date;
 
-      const updatedShowDates = (scheduleFormData.show_dates || []).map(
-        (showDate) => {
-          const dateStr = showDate.start_date;
-
-          const dateOffers = dateLevelOffers
-            .filter((o) => o.selected_dates.includes(dateStr))
-            .map((o) => ({
-              offer_id: o.offer_id,
-              valid_from: dateStr,
-              valid_to: dateStr,
-            }));
-
-          const dateCoupons = dateLevelCoupons
-            .filter((c) => c.selected_dates.includes(dateStr))
-            .map((c) => ({
-              coupon_id: c.coupon_id,
-              valid_from: dateStr,
-              valid_to: dateStr,
-            }));
-
-          const scheduleOffers = scheduleLevelOffers.map((o) => ({
+        const dateOffers = dateLevelOffers
+          .filter((o) => o.selected_dates.includes(dateStr))
+          .map((o) => ({
             offer_id: o.offer_id,
             valid_from: dateStr,
             valid_to: dateStr,
           }));
 
-          const scheduleCoupons = scheduleLevelCoupons.map((c) => ({
+        const dateCoupons = dateLevelCoupons
+          .filter((c) => c.selected_dates.includes(dateStr))
+          .map((c) => ({
             coupon_id: c.coupon_id,
             valid_from: dateStr,
             valid_to: dateStr,
           }));
 
-          const allDateOffers = [...dateOffers, ...scheduleOffers];
-          const allDateCoupons = [...dateCoupons, ...scheduleCoupons];
+        const scheduleOffers = scheduleLevelOffers.map((o) => ({
+          offer_id: o.offer_id,
+          valid_from: dateStr,
+          valid_to: dateStr,
+        }));
 
-          const updatedShowTimes = (showDate.show_times || []).map(
-            (showTime) => ({
-              ...showTime,
-              offer_ids: allDateOffers,
-              coupon_ids: allDateCoupons,
-            })
-          );
+        const scheduleCoupons = scheduleLevelCoupons.map((c) => ({
+          coupon_id: c.coupon_id,
+          valid_from: dateStr,
+          valid_to: dateStr,
+        }));
 
-          return {
-            ...showDate,
+        const allDateOffers = [...dateOffers, ...scheduleOffers];
+        const allDateCoupons = [...dateCoupons, ...scheduleCoupons];
+
+        const updatedShowTimes = (showDate.show_times || []).map(
+          (showTime) => ({
+            ...showTime,
             offer_ids: allDateOffers,
             coupon_ids: allDateCoupons,
-            show_times: updatedShowTimes,
-          };
-        }
-      );
+            id: showTime.show_time_id || showTime.id, 
+          })
+        );
+
+        return {
+          ...showDate,
+          offer_ids: allDateOffers,
+          coupon_ids: allDateCoupons,
+          show_times: updatedShowTimes,
+          id: showDate.show_date_id || showDate.id,
+        };
+      });
 
       const finalData = {
         ...scheduleFormData,
@@ -783,7 +771,7 @@ const ScheduleDetails = ({ mode, id }) => {
         show_dates: updatedShowDates,
       };
 
-      console.log("\n=== FINAL SUBMIT DATA ===");
+      console.log("FINAL SUBMIT DATA");
       console.log(JSON.stringify(finalData, null, 2));
 
       const updatedData = updateStoreAndForm(finalData);
