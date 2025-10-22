@@ -3,7 +3,7 @@ import { Form, Card, Button, Input, message, Select, Row, Col } from "antd";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import { addPayment } from "store/slices/paymentSlice";
+import { addPayment, getSinglePayment } from "store/slices/paymentSlice";
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,22 +18,57 @@ import DraftSystem from "drafts/components/DraftSystem";
 
 const { Option } = Select;
 
-const PaymentFormFields = ({ mode }) => {
+const PaymentFormFields = ({ mode, paymentId }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const { filteredEvents = [], loading } = useSelector((state) => state.event);
-  const { responseMessage, responseData } = useSelector(
+  const { responseMessage, responseData, singlePayment } = useSelector(
     (state) => state.payment
   );
   const [placeId, setPlaceId] = useState();
   const [submitting, setSubmitting] = useState(false);
 
-  // State to track all form data for draft system
   const [allFormData, setAllFormData] = useState({});
 
   useEffect(() => {
+    if (mode === "EDIT") {
+      dispatch(getSinglePayment({ payment_id: paymentId }));
+    }
     dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
   }, [dispatch]);
+
+  useEffect(() => {
+    if (mode == "EDIT" && singlePayment) {
+      if (singlePayment.place?.id) {
+        setPlaceId(singlePayment.place.id);
+      }
+
+      const formValues = {
+        place_id: singlePayment.place?.id,
+        place: singlePayment.place
+          ? `${singlePayment.place.name}, ${singlePayment.place.country.name}`
+          : "",
+        event_id: singlePayment.event?.id || null,
+        terms_and_conditions: singlePayment.terms_and_conditions || "",
+        additional_urls: singlePayment.additional_urls || "",
+        payment_methods: singlePayment.payment_methods || [{}],
+        add_on_services:
+          singlePayment.add_on_services?.map((service) => ({
+            service_name: service.service_name,
+            description: service.description,
+            is_percentage: service.is_percentage,
+            percentage_or_amount: service.percentage_or_amount,
+            service_features: service.service_features || [],
+          })) || [],
+      };
+
+      form.setFieldsValue(formValues);
+
+      setAllFormData(formValues);
+
+      console.log("✅ Edit data loaded:", formValues);
+    }
+  }, [singlePayment, mode, form]);
 
   const handleSelectEvent = (id) => {
     if (!id) return;
@@ -43,20 +78,22 @@ const PaymentFormFields = ({ mode }) => {
   const getCompleteFormData = () => {
     const mainFormValues = form.getFieldsValue();
     console.log("🔍 Getting complete form data:", mainFormValues);
-    
+
     // Ensure payment_methods and add_on_services are properly structured
     const completeData = {
       ...mainFormValues,
       place_id: placeId,
-      // Ensure these arrays exist even if empty
+
       payment_methods: mainFormValues.payment_methods || [],
-      add_on_services: mainFormValues.add_on_services || []
+      add_on_services: mainFormValues.add_on_services || [],
     };
 
     console.log("📊 Complete form data structure:", {
-      mainFields: Object.keys(mainFormValues).filter(k => !['payment_methods', 'add_on_services'].includes(k)),
+      mainFields: Object.keys(mainFormValues).filter(
+        (k) => !["payment_methods", "add_on_services"].includes(k)
+      ),
       paymentMethods: completeData.payment_methods?.length || 0,
-      addOnServices: completeData.add_on_services?.length || 0
+      addOnServices: completeData.add_on_services?.length || 0,
     });
 
     return completeData;
@@ -65,9 +102,9 @@ const PaymentFormFields = ({ mode }) => {
   // Handle draft loaded - restore all form data including nested structures
   const handleDraftLoaded = (draftData) => {
     console.log("📥 Loading draft data:", draftData);
-    
+
     const { formValues } = draftData;
-    
+
     // Set place ID if it exists
     if (formValues.place_id) {
       setPlaceId(formValues.place_id);
@@ -78,12 +115,12 @@ const PaymentFormFields = ({ mode }) => {
       ...formValues,
       // Ensure arrays are properly set
       payment_methods: formValues.payment_methods || [{}],
-      add_on_services: formValues.add_on_services || []
+      add_on_services: formValues.add_on_services || [],
     });
 
     console.log("✅ Form values set:", {
       paymentMethods: formValues.payment_methods?.length || 0,
-      addOnServices: formValues.add_on_services?.length || 0
+      addOnServices: formValues.add_on_services?.length || 0,
     });
 
     // Force re-render of child components by updating state
@@ -118,17 +155,6 @@ const PaymentFormFields = ({ mode }) => {
       }
 
       if (mode === "EDIT") {
-        // const editData = {
-        //   ...processedValues,
-        //   id: coupon.id,
-        // };
-        // const resultAction = await dispatch(
-        //   editCoupon({ data: editData, action: ActionType.WARNING })
-        // );
-        // if (editCoupon.fulfilled.match(resultAction)) {
-        //   dispatch(setSelectedCoupon(editData));
-        //   dispatch(setCouponDialogVisible(true));
-        // }
       } else {
         const formData = {
           ...submitData,
@@ -207,15 +233,19 @@ const PaymentFormFields = ({ mode }) => {
         </Card>
 
         {/* Pass key to force re-render when draft is loaded */}
-        <PaymentMethodTabs 
-          form={form} 
-          key={`payment-methods-${JSON.stringify(allFormData.payment_methods || [])}`}
+        <PaymentMethodTabs
+          form={form}
+          key={`payment-methods-${JSON.stringify(
+            allFormData.payment_methods || []
+          )}`}
         />
-        <AddOnServicesForm 
-          form={form} 
-          key={`add-on-services-${JSON.stringify(allFormData.add_on_services || [])}`}
+        <AddOnServicesForm
+          form={form}
+          key={`add-on-services-${JSON.stringify(
+            allFormData.add_on_services || []
+          )}`}
         />
-        
+
         <Flex className="py-2" mobileFlex={false} justifyContent="flex-end">
           <DraftSystem
             form={form}
