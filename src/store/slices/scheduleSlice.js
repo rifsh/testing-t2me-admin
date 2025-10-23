@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { GET_SCHEDULE_MOCK_API, ENABLE_MOCK_API } from "configs/MockConfig";
 import ScheduleMockData from "mock/data/scheduleData";
 import ScheduleService from "services/ScheduleService";
+import { ActionType } from "utils/api/warning-submit-util";
 
 export const initialState = {
   loading: false,
@@ -28,6 +29,21 @@ export const initialState = {
   pagination: { size: 10, page: 1 },
   scheduleFormData: {},
   checkedscheduleDetails: null,
+
+  // WarningModal States (matching OfferForm pattern)
+  dialogVisible: false,
+  selectedSchedule: null,
+  responseImpactData: null,
+  warningPagination: {
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  },
+  submitPagination: {
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  },
 };
 
 export const fetchAllSchedules = createAsyncThunk(
@@ -48,6 +64,7 @@ export const fetchAllSchedules = createAsyncThunk(
     }
   }
 );
+
 export const fetchSingleSchedules = createAsyncThunk(
   "schedule/fetchSingle",
   async (pageData, { rejectWithValue }) => {
@@ -66,6 +83,7 @@ export const fetchSingleSchedules = createAsyncThunk(
     }
   }
 );
+
 export const checkScheduleEdit = createAsyncThunk(
   "schedule/checkScheduleEdit",
   async (params, { rejectWithValue }) => {
@@ -87,21 +105,24 @@ export const addSchedule = createAsyncThunk(
       const response = await ScheduleService.addSchedule(data, action);
       return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Error creating user");
+      return rejectWithValue(error.response?.data || "Error creating schedule");
     }
   }
 );
 
 export const editSchedule = createAsyncThunk(
   "schedule/edit",
-  async ({ data, action }, { rejectWithValue }) => {
+  async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
-      const response = await ScheduleService.editSchedule(data, action);
-      return response.status;
+      const response = await ScheduleService.editSchedule(
+        data,
+        action,
+        pageData
+      );
+      return { ...response, action };
     } catch (error) {
       console.log("errortesting", error);
-
-      return rejectWithValue(error.message || "Failed to edit event");
+      return rejectWithValue(error.message || "Failed to edit schedule");
     }
   }
 );
@@ -114,8 +135,7 @@ export const editScheduleStatus = createAsyncThunk(
       return response;
     } catch (error) {
       console.log("errortesting", error);
-
-      return rejectWithValue(error.message || "Failed to edit event");
+      return rejectWithValue(error.message || "Failed to edit schedule status");
     }
   }
 );
@@ -125,11 +145,9 @@ const scheduleSlice = createSlice({
   initialState,
   reducers: {
     setScheduleFormData: (state, action) => {
-      // Deep merge to handle nested objects properly
       state.scheduleFormData = {
         ...state.scheduleFormData,
         ...action.payload,
-        // Ensure arrays are properly handled
         show_dates:
           action.payload.show_dates || state.scheduleFormData.show_dates || [],
         add_ons: action.payload.add_ons || state.scheduleFormData.add_ons || [],
@@ -148,7 +166,6 @@ const scheduleSlice = createSlice({
       const { field, value } = action.payload;
       state.scheduleFormData[field] = value;
     },
-
     setTimeSlots: (state, action) => {
       state.timeSlots = action.payload;
     },
@@ -168,6 +185,18 @@ const scheduleSlice = createSlice({
     setScheduleSubmitData: (state, action) => {
       state.submitedData = action.payload;
     },
+
+    // WarningModal Reducers (matching OfferForm pattern)
+    setScheduleModalLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+    setScheduleDialogVisible: (state, action) => {
+      state.dialogVisible = action.payload;
+    },
+    setSelectedSchedule: (state, action) => {
+      state.selectedSchedule = action.payload;
+    },
+
     addNewTimeSlot: (state, action) => {
       const { dateStr } = action.payload;
       if (!state.timeSlots[dateStr]) {
@@ -250,11 +279,9 @@ const scheduleSlice = createSlice({
       );
 
       if (existingOfferIndex !== -1) {
-        // Store original dates before removing
         const existingOffer = state.selectedOffers[existingOfferIndex];
         state.selectedOffers.splice(existingOfferIndex, 1);
       } else {
-        // Add new offer with original dates
         const newOffer = {
           ...action.payload,
           offer: {
@@ -266,7 +293,6 @@ const scheduleSlice = createSlice({
         state.selectedOffers.push(newOffer);
       }
     },
-
     updateSelectedOffer: (state, action) => {
       const existingOfferIndex = state.selectedOffers.findIndex(
         (offer) => offer.offer.id === action.payload.id
@@ -284,18 +310,15 @@ const scheduleSlice = createSlice({
         };
       }
     },
-
     toggleSelectedCoupon: (state, action) => {
       const existingCouponIndex = state.selectedCoupons.findIndex(
         (coupon) => coupon.id === action.payload.id
       );
 
       if (existingCouponIndex !== -1) {
-        // Store original dates before removing
         const existingCoupon = state.selectedCoupons[existingCouponIndex];
         state.selectedCoupons.splice(existingCouponIndex, 1);
       } else {
-        // Add new coupon with original dates
         const newCoupon = {
           ...action.payload,
           coupons: {
@@ -307,7 +330,6 @@ const scheduleSlice = createSlice({
         state.selectedCoupons.push(newCoupon);
       }
     },
-
     updateSelectedCoupons: (state, action) => {
       const existingCouponIndex = state.selectedCoupons.findIndex(
         (coupon) => coupon.id === action.payload.id
@@ -332,16 +354,12 @@ const scheduleSlice = createSlice({
       state.isSelectTime = action.payload;
     },
     setAddOnServie: (state, action) => {
-      // Replace the entire selectedAddOnServiceList with new data
       state.selectedAddOnServiceList = action.payload;
     },
-
-    // Alternative: If you want to add/remove individual items
     toggleAddOnService: (state, action) => {
       const { addon, isSelected } = action.payload;
 
       if (isSelected) {
-        // Add to list if not already present
         const existingIndex = state.selectedAddOnServiceList.findIndex(
           (item) => item.name === addon.name
         );
@@ -355,7 +373,6 @@ const scheduleSlice = createSlice({
           });
         }
       } else {
-        // Remove from list
         state.selectedAddOnServiceList = state.selectedAddOnServiceList.filter(
           (item) => item.name !== addon.name
         );
@@ -377,21 +394,53 @@ const scheduleSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // editSchedule with WARNING/SUBMIT action support
       .addCase(editSchedule.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(editSchedule.fulfilled, (state, { payload }) => {
         state.loading = false;
-        if (payload.message) {
-          state.message = payload.message;
-          state.editable_status = payload.editable_status;
+
+        // Handle WARNING action response
+        if (payload.action === ActionType.WARNING) {
+          state.dialogVisible = true;
+          state.message = payload.status?.message || payload.message;
+          state.editable_status = payload.status?.editable_status;
+          state.responseImpactData = payload.data || payload.status?.data;
+
+          // Update pagination if provided
+          if (payload.status?.pagination || payload.pagination) {
+            const paginationData =
+              payload.status?.pagination || payload.pagination;
+            state.warningPagination = {
+              current: paginationData.page || 1,
+              pageSize: paginationData.size || 10,
+              total: paginationData.total || 0,
+            };
+          }
+        }
+        // Handle SUBMIT action response
+        else if (payload.action === ActionType.SUBMIT) {
+          state.dialogVisible = false;
+          state.message = payload.status?.message || payload.message;
+          state.responseData = payload.data;
+          state.responseMessage = payload.status?.message;
+        }
+        // Default edit response
+        else {
+          if (payload.message) {
+            state.message = payload.message;
+            state.editable_status = payload.editable_status;
+          }
         }
       })
       .addCase(editSchedule.rejected, (state, { payload }) => {
         state.loading = false;
-        state.error = payload || "Failed to edit event";
+        state.error = payload || "Failed to edit schedule";
+        state.dialogVisible = false;
       })
+
       .addCase(editScheduleStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -405,8 +454,9 @@ const scheduleSlice = createSlice({
       })
       .addCase(editScheduleStatus.rejected, (state, { payload }) => {
         state.loading = false;
-        state.error = payload || "Failed to edit event";
+        state.error = payload || "Failed to edit schedule status";
       })
+
       .addCase(addSchedule.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -421,6 +471,7 @@ const scheduleSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
       .addCase(fetchAllSchedules.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -435,6 +486,7 @@ const scheduleSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
       .addCase(fetchSingleSchedules.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -447,6 +499,7 @@ const scheduleSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
       .addCase(checkScheduleEdit.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -484,9 +537,14 @@ export const {
   updateTimeSlot,
   setScheduleSubmitData,
   setScheduleSelectTime,
+  setScheduleModalLoading,
+  setScheduleDialogVisible,
+  setSelectedSchedule,
   updateSelectedOffer,
   setAddOnServie,
   setFoodTimeSlots,
   toggleAddOnService,
+  clearTimeSlots,
 } = scheduleSlice.actions;
+
 export default scheduleSlice.reducer;

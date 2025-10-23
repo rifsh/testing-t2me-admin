@@ -14,10 +14,10 @@ const OfferService = {};
 
 OfferService.addOffer = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
 
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_URL,
@@ -27,10 +27,10 @@ OfferService.addOffer = function (data, action) {
   return fetch({
     url: `${offreUrl}?action=${encodedAction}`,
     method: "post",
-    data: formData,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    data: data,
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
   });
 };
 
@@ -39,10 +39,10 @@ OfferService.editOffer = function (data, action, pageData) {
 
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
   const offerUrlBase = Utils.getUrlByUserRole(
     ApiConstant.OFFER_URL,
     ApiConstant.ORGANIZER_OFFER_URL,
@@ -59,11 +59,11 @@ OfferService.editOffer = function (data, action, pageData) {
   return fetch({
     url: `${offerUrl}/${data.id}`,
     method: "put",
-    data: formData,
+    data: data,
     params: params,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
   });
 };
 

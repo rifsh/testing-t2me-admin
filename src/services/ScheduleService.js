@@ -16,7 +16,7 @@ ScheduleService.addSchedule = function (data, action) {
 ScheduleService.editSchedule = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
-    url: `${ApiConstant.SCHEDULE_URL}/${data.id}?action=${encodedAction}`,
+    url: `${ApiConstant.EDIT_SCHEDULE_URL}${data.id}?action=${encodedAction}`,
     method: "put",
     data: data,
   });
