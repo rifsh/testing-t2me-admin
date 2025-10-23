@@ -53,15 +53,19 @@ const CountryForm = ({ mode, placeId }) => {
     message: warningMessage,
   } = useSelector((state) => state.locations);
 
-  // Define which fields to include in confirmation request
+  // Define which fields from ORIGINAL FORM DATA to include in confirmation
   const FIELDS_TO_CONFIRM = [
     "name",
     "description",
     "thumbnail_image",
-    "thumbnail_image_upload_url",
     "banner_images",
-    "banner_images_upload_url",
     "country_id",
+  ];
+
+  // Define which fields from SUBMIT RESPONSE to include in confirmation
+  const EXTRA_FIELDS_FROM_RESPONSE = [
+    "thumbnail_image_upload_url",
+    "banner_images_upload_url",
   ];
 
   useEffect(() => {
@@ -137,13 +141,6 @@ const CountryForm = ({ mode, placeId }) => {
 
       if (!placeId) {
         dispatch(setSelectedSubmitItem(data));
-        const resultAction = await dispatch(
-          createPlace({ values: data, action: ActionType.SUBMIT })
-        );
-
-        if (createPlace.fulfilled.match(resultAction)) {
-          // Modal will handle the rest
-        }
       } else {
         const editData = {
           ...data,
@@ -275,9 +272,7 @@ const CountryForm = ({ mode, placeId }) => {
         form={form}
         formType={"place"}
         setIsUploading={setIsUploading}
-        // NEW PROPS: Specify which fields to include in confirmation
-        fieldsToConfirm={FIELDS_TO_CONFIRM}
-        // NEW PROPS: Specify upload field configurations
+        extraFieldsFromResponse={EXTRA_FIELDS_FROM_RESPONSE}
         uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.PLACE}
       />
     </>

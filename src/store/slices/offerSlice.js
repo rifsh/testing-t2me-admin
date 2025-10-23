@@ -98,6 +98,7 @@ export const editOffer = createAsyncThunk(
       const response = await OfferService.editOffer(data, action, pageData);
       return response;
     } catch (error) {
+      console.error("error: ", error);
       return rejectWithValue(error.message || "Failed to edit event");
     }
   }
