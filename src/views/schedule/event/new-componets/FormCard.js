@@ -243,9 +243,9 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
     updateFormData({ venue_id: venueId });
   };
 
-  const handleBookingTypeChange = (typeId) => {
-    dispatch(setSelectedTicketType(typeId));
-    updateFormData({ available_types: typeId });
+  const handleBookingTypeChange = (name) => {
+    dispatch(setSelectedTicketType(name));
+    updateFormData({ available_types: name });
   };
 
   const handleSearch = (value) => {
@@ -574,7 +574,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                         }}
                       >
                         {availableTypes.map((type) => (
-                          <Option key={type.id} value={type.id}>
+                          <Option key={type.id} value={type.code}>
                             <div className="flex items-center">
                               <TagsOutlined className="mr-2 text-purple-500" />
                               {type.name}
