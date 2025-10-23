@@ -2,7 +2,7 @@ import { message } from "antd";
 import ResponseShowModal from "components/util-components/ModalItems/ResponseShowModal";
 import { TextConstants } from "constants/TextConstant";
 import { useDraft } from "drafts/hooks/useDraftManager";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -30,6 +30,7 @@ export const SubmitAndConfirmModal = ({
   mode,
   setIsUploading,
   fieldsToConfirm = [],
+  extraFieldsFromResponse = [], // NEW PROP: Fields to extract from submit response
   uploadFieldConfigs = [],
 }) => {
   const dispatch = useDispatch();
@@ -38,6 +39,11 @@ export const SubmitAndConfirmModal = ({
   const [uploadFailed, setUploadFailed] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [isRetrying, setIsRetrying] = useState(false);
+
+  // ===== CRITICAL: Store original data before any API calls =====
+  const originalDataRef = useRef(null);
+  // Store submit response data for extracting extra fields
+  const submitResponseRef = useRef(null);
 
   const { deleteDraft } = useDraft({
     form,
@@ -77,34 +83,57 @@ export const SubmitAndConfirmModal = ({
       setUploadFailed(false);
       setUploadError(null);
       setIsProcessing(false);
+      // Clear original data ref when modal closes
+      originalDataRef.current = null;
+      submitResponseRef.current = null;
     }
   }, [responseDialogVisible]);
 
+  // ===== CRITICAL: Store original data when selectedSubmitItem changes =====
   useEffect(() => {
-    if (selectedSubmitItem) {
-      dispatch(
-        addFunction({ data: selectedSubmitItem, action: ActionType.SUBMIT })
-      )
+    if (selectedSubmitItem && !originalDataRef.current) {
+      // Deep clone to preserve original data
+      const clonedData = JSON.parse(JSON.stringify(selectedSubmitItem));
+      originalDataRef.current = clonedData;
+      console.log("=== ORIGINAL DATA STORED ===", originalDataRef.current);
+
+      // Call submit with ORIGINAL data
+      dispatch(addFunction({ data: clonedData, action: ActionType.SUBMIT }))
         .then((result) => {
           if (addFunction.fulfilled?.match(result)) {
+            // ===== STORE SUBMIT RESPONSE for extracting extra fields =====
+            submitResponseRef.current = result.payload;
+            console.log(
+              "=== SUBMIT RESPONSE STORED ===",
+              submitResponseRef.current
+            );
+
             dispatch(setResponseDialogVisible(true));
           } else {
             dispatch(resetStatusModalState());
+            console.error(TextConstants.ErrorSubmittingItem);
             message.error(TextConstants.ErrorSubmittingItem);
+            // Clear original data on error
+            originalDataRef.current = null;
+            submitResponseRef.current = null;
           }
         })
         .catch((err) => {
           console.error("Submit error:", err);
           message.error(TextConstants.ErrorSubmittingItem);
+          // Clear original data on error
+          originalDataRef.current = null;
+          submitResponseRef.current = null;
         });
     }
   }, [selectedSubmitItem, dispatch, addFunction]);
 
   const handleSubmitPagination = (page, size) => {
-    if (selectedSubmitItem) {
+    // ===== USE ORIGINAL DATA for pagination =====
+    if (originalDataRef.current) {
       dispatch(
         addFunction({
-          data: selectedSubmitItem,
+          data: originalDataRef.current,
           action: ActionType.SUBMIT,
           pageData: { page: page, size: size },
         })
@@ -172,6 +201,8 @@ export const SubmitAndConfirmModal = ({
       // Navigate after successful retry
       deleteDraft();
       dispatch(resetStatusModalState());
+      originalDataRef.current = null; // Clear original data
+      submitResponseRef.current = null;
       navigate(navigationPath);
     } catch (error) {
       console.error("Retry upload failed:", error);
@@ -200,7 +231,7 @@ export const SubmitAndConfirmModal = ({
     }
 
     try {
-      if (!selectedSubmitItem) {
+      if (!originalDataRef.current) {
         message.error(TextConstants.NoItemSelected);
         return;
       }
@@ -212,15 +243,65 @@ export const SubmitAndConfirmModal = ({
         setIsUploading(true);
       }
 
-      // Prepare confirmation data with specified fields
-      const confirmationData = prepareConfirmationData(
-        responseData,
-        fieldsToConfirm
-      );
+      // ===== CRITICAL: Build confirmation data from ORIGINAL + RESPONSE =====
+      const originalData = originalDataRef.current;
+      const submitResponse = submitResponseRef.current;
+      const recordId = originalData.id;
 
-      console.log("Confirmation Data:", confirmationData);
+      console.log("=== BUILDING CONFIRM DATA ===", {
+        originalData,
+        submitResponse,
+        recordId,
+        fieldsToConfirm,
+        extraFieldsFromResponse,
+      });
 
-      // Send confirmation request FIRST
+      // Step 1: Extract fields from ORIGINAL data
+      let confirmationData = {};
+
+      if (fieldsToConfirm && fieldsToConfirm.length > 0) {
+        // If specific fields are requested, filter them from original data
+        fieldsToConfirm.forEach((field) => {
+          if (originalData.hasOwnProperty(field)) {
+            confirmationData[field] = originalData[field];
+          }
+        });
+      } else {
+        // If no specific fields, use all original data
+        confirmationData = { ...originalData };
+      }
+
+      // Step 2: Extract extra fields from SUBMIT RESPONSE
+      if (
+        extraFieldsFromResponse &&
+        extraFieldsFromResponse.length > 0 &&
+        submitResponse
+      ) {
+        // Navigate through response data structure
+        let responseDataObj =
+          submitResponse?.data?.data || submitResponse?.data || submitResponse;
+
+        console.log("=== EXTRACTING EXTRA FIELDS FROM RESPONSE ===", {
+          responseDataObj,
+          extraFieldsFromResponse,
+        });
+
+        extraFieldsFromResponse.forEach((field) => {
+          if (responseDataObj.hasOwnProperty(field)) {
+            confirmationData[field] = responseDataObj[field];
+            console.log(`Added extra field: ${field}`, responseDataObj[field]);
+          }
+        });
+      }
+
+      // Step 3: Always include ID
+      if (recordId) {
+        confirmationData.id = recordId;
+      }
+
+      console.log("=== FINAL CONFIRMATION DATA ===", confirmationData);
+
+      // Send confirmation request
       const resultAction = await dispatch(
         addFunction({ data: confirmationData, action: ActionType.CONFIRM })
       );
@@ -239,6 +320,8 @@ export const SubmitAndConfirmModal = ({
           message.success(onSubmitMessage);
           deleteDraft();
           dispatch(resetStatusModalState());
+          originalDataRef.current = null; // Clear original data
+          submitResponseRef.current = null;
           navigate(navigationPath);
         } catch (uploadError) {
           // Upload failed - keep modal open with retry button
@@ -284,6 +367,8 @@ export const SubmitAndConfirmModal = ({
       dispatch(setModalLoading(false));
       dispatch(setResponseDialogVisible(false));
       dispatch(resetStatusModalState());
+      originalDataRef.current = null; // Clear original data
+      submitResponseRef.current = null;
 
       if (setIsUploading) {
         setIsUploading(false);
@@ -302,10 +387,14 @@ export const SubmitAndConfirmModal = ({
         setUploadError(null);
         deleteDraft();
         dispatch(resetStatusModalState());
+        originalDataRef.current = null; // Clear original data
+        submitResponseRef.current = null;
         navigate(navigationPath);
       }
     } else {
       dispatch(resetStatusModalState());
+      originalDataRef.current = null; // Clear original data
+      submitResponseRef.current = null;
       message.warning(onCloseMessage);
     }
   };

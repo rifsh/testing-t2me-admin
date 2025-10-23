@@ -4,6 +4,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOfferDetails } from "store/slices/offerSlice";
 import { isOrganizer } from "configs/UserAccessConfig";
+import { EDIT } from "constants/AppConstants";
 
 const EditOffer = () => {
   const location = useLocation();
@@ -19,7 +20,7 @@ const EditOffer = () => {
     }
   }, [dispatch, offerId]);
 
-  return <OfferForm mode="EDIT" offer={offerDetails} type={type} isMakeChange={isMakeChange} />;
+  return <OfferForm mode={EDIT} offer={offerDetails} type={type} isMakeChange={isMakeChange} />;
 };
 
 export default EditOffer;
