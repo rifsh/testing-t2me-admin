@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Input,
   Row,
@@ -8,12 +8,11 @@ import {
   DatePicker,
   Checkbox,
   Button,
-  Space,
   Typography,
   InputNumber,
   Radio,
-  Select,
   Divider,
+  Tag,
 } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -32,8 +31,7 @@ import { EventType } from "constants/AppConstants";
 import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
 import { isOrganizer } from "configs/UserAccessConfig";
 
-const { Text, Title } = Typography;
-const { Option } = Select;
+const { Text } = Typography;
 
 const rules = {
   name: [
@@ -76,12 +74,32 @@ const rules = {
 
 function OfferFormFields({ type }) {
   const dispatch = useDispatch();
+  const form = Form.useFormInstance();
   const { isDateRequired, availableOfferDays } = useSelector(
     (state) => state.offers
   );
-  const [form] = Form.useForm();
-  const [isAllDaysSelected, setIsAllDaysSelected] = React.useState(false);
-  const [applicableDays, setApplicableDays] = React.useState([]);
+
+  // Local state to force re-renders
+  const [selectedDays, setSelectedDays] = useState([]);
+
+  useEffect(() => {
+    dispatch(getAvailableOfferDays({}));
+  }, [dispatch]);
+
+  // Sync local state with form values
+  useEffect(() => {
+    const formDays = form.getFieldValue("applicable_days") || [];
+    console.log("Form days changed:", formDays);
+    setSelectedDays(formDays);
+  }, [form]);
+
+  // Watch for form field changes
+  const watchedDays = Form.useWatch("applicable_days", form) || [];
+
+  useEffect(() => {
+    console.log("Watched days changed:", watchedDays);
+    setSelectedDays(watchedDays);
+  }, [watchedDays]);
 
   const handleRequiredChanges = (e) => {
     dispatch(setIsDateRequired(e.target.checked));
@@ -92,15 +110,10 @@ function OfferFormFields({ type }) {
       });
     }
   };
-  useEffect(() => {
-    dispatch(getAvailableOfferDays({}));
-  }, [dispatch]);
+
   const disablePastDates = (current) => {
     return current && current < moment().startOf("day");
   };
-  useEffect(() => {
-    setApplicableDays(form.getFieldValue("applicable_days") || []);
-  }, []);
 
   const disableEndDate = (current) => {
     const startDateValue = form.getFieldValue("start_date");
@@ -123,29 +136,81 @@ function OfferFormFields({ type }) {
     return e?.fileList || [];
   };
 
-  const handleAllDaysChange = (e) => {
-    const checked = e.target.checked;
-    const allDayValues = availableOfferDays.map((day) => day.code);
+  // Day name mapping for better display
+  const getDayDisplayInfo = (dayName) => {
+    const dayColors = {
+      MONDAY: "#1890ff",
+      TUESDAY: "#52c41a",
+      WEDNESDAY: "#faad14",
+      THURSDAY: "#722ed1",
+      FRIDAY: "#eb2f96",
+      SATURDAY: "#13c2c2",
+      SUNDAY: "#f5222d",
+    };
 
-    if (checked) {
-      setApplicableDays(allDayValues);
-      form.setFieldsValue({ applicable_days: allDayValues });
+    const dayIcons = {
+      MONDAY: "M",
+      TUESDAY: "T",
+      WEDNESDAY: "W",
+      THURSDAY: "T",
+      FRIDAY: "F",
+      SATURDAY: "S",
+      SUNDAY: "S",
+    };
+
+    return {
+      color: dayColors[dayName] || "#1890ff",
+      icon: dayIcons[dayName] || dayName.charAt(0),
+      displayName: dayName.charAt(0) + dayName.slice(1).toLowerCase(),
+    };
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const allDayNames = availableOfferDays.map((day) =>
+        day.full_name.toUpperCase()
+      );
+      form.setFieldsValue({ applicable_days: allDayNames });
+      setSelectedDays(allDayNames);
     } else {
-      setApplicableDays([]);
       form.setFieldsValue({ applicable_days: [] });
+      setSelectedDays([]);
+    }
+  };
+
+  const handleDayClick = (dayName) => {
+    const normalizedDayName = dayName.toUpperCase();
+    const currentDays = form.getFieldValue("applicable_days") || [];
+    const normalizedCurrentDays = currentDays.map((d) => d.toUpperCase());
+
+    let newDays;
+    if (normalizedCurrentDays.includes(normalizedDayName)) {
+      newDays = currentDays.filter(
+        (d) => d.toUpperCase() !== normalizedDayName
+      );
+    } else {
+      newDays = [...currentDays, normalizedDayName];
     }
 
-    setIsAllDaysSelected(checked);
+    console.log("Day clicked:", normalizedDayName);
+    console.log("New days:", newDays);
+
+    form.setFieldsValue({ applicable_days: newDays });
+    setSelectedDays(newDays);
   };
 
-  const handleDaySelectionChange = (checkedValues) => {
-    setApplicableDays(checkedValues);
-    form.setFieldsValue({ applicable_days: checkedValues });
-    setIsAllDaysSelected(checkedValues.length === availableOfferDays.length);
-  };
+  const allSelected =
+    availableOfferDays?.length > 0 &&
+    selectedDays.length === availableOfferDays.length;
+
+  console.log("=== Render State ===");
+  console.log("Selected Days:", selectedDays);
+  console.log("All Selected:", allSelected);
+  console.log("Available Days:", availableOfferDays);
 
   return (
     <Row gutter={16}>
+      {/* Left Column - Main Form */}
       <Col xs={24} sm={24} md={17}>
         <Card title="Offer Details" bordered={false}>
           {type === EventType.MOVIE && isOrganizer() && (
@@ -271,71 +336,6 @@ function OfferFormFields({ type }) {
 
           <Row gutter={16}>
             <Col xs={24}>
-              <label
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  display: "block",
-                  marginBottom: "8px",
-                }}
-              >
-                Applicable Days
-              </label>
-              <div
-                style={{
-                  border: "1px solid #d9d9d9",
-                  borderRadius: "8px",
-                  padding: "16px",
-                  backgroundColor: "#fafafa",
-                  marginBottom: "24px",
-                }}
-              >
-                <Checkbox
-                  checked={isAllDaysSelected}
-                  onChange={handleAllDaysChange}
-                  style={{
-                    marginBottom: 12,
-                    fontSize: "15px",
-                    fontWeight: 500,
-                  }}
-                >
-                  <span style={{ color: "#1890ff" }}>Select All Days</span>
-                </Checkbox>
-
-                <Form.Item name="applicable_days" style={{ marginBottom: 0 }}>
-                  <Checkbox.Group
-                    onChange={handleDaySelectionChange}
-                    style={{ width: "100%" }}
-                  >
-                    <Row gutter={[12, 12]}>
-                      {availableOfferDays.map((day) => (
-                        <Col xs={12} sm={12} md={8} key={day.code}>
-                          <div
-                            style={{
-                              padding: "8px 12px",
-                              borderRadius: "6px",
-                              backgroundColor: "#fff",
-                              border: "1px solid #e8e8e8",
-                              transition: "all 0.3s",
-                            }}
-                          >
-                            <Checkbox value={day.code}>
-                              {day.full_name}
-                            </Checkbox>
-                          </div>
-                        </Col>
-                      ))}
-                    </Row>
-                  </Checkbox.Group>
-                </Form.Item>
-              </div>
-            </Col>
-          </Row>
-
-          <Divider style={{ margin: "24px 0" }} />
-
-          <Row gutter={16}>
-            <Col xs={24}>
               <Form.Item
                 name="date_required"
                 label="Date Range"
@@ -437,77 +437,189 @@ function OfferFormFields({ type }) {
               </Text>
             </Col>
           </Row>
+        </Card>
+      </Col>
 
-          <Divider style={{ margin: "24px 0" }} />
+      {/* Right Column - Applicable Days & Keywords */}
+      <Col xs={24} sm={24} md={7}>
+        {/* Applicable Days Card */}
+        <Card
+          title={
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>Applicable Days</span>
+              {selectedDays.length > 0 && (
+                <Tag color="blue" style={{ margin: 0 }}>
+                  {selectedDays.length} selected
+                </Tag>
+              )}
+            </div>
+          }
+          bordered={false}
+          style={{ marginBottom: "16px" }}
+        >
+          <div
+            style={{
+              marginBottom: "16px",
+              padding: "12px",
+              background: "#f5f5f5",
+              borderRadius: "8px",
+            }}
+          >
+            <Checkbox
+              checked={allSelected}
+              indeterminate={selectedDays.length > 0 && !allSelected}
+              onChange={handleSelectAll}
+              style={{ fontSize: "14px", fontWeight: 500 }}
+            >
+              Select All Days
+            </Checkbox>
+          </div>
 
-          <Row gutter={16}>
-            <Col xs={24}>
-              <Form.List name="key_words">
-                {(fields, { add, remove }) => (
-                  <>
-                    <label
+          <Form.Item name="applicable_days" noStyle>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                gap: "10px",
+              }}
+            >
+              {availableOfferDays?.map((day) => {
+                const dayName = day.full_name.toUpperCase();
+                const normalizedSelectedDays = selectedDays.map((d) =>
+                  d.toUpperCase()
+                );
+                const isSelected = normalizedSelectedDays.includes(dayName);
+                const dayInfo = getDayDisplayInfo(dayName);
+
+                return (
+                  <div
+                    key={day.id}
+                    onClick={() => handleDayClick(dayName)}
+                    style={{
+                      padding: "12px",
+                      borderRadius: "8px",
+                      backgroundColor: isSelected
+                        ? `${dayInfo.color}15`
+                        : "#fafafa",
+                      border: isSelected
+                        ? `2px solid ${dayInfo.color}`
+                        : "1px solid #e0e0e0",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      minHeight: "70px",
+                      position: "relative",
+                      boxShadow: isSelected
+                        ? `0 2px 8px ${dayInfo.color}40`
+                        : "0 1px 2px rgba(0,0,0,0.05)",
+                      transform: isSelected ? "scale(1.02)" : "scale(1)",
+                    }}
+                  >
+                    <div
                       style={{
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "50%",
+                        backgroundColor: isSelected ? dayInfo.color : "#e0e0e0",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: "bold",
                         fontSize: "14px",
-                        fontWeight: 500,
-                        marginBottom: "12px",
-                        display: "block",
+                        transition: "all 0.3s ease",
                       }}
                     >
-                      Keywords
-                    </label>
-                    <div style={{ marginBottom: "12px" }}>
-                      {fields.map(({ key, name, fieldKey, ...restField }) => (
-                        <Space
-                          key={key}
-                          style={{
-                            display: "flex",
-                            marginBottom: 12,
-                            alignItems: "flex-start",
-                          }}
-                        >
-                          <Form.Item
-                            {...restField}
-                            name={name}
-                            fieldKey={fieldKey}
-                            rules={[
-                              {
-                                required: true,
-                                message: "Please enter a keyword",
-                              },
-                            ]}
-                            style={{ marginBottom: 0, flex: 1 }}
-                          >
-                            <Input
-                              placeholder="Enter keyword"
-                              size="large"
-                              style={{ minWidth: "300px" }}
-                            />
-                          </Form.Item>
-                          <Button
-                            type="text"
-                            danger
-                            size="large"
-                            onClick={() => remove(name)}
-                          >
-                            Remove
-                          </Button>
-                        </Space>
-                      ))}
+                      {dayInfo.icon}
                     </div>
-                    <Button
-                      type="dashed"
-                      onClick={() => add()}
-                      block
-                      size="large"
-                      style={{ marginTop: "8px" }}
+                    <span
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: isSelected ? 600 : 400,
+                        color: isSelected ? dayInfo.color : "#595959",
+                        textAlign: "center",
+                      }}
                     >
-                      + Add Keyword
-                    </Button>
-                  </>
-                )}
-              </Form.List>
-            </Col>
-          </Row>
+                      {dayInfo.displayName}
+                    </span>
+                    {isSelected && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "6px",
+                          right: "6px",
+                          width: "18px",
+                          height: "18px",
+                          borderRadius: "50%",
+                          backgroundColor: dayInfo.color,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "10px",
+                          color: "white",
+                        }}
+                      >
+                        ✓
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </Form.Item>
+        </Card>
+
+        {/* Keywords Card */}
+        <Card title="Keywords" bordered={false}>
+          <Form.List name="key_words">
+            {(fields, { add, remove }) => (
+              <>
+                <div style={{ marginBottom: "12px" }}>
+                  {fields.map(({ key, name, ...restField }) => (
+                    <div
+                      key={key}
+                      style={{
+                        display: "flex",
+                        marginBottom: 12,
+                        gap: "8px",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <Form.Item
+                        {...restField}
+                        name={name}
+                        rules={[
+                          {
+                            required: true,
+                            message: "Enter keyword",
+                          },
+                        ]}
+                        style={{ marginBottom: 0, flex: 1 }}
+                      >
+                        <Input placeholder="Enter keyword" size="large" />
+                      </Form.Item>
+                      <Button
+                        type="text"
+                        danger
+                        size="large"
+                        onClick={() => remove(name)}
+                        style={{ padding: "4px 8px" }}
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <Button type="dashed" onClick={() => add()} block size="large">
+                  + Add Keyword
+                </Button>
+              </>
+            )}
+          </Form.List>
         </Card>
       </Col>
     </Row>

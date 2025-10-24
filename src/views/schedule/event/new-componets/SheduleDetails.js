@@ -18,13 +18,18 @@ import {
   setTimeSlots,
   checkScheduleEdit,
   editSchedule,
+  setScheduleDialogVisible,
+  setScheduleModalLoading,
+  setSelectedSchedule,
 } from "store/slices/scheduleSlice";
 import { setCurrentStep, resetState } from "store/slices/eventSlice";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import LoadingOverlay from "components/util-components/Loader/index";
+import WarningModal from "components/util-components/ModalItems/WarningModal";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { BOOKING_ADDON_TYPE, EDIT } from "constants/AppConstants";
+import { ActionType } from "utils/api/warning-submit-util";
 import dayjs from "dayjs";
 import Utils from "utils";
 import { ScheduleUtil } from "../utils";
@@ -33,7 +38,7 @@ const getBlockingInfo = (checkedScheduleDetails) => {
   if (!checkedScheduleDetails) {
     return {
       isScheduleBlocked: false,
-      blockedDates: [],
+      blockedDates: new Set(),
       blockedTimeSlots: new Map(),
       blockingTicketIds: [],
       blockingSeatIds: [],
@@ -45,7 +50,7 @@ const getBlockingInfo = (checkedScheduleDetails) => {
   }
 
   const blockedDates = new Set();
-  const blockedTimeSlots = new Map(); // Map<dateId, Set<timeSlotId>>
+  const blockedTimeSlots = new Map();
 
   if (checkedScheduleDetails.show_dates) {
     checkedScheduleDetails.show_dates.forEach((dateInfo) => {
@@ -113,8 +118,6 @@ const getBlockingMessage = (blockingInfo) => {
 
   return null;
 };
-
-// ==================== BLOCKING WARNING MODAL ====================
 
 const BlockingWarningModal = ({ visible, blockingInfo, onOk, onCancel }) => {
   const blockingMessage = getBlockingMessage(blockingInfo);
@@ -241,21 +244,17 @@ const BlockingWarningModal = ({ visible, blockingInfo, onOk, onCancel }) => {
   );
 };
 
-// ==================== MAIN COMPONENT ====================
-
 const ScheduleDetails = ({ mode, id }) => {
   const [tab, setTab] = useState(1);
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Refs
   const isInitialized = useRef(false);
   const hasLoadedEditData = useRef(false);
   const lastEditId = useRef(null);
   const hasShownBlockingModal = useRef(false);
 
-  // Blocking state
   const [showBlockingModal, setShowBlockingModal] = useState(false);
   const [blockingInfo, setBlockingInfo] = useState({
     isScheduleBlocked: false,
@@ -265,7 +264,6 @@ const ScheduleDetails = ({ mode, id }) => {
     blockingSeatIds: [],
   });
 
-  // Selectors
   const {
     scheduleFormData,
     scheduleDetails,
@@ -277,6 +275,12 @@ const ScheduleDetails = ({ mode, id }) => {
     foodTimeSlots,
     selectedAddOnServiceList,
     checkedscheduleDetails,
+    dialogVisible,
+    editable_status,
+    selectedSchedule,
+    responseImpactData,
+    warningPagination,
+    message: warningMessage,
   } = useSelector((state) => state.schedules);
 
   const { eventDetails, submitLoading } = useSelector((state) => state.event);
@@ -287,7 +291,7 @@ const ScheduleDetails = ({ mode, id }) => {
   const isEditMode = useMemo(() => mode === EDIT, [mode]);
   const editId = useMemo(() => id, [id]);
 
-  // ==================== BLOCKING CHECK EFFECT ====================
+  // Blocking check effect
   useEffect(() => {
     if (
       isEditMode &&
@@ -299,36 +303,57 @@ const ScheduleDetails = ({ mode, id }) => {
 
       console.log("Blocking Info:", info);
 
-      // Show modal if schedule is completely blocked
       if (info.isScheduleBlocked) {
         setShowBlockingModal(true);
         hasShownBlockingModal.current = true;
-      }
-      // Show info modal for partial blocking
-      else if (info.blockedDates.size > 0 || info.blockedTimeSlots.size > 0) {
+      } else if (info.blockedDates.size > 0 || info.blockedTimeSlots.size > 0) {
         setShowBlockingModal(true);
         hasShownBlockingModal.current = true;
       }
     }
   }, [isEditMode, checkedscheduleDetails]);
 
-  // ==================== BLOCKING MODAL HANDLERS ====================
+  // Blocking modal handlers
   const handleBlockingModalOk = () => {
     if (blockingInfo.isScheduleBlocked) {
-      // If schedule is completely blocked, navigate back
       navigate(`${APP_PREFIX_PATH}/schedule/list`);
     } else {
-      // For partial blocking, allow user to continue
       setShowBlockingModal(false);
     }
   };
 
   const handleBlockingModalCancel = () => {
-    // Navigate back to list
     navigate(`${APP_PREFIX_PATH}/schedule/list`);
   };
 
-  // ==================== UTILITY FUNCTIONS ====================
+  // Warning modal handlers (matching OfferForm pattern)
+  const handleWarningPagination = (page, size) => {
+    dispatch(
+      editSchedule({
+        data: selectedSchedule,
+        action: ActionType.WARNING,
+        pageData: { page, size },
+      })
+    );
+  };
+
+  const handleModalSubmit = async () => {
+    dispatch(setScheduleModalLoading(true));
+    const resultAction = await dispatch(
+      editSchedule({ data: selectedSchedule, action: ActionType.SUBMIT })
+    );
+    dispatch(setScheduleModalLoading(false));
+    dispatch(setScheduleDialogVisible(false));
+    if (editSchedule.fulfilled.match(resultAction)) {
+      dispatch(setSelectedSubmitItem(selectedSchedule));
+    }
+  };
+
+  const handleModalCancel = () => {
+    dispatch(setScheduleDialogVisible(false));
+  };
+
+  // Utility functions
   const updateStoreAndForm = (data) => {
     const updatedData = {
       ...scheduleFormData,
@@ -339,33 +364,81 @@ const ScheduleDetails = ({ mode, id }) => {
     return updatedData;
   };
 
-  const setupEditTimeSlots = (showDates) => {
-    if (!showDates?.length) return {};
+  const setupEditTimeSlots = (scheduleDetails) => {
+    if (!scheduleDetails) return;
 
-    const newDates = showDates.map((sd) => sd.start_date);
-    const formattedTimeSlots = showDates.reduce((acc, showDate) => {
-      acc[showDate.start_date] = showDate.show_times.map((time) => ({
-        start_time: dayjs(
-          `${showDate.start_date} ${time.start_time}`,
-          "YYYY-MM-DD hh:mm A"
-        ),
-        end_time: dayjs(
-          `${showDate.start_date} ${time.end_time}`,
-          "YYYY-MM-DD hh:mm A"
-        ),
-        ticketType: time.event_ticket_structures?.id,
-        seat_structure_id: time.event_ticket_structures?.ticket_structure?.id,
-        ticket_set: time.event_ticket_structures?.ticket_set,
-        offer_ids: time.offer_ids || [],
-        coupon_ids: time.coupon_ids || [],
-        id: time.id,
-        is_midnight: time.is_midnight || false,
-        show_time_ticket_types: time.show_time_ticket_types || [],
-        show_date_id: showDate.id,
-        show_time_id: time.id,
-      }));
-      return acc;
-    }, {});
+    // Determine booking type
+    const isSeatBased = scheduleDetails.available_types === "seat_structure";
+    const sourceData = isSeatBased
+      ? scheduleDetails.show_seat_details
+      : scheduleDetails.show_dates;
+
+    if (!sourceData?.length) return;
+
+    const newDates = sourceData.map((item) => item.start_date);
+
+    const formattedTimeSlots = {};
+
+    if (isSeatBased) {
+      // Handle seat-based booking - each item is a date with single time slot
+      sourceData.forEach((seatDetail) => {
+        if (!formattedTimeSlots[seatDetail.start_date]) {
+          formattedTimeSlots[seatDetail.start_date] = [];
+        }
+
+        formattedTimeSlots[seatDetail.start_date].push({
+          start_time: dayjs(
+            `${seatDetail.start_date} ${seatDetail.start_time}`,
+            "YYYY-MM-DD hh:mm A"
+          ),
+          end_time: dayjs(
+            `${seatDetail.start_date} ${seatDetail.end_time}`,
+            "YYYY-MM-DD hh:mm A"
+          ),
+          seatStructureId: seatDetail.event_seats?.event_seatstructures?.id,
+          seat_structure_id: seatDetail.event_seats?.event_seatstructures?.id,
+          seatStructureName: seatDetail.event_seats?.event_seatstructures?.name,
+          totalSeats: seatDetail.event_seats?.event_seatstructures?.total_seats,
+          offer_ids: seatDetail.offer_ids || [],
+          coupon_ids: seatDetail.coupon_ids || [],
+          id: seatDetail.id,
+          is_midnight: seatDetail.is_midnight || false,
+          // Store IDs for payload
+          show_date_id: seatDetail.id,
+          show_time_id: seatDetail.id,
+          event_seat_id: seatDetail.event_seats?.event_seatstructures?.id,
+        });
+      });
+    } else {
+      // Handle ticket-based booking - original logic
+      sourceData.forEach((showDate) => {
+        formattedTimeSlots[showDate.start_date] = showDate.show_times.map(
+          (time) => ({
+            start_time: dayjs(
+              `${showDate.start_date} ${time.start_time}`,
+              "YYYY-MM-DD hh:mm A"
+            ),
+            end_time: dayjs(
+              `${showDate.start_date} ${time.end_time}`,
+              "YYYY-MM-DD hh:mm A"
+            ),
+            ticketType: time.event_ticket_structures?.id,
+            seat_structure_id:
+              time.event_ticket_structures?.ticket_structure?.id,
+            ticket_set: time.event_ticket_structures?.ticket_set,
+            offer_ids: time.offer_ids || [],
+            coupon_ids: time.coupon_ids || [],
+            id: time.id,
+            is_midnight: time.is_midnight || false,
+            show_time_ticket_types: time.show_time_ticket_types || [],
+            // Store IDs for payload
+            show_date_id: showDate.id,
+            show_time_id: time.id,
+            ticket_structure_id: time.event_ticket_structures?.id,
+          })
+        );
+      });
+    }
 
     if (newDates.length > 0) {
       dispatch(setDates(newDates));
@@ -374,10 +447,14 @@ const ScheduleDetails = ({ mode, id }) => {
       dispatch(setTimeSlots(formattedTimeSlots));
     }
 
-    return { timeSlots: formattedTimeSlots, show_dates: showDates };
+    return {
+      timeSlots: formattedTimeSlots,
+      show_dates: isSeatBased ? [] : sourceData,
+      show_seat_details: isSeatBased ? sourceData : [],
+    };
   };
 
-  // ==================== INITIALIZATION ====================
+  // Initialization
   useEffect(() => {
     const initializeComponent = async () => {
       if (
@@ -431,7 +508,7 @@ const ScheduleDetails = ({ mode, id }) => {
     };
   }, [dispatch, isEditMode, editId, checkedscheduleDetails]);
 
-  // ==================== LOAD EDIT DATA ====================
+  // Load edit data
   useEffect(() => {
     const shouldLoadEditData =
       isEditMode &&
@@ -442,11 +519,10 @@ const ScheduleDetails = ({ mode, id }) => {
       !hasLoadedEditData.current;
 
     if (shouldLoadEditData) {
-      console.log("===== SETTING UP EDIT DATA =====");
-
       try {
         const formValues = ScheduleUtil.createFormValues(scheduleDetails);
-        const timeSlotData = setupEditTimeSlots(scheduleDetails.show_dates);
+        // ✅ FIX: Pass the entire scheduleDetails object, not just show_dates
+        const timeSlotData = setupEditTimeSlots(scheduleDetails);
 
         const finalFormValues = {
           ...formValues,
@@ -461,7 +537,6 @@ const ScheduleDetails = ({ mode, id }) => {
         }, 100);
 
         hasLoadedEditData.current = true;
-        console.log("===== EDIT MODE SETUP COMPLETED =====");
       } catch (error) {
         console.error("Error setting up edit data:", error);
         hasLoadedEditData.current = false;
@@ -470,11 +545,8 @@ const ScheduleDetails = ({ mode, id }) => {
     }
   }, [scheduleDetails, isEditMode, editId, dispatch, form]);
 
-  // ==================== VALIDATION & HANDLERS ====================
-  // (Keep all your existing validation and handler functions unchanged)
-
+  // Validation & handlers
   const validateTimeSlots = (values) => {
-    // Your existing validation code
     return true;
   };
 
@@ -491,7 +563,6 @@ const ScheduleDetails = ({ mode, id }) => {
   ];
 
   const transformAddOns = (addOns) => {
-    // Your existing code
     if (selectedAddOnServiceList?.length > 0) {
       return selectedAddOnServiceList;
     }
@@ -504,7 +575,6 @@ const ScheduleDetails = ({ mode, id }) => {
   };
 
   const transformFoodSlots = () => {
-    // Your existing code
     if (foodTimeSlots && Object.keys(foodTimeSlots).length > 0) {
       return Object.entries(foodTimeSlots).map(([key, slot]) => ({
         id: slot.id || parseInt(key) + 1,
@@ -518,7 +588,6 @@ const ScheduleDetails = ({ mode, id }) => {
   };
 
   const transformOffersCoupons = (items, type) => {
-    // Your existing code
     if (!items?.length) return [];
     return items.map((item) => ({
       [`${type}_id`]: item[type]?.id || item.id,
@@ -539,7 +608,65 @@ const ScheduleDetails = ({ mode, id }) => {
     const startDate = dayjs(values.start_date).format("YYYY-MM-DD");
     const endDate = dayjs(values.end_date).format("YYYY-MM-DD");
 
+    const isSeatBased = values.available_types === "seat_structure";
+
+    let transformedShowDates = [];
+
+    if (isSeatBased) {
+      // ✅ For seat-based: Convert seat_details into show_dates with show_times structure
+      const groupedByDate = {};
+
+      (values.show_seat_details || []).forEach((seatDetail) => {
+        if (!groupedByDate[seatDetail.start_date]) {
+          groupedByDate[seatDetail.start_date] = {
+            id: seatDetail.show_date_id || seatDetail.id,
+            start_date: seatDetail.start_date,
+            show_times: [],
+          };
+        }
+
+        groupedByDate[seatDetail.start_date].show_times.push({
+          id: seatDetail.show_time_id || seatDetail.id,
+          start_time: seatDetail.start_time,
+          end_time: seatDetail.end_time,
+          is_midnight: seatDetail.is_midnight || false,
+          event_seat_id: seatDetail.event_seat_id || seatDetail.seatStructureId,
+          offer_ids: seatDetail.offer_ids || [],
+          coupon_ids: seatDetail.coupon_ids || [],
+        });
+      });
+
+      transformedShowDates = Object.values(groupedByDate);
+    } else {
+      // ✅ For ticket-based: show_dates contains nested show_times array
+      transformedShowDates = (values.show_dates || []).map((showDate) => {
+        const transformedShowTimes = (showDate.show_times || []).map(
+          (showTime) => ({
+            id: showTime.show_time_id || showTime.id,
+            start_time: showTime.start_time,
+            end_time: showTime.end_time,
+            is_midnight: String(showTime.is_midnight),
+            ticket_structure_id: showTime.ticket_structure_id,
+            ticket_set: showTime.ticket_set,
+            seat_structure_id: showTime.seat_structure_id,
+            offer_ids: showTime.offer_ids || [],
+            coupon_ids: showTime.coupon_ids || [],
+          })
+        );
+
+        return {
+          id: showDate.show_date_id || showDate.id,
+          start_date: showDate.start_date,
+          end_date: showDate.end_date,
+          offer_ids: showDate.offer_ids || [],
+          coupon_ids: showDate.coupon_ids || [],
+          show_times: transformedShowTimes,
+        };
+      });
+    }
+
     return {
+      id: values.id !== undefined ? values.id : undefined,
       start_date: startDate,
       end_date: endDate,
       available_types: values.available_types || "ticket_structure",
@@ -560,13 +687,12 @@ const ScheduleDetails = ({ mode, id }) => {
       ),
       add_ons: transformAddOns(values.add_ons),
       food_slots: transformFoodSlots(),
-      name: values.name || "",
+      name: values.name,
       event_id: values.event_id,
       venue_id: values.venue_id,
-      show_dates: values.show_dates || [],
+      show_dates: transformedShowDates,
       offer_ids: transformOffersCoupons(selectedOffers, "offer"),
       coupon_ids: transformOffersCoupons(selectedCoupons, "coupons"),
-      id: values.id || undefined,
     };
   };
 
@@ -598,50 +724,23 @@ const ScheduleDetails = ({ mode, id }) => {
 
   const handleOfferSubmit = (formData) => {
     try {
-      console.log("=== OFFER SUBMIT STARTED ===");
-      console.log("Received formData:", formData);
-      console.log("Received offer_ids:", formData.offer_ids);
-
-      // Get actual show_dates (dates that have time slots)
-      const existingShowDates = (scheduleFormData.show_dates || []).map(
+      const existingShowDates = scheduleFormData.show_dates.map(
         (sd) => sd.start_date
       );
 
-      console.log(
-        "Existing show dates from scheduleFormData:",
-        existingShowDates
-      );
-
-      // Process offers with smart distribution
-      const processedOffers = (formData.offer_ids || []).map((offer) => {
-        const selectedDates = offer.selected_dates || [];
-
-        console.log(`\n--- Processing Offer ${offer.offer_id} ---`);
-        console.log("offer.selected_dates:", selectedDates);
-        console.log("existingShowDates:", existingShowDates);
-        console.log("selectedDates length:", selectedDates.length);
-        console.log("existingShowDates length:", existingShowDates.length);
-
-        // Check if ALL existing show_dates are selected
+      // Process offers and coupons
+      const processedOffers = formData.offer_ids.map((offer) => {
+        const selectedDates = offer.selected_dates;
         const datesMatch = existingShowDates.every((date) =>
           selectedDates.includes(date)
         );
-        console.log(
-          "Do all existingShowDates exist in selectedDates?",
-          datesMatch
-        );
-
         const allShowDatesSelected =
           selectedDates.length === existingShowDates.length &&
           selectedDates.length > 0 &&
           existingShowDates.length > 0 &&
           datesMatch;
-
         const isScheduleLevel =
           selectedDates.length === 0 || allShowDatesSelected;
-
-        console.log("allShowDatesSelected:", allShowDatesSelected);
-        console.log("isScheduleLevel:", isScheduleLevel);
 
         return {
           offer_id: offer.offer_id,
@@ -652,20 +751,16 @@ const ScheduleDetails = ({ mode, id }) => {
         };
       });
 
-      // Process coupons
-      const processedCoupons = (formData.coupon_ids || []).map((coupon) => {
-        const selectedDates = coupon.selected_dates || [];
-
+      const processedCoupons = formData.coupon_ids.map((coupon) => {
+        const selectedDates = coupon.selected_dates;
         const datesMatch = existingShowDates.every((date) =>
           selectedDates.includes(date)
         );
-
         const allShowDatesSelected =
           selectedDates.length === existingShowDates.length &&
           selectedDates.length > 0 &&
           existingShowDates.length > 0 &&
           datesMatch;
-
         const isScheduleLevel =
           selectedDates.length === 0 || allShowDatesSelected;
 
@@ -678,14 +773,12 @@ const ScheduleDetails = ({ mode, id }) => {
         };
       });
 
-      // Separate by level
       const scheduleLevelOffers = processedOffers.filter(
         (o) => o.is_schedule_level
       );
       const dateLevelOffers = processedOffers.filter(
         (o) => !o.is_schedule_level
       );
-
       const scheduleLevelCoupons = processedCoupons.filter(
         (c) => c.is_schedule_level
       );
@@ -693,91 +786,60 @@ const ScheduleDetails = ({ mode, id }) => {
         (c) => !c.is_schedule_level
       );
 
-      console.log("\n=== DISTRIBUTION RESULTS ===");
-      console.log("Schedule-level offers:", scheduleLevelOffers);
-      console.log("Date-level offers:", dateLevelOffers);
-      console.log("Schedule-level coupons:", scheduleLevelCoupons);
-      console.log("Date-level coupons:", dateLevelCoupons);
+      // Update show_dates with date-level offers/coupons
+      const updatedShowDates = scheduleFormData.show_dates.map((showDate) => {
+        const dateStr = showDate.start_date;
 
-      // Update show_dates - preserve structure
-      const updatedShowDates = (scheduleFormData.show_dates || []).map(
-        (showDate) => {
-          const dateStr = showDate.start_date;
-
-          // For date-level offers/coupons
-          const dateOffers = dateLevelOffers
-            .filter((o) => o.selected_dates.includes(dateStr))
-            .map((o) => ({
-              offer_id: o.offer_id,
-              valid_from: dateStr,
-              valid_to: dateStr,
-            }));
-
-          const dateCoupons = dateLevelCoupons
-            .filter((c) => c.selected_dates.includes(dateStr))
-            .map((c) => ({
-              coupon_id: c.coupon_id,
-              valid_from: dateStr,
-              valid_to: dateStr,
-            }));
-
-          // For schedule-level offers/coupons, add them to every date
-          const scheduleOffers = scheduleLevelOffers.map((o) => ({
+        const dateOffers = dateLevelOffers
+          .filter((o) => o.selected_dates.includes(dateStr))
+          .map((o) => ({
             offer_id: o.offer_id,
             valid_from: dateStr,
             valid_to: dateStr,
           }));
 
-          const scheduleCoupons = scheduleLevelCoupons.map((c) => ({
+        const dateCoupons = dateLevelCoupons
+          .filter((c) => c.selected_dates.includes(dateStr))
+          .map((c) => ({
             coupon_id: c.coupon_id,
             valid_from: dateStr,
             valid_to: dateStr,
           }));
 
-          // Combine all offers and coupons for this date
-          const allDateOffers = [...dateOffers, ...scheduleOffers];
-          const allDateCoupons = [...dateCoupons, ...scheduleCoupons];
+        const updatedShowTimes = (showDate.show_times || []).map(
+          (showTime) => ({
+            ...showTime,
+            offer_ids: dateOffers,
+            coupon_ids: dateCoupons,
+            id: showTime.show_time_id || showTime.id,
+          })
+        );
 
-          // Update show_times with combined offers/coupons
-          const updatedShowTimes = (showDate.show_times || []).map(
-            (showTime) => ({
-              ...showTime,
-              offer_ids: allDateOffers,
-              coupon_ids: allDateCoupons,
-            })
-          );
+        return {
+          ...showDate,
+          offer_ids: dateOffers,
+          coupon_ids: dateCoupons,
+          show_times: updatedShowTimes,
+          id: showDate.show_date_id || showDate.id,
+        };
+      });
 
-          return {
-            ...showDate,
-            offer_ids: allDateOffers,
-            coupon_ids: allDateCoupons,
-            show_times: updatedShowTimes,
-          };
-        }
-      );
-      const finalooferids = formData.offer_ids.map((oo) => oo.offer_id);
-      // Build final data
+      // ✅ FIX: Schedule-level offers/coupons go to ROOT level (empty selected_dates array)
       const finalData = {
         ...scheduleFormData,
         ...formData,
-        // Schedule-level offers/coupons - empty array means applies to ALL dates
         offer_ids: scheduleLevelOffers.map((o) => ({
           offer_id: o.offer_id,
           valid_from: o.valid_from,
           valid_to: o.valid_to,
-          selected_dates: [], // Empty = schedule-level (applies to all)
         })),
         coupon_ids: scheduleLevelCoupons.map((c) => ({
           coupon_id: c.coupon_id,
           valid_from: c.valid_from,
           valid_to: c.valid_to,
-          selected_dates: [], // Empty = schedule-level (applies to all)
         })),
         show_dates: updatedShowDates,
       };
-
-      console.log("\n=== FINAL SUBMIT DATA ===");
-      console.log(JSON.stringify(finalData, null, 2));
 
       const updatedData = updateStoreAndForm(finalData);
       handleFinalSubmit(updatedData);
@@ -791,23 +853,48 @@ const ScheduleDetails = ({ mode, id }) => {
 
   const handleFinalSubmit = async (finalData = null) => {
     try {
-      console.warn(scheduleDetails.id, "idsss");
-      const dataToSubmit = finalData || {
-        ...scheduleFormData,
-        ...form.getFieldsValue(),
-      };
-      const finalSubmitData = {
-        ...dataToSubmit,
-        id: scheduleDetails.id || undefined,
-      };
-      const submitData = transformSubmitData(finalSubmitData);
+      if (mode === EDIT) {
+        const dataToSubmit = finalData || {
+          ...scheduleFormData,
+          ...form.getFieldsValue(),
+        };
+        const finalSubmitData = {
+          ...dataToSubmit,
+          id: scheduleDetails.id || undefined,
+        };
 
-      dispatch(setScheduleSubmitData(submitData));
+        const editData = transformSubmitData(finalSubmitData);
+        const pageData = {
+          schedule_id: scheduleDetails.id,
+        };
 
-      dispatch(setSelectedSubmitItem(submitData));
+        console.log("Edit Data:", editData);
+        const resultAction = await dispatch(
+          editSchedule({ data: editData, action: ActionType.WARNING, pageData })
+        );
 
-      console.log("Final submit data:", submitData);
-      message.success("Schedule data prepared for submission!");
+        if (editSchedule.fulfilled.match(resultAction)) {
+          dispatch(setSelectedSchedule(editData));
+          dispatch(setScheduleDialogVisible(true));
+        }
+      } else {
+        console.warn(scheduleDetails.id, "idsss");
+        const dataToSubmit = finalData || {
+          ...scheduleFormData,
+          ...form.getFieldsValue(),
+        };
+        const finalSubmitData = {
+          ...dataToSubmit,
+          id: scheduleDetails.id || undefined,
+        };
+        const submitData = transformSubmitData(finalSubmitData);
+
+        dispatch(setScheduleSubmitData(submitData));
+        dispatch(setSelectedSubmitItem(submitData));
+
+        console.log("Final submit data:", submitData);
+        message.success("Schedule data prepared for submission!");
+      }
     } catch (error) {
       console.error("Final submit error:", error);
       message.error(
@@ -844,7 +931,6 @@ const ScheduleDetails = ({ mode, id }) => {
     formValues: form.getFieldsValue(),
   });
 
-  // If schedule is completely blocked, show overlay
   if (blockingInfo.isScheduleBlocked) {
     return (
       <div className="relative">
@@ -876,7 +962,6 @@ const ScheduleDetails = ({ mode, id }) => {
     <div>
       <LoadingOverlay loading={loading} />
 
-      {/* Blocking Warning Modal */}
       <BlockingWarningModal
         visible={showBlockingModal}
         blockingInfo={blockingInfo}
@@ -912,6 +997,26 @@ const ScheduleDetails = ({ mode, id }) => {
           blockingInfo={blockingInfo}
         />
       )}
+
+      <WarningModal
+        visible={dialogVisible}
+        title="Confirm Action"
+        details={warningMessage}
+        responseData={responseImpactData}
+        warningMessage="Do you want to continue?"
+        onSubmit={handleModalSubmit}
+        onCancel={handleModalCancel}
+        confirmText="Proceed"
+        cancelText="Back"
+        loading={loading}
+        tableConfig={{
+          title: "Active Schedules",
+          dataKey: "items",
+        }}
+        editable_status={editable_status}
+        pagination={warningPagination}
+        onPaginationChange={handleWarningPagination}
+      />
 
       <SubmitAndConfirmModal
         responseData={responseData}

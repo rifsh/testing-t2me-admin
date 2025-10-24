@@ -14,10 +14,10 @@ const OfferService = {};
 
 OfferService.addOffer = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
 
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.OFFER_URL,
@@ -27,22 +27,16 @@ OfferService.addOffer = function (data, action) {
   return fetch({
     url: `${offreUrl}?action=${encodedAction}`,
     method: "post",
-    data: formData,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    data: data,
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
   });
 };
 
 OfferService.editOffer = function (data, action, pageData) {
-  console.log(data, "DATA IN SERVICE");
-
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
   const offerUrlBase = Utils.getUrlByUserRole(
     ApiConstant.OFFER_URL,
     ApiConstant.ORGANIZER_OFFER_URL,
@@ -50,20 +44,20 @@ OfferService.editOffer = function (data, action, pageData) {
   );
   const offerUrl = isOrganizer()
     ? `${offerUrlBase}?action=${encodedAction}`
-    : `${offerUrlBase}/${data.id}?action=${encodedAction}&seat_id=${data.id}`;
+    : `${offerUrlBase}/${data.id}?action=${encodedAction}`;
   const params = {
     action: encodedAction,
-    ...Utils.filterParams(pageData),
+    ...(pageData ? Utils.filterParams(pageData) : {}),
   };
 
   return fetch({
-    url: `${offerUrl}/${data.id}`,
+    url: `${offerUrl}`,
     method: "put",
-    data: formData,
+    data: data,
     params: params,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
   });
 };
 

@@ -333,12 +333,13 @@ const EventsList = () => {
     }
   };
   const handleSearchIsEmpty = (value) => {
-    console.log("enterd is empty search");
-    if (value) {
-      dispatch(setGlobalSearchValue(value));
-      setSearchTerm(value);
-    }
-    if (!value) {
+    console.log("entered is empty search", value);
+
+    setSearchTerm(value);
+    dispatch(setGlobalSearchValue(value));
+
+    // If empty, reset and fetch all
+    if (!value || value.trim() === "") {
       console.log("is empty search");
       dispatch(resetSearchValue());
       dispatch(

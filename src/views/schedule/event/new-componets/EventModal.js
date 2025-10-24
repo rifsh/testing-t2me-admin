@@ -42,6 +42,8 @@ const EventModal = ({
   const [conflictWarning, setConflictWarning] = useState(null);
   const [showMultiDayWarning, setShowMultiDayWarning] = useState(false);
   const [dateValidationError, setDateValidationError] = useState(null);
+  const availableTypes = parentForm?.getFieldValue("available_types");
+  const isSeatBased = availableTypes === "seat_structure";
 
   // Enhanced dragging states
   const [isDragging, setIsDragging] = useState(false);
@@ -327,7 +329,6 @@ const EventModal = ({
     }
   }, [isOpen, event]);
 
-  // Initialize form data (same as before)
   useEffect(() => {
     if (isOpen && !showMultiDayWarning) {
       if (event) {
@@ -363,11 +364,12 @@ const EventModal = ({
             ? new Date(event.show_end_date)
             : null,
           is_midnight_passed: event.is_midnight_passed || false,
+          // ✅ FIX: Handle both ticket and seat fields properly
           ticket_structure_id:
             event.ticket_structure_id || event.ticketType || null,
           ticket_set: event.ticket_set || event.ticketSet || null,
           seat_structure_id:
-            event.seat_structure_id || event.seatStructure || null,
+            event.seat_structure_id || event.seatStructureId || null,
           offer_ids: Array.isArray(event.offer_ids)
             ? event.offer_ids
             : event.offer_ids
@@ -500,18 +502,16 @@ const EventModal = ({
   const isFormValid = () => {
     const requiredFields = ["start_date", "start_time", "end_time"];
 
-    // Check date validation
     if (dateValidationError) {
       return false;
     }
 
-    // Check midnight requirements
     if (formData.is_midnight_passed && !formData.show_end_date) {
       return false;
     }
 
-    // Check ticket requirements
-    if (selectedTicketType === 1) {
+    // ✅ FIX: Check based on actual available_types
+    if (isSeatBased) {
       requiredFields.push("seat_structure_id");
     } else {
       requiredFields.push("ticket_set", "ticket_structure_id");
@@ -535,7 +535,6 @@ const EventModal = ({
         return;
       }
 
-      // Check date validation
       if (!validateDates(formData)) {
         message.error(
           dateValidationError || "Please check your date selection"
@@ -547,8 +546,12 @@ const EventModal = ({
         message.error("Please select show end date for midnight passed events");
         return;
       }
-
-      if (selectedTicketType !== 1) {
+      if (isSeatBased) {
+        if (!formData.seat_structure_id) {
+          message.error("Please select a seat structure");
+          return;
+        }
+      } else {
         if (!formData.ticket_structure_id) {
           message.error("Please select a ticket type");
           return;
@@ -557,11 +560,6 @@ const EventModal = ({
           message.error("Please select a ticket set");
           return;
         }
-      }
-
-      if (selectedTicketType === 1 && !formData.seat_structure_id) {
-        message.error("Please select a seat structure");
-        return;
       }
 
       if (conflictWarning) {
@@ -893,7 +891,7 @@ const EventModal = ({
 
               {/* Tickets Section (same as before) */}
               <div>
-                {selectedTicketType === 1 ? (
+                {isSeatBased ? (
                   <CustomSelect
                     label="Seat Structure"
                     value={formData.seat_structure_id}
@@ -1061,7 +1059,20 @@ const EventModal = ({
                     </div>
                   )}
 
-                  {formData.ticket_structure_id && (
+                  {isSeatBased && formData.seat_structure_id && (
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">
+                        Seat Structure
+                      </div>
+                      <div className="text-gray-900">
+                        {availableSeats.find(
+                          (seat) => seat.value === formData.seat_structure_id
+                        )?.label || "Unknown"}
+                      </div>
+                    </div>
+                  )}
+
+                  {!isSeatBased && formData.ticket_structure_id && (
                     <div>
                       <div className="text-xs text-gray-500 mb-1">
                         Ticket Type
@@ -1074,7 +1085,7 @@ const EventModal = ({
                     </div>
                   )}
 
-                  {formData.ticket_set && (
+                  {!isSeatBased && formData.ticket_set && (
                     <div>
                       <div className="text-xs text-gray-500 mb-1">
                         Ticket Set
@@ -1082,19 +1093,6 @@ const EventModal = ({
                       <div className="text-gray-900">
                         {ticketSetOptions.find(
                           (opt) => opt.value === formData.ticket_set
-                        )?.label || "Unknown"}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedTicketType === 1 && formData.seat_structure_id && (
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">
-                        Seat Structure
-                      </div>
-                      <div className="text-gray-900">
-                        {availableSeats.find(
-                          (seat) => seat.value === formData.seat_structure_id
                         )?.label || "Unknown"}
                       </div>
                     </div>
