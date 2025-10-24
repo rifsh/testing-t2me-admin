@@ -550,18 +550,6 @@ const ScheduleDetails = ({ mode, id }) => {
     return true;
   };
 
-  const getDefaultAddOns = () => [{}];
-
-  const getDefaultFoodSlots = () => [
-    {
-      id: 1,
-      name: "Default Food Slot",
-      start_time: "01:00",
-      end_time: "06:00",
-      num_of_tickets: 23,
-    },
-  ];
-
   const transformAddOns = (addOns) => {
     if (selectedAddOnServiceList?.length > 0) {
       return selectedAddOnServiceList;
@@ -571,7 +559,7 @@ const ScheduleDetails = ({ mode, id }) => {
         typeof addon === "string" ? { name: addon, status: true } : addon
       );
     }
-    return getDefaultAddOns();
+    return [];
   };
 
   const transformFoodSlots = () => {
@@ -584,7 +572,7 @@ const ScheduleDetails = ({ mode, id }) => {
         num_of_tickets: slot.num_of_tickets || 23,
       }));
     }
-    return getDefaultFoodSlots();
+    return [];
   };
 
   const transformOffersCoupons = (items, type) => {

@@ -689,7 +689,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                   Booking Settings
                 </h2>
                 <div className="space-y-3">
-                  <div
+                  {/* <div
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -743,7 +743,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                         <div className="w-5 h-5 border-2 border-gray-300 rounded"></div>
                       )}
                     </div>
-                  </div>
+                  </div> */}
 
                   <div
                     onClick={(e) => {
