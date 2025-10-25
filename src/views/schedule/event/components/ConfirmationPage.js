@@ -132,7 +132,7 @@ const ConfirmationPage = () => {
                               </Tooltip>
                             )}
                           </Text>
-                          {selectedTicketType === 2 && (
+                          {selectedTicketType === "ticket_structure" && (
                             <Space align="center">
                               <FaTicketAlt />
                               <Text type="secondary">
@@ -142,7 +142,7 @@ const ConfirmationPage = () => {
                           )}
                           {selectedTicketType && (
                             <Text type="secondary">
-                              {selectedTicketType === 1
+                              {selectedTicketType === "seat_structure"
                                 ? `Seat Structure ID: ${timeSlot.seat_structure_id}`
                                 : `Ticket Structure ID: ${timeSlot.ticket_structure_id}`}{" "}
                             </Text>

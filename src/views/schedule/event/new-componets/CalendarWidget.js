@@ -1,388 +1,335 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getDaysInMonth, isSameDay, isDateInRange } from "../utils";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { Calendar as CalendarIcon, AlertCircle, X } from "lucide-react";
+import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(isBetween);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const CalendarWidget = ({
   onDateRangeChange,
   initialStartDate = null,
   initialEndDate = null,
+  minDate = null,
+  maxDate = null,
   blockedDates = new Set(),
   isScheduleBlocked = false,
   isEditMode = false,
-  minDate = null,
-  bookingEndDate = null,
+  timezone = "Asia/Dubai",
 }) => {
-  const [currentDate, setCurrentDate] = useState(() => {
-    if (initialStartDate) {
-      return new Date(initialStartDate);
-    }
-    return new Date();
-  });
-
-  const [selectedStartDate, setSelectedStartDate] = useState(initialStartDate);
-  const [selectedEndDate, setSelectedEndDate] = useState(initialEndDate);
+  const [startDate, setStartDate] = useState(
+    initialStartDate ? dayjs(initialStartDate).tz(timezone).toDate() : null
+  );
+  const [endDate, setEndDate] = useState(
+    initialEndDate ? dayjs(initialEndDate).tz(timezone).toDate() : null
+  );
 
   useEffect(() => {
     if (initialStartDate) {
-      const startDate = new Date(initialStartDate);
-      setCurrentDate(new Date(startDate.getFullYear(), startDate.getMonth()));
-      setSelectedStartDate(initialStartDate);
+      setStartDate(dayjs(initialStartDate).tz(timezone).toDate());
     }
-  }, [initialStartDate]);
-
-  useEffect(() => {
     if (initialEndDate) {
-      setSelectedEndDate(initialEndDate);
+      setEndDate(dayjs(initialEndDate).tz(timezone).toDate());
     }
-  }, [initialEndDate]);
-
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-  const navigateMonth = (direction) => {
-    setCurrentDate((prev) => {
-      const newDate = new Date(prev);
-      newDate.setMonth(newDate.getMonth() + direction);
-      return newDate;
-    });
-  };
-
-  const formatDateForAPI = (date) => {
-    if (!date) return null;
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  }, [initialStartDate, initialEndDate, timezone]);
 
   const isDateBlocked = (date) => {
     if (!date) return false;
-    const dateStr = formatDateForAPI(date);
+    const dateStr = dayjs(date).tz(timezone).format("YYYY-MM-DD");
     return blockedDates.has(dateStr);
   };
 
-  // FIXED: Changed <= to < so same day is allowed
-  const isBeforeBookingDate = (date) => {
+  const isBeforeMinDate = (date) => {
     if (!minDate || !date) return false;
-
-    const checkDate = new Date(date);
-    checkDate.setHours(0, 0, 0, 0);
-
-    const minDateTime = new Date(minDate);
-    minDateTime.setHours(0, 0, 0, 0);
-
-    return checkDate < minDateTime;
+    return dayjs(date)
+      .tz(timezone)
+      .isBefore(dayjs(minDate).tz(timezone), "day");
   };
 
-  const isBeforeStartDate = (date) => {
-    if (!selectedStartDate || !date) return false;
-
-    const checkDate = new Date(date);
-    checkDate.setHours(0, 0, 0, 0);
-
-    const startDate = new Date(selectedStartDate);
-    startDate.setHours(0, 0, 0, 0);
-
-    return checkDate < startDate;
+  const isAfterMaxDate = (date) => {
+    if (!maxDate || !date) return false;
+    return dayjs(date).tz(timezone).isAfter(dayjs(maxDate).tz(timezone), "day");
   };
 
-  const hasBlockedDatesInRange = () => {
-    if (!selectedStartDate || !selectedEndDate) return false;
+  const hasBlockedDatesInRange = (start, end) => {
+    if (!start || !end) return false;
+    let current = dayjs(start).tz(timezone);
+    const endDay = dayjs(end).tz(timezone);
 
-    const start = new Date(selectedStartDate);
-    const end = new Date(selectedEndDate);
-
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      if (isDateBlocked(d)) {
+    while (current.isSameOrBefore(endDay, "day")) {
+      if (isDateBlocked(current.toDate())) {
         return true;
       }
+      current = current.add(1, "day");
     }
     return false;
   };
 
-  const handleDateClick = (day) => {
-    if (isScheduleBlocked) {
-      return;
+  const filterDate = (date) => {
+    if (isDateBlocked(date)) return false;
+    if (isBeforeMinDate(date)) return false;
+    if (isAfterMaxDate(date)) return false;
+
+    if (startDate && !endDate) {
+      const dateInTz = dayjs(date).tz(timezone);
+      const startInTz = dayjs(startDate).tz(timezone);
+      if (dateInTz.isBefore(startInTz, "day")) return false;
+      if (hasBlockedDatesInRange(startDate, date)) return false;
     }
 
-    const clickedDate = day.fullDate;
+    if (
+      isEditMode &&
+      startDate &&
+      endDate &&
+      hasBlockedDatesInRange(startDate, endDate)
+    ) {
+      const dateInTz = dayjs(date).tz(timezone);
+      const endInTz = dayjs(endDate).tz(timezone);
 
-    if (isDateBlocked(clickedDate)) {
-      return;
-    }
-
-    if (isBeforeBookingDate(clickedDate)) {
-      return;
-    }
-
-    let newStartDate, newEndDate;
-
-    if (isEditMode && hasBlockedDatesInRange()) {
-      if (!selectedEndDate || clickedDate <= selectedEndDate) {
-        return;
+      if (dateInTz.isSameOrBefore(endInTz, "day")) {
+        return false;
       }
 
-      newStartDate = selectedStartDate;
-      newEndDate = clickedDate;
-
-      const start = new Date(selectedEndDate);
-      start.setDate(start.getDate() + 1);
-      const end = new Date(clickedDate);
-      let hasBlockedDates = false;
-
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        if (isDateBlocked(d) || (minDate && isBeforeBookingDate(d))) {
-          hasBlockedDates = true;
-          break;
-        }
-      }
-
-      if (hasBlockedDates) {
-        return;
-      }
-    } else {
-      if (!selectedStartDate || (selectedStartDate && selectedEndDate)) {
-        newStartDate = clickedDate;
-        newEndDate = null;
-      } else if (selectedStartDate && !selectedEndDate) {
-        if (clickedDate < selectedStartDate) {
-          return;
-        }
-
-        newStartDate = selectedStartDate;
-        newEndDate = clickedDate;
-
-        const start = new Date(newStartDate);
-        const end = new Date(newEndDate);
-        let hasBlockedDates = false;
-
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          if (isDateBlocked(d) || (minDate && isBeforeBookingDate(d))) {
-            hasBlockedDates = true;
-            break;
-          }
-        }
-
-        if (hasBlockedDates) {
-          return;
-        }
+      const dayAfterEnd = endInTz.add(1, "day");
+      if (hasBlockedDatesInRange(dayAfterEnd.toDate(), date)) {
+        return false;
       }
     }
 
-    setSelectedStartDate(newStartDate);
-    setSelectedEndDate(newEndDate);
+    return true;
+  };
+
+  const onChange = (dates) => {
+    const [start, end] = dates;
+    setStartDate(start);
+    setEndDate(end);
 
     if (onDateRangeChange) {
       onDateRangeChange({
-        startDate: newStartDate,
-        endDate: newEndDate,
-        isSelecting: newEndDate === null,
+        startDate: start,
+        endDate: end,
+        isSelecting: start && !end,
       });
     }
   };
 
-  const days = getDaysInMonth(currentDate);
+  const getDayClassName = (date) => {
+    const classes = [];
+    if (isDateBlocked(date)) classes.push("blocked-date");
+    if (isBeforeMinDate(date)) classes.push("before-min-date");
+    if (isAfterMaxDate(date)) classes.push("after-max-date");
+    return classes.join(" ");
+  };
+
+  const handleClear = () => {
+    setStartDate(null);
+    setEndDate(null);
+    if (onDateRangeChange) {
+      onDateRangeChange({
+        startDate: null,
+        endDate: null,
+        isSelecting: false,
+      });
+    }
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 max-w-sm">
-      {/* Calendar Header */}
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={() => navigateMonth(-1)}
-          className="p-1 hover:bg-gray-100 rounded-md transition-colors"
-          aria-label="Previous month"
-          disabled={isScheduleBlocked}
-        >
-          <ChevronLeft size={16} className="text-gray-600" />
-        </button>
-
-        <h3 className="text-sm font-medium text-gray-800">
-          {months[currentDate.getMonth()]} {currentDate.getFullYear()}
-        </h3>
-
-        <button
-          onClick={() => navigateMonth(1)}
-          className="p-1 hover:bg-gray-100 rounded-md transition-colors"
-          aria-label="Next month"
-          disabled={isScheduleBlocked}
-        >
-          <ChevronRight size={16} className="text-gray-600" />
-        </button>
-      </div>
-
-      {/* Week Days Header */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {weekDays.map((day) => (
-          <div
-            key={day}
-            className="text-center text-xs font-medium text-gray-500 py-2"
-          >
-            {day}
+    <div className="w-full">
+      {isScheduleBlocked && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+          <AlertCircle
+            size={18}
+            className="text-red-600 mt-0.5 flex-shrink-0"
+          />
+          <div>
+            <p className="text-sm font-semibold text-red-900">
+              Schedule Locked
+            </p>
+            <p className="text-xs text-red-700">Date changes not allowed</p>
           </div>
-        ))}
+        </div>
+      )}
+
+      <div className="w-full">
+        <DatePicker
+          selected={startDate}
+          onChange={onChange}
+          startDate={startDate}
+          endDate={endDate}
+          selectsRange
+          inline
+          minDate={minDate ? dayjs(minDate).tz(timezone).toDate() : null}
+          maxDate={maxDate ? dayjs(maxDate).tz(timezone).toDate() : null}
+          filterDate={filterDate}
+          disabled={isScheduleBlocked}
+          dayClassName={getDayClassName}
+          monthsShown={1}
+          calendarClassName="full-width-calendar"
+        />
       </div>
 
-      {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((day, index) => {
-          const isSelected =
-            isSameDay(day.fullDate, selectedStartDate) ||
-            isSameDay(day.fullDate, selectedEndDate);
-          const isInRange = isDateInRange(
-            day.fullDate,
-            selectedStartDate,
-            selectedEndDate
-          );
-          const isToday = isSameDay(day.fullDate, new Date());
-          const isBlocked = isDateBlocked(day.fullDate);
-          const isBeforeBooking = minDate
-            ? isBeforeBookingDate(day.fullDate)
-            : false;
-          const isBeforeStart =
-            selectedStartDate && !selectedEndDate
-              ? isBeforeStartDate(day.fullDate)
-              : false;
-
-          const isDisabledForEdit =
-            isEditMode &&
-            hasBlockedDatesInRange() &&
-            selectedEndDate &&
-            day.fullDate <= selectedEndDate;
-
-          const isDisabled =
-            !day.isCurrentMonth ||
-            isBlocked ||
-            isBeforeBooking ||
-            isBeforeStart ||
-            isScheduleBlocked ||
-            isDisabledForEdit;
-
-          return (
-            <button
-              key={index}
-              onClick={() => handleDateClick(day)}
-              disabled={isDisabled}
-              className={`
-                relative h-8 w-8 text-sm rounded-md transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500
-                ${
-                  !day.isCurrentMonth
-                    ? "text-gray-300 cursor-not-allowed"
-                    : isBlocked
-                    ? "bg-red-100 text-red-400 cursor-not-allowed line-through"
-                    : isBeforeBooking
-                    ? "bg-orange-50 text-orange-300 cursor-not-allowed"
-                    : isBeforeStart
-                    ? "bg-gray-50 text-gray-300 cursor-not-allowed"
-                    : isDisabledForEdit
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : isScheduleBlocked
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-gray-700 hover:text-gray-900"
-                }
-                ${
-                  isSelected
-                    ? "bg-blue-500 text-white shadow-md"
-                    : isInRange && !isBlocked && !isBeforeBooking
-                    ? "bg-blue-100 text-blue-700"
-                    : !isBlocked &&
-                      !isBeforeBooking &&
-                      !isBeforeStart &&
-                      !isDisabledForEdit &&
-                      day.isCurrentMonth
-                    ? "hover:bg-gray-100"
-                    : ""
-                }
-                ${
-                  isToday &&
-                  !isSelected &&
-                  !isInRange &&
-                  !isBlocked &&
-                  !isBeforeBooking &&
-                  !isBeforeStart
-                    ? "bg-blue-50 text-blue-600 font-semibold"
-                    : ""
-                }
-              `}
-              aria-label={`Select ${day.fullDate.toDateString()}`}
-              title={
-                isBlocked
-                  ? "This date is locked and cannot be selected"
-                  : isBeforeBooking
-                  ? "Event dates must be on or after the booking date"
-                  : isBeforeStart
-                  ? "End date must be after start date"
-                  : isDisabledForEdit
-                  ? "Only dates after the current end date can be selected"
-                  : ""
-              }
-            >
-              {day.date}
-              {isBlocked && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-full h-0.5 bg-red-500 rotate-45"></div>
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Warning messages */}
       {blockedDates.size > 0 && (
-        <div className="mt-3 p-2 bg-red-50 rounded-lg border border-red-200">
-          <p className="text-xs text-red-700 flex items-center">
-            <span className="mr-1">🔒</span>
+        <div className="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
+          <AlertCircle
+            size={14}
+            className="text-amber-600 mt-0.5 flex-shrink-0"
+          />
+          <p className="text-xs text-amber-800">
             {blockedDates.size} locked date(s) cannot be modified
           </p>
         </div>
       )}
 
       {minDate && (
-        <div className="mt-2 p-2 bg-orange-50 rounded-lg border border-orange-200">
-          <p className="text-xs text-orange-700 flex items-center">
-            <span className="mr-1">⚠️</span>
-            Event dates must be from {new Date(
-              minDate
-            ).toLocaleDateString()}{" "}
-            onwards
+        <div className="mt-3 p-2.5 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-2">
+          <AlertCircle
+            size={14}
+            className="text-blue-600 mt-0.5 flex-shrink-0"
+          />
+          <p className="text-xs text-blue-800">
+            Event dates must be from{" "}
+            {dayjs(minDate).tz(timezone).format("MMM D, YYYY")} onwards
           </p>
         </div>
       )}
 
-      {selectedStartDate && !selectedEndDate && (
-        <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-xs text-blue-700 flex items-center">
-            <span className="mr-1">📅</span>
-            Select end date from {selectedStartDate.toLocaleDateString()}{" "}
-            onwards
+      {startDate && !endDate && (
+        <div className="mt-3 p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl flex items-start gap-2">
+          <CalendarIcon
+            size={14}
+            className="text-indigo-600 mt-0.5 flex-shrink-0"
+          />
+          <p className="text-xs text-indigo-800">
+            Select end date from{" "}
+            {dayjs(startDate).tz(timezone).format("MMM D, YYYY")} onwards
           </p>
         </div>
       )}
 
-      {isEditMode && hasBlockedDatesInRange() && (
-        <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-xs text-blue-700 flex items-center">
-            <span className="mr-1">ℹ️</span>
-            Select dates after {selectedEndDate?.toLocaleDateString()} to extend
-          </p>
-        </div>
-      )}
+      {isEditMode &&
+        startDate &&
+        endDate &&
+        hasBlockedDatesInRange(startDate, endDate) && (
+          <div className="mt-3 p-2.5 bg-purple-50 border border-purple-200 rounded-xl flex items-start gap-2">
+            <AlertCircle
+              size={14}
+              className="text-purple-600 mt-0.5 flex-shrink-0"
+            />
+            <p className="text-xs text-purple-800">
+              Select dates after{" "}
+              {dayjs(endDate).tz(timezone).format("MMM D, YYYY")} to extend
+            </p>
+          </div>
+        )}
+
+      <div className="mt-4 flex gap-2">
+        <button
+          onClick={handleClear}
+          disabled={(!startDate && !endDate) || isScheduleBlocked}
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          <X size={14} />
+          Clear
+        </button>
+      </div>
+
+      <style jsx global>{`
+        .full-width-calendar.react-datepicker {
+          font-family: inherit;
+          border: 1px solid #e5e7eb;
+          width: 100% !important;
+          border-radius: 12px;
+        }
+
+        .full-width-calendar .react-datepicker__month-container {
+          width: 100% !important;
+        }
+
+        .full-width-calendar .react-datepicker__month {
+          width: 100% !important;
+          margin: 0.8rem;
+        }
+
+        .full-width-calendar .react-datepicker__week {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+        }
+
+        .full-width-calendar .react-datepicker__day,
+        .full-width-calendar .react-datepicker__day-name {
+          width: 2.5rem;
+          height: 2.5rem;
+          line-height: 2.5rem;
+          margin: 0.2rem;
+          flex: 1;
+        }
+
+        .react-datepicker__header {
+          background-color: #f9fafb;
+          border-bottom: 1px solid #e5e7eb;
+          border-radius: 12px 12px 0 0;
+          padding-top: 12px;
+        }
+
+        .react-datepicker__day.blocked-date {
+          background-color: #fee2e2 !important;
+          color: #ef4444 !important;
+          text-decoration: line-through;
+          cursor: not-allowed !important;
+        }
+
+        .react-datepicker__day.before-min-date,
+        .react-datepicker__day.after-max-date {
+          background-color: #f3f4f6 !important;
+          color: #9ca3af !important;
+          cursor: not-allowed !important;
+        }
+
+        .react-datepicker__day--in-range {
+          background-color: #dbeafe !important;
+          color: #1e40af !important;
+          border-radius: 0 !important;
+        }
+
+        .react-datepicker__day--range-start,
+        .react-datepicker__day--range-end {
+          background-color: #3b82f6 !important;
+          color: white !important;
+          font-weight: 600 !important;
+          border-radius: 6px !important;
+        }
+
+        .react-datepicker__day--selected {
+          background-color: #3b82f6 !important;
+          color: white !important;
+          font-weight: 600 !important;
+        }
+
+        .react-datepicker__day:hover:not(.react-datepicker__day--disabled) {
+          background-color: #e0e7ff;
+          border-radius: 6px;
+        }
+
+        .react-datepicker__current-month {
+          font-weight: 600;
+          color: #1f2937;
+          font-size: 1rem;
+        }
+
+        .react-datepicker__day-name {
+          color: #6b7280;
+          font-weight: 500;
+        }
+      `}</style>
     </div>
   );
 };
 
 export default CalendarWidget;
+  

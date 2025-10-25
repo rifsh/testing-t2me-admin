@@ -38,6 +38,7 @@ import FilterSlice from "./slices/fliterSlice";
 import orderSlice from "./slices/ordersSlice";
 import qr from "./slices/qrVerificationSlice";
 import apscheduler from "./slices/apschedulerSlice";
+import s3Cloudflare from "./slices/s3CloudflareSlice";
 
 const rootReducer = (asyncReducers = {}) => {
   return (state, action) => {
@@ -80,6 +81,7 @@ const rootReducer = (asyncReducers = {}) => {
       apscheduler,
       orderSlice,
       qr,
+      s3Cloudflare,
       ...asyncReducers,
     });
 

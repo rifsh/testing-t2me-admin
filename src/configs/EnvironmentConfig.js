@@ -1,7 +1,7 @@
 import { COMMON_SKIP_ENCRYPTION_PATHS } from "configs/encryptionConfigs ";
 
 const dev = {
-  // API_ENDPOINT_URL: "http://192.168.29.187:8000",
+  // API_ENDPOINT_URL: "http://192.168.29.222:8000",
   // // "http://192.168.29.8:8000/", //"http://192.168.29.221:8000",
   // API_ENDPOINT_URL: "http://192.168.29.222:8000",
   API_ENDPOINT_URL: "https://uat-tickets2me.mitetechnology.in",

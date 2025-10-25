@@ -12,6 +12,7 @@ import {
   Typography,
   Tooltip,
   message,
+  Modal, // Add this import
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { fetchAllCountires } from "store/slices/locationSlice";
@@ -28,6 +29,7 @@ import Utils from "utils/index";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 import ReactQuill from "react-quill";
 import TextEditor from "../../../../components/util-components/FormItems/TextEditor";
+import { deleteS3Image } from "store/slices/s3CloudflareSlice";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -51,29 +53,11 @@ const rules = {
       message: "Please enter country name",
     },
   ],
-  // thumbnail_image: [
-  //   {
-  //     required: true,
-  //     message: "Please upload a thumbnail image",
-  //   },
-  // ],
-  // banner_images: [
-  //   {
-  //     required: true,
-  //     message: "Please upload banner images",
-  //   },
-  // ],
 };
 
 const CountryFormFields = ({ mode, form }) => {
   const dispatch = useDispatch();
   const { loading, countries, error } = useSelector((state) => state.locations);
-
-  // useEffect(() => {
-  //   if (countries.length === 0) {
-  //     dispatch(fetchAllCountires());
-  //   }
-  // }, [dispatch, countries]);
 
   const normFile = (e) => {
     if (Array.isArray(e)) {
@@ -83,8 +67,9 @@ const CountryFormFields = ({ mode, form }) => {
   };
 
   const handleBeforeUpload = Utils.handleBeforeUpload;
-  const [thumbnailImage, setThumbnailImage] = useState(null); // State for thumbnail image
+  const [thumbnailImage, setThumbnailImage] = useState(null);
   const [bannerImages, setBannerImages] = useState([]);
+
   const handleThumbnailChange = (info) => {
     if (info.file.status === "done") {
       setThumbnailImage(info.file.originFileObj);
@@ -93,12 +78,50 @@ const CountryFormFields = ({ mode, form }) => {
     }
   };
 
-  // Handle banner images selection
   const handleBannerChange = (info) => {
     if (info.file.status === "done") {
       setBannerImages(info.fileList.map((file) => file.originFileObj));
     } else if (info.file.status === "removed") {
       setBannerImages(info.fileList.map((file) => file.originFileObj));
+    }
+  };
+
+  const handleDeleteBannerImage = (file, onSuccess) => {
+    // Check if file has id (from database)
+    if (file.id) {
+      Modal.confirm({
+        title: "Delete Image",
+        content: `Are you sure you want to delete this image? This will permanently remove it from the database and cannot be undone.`,
+        okText: "Yes, Delete",
+        okType: "danger",
+        cancelText: "Cancel",
+        onOk: () => {
+          // Return the promise for proper modal handling
+          return dispatch(
+            deleteS3Image({
+              id: file.id,
+              module_name: "place",
+            })
+          )
+            .unwrap()
+            .then(() => {
+              message.success("Image deleted successfully from database");
+              // Call success callback to remove from UI
+              if (onSuccess) {
+                onSuccess();
+              }
+            })
+            .catch((error) => {
+              message.error(error?.message || "Failed to delete image");
+              console.error("Delete error:", error);
+            });
+        },
+      });
+    } else {
+      // For new uploads, just call success to remove from UI
+      if (onSuccess) {
+        onSuccess();
+      }
     }
   };
 
@@ -118,31 +141,6 @@ const CountryFormFields = ({ mode, form }) => {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
-          {/* <Form.Item
-            name="country_id"
-            label="Country name"
-            rules={rules.country}
-          >
-            <Select
-              className="w-100"
-              placeholder="Choose a Country"
-              loading={loading}
-              showSearch
-              filterOption={(input, option) =>
-                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }
-            >
-              {countries && countries.length > 0 ? (
-                countries.map((country) => (
-                  <Option key={country.id} value={country.id}>
-                    {country.country}
-                  </Option>
-                ))
-              ) : (
-                <Option disabled>No countries available</Option>
-              )}
-            </Select>
-          </Form.Item> */}
           <Form.Item name="name" label="Place" rules={rules.name}>
             <Input placeholder="Place Name" />
           </Form.Item>
@@ -186,6 +184,7 @@ const CountryFormFields = ({ mode, form }) => {
               maxCount={20}
               targetResolution={ThumbnailImageResolutions.PLACE}
               form={form}
+              onDelete={handleDeleteBannerImage} // Changed prop name
             />
           </Form.Item>
 

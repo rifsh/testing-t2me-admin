@@ -154,58 +154,58 @@ const validateBasicSection = async (values = {}) => {
   }
 
   // Thumbnail image validation
-  const thumbnailImage = values.thumbnail_image;
-  if (
-    !thumbnailImage ||
-    !Array.isArray(thumbnailImage) ||
-    thumbnailImage.length === 0
-  ) {
-    errors.push(
-      makeFieldError(["thumbnail_image"], "Thumbnail image is required")
-    );
-  } else {
-    // Validate thumbnail image properties
-    const validThumbnails = thumbnailImage.filter(
-      (file) => file && (file.status === "done" || file.status === "uploading")
-    );
+  // const thumbnailImage = values.thumbnail_image;
+  // if (
+  //   !thumbnailImage ||
+  //   !Array.isArray(thumbnailImage) ||
+  //   thumbnailImage.length === 0
+  // ) {
+  //   errors.push(
+  //     makeFieldError(["thumbnail_image"], "Thumbnail image is required")
+  //   );
+  // } else {
+  //   // Validate thumbnail image properties
+  //   const validThumbnails = thumbnailImage.filter(
+  //     (file) => file && (file.status === "done" || file.status === "uploading")
+  //   );
 
-    if (validThumbnails.length === 0) {
-      errors.push(
-        makeFieldError(
-          ["thumbnail_image"],
-          "Please upload a valid thumbnail image"
-        )
-      );
-    } else {
-      // Check image format
-      const invalidFormatThumbnails = validThumbnails.filter(
-        (file) => !validateImageFormat(file)
-      );
+  //   if (validThumbnails.length === 0) {
+  //     errors.push(
+  //       makeFieldError(
+  //         ["thumbnail_image"],
+  //         "Please upload a valid thumbnail image"
+  //       )
+  //     );
+  //   } else {
+  //     // Check image format
+  //     const invalidFormatThumbnails = validThumbnails.filter(
+  //       (file) => !validateImageFormat(file)
+  //     );
 
-      if (invalidFormatThumbnails.length > 0) {
-        errors.push(
-          makeFieldError(
-            ["thumbnail_image"],
-            "Please replace the image with a supported format (JPG, PNG, GIF, WebP)"
-          )
-        );
-      }
-    }
+  //     if (invalidFormatThumbnails.length > 0) {
+  //       errors.push(
+  //         makeFieldError(
+  //           ["thumbnail_image"],
+  //           "Please replace the image with a supported format (JPG, PNG, GIF, WebP)"
+  //         )
+  //       );
+  //     }
+  //   }
 
-    // Optional: Check file size (if available)
-    const largeThumbnails = thumbnailImage.filter(
-      (file) => file.size && file.size > 5 * 1024 * 1024 // 5MB limit
-    );
+  //   // Optional: Check file size (if available)
+  //   const largeThumbnails = thumbnailImage.filter(
+  //     (file) => file.size && file.size > 5 * 1024 * 1024 // 5MB limit
+  //   );
 
-    if (largeThumbnails.length > 0) {
-      errors.push(
-        makeFieldError(
-          ["thumbnail_image"],
-          "Thumbnail image must be less than 5MB"
-        )
-      );
-    }
-  }
+  //   if (largeThumbnails.length > 0) {
+  //     errors.push(
+  //       makeFieldError(
+  //         ["thumbnail_image"],
+  //         "Thumbnail image must be less than 5MB"
+  //       )
+  //     );
+  //   }
+  // }
 
   // Event images validation (if provided)
   const eventImages = values.event_images;
