@@ -1,62 +1,50 @@
 import React, { useState, useEffect } from "react";
-import { AlertCircle, X } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { Calendar, Clock, X, Globe, AlertCircle } from "lucide-react";
 import dayjs from "dayjs";
-import isBetween from "dayjs/plugin/isBetween";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DateRangeCalendar } from "@mui/x-date-pickers-pro/DateRangeCalendar";
-import { PickersDay } from "@mui/x-date-pickers/PickersDay";
-import { styled } from "@mui/material/styles";
-
-dayjs.extend(isBetween);
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { message } from "antd";
+dayjs.extend(isSameOrBefore);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// Styled components for custom day rendering
-const StyledPickersDay = styled(PickersDay)(({ theme }) => ({
-  "&.blocked-date": {
-    backgroundColor: "#fee2e2 !important",
-    color: "#ef4444 !important",
-    textDecoration: "line-through",
-    cursor: "not-allowed !important",
-    "&:hover": {
-      backgroundColor: "#fecaca !important",
-    },
-  },
-  "&.before-min-date, &.after-max-date": {
-    backgroundColor: "#f3f4f6 !important",
-    color: "#9ca3af !important",
-    cursor: "not-allowed !important",
-    "&:hover": {
-      backgroundColor: "#e5e7eb !important",
-    },
-  },
-}));
-
-const CalendarWidget = ({
-  onDateRangeChange,
-  initialStartDate = null,
-  initialEndDate = null,
-  minDate = null,
-  maxDate = null,
+const CompactDateTimePicker = ({
+  onDateTimeChange,
+  initialDateTime = null,
+  value = null,
+  placeholder = "Select Date & Time",
+  disabled = false,
+  label = null,
+  timezone = "Asia/Dubai",
+  minDateTime = null,
+  maxDateTime = null, // NEW PROP
+  disablePastDates = false,
+  disablePastTimes = false,
   blockedDates = new Set(),
   isScheduleBlocked = false,
-  isEditMode = false,
-  timezone = "Asia/Dubai",
 }) => {
-  const [value, setValue] = useState([
-    initialStartDate ? dayjs(initialStartDate).tz(timezone) : null,
-    initialEndDate ? dayjs(initialEndDate).tz(timezone) : null,
-  ]);
+  const getInitialValue = () => {
+    if (value) {
+      return dayjs(value).tz(timezone).toDate();
+    }
+    if (initialDateTime) {
+      return dayjs(initialDateTime).tz(timezone).toDate();
+    }
+    return null;
+  };
+
+  const [selectedDateTime, setSelectedDateTime] = useState(getInitialValue);
 
   useEffect(() => {
-    setValue([
-      initialStartDate ? dayjs(initialStartDate).tz(timezone) : null,
-      initialEndDate ? dayjs(initialEndDate).tz(timezone) : null,
-    ]);
-  }, [initialStartDate, initialEndDate, timezone]);
+    if (value) {
+      setSelectedDateTime(dayjs(value).tz(timezone).toDate());
+    } else if (value === null) {
+      setSelectedDateTime(null);
+    }
+  }, [value, timezone]);
 
   const isDateBlocked = (date) => {
     if (!date) return false;
@@ -64,243 +52,357 @@ const CalendarWidget = ({
     return blockedDates.has(dateStr);
   };
 
-  const isBeforeMinDate = (date) => {
-    if (!minDate || !date) return false;
-    return dayjs(date).tz(timezone).isBefore(dayjs(minDate).tz(timezone), "day");
-  };
+  const filterDate = (date) => {
+    if (isDateBlocked(date)) return false;
 
-  const isAfterMaxDate = (date) => {
-    if (!maxDate || !date) return false;
-    return dayjs(date).tz(timezone).isAfter(dayjs(maxDate).tz(timezone), "day");
-  };
+    const nowInTz = dayjs().tz(timezone).startOf("day");
+    const dateToCheck = dayjs(date).startOf("day");
+    const nowDateStr = nowInTz.format("YYYY-MM-DD");
+    const checkDateStr = dateToCheck.format("YYYY-MM-DD");
 
-  const hasBlockedDatesInRange = (start, end) => {
-    if (!start || !end) return false;
-    let current = dayjs(start).tz(timezone);
-    const endDay = dayjs(end).tz(timezone);
-
-    while (current.isSameOrBefore(endDay, "day")) {
-      if (isDateBlocked(current.toDate())) {
-        return true;
-      }
-      current = current.add(1, "day");
-    }
-    return false;
-  };
-
-  const shouldDisableDate = (date) => {
-    const dayjsDate = dayjs(date);
-
-    if (isDateBlocked(dayjsDate)) return true;
-    if (isBeforeMinDate(dayjsDate)) return true;
-    if (isAfterMaxDate(dayjsDate)) return true;
-
-    // Check if selecting and there are blocked dates in between
-    const [startDate, endDate] = value;
-    
-    if (startDate && !endDate) {
-      const dateInTz = dayjs(date).tz(timezone);
-      const startInTz = dayjs(startDate).tz(timezone);
-      
-      if (dateInTz.isBefore(startInTz, "day")) return true;
-      if (hasBlockedDatesInRange(startDate.toDate(), date)) return true;
+    // Check minimum date
+    if (minDateTime) {
+      const minDateInTz = dayjs(minDateTime).tz(timezone).startOf("day");
+      const minDateStr = minDateInTz.format("YYYY-MM-DD");
+      if (checkDateStr < minDateStr) return false;
     }
 
-    if (
-      isEditMode &&
-      startDate &&
-      endDate &&
-      hasBlockedDatesInRange(startDate.toDate(), endDate.toDate())
-    ) {
-      const dateInTz = dayjs(date).tz(timezone);
-      const endInTz = dayjs(endDate).tz(timezone);
+    // NEW: Check maximum date
+    if (maxDateTime) {
+      const maxDateInTz = dayjs(maxDateTime).tz(timezone).startOf("day");
+      const maxDateStr = maxDateInTz.format("YYYY-MM-DD");
+      if (checkDateStr >= maxDateStr) return false; // Block dates >= max
+    }
 
-      if (dateInTz.isSameOrBefore(endInTz, "day")) {
-        return true;
-      }
+    if (disablePastDates && checkDateStr < nowDateStr) return false;
 
-      const dayAfterEnd = endInTz.add(1, "day");
-      if (hasBlockedDatesInRange(dayAfterEnd.toDate(), date)) {
-        return true;
+    return true;
+  };
+
+  // Updated filterTime function
+  const filterTime = (time) => {
+    if (!selectedDateTime) return true;
+
+    const nowInTz = dayjs().tz(timezone);
+    const selectedDateInTz = dayjs(selectedDateTime).tz(timezone);
+    const timeDate = new Date(time);
+    const timeHour = timeDate.getHours();
+    const timeMinute = timeDate.getMinutes();
+    const isToday =
+      selectedDateInTz.format("YYYY-MM-DD") === nowInTz.format("YYYY-MM-DD");
+
+    // Check past times
+    if (disablePastTimes && isToday) {
+      const currentHourMinute = nowInTz.hour() * 60 + nowInTz.minute();
+      const timeHourMinute = timeHour * 60 + timeMinute;
+      if (timeHourMinute < currentHourMinute) return false;
+    }
+
+    // Check minimum time
+    if (minDateTime) {
+      const minDateInTz = dayjs(minDateTime).tz(timezone);
+      const isMinDate =
+        selectedDateInTz.format("YYYY-MM-DD") ===
+        minDateInTz.format("YYYY-MM-DD");
+      if (isMinDate) {
+        const minHourMinute = minDateInTz.hour() * 60 + minDateInTz.minute();
+        const timeHourMinute = timeHour * 60 + timeMinute;
+        if (timeHourMinute < minHourMinute) return false;
       }
     }
 
-    return false;
-  };
-
-  const renderDay = (day, selectedDays, pickersDayProps) => {
-    const dayjsDay = dayjs(day);
-    let className = "";
-
-    if (isDateBlocked(dayjsDay)) {
-      className = "blocked-date";
-    } else if (isBeforeMinDate(dayjsDay)) {
-      className = "before-min-date";
-    } else if (isAfterMaxDate(dayjsDay)) {
-      className = "after-max-date";
+    // NEW: Check maximum time
+    if (maxDateTime) {
+      const maxDateInTz = dayjs(maxDateTime).tz(timezone);
+      const isMaxDate =
+        selectedDateInTz.format("YYYY-MM-DD") ===
+        maxDateInTz.format("YYYY-MM-DD");
+      if (isMaxDate) {
+        const maxHourMinute = maxDateInTz.hour() * 60 + maxDateInTz.minute();
+        const timeHourMinute = timeHour * 60 + timeMinute;
+        if (timeHourMinute >= maxHourMinute) return false; // Block times >= max
+      }
     }
 
-    return (
-      <StyledPickersDay
-        {...pickersDayProps}
-        day={day}
-        className={className}
-      />
-    );
+    return true;
   };
 
-  const handleChange = (newValue) => {
-    if (isScheduleBlocked) return;
+  const handleChange = (date) => {
+    if (!date) {
+      setSelectedDateTime(null);
+      if (onDateTimeChange) {
+        onDateTimeChange(null);
+      }
+      return;
+    }
 
-    const [start, end] = newValue;
-    setValue(newValue);
+    // Don't convert - use the date as selected
+    setSelectedDateTime(date);
 
-    if (onDateRangeChange) {
-      onDateRangeChange({
-        startDate: start ? start.toDate() : null,
-        endDate: end ? end.toDate() : null,
-        isSelecting: start && !end,
-      });
+    if (onDateTimeChange) {
+      onDateTimeChange(date);
     }
   };
 
-  const handleClear = () => {
-    if (isScheduleBlocked) return;
-    
-    setValue([null, null]);
-    if (onDateRangeChange) {
-      onDateRangeChange({
-        startDate: null,
-        endDate: null,
-        isSelecting: false,
-      });
-    }
+  const getTimezoneAbbr = () => {
+    const abbrs = {
+      "Asia/Dubai": "GST",
+      "America/New_York": "EST",
+      "America/Los_Angeles": "PST",
+      "Europe/London": "GMT",
+      "Asia/Kolkata": "IST",
+      "Asia/Tokyo": "JST",
+      "Australia/Sydney": "AEDT",
+    };
+    return abbrs[timezone] || dayjs().tz(timezone).format("z");
   };
 
-  const [startDate, endDate] = value;
+  const formatDisplayDate = () => {
+    if (!selectedDateTime) return placeholder;
+
+    const dateInTz = dayjs(selectedDateTime).tz(timezone);
+    const nowInTz = dayjs().tz(timezone);
+    const todayInTz = nowInTz.startOf("day");
+    const tomorrowInTz = todayInTz.add(1, "day");
+    const selectedDayInTz = dateInTz.startOf("day");
+
+    const timeString = dateInTz.format("hh:mm A");
+
+    if (selectedDayInTz.isSame(todayInTz, "day")) {
+      return `Today, ${timeString}`;
+    }
+    if (selectedDayInTz.isSame(tomorrowInTz, "day")) {
+      return `Tomorrow, ${timeString}`;
+    }
+    return `${dateInTz.format("ddd, MMM D, YYYY")}, ${timeString}`;
+  };
 
   return (
     <div className="w-full">
+      {label && (
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          {label}
+        </label>
+      )}
+
       {isScheduleBlocked && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
-          <AlertCircle size={18} className="text-red-600 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-red-900">Schedule Locked</p>
-            <p className="text-xs text-red-700">Date changes not allowed</p>
-          </div>
+        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+          <AlertCircle
+            size={18}
+            className="text-red-600 mt-0.5 flex-shrink-0"
+          />
+          <span className="text-sm text-red-800 font-medium">
+            Schedule is locked due to active bookings
+          </span>
         </div>
       )}
 
-      <div className="w-full overflow-hidden">
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DateRangeCalendar
-            value={value}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+            <Calendar size={18} className="text-gray-400" />
+          </div>
+          <DatePicker
+            selected={selectedDateTime}
             onChange={handleChange}
-            disabled={isScheduleBlocked}
-            disablePast={false}
-            minDate={minDate ? dayjs(minDate).tz(timezone) : undefined}
-            maxDate={maxDate ? dayjs(maxDate).tz(timezone) : undefined}
-            shouldDisableDate={shouldDisableDate}
-            slots={{
-              day: renderDay,
-            }}
-            calendars={1}
-            sx={{
-              width: "100%",
-              maxWidth: "100%",
-              "& .MuiDateRangePickerDay-root": {
-                width: "100%",
-              },
-              "& .MuiPickersCalendarHeader-root": {
-                paddingLeft: 1,
-                paddingRight: 1,
-              },
-              "& .MuiDayCalendar-header": {
-                justifyContent: "space-around",
-              },
-              "& .MuiDayCalendar-weekContainer": {
-                justifyContent: "space-around",
-              },
-              "& .MuiPickersDay-root": {
-                fontSize: "0.875rem",
-                margin: "2px",
-              },
-              "& .MuiPickersDay-root:hover": {
-                backgroundColor: "#e0e7ff",
-              },
-              "& .Mui-selected": {
-                backgroundColor: "#3b82f6 !important",
-                color: "white !important",
-                fontWeight: 600,
-                "&:hover": {
-                  backgroundColor: "#2563eb !important",
-                },
-              },
-              "& .MuiDateRangePickerDay-rangeIntervalDayHighlight": {
-                backgroundColor: "#dbeafe !important",
-                color: "#1e40af !important",
-              },
-              "& .MuiDateRangePickerDay-rangeIntervalDayHighlightStart, & .MuiDateRangePickerDay-rangeIntervalDayHighlightEnd":
-                {
-                  backgroundColor: "#3b82f6 !important",
-                  color: "white !important",
-                },
-            }}
+            disabled={disabled || isScheduleBlocked}
+            minDate={
+              minDateTime
+                ? (() => {
+                    const minInTz = dayjs(minDateTime).tz(timezone);
+                    return new Date(
+                      minInTz.year(),
+                      minInTz.month(),
+                      minInTz.date()
+                    );
+                  })()
+                : disablePastDates
+                ? (() => {
+                    const nowInTz = dayjs().tz(timezone);
+                    return new Date(
+                      nowInTz.year(),
+                      nowInTz.month(),
+                      nowInTz.date()
+                    );
+                  })()
+                : null
+            }
+            maxDate={
+              maxDateTime
+                ? (() => {
+                    const maxInTz = dayjs(maxDateTime)
+                      .tz(timezone)
+                      .subtract(1, "day");
+                    return new Date(
+                      maxInTz.year(),
+                      maxInTz.month(),
+                      maxInTz.date()
+                    );
+                  })()
+                : null
+            }
+            filterDate={filterDate}
+            dateFormat="MMM d, yyyy"
+            placeholderText="Select date"
+            showMonthDropdown
+            showYearDropdown
+            dropdownMode="select"
+            timeZone={timezone} // Add this
+            className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-all"
           />
-        </LocalizationProvider>
+        </div>
+
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+            <Clock size={18} className="text-gray-400" />
+          </div>
+          <DatePicker
+            selected={selectedDateTime}
+            onChange={handleChange}
+            disabled={disabled || isScheduleBlocked || !selectedDateTime}
+            showTimeSelect
+            showTimeSelectOnly
+            timeIntervals={5}
+            timeCaption="Time"
+            dateFormat="h:mm aa"
+            placeholderText="Select time"
+            filterTime={filterTime}
+            timeZone={timezone}
+            className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-all"
+          />
+        </div>
       </div>
+
+      {/* Quick Selection Buttons */}
+      {!disabled && !isScheduleBlocked && (
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={() => {
+              const nowInTz = dayjs().tz(timezone);
+              const minutes = Math.ceil(nowInTz.minute() / 5) * 5;
+              const roundedTime = nowInTz
+                .minute(minutes)
+                .second(0)
+                .millisecond(0);
+
+              // Validate against maxDateTime (for ad picker)
+              if (maxDateTime && roundedTime.toDate() >= maxDateTime) {
+                message.error(
+                  `Time must be before ${dayjs(maxDateTime)
+                    .tz(timezone)
+                    .format("MMM D, YYYY hh:mm A")}`
+                );
+                return;
+              }
+
+              // Validate against minDateTime (for booking picker)
+              if (minDateTime && roundedTime.toDate() <= minDateTime) {
+                message.error(
+                  `Time must be after ${dayjs(minDateTime)
+                    .tz(timezone)
+                    .format("MMM D, YYYY hh:mm A")}`
+                );
+                return;
+              }
+
+              const localDate = new Date(
+                roundedTime.year(),
+                roundedTime.month(),
+                roundedTime.date(),
+                roundedTime.hour(),
+                roundedTime.minute(),
+                0,
+                0
+              );
+              handleChange(localDate);
+            }}
+            className="flex-1 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-all flex items-center justify-center gap-1.5"
+          >
+            <Clock size={14} />
+            Set Now
+          </button>
+          <button
+            onClick={() => {
+              const tomorrowInTz = dayjs()
+                .tz(timezone)
+                .add(1, "day")
+                .hour(9)
+                .minute(0)
+                .second(0)
+                .millisecond(0);
+
+              // Create a date object that represents this timezone's time as local time
+              const localDate = new Date(
+                tomorrowInTz.year(),
+                tomorrowInTz.month(),
+                tomorrowInTz.date(),
+                tomorrowInTz.hour(),
+                tomorrowInTz.minute(),
+                0,
+                0
+              );
+              handleChange(localDate);
+            }}
+            className="flex-1 py-2 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-xl hover:bg-green-100 transition-all flex items-center justify-center gap-1.5"
+          >
+            <Calendar size={14} />
+            Tomorrow
+          </button>
+        </div>
+      )}
 
       {blockedDates.size > 0 && (
-        <div className="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
-          <AlertCircle size={14} className="text-amber-600 mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-amber-800">
-            {blockedDates.size} locked date(s) cannot be modified
-          </p>
-        </div>
+        <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
+          <AlertCircle size={12} />
+          Some dates are blocked due to active bookings
+        </p>
       )}
 
-      {minDate && (
-        <div className="mt-3 p-2.5 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-2">
-          <AlertCircle size={14} className="text-blue-600 mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-blue-800">
-            Event dates must be from {dayjs(minDate).tz(timezone).format("MMM D, YYYY")} onwards
-          </p>
-        </div>
-      )}
-
-      {startDate && !endDate && (
-        <div className="mt-3 p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl flex items-start gap-2">
-          <AlertCircle size={14} className="text-indigo-600 mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-indigo-800">
-            Select end date from {dayjs(startDate).tz(timezone).format("MMM D, YYYY")} onwards
-          </p>
-        </div>
-      )}
-
-      {isEditMode &&
-        startDate &&
-        endDate &&
-        hasBlockedDatesInRange(startDate.toDate(), endDate.toDate()) && (
-          <div className="mt-3 p-2.5 bg-purple-50 border border-purple-200 rounded-xl flex items-start gap-2">
-            <AlertCircle size={14} className="text-purple-600 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-purple-800">
-              Select dates after {dayjs(endDate).tz(timezone).format("MMM D, YYYY")} to extend
-            </p>
-          </div>
-        )}
-
-      <div className="mt-4 flex gap-2">
-        <button
-          onClick={handleClear}
-          disabled={(!startDate && !endDate) || isScheduleBlocked}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-        >
-          <X size={14} />
-          Clear
-        </button>
-      </div>
+      <style jsx global>{`
+        .react-datepicker-wrapper {
+          width: 100%;
+        }
+        .react-datepicker__input-container {
+          width: 100%;
+        }
+        .react-datepicker__day--disabled {
+          color: #d1d5db !important;
+          text-decoration: line-through;
+          cursor: not-allowed !important;
+        }
+        .react-datepicker-popper {
+          z-index: 9999 !important;
+        }
+        .react-datepicker {
+          font-family: inherit;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .react-datepicker__header {
+          background-color: #f9fafb;
+          border-bottom: 1px solid #e5e7eb;
+          border-top-left-radius: 12px;
+          border-top-right-radius: 12px;
+        }
+        .react-datepicker__day--selected,
+        .react-datepicker__day--keyboard-selected {
+          background-color: #3b82f6 !important;
+          color: white !important;
+          font-weight: 600;
+        }
+        .react-datepicker__day:hover {
+          background-color: #dbeafe;
+          border-radius: 6px;
+        }
+        .react-datepicker__time-list-item--selected {
+          background-color: #3b82f6 !important;
+          color: white !important;
+          font-weight: 600;
+        }
+      `}</style>
     </div>
   );
 };
 
-export default CalendarWidget;
+export default CompactDateTimePicker;
