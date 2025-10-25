@@ -1,12 +1,12 @@
 import React from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import PaymentFormFields from "../components/paymentFormField";
 
-
 const EditPayment = () => {
-    //const { paymentId } = useParams();
-    return (
-        <PaymentFormFields mode="EDIT" />
-    )
-}
+  const { paymentId } = useParams();
+  console.log("PAYMENT ID:- ", paymentId);
 
-export default EditPayment;  
+  return <PaymentFormFields mode="EDIT" paymentId={paymentId} />;
+};
+
+export default EditPayment;

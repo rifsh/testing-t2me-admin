@@ -82,7 +82,7 @@ const TicketFormFields = ({ mode, ticket }) => {
 
     const completeData = {
       ...mainFormValues,
-      // Include ticket types from Redux if available
+
       ...(ticketReduxData && {
         redux_ticket_data: {
           venue_id: ticketReduxData.venue_id,
