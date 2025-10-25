@@ -14,6 +14,8 @@
     "@mui/icons-material": "^6.4.8",
     "@mui/material": "^6.4.8",
     "@mui/x-date-pickers": "^8.15.0",
+    "@mui/x-date-pickers-pro": "^8.15.0",
+    "@mui/x-license-pro": "^6.10.2",
     "@reduxjs/toolkit": "^1.8.5",
     "@seatsio/seatsio-react": "^15.8.0",
     "@testing-library/jest-dom": "^5.11.4",
