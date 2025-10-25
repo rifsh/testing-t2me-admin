@@ -1,11 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  Plus,
-  ExclamationCircleOutlined,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Plus } from "lucide-react";
 import { Modal, message } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { setScheduleFormData } from "store/slices/scheduleSlice";
@@ -96,7 +90,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
   const weekDayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
   const timezone =
-    eventDetails?.venue_events?.[0]?.venue?.place?.country?.time_zone || "UTC";
+    eventDetails?.venue_events?.[0]?.venue?.place?.country?.time_zone;
 
   // ==================== EDITABLE FLAGS ====================
   const isScheduleEditable = scheduleDetails?.editable !== false;
@@ -109,57 +103,29 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
   const isScheduleBlocked =
     !isScheduleEditable || !isPlaceEditable || !isVenueEditable;
 
-  // ==================== HELPER FUNCTIONS ====================
-  const getDefaultDates = () => {
-    const now = new Date();
-    const adStart = new Date(now);
-    adStart.setDate(now.getDate() + 1);
-    adStart.setHours(9, 0, 0, 0);
-
-    const bookingStart = new Date(now);
-    bookingStart.setDate(now.getDate() + 2);
-    bookingStart.setHours(10, 0, 0, 0);
-
-    const eventStart = new Date(bookingStart);
-    eventStart.setDate(bookingStart.getDate() + 2);
-    eventStart.setHours(11, 0, 0, 0);
-
-    const eventEnd = new Date(eventStart);
-    eventEnd.setDate(eventStart.getDate() + 6);
-    eventEnd.setHours(23, 59, 59, 999);
-
-    return {
-      adStartTime: adStart,
-      bookingStartTime: bookingStart,
-      eventStartDate: eventStart,
-      eventEndDate: eventEnd,
-    };
-  };
-
-  // ==================== STATE INITIALIZATION ====================
-  const defaults = getDefaultDates();
-
+  // ==================== STATE INITIALIZATION (NO DEFAULTS) ====================
   const [adStartDateTime, setAdStartDateTime] = useState(() => {
     return scheduleFormData?.ad_start_date_time
       ? new Date(scheduleFormData.ad_start_date_time)
-      : defaults.adStartTime;
+      : null; // Changed: No default
   });
 
   const [bookingStartDateTime, setBookingStartDateTime] = useState(() => {
     return scheduleFormData?.booking_start_date_time
       ? new Date(scheduleFormData.booking_start_date_time)
-      : defaults.bookingStartTime;
+      : null; // Changed: No default
   });
 
   const [dateRange, setDateRange] = useState(() => ({
     startDate: scheduleFormData?.start_date
       ? new Date(scheduleFormData.start_date)
-      : defaults.eventStartDate,
+      : null, // Changed: No default
     endDate: scheduleFormData?.end_date
       ? new Date(scheduleFormData.end_date)
-      : defaults.eventEndDate,
+      : null, // Changed: No default
     isSelecting: false,
   }));
+
   const [allEvents, setAllEvents] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -493,46 +459,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     return true;
   };
 
-  // ==================== EVENT HANDLERS ====================
-  const resetToDefaults = () => {
-    if (isScheduleBlocked) {
-      message.error("Cannot reset: Schedule is locked due to active bookings");
-      return;
-    }
-
-    const newDefaults = getDefaultDates();
-    setAdStartDateTime(newDefaults.adStartTime);
-    setBookingStartDateTime(newDefaults.bookingStartTime);
-    setDateRange({
-      startDate: newDefaults.eventStartDate,
-      endDate: newDefaults.eventEndDate,
-      isSelecting: false,
-    });
-    setAllEvents([]);
-    setCurrentWeekStart(0);
-    hasLoadedEditData.current = false;
-    blockingChecked.current = false;
-    setBlockedEventIds(new Set());
-
-    form?.setFieldValue("ad_start_date_time", newDefaults.adStartTime);
-    form?.setFieldValue(
-      "booking_start_date_time",
-      newDefaults.bookingStartTime
-    );
-
-    dispatch(
-      setScheduleFormData({
-        ...scheduleFormData,
-        ad_start_date_time: formatDateTime(newDefaults.adStartTime),
-        booking_start_date_time: formatDateTime(newDefaults.bookingStartTime),
-        start_date: formatDateForAPI(newDefaults.eventStartDate),
-        end_date: formatDateForAPI(newDefaults.eventEndDate),
-        show_dates: [],
-        timeSlots: {},
-      })
-    );
-  };
-
+  // ==================== EVENT HANDLERS WITH VALIDATION ====================
   const handleAdStartTimeChange = (date) => {
     if (isScheduleBlocked) {
       message.error("Cannot modify: Schedule is locked due to active bookings");
@@ -540,35 +467,39 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     }
 
     if (!date) {
-      resetToDefaults();
-      message.warning(
-        "Advertisement date cleared. All dates have been reset to defaults."
+      setAdStartDateTime(null);
+      setBookingStartDateTime(null);
+      setDateRange({ startDate: null, endDate: null, isSelecting: false });
+      setAllEvents([]);
+      blockingChecked.current = false;
+
+      form?.setFieldValue("ad_start_date_time", null);
+      form?.setFieldValue("booking_start_date_time", null);
+
+      dispatch(
+        setScheduleFormData({
+          ...scheduleFormData,
+          ad_start_date_time: null,
+          booking_start_date_time: null,
+          start_date: null,
+          end_date: null,
+          show_dates: [],
+          timeSlots: {},
+        })
       );
+
+      message.warning("All dates have been cleared.");
       return;
+    }
+
+    // VALIDATION: ad < booking
+    if (bookingStartDateTime && date >= bookingStartDateTime) {
+      message.error("Advertisement time must be before Booking time");
+      return; // Don't update - validation failed
     }
 
     setAdStartDateTime(date);
     form?.setFieldValue("ad_start_date_time", date);
-
-    if (bookingStartDateTime && date >= bookingStartDateTime) {
-      const newDefaults = getDefaultDates();
-      setBookingStartDateTime(newDefaults.bookingStartTime);
-      setDateRange({
-        startDate: newDefaults.eventStartDate,
-        endDate: newDefaults.eventEndDate,
-        isSelecting: false,
-      });
-      setAllEvents([]);
-      blockingChecked.current = false;
-      form?.setFieldValue(
-        "booking_start_date_time",
-        newDefaults.bookingStartTime
-      );
-
-      message.warning(
-        "Booking and event dates have been reset due to invalid advertisement date."
-      );
-    }
 
     dispatch(
       setScheduleFormData({
@@ -576,6 +507,8 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
         ad_start_date_time: formatDateTime(date),
       })
     );
+
+    message.success("Advertisement time updated successfully");
   };
 
   const handleBookingStartTimeChange = (date) => {
@@ -585,93 +518,125 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     }
 
     if (!date) {
-      const newDefaults = getDefaultDates();
-      setBookingStartDateTime(newDefaults.bookingStartTime);
-      setDateRange({
-        startDate: newDefaults.eventStartDate,
-        endDate: newDefaults.eventEndDate,
-        isSelecting: false,
-      });
+      setBookingStartDateTime(null);
+      setDateRange({ startDate: null, endDate: null, isSelecting: false });
       setAllEvents([]);
       blockingChecked.current = false;
-      form?.setFieldValue("bookingstartdatetime", newDefaults.bookingStartTime);
-      message.warning(
-        "Booking date cleared. Booking and event dates have been reset to defaults."
+
+      form?.setFieldValue("booking_start_date_time", null);
+
+      dispatch(
+        setScheduleFormData({
+          ...scheduleFormData,
+          booking_start_date_time: null,
+          start_date: null,
+          end_date: null,
+          show_dates: [],
+          timeSlots: {},
+        })
       );
+
+      message.warning("Booking date cleared. Event dates have been reset.");
       return;
     }
 
-    setBookingStartDateTime(date);
-    form?.setFieldValue("bookingstartdatetime", date);
+    // VALIDATION: booking > ad
+    if (adStartDateTime && date <= adStartDateTime) {
+      message.error("Booking time must be after Advertisement time");
+      return; // Don't update - validation failed
+    }
 
-    // FIXED: Changed <= to < to allow same day
+    // Check if we need to reset event dates
     if (dateRange.startDate) {
-      const bookingDate = new Date(date);
-      bookingDate.setHours(0, 0, 0, 0); // Set to start of day
+      const bookingDate = dayjs(date).tz(timezone).startOf("day");
+      const eventStart = dayjs(dateRange.startDate).tz(timezone).startOf("day");
 
-      const eventStart = new Date(dateRange.startDate);
-      eventStart.setHours(0, 0, 0, 0); // Set to start of day
-
-      // Changed from <= to < (allow same day)
-      if (eventStart < bookingDate) {
-        const newDefaults = getDefaultDates();
-        setDateRange({
-          startDate: newDefaults.eventStartDate,
-          endDate: newDefaults.eventEndDate,
-          isSelecting: false,
-        });
+      if (bookingDate.isSameOrAfter(eventStart)) {
+        setDateRange({ startDate: null, endDate: null, isSelecting: false });
         setAllEvents([]);
         blockingChecked.current = false;
-        message.warning(
-          "Event dates have been reset because they must be on or after the booking date."
+
+        dispatch(
+          setScheduleFormData({
+            ...scheduleFormData,
+            booking_start_date_time: formatDateTime(date),
+            start_date: null,
+            end_date: null,
+            show_dates: [],
+            timeSlots: {},
+          })
         );
+
+        message.warning("Event dates reset - must be after new Booking time");
+        setBookingStartDateTime(date);
+        form?.setFieldValue("booking_start_date_time", date);
+        return;
       }
     }
+
+    setBookingStartDateTime(date);
+    form?.setFieldValue("booking_start_date_time", date);
 
     dispatch(
       setScheduleFormData({
         ...scheduleFormData,
-        bookingstartdatetime: formatDateTime(date),
+        booking_start_date_time: formatDateTime(date),
       })
     );
+
+    message.success("Booking time updated successfully");
   };
 
   const handleDateRangeChange = (range) => {
-    // CRITICAL: Check blocking info first
-    if (
-      blockingInfo.isScheduleBlocked ||
-      blockingInfo.isVenueBlocked ||
-      blockingInfo.isPlaceBlocked
-    ) {
+    // Check blocking first
+    if (isScheduleBlocked) {
       message.error("Cannot modify: Schedule is locked due to active bookings");
       return;
     }
 
-    // FIXED: Don't treat incomplete selection as clearing dates in edit mode
     if (!range.startDate || !range.endDate) {
-      // If user is still selecting (isSelecting = true), don't reset
       if (range.isSelecting) {
-        // Just update the partial selection without resetting
         setDateRange(range);
         return;
       }
-
-      // Only reset if both dates are explicitly null/undefined AND not selecting
-      const newDefaults = getDefaultDates();
-      setDateRange({
-        startDate: newDefaults.eventStartDate,
-        endDate: newDefaults.eventEndDate,
-        isSelecting: false,
-      });
+      setDateRange({ startDate: null, endDate: null, isSelecting: false });
       setAllEvents([]);
       blockingChecked.current = false;
-      message.warning(
-        "Event dates cleared. Dates have been reset to defaults."
+
+      dispatch(
+        setScheduleFormData({
+          ...scheduleFormData,
+          start_date: null,
+          end_date: null,
+          show_dates: [],
+          timeSlots: {},
+        })
       );
+
+      message.warning("Event dates cleared.");
       return;
     }
 
-    // Validate date range against blocking info
+    // VALIDATION: event start > booking
+    if (bookingStartDateTime) {
+      const bookingDate = dayjs(bookingStartDateTime)
+        .tz(timezone)
+        .startOf("day");
+      const eventStart = dayjs(range.startDate).tz(timezone).startOf("day");
+
+      if (eventStart.isSameOrBefore(bookingDate)) {
+        message.error("Event start date must be after Booking date");
+        return; // Don't update - validation failed
+      }
+    }
+
+    // VALIDATION: end > start
+    if (range.startDate >= range.endDate) {
+      message.error("Event end date must be after start date");
+      return; // Don't update - validation failed
+    }
+
+    // Validate against blocking info
     const validation = validateDateRange(
       range.startDate,
       range.endDate,
@@ -684,57 +649,31 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       return;
     }
 
-    if (bookingStartDateTime) {
-      const bookingDate = new Date(bookingStartDateTime);
-      bookingDate.setHours(0, 0, 0, 0);
-
-      const eventStart = new Date(range.startDate);
-      eventStart.setHours(0, 0, 0, 0);
-
-      if (eventStart < bookingDate) {
-        message.error(
-          "Event start date must be on or after the booking date. Please select a valid date."
-        );
-        return;
-      }
-    }
-
-    if (range.startDate >= range.endDate) {
-      message.error(
-        "End date must be after start date. Please select a valid date range."
-      );
-      return;
-    }
-
-    const hasExistingTimeSlots = allEvents && allEvents.length > 0;
-
-    // FIXED: Check if date range actually CHANGED (not just re-selected same dates)
+    // Check if range changed and we have events
     const isDateRangeChanged =
       !dateRange.startDate ||
       !dateRange.endDate ||
       dateRange.startDate.getTime() !== range.startDate.getTime() ||
       dateRange.endDate.getTime() !== range.endDate.getTime();
 
-    // FIXED: Only show confirmation modal if dates CHANGED and we have events
-    if (hasExistingTimeSlots && isDateRangeChanged) {
-      // ADDITIONAL FIX: In edit mode with blocked dates, only extending end date shouldn't trigger reset
+    if (allEvents.length > 0 && isDateRangeChanged) {
+      // Check if just extending end date
       const isExtendingEndDate =
         dateRange.startDate &&
         dateRange.endDate &&
         range.startDate.getTime() === dateRange.startDate.getTime() &&
         range.endDate > dateRange.endDate;
 
-      if (isExtendingEndDate) {
-        // Just extend without confirmation
-        proceedWithDateRangeChange(range);
+      if (!isExtendingEndDate) {
+        // Show confirmation modal
+        setPendingDateChange({ type: "dateRange", range });
+        setShowResetConfirmModal(true);
         return;
       }
-
-      setPendingDateChange({ type: "dateRange", range });
-      setShowResetConfirmModal(true);
-    } else {
-      proceedWithDateRangeChange(range);
     }
+
+    // Apply changes
+    proceedWithDateRangeChange(range);
   };
 
   const proceedWithDateRangeChange = (range) => {
@@ -754,7 +693,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       })
     );
 
-    message.success("Event dates updated successfully.");
+    message.success("Event dates updated successfully");
   };
 
   const debouncedSave = useCallback(
@@ -812,7 +751,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
           const dateStr = formatDateForAPI(allDaysInRange[day]);
 
           if (!eventsByDate[dateStr]) {
-            // FIX: Store show_date_id in the structure
             eventsByDate[dateStr] = {
               show_date_id: event.show_date_id,
               show_times: [],
@@ -820,7 +758,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
           }
 
           eventsByDate[dateStr].show_times.push({
-            // FIX: Include show_time ID
             id: event.show_time_id,
             start_time: `${event.startTime.hour.toString().padStart(2, "0")}:${(
               event.startTime.minute || 0
@@ -832,7 +769,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
             )
               .toString()
               .padStart(2, "0")}`,
-            // FIX: Include ticket_structure_id and other fields
             ticket_structure_id: event.ticket_structure_id,
             offer_ids: event.offer_ids || [],
             coupon_ids: event.coupon_ids || [],
@@ -872,7 +808,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
         }
 
         return {
-          // FIX: Include show_date ID
           id: dateData.show_date_id,
           start_date: dateStr,
           end_date: endDate,
@@ -952,13 +887,11 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
   };
 
   const handleEventSave = (eventData) => {
-    // Check if schedule is globally blocked
     if (blockingInfo?.isScheduleEditableStatus) {
       message.error("Cannot modify: Schedule is locked due to active bookings");
       return;
     }
 
-    // Check if this specific event's date/time is blocked
     if (eventData.show_date_id && eventData.show_time_id) {
       if (
         !canEditEvent(
@@ -1113,49 +1046,14 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     }));
   };
 
-  const getBookingMinDate = () => {
-    if (adStartDateTime) {
-      const minDate = new Date(adStartDateTime);
-      minDate.setMinutes(minDate.getMinutes() + 1);
-      return minDate;
-    }
-    return new Date(Date.now() + 24 * 60 * 60 * 1000);
-  };
-
   const getEventMinDate = () => {
     if (bookingStartDateTime) {
       const minDate = new Date(bookingStartDateTime);
-      minDate.setDate(minDate.getDate());
+      minDate.setDate(minDate.getDate() + 1);
       minDate.setHours(0, 0, 0, 0);
       return minDate;
     }
-    return new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
-  };
-
-  // Create blocked dates set for calendar
-  const getBlockedDatesSet = () => {
-    const blockedDates = new Set();
-
-    if (blockingInfo?.blockedDates) {
-      // If blockedDates is already a Set of date IDs, convert to date strings
-      blockingInfo.blockedDates.forEach((showDateId) => {
-        // Find corresponding date string from timeSlots
-        Object.entries(scheduleFormData?.timeSlots || {}).forEach(
-          ([dateStr, slots]) => {
-            if (Array.isArray(slots)) {
-              const hasBlockedDate = slots.some(
-                (slot) => slot.show_date_id === showDateId
-              );
-              if (hasBlockedDate) {
-                blockedDates.add(dateStr);
-              }
-            }
-          }
-        );
-      });
-    }
-
-    return blockedDates;
+    return null;
   };
 
   // ==================== COMPUTED VALUES ====================
@@ -1166,20 +1064,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
   const canNavigatePrev = currentWeekStart > 0;
   const hasValidDateRange = dateRange.startDate && dateRange.endDate;
 
-  const isAdDateDisabled =
-    blockingInfo?.isScheduleEditableStatus || isScheduleBlocked;
-
-  const isBookingDateDisabled =
-    !adStartDateTime ||
-    blockingInfo?.isScheduleEditableStatus ||
-    isScheduleBlocked;
-
-  const isEventDateDisabled =
-    !bookingStartDateTime ||
-    !adStartDateTime ||
-    blockingInfo?.isScheduleEditableStatus ||
-    isScheduleBlocked;
-
   // ==================== RENDER ====================
   return (
     <div className="max-w-full mx-auto bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
@@ -1189,7 +1073,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
         {isScheduleBlocked && (
           <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
             <div className="flex items-center space-x-2">
-              {/* <ExclamationCircleOutlined className="text-red-600 text-lg" /> */}
               <div>
                 <p className="text-sm font-semibold text-red-900">
                   🔒 Schedule Locked
@@ -1243,61 +1126,32 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
         <div className="col-span-3 space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Advertisement Start Time *
-              </label>
               <CompactDateTimePicker
-                onDateTimeChange={handleAdStartTimeChange}
-                label=""
-                fullWidth={true}
-                size="default"
-                minDateTime={new Date(Date.now() + 60 * 60 * 1000)}
-                showClearButton={true}
+                label="Advertisement Start Time"
                 value={adStartDateTime}
+                onDateTimeChange={handleAdStartTimeChange}
                 timezone={timezone}
                 disablePastDates={true}
                 disablePastTimes={true}
-                disabled={
-                  isAdDateDisabled || blockingInfo?.isScheduleEditableStatus
-                }
-                blockedDates={getBlockedDatesSet(
-                  scheduleFormData,
-                  blockingInfo,
-                  checkedscheduleDetails
-                )}
-                isScheduleBlocked={
-                  blockingInfo?.isScheduleEditableStatus || false
-                }
+                maxDateTime={bookingStartDateTime}
+                disabled={isScheduleBlocked}
+                blockedDates={getBlockedDatesSet()}
+                isScheduleBlocked={isScheduleBlocked}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Booking Start Time *
-              </label>
               <CompactDateTimePicker
-                onDateTimeChange={handleBookingStartTimeChange}
-                label=""
-                fullWidth={true}
-                size="default"
-                minDateTime={getBookingMinDate()}
-                showClearButton={true}
+                label="Booking Start Time"
                 value={bookingStartDateTime}
+                onDateTimeChange={handleBookingStartTimeChange}
                 timezone={timezone}
+                minDateTime={adStartDateTime}
                 disablePastDates={true}
                 disablePastTimes={true}
-                disabled={
-                  isBookingDateDisabled ||
-                  blockingInfo?.isScheduleEditableStatus
-                }
-                blockedDates={getBlockedDatesSet(
-                  scheduleFormData,
-                  blockingInfo,
-                  checkedscheduleDetails
-                )}
-                isScheduleBlocked={
-                  blockingInfo?.isScheduleEditableStatus || false
-                }
+                disabled={!adStartDateTime || isScheduleBlocked}
+                blockedDates={getBlockedDatesSet()}
+                isScheduleBlocked={isScheduleBlocked}
               />
             </div>
           </div>
@@ -1308,14 +1162,16 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
             </label>
             <div
               className={
-                isEventDateDisabled ? "opacity-50 pointer-events-none" : ""
+                !bookingStartDateTime || isScheduleBlocked
+                  ? "opacity-50 pointer-events-none"
+                  : ""
               }
             >
               <CalendarWidget
                 onDateRangeChange={handleDateRangeChange}
                 initialStartDate={dateRange.startDate}
                 initialEndDate={dateRange.endDate}
-                minDate={getEventMinDate()} // Already calculated in your code
+                minDate={getEventMinDate()}
                 blockedDates={getBlockedDatesSet(
                   scheduleFormData,
                   blockingInfo,
@@ -1325,6 +1181,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                   blockingInfo?.isScheduleEditableStatus || false
                 }
                 isEditMode={true}
+                timezone={timezone}
               />
             </div>
           </div>
@@ -1594,6 +1451,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
         blockingInfo={blockingInfo}
         checkedscheduleDetails={checkedscheduleDetails}
       />
+
       {/* RESET CONFIRMATION MODAL */}
       <Modal
         title="Reset All Time Slots"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Button, Upload, message, Avatar } from "antd";
-import { UploadOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Upload, message, Modal } from "antd";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import {
   SupportImageFormat,
   ResolutionByServices,
@@ -8,16 +8,6 @@ import {
 import Utils from "utils/index";
 import ImageCropper from "components/util-components/Image/ImageCroping";
 
-/**
- * A reusable image picker component with cropping functionality
- * @param {Object} props Component props
- * @param {Array} props.value Current file list
- * @param {Function} props.onChange Callback when file list changes
- * @param {Object} props.form Form instance
- * @param {Object} props.targetResolution Target resolution for the cropped image {width, height}
- * @param {number} props.maxCount Maximum number of images allowed (default: 1)
- * @param {boolean} props.square Whether to display images in square shape (default: true)
- */
 const ResizedImgePicker = ({
   value,
   onChange,
@@ -25,14 +15,14 @@ const ResizedImgePicker = ({
   targetResolution = { width: 1000, height: 1000 },
   maxCount = 1,
   square = true,
+  onDelete,
 }) => {
-  // States for the image cropper
   const [cropperVisible, setCropperVisible] = useState(false);
   const [imageToProcess, setImageToProcess] = useState(null);
   const [currentFileName, setCurrentFileName] = useState(null);
   const [fileList, setFileList] = useState([]);
+  const [hoveredItem, setHoveredItem] = useState(null);
 
-  // Sync fileList with value from form
   useEffect(() => {
     if (value) {
       setFileList(Array.isArray(value) ? value : [value]);
@@ -41,15 +31,12 @@ const ResizedImgePicker = ({
     }
   }, [value]);
 
-  // Image handling functions
   const beforeUpload = (file) => {
-    // Check if we've already reached the maximum number of files
     if (fileList.length >= maxCount) {
       message.warning(`You can only upload a maximum of ${maxCount} images.`);
       return Upload.LIST_IGNORE;
     }
 
-    // Check file size and format using Utils helper
     const isValidFile = Utils.handleBeforeUpload(
       file,
       ResolutionByServices.place
@@ -59,15 +46,11 @@ const ResizedImgePicker = ({
       return Upload.LIST_IGNORE;
     }
 
-    // Store the original filename
     setCurrentFileName(file.name);
-
-    // Create a temporary URL for the file to be used in the cropper
     const objectUrl = URL.createObjectURL(file);
     setImageToProcess(objectUrl);
     setCropperVisible(true);
 
-    // Prevent default upload behavior
     return false;
   };
 
@@ -87,23 +70,19 @@ const ResizedImgePicker = ({
     }
     setImageToProcess(null);
 
-    // Create a new file with the cropped image
     const newFile = {
       uid: Date.now().toString(),
       name: currentFileName || croppedFile.name,
       status: "done",
       url: URL.createObjectURL(croppedFile),
       originFileObj: croppedFile,
+      id: null, // New upload, no id yet
     };
 
-    // Update file list by adding the new file
-    // Fixed logic: Just add the new file to the existing file list
     const newFileList = [...fileList, newFile];
-
     setFileList(newFileList);
     setCurrentFileName(null);
 
-    // Call the onChange prop to update the form
     if (onChange) {
       onChange(newFileList);
     }
@@ -111,17 +90,30 @@ const ResizedImgePicker = ({
     message.success("Image cropped successfully");
   };
 
-  const handleRemoveImage = (file) => {
-    const newFileList = fileList.filter((item) => item.uid !== file.uid);
-    setFileList(newFileList);
+  const handleDeleteClick = (file, e) => {
+    e.stopPropagation();
 
-    // Call the onChange prop to update the form
-    if (onChange) {
-      onChange(newFileList);
+    // Check if file has an id (from database)
+    if (file.id && onDelete) {
+      // Call parent's delete handler with callback
+      onDelete(file, () => {
+        // Remove from UI after successful deletion
+        const newFileList = fileList.filter((item) => item.uid !== file.uid);
+        setFileList(newFileList);
+        if (onChange) {
+          onChange(newFileList);
+        }
+      });
+    } else {
+      // For new uploads without id, just remove from list
+      const newFileList = fileList.filter((item) => item.uid !== file.uid);
+      setFileList(newFileList);
+      if (onChange) {
+        onChange(newFileList);
+      }
     }
   };
 
-  // Custom upload button based on whether we have images and maxCount
   const uploadButton = (
     <div className="ant-upload-button">
       <PlusOutlined />
@@ -135,13 +127,84 @@ const ResizedImgePicker = ({
         listType={square ? "picture-card" : "picture"}
         fileList={fileList}
         beforeUpload={beforeUpload}
-        onRemove={handleRemoveImage}
+        onRemove={() => false} // Disable default remove
         accept={`.${SupportImageFormat.join(",.")}`}
         maxCount={maxCount}
         multiple={maxCount > 1}
         showUploadList={{
-          showPreviewIcon: true,
-          showRemoveIcon: true,
+          showPreviewIcon: false,
+          showRemoveIcon: false,
+        }}
+        itemRender={(originNode, file) => {
+          const isHovered = hoveredItem === file.uid;
+
+          return (
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                height: "100%",
+                borderRadius: "8px",
+                overflow: "hidden",
+              }}
+              onMouseEnter={() => setHoveredItem(file.uid)}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
+              <img
+                src={file.url || file.thumbUrl}
+                alt={file.name}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+              {isHovered && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: "rgba(0, 0, 0, 0.5)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    transition: "all 0.3s",
+                  }}
+                >
+                  <Button
+                    type="primary"
+                  danger
+                    icon={<DeleteOutlined />}
+                    onClick={(e) => handleDeleteClick(file, e)}
+                    size="small"
+                  >
+                    {/* {file.id ? "Delete from DB" : "Remove"} */}
+                  </Button>
+                </div>
+              )}
+              {/* Show indicator if image is from database */}
+              {file.id && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "4px",
+                    right: "4px",
+                    background: "rgba(0, 0, 0, 0.6)",
+                    color: "white",
+                    padding: "2px 6px",
+                    borderRadius: "4px",
+                    fontSize: "10px",
+                  }}
+                >
+                  DB
+                </div>
+              )}
+            </div>
+          );
         }}
       >
         {fileList.length >= maxCount ? null : uploadButton}

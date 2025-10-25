@@ -105,6 +105,43 @@ const CountryForm = ({ mode, placeId }) => {
       }
     }
   }, [singlePlace, form, mode]);
+  // In your edit form component (where you fetch and set initial values)
+  useEffect(() => {
+    if (singlePlace) {
+      // Map thumbnail image
+      const thumbnailFile = singlePlace.thumbnail_image
+        ? [
+            {
+              uid: "thumbnail-1",
+              name: singlePlace.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${singlePlace.thumbnail_image}`,
+              id: null, // Thumbnail doesn't have id in media array
+            },
+          ]
+        : [];
+
+      // Map banner images from media array
+      const bannerFiles = singlePlace.media
+        ? singlePlace.media.map((media, index) => ({
+            uid: `banner-${media.id}`,
+            name: media.media_url.split("/").pop(),
+            status: "done",
+            url: `${CDN_PATH}/${media.media_url}`,
+            id: media.id, // This is the important part - media id for deletion
+            mediaType: media.media_type,
+            caption: media.caption,
+          }))
+        : [];
+
+      form.setFieldsValue({
+        name: singlePlace.name,
+        description: singlePlace.description,
+        thumbnail_image: thumbnailFile,
+        banner_images: bannerFiles, // Now each file has the media id
+      });
+    }
+  }, [singlePlace, form]);
 
   useEffect(() => {
     if (error) {

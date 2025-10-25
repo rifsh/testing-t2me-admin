@@ -363,7 +363,7 @@ export function ScheduleTimeSlots({ form }) {
       return;
     }
 
-    if (selectedTicketType === 1) {
+    if (selectedTicketType === "seat_structure") {
       if (!sourceSlot?.seat_structure_id) {
         message.warning("Please select a Seat Structure first");
         return;

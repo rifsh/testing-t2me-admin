@@ -349,7 +349,7 @@ const MultyStepScheduleForm = ({ mode, id }) => {
               );
               return;
             }
-            if (selectedTicketType === 1) {
+            if (selectedTicketType === "seat_structure") {
               if (!slot.seat_structure_id) {
                 message.error(
                   `Seat Structure is required for all slots on ${date}`
