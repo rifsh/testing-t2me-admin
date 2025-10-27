@@ -221,6 +221,34 @@ const ALL_NAVIGATION_ITEMS = {
     submenu: [],
     category: FEATURE_CATEGORIES.REPORTS,
   },
+  "reports.dashboard": {
+    key: "super-admin.reports",
+    path: `${APP_PREFIX_PATH}/super-admin/reports`,
+    title: "sidenav.overview",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    get submenu() {
+      const allSubmenuItems = [
+        {
+          key: "super-admin.reports",
+          path: `${APP_PREFIX_PATH}/super-admin/reports`,
+          title: "sidenav.overview.dashboard",
+          icon: DashboardOutlined,
+          breadcrumb: false,
+          submenu: [],
+        },
+        {
+          key: "super-admin.statistics",
+          path: `${APP_PREFIX_PATH}/dashboards/statics`,
+          title: "sidenav.overview.statics",
+          icon: DashboardOutlined,
+          breadcrumb: false,
+          submenu: [],
+        },
+      ];
+      return buildDynamicSubmenu("orders", null, allSubmenuItems);
+    }, category: FEATURE_CATEGORIES.REPORTS,
+  },
   "reports.orders": {
     key: "super-admin.reports.orders",
     path: `${APP_PREFIX_PATH}/super-admin/reports/orders`,
