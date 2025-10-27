@@ -18,8 +18,6 @@ const EDIT = "EDIT";
 
 const VenueForm = ({ mode, venueId }) => {
   const dispatch = useDispatch();
-  console.log("MODEEEEEEEEEEE", mode);
-  console.log("VENUEEEEEEIDDDDD", venueId);
 
   const { singleVenues } = useSelector((state) => state.locations);
 
