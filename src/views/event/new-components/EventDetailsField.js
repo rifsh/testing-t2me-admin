@@ -23,39 +23,68 @@ import {
   Space,
   Divider,
 } from "antd";
+import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
-const EventDetailsField = ({ mode }) => {
-  const normFile = (e) => {
-    console.warn("eeeeeeeeeeeeeeeeeeeee", e);
-    if (Array.isArray(e)) {
-      // Filter out empty strings and invalid entries, keep only valid file objects
-      return e
-        .filter(
-          (file) =>
-            file &&
-            typeof file === "object" &&
-            file !== null &&
-            (file.originFileObject || file.name || file.uid)
-        )
-        .map((file) => ({ ...file }));
-    }
+const EventDetailsField = ({ mode, form }) => {
+  const { handleDeleteImage } = useS3ImageDelete("event");
 
-    const fileList = e?.fileList || [];
-    // Filter out empty strings and invalid entries, keep only valid file objects
-    return fileList
+ const normFile = (e) => {
+  if (Array.isArray(e)) {
+    return e
       .filter(
         (file) =>
           file &&
           typeof file === "object" &&
           file !== null &&
-          (file.originFileObject || file.name || file.uid)
+          (file.originFileObj || file.name || file.uid)
       )
-      .map((file) => ({ ...file }));
-  };
+      .map((file) => {
+        // Create a deep clone to avoid frozen object issues
+        return {
+          uid: file.uid,
+          name: file.name,
+          status: file.status || 'done',
+          url: file.url,
+          thumbUrl: file.thumbUrl || file.url,
+          originFileObj: file.originFileObj,
+          id: file.id,
+          mediaType: file.mediaType,
+          caption: file.caption,
+          ...(file.response && { response: file.response }),
+          ...(file.percent && { percent: file.percent }),
+        };
+      });
+  }
 
+  const fileList = e?.fileList || [];
+  return fileList
+    .filter(
+      (file) =>
+        file &&
+        typeof file === "object" &&
+        file !== null &&
+        (file.originFileObj || file.name || file.uid)
+    )
+    .map((file) => {
+      // Create a deep clone to avoid frozen object issues
+      return {
+        uid: file.uid,
+        name: file.name,
+        status: file.status || 'done',
+        url: file.url,
+        thumbUrl: file.thumbUrl || file.url,
+        originFileObj: file.originFileObj,
+        id: file.id,
+        mediaType: file.mediaType,
+        caption: file.caption,
+        ...(file.response && { response: file.response }),
+        ...(file.percent && { percent: file.percent }),
+      };
+    });
+};
   return (
     <Row gutter={24}>
       {/* Left Column */}
@@ -97,42 +126,30 @@ const EventDetailsField = ({ mode }) => {
               <Form.Item
                 name="thumbnail_image"
                 label="Thumbnail"
-                required={true}
-                valuePropName="fileList"
+                valuePropName="value"
                 getValueFromEvent={normFile}
               >
                 <ResizedImgePicker
                   maxCount={1}
                   targetResolution={ThumbnailImageResolutions.EVENT}
-                  beforeUpload={() => false} // Prevent auto upload
+                  form={form}
+                  onDelete={handleDeleteImage}
                 />
               </Form.Item>
-              <Text type="secondary" style={{ fontSize: 11 }}>
-                {SupportFormatContent.join(",")}:{" "}
-                {SupportImageFormat.join(", ")}
-                <br />
-                {ResolutionByServices.place}px
-              </Text>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="banner_images"
                 label="Banners"
-                valuePropName="fileList"
+                valuePropName="value"
                 getValueFromEvent={normFile}
               >
                 <ResizedImgePicker
                   maxCount={20}
                   targetResolution={ThumbnailImageResolutions.EVENT_BANNER}
-                  beforeUpload={() => false} // Prevent auto upload
+                  form={form}
+                  onDelete={handleDeleteImage}
                 />
-              </Form.Item>
-              <Form.Item
-                name="banner_image_url"
-                label="Banner URL (Optional)"
-                rules={[{ type: "url", message: "Please enter a valid URL" }]}
-              >
-                <Input placeholder="https://example.com/banner.jpg" />
               </Form.Item>
             </Col>
           </Row>
@@ -140,13 +157,14 @@ const EventDetailsField = ({ mode }) => {
           <Form.Item
             name="event_images"
             label="Additional Images"
-            valuePropName="fileList"
+            valuePropName="value"
             getValueFromEvent={normFile}
           >
             <ResizedImgePicker
               maxCount={20}
               targetResolution={ThumbnailImageResolutions.EVENT}
-              beforeUpload={() => false} // Prevent auto upload
+              form={form}
+              onDelete={handleDeleteImage}
             />
           </Form.Item>
         </Card>

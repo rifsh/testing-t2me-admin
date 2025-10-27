@@ -133,17 +133,34 @@ export const transformFormDataForAPI = (formData, additionalContext = {}) => {
     return 1;
   };
 
-  // Transform file objects to the expected format
-  const transformFileFields = (fileField) => {
-    if (!fileField || !Array.isArray(fileField)) return null;
+  /**
+   * Transform thumbnail image to API format
+   * Returns object with file_name and media_type, or null
+   */
+  const transformThumbnailImage = (fileField) => {
+    if (!fileField || !Array.isArray(fileField) || fileField.length === 0) {
+      return null;
+    }
 
-    return fileField.map((file, index) => ({
-      uid: file.uid || `${Date.now()}-${index}`,
-      name: file.name || `file-${index}`,
-      status: file.status || "done",
-      url: file.url || file.thumbUrl || "",
-      originFileObj: file.originFileObj || {},
-      thumbUrl: file.thumbUrl || file.url || "",
+    const file = fileField[0];
+    return {
+      file_name: file.name || file.file_name || null,
+      media_type: "image",
+    };
+  };
+
+  /**
+   * Transform multiple images to API format
+   * Returns array of objects with file_name and media_type
+   */
+  const transformMultipleImages = (fileField) => {
+    if (!fileField || !Array.isArray(fileField) || fileField.length === 0) {
+      return [];
+    }
+
+    return fileField.map((file) => ({
+      file_name: file.name || file.file_name || null,
+      media_type: "image",
     }));
   };
 
@@ -153,10 +170,10 @@ export const transformFormDataForAPI = (formData, additionalContext = {}) => {
     event_name: formData.event_name || "",
     description: formData.description || "",
 
-    // File uploads
-    thumbnail_image: transformFileFields(formData.thumbnail_image),
-    banner_images: transformFileFields(formData.banner_images),
-    event_images: transformFileFields(formData.event_images),
+    // File uploads - NEW FORMAT
+    thumbnail_image: transformThumbnailImage(formData.thumbnail_image),
+    banner_images: transformMultipleImages(formData.banner_images),
+    event_images: transformMultipleImages(formData.event_images),
 
     // Add-on services and QNA
     event_add_on_services: formData.event_add_on_services || [],
@@ -176,10 +193,10 @@ export const transformFormDataForAPI = (formData, additionalContext = {}) => {
     venues: getPrimaryVenue(),
     max_capacity: calculateMaxCapacity(),
 
-    // FIXED: Seat configuration - returns array of objects
+    // Seat configuration - returns array of objects
     seat_structure: transformSeatStructure(),
 
-    // FIXED: Seat structure IDs - returns plain array of integers [1, 11], NOT "[1, 11]"
+    // Seat structure IDs - returns plain array of integers [1, 11], NOT "[1, 11]"
     event_seat_structure_id: getSeatStructureIds(),
 
     // Ticket information
@@ -203,6 +220,9 @@ export const transformFormDataForAPI = (formData, additionalContext = {}) => {
   };
 
   console.log("📤 Transformed data:", transformedData);
+  console.log("🖼️ Thumbnail image:", transformedData.thumbnail_image);
+  console.log("🖼️ Banner images:", transformedData.banner_images);
+  console.log("🖼️ Event images:", transformedData.event_images);
   console.log("🪑 Seat structure:", transformedData.seat_structure);
   console.log("🎫 Ticket structure:", transformedData.ticket_structure);
   console.log(
@@ -249,9 +269,10 @@ export const validateTransformedData = (transformedData) => {
     errors.push("At least one seat structure or ticket structure is required");
   }
 
+  // Updated validation for new image format
   if (
     !transformedData.thumbnail_image ||
-    transformedData.thumbnail_image.length === 0
+    !transformedData.thumbnail_image.file_name
   ) {
     errors.push("Thumbnail image is required");
   }
