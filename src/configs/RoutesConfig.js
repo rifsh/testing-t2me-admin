@@ -44,6 +44,12 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() => import("views/app-views/dashboards/default")),
     category: "orders",
   },
+  "reports.dashboard": {
+    key: "super-admin.statistics",
+    path: `${APP_PREFIX_PATH}/dashboards/statics`,
+    component: React.lazy(() => import("views/app-views/statics/index")),
+    category: "orders",
+  },
   "reports.analytic": {
     key: "dashboard.analytic",
     path: `${APP_PREFIX_PATH}/dashboards/analytic`,
@@ -396,7 +402,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "general.payment.edit": {
     key: "payment.edit",
-    path: `${APP_PREFIX_PATH}/payment/edit/`,
+    path: `${APP_PREFIX_PATH}/payment/edit/:paymentId`,
     component: React.lazy(() => import("views/payment/edit-payment")),
     category: "services",
     subcategory: "general",
@@ -535,7 +541,9 @@ const ALL_PROTECTED_ROUTES = {
   "event.schedule.new.add": {
     key: "schedule.add",
     path: `${APP_PREFIX_PATH}/schedule/new/add`,
-    component: React.lazy(() => import("views/schedule/event/new-add-schedule")),
+    component: React.lazy(() =>
+      import("views/schedule/event/new-add-schedule")
+    ),
     category: "services",
     subcategory: "event",
     item: "schedule",
@@ -1217,7 +1225,7 @@ const ALL_PROTECTED_ROUTES = {
     subcategory: "layout",
     item: "footer",
   },
-    "app.footer.edit": {
+  "app.footer.edit": {
     key: "app.management.layout.footer.edit",
     path: `${APP_PREFIX_PATH}/app/management/layout/footer/edit`,
     component: React.lazy(() =>
@@ -1370,18 +1378,14 @@ const ALL_PROTECTED_ROUTES = {
     key: "user.consumes.list",
     path: `${APP_PREFIX_PATH}/user/consumes/:id/:eventId`,
     component: React.lazy(() =>
-      import(
-        "views/consumes/user-consumes/list-user"
-      )
+      import("views/consumes/user-consumes/list-user")
     ),
   },
   "food.consumes": {
     key: "food.consumes.list",
     path: `${APP_PREFIX_PATH}/food/consumes/:id/:eventId`,
     component: React.lazy(() =>
-      import(
-        "views/consumes/food-consumes/list-food"
-      )
+      import("views/consumes/food-consumes/list-food")
     ),
   },
 };

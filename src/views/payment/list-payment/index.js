@@ -171,14 +171,14 @@ const PaymentList = () => {
         {hasPermission(
           PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.PAYMENT.ADD_PAYMENT
         ) && (
-            <Button
-              type="primary"
-              icon={<FormOutlined />}
-              onClick={() => navigate(`${APP_PREFIX_PATH}/payment/add`)}
-            >
-              Add Payment
-            </Button>
-          )}
+          <Button
+            type="primary"
+            icon={<FormOutlined />}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/payment/add`)}
+          >
+            Add Payment
+          </Button>
+        )}
       </Flex>
       <div className="table-responsive">
         <Table
