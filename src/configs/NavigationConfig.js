@@ -215,7 +215,7 @@ const ALL_NAVIGATION_ITEMS = {
   "reports.dashboard": {
     key: "super-admin.reports",
     path: `${APP_PREFIX_PATH}/super-admin/reports`,
-    title: "sidenav.dashboard",
+    title: "sidenav.overview.dashboard",
     icon: DashboardOutlined,
     breadcrumb: false,
     submenu: [],
@@ -317,7 +317,7 @@ const ALL_NAVIGATION_ITEMS = {
   "organizer.reports.dashboard": {
     key: "organizer.reports",
     path: `${APP_PREFIX_PATH}/organizer/reports`,
-    title: "sidenav.dashboard",
+    title: "sidenav.overview.dashboard",
     icon: DashboardOutlined,
     breadcrumb: false,
     submenu: [],
