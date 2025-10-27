@@ -209,6 +209,12 @@ export const extractFileObjects = (formValues, fileFields = null) => {
  */
 // utils/s3UploadUtil.js
 
+// utils/s3UploadUtil.js
+
+/**
+ * Default upload field configurations for common scenarios
+ * Maps form fields to API response fields for S3 upload
+ */
 export const UPLOAD_FIELD_CONFIGS = {
   PLACE: [
     {
@@ -224,11 +230,27 @@ export const UPLOAD_FIELD_CONFIGS = {
       isArray: true,
     },
   ],
+
+  VENUE: [
+    {
+      dataField: "thumbnail_image",
+      uploadUrlField: "thumbnail_image_upload_url",
+      fileField: "thumbnail_image",
+      isArray: false,
+    },
+    {
+      dataField: "banner_images",
+      uploadUrlField: "banner_images_upload_url",
+      fileField: "banner_images",
+      isArray: true,
+    },
+  ],
+
   EVENT: [
     {
       dataField: "thumbnail_image",
       uploadUrlField: "thumbnail_image_upload_url",
-      fileField: "thumbnail_image", // ❌ WAS: "banner_images" - THIS WAS THE BUG
+      fileField: "thumbnail_image", // ✅ FIXED - WAS: "banner_images"
       isArray: false,
     },
     {

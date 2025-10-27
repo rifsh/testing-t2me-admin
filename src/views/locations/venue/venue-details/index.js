@@ -3,11 +3,9 @@ import { Card, Row, Col, Typography, Image, Carousel, Alert } from "antd";
 import Loading from "components/shared-components/Loading";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
-import {
-  getSingleVenues,
-} from "store/slices/locationSlice";
+import { getSingleVenues } from "store/slices/locationSlice";
+import { CDN_PATH } from "configs/AppConfig";
 const { Title, Text } = Typography;
-
 
 const VenueDetails = () => {
   const dispatch = useDispatch();
@@ -17,22 +15,20 @@ const VenueDetails = () => {
     console.log("FETCHING SINGLE VENUE");
 
     if (venueId) {
-      dispatch(getSingleVenues(venueId))
+      dispatch(getSingleVenues(venueId));
       console.log("FETCHING SINGLE VENUE", singleVenues);
     }
   }, [dispatch, venueId]);
   const { singleVenues, loading, error } = useSelector(
     (state) => state.locations
   );
-  console.log(singleVenues, 'addonser');
-
-
+  console.log(singleVenues, "addonser");
 
   if (loading) return <Loading />;
   if (error) return <Alert message={`Error: ${error}`} type="error" />;
   if (!singleVenues) return <div>No Venue Details Found</div>;
-
-  const mediaImages = singleVenues.media?.map((item) => item.media_url) || [];
+  const mediaImages =
+    singleVenues.media?.map((item) => `${CDN_PATH}/${item.media_url}`) || [];
 
   const isNoImage =
     !singleVenues.thumbnail_image || singleVenues.thumbnail_image === "images";
@@ -59,7 +55,7 @@ const VenueDetails = () => {
             ) : (
               <Image
                 alt="venue thumbnail"
-                src={singleVenues.thumbnail_image}
+                src={`${CDN_PATH}/${singleVenues.thumbnail_image}`}
                 height={300}
                 style={{ objectFit: "cover" }}
               />
@@ -74,49 +70,69 @@ const VenueDetails = () => {
       </Col>
 
       <Col span={24}>
-        <Card title={<span style={{ color: "#1890ff" }}>Venue Overview</span>} bordered={false}>
+        <Card
+          title={<span style={{ color: "#1890ff" }}>Venue Overview</span>}
+          bordered={false}
+        >
           <Row gutter={[16, 16]}>
             <Col span={12}>
-              <Text strong>Address:</Text> {singleVenues.address || "Not Available"}
+              <Text strong>Address:</Text>{" "}
+              {singleVenues.address || "Not Available"}
             </Col>
             <Col span={12}>
-              <Text strong>Capacity:</Text> {singleVenues.capacity || "Not Available"}
+              <Text strong>Capacity:</Text>{" "}
+              {singleVenues.capacity || "Not Available"}
             </Col>
             <Col span={12}>
               <Text strong>Indoor:</Text> {singleVenues.indoor ? "Yes" : "No"}
             </Col>
             <Col span={12}>
-              <Text strong>Latitude:</Text> {singleVenues.latitude || "Not Available"}
+              <Text strong>Latitude:</Text>{" "}
+              {singleVenues.latitude || "Not Available"}
             </Col>
             <Col span={12}>
-              <Text strong>Longitude:</Text> {singleVenues.longitude || "Not Available"}
+              <Text strong>Longitude:</Text>{" "}
+              {singleVenues.longitude || "Not Available"}
             </Col>
             <Col span={12}>
-              <Text strong>Description:</Text> <div dangerouslySetInnerHTML={{ __html: singleVenues.description || "Not Available" }} />
+              <Text strong>Description:</Text>{" "}
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: singleVenues.description || "Not Available",
+                }}
+              />
             </Col>
           </Row>
         </Card>
       </Col>
       <Col span={24}>
         {/* Event Add on Services Section */}
-        <Card title={<span style={{ color: "#1890ff" }}>Venue Add on Services</span>} bordered={false}>
+        <Card
+          title={
+            <span style={{ color: "#1890ff" }}>Venue Add on Services</span>
+          }
+          bordered={false}
+        >
           <Row gutter={[24, 24]} justify="left">
             {singleVenues.venue_add_on_services?.length > 0 ? (
               singleVenues.venue_add_on_services.map((service, index) => (
                 <Col xs={24} sm={12} md={8} lg={6} key={index}>
-
                   <div>
-                    <Title level={5} style={{ marginBottom: 10 }}>{service.title}</Title>
+                    <Title level={5} style={{ marginBottom: 10 }}>
+                      {service.title}
+                    </Title>
 
                     <div style={{ textAlign: "left" }}>
                       {service.services.map((item, idx) => (
-                        <Text key={idx} style={{ display: "block", marginBottom: 5 }}>
+                        <Text
+                          key={idx}
+                          style={{ display: "block", marginBottom: 5 }}
+                        >
                           • {item}
                         </Text>
                       ))}
                     </div>
                   </div>
-
                 </Col>
               ))
             ) : (
@@ -130,18 +146,24 @@ const VenueDetails = () => {
 
       {mediaImages.length > 0 && (
         <Col span={24}>
-          <Card title={<span style={{ color: "#1890ff" }}>Media Gallery</span>} bordered={false}>
+          <Card
+            title={<span style={{ color: "#1890ff" }}>Media Gallery</span>}
+            bordered={false}
+          >
             <Carousel autoplay autoplaySpeed={3000}>
               {mediaImages.map((url, index) => (
                 <div key={index}>
-                  <Image alt={`media image ${index + 1}`} src={url} height={300} />
+                  <Image
+                    alt={`media image ${index + 1}`}
+                    src={url}
+                    height={300}
+                  />
                 </div>
               ))}
             </Carousel>
           </Card>
         </Col>
       )}
-
     </Row>
   );
 };

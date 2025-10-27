@@ -150,46 +150,22 @@ LocationService.editVenue = function (
 // };
 LocationService.addVenue = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
-
-  // const formData = new FormData();
-
-  // // Ensure address is appended to the formData
-  // formData.append("address", data.address); // Add this line
-
-  // formData.append("place_id", data.place_id);
-  // formData.append("name", data.name);
-  // formData.append("capacity", data.capacity);
-  // formData.append("indoor", data.indoor);
-  // formData.append("description", data.description);
-  // formData.append("latitude", data.latitude);
-  // formData.append("longitude", data.longitude);
-  // formData.append("venue_add_on_services", data.venue_add_on_services);
-
-  // if (data.thumbnail_image && data.thumbnail_image[0]) {
-  //   formData.append("thumbnail_image", data.thumbnail_image[0].originFileObj);
-  // }
-
-  // if (data.banner_images && Array.isArray(data.banner_images)) {
-  //   data.banner_images.forEach((image) => {
-  //     formData.append("banner_images", image.originFileObj);
-  //   });
-  // }
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
 
   return fetch({
     url: ApiConstant.VENUE_URL,
     method: "POST",
-    data: formData,
+    data: data,
     params: {
       place_id: data.place_id,
       action: encodedAction,
     },
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
   });
 };
 
