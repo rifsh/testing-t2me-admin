@@ -49,7 +49,8 @@ const EventDetails = () => {
   const { eventId } = useParams();
   const dispatch = useDispatch();
   const { eventDetails, loading, error } = useSelector((state) => state.event);
-  const mediaImages = eventDetails?.media?.map((item) => item.media_url) || [];
+  const mediaImages =
+    eventDetails?.media?.map((item) => `${CDN_PATH}/${item.media_url}`) || [];
   const [form] = Form.useForm();
   const [enrollModalVisible, setEnrollModalVisible] = useState(false);
   const currentUser = getCurrentUser();
@@ -134,7 +135,7 @@ const EventDetails = () => {
                     style={{
                       borderRadius: "8px",
                       overflow: "hidden",
-                      width: "100%"
+                      width: "100%",
                     }}
                   >
                     <Image
@@ -145,7 +146,7 @@ const EventDetails = () => {
                       style={{
                         width: "100%",
                         objectFit: "cover",
-                        display: "block"
+                        display: "block",
                       }}
                     />
                   </div>
@@ -230,11 +231,19 @@ const EventDetails = () => {
             key="2"
           >
             <div style={{ padding: "24px 24px 0" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                }}
+              >
                 <Typography.Title level={4} style={{ margin: 0 }}>
                   Event Users
                 </Typography.Title>
-                {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
+                {currentUser.role_id !==
+                  UserRoleConstants.eventOrganizerRoleId && (
                   <Button
                     type="primary"
                     icon={<UserAddOutlined />}

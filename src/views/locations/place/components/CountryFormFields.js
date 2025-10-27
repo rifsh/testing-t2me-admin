@@ -30,6 +30,7 @@ import ResizedImgePicker from "components/util-components/Image/ResizedImgePicke
 import ReactQuill from "react-quill";
 import TextEditor from "../../../../components/util-components/FormItems/TextEditor";
 import { deleteS3Image } from "store/slices/s3CloudflareSlice";
+import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -86,44 +87,7 @@ const CountryFormFields = ({ mode, form }) => {
     }
   };
 
-  const handleDeleteBannerImage = (file, onSuccess) => {
-    // Check if file has id (from database)
-    if (file.id) {
-      Modal.confirm({
-        title: "Delete Image",
-        content: `Are you sure you want to delete this image? This will permanently remove it from the database and cannot be undone.`,
-        okText: "Yes, Delete",
-        okType: "danger",
-        cancelText: "Cancel",
-        onOk: () => {
-          // Return the promise for proper modal handling
-          return dispatch(
-            deleteS3Image({
-              id: file.id,
-              module_name: "place",
-            })
-          )
-            .unwrap()
-            .then(() => {
-              message.success("Image deleted successfully from database");
-              // Call success callback to remove from UI
-              if (onSuccess) {
-                onSuccess();
-              }
-            })
-            .catch((error) => {
-              message.error(error?.message || "Failed to delete image");
-              console.error("Delete error:", error);
-            });
-        },
-      });
-    } else {
-      // For new uploads, just call success to remove from UI
-      if (onSuccess) {
-        onSuccess();
-      }
-    }
-  };
+  const { handleDeleteImage } = useS3ImageDelete("place");
 
   if (loading) {
     return (
@@ -184,7 +148,7 @@ const CountryFormFields = ({ mode, form }) => {
               maxCount={20}
               targetResolution={ThumbnailImageResolutions.PLACE}
               form={form}
-              onDelete={handleDeleteBannerImage} // Changed prop name
+              onDelete={handleDeleteImage}
             />
           </Form.Item>
 
