@@ -30,6 +30,7 @@ import ResizedImgePicker from "components/util-components/Image/ResizedImgePicke
 import { EventType } from "constants/AppConstants";
 import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
 import { isOrganizer } from "configs/UserAccessConfig";
+import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
 
 const { Text } = Typography;
 
@@ -78,6 +79,7 @@ function OfferFormFields({ type }) {
   const { isDateRequired, availableOfferDays } = useSelector(
     (state) => state.offers
   );
+  const { handleDeleteImage, deletingImages } = useS3ImageDelete("offer");
 
   // Local state to force re-renders
   const [selectedDays, setSelectedDays] = useState([]);
@@ -425,6 +427,8 @@ function OfferFormFields({ type }) {
                   maxCount={1}
                   targetResolution={ThumbnailImageResolutions.OFFER}
                   form={form}
+                  onDelete={handleDeleteImage}
+                  deletingImages={deletingImages}
                 />
               </Form.Item>
               <Text
