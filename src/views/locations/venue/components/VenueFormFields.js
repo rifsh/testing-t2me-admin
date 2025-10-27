@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Input,
   Row,
@@ -35,7 +35,10 @@ import LocationMarker from "./LocationMarker";
 import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { RulesMessageConstants } from "constants/RulesConstant";
-import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import {
+  setSelectedSubmitItem,
+  setOriginalFiles,
+} from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import {
@@ -65,6 +68,8 @@ import TextEditor from "components/util-components/FormItems/TextEditor";
 import BackButton from "components/Buttons/BackPageButoon";
 import DraftSystem from "drafts/components/DraftSystem";
 import { useDraft } from "drafts/hooks/useDraftManager";
+import { UPLOAD_FIELD_CONFIGS, extractFileObjects } from "utils/s3UploadUtil";
+import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -74,6 +79,9 @@ const VenueFormFields = ({ mode, venue }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [isUploading, setIsUploading] = useState(false);
+
+  const { handleDeleteImage, deletingImages } = useS3ImageDelete("venue");
 
   const {
     coordinates,
@@ -93,14 +101,37 @@ const VenueFormFields = ({ mode, venue }) => {
     placeValidationDialogVisible,
     message: warningMessage,
   } = useSelector((state) => state.locations);
-  // const { deleteDraft } = useDraft({
-  //   form,
-  //   formType: "place",
-  //   mode,
-  //   recordId: venue,
-  // });
+
+  // ✅ FIXED: Properly map existing images with media IDs for deletion
   useEffect(() => {
     if (venue && mode === "EDIT") {
+      // Map thumbnail image
+      const thumbnailFile =
+        venue.thumbnail_image && venue.thumbnail_image !== "images"
+          ? [
+              {
+                uid: "thumbnail-1",
+                name: venue.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${venue.thumbnail_image}`,
+                id: null, // Thumbnail doesn't have media id
+              },
+            ]
+          : [];
+
+      // Map banner images with media ids for deletion
+      const bannerFiles = venue?.media
+        ? venue.media.map((media, index) => ({
+            uid: `banner-${media.id}`, // Use media id in uid
+            name: media.media_url.split("/").pop(),
+            status: "done",
+            url: `${CDN_PATH}/${media.media_url}`,
+            id: media.id, // ✅ Store media id for deletion
+            mediaType: media.media_type,
+            caption: media.caption,
+          }))
+        : [];
+
       form.setFieldsValue({
         address: venue.address,
         place: venue.place?.name,
@@ -116,26 +147,8 @@ const VenueFormFields = ({ mode, venue }) => {
         venue_add_on_services: !venue.venue_add_on_services
           ? []
           : venue.venue_add_on_services,
-        banner_images: venue?.media
-          ? venue?.media?.map((banner, index) => ({
-              uid: `-banner-${index}`,
-              name: banner?.media_url.split("/").pop(),
-              status: "done",
-              url: `${CDN_PATH}/${banner?.media_url}`,
-            }))
-          : [],
-
-        thumbnail_image:
-          venue.thumbnail_image && venue.thumbnail_image !== "images"
-            ? [
-                {
-                  uid: "-1",
-                  name: venue.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: `${CDN_PATH}/${venue.thumbnail_image}`,
-                },
-              ]
-            : [],
+        banner_images: bannerFiles, // ✅ Now includes media IDs
+        thumbnail_image: thumbnailFile,
       });
     }
   }, [form, venue, mode]);
@@ -161,6 +174,12 @@ const VenueFormFields = ({ mode, venue }) => {
     try {
       const values = await form.validateFields();
 
+      // ✅ Extract original file objects for S3 upload
+      const originalFiles = extractFileObjects(values);
+
+      // ✅ Store original files in Redux for confirmation modal
+      dispatch(setOriginalFiles(originalFiles));
+
       // Clean and sanitize add-on services
       const cleanedAddOnServices = Array.isArray(values.venue_add_on_services)
         ? values.venue_add_on_services.map((item) => ({
@@ -172,8 +191,8 @@ const VenueFormFields = ({ mode, venue }) => {
       // Shared base data
       const baseData = {
         ...values,
-        latitude: coordinates.lat || 0,
-        longitude: coordinates.lng || 0,
+        latitude: coordinates.lat || venue?.latitude || 0,
+        longitude: coordinates.lng || venue?.longitude || 0,
         capacity: values.capacity || 0,
         indoor: values.indoor !== undefined ? values.indoor : false,
         address: values.address,
@@ -214,9 +233,22 @@ const VenueFormFields = ({ mode, venue }) => {
           return;
         }
 
+        // ✅ Transform data with file names for API
         const formData = {
           ...baseData,
           place_id: selectedPlace,
+          thumbnail_image: {
+            file_name:
+              values.thumbnail_image?.[0]?.name ||
+              values.thumbnail_image?.[0]?.file_name ||
+              null,
+            media_type: "image",
+          },
+          banner_images:
+            values.banner_images?.map((img) => ({
+              file_name: img.name || img.file_name,
+              media_type: "image",
+            })) || [],
         };
         console.log("Form values:", formData);
 
@@ -249,7 +281,6 @@ const VenueFormFields = ({ mode, venue }) => {
 
   const handleWarningPagination = (page, size) => {
     console.log("------------------------");
-
     console.log("CHANIGN...........");
 
     dispatch(
@@ -270,9 +301,6 @@ const VenueFormFields = ({ mode, venue }) => {
     dispatch(setLocationDialogVisible(false));
     if (editVenue.fulfilled.match(resultAction)) {
       dispatch(setSelectedSubmitItem(selectedVenue));
-      // antdMessage.success(`Event ${selectedPlace.name} updated successfully`);
-      // form.resetFields();
-      // navigate(`${APP_PREFIX_PATH}/place/list`);
     }
   };
 
@@ -314,7 +342,11 @@ const VenueFormFields = ({ mode, venue }) => {
                 />
                 <DiscardButton form={form} />
               </div>
-              <Button type="primary" onClick={onFinish} loading={loading}>
+              <Button
+                type="primary"
+                onClick={onFinish}
+                loading={loading || isUploading}
+              >
                 {mode === "ADD" ? "Add" : "Save"}
               </Button>
             </Flex>
@@ -384,8 +416,9 @@ const VenueFormFields = ({ mode, venue }) => {
               ]}
             >
               <TextEditor />
-              {/* <Input.TextArea rows={4} placeholder="Enter venue description" /> */}
             </Form.Item>
+
+            {/* ✅ FIXED: Added deletingImages prop to thumbnail */}
             <Form.Item
               name="thumbnail_image"
               label="Thumbnail Image"
@@ -397,6 +430,8 @@ const VenueFormFields = ({ mode, venue }) => {
                 maxCount={1}
                 targetResolution={ThumbnailImageResolutions.VENUE}
                 form={form}
+                onDelete={handleDeleteImage}
+                deletingImages={deletingImages}
               />
             </Form.Item>
             <Text
@@ -407,6 +442,8 @@ const VenueFormFields = ({ mode, venue }) => {
               &{" resolution "}
               {ResolutionByServices.venue} pixels.{" "}
             </Text>
+
+            {/* ✅ Already has onDelete and deletingImages */}
             <Form.Item
               name="banner_images"
               label="Banner Images"
@@ -418,6 +455,8 @@ const VenueFormFields = ({ mode, venue }) => {
                 maxCount={20}
                 targetResolution={ThumbnailImageResolutions.PLACE}
                 form={form}
+                onDelete={handleDeleteImage}
+                deletingImages={deletingImages}
               />
             </Form.Item>
             <Text
@@ -430,7 +469,7 @@ const VenueFormFields = ({ mode, venue }) => {
             </Text>
           </Card>
 
-          {/* Rest of the form remains the same */}
+          {/* Add on Services Section */}
           <Card>
             <Form.Item name="venue_add_on_services" label="Add on Services">
               <Form.List name="venue_add_on_services">
@@ -557,7 +596,10 @@ const VenueFormFields = ({ mode, venue }) => {
             <div className="mb-3">
               <h3>Pick Location</h3>
               <MapContainer
-                center={coordinates}
+                center={[
+                  coordinates.lat || venue?.latitude || 25.2048,
+                  coordinates.lng || venue?.longitude || 55.2708,
+                ]}
                 zoom={13}
                 style={{ height: "400px", width: "100%" }}
               >
@@ -595,7 +637,9 @@ const VenueFormFields = ({ mode, venue }) => {
         pagination={warningPagination}
         onPaginationChange={handleWarningPagination}
       />
-      <LoadingOverlay loading={loading} />
+      <LoadingOverlay loading={loading || isUploading} />
+
+      {/* ✅ FIXED: Added setIsUploading prop */}
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? editVenue : addVenue}
@@ -604,6 +648,12 @@ const VenueFormFields = ({ mode, venue }) => {
         mode={mode}
         form={form}
         formType={"venue"}
+        setIsUploading={setIsUploading}
+        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.VENUE}
+        extraFieldsFromResponse={[
+          "thumbnail_image_upload_url",
+          "banner_images_upload_url",
+        ]}
       />
     </Row>
   );
