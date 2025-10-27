@@ -2,6 +2,7 @@ export const PAYMENT_METHODS = {
   N_GENIUS: "N-Genius Online",
   UPI: "UPI",
   CARD_PAYMENT: "Card Payment",
+  HDFC_SMART_GATEWAY: "HDFC SmartGateway",
 };
 
 // UPI providers

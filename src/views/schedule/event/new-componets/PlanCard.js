@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Calendar, Plus } from "lucide-react";
-import { Modal, message } from "antd";
+import { Button, Modal, message } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { setScheduleFormData } from "store/slices/scheduleSlice";
 
@@ -9,7 +9,6 @@ import TimeSelector from "./TimeSelector";
 import EventModal from "./EventModal";
 import { getDaysDiff, ScheduleUtil } from "../utils";
 import CompactDateTimePicker from "./CompactDateTimePicker";
-import TimeSlotsSidebar from "./TimeSlotsSidebar";
 import dayjs from "dayjs";
 import {
   getBlockingInfo,
@@ -132,6 +131,115 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
   const [currentWeekStart, setCurrentWeekStart] = useState(0);
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
   const [pendingDateChange, setPendingDateChange] = useState(null);
+
+  // FIXED: Load events from Redux when component mounts or when show_dates changes
+  useEffect(() => {
+    // Don't load if we already have events or are in the middle of loading
+    if (allEvents.length > 0 || hasLoadedEditData.current) {
+      return;
+    }
+
+    const showDates =
+      scheduleFormData?.show_dates || scheduleFormData?.showdates;
+
+    if (
+      showDates &&
+      showDates.length > 0 &&
+      scheduleFormData.start_date &&
+      scheduleFormData.end_date
+    ) {
+      console.log("===== LOADING EVENTS FROM REDUX =====");
+      console.log("Show dates count:", showDates.length);
+
+      try {
+        const startDate = new Date(scheduleFormData.start_date);
+        const endDate = new Date(scheduleFormData.end_date);
+
+        setDateRange({
+          startDate,
+          endDate,
+          isSelecting: false,
+        });
+
+        if (scheduleFormData.ad_start_date_time) {
+          setAdStartDateTime(new Date(scheduleFormData.ad_start_date_time));
+        }
+
+        if (scheduleFormData.booking_start_date_time) {
+          setBookingStartDateTime(
+            new Date(scheduleFormData.booking_start_date_time)
+          );
+        }
+
+        const loadedEvents = [];
+        let eventIdCounter = 0;
+
+        showDates.forEach((showDate, dateIndex) => {
+          const dateStr = showDate.start_date;
+          const slotDate = new Date(dateStr);
+          const daysDiff = Math.floor(
+            (slotDate - startDate) / (1000 * 60 * 60 * 24)
+          );
+
+          if (showDate.show_times && Array.isArray(showDate.show_times)) {
+            showDate.show_times.forEach((timeSlot, slotIndex) => {
+              // Parse times
+              const startTime = parseTimeString(timeSlot.start_time);
+              const endTime = parseTimeString(timeSlot.end_time);
+
+              const colorClass =
+                timeSlotColors[daysDiff % timeSlotColors.length];
+
+              const event = {
+                id: `loaded-${dateStr}-${slotIndex}-${eventIdCounter++}`,
+                startTime: {
+                  day: daysDiff,
+                  hour: startTime.hour,
+                  minute: startTime.minute,
+                },
+                endTime: {
+                  day:
+                    timeSlot.is_midnight === "true" ? daysDiff + 1 : daysDiff,
+                  hour: endTime.hour,
+                  minute: endTime.minute,
+                },
+                ticketType: timeSlot.ticket_structure_id,
+                ticket_structure_id: timeSlot.ticket_structure_id,
+                ticketstructureid: timeSlot.ticket_structure_id,
+                seat_structure_id: timeSlot.seat_structure_id,
+                seatstructureid: timeSlot.seat_structure_id,
+                ticket_set: timeSlot.ticket_set,
+                ticketset: timeSlot.ticket_set,
+                is_midnight_passed: timeSlot.is_midnight === "true",
+                ismidnightpassed: timeSlot.is_midnight === "true",
+                show_end_date: showDate.end_date,
+                showenddate: showDate.end_date,
+                show_date_id: showDate.id,
+                show_time_id: timeSlot.id,
+                offer_ids: timeSlot.offer_ids || [],
+                offerids: timeSlot.offer_ids || [],
+                coupon_ids: timeSlot.coupon_ids || [],
+                couponids: timeSlot.coupon_ids || [],
+                color: colorClass,
+                timezone: timezone,
+              };
+
+              loadedEvents.push(event);
+              console.log(`✅ Loaded event ${eventIdCounter}:`, event);
+            });
+          }
+        });
+
+        setAllEvents(loadedEvents);
+        hasLoadedEditData.current = true;
+        console.log(`===== LOADED ${loadedEvents.length} EVENTS =====`);
+        message.success(`Loaded ${loadedEvents.length} time slots`);
+      } catch (error) {
+        console.error("❌ Error loading events:", error);
+        message.error("Failed to load time slots");
+      }
+    }
+  }, [scheduleFormData?.show_dates, scheduleFormData?.showdates, timezone]);
 
   // ==================== BLOCKING INFO PROCESSING ====================
   useEffect(() => {
@@ -289,6 +397,28 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
 
     return eventStartTime === slotStartTime;
   };
+  // Add this useEffect to AUTO-SAVE allEvents to Redux whenever they change
+  useEffect(() => {
+    if (allEvents.length > 0 && dateRange.startDate && dateRange.endDate) {
+      const showDates = generateShowDatesFromEvents(allEvents, dateRange);
+
+      console.log("💾 AUTO-SAVING to Redux:", {
+        allEventsCount: allEvents.length,
+        showDatesCount: showDates.length,
+        showDates,
+      });
+
+      // Save to Redux immediately
+      dispatch(
+        setScheduleFormData({
+          show_dates: showDates,
+          timezone: timezone,
+        })
+      );
+    } else if (allEvents.length === 0) {
+      console.log("⚠️ No events to save");
+    }
+  }, [allEvents, dateRange.startDate, dateRange.endDate, timezone, dispatch]);
 
   // ==================== LOAD EDIT MODE DATA ====================
   useEffect(() => {
@@ -427,35 +557,96 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     }
   }, [scheduleFormData, timezone]);
 
-  // ==================== VALIDATION FUNCTIONS ====================
   const isAllDatesValid = () => {
+    console.log("🔍 Validation Check:", {
+      adStartDateTime: adStartDateTime ? "✓" : "✗",
+      bookingStartDateTime: bookingStartDateTime ? "✓" : "✗",
+      dateRangeStart: dateRange.startDate ? "✓" : "✗",
+      dateRangeEnd: dateRange.endDate ? "✓" : "✗",
+      allEventsCount: allEvents.length,
+      scheduleFormDataShowDates: scheduleFormData?.show_dates?.length,
+    });
+
+    // Check if all required dates are set
     if (
       !adStartDateTime ||
       !bookingStartDateTime ||
       !dateRange.startDate ||
       !dateRange.endDate
     ) {
+      console.log("❌ Missing required dates");
       return false;
     }
 
+    // Check date order: ad < booking
     if (adStartDateTime >= bookingStartDateTime) {
+      console.log("❌ Ad time must be before booking time");
       return false;
     }
 
+    // ✅ FIX: More lenient date comparison
+    // Booking can end on the same day or before the event starts
     const bookingDate = new Date(bookingStartDateTime);
-    bookingDate.setHours(23, 59, 59, 999);
-
     const eventStart = new Date(dateRange.startDate);
-    eventStart.setHours(0, 0, 0, 0);
 
-    if (eventStart <= bookingDate) {
+    // Set booking to end of day and event to start of day for comparison
+    const bookingEndOfDay = new Date(bookingDate);
+    bookingEndOfDay.setHours(23, 59, 59, 999);
+
+    const eventStartOfDay = new Date(eventStart);
+    eventStartOfDay.setHours(0, 0, 0, 0);
+
+    console.log("📅 Date Comparison:", {
+      bookingDateTime: bookingDate.toISOString(),
+      bookingEndOfDay: bookingEndOfDay.toISOString(),
+      eventStartDate: dateRange.startDate,
+      eventStartOfDay: eventStartOfDay.toISOString(),
+      comparison: eventStartOfDay.getTime() - bookingEndOfDay.getTime(),
+    });
+
+    // ✅ FIX: Allow event to start on the same day as booking ends
+    // Only fail if event starts BEFORE booking date (not same day)
+    if (eventStartOfDay < new Date(bookingDate.setHours(0, 0, 0, 0))) {
+      console.log("❌ Event must not start before booking date");
       return false;
     }
 
-    if (!allEvents || allEvents.length === 0) {
+    // ✅ Check for time slots in BOTH allEvents AND Redux
+    const hasEventsInState = allEvents && allEvents.length > 0;
+    const hasEventsInRedux =
+      scheduleFormData?.show_dates && scheduleFormData.show_dates.length > 0;
+
+    if (!hasEventsInState && !hasEventsInRedux) {
+      console.log("❌ No time slots found");
       return false;
     }
 
+    // ✅ If we have events, validate they have proper ticket/seat configuration
+    if (hasEventsInState) {
+      const invalidEvents = allEvents.filter((event) => {
+        const hasTicketStructure =
+          event.ticket_structure_id ||
+          event.ticketstructureid ||
+          event.ticketType;
+
+        const hasSeatStructure =
+          event.seat_structure_id || event.seatstructureid;
+
+        const hasTicketSet = event.ticket_set || event.ticketset;
+
+        return !(hasTicketStructure || hasTicketSet || hasSeatStructure);
+      });
+
+      if (invalidEvents.length > 0) {
+        console.log(
+          "❌ Some time slots are missing ticket/seat configuration:",
+          invalidEvents
+        );
+        return false;
+      }
+    }
+
+    console.log("✅ All validations passed");
     return true;
   };
 
@@ -722,29 +913,163 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       return new Date(day);
     });
   };
+  const hasValidTimeSlots = () => {
+    if (!allEvents || allEvents.length === 0) {
+      return false;
+    }
+
+    // Check if all events have required fields
+    return allEvents.every(
+      (event) => event.ticketType || event.ticket_set || event.seat_structure_id
+    );
+  };
+  const handleSubmit = () => {
+    console.log("🔍 Submit Validation:", {
+      allEventsCount: allEvents.length,
+      scheduleFormDataShowDates: scheduleFormData?.show_dates?.length,
+      adStartDateTime: !!adStartDateTime,
+      bookingStartDateTime: !!bookingStartDateTime,
+      dateRange: !!(dateRange.startDate && dateRange.endDate),
+    });
+
+    // Validate required dates
+    if (!isAllDatesValid()) {
+      message.error(
+        "Please fill in all required dates and configure at least one time slot"
+      );
+      return;
+    }
+
+    // ✅ Try to get show_dates from Redux first
+    let showDates = scheduleFormData?.show_dates || scheduleFormData?.showdates;
+
+    // ✅ If not in Redux, generate from allEvents
+    if (!showDates || showDates.length === 0) {
+      console.log("⚠️ No show_dates in Redux, generating from allEvents...");
+      showDates = generateShowDatesFromEvents(allEvents, dateRange);
+    }
+
+    if (!showDates || showDates.length === 0) {
+      message.error(
+        "No time slots configured. Please add at least one time slot."
+      );
+      console.error("❌ Failed to get or generate show_dates:", {
+        reduxShowDates: scheduleFormData?.show_dates,
+        allEvents,
+        dateRange,
+      });
+      return;
+    }
+
+    // ✅ Validate that all time slots have proper configuration
+    const invalidSlots = showDates.filter(
+      (sd) =>
+        !sd.show_times ||
+        sd.show_times.length === 0 ||
+        sd.show_times.some(
+          (st) =>
+            !st.ticket_structure_id && !st.seat_structure_id && !st.ticket_set
+        )
+    );
+
+    if (invalidSlots.length > 0) {
+      message.error("Some time slots are missing ticket/seat configuration");
+      console.error("❌ Invalid time slots:", invalidSlots);
+      return;
+    }
+
+    // ✅ Prepare the complete form data to pass to parent
+    const formData = {
+      start_date: formatDateForAPI(dateRange.startDate),
+      end_date: formatDateForAPI(dateRange.endDate),
+      ad_start_date_time: formatDateTimeForAPI(adStartDateTime),
+      booking_start_date_time: formatDateTimeForAPI(bookingStartDateTime),
+      show_dates: showDates,
+      timezone: timezone,
+    };
+
+    console.log("✅ Submitting validated data to parent:", {
+      show_dates_count: showDates.length,
+      formData,
+    });
+
+    // ✅ Call parent's onSubmit handler (handleTimeSlotSubmit from ScheduleDetails)
+    if (onSubmit) {
+      onSubmit(formData);
+    } else {
+      message.error("Submit handler not found");
+    }
+  };
 
   const generateShowDatesFromEvents = (events, currentDateRange) => {
-    if (
-      !events ||
-      events.length === 0 ||
-      !currentDateRange.startDate ||
-      !currentDateRange.endDate
-    ) {
+    console.log("📅 generateShowDatesFromEvents called:", {
+      eventsCount: events?.length,
+      hasDateRange: !!(
+        currentDateRange?.startDate && currentDateRange?.endDate
+      ),
+      availableTypes: scheduleFormData?.available_types,
+    });
+
+    if (!events || events.length === 0) {
+      console.warn("⚠️ No events to generate show_dates");
+      return [];
+    }
+
+    if (!currentDateRange.startDate || !currentDateRange.endDate) {
+      console.warn("⚠️ Invalid date range");
       return [];
     }
 
     const allDaysInRange = getAllDaysInRange();
     const eventsByDate = {};
+    const isSeatBased = scheduleFormData?.available_types === "seat_structure";
 
-    events.forEach((event) => {
-      if (!event.startTime || !event.endTime) return;
+    console.log(
+      `🔄 Processing ${events.length} events (${
+        isSeatBased ? "SEAT" : "TICKET"
+      } based)`
+    );
+
+    events.forEach((event, index) => {
+      if (!event.startTime || !event.endTime) {
+        console.warn(`⚠️ Event ${index} missing time data:`, event);
+        return;
+      }
+
+      // ✅ Validate configuration based on booking type
+      let hasValidConfig = false;
+
+      if (isSeatBased) {
+        hasValidConfig = !!(event.seat_structure_id || event.seatstructureid);
+        if (!hasValidConfig) {
+          console.warn(
+            `⚠️ Seat-based event ${index} missing seat_structure_id:`,
+            event
+          );
+          return;
+        }
+      } else {
+        const hasTicketStructure = !!(
+          event.ticket_structure_id ||
+          event.ticketstructureid ||
+          event.ticketType
+        );
+        const hasTicketSet = !!(event.ticket_set || event.ticketset);
+        hasValidConfig = hasTicketStructure || hasTicketSet;
+
+        if (!hasValidConfig) {
+          console.warn(
+            `⚠️ Ticket-based event ${index} missing ticket config:`,
+            event
+          );
+          return;
+        }
+      }
 
       const startDay = event.startTime.day;
-      let endDay = event.endTime.day;
-
-      if (event.is_midnight_passed) {
-        endDay = startDay;
-      }
+      const isMidnight =
+        event.is_midnight_passed || event.ismidnightpassed || false;
+      const endDay = isMidnight ? startDay : event.endTime.day;
 
       for (let day = startDay; day <= endDay; day++) {
         if (allDaysInRange[day]) {
@@ -752,35 +1077,52 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
 
           if (!eventsByDate[dateStr]) {
             eventsByDate[dateStr] = {
-              show_date_id: event.show_date_id,
+              show_date_id: event.show_date_id || event.showdateid,
               show_times: [],
             };
           }
 
-          eventsByDate[dateStr].show_times.push({
-            id: event.show_time_id,
-            start_time: `${event.startTime.hour.toString().padStart(2, "0")}:${(
-              event.startTime.minute || 0
-            )
-              .toString()
-              .padStart(2, "0")}`,
-            end_time: `${event.endTime.hour.toString().padStart(2, "0")}:${(
-              event.endTime.minute || 0
-            )
-              .toString()
-              .padStart(2, "0")}`,
-            ticket_structure_id: event.ticket_structure_id,
-            offer_ids: event.offer_ids || [],
-            coupon_ids: event.coupon_ids || [],
-            ticket_set: event.ticket_set,
-            seat_structure_id: event.seat_structure_id,
-            is_midnight: event.is_midnight_passed ? "true" : "false",
-            show_end_date:
-              event.is_midnight_passed && event.show_end_date
-                ? event.show_end_date
-                : null,
-            timezone: timezone,
-          });
+          const startHour = String(event.startTime.hour).padStart(2, "0");
+          const startMinute = String(event.startTime.minute || 0).padStart(
+            2,
+            "0"
+          );
+          const endHour = String(event.endTime.hour).padStart(2, "0");
+          const endMinute = String(event.endTime.minute || 0).padStart(2, "0");
+
+          const showTime = {
+            show_time_id: event.show_time_id || event.showtimeid || event.id,
+            start_time: `${startHour}:${startMinute}`,
+            end_time: `${endHour}:${endMinute}`,
+            is_midnight: isMidnight ? "true" : "false",
+            offer_ids: event.offer_ids || event.offerids || [],
+            coupon_ids: event.coupon_ids || event.couponids || [],
+          };
+
+          // ✅ Add fields based on booking type
+          if (isSeatBased) {
+            showTime.seat_structure_id =
+              event.seat_structure_id || event.seatstructureid;
+            showTime.ticket_structure_id = null;
+            showTime.ticket_set = null;
+          } else {
+            showTime.ticket_structure_id =
+              event.ticket_structure_id ||
+              event.ticketstructureid ||
+              event.ticketType;
+            showTime.ticket_set = event.ticket_set || event.ticketset;
+            showTime.seat_structure_id =
+              event.seat_structure_id || event.seatstructureid || null;
+          }
+
+          eventsByDate[dateStr].show_times.push(showTime);
+
+          console.log(
+            `✅ Added ${
+              isSeatBased ? "seat" : "ticket"
+            }-based show_time for ${dateStr}:`,
+            showTime
+          );
         }
       }
     });
@@ -788,98 +1130,38 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     const showDates = Object.entries(eventsByDate).map(
       ([dateStr, dateData]) => {
         let endDate = null;
-
-        const hasMidnightEvent = dateData.show_times.some(
+        const hasMidnight = dateData.show_times.some(
           (st) => st.is_midnight === "true"
         );
 
-        if (hasMidnightEvent) {
-          const midnightEvent = dateData.show_times.find(
-            (st) => st.is_midnight === "true"
-          );
-          if (midnightEvent && midnightEvent.show_end_date) {
-            endDate = midnightEvent.show_end_date;
-          } else {
-            const startDate = new Date(dateStr);
-            const nextDay = new Date(startDate);
-            nextDay.setDate(startDate.getDate() + 1);
-            endDate = formatDateForAPI(nextDay);
-          }
+        if (hasMidnight) {
+          const startDate = new Date(dateStr);
+          const nextDay = new Date(startDate);
+          nextDay.setDate(startDate.getDate() + 1);
+          endDate = formatDateForAPI(nextDay);
         }
 
         return {
-          id: dateData.show_date_id,
+          show_date_id: dateData.show_date_id,
           start_date: dateStr,
           end_date: endDate,
           show_times: dateData.show_times,
           offer_ids: [],
           coupon_ids: [],
-          timezone: timezone,
         };
       }
     );
 
     showDates.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
 
+    console.log(
+      `✅ Generated ${showDates.length} ${
+        isSeatBased ? "seat" : "ticket"
+      }-based show_dates:`,
+      showDates
+    );
+
     return showDates;
-  };
-
-  const handleCreateEvent = async () => {
-    try {
-      if (blockingInfo?.isScheduleEditableStatus) {
-        message.error("Cannot save: Schedule is locked due to active bookings");
-        return;
-      }
-
-      if (!allEvents || allEvents.length === 0) {
-        message.error(
-          "Please add at least one time slot before saving the schedule."
-        );
-        return;
-      }
-
-      const hasBlockedEvents = allEvents.some((event) => {
-        return blockedEventIds.has(event.id);
-      });
-
-      if (hasBlockedEvents && isScheduleBlocked) {
-        message.error(
-          "Cannot save: schedule has locked time slots with active bookings"
-        );
-        return;
-      }
-
-      const currentFormData = form?.getFieldsValue() || {};
-
-      const finalData = {
-        ...scheduleFormData,
-        ...currentFormData,
-        start_date: formatDateForAPI(dateRange.startDate),
-        end_date: formatDateForAPI(dateRange.endDate),
-        ad_start_date_time: formatDateTime(adStartDateTime),
-        booking_start_date_time: formatDateTime(bookingStartDateTime),
-        show_dates: generateShowDatesFromEvents(allEvents, dateRange),
-        timezone: timezone,
-      };
-
-      console.log("💾 SUBMITTING SCHEDULE DATA:", finalData);
-
-      const result = await onSubmit(finalData);
-
-      message.success("Schedule saved successfully!");
-    } catch (error) {
-      console.error("❌ SCHEDULE SUBMISSION ERROR:", error);
-
-      if (error?.response?.data?.status?.message) {
-        message.error(error.response.data.status.message);
-      } else if (error?.response?.data?.server_error) {
-        message.error(error.response.data.server_error);
-      } else if (error?.message) {
-        message.error(error.message);
-      } else {
-        message.error("Failed to save schedule. Please try again.");
-      }
-    }
   };
 
   const getColorForDay = (dayIndex) => {
@@ -892,101 +1174,128 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       return;
     }
 
-    if (eventData.show_date_id && eventData.show_time_id) {
-      if (
-        !canEditEvent(
-          eventData.id,
-          eventData.show_date_id,
-          eventData.show_time_id,
-          blockingInfo
-        )
-      ) {
-        message.error(
-          "This time slot has active bookings and cannot be modified"
-        );
-        return;
-      }
+    console.log("💾 Saving event:", eventData);
+
+    // Validation
+    if (!eventData.startTime || !eventData.endTime) {
+      message.error("Please select valid start and end times");
+      return;
     }
 
-    if (isScheduleBlocked) {
-      message.error("Cannot modify: Schedule is locked due to active bookings");
+    // Check for ticket/seat configuration
+    const hasTicketStructure =
+      eventData.ticket_structure_id ||
+      eventData.ticketstructureid ||
+      eventData.ticketType;
+
+    const hasSeatStructure =
+      eventData.seat_structure_id || eventData.seatstructureid;
+
+    const hasTicketSet = eventData.ticket_set || eventData.ticketset;
+
+    if (!hasTicketStructure && !hasSeatStructure && !hasTicketSet) {
+      message.error(
+        "Please select ticket structure, ticket set, or seat structure"
+      );
       return;
     }
 
     if (eventData.id && eventData.id.startsWith("temp-")) {
+      // Creating new event
       const eventDayIndex = eventData.startTime.day + currentWeekStart;
       const colorClass = getColorForDay(eventDayIndex);
 
       const newEvent = {
         ...eventData,
-        id: Date.now().toString(),
+        id: `event-${Date.now()}`,
         color: colorClass,
         timezone: timezone,
+        // ✅ Normalize all field names (store both variations)
+        ticket_structure_id: hasTicketStructure || null,
+        ticketstructureid: hasTicketStructure || null,
+        ticketType: hasTicketStructure || null,
+        ticket_set: hasTicketSet || null,
+        ticketset: hasTicketSet || null,
+        seat_structure_id: hasSeatStructure || null,
+        seatstructureid: hasSeatStructure || null,
+        is_midnight_passed:
+          eventData.is_midnight_passed || eventData.ismidnightpassed || false,
+        ismidnightpassed:
+          eventData.is_midnight_passed || eventData.ismidnightpassed || false,
+        offer_ids: eventData.offer_ids || eventData.offerids || [],
+        offerids: eventData.offer_ids || eventData.offerids || [],
+        coupon_ids: eventData.coupon_ids || eventData.couponids || [],
+        couponids: eventData.coupon_ids || eventData.couponids || [],
         startTime: {
           ...eventData.startTime,
           day: eventDayIndex,
         },
         endTime: {
           ...eventData.endTime,
-          day: eventData.is_midnight_passed
-            ? eventDayIndex
-            : eventData.endTime.day + currentWeekStart,
+          day:
+            eventData.is_midnight_passed || eventData.ismidnightpassed
+              ? eventDayIndex
+              : eventData.endTime.day + currentWeekStart,
         },
       };
+
+      console.log("✅ Created new event:", newEvent);
 
       setAllEvents((prev) => {
         const updated = [...prev, newEvent];
-        debouncedSave({
-          ...scheduleFormData,
-          show_dates: generateShowDatesFromEvents(updated, dateRange),
-          timezone: timezone,
-        });
+
+        // Generate and save show_dates
+        const showDates = generateShowDatesFromEvents(updated, dateRange);
+
+        dispatch(
+          setScheduleFormData({
+            show_dates: showDates,
+            timezone: timezone,
+          })
+        );
+
         return updated;
       });
+
       message.success("Time slot created successfully!");
     } else {
-      const eventDayIndex =
-        eventData.originalStartDay !== undefined
-          ? eventData.originalStartDay
-          : eventData.startTime.day;
-      const colorClass = getColorForDay(eventDayIndex);
-
-      const updatedEvent = {
-        ...eventData,
-        color: colorClass,
-        timezone: timezone,
-        startTime: {
-          ...eventData.startTime,
-          day:
-            eventData.originalStartDay !== undefined
-              ? eventData.originalStartDay
-              : eventData.startTime.day + currentWeekStart,
-        },
-        endTime: {
-          ...eventData.endTime,
-          day: eventData.is_midnight_passed
-            ? eventData.originalStartDay !== undefined
-              ? eventData.originalStartDay
-              : eventData.startTime.day + currentWeekStart
-            : eventData.originalEndDay !== undefined
-            ? eventData.originalEndDay
-            : eventData.endTime.day + currentWeekStart,
-        },
-      };
-
+      // Updating existing event
       setAllEvents((prev) => {
-        const updated = prev.map((e) =>
-          e.id === eventData.id ? updatedEvent : e
-        );
-        debouncedSave({
-          ...scheduleFormData,
-          show_dates: generateShowDatesFromEvents(updated, dateRange),
-          timezone: timezone,
+        const updated = prev.map((e) => {
+          if (e.id === eventData.id) {
+            return {
+              ...e,
+              ...eventData,
+              // ✅ Normalize field names
+              ticket_structure_id: hasTicketStructure || null,
+              ticketstructureid: hasTicketStructure || null,
+              ticket_set: hasTicketSet || null,
+              ticketset: hasTicketSet || null,
+              seat_structure_id: hasSeatStructure || null,
+              seatstructureid: hasSeatStructure || null,
+            };
+          }
+          return e;
         });
+
+        // Generate and save show_dates
+        const showDates = generateShowDatesFromEvents(updated, dateRange);
+
+        dispatch(
+          setScheduleFormData({
+            show_dates: showDates,
+            timezone: timezone,
+          })
+        );
+
         return updated;
       });
+
       message.success("Time slot updated successfully!");
     }
+
+    setModalOpen(false);
+    setSelectedEvent(null);
   };
 
   const handleEventDelete = (eventId) => {
@@ -1108,16 +1417,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
             </div>
           </div>
         </div>
-
-        {!isAllDatesValid() && hasValidDateRange && (
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-            <p className="text-amber-800 text-sm">
-              {allEvents.length === 0
-                ? "⚠️ Please add at least one time slot to save the schedule."
-                : "⚠️ Please check your date configuration."}
-            </p>
-          </div>
-        )}
       </div>
 
       {/* MAIN GRID */}
@@ -1148,6 +1447,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                 timezone={timezone}
                 minDateTime={adStartDateTime}
                 disablePastDates={true}
+                minDate={adStartDateTime}
                 disablePastTimes={true}
                 disabled={!adStartDateTime || isScheduleBlocked}
                 blockedDates={getBlockedDatesSet()}
@@ -1172,103 +1472,13 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                 initialStartDate={dateRange.startDate}
                 initialEndDate={dateRange.endDate}
                 minDate={getEventMinDate()}
-                blockedDates={getBlockedDatesSet(
-                  scheduleFormData,
-                  blockingInfo,
-                  checkedscheduleDetails
-                )}
-                isScheduleBlocked={
-                  blockingInfo?.isScheduleEditableStatus || false
-                }
+                blockedDates={getBlockedDatesSet()}
+                isScheduleBlocked={isScheduleBlocked}
                 isEditMode={true}
                 timezone={timezone}
               />
             </div>
           </div>
-
-          {hasValidDateRange && (
-            <TimeSlotsSidebar
-              allEvents={allEvents}
-              onEventClick={(eventData, clickEvent) => {
-                if (blockedEventIds.has(eventData.id)) {
-                  message.warning(
-                    "This time slot has active bookings and cannot be modified"
-                  );
-                  return;
-                }
-                const clickPosition = {
-                  x: clickEvent?.clientX || 0,
-                  y: clickEvent?.clientY || 0,
-                };
-                setSelectedEvent({ ...eventData, clickPosition });
-                setModalOpen(true);
-              }}
-              onEventDelete={handleEventDelete}
-              onEventUpdate={(event) => {
-                if (blockedEventIds.has(event.id)) {
-                  message.warning(
-                    "This time slot has active bookings and cannot be modified"
-                  );
-                  return;
-                }
-                setSelectedEvent(event);
-                setModalOpen(true);
-              }}
-              onApplyToAll={(templateEvent) => {
-                if (isScheduleBlocked) {
-                  message.error("Cannot add slots: Schedule is locked");
-                  return;
-                }
-
-                const newEvents = [];
-                allDaysInRange.forEach((_, dayIndex) => {
-                  const hasConflict = allEvents.some((event) => {
-                    return ScheduleUtil.isTimeOverlapping(event, {
-                      startTime: { ...templateEvent.startTime, day: dayIndex },
-                      endTime: { ...templateEvent.endTime, day: dayIndex },
-                    });
-                  });
-
-                  if (!hasConflict) {
-                    const colorClass = getColorForDay(dayIndex);
-                    newEvents.push({
-                      ...templateEvent,
-                      id: `applied-${Date.now()}-${dayIndex}`,
-                      color: colorClass,
-                      timezone: timezone,
-                      startTime: { ...templateEvent.startTime, day: dayIndex },
-                      endTime: { ...templateEvent.endTime, day: dayIndex },
-                    });
-                  }
-                });
-
-                if (newEvents.length > 0) {
-                  setAllEvents((prev) => {
-                    const updated = [...prev, ...newEvents];
-                    debouncedSave({
-                      ...scheduleFormData,
-                      show_dates: generateShowDatesFromEvents(
-                        updated,
-                        dateRange
-                      ),
-                      timezone: timezone,
-                    });
-                    return updated;
-                  });
-                  message.success(
-                    `Successfully applied time slot to ${newEvents.length} days!`
-                  );
-                } else {
-                  message.error(
-                    "Could not apply time slot due to conflicts on all days."
-                  );
-                }
-              }}
-              allDaysInRange={allDaysInRange}
-              timezone={timezone}
-              blockedEventIds={blockedEventIds}
-            />
-          )}
         </div>
 
         {/* MAIN CONTENT AREA */}
@@ -1277,7 +1487,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
             <div>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-4">
-                  <button
+                  <Button
                     onClick={() =>
                       setCurrentWeekStart(Math.max(0, currentWeekStart - 7))
                     }
@@ -1285,8 +1495,8 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                     className="p-2 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft size={20} className="text-gray-600" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() =>
                       setCurrentWeekStart(
                         Math.min(currentWeekStart + 7, totalDays - 7)
@@ -1296,7 +1506,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                     className="p-2 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronRight size={20} className="text-gray-600" />
-                  </button>
+                  </Button>
                   <h2 className="text-xl font-semibold text-gray-800">
                     {visibleDays.length > 0
                       ? `${visibleDays[0].toLocaleDateString()} - ${visibleDays[
@@ -1312,33 +1522,23 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                   )}
                 </div>
                 <div className="flex items-center space-x-3">
-                  <button
-                    onClick={onBack}
-                    className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-xl font-medium transition-colors flex items-center space-x-2"
-                  >
+                  <Button onClick={onBack} type="default">
                     <span>Go Back</span>
-                  </button>
-                  <button
-                    onClick={handleCreateEvent}
-                    className={`px-4 py-2 rounded-xl font-medium transition-colors flex items-center space-x-2 ${
-                      isAllDatesValid() && !isScheduleBlocked
-                        ? "bg-blue-500 hover:bg-blue-600 text-white"
-                        : "bg-gray-300 cursor-not-allowed text-gray-500"
-                    }`}
+                  </Button>
+                  <Button
+                    onClick={handleSubmit}
+                    type="primary"
                     disabled={!isAllDatesValid() || isScheduleBlocked}
-                    title={
-                      isScheduleBlocked
-                        ? "Schedule is locked"
-                        : !isAllDatesValid()
-                        ? allEvents.length === 0
-                          ? "Please add at least one time slot"
-                          : "Please check your configuration"
-                        : "Save schedule"
-                    }
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                    // loading={loading}
                   >
                     <Plus size={16} />
-                    <span>Save Schedule</span>
-                  </button>
+                    <span>
+                      {allEvents.length > 0
+                        ? `Save Schedule (${allEvents.length} time slots)`
+                        : "Save Schedule"}
+                    </span>
+                  </Button>
                 </div>
               </div>
 
@@ -1412,6 +1612,188 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                   blockedEventIds={blockedEventIds}
                   blockingInfo={blockingInfo}
                   checkedscheduleDetails={checkedscheduleDetails}
+                  // ADD THIS PROP:
+                  onEventDelete={handleEventDelete}
+                  onApplyToAll={(templateEvent) => {
+                    if (isScheduleBlocked) {
+                      message.error("Cannot add slots: Schedule is locked");
+                      return;
+                    }
+
+                    console.log(
+                      "🔄 Apply to All triggered with template:",
+                      templateEvent
+                    );
+
+                    const newEvents = [];
+                    let skippedDays = 0;
+                    const allDaysInRange = getAllDaysInRange();
+
+                    allDaysInRange.forEach((_, dayIndex) => {
+                      // Create the event for this day
+                      const potentialEvent = {
+                        startTime: {
+                          hour: templateEvent.startTime.hour,
+                          minute: templateEvent.startTime.minute || 0,
+                          day: dayIndex,
+                        },
+                        endTime: {
+                          hour: templateEvent.endTime.hour,
+                          minute: templateEvent.endTime.minute || 0,
+                          day:
+                            templateEvent.ismidnightpassed ||
+                            templateEvent.is_midnight_passed
+                              ? dayIndex + 1
+                              : dayIndex,
+                        },
+                      };
+
+                      // Check for conflicts
+                      const hasConflict = allEvents.some((event) => {
+                        return ScheduleUtil.isTimeOverlapping(
+                          event,
+                          potentialEvent
+                        );
+                      });
+
+                      if (!hasConflict) {
+                        const colorClass = getColorForDay(dayIndex);
+
+                        // ✅ Create complete event with ALL fields from template
+                        const newEvent = {
+                          id: `applied-${Date.now()}-${dayIndex}-${Math.random()
+                            .toString(36)
+                            .substr(2, 9)}`,
+                          startTime: potentialEvent.startTime,
+                          endTime: potentialEvent.endTime,
+                          color: colorClass,
+                          timezone: timezone,
+
+                          // ✅ Copy ALL ticket/seat fields (handle both field name variations)
+                          ticketType:
+                            templateEvent.ticketType ||
+                            templateEvent.ticket_structure_id ||
+                            templateEvent.ticketstructureid,
+                          ticket_structure_id:
+                            templateEvent.ticket_structure_id ||
+                            templateEvent.ticketstructureid ||
+                            templateEvent.ticketType,
+                          ticketstructureid:
+                            templateEvent.ticket_structure_id ||
+                            templateEvent.ticketstructureid ||
+                            templateEvent.ticketType,
+
+                          ticket_set:
+                            templateEvent.ticket_set || templateEvent.ticketset,
+                          ticketset:
+                            templateEvent.ticket_set || templateEvent.ticketset,
+
+                          seat_structure_id:
+                            templateEvent.seat_structure_id ||
+                            templateEvent.seatstructureid,
+                          seatstructureid:
+                            templateEvent.seat_structure_id ||
+                            templateEvent.seatstructureid,
+
+                          // ✅ Copy midnight flag
+                          is_midnight_passed:
+                            templateEvent.is_midnight_passed ||
+                            templateEvent.ismidnightpassed ||
+                            false,
+                          ismidnightpassed:
+                            templateEvent.is_midnight_passed ||
+                            templateEvent.ismidnightpassed ||
+                            false,
+
+                          // ✅ Copy end date if midnight
+                          show_end_date:
+                            templateEvent.show_end_date ||
+                            templateEvent.showenddate ||
+                            null,
+                          showenddate:
+                            templateEvent.show_end_date ||
+                            templateEvent.showenddate ||
+                            null,
+
+                          // ✅ Copy offer and coupon IDs
+                          offer_ids:
+                            templateEvent.offer_ids ||
+                            templateEvent.offerids ||
+                            [],
+                          offerids:
+                            templateEvent.offer_ids ||
+                            templateEvent.offerids ||
+                            [],
+                          coupon_ids:
+                            templateEvent.coupon_ids ||
+                            templateEvent.couponids ||
+                            [],
+                          couponids:
+                            templateEvent.coupon_ids ||
+                            templateEvent.couponids ||
+                            [],
+                        };
+
+                        console.log(
+                          `✅ Created event for day ${dayIndex}:`,
+                          newEvent
+                        );
+                        newEvents.push(newEvent);
+                      } else {
+                        skippedDays++;
+                      }
+                    });
+
+                    if (newEvents.length > 0) {
+                      // ✅ Update state and IMMEDIATELY save to Redux
+                      setAllEvents((prev) => {
+                        const updated = [...prev, ...newEvents];
+
+                        console.log(
+                          `💾 Saving ${updated.length} events to Redux (${newEvents.length} new)`
+                        );
+
+                        // ✅ Generate show_dates IMMEDIATELY
+                        const showDates = generateShowDatesFromEvents(
+                          updated,
+                          dateRange
+                        );
+
+                        console.log("📊 Generated show_dates:", {
+                          totalEvents: updated.length,
+                          showDatesCount: showDates.length,
+                          showDates,
+                        });
+
+                        // ✅ CRITICAL: Force immediate Redux save (don't rely on useEffect)
+                        const formDataToSave = {
+                          ...scheduleFormData,
+                          show_dates: showDates,
+                          timezone: timezone,
+                        };
+
+                        dispatch(setScheduleFormData(formDataToSave));
+
+                        console.log("✅ Redux updated with show_dates");
+
+                        return updated;
+                      });
+
+                      if (skippedDays > 0) {
+                        message.success(
+                          `Successfully applied time slot to ${newEvents.length} days! (${skippedDays} days skipped due to conflicts)`
+                        );
+                      } else {
+                        message.success(
+                          `Successfully applied time slot to all ${newEvents.length} days!`
+                        );
+                      }
+                    } else {
+                      message.error(
+                        "Could not apply time slot due to conflicts on all days."
+                      );
+                    }
+                  }}
                 />
               </div>
             </div>

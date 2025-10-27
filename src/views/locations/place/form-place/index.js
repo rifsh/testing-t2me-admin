@@ -162,18 +162,19 @@ const CountryForm = ({ mode, placeId }) => {
       // Transform the data to extract file names
       const data = {
         ...values,
-          thumbnail_image: {
-            file_name:
-              values.thumbnail_image?.[0]?.name ||
-              values.thumbnail_image?.[0]?.file_name ||
-              null,
+        thumbnail_image: {
+          file_name:
+            values.thumbnail_image?.[0]?.name ||
+            values.thumbnail_image?.[0]?.file_name ||
+            null,
+          media_type: "image",
+        },
+        banner_images:
+          values.banner_images?.map((img) => ({
+            id: img.id,
+            file_name: img.name || img.file_name,
             media_type: "image",
-          },
-          banner_images:
-            values.banner_images?.map((img) => ({
-              file_name: img.name || img.file_name,
-              media_type: "image",
-            })) || [],
+          })) || [],
       };
 
       if (!placeId) {

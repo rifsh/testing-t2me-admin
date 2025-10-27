@@ -593,114 +593,222 @@ const ScheduleDetails = ({ mode, id }) => {
   };
 
   const transformSubmitData = (values) => {
-  const startDate = dayjs(values.start_date).format("YYYY-MM-DD");
-  const endDate = dayjs(values.end_date).format("YYYY-MM-DD");
+    console.log("🔍 Starting transform with values:", values);
 
-  const isSeatBased = values.available_types === "seat_structure";
+    const startDate = dayjs(
+      values.start_date || scheduleFormData.start_date
+    ).format("YYYY-MM-DD");
+    const endDate = dayjs(values.end_date || scheduleFormData.end_date).format(
+      "YYYY-MM-DD"
+    );
 
-  let transformedShowDates = [];
+    const isSeatBased =
+      (values.available_types || scheduleFormData.available_types) ===
+      "seat_structure";
 
-  if (isSeatBased) {
-    // ✅ FIX: Use data from Redux state (scheduleFormData) instead of values
-    const seatDetails = values.show_seat_details || scheduleFormData.show_seat_details || [];
-    
-    // Group seat details by date
-    const groupedByDate = {};
+    let transformedShowDates = [];
 
-    seatDetails.forEach((seatDetail) => {
-      const dateKey = seatDetail.start_date;
-      
-      if (!groupedByDate[dateKey]) {
-        groupedByDate[dateKey] = {
-          id: seatDetail.show_date_id || seatDetail.id,
-          start_date: dateKey,
-          show_times: [],
-        };
+    console.log("🔍 Transform type check:", {
+      isSeatBased,
+      available_types:
+        values.available_types || scheduleFormData.available_types,
+    });
+
+    if (isSeatBased) {
+      // ✅ FIX: For seat-based, try multiple sources for show_dates
+      const showDates =
+        values.show_dates ||
+        scheduleFormData.show_dates ||
+        scheduleFormData.showdates ||
+        [];
+
+      console.log("🪑 Seat-based transform:", {
+        showDates_from_values: values.show_dates?.length,
+        showDates_from_redux: scheduleFormData.show_dates?.length,
+        final_showDates: showDates.length,
+        showDates,
+      });
+
+      if (!showDates || showDates.length === 0) {
+        throw new Error(
+          "At least one seat-based show time is required. Please add time slots in the Plan tab."
+        );
       }
 
-      groupedByDate[dateKey].show_times.push({
-        id: seatDetail.show_time_id || seatDetail.id,
-        start_time: dayjs(seatDetail.start_time).format("hh:mm A"),
-        end_time: dayjs(seatDetail.end_time).format("hh:mm A"),
-        is_midnight: seatDetail.is_midnight || false,
-        event_seat_id: seatDetail.event_seat_id || seatDetail.seatStructureId,
-        offer_ids: seatDetail.offer_ids || [],
-        coupon_ids: seatDetail.coupon_ids || [],
+      // ✅ For seat-based, show_dates already has the correct structure from generateShowDatesFromEvents
+      transformedShowDates = showDates.map((showDate) => {
+        const transformedShowTimes = (showDate.show_times || []).map(
+          (showTime) => {
+            // ✅ Validate seat structure exists
+            const seatStructureId =
+              showTime.seat_structure_id ||
+              showTime.seatstructureid ||
+              showTime.event_seat_id;
+
+            if (!seatStructureId) {
+              console.error(
+                "❌ Missing seat_structure_id for show_time:",
+                showTime
+              );
+            }
+
+            return {
+              show_time_id: showTime.show_time_id || showTime.id,
+              start_time: showTime.start_time,
+              end_time: showTime.end_time,
+              is_midnight: String(showTime.is_midnight || false),
+              seat_structure_id: seatStructureId, // ✅ Use seat_structure_id for seat-based
+              offer_ids: showTime.offer_ids || [],
+              coupon_ids: showTime.coupon_ids || [],
+            };
+          }
+        );
+
+        return {
+          show_date_id: showDate.show_date_id || showDate.id,
+          start_date: showDate.start_date,
+          end_date: showDate.end_date,
+          offer_ids: showDate.offer_ids || [],
+          coupon_ids: showDate.coupon_ids || [],
+          show_times: transformedShowTimes,
+        };
       });
-    });
+    } else {
+      // ✅ For ticket-based booking
+      const showDates =
+        values.show_dates ||
+        scheduleFormData.show_dates ||
+        scheduleFormData.showdates ||
+        [];
 
-    transformedShowDates = Object.values(groupedByDate);
-  } else {
-    // ✅ For ticket-based: Use from Redux state with fallback to values
-    const showDates = values.show_dates || scheduleFormData.show_dates || [];
-    
-    transformedShowDates = showDates.map((showDate) => {
-      const transformedShowTimes = (showDate.show_times || []).map(
-        (showTime) => ({
-          id: showTime.show_time_id || showTime.id,
-          start_time: dayjs(showTime.start_time).format("hh:mm A"),
-          end_time: dayjs(showTime.end_time).format("hh:mm A"),
-          is_midnight: String(showTime.is_midnight),
-          ticket_structure_id: showTime.ticket_structure_id,
-          ticket_set: showTime.ticket_set,
-          seat_structure_id: showTime.seat_structure_id,
-          offer_ids: showTime.offer_ids || [],
-          coupon_ids: showTime.coupon_ids || [],
-        })
-      );
+      console.log("🎫 Ticket-based transform:", {
+        showDates_from_values: values.show_dates?.length,
+        showDates_from_redux: scheduleFormData.show_dates?.length,
+        final_showDates: showDates.length,
+      });
 
-      return {
-        id: showDate.show_date_id || showDate.id,
-        start_date: showDate.start_date,
-        end_date: showDate.end_date,
-        offer_ids: showDate.offer_ids || [],
-        coupon_ids: showDate.coupon_ids || [],
-        show_times: transformedShowTimes,
-      };
-    });
-  }
+      if (!showDates || showDates.length === 0) {
+        throw new Error(
+          "At least one show date is required. Please add time slots in the Plan tab."
+        );
+      }
 
-  // ✅ Add validation to ensure show_dates is not empty
-  if (!transformedShowDates || transformedShowDates.length === 0) {
-    console.error("No show dates found. Check data:", {
+      transformedShowDates = showDates.map((showDate) => {
+        const transformedShowTimes = (showDate.show_times || []).map(
+          (showTime) => {
+            // ✅ Validate ticket structure exists
+            const ticketStructureId =
+              showTime.ticket_structure_id || showTime.ticketstructureid;
+
+            if (!ticketStructureId && !showTime.ticket_set) {
+              console.error(
+                "❌ Missing ticket_structure_id or ticket_set for show_time:",
+                showTime
+              );
+            }
+
+            return {
+              show_time_id: showTime.show_time_id || showTime.id,
+              start_time: showTime.start_time,
+              end_time: showTime.end_time,
+              is_midnight: String(showTime.is_midnight || false),
+              ticket_structure_id: ticketStructureId,
+              ticket_set: showTime.ticket_set,
+              seat_structure_id: showTime.seat_structure_id, // Can be null for ticket-based
+              offer_ids: showTime.offer_ids || [],
+              coupon_ids: showTime.coupon_ids || [],
+            };
+          }
+        );
+
+        return {
+          show_date_id: showDate.show_date_id || showDate.id,
+          start_date: showDate.start_date,
+          end_date: showDate.end_date,
+          offer_ids: showDate.offer_ids || [],
+          coupon_ids: showDate.coupon_ids || [],
+          show_times: transformedShowTimes,
+        };
+      });
+    }
+
+    // ✅ Final validation with better error message
+    if (!transformedShowDates || transformedShowDates.length === 0) {
+      const errorMsg = isSeatBased
+        ? "Failed to transform seat-based show dates. Please ensure all time slots have a seat structure selected."
+        : "Failed to transform ticket-based show dates. Please ensure all time slots have a ticket structure or ticket set selected.";
+
+      console.error("❌ Transform failed:", {
+        isSeatBased,
+        transformedShowDates,
+        values,
+        scheduleFormData,
+      });
+
+      throw new Error(errorMsg);
+    }
+
+    console.log("✅ Successfully transformed show_dates:", {
+      count: transformedShowDates.length,
       isSeatBased,
-      values,
-      scheduleFormData,
+      data: transformedShowDates,
     });
-    throw new Error("At least one show date is required");
-  }
 
-  return {
-    id: values.id !== undefined ? values.id : undefined,
-    start_date: startDate,
-    end_date: endDate,
-    available_types: values.available_types || "ticket_structure",
-    max_ticket_per_booking: String(values.max_ticket_per_booking || 23),
-    is_multi_date: Boolean(values.is_multi_date),
-    booking_start_date_time: dayjs(values.booking_start_date_time).format(
-      "YYYY-MM-DDTHH:mm"
-    ),
-    ad_start_date_time: dayjs(values.ad_start_date_time).format(
-      "YYYY-MM-DDTHH:mm"
-    ),
-    booking_limit_per_user: values.booking_limit_per_user_toggle
-      ? values.booking_limit_per_user
-      : null,
-    payment_required: Boolean(values.payment_required),
-    booking_limit_per_user_toggle: Boolean(
-      values.booking_limit_per_user_toggle
-    ),
-    add_ons: transformAddOns(values.add_ons),
-    food_slots: transformFoodSlots(),
-    name: values.name,
-    event_id: values.event_id,
-    venue_id: values.venue_id,
-    show_dates: transformedShowDates,
-    offer_ids: transformOffersCoupons(selectedOffers, "offer"),
-    coupon_ids: transformOffersCoupons(selectedCoupons, "coupons"),
+    // ✅ Return COMPLETE payload with ALL required fields
+    const completePayload = {
+      name: values.name || scheduleFormData.name,
+      start_date: startDate,
+      end_date: endDate,
+      event_id: values.event_id || scheduleFormData.event_id,
+      venue_id: values.venue_id || scheduleFormData.venue_id,
+      available_types:
+        values.available_types ||
+        scheduleFormData.available_types ||
+        "ticket_structure",
+
+      max_ticket_per_booking: String(
+        values.max_ticket_per_booking ||
+          scheduleFormData.max_ticket_per_booking ||
+          23
+      ),
+      is_multi_date: Boolean(
+        values.is_multi_date || scheduleFormData.is_multi_date
+      ),
+      booking_start_date_time: dayjs(
+        values.booking_start_date_time ||
+          scheduleFormData.booking_start_date_time
+      ).format("YYYY-MM-DDTHH:mm"),
+      ad_start_date_time: dayjs(
+        values.ad_start_date_time || scheduleFormData.ad_start_date_time
+      ).format("YYYY-MM-DDTHH:mm"),
+
+      booking_limit_per_user: values.booking_limit_per_user_toggle
+        ? values.booking_limit_per_user
+        : null,
+      payment_required: Boolean(
+        values.payment_required || scheduleFormData.payment_required
+      ),
+      booking_limit_per_user_toggle: Boolean(
+        values.booking_limit_per_user_toggle ||
+          scheduleFormData.booking_limit_per_user_toggle
+      ),
+
+      add_ons: transformAddOns(values.add_ons || scheduleFormData.add_ons),
+      food_slots: transformFoodSlots(),
+
+      show_dates: transformedShowDates,
+      offer_ids: transformOffersCoupons(selectedOffers, "offer"),
+      coupon_ids: transformOffersCoupons(selectedCoupons, "coupons"),
+
+      ...(values.id || scheduleDetails?.id
+        ? { id: values.id || scheduleDetails.id }
+        : {}),
+    };
+
+    console.log("✅ Complete payload:", completePayload);
+
+    return completePayload;
   };
-};
-
 
   const handleFormSubmit = async (formData) => {
     try {
@@ -715,227 +823,250 @@ const ScheduleDetails = ({ mode, id }) => {
   };
 
   const handleTimeSlotSubmit = async (formData) => {
-  try {
-    // ✅ Merge current form values with formData
-    const currentFormValues = form.getFieldsValue();
-    const mergedData = {
-      ...scheduleFormData,
-      ...currentFormValues,
-      ...formData,
-    };
+    try {
+      const currentFormValues = form.getFieldsValue();
 
-    // ✅ Update Redux store
-    const updatedData = updateStoreAndForm(mergedData);
-
-    if (!validateTimeSlots(updatedData)) return;
-
-    // ✅ Log for debugging
-    console.log("Time slot data before moving to offers:", {
-      show_dates: updatedData.show_dates,
-      show_seat_details: updatedData.show_seat_details,
-      available_types: updatedData.available_types,
-    });
-
-    setTab(3);
-    message.success("Time slots configured successfully!");
-  } catch (error) {
-    console.error("Time slot validation error:", error);
-    message.error("Please ensure all time slots are configured correctly.");
-  }
-};
-
- const handleOfferSubmit = (formData) => {
-  try {
-    // ✅ Get existing show_dates from Redux state
-    const existingShowDates = scheduleFormData.show_dates || [];
-    const isSeatBased = scheduleFormData.available_types === "seat_structure";
-    
-    // ✅ Extract date strings for comparison
-    const existingDateStrings = existingShowDates.map((sd) => sd.start_date);
-
-    // Process offers and coupons
-    const processedOffers = formData.offer_ids.map((offer) => {
-      const selectedDates = offer.selected_dates || [];
-      const datesMatch = existingDateStrings.every((date) =>
-        selectedDates.includes(date)
-      );
-      const allShowDatesSelected =
-        selectedDates.length === existingDateStrings.length &&
-        selectedDates.length > 0 &&
-        existingDateStrings.length > 0 &&
-        datesMatch;
-      const isScheduleLevel =
-        selectedDates.length === 0 || allShowDatesSelected;
-
-      return {
-        offer_id: offer.offer_id,
-        valid_from: offer.valid_from,
-        valid_to: offer.valid_to,
-        selected_dates: selectedDates,
-        is_schedule_level: isScheduleLevel,
+      // ✅ CRITICAL FIX: Ensure show_dates from formData is preserved
+      const mergedData = {
+        ...scheduleFormData,
+        ...currentFormValues,
+        ...formData,
+        // ✅ Explicitly preserve show_dates
+        show_dates: formData.show_dates || scheduleFormData.show_dates || [],
       };
-    });
 
-    const processedCoupons = formData.coupon_ids.map((coupon) => {
-      const selectedDates = coupon.selected_dates || [];
-      const datesMatch = existingDateStrings.every((date) =>
-        selectedDates.includes(date)
-      );
-      const allShowDatesSelected =
-        selectedDates.length === existingDateStrings.length &&
-        selectedDates.length > 0 &&
-        existingDateStrings.length > 0 &&
-        datesMatch;
-      const isScheduleLevel =
-        selectedDates.length === 0 || allShowDatesSelected;
-
-      return {
-        coupon_id: coupon.coupon_id,
-        valid_from: coupon.valid_from,
-        valid_to: coupon.valid_to,
-        selected_dates: selectedDates,
-        is_schedule_level: isScheduleLevel,
-      };
-    });
-
-    const scheduleLevelOffers = processedOffers.filter(
-      (o) => o.is_schedule_level
-    );
-    const dateLevelOffers = processedOffers.filter(
-      (o) => !o.is_schedule_level
-    );
-    const scheduleLevelCoupons = processedCoupons.filter(
-      (c) => c.is_schedule_level
-    );
-    const dateLevelCoupons = processedCoupons.filter(
-      (c) => !c.is_schedule_level
-    );
-
-    // ✅ Preserve existing show_dates structure while adding offers/coupons
-    const updatedShowDates = existingShowDates.map((showDate) => {
-      const dateStr = showDate.start_date;
-
-      const dateOffers = dateLevelOffers
-        .filter((o) => o.selected_dates.includes(dateStr))
-        .map((o) => ({
-          offer_id: o.offer_id,
-          valid_from: dateStr,
-          valid_to: dateStr,
-        }));
-
-      const dateCoupons = dateLevelCoupons
-        .filter((c) => c.selected_dates.includes(dateStr))
-        .map((c) => ({
-          coupon_id: c.coupon_id,
-          valid_from: dateStr,
-          valid_to: dateStr,
-        }));
-
-      const updatedShowTimes = (showDate.show_times || []).map(
-        (showTime) => ({
-          ...showTime,
-          offer_ids: dateOffers,
-          coupon_ids: dateCoupons,
-          id: showTime.show_time_id || showTime.id,
-        })
-      );
-
-      return {
-        ...showDate,
-        offer_ids: dateOffers,
-        coupon_ids: dateCoupons,
-        show_times: updatedShowTimes,
-        id: showDate.show_date_id || showDate.id,
-      };
-    });
-
-    // ✅ Preserve show_seat_details if seat-based
-    const finalData = {
-      ...scheduleFormData,
-      ...formData,
-      offer_ids: scheduleLevelOffers.map((o) => ({
-        offer_id: o.offer_id,
-        valid_from: o.valid_from,
-        valid_to: o.valid_to,
-      })),
-      coupon_ids: scheduleLevelCoupons.map((c) => ({
-        coupon_id: c.coupon_id,
-        valid_from: c.valid_from,
-        valid_to: c.valid_to,
-      })),
-      show_dates: updatedShowDates,
-      show_seat_details: scheduleFormData.show_seat_details || [],
-    };
-
-    console.log("Final data with offers/coupons:", {
-      show_dates: finalData.show_dates,
-      show_seat_details: finalData.show_seat_details,
-      available_types: finalData.available_types,
-    });
-
-    const updatedData = updateStoreAndForm(finalData);
-    handleFinalSubmit(updatedData);
-
-    message.success("Offers and coupons configured successfully!");
-  } catch (error) {
-    console.error("Error in handleOfferSubmit:", error);
-    message.error("Failed to process offers and coupons");
-  }
-};
-
-
-  const handleFinalSubmit = async (finalData = null) => {
-  try {
-    const dataToSubmit = finalData || {
-      ...scheduleFormData,
-      ...form.getFieldsValue(),
-    };
-
-    const finalSubmitData = {
-      ...dataToSubmit,
-      id: scheduleDetails?.id || undefined,
-    };
-
-    // ✅ Validate show_dates before transformation
-    if (!finalSubmitData.show_dates || finalSubmitData.show_dates.length === 0) {
-      if (!finalSubmitData.show_seat_details || finalSubmitData.show_seat_details.length === 0) {
-        message.error("Please add at least one show date with time slots");
-        setTab(2); // Go back to time slot tab
+      // ✅ Validate that show_dates exists and is not empty
+      if (!mergedData.show_dates || mergedData.show_dates.length === 0) {
+        message.error("Please add at least one time slot before proceeding");
+        console.error("❌ No show_dates found:", {
+          formData,
+          scheduleFormData,
+          mergedData,
+        });
         return;
       }
+
+      // ✅ Update Redux store
+      const updatedData = updateStoreAndForm(mergedData);
+
+      // ✅ Log for debugging
+      console.log("✅ Time slot data saved to Redux:", {
+        show_dates_count: updatedData.show_dates?.length,
+        show_dates: updatedData.show_dates,
+        available_types: updatedData.available_types,
+      });
+
+      setTab(3);
+      message.success(
+        `${updatedData.show_dates.length} time slots saved successfully!`
+      );
+    } catch (error) {
+      console.error("Time slot validation error:", error);
+      message.error("Please ensure all time slots are configured correctly.");
     }
+  };
 
-    const transformedData = transformSubmitData(finalSubmitData);
+  const handleOfferSubmit = (formData) => {
+    try {
+      // ✅ Get existing show_dates from Redux state
+      const existingShowDates = scheduleFormData.show_dates || [];
+      const isSeatBased = scheduleFormData.available_types === "seat_structure";
 
-    if (mode === EDIT) {
-      const pageData = {
-        schedule_id: scheduleDetails.id,
-      };
+      // ✅ Extract date strings for comparison
+      const existingDateStrings = existingShowDates.map((sd) => sd.start_date);
 
-      console.log("Edit Data:", transformedData);
-      const resultAction = await dispatch(
-        editSchedule({ data: transformedData, action: ActionType.WARNING, pageData })
+      // Process offers and coupons
+      const processedOffers = formData.offer_ids.map((offer) => {
+        const selectedDates = offer.selected_dates || [];
+        const datesMatch = existingDateStrings.every((date) =>
+          selectedDates.includes(date)
+        );
+        const allShowDatesSelected =
+          selectedDates.length === existingDateStrings.length &&
+          selectedDates.length > 0 &&
+          existingDateStrings.length > 0 &&
+          datesMatch;
+        const isScheduleLevel =
+          selectedDates.length === 0 || allShowDatesSelected;
+
+        return {
+          offer_id: offer.offer_id,
+          valid_from: offer.valid_from,
+          valid_to: offer.valid_to,
+          selected_dates: selectedDates,
+          is_schedule_level: isScheduleLevel,
+        };
+      });
+
+      const processedCoupons = formData.coupon_ids.map((coupon) => {
+        const selectedDates = coupon.selected_dates || [];
+        const datesMatch = existingDateStrings.every((date) =>
+          selectedDates.includes(date)
+        );
+        const allShowDatesSelected =
+          selectedDates.length === existingDateStrings.length &&
+          selectedDates.length > 0 &&
+          existingDateStrings.length > 0 &&
+          datesMatch;
+        const isScheduleLevel =
+          selectedDates.length === 0 || allShowDatesSelected;
+
+        return {
+          coupon_id: coupon.coupon_id,
+          valid_from: coupon.valid_from,
+          valid_to: coupon.valid_to,
+          selected_dates: selectedDates,
+          is_schedule_level: isScheduleLevel,
+        };
+      });
+
+      const scheduleLevelOffers = processedOffers.filter(
+        (o) => o.is_schedule_level
+      );
+      const dateLevelOffers = processedOffers.filter(
+        (o) => !o.is_schedule_level
+      );
+      const scheduleLevelCoupons = processedCoupons.filter(
+        (c) => c.is_schedule_level
+      );
+      const dateLevelCoupons = processedCoupons.filter(
+        (c) => !c.is_schedule_level
       );
 
-      if (editSchedule.fulfilled.match(resultAction)) {
-        dispatch(setSelectedSchedule(transformedData));
-        dispatch(setScheduleDialogVisible(true));
-      }
-    } else {
-      dispatch(setScheduleSubmitData(transformedData));
-      dispatch(setSelectedSubmitItem(transformedData));
+      // ✅ Preserve existing show_dates structure while adding offers/coupons
+      const updatedShowDates = existingShowDates.map((showDate) => {
+        const dateStr = showDate.start_date;
 
-      console.log("Final submit data:", transformedData);
-      message.success("Schedule data prepared for submission!");
+        const dateOffers = dateLevelOffers
+          .filter((o) => o.selected_dates.includes(dateStr))
+          .map((o) => ({
+            offer_id: o.offer_id,
+            valid_from: dateStr,
+            valid_to: dateStr,
+          }));
+
+        const dateCoupons = dateLevelCoupons
+          .filter((c) => c.selected_dates.includes(dateStr))
+          .map((c) => ({
+            coupon_id: c.coupon_id,
+            valid_from: dateStr,
+            valid_to: dateStr,
+          }));
+
+        const updatedShowTimes = (showDate.show_times || []).map(
+          (showTime) => ({
+            ...showTime,
+            offer_ids: dateOffers,
+            coupon_ids: dateCoupons,
+            id: showTime.show_time_id || showTime.id,
+          })
+        );
+
+        return {
+          ...showDate,
+          offer_ids: dateOffers,
+          coupon_ids: dateCoupons,
+          show_times: updatedShowTimes,
+          id: showDate.show_date_id || showDate.id,
+        };
+      });
+
+      // ✅ Preserve show_seat_details if seat-based
+      const finalData = {
+        ...scheduleFormData,
+        ...formData,
+        offer_ids: scheduleLevelOffers.map((o) => ({
+          offer_id: o.offer_id,
+          valid_from: o.valid_from,
+          valid_to: o.valid_to,
+        })),
+        coupon_ids: scheduleLevelCoupons.map((c) => ({
+          coupon_id: c.coupon_id,
+          valid_from: c.valid_from,
+          valid_to: c.valid_to,
+        })),
+        show_dates: updatedShowDates,
+        show_seat_details: scheduleFormData.show_seat_details || [],
+      };
+
+      console.log("Final data with offers/coupons:", {
+        show_dates: finalData.show_dates,
+        show_seat_details: finalData.show_seat_details,
+        available_types: finalData.available_types,
+      });
+
+      const updatedData = updateStoreAndForm(finalData);
+      handleFinalSubmit(updatedData);
+
+      message.success("Offers and coupons configured successfully!");
+    } catch (error) {
+      console.error("Error in handleOfferSubmit:", error);
+      message.error("Failed to process offers and coupons");
     }
-  } catch (error) {
-    console.error("Final submit error:", error);
-    message.error(
-      error.message || "Failed to submit the form. Please check all required fields."
-    );
-  }
-};
+  };
 
+  const handleFinalSubmit = async (finalData = null) => {
+    try {
+      const dataToSubmit = finalData || {
+        ...scheduleFormData,
+        ...form.getFieldsValue(),
+      };
+
+      const finalSubmitData = {
+        ...dataToSubmit,
+        id: scheduleDetails?.id || undefined,
+      };
+
+      // ✅ Validate show_dates before transformation
+      if (
+        !finalSubmitData.show_dates ||
+        finalSubmitData.show_dates.length === 0
+      ) {
+        if (
+          !finalSubmitData.show_seat_details ||
+          finalSubmitData.show_seat_details.length === 0
+        ) {
+          message.error("Please add at least one show date with time slots");
+          setTab(2); // Go back to time slot tab
+          return;
+        }
+      }
+
+      const transformedData = transformSubmitData(finalSubmitData);
+
+      if (mode === EDIT) {
+        const pageData = {
+          schedule_id: scheduleDetails.id,
+        };
+
+        console.log("Edit Data:", transformedData);
+        const resultAction = await dispatch(
+          editSchedule({
+            data: transformedData,
+            action: ActionType.WARNING,
+            pageData,
+          })
+        );
+
+        if (editSchedule.fulfilled.match(resultAction)) {
+          dispatch(setSelectedSchedule(transformedData));
+          dispatch(setScheduleDialogVisible(true));
+        }
+      } else {
+        dispatch(setScheduleSubmitData(transformedData));
+        dispatch(setSelectedSubmitItem(transformedData));
+
+        console.log("Final submit data:", transformedData);
+        message.success("Schedule data prepared for submission!");
+      }
+    } catch (error) {
+      console.error("Final submit error:", error);
+      message.error(
+        error.message ||
+          "Failed to submit the form. Please check all required fields."
+      );
+    }
+  };
 
   const handleBack = () => {
     updateStoreAndForm(form.getFieldsValue());

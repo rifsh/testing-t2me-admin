@@ -121,6 +121,43 @@ const PaymentMethodFields = ({ name, payment_type, form }) => {
           </Form.Item>
         </div>
       );
+    case PAYMENT_METHODS.HDFC_SMART_GATEWAY:
+      return (
+        <div className="payment-method-fields-n-genius">
+          <Form.Item
+            name={getFieldName("merchant_id")}
+            label="Merchant ID"
+            rules={[{ required: true, message: "Please enter merchant ID" }]}
+          >
+            <Input placeholder="Enter N-Genius merchant ID" />
+          </Form.Item>
+          <Form.Item
+            name={getFieldName("api_key")}
+            label="API Key"
+            rules={[{ required: true, message: "Please enter API key" }]}
+          >
+            <Input.Password placeholder="Enter N-Genius API key" />
+          </Form.Item>
+          <Form.Item
+            name={getFieldName("payment_page_client_id")}
+            label="Client Id"
+            rules={[
+              { required: true, message: "Please enter client id" },
+            ]}
+          >
+            <Input placeholder="Enter client id" />
+          </Form.Item>
+          <Form.Item
+            name={getFieldName("response_key")}
+            label="Response Key"
+            rules={[
+              { required: true, message: "Please enter response key" },
+            ]}
+          >
+            <Input placeholder="Enter response key" />
+          </Form.Item>
+        </div>
+      );
     default:
       return null;
   }

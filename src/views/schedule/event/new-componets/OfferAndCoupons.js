@@ -37,8 +37,22 @@ const { RangePicker } = DatePicker;
 const getAvailableShowDates = (startDate, endDate, existingShowDates) => {
   const dates = [];
 
-  // Only include dates that have show_times configured
-  existingShowDates.forEach((dateStr) => {
+  console.log("🔍 Getting available show dates:", {
+    startDate,
+    endDate,
+    existingShowDates,
+  });
+
+  // ✅ FIX: Handle both array of strings and array of objects
+  const showDateStrings = existingShowDates
+    .map((sd) => {
+      if (typeof sd === "string") return sd;
+      if (sd.start_date) return sd.start_date;
+      return null;
+    })
+    .filter(Boolean);
+
+  showDateStrings.forEach((dateStr) => {
     const dateObj = dayjs(dateStr);
     if (
       dateObj.isSameOrAfter(dayjs(startDate), "day") &&
@@ -53,6 +67,7 @@ const getAvailableShowDates = (startDate, endDate, existingShowDates) => {
     }
   });
 
+  console.log("✅ Available dates for selection:", dates);
   return dates.sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
 };
 
@@ -497,6 +512,7 @@ const SimplifiedCouponCard = ({
 const OfferAndCoupons = ({ onSubmit, form, onBack, initialData, mode }) => {
   const dispatch = useDispatch();
   const { eventDetails, loading } = useSelector((state) => state.event);
+  const { scheduleFormData } = useSelector((state) => state.schedules);
 
   const [selectedOfferItems, setSelectedOfferItems] = useState([]);
   const [selectedCouponItems, setSelectedCouponItems] = useState([]);
@@ -625,40 +641,48 @@ const OfferAndCoupons = ({ onSubmit, form, onBack, initialData, mode }) => {
 
   const availableOffers = eventDetails?.event_offers || [];
   const availableCoupons = eventDetails?.event_coupons || [];
+  const scheduleStartDate = useMemo(
+    () => form?.getFieldValue("start_date") || scheduleFormData?.start_date,
+    [form, scheduleFormData]
+  );
 
+  const scheduleEndDate = useMemo(
+    () => form?.getFieldValue("end_date") || scheduleFormData?.end_date,
+    [form, scheduleFormData]
+  );
   // Memoized schedule dates with proper dayjs conversion and validation
-  const { scheduleStartDate, scheduleEndDate, schedStart, schedEnd } =
-    useMemo(() => {
-      const formValues = form.getFieldsValue();
+  const { schedStart, schedEnd } = useMemo(() => {
+    const formValues = form.getFieldsValue();
 
-      const startDate =
-        formValues.start_date ||
-        initialData?.start_date ||
-        formValues.startdate ||
-        formValues.eventstartdate ||
-        formValues.schedulestartdate ||
-        formValues.dateRange?.[0];
+    const startDate =
+      formValues.start_date ||
+      initialData?.start_date ||
+      formValues.startdate ||
+      formValues.eventstartdate ||
+      formValues.schedulestartdate ||
+      formValues.dateRange?.[0];
 
-      const endDate =
-        formValues.end_date ||
-        initialData?.end_date ||
-        formValues.enddate ||
-        formValues.eventenddate ||
-        formValues.scheduleenddate ||
-        formValues.dateRange?.[1];
+    const endDate =
+      formValues.end_date ||
+      initialData?.end_date ||
+      formValues.enddate ||
+      formValues.eventenddate ||
+      formValues.scheduleenddate ||
+      formValues.dateRange?.[1];
 
-      return {
-        scheduleStartDate: startDate,
-        scheduleEndDate: endDate,
-        schedStart: startDate ? dayjs(startDate) : null,
-        schedEnd: endDate ? dayjs(endDate) : null,
-      };
-    }, [form, initialData]);
+    return {
+      scheduleStartDate: startDate,
+      scheduleEndDate: endDate,
+      schedStart: startDate ? dayjs(startDate) : null,
+      schedEnd: endDate ? dayjs(endDate) : null,
+    };
+  }, [form, initialData]);
 
   // Get existing show dates (dates with configured time slots)
-  const existingShowDates = (initialData?.show_dates || []).map(
-    (sd) => sd.start_date
-  );
+  const existingShowDates = useMemo(() => {
+    const showDates = scheduleFormData?.show_dates || [];
+    return showDates.map((sd) => sd.start_date);
+  }, [scheduleFormData]);
 
   const validateItemDates = (offerStart, offerEnd, itemName) => {
     if (

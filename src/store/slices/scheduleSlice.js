@@ -145,6 +145,11 @@ const scheduleSlice = createSlice({
   initialState,
   reducers: {
     setScheduleFormData: (state, action) => {
+      console.log("📦 Redux: Setting schedule form data", {
+        show_dates_incoming: action.payload.show_dates?.length,
+        show_dates_current: state.scheduleFormData.show_dates?.length,
+      });
+
       state.scheduleFormData = {
         ...state.scheduleFormData,
         ...action.payload,
@@ -158,7 +163,12 @@ const scheduleSlice = createSlice({
         coupon_ids:
           action.payload.coupon_ids || state.scheduleFormData.coupon_ids || [],
       };
+
+      console.log("📦 Redux: Updated schedule form data", {
+        show_dates_final: state.scheduleFormData.show_dates?.length,
+      });
     },
+
     resetScheduleData: (state) => {
       state.scheduleFormData = initialState.scheduleFormData;
     },
