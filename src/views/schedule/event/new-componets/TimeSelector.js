@@ -6,8 +6,9 @@ import {
   formatTime,
   timeToMinutes,
 } from "../utils";
-import { message } from "antd";
-
+import { message, Modal } from "antd";
+import { Dropdown, Menu } from "antd";
+import { MoreVertical, Copy, Trash2, Edit } from "lucide-react";
 const TimeSelector = ({
   days = [],
   selectedTimeSlot,
@@ -26,6 +27,7 @@ const TimeSelector = ({
   eventDateRange = null,
   selectedEventId = null,
   blockedEventIds = new Set(),
+  onEventDelete,
 }) => {
   const timeSlots = generateTimeSlots();
   const [isSelecting, setIsSelecting] = useState(false);
@@ -33,10 +35,11 @@ const TimeSelector = ({
   const [dragEnd, setDragEnd] = useState(null);
   const [overlapMessage, setOverlapMessage] = useState(null);
   const [activeEventId, setActiveEventId] = useState(null);
+  const [menuVisible, setMenuVisible] = useState({});
   const isEventBlocked = (eventId) => {
     return blockedEventIds.has(eventId);
   };
-  
+
   const logMidnightEvent = (event, context = "") => {
     if (event.is_midnight_passed) {
       console.log(`🌙 MIDNIGHT EVENT ${context}:`, {
@@ -55,6 +58,84 @@ const TimeSelector = ({
         dayTwoDuration: calculateDayTwoDuration(event),
       });
     }
+  };
+  const handleApplyToAll = (event, dayIndex) => {
+    if (isEventBlocked(event.id)) {
+      message.error("Cannot apply: This time slot is locked");
+      return;
+    }
+
+    Modal.confirm({
+      title: "Apply to All Days",
+      content: (
+        <div className="py-2">
+          <p>
+            Do you want to apply this time slot{" "}
+            <strong>
+              {formatTime(event.startTime.hour, event.startTime.minute || 0)} -{" "}
+              {formatTime(event.endTime.hour, event.endTime.minute || 0)}
+            </strong>{" "}
+            to all days in the schedule?
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Days with conflicting time slots will be skipped automatically.
+          </p>
+        </div>
+      ),
+      okText: "Yes, Apply to All",
+      cancelText: "Cancel",
+      onOk: () => {
+        if (onApplyToAll) {
+          // ✅ FIX: Pass complete template event with ALL fields
+          const templateEvent = {
+            startTime: {
+              hour: event.startTime.hour,
+              minute: event.startTime.minute || 0,
+              day: 0,
+            },
+            endTime: {
+              hour: event.endTime.hour,
+              minute: event.endTime.minute || 0,
+              day: event.is_midnight_passed || event.ismidnightpassed ? 1 : 0,
+            },
+            // ✅ Copy ALL ticket/seat fields (both field name variations)
+            ticketType:
+              event.ticketType ||
+              event.ticket_structure_id ||
+              event.ticketstructureid,
+            ticket_structure_id:
+              event.ticket_structure_id ||
+              event.ticketstructureid ||
+              event.ticketType,
+            ticketstructureid:
+              event.ticket_structure_id ||
+              event.ticketstructureid ||
+              event.ticketType,
+            ticket_set: event.ticket_set || event.ticketset,
+            ticketset: event.ticket_set || event.ticketset,
+            seat_structure_id: event.seat_structure_id || event.seatstructureid,
+            seatstructureid: event.seat_structure_id || event.seatstructureid,
+            is_midnight_passed:
+              event.is_midnight_passed || event.ismidnightpassed || false,
+            ismidnightpassed:
+              event.is_midnight_passed || event.ismidnightpassed || false,
+            show_end_date: event.show_end_date || event.showenddate,
+            showenddate: event.show_end_date || event.showenddate,
+            // ✅ Copy offer and coupon IDs
+            offer_ids: event.offer_ids || event.offerids || [],
+            offerids: event.offer_ids || event.offerids || [],
+            coupon_ids: event.coupon_ids || event.couponids || [],
+            couponids: event.coupon_ids || event.couponids || [],
+          };
+
+          console.log("✅ Applying template to all days:", templateEvent);
+          onApplyToAll(templateEvent);
+          message.success(
+            "Time slot configuration will be applied to all available days!"
+          );
+        }
+      },
+    });
   };
 
   // FIXED: Calculate total midnight event duration
@@ -86,19 +167,106 @@ const TimeSelector = ({
   };
 
   // FIXED: Calculate day one duration (start time to midnight)
+  // In TimeSelector component - Fix the midnight event display calculation
   const calculateDayOneDuration = (event) => {
-    if (!event.is_midnight_passed) return 0;
     const startMinutes = timeToMinutes(
       event.startTime.hour,
       event.startTime.minute || 0
     );
-    return 24 * 60 - startMinutes; // Minutes from start to midnight
+    const midnightMinutes = 24 * 60; // End of day
+    return midnightMinutes - startMinutes;
   };
 
-  // FIXED: Calculate day two duration (midnight to end time)
   const calculateDayTwoDuration = (event) => {
-    if (!event.is_midnight_passed) return 0;
-    return timeToMinutes(event.endTime.hour, event.endTime.minute || 0);
+    // FIXED: For early morning times (1-5 AM), ensure proper calculation
+    const endMinutes = timeToMinutes(
+      event.endTime.hour,
+      event.endTime.minute || 0
+    );
+
+    // If end time is early morning (0-6 AM), it's part of the midnight event
+    if (event.endTime.hour < 6) {
+      return endMinutes; // Duration from midnight to end time
+    }
+
+    return endMinutes;
+  };
+
+  const getEventDisplayInfo = (event, dayIndex, slotIndex) => {
+    const eventStartHour = event.startTime.hour;
+    const eventStartMinute = event.startTime.minute || 0;
+    const eventStartDay = event.startTime.day;
+    const eventStartSlot = Math.floor(eventStartHour);
+
+    // Check if event is blocked
+    const blocked = isEventBlocked(event.id);
+
+    // FIXED: Enhanced midnight event display
+    if (event.is_midnight_passed || event.ismidnightpassed) {
+      // Day 1: Show from start time to midnight
+      if (dayIndex === eventStartDay && slotIndex === eventStartSlot) {
+        const duration = calculateDayOneDuration(event);
+        const heightSlots = Math.max(1, Math.ceil(duration / 60));
+
+        return {
+          show: true,
+          height: heightSlots,
+          type: "midnight-day1",
+          duration: duration,
+          blocked: blocked,
+        };
+      }
+
+      // Day 2: Show from midnight to end time
+      // FIXED: Check if we're at slot 0 (midnight) on the next day
+      if (dayIndex === eventStartDay + 1 && slotIndex === 0) {
+        const duration = calculateDayTwoDuration(event);
+        if (duration > 0) {
+          // FIXED: For early morning times, ensure minimum height
+          const heightSlots = Math.max(1, Math.ceil(duration / 60));
+
+          console.log(`🌙 Midnight Day 2 Display:`, {
+            dayIndex,
+            slotIndex,
+            duration,
+            heightSlots,
+            endHour: event.endTime.hour,
+            endMinute: event.endTime.minute,
+          });
+
+          return {
+            show: true,
+            height: heightSlots,
+            type: "midnight-day2",
+            duration: duration,
+            blocked: blocked,
+          };
+        }
+      }
+    } else {
+      // Regular event display
+      if (dayIndex === eventStartDay && slotIndex === eventStartSlot) {
+        const eventEndMinutes = timeToMinutes(
+          event.endTime.hour,
+          event.endTime.minute || 0
+        );
+        const eventStartMinutes = timeToMinutes(
+          eventStartHour,
+          eventStartMinute
+        );
+        const durationMinutes = eventEndMinutes - eventStartMinutes;
+        const heightSlots = Math.max(1, Math.ceil(durationMinutes / 60));
+
+        return {
+          show: true,
+          height: heightSlots,
+          type: "regular",
+          blocked: blocked,
+        };
+      }
+    }
+
+    return { show: false };
   };
 
   const getDaySpecificColors = (dayIndex) => {
@@ -462,78 +630,6 @@ const TimeSelector = ({
     return visibleEvent;
   };
 
-  // FIXED: Enhanced event display calculation for midnight events
-  const getEventDisplayInfo = (event, dayIndex, slotIndex) => {
-    if (!event || !event.startTime || !event.endTime) return null;
-
-    const eventStartDay = event.startTime.day;
-    const eventStartHour = event.startTime.hour;
-    const eventStartMinute = event.startTime.minute || 0;
-    const eventStartSlot = eventStartHour;
-
-    // Check if event is blocked
-    const blocked = isEventBlocked(event.id);
-
-    logMidnightEvent(
-      event,
-      `calculating display info for day ${dayIndex}, slot ${slotIndex}`
-    );
-
-    if (event.is_midnight_passed) {
-      // Day 1: Show from start time to midnight
-      if (dayIndex === eventStartDay && slotIndex === eventStartSlot) {
-        const duration = calculateDayOneDuration(event);
-        const heightSlots = Math.max(1, Math.ceil(duration / 60));
-
-        return {
-          show: true,
-          height: heightSlots,
-          type: "midnight-day1",
-          duration: duration,
-          blocked: blocked, // Add blocked flag
-        };
-      }
-
-      // Day 2: Show from midnight to end time
-      if (dayIndex === eventStartDay + 1 && slotIndex === 0) {
-        const duration = calculateDayTwoDuration(event);
-        if (duration > 0) {
-          const heightSlots = Math.max(1, Math.ceil(duration / 60));
-
-          return {
-            show: true,
-            height: heightSlots,
-            type: "midnight-day2",
-            duration: duration,
-            blocked: blocked, // Add blocked flag
-          };
-        }
-      }
-    } else {
-      // Regular event display
-      if (dayIndex === eventStartDay && slotIndex === eventStartSlot) {
-        const eventEndMinutes = timeToMinutes(
-          event.endTime.hour,
-          event.endTime.minute || 0
-        );
-        const eventStartMinutes = timeToMinutes(
-          eventStartHour,
-          eventStartMinute
-        );
-        const durationMinutes = eventEndMinutes - eventStartMinutes;
-        const heightSlots = Math.max(1, Math.ceil(durationMinutes / 60));
-        return {
-          show: true,
-          height: heightSlots,
-          type: "regular",
-          blocked: blocked, // Add blocked flag
-        };
-      }
-    }
-
-    return { show: false };
-  };
-
   const displaySlots = [];
   for (let hour = 0; hour < 24; hour++) {
     displaySlots.push({
@@ -543,6 +639,77 @@ const TimeSelector = ({
       isHourMark: true,
     });
   }
+  const getEventMenu = (event, dayIndex) => {
+    const isBlocked = isEventBlocked(event.id);
+
+    return (
+      <Menu
+        onClick={({ key, domEvent }) => {
+          domEvent.stopPropagation();
+          setMenuVisible({ ...menuVisible, [event.id]: false });
+
+          switch (key) {
+            case "edit":
+              if (!isBlocked) {
+                onEventClick(event, domEvent);
+              } else {
+                message.warning(
+                  "This time slot is locked and cannot be edited"
+                );
+              }
+              break;
+            case "apply":
+              if (!isBlocked) {
+                handleApplyToAll(event, dayIndex);
+              } else {
+                message.error("Cannot apply: This time slot is locked");
+              }
+              break;
+            case "delete":
+              if (!isBlocked) {
+                Modal.confirm({
+                  title: "Delete Time Slot",
+                  content: "Are you sure you want to delete this time slot?",
+                  okText: "Delete",
+                  cancelText: "Cancel",
+                  okButtonProps: { danger: true },
+                  onOk: () => {
+                    // FIXED: Use the onEventDelete prop that's passed to the component
+                    if (onEventDelete) {
+                      onEventDelete(event.id);
+                      message.success("Time slot deleted successfully!");
+                    } else {
+                      message.error("Delete function not available");
+                    }
+                  },
+                });
+              } else {
+                message.error(
+                  "Cannot delete: This time slot has active bookings"
+                );
+              }
+              break;
+          }
+        }}
+      >
+        <Menu.Item key="edit" icon={<Edit size={14} />} disabled={isBlocked}>
+          Edit Details
+        </Menu.Item>
+        <Menu.Item key="apply" icon={<Copy size={14} />} disabled={isBlocked}>
+          Apply to All Days
+        </Menu.Item>
+        <Menu.Divider />
+        <Menu.Item
+          key="delete"
+          icon={<Trash2 size={14} />}
+          danger
+          disabled={isBlocked}
+        >
+          Delete Time Slot
+        </Menu.Item>
+      </Menu>
+    );
+  };
 
   // NEW: Check if event is selected
   const isEventSelected = (event) => {
@@ -645,7 +812,7 @@ const TimeSelector = ({
                       <div
                         className={`absolute inset-x-1 top-0 cursor-pointer transition-all duration-200 z-10 flex ${
                           eventInfo.blocked
-                            ? "opacity-75 cursor-not-allowed" // Blocked styling
+                            ? "opacity-75 cursor-not-allowed"
                             : isEventSelected(event)
                             ? "ring-4 ring-blue-400 ring-opacity-70 shadow-2xl scale-105"
                             : "hover:opacity-90 hover:shadow-lg"
@@ -671,20 +838,20 @@ const TimeSelector = ({
                             : getEventTooltip(event)
                         }
                       >
-                        {/* Color bar with lock indication */}
+                        {/* Color bar */}
                         <div
                           className={`rounded-l transition-all ${
                             eventInfo.blocked
-                              ? "bg-gray-400" // Blocked color
+                              ? "bg-gray-400"
                               : getEventColors(event, dayIndex).main
                           } ${isEventSelected(event) ? "w-2" : "w-1"}`}
                         ></div>
 
-                        {/* Event content with lock overlay */}
+                        {/* Event content */}
                         <div
                           className={`flex-1 ${
                             eventInfo.blocked
-                              ? "bg-gray-50 border-gray-300" // Blocked styling
+                              ? "bg-gray-50 border-gray-300"
                               : getEventColors(event, dayIndex).light
                           } ${
                             eventInfo.blocked
@@ -696,9 +863,48 @@ const TimeSelector = ({
                               : ""
                           }`}
                         >
-                          {/* LOCK BADGE FOR BLOCKED EVENTS */}
+                          {/* Menu Button - TOP RIGHT */}
+                          <Dropdown
+                            overlay={getEventMenu(event, dayIndex)}
+                            trigger={["click"]}
+                            placement="bottomRight"
+                            open={menuVisible[event.id]}
+                            onOpenChange={(visible) => {
+                              setMenuVisible({
+                                ...menuVisible,
+                                [event.id]: visible,
+                              });
+                            }}
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMenuVisible({
+                                  ...menuVisible,
+                                  [event.id]: true,
+                                });
+                              }}
+                              className={`absolute top-1 right-1 p-1 rounded hover:bg-white/80 transition-all z-30 ${
+                                eventInfo.blocked
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
+                              title="More options"
+                            >
+                              <MoreVertical
+                                size={16}
+                                className={
+                                  eventInfo.blocked
+                                    ? "text-gray-500"
+                                    : getEventColors(event, dayIndex).text
+                                }
+                              />
+                            </button>
+                          </Dropdown>
+
+                          {/* Lock Badge */}
                           {eventInfo.blocked && (
-                            <div className="absolute top-1 right-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1 shadow-md z-20">
+                            <div className="absolute top-1 right-8 bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold flex items-center space-x-1 shadow-md z-20">
                               <svg
                                 className="w-3 h-3"
                                 fill="currentColor"
@@ -721,7 +927,7 @@ const TimeSelector = ({
 
                           {/* Event title */}
                           <div
-                            className={`font-medium truncate text-sm leading-tight ${
+                            className={`font-medium truncate text-sm leading-tight pr-6 ${
                               eventInfo.blocked
                                 ? "text-gray-600"
                                 : getEventColors(event, dayIndex).text
