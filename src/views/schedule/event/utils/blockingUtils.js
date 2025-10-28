@@ -172,11 +172,12 @@ export const getBlockedDatesSet = (
 ) => {
   const blockedDates = new Set();
 
-  if (!blockingInfo || !scheduleFormData) {
+  // FIXED: Return empty set if no blocking info or it's initial load
+  if (!blockingInfo || !scheduleFormData || !checkedScheduleDetails) {
     return blockedDates;
   }
 
-  // If schedule is completely blocked, block all dates
+  // FIXED: If schedule is completely blocked, block all dates
   if (
     blockingInfo.isScheduleBlocked ||
     blockingInfo.isVenueBlocked ||
@@ -192,17 +193,19 @@ export const getBlockedDatesSet = (
   }
 
   // Add dates that are completely blocked
-  blockingInfo.blockedDates.forEach((showDateId) => {
-    // Find the corresponding date string from show_dates
-    if (checkedScheduleDetails?.show_dates) {
-      const showDate = checkedScheduleDetails.show_dates.find(
-        (sd) => sd.show_date_id === showDateId
-      );
-      if (showDate?.start_date) {
-        blockedDates.add(showDate.start_date);
+  if (blockingInfo.blockedDates && blockingInfo.blockedDates.size > 0) {
+    blockingInfo.blockedDates.forEach((showDateId) => {
+      // Find the corresponding date string from show_dates
+      if (checkedScheduleDetails?.show_dates) {
+        const showDate = checkedScheduleDetails.show_dates.find(
+          (sd) => sd.show_date_id === showDateId
+        );
+        if (showDate?.start_date) {
+          blockedDates.add(showDate.start_date);
+        }
       }
-    }
-  });
+    });
+  }
 
   return blockedDates;
 };

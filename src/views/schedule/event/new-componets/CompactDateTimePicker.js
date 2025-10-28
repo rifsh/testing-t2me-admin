@@ -58,19 +58,19 @@ const CompactDateTimePicker = ({
     const currentInTz = dayjs(current).tz(timezone).startOf("day");
     const today = dayjs().tz(timezone).startOf("day");
 
-    // FIXED: Disable today if disableToday prop is true
+    // Check if date is blocked by active bookings
+    const dateStr = currentInTz.format("YYYY-MM-DD");
+    if (blockedDates && blockedDates.size > 0 && blockedDates.has(dateStr)) {
+      return true;
+    }
+
+    // FIXED: Only disable today if explicitly requested
     if (disableToday && currentInTz.isSame(today, "day")) {
       return true;
     }
 
-    // Disable dates before today
-    if (currentInTz.isBefore(today, "day")) {
-      return true;
-    }
-
-    // Check if date is blocked
-    const dateStr = currentInTz.format("YYYY-MM-DD");
-    if (blockedDates.has(dateStr)) {
+    // FIXED: Only disable past dates (NOT including today) if disablePastDates is true
+    if (disablePastDates && currentInTz.isBefore(today, "day")) {
       return true;
     }
 
@@ -93,7 +93,7 @@ const CompactDateTimePicker = ({
     const today = dayjs().tz(timezone).startOf("day");
 
     // If selected date is today, disable past hours and minutes
-    if (selectedDate.isSame(today, "day")) {
+    if (selectedDate.isSame(today, "day") && disablePastTimes) {
       return {
         disabledHours: () => {
           const hours = [];
@@ -124,6 +124,13 @@ const CompactDateTimePicker = ({
       if (onDateTimeChange) {
         onDateTimeChange(null);
       }
+      return;
+    }
+
+    // ADDED: Validate against blocked dates when "Now" button is clicked
+    const dateStr = dayjs(date).tz(timezone).format("YYYY-MM-DD");
+    if (blockedDates && blockedDates.size > 0 && blockedDates.has(dateStr)) {
+      message.error("This date is blocked due to active bookings");
       return;
     }
 
@@ -169,7 +176,7 @@ const CompactDateTimePicker = ({
           }}
           format="MMM D, YYYY hh:mm A"
           placeholder={placeholder}
-          showNow={true}
+          showNow={!isScheduleBlocked}
           className="w-full"
           size="large"
           style={{ width: "100%" }}
