@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Button, Upload, message, Modal } from "antd";
-import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Button, Upload, message, Modal, Progress } from "antd";
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  PlayCircleOutlined,
+} from "@ant-design/icons";
 import {
   SupportImageFormat,
   ResolutionByServices,
@@ -8,7 +12,7 @@ import {
 import Utils from "utils/index";
 import ImageCropper from "components/util-components/Image/ImageCroping";
 
-const ResizedImgePicker = ({
+const ResizedMediaPicker = ({
   value,
   onChange,
   form,
@@ -16,12 +20,15 @@ const ResizedImgePicker = ({
   maxCount = 1,
   square = true,
   onDelete,
+  allowVideo = false, // New prop to enable video uploads
+  maxVideoSize = 100, // Max video size in MB
 }) => {
   const [cropperVisible, setCropperVisible] = useState(false);
   const [imageToProcess, setImageToProcess] = useState(null);
   const [currentFileName, setCurrentFileName] = useState(null);
   const [fileList, setFileList] = useState([]);
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState({});
 
   useEffect(() => {
     if (value) {
@@ -31,12 +38,39 @@ const ResizedImgePicker = ({
     }
   }, [value]);
 
+  const isVideoFile = (file) => {
+    return (
+      file.type?.startsWith("video/") ||
+      /\.(mp4|webm|ogg|mov|avi)$/i.test(file.name)
+    );
+  };
+
   const beforeUpload = (file) => {
     if (fileList.length >= maxCount) {
-      message.warning(`You can only upload a maximum of ${maxCount} images.`);
+      message.warning(`You can only upload a maximum of ${maxCount} files.`);
       return Upload.LIST_IGNORE;
     }
 
+    // Check if it's a video file
+    if (isVideoFile(file)) {
+      if (!allowVideo) {
+        message.error("Video uploads are not allowed for this field.");
+        return Upload.LIST_IGNORE;
+      }
+
+      // Validate video size
+      const isLt100M = file.size / 1024 / 1024 < maxVideoSize;
+      if (!isLt100M) {
+        message.error(`Video must be smaller than ${maxVideoSize}MB!`);
+        return Upload.LIST_IGNORE;
+      }
+
+      // Add video directly without cropping
+      handleVideoUpload(file);
+      return false;
+    }
+
+    // Handle image upload with cropping
     const isValidFile = Utils.handleBeforeUpload(
       file,
       ResolutionByServices.place
@@ -52,6 +86,55 @@ const ResizedImgePicker = ({
     setCropperVisible(true);
 
     return false;
+  };
+
+  const handleVideoUpload = (file) => {
+    // Create video thumbnail
+    const video = document.createElement("video");
+    const canvas = document.createElement("canvas");
+    const objectUrl = URL.createObjectURL(file);
+
+    video.preload = "metadata";
+    video.src = objectUrl;
+
+    video.onloadedmetadata = () => {
+      video.currentTime = 0.5; // Capture frame at 0.5 seconds
+    };
+
+    video.onseeked = () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const thumbnailUrl = canvas.toDataURL("image/jpeg");
+
+      const newFile = {
+        uid: Date.now().toString(),
+        name: file.name,
+        status: "done",
+        url: objectUrl,
+        thumbUrl: thumbnailUrl,
+        originFileObj: file,
+        type: "video",
+        id: null,
+      };
+
+      const newFileList = [...fileList, newFile];
+      setFileList(newFileList);
+
+      if (onChange) {
+        onChange(newFileList);
+      }
+
+      URL.revokeObjectURL(objectUrl);
+      message.success("Video uploaded successfully");
+    };
+
+    video.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      message.error("Failed to process video");
+    };
   };
 
   const handleCancelCrop = () => {
@@ -76,7 +159,8 @@ const ResizedImgePicker = ({
       status: "done",
       url: URL.createObjectURL(croppedFile),
       originFileObj: croppedFile,
-      id: null, // New upload, no id yet
+      type: "image",
+      id: null,
     };
 
     const newFileList = [...fileList, newFile];
@@ -93,11 +177,8 @@ const ResizedImgePicker = ({
   const handleDeleteClick = (file, e) => {
     e.stopPropagation();
 
-    // Check if file has an id (from database)
     if (file.id && onDelete) {
-      // Call parent's delete handler with callback
       onDelete(file, () => {
-        // Remove from UI after successful deletion
         const newFileList = fileList.filter((item) => item.uid !== file.uid);
         setFileList(newFileList);
         if (onChange) {
@@ -105,7 +186,6 @@ const ResizedImgePicker = ({
         }
       });
     } else {
-      // For new uploads without id, just remove from list
       const newFileList = fileList.filter((item) => item.uid !== file.uid);
       setFileList(newFileList);
       if (onChange) {
@@ -114,12 +194,36 @@ const ResizedImgePicker = ({
     }
   };
 
+  const handlePreview = (file) => {
+    if (file.type === "video") {
+      Modal.info({
+        title: "Video Preview",
+        width: 800,
+        content: (
+          <video
+            controls
+            style={{ width: "100%", maxHeight: "500px" }}
+            src={file.url}
+          >
+            Your browser does not support the video tag.
+          </video>
+        ),
+      });
+    }
+  };
+
   const uploadButton = (
     <div className="ant-upload-button">
       <PlusOutlined />
-      <div style={{ marginTop: 8 }}>Upload</div>
+      <div style={{ marginTop: 8 }}>
+        Upload {allowVideo ? "Image/Video" : "Image"}
+      </div>
     </div>
   );
+
+  const acceptFormats = allowVideo
+    ? `.${SupportImageFormat.join(",.")},.mp4,.webm,.ogg,.mov,.avi`
+    : `.${SupportImageFormat.join(",.")}`;
 
   return (
     <div>
@@ -127,8 +231,8 @@ const ResizedImgePicker = ({
         listType={square ? "picture-card" : "picture"}
         fileList={fileList}
         beforeUpload={beforeUpload}
-        onRemove={() => false} // Disable default remove
-        accept={`.${SupportImageFormat.join(",.")}`}
+        onRemove={() => false}
+        accept={acceptFormats}
         maxCount={maxCount}
         multiple={maxCount > 1}
         showUploadList={{
@@ -137,6 +241,7 @@ const ResizedImgePicker = ({
         }}
         itemRender={(originNode, file) => {
           const isHovered = hoveredItem === file.uid;
+          const isVideo = file.type === "video";
 
           return (
             <div
@@ -149,9 +254,10 @@ const ResizedImgePicker = ({
               }}
               onMouseEnter={() => setHoveredItem(file.uid)}
               onMouseLeave={() => setHoveredItem(null)}
+              onClick={() => isVideo && handlePreview(file)}
             >
               <img
-                src={file.url || file.thumbUrl}
+                src={file.thumbUrl || file.url}
                 alt={file.name}
                 style={{
                   width: "100%",
@@ -159,6 +265,25 @@ const ResizedImgePicker = ({
                   objectFit: "cover",
                 }}
               />
+
+              {/* Video play icon overlay */}
+              {isVideo && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    fontSize: "32px",
+                    color: "white",
+                    opacity: 0.8,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <PlayCircleOutlined />
+                </div>
+              )}
+
               {isHovered && (
                 <div
                   style={{
@@ -177,16 +302,15 @@ const ResizedImgePicker = ({
                 >
                   <Button
                     type="primary"
-                  danger
+                    danger
                     icon={<DeleteOutlined />}
                     onClick={(e) => handleDeleteClick(file, e)}
                     size="small"
-                  >
-                    {/* {file.id ? "Delete from DB" : "Remove"} */}
-                  </Button>
+                  />
                 </div>
               )}
-              {/* Show indicator if image is from database */}
+
+              {/* DB indicator */}
               {file.id && (
                 <div
                   style={{
@@ -201,6 +325,24 @@ const ResizedImgePicker = ({
                   }}
                 >
                   DB
+                </div>
+              )}
+
+              {/* Video type indicator */}
+              {isVideo && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "4px",
+                    left: "4px",
+                    background: "rgba(0, 0, 0, 0.6)",
+                    color: "white",
+                    padding: "2px 6px",
+                    borderRadius: "4px",
+                    fontSize: "10px",
+                  }}
+                >
+                  VIDEO
                 </div>
               )}
             </div>
@@ -225,4 +367,4 @@ const ResizedImgePicker = ({
   );
 };
 
-export default ResizedImgePicker;
+export default ResizedMediaPicker;

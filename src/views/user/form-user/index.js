@@ -1,14 +1,17 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import { Tabs, Form, Button, message, Card } from "antd";
 import Flex from "components/shared-components/Flex";
 import UserFormFields from "../components/UserFormFields";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import { createUser, updateUser } from "store/slices/userSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
-import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import {
+  setSelectedSubmitItem,
+  setOriginalFiles,
+} from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import LoadingOverlay from "components/util-components/Loader/index";
 import { ActionType } from "utils/api/warning-submit-util";
@@ -29,6 +32,7 @@ import { getCurrentUser } from "configs/UserAccessConfig";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { fetchDropdownTheaters } from "store/slices/theaterSlice";
+import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil";
 
 const ADD = "ADD";
 
@@ -53,23 +57,32 @@ const UserForm = ({ mode = ADD, user = {} }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [isUploading, setIsUploading] = useState(false);
+
+  const EXTRA_FIELDS_FROM_RESPONSE = ["thumbnail_image_upload_url"];
 
   useEffect(() => {
     if (user && mode === "EDIT") {
+      // Map thumbnail image with proper structure
+      const thumbnailFile =
+        user.user?.thumbnail_image && user.user?.thumbnail_image !== "images"
+          ? [
+              {
+                uid: "thumbnail-1",
+                name: user.user?.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${user.user?.thumbnail_image}`,
+                id: null, // User thumbnail doesn't have id
+                type: "image",
+                mediaType: "image",
+              },
+            ]
+          : [];
+
       const formData = {
         username: user.user?.username ?? "",
         position_id: user.user?.role?.position_id ?? "",
-        thumbnail_image:
-          user.user?.thumbnail_image && user.user?.thumbnail_image !== "images"
-            ? [
-                {
-                  uid: "-1",
-                  name: user.user?.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: user.user?.thumbnail_image,
-                },
-              ]
-            : [],
+        thumbnail_image: thumbnailFile,
         event_ids: Array.isArray(user.events)
           ? user.events.map((event) => event.id)
           : [],
@@ -82,7 +95,7 @@ const UserForm = ({ mode = ADD, user = {} }) => {
       console.warn("Formdata", formData);
       form.setFieldsValue(formData);
     }
-  }, [form, user, mode]);
+  }, [form, user, mode, dispatch]);
 
   useEffect(() => {
     if (error) {
@@ -91,12 +104,31 @@ const UserForm = ({ mode = ADD, user = {} }) => {
   }, [error]);
 
   const onFinish = async () => {
-    const values = await form.validateFields();
     try {
+      const values = await form.validateFields();
+
+      // Extract original file objects for later S3 upload
+      const originalFiles = extractFileObjects(values);
+
+      // Store original files in Redux for use in confirmation
+      dispatch(setOriginalFiles(originalFiles));
+
+      // Transform thumbnail_image - always image type
+      const thumbnailData = values.thumbnail_image?.[0]
+        ? {
+            file_name:
+              values.thumbnail_image[0].name ||
+              values.thumbnail_image[0].file_name ||
+              null,
+            media_type: "image",
+          }
+        : null;
+
       if (mode === "EDIT") {
         const data = {
           ...values,
           id: user.id,
+          thumbnail_image: thumbnailData,
         };
 
         const resultAction = await dispatch(
@@ -118,7 +150,8 @@ const UserForm = ({ mode = ADD, user = {} }) => {
           }
         }
       } else {
-        const formData = { ...values };
+        const formData = { ...values, thumbnail_image: thumbnailData };
+
         if (
           values.position_id === UserRoleConstants.eventOrganizerRoleId ||
           values.position_id === UserRoleConstants.eventSupportingTeamRoleId
@@ -126,7 +159,15 @@ const UserForm = ({ mode = ADD, user = {} }) => {
           const resultAction = await dispatch(
             validateMultipleEvent(values.event_ids ?? [])
           );
-          dispatch(setSelectedSubmitItem(formData));
+
+          if (validateMultipleEvent.fulfilled.match(resultAction)) {
+            const response = resultAction.payload;
+            if (response.message === "warning") {
+              dispatch(setEventValidationDialogVisible(true));
+            } else if (response.data && response.data?.[0]?.validation_status) {
+              dispatch(setSelectedSubmitItem(formData));
+            }
+          }
         } else {
           dispatch(setSelectedSubmitItem(formData));
         }
@@ -152,6 +193,7 @@ const UserForm = ({ mode = ADD, user = {} }) => {
   const handleModalCancel = () => {
     dispatch(setUserDialogVisible(false));
   };
+
   const handleValidationModalCancel = () => {
     dispatch(setEventValidationDialogVisible(false));
   };
@@ -179,22 +221,25 @@ const UserForm = ({ mode = ADD, user = {} }) => {
                 type="primary"
                 onClick={() => onFinish()}
                 htmlType="submit"
-                loading={loading}
+                loading={loading || isUploading}
               >
                 {mode === "ADD" ? "Add" : `Save`}
               </Button>
             </div>
           </Flex>
         </Card>
-        <UserFormFields mode={mode} user={user} />
+        <UserFormFields mode={mode} user={user} form={form} />
       </Form>
-      <LoadingOverlay loading={loading} />
+
+      <LoadingOverlay loading={loading || isUploading} />
+
       <ValidationModal
         visible={eventValidationDialogVisible}
         data={ValidateData?.errors}
         statusMessage={messages}
         onClose={handleValidationModalCancel}
       />
+
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
@@ -212,6 +257,7 @@ const UserForm = ({ mode = ADD, user = {} }) => {
         }}
         editable_status={editable_status}
       />
+
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? updateUser : createUser}
@@ -220,6 +266,9 @@ const UserForm = ({ mode = ADD, user = {} }) => {
         mode={mode}
         form={form}
         formType={"user"}
+        setIsUploading={setIsUploading}
+        extraFieldsFromResponse={EXTRA_FIELDS_FROM_RESPONSE}
+        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.USER}
       />
     </>
   );

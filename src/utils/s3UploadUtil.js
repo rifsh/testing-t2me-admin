@@ -184,6 +184,7 @@ export const extractFileObjects = (formValues, fileFields = null) => {
     thumbnail_image: false, // single file
     banner_images: true, // array of files
     event_images: true, // array of files
+    media_path: false,
   };
 
   const fieldsToExtract = fileFields || defaultFields;
@@ -230,6 +231,22 @@ export const UPLOAD_FIELD_CONFIGS = {
       isArray: true,
     },
   ],
+  AD_BANNER: [
+    {
+      dataField: "media_path",
+      uploadUrlField: "media_path_upload_url",
+      fileField: "media_path",
+      isArray: false,
+    },
+  ],
+  CATEGORY: [
+    {
+      dataField: "thumbnail_image",
+      uploadUrlField: "thumbnail_image_upload_url",
+      fileField: "thumbnail_image",
+      isArray: false,
+    },
+  ],
 
   VENUE: [
     {
@@ -243,6 +260,14 @@ export const UPLOAD_FIELD_CONFIGS = {
       uploadUrlField: "banner_images_upload_url",
       fileField: "banner_images",
       isArray: true,
+    },
+  ],
+  USER: [
+    {
+      dataField: "thumbnail_image",
+      uploadUrlField: "thumbnail_image_upload_url",
+      fileField: "thumbnail_image",
+      isArray: false,
     },
   ],
 

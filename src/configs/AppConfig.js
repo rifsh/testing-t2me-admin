@@ -49,7 +49,7 @@ export const MAIN_LAYOUT_COMPONENT = [
   "/qr-scanner",
   "/qr-scanner/event",
   "/qr-scanner/add-ons",
-  // "/schedule/add",
+  // "/schedule/new/add",
 ];
 
 export const THEME_CONFIG = {

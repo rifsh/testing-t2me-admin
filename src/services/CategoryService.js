@@ -6,18 +6,18 @@ import { handleAction } from "utils/api/warning-submit-util";
 const CategoryService = {};
 
 CategoryService.addCategory = function (data, action) {
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
 
   return fetch({
     url: ApiConstant.CATEGORY_URL,
     method: "POST",
-    data: formData,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    data: data,
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
     params: { action: handleAction(action) },
   });
 };
@@ -64,18 +64,18 @@ CategoryService.fetchSubCategory = function (pageData) {
 };
 
 CategoryService.addSubCategory = function (data, action) {
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
 
   return fetch({
     url: ApiConstant.SUB_CATEGORY_URL,
     method: "POST",
-    data: formData,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    data: data,
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
     params: {
       category_id: data.category_id,
       action: handleAction(action),
@@ -88,17 +88,17 @@ CategoryService.editCategory = function (
   action,
   pageData = { page: 1, size: 10 }
 ) {
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
   return fetch({
     url: `${ApiConstant.CATEGORY_URL}/${data.id}`,
     method: "put",
-    data: formData,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    data: data,
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
     params: {
       action: handleAction(action),
       ...Utils.filterParams(pageData),

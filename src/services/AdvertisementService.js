@@ -98,24 +98,24 @@ AdvertisementService.addAdSchedule = function (data, action) {
 AdvertisementService.addAdBanner = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["media_path"],
-    skipEmpty: true,
-  });
-  if (data.media_path && Array.isArray(data.media_path)) {
-    data.media_path.forEach((image) => {
-      formData.append("media_path", image.originFileObj);
-    });
-  }
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["media_path"],
+  //   skipEmpty: true,
+  // });
+  // if (data.media_path && Array.isArray(data.media_path)) {
+  //   data.media_path.forEach((image) => {
+  //     formData.append("media_path", image.originFileObj);
+  //   });
+  // }
 
   return fetch({
     url: ApiConstant.ADVERTISEMENT_BANNER_URL,
     method: "POST",
-    data: formData,
+    data: data,
     params: Utils.filterParams({ action: encodedAction }),
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
   });
 };
 

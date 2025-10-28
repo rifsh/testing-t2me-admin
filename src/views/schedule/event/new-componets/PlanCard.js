@@ -132,7 +132,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
   const [pendingDateChange, setPendingDateChange] = useState(null);
 
-  // FIXED: Load events from Redux when component mounts or when show_dates changes
   useEffect(() => {
     // Don't load if we already have events or are in the middle of loading
     if (allEvents.length > 0 || hasLoadedEditData.current) {
@@ -150,6 +149,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     ) {
       console.log("===== LOADING EVENTS FROM REDUX =====");
       console.log("Show dates count:", showDates.length);
+      console.log("Show dates data:", showDates);
 
       try {
         const startDate = new Date(scheduleFormData.start_date);
@@ -175,64 +175,104 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
         let eventIdCounter = 0;
 
         showDates.forEach((showDate, dateIndex) => {
-          const dateStr = showDate.start_date;
+          const dateStr = showDate.startdate || showDate.start_date;
           const slotDate = new Date(dateStr);
           const daysDiff = Math.floor(
             (slotDate - startDate) / (1000 * 60 * 60 * 24)
           );
 
-          if (showDate.show_times && Array.isArray(showDate.show_times)) {
-            showDate.show_times.forEach((timeSlot, slotIndex) => {
-              // Parse times
-              const startTime = parseTimeString(timeSlot.start_time);
-              const endTime = parseTimeString(timeSlot.end_time);
+          console.log(`📅 Processing show_date ${dateIndex}:`, {
+            dateStr,
+            daysDiff,
+            showtimes: showDate.showtimes || showDate.show_times,
+          });
 
+          const showtimes = showDate.showtimes || showDate.show_times;
+
+          if (showtimes && Array.isArray(showtimes)) {
+            showtimes.forEach((timeSlot, slotIndex) => {
+              const startTime = parseTimeString(
+                timeSlot.starttime || timeSlot.start_time
+              );
+              const endTime = parseTimeString(
+                timeSlot.endtime || timeSlot.end_time
+              );
               const colorClass =
                 timeSlotColors[daysDiff % timeSlotColors.length];
 
+              // ✅ CRITICAL: Normalize ALL midnight field variations
+              const isMidnight =
+                timeSlot.ismidnight === true ||
+                timeSlot.is_midnight_passed === true ||
+                timeSlot.ismidnightpassed === true ||
+                timeSlot.is_midnight === "true" ||
+                timeSlot.ismidnight === "true";
+
+              console.log(`⏰ Processing time slot ${slotIndex}:`, {
+                startTime: `${startTime.hour}:${startTime.minute}`,
+                endTime: `${endTime.hour}:${endTime.minute}`,
+                isMidnight,
+                rawMidnightValue: {
+                  ismidnight: timeSlot.ismidnight,
+                  is_midnight_passed: timeSlot.is_midnight_passed,
+                  ismidnightpassed: timeSlot.ismidnightpassed,
+                  is_midnight: timeSlot.is_midnight,
+                },
+              });
+
               const event = {
-                id: `loaded-${dateStr}-${slotIndex}-${eventIdCounter++}`,
+                id: `loaded-${dateStr}-${slotIndex}-${eventIdCounter}`,
                 startTime: {
                   day: daysDiff,
                   hour: startTime.hour,
                   minute: startTime.minute,
                 },
                 endTime: {
-                  day:
-                    timeSlot.is_midnight === "true" ? daysDiff + 1 : daysDiff,
+                  day: isMidnight ? daysDiff + 1 : daysDiff,
                   hour: endTime.hour,
                   minute: endTime.minute,
                 },
-                ticketType: timeSlot.ticket_structure_id,
-                ticket_structure_id: timeSlot.ticket_structure_id,
-                ticketstructureid: timeSlot.ticket_structure_id,
-                seat_structure_id: timeSlot.seat_structure_id,
-                seatstructureid: timeSlot.seat_structure_id,
-                ticket_set: timeSlot.ticket_set,
-                ticketset: timeSlot.ticket_set,
-                is_midnight_passed: timeSlot.is_midnight === "true",
-                ismidnightpassed: timeSlot.is_midnight === "true",
-                show_end_date: showDate.end_date,
-                showenddate: showDate.end_date,
-                show_date_id: showDate.id,
-                show_time_id: timeSlot.id,
-                offer_ids: timeSlot.offer_ids || [],
-                offerids: timeSlot.offer_ids || [],
-                coupon_ids: timeSlot.coupon_ids || [],
-                couponids: timeSlot.coupon_ids || [],
+                // ✅ Store ALL midnight field variations as BOOLEAN
+                is_midnight_passed: isMidnight,
+                ismidnightpassed: isMidnight,
+                ismidnight: isMidnight,
+                // ✅ Ticket/Seat fields
+                ticketType:
+                  timeSlot.ticketstructureid || timeSlot.ticket_structure_id,
+                ticketstructureid:
+                  timeSlot.ticketstructureid || timeSlot.ticket_structure_id,
+                ticket_structure_id:
+                  timeSlot.ticketstructureid || timeSlot.ticket_structure_id,
+                seatstructureid:
+                  timeSlot.seatstructureid || timeSlot.seat_structure_id,
+                seat_structure_id:
+                  timeSlot.seatstructureid || timeSlot.seat_structure_id,
+                ticketset: timeSlot.ticketset || timeSlot.ticket_set,
+                ticket_set: timeSlot.ticketset || timeSlot.ticket_set,
+                showenddate: showDate.enddate || showDate.end_date,
+                show_end_date: showDate.enddate || showDate.end_date,
+                showdateid: showDate.id || showDate.show_date_id,
+                showtimeid: timeSlot.id || timeSlot.show_time_id,
+                offerids: timeSlot.offerids || timeSlot.offer_ids || [],
+                offer_ids: timeSlot.offerids || timeSlot.offer_ids || [],
+                couponids: timeSlot.couponids || timeSlot.coupon_ids || [],
+                coupon_ids: timeSlot.couponids || timeSlot.coupon_ids || [],
                 color: colorClass,
                 timezone: timezone,
               };
 
+              console.log(`✅ Created event ${eventIdCounter}:`, event);
               loadedEvents.push(event);
-              console.log(`✅ Loaded event ${eventIdCounter}:`, event);
+              eventIdCounter++;
             });
           }
         });
 
+        console.log(`✅ Total loaded events: ${loadedEvents.length}`);
+        console.log("📊 All loaded events:", loadedEvents);
+
         setAllEvents(loadedEvents);
         hasLoadedEditData.current = true;
-        console.log(`===== LOADED ${loadedEvents.length} EVENTS =====`);
         message.success(`Loaded ${loadedEvents.length} time slots`);
       } catch (error) {
         console.error("❌ Error loading events:", error);
@@ -240,6 +280,21 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       }
     }
   }, [scheduleFormData?.show_dates, scheduleFormData?.showdates, timezone]);
+
+  useEffect(() => {
+    // Detect if show_dates was cleared from Redux
+    const showDates =
+      scheduleFormData?.show_dates || scheduleFormData?.showdates;
+
+    if (!showDates || showDates.length === 0) {
+      // Redux was cleared, clear local state too
+      console.log("🧹 Clearing local state - Redux show_dates is empty");
+      setAllEvents([]);
+      hasLoadedEditData.current = false;
+      blockingChecked.current = false;
+      setBlockedEventIds(new Set());
+    }
+  }, [scheduleFormData?.show_dates, scheduleFormData?.showdates]);
 
   // ==================== BLOCKING INFO PROCESSING ====================
   useEffect(() => {
@@ -1329,30 +1384,81 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
 
   const getVisibleEvents = () => {
     const visibleDays = getVisibleDays();
+
+    console.log("🔍 getVisibleEvents called:", {
+      totalEvents: allEvents.length,
+      visibleDaysCount: visibleDays.length,
+      currentWeekStart,
+    });
+
     const visibleEvents = allEvents.filter((event) => {
-      if (!event.startTime || !event.endTime) return false;
+      if (!event.startTime || !event.endTime) {
+        console.warn("❌ Event missing time data:", event);
+        return false;
+      }
 
       const eventStartDay = event.startTime.day;
       const eventEndDay = event.endTime.day;
       const weekStart = currentWeekStart;
       const weekEnd = currentWeekStart + visibleDays.length - 1;
 
-      return !(eventEndDay < weekStart || eventStartDay > weekEnd);
+      const isVisible = !(eventEndDay < weekStart || eventStartDay > weekEnd);
+
+      if (isVisible) {
+        console.log("✅ Event is visible:", {
+          id: event.id,
+          eventStartDay,
+          eventEndDay,
+          weekRange: `${weekStart}-${weekEnd}`,
+        });
+      }
+
+      return isVisible;
     });
 
-    return visibleEvents.map((event) => ({
-      ...event,
-      startTime: {
-        ...event.startTime,
-        day: event.startTime.day - currentWeekStart,
-      },
-      endTime: {
-        ...event.endTime,
-        day: event.endTime.day - currentWeekStart,
-      },
-      originalStartDay: event.startTime.day,
-      originalEndDay: event.endTime.day,
-    }));
+    console.log(
+      `📊 Returning ${visibleEvents.length} visible events out of ${allEvents.length} total`
+    );
+
+    return visibleEvents.map((event) => {
+      // ✅ NORMALIZE the event before passing to TimeSelector
+      const normalized = {
+        ...event,
+        // Normalize midnight field as BOOLEAN
+        is_midnight_passed:
+          event.is_midnight_passed === true ||
+          event.ismidnightpassed === true ||
+          event.ismidnight === true,
+        ismidnightpassed:
+          event.is_midnight_passed === true ||
+          event.ismidnightpassed === true ||
+          event.ismidnight === true,
+        ismidnight:
+          event.is_midnight_passed === true ||
+          event.ismidnightpassed === true ||
+          event.ismidnight === true,
+        // Adjust day indices for current week view
+        startTime: {
+          ...event.startTime,
+          day: event.startTime.day - currentWeekStart,
+        },
+        endTime: {
+          ...event.endTime,
+          day: event.endTime.day - currentWeekStart,
+        },
+        originalStartDay: event.startTime.day,
+        originalEndDay: event.endTime.day,
+      };
+
+      console.log("✅ Normalized event for TimeSelector:", {
+        id: normalized.id,
+        adjustedStartDay: normalized.startTime.day,
+        adjustedEndDay: normalized.endTime.day,
+        is_midnight: normalized.is_midnight_passed,
+      });
+
+      return normalized;
+    });
   };
 
   const getEventMinDate = () => {
@@ -1434,8 +1540,13 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                 disablePastTimes={true}
                 maxDateTime={bookingStartDateTime}
                 disabled={isScheduleBlocked}
-                blockedDates={getBlockedDatesSet()}
+                blockedDates={getBlockedDatesSet(
+                  scheduleFormData,
+                  blockingInfo,
+                  checkedscheduleDetails
+                )}
                 isScheduleBlocked={isScheduleBlocked}
+                // REMOVED: disableToday prop
               />
             </div>
 
@@ -1450,8 +1561,13 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                 minDate={adStartDateTime}
                 disablePastTimes={true}
                 disabled={!adStartDateTime || isScheduleBlocked}
-                blockedDates={getBlockedDatesSet()}
+                blockedDates={getBlockedDatesSet(
+                  scheduleFormData,
+                  blockingInfo,
+                  checkedscheduleDetails
+                )}
                 isScheduleBlocked={isScheduleBlocked}
+                // REMOVED: disableToday prop
               />
             </div>
           </div>
@@ -1528,7 +1644,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                   <Button
                     onClick={handleSubmit}
                     type="primary"
-                    disabled={!isAllDatesValid() || isScheduleBlocked}
+                    // disabled={!isAllDatesValid() || isScheduleBlocked}
                     className="bg-indigo-600 hover:bg-indigo-700"
                     // loading={loading}
                   >
