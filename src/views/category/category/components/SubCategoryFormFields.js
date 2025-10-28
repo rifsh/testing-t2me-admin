@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Input,
   Row,
@@ -25,13 +25,17 @@ import { useDispatch, useSelector } from "react-redux";
 import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import { Option } from "antd/es/mentions";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import {
+  setSelectedSubmitItem,
+  setOriginalFiles,
+} from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { UploadOutlined } from "@ant-design/icons";
 import {
   SupportImageFormat,
   SupportFormatContent,
   ThumbnailImageResolutions,
+  ResolutionByServices,
 } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import LoadingOverlay from "components/util-components/Loader/index";
@@ -42,6 +46,7 @@ import { filterOption } from "components/util-components/FormItems/dropDownSearc
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 import BackButton from "components/Buttons/BackPageButoon";
 import DraftSystem from "drafts/components/DraftSystem";
+import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil";
 
 const ADD = "ADD";
 const EDIT = "EDIT";
@@ -58,6 +63,8 @@ const rules = {
 const SubCategoryFormFields = ({ mode, category }) => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
+  const [isUploading, setIsUploading] = useState(false);
+
   const {
     loading,
     error,
@@ -73,9 +80,11 @@ const SubCategoryFormFields = ({ mode, category }) => {
     warningPagination,
     validationStatus,
     categoryValidationDialogVisible,
-    message,
+    message: validationMessage,
     modalLoading,
   } = useSelector((state) => state.category);
+
+  const EXTRA_FIELDS_FROM_RESPONSE = ["thumbnail_image_upload_url"];
 
   useEffect(() => {
     dispatch(fetchCategories({}));
@@ -86,22 +95,27 @@ const SubCategoryFormFields = ({ mode, category }) => {
     console.log("CATEGORYYYYYYYY", category);
 
     if (mode === EDIT && category) {
+      // Map thumbnail image with proper structure
+      const thumbnailFile =
+        category.thumbnail_image && category.thumbnail_image !== "images"
+          ? [
+              {
+                uid: "thumbnail-1",
+                name: category.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${category.thumbnail_image}`,
+                id: null,
+                type: "image",
+                mediaType: "image",
+              },
+            ]
+          : [];
+
       form.setFieldsValue({
         category_id: category.category.id,
         name: category.name,
         description: category.description,
-        thumbnail_image:
-          category.thumbnail_image && category.thumbnail_image !== "images"
-            ? [
-                {
-                  uid: "-1",
-                  name: category.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  // url: category.thumbnail_image,
-                  url: `${CDN_PATH}/${category.thumbnail_image}`,
-                },
-              ]
-            : [],
+        thumbnail_image: thumbnailFile,
       });
     }
   }, [mode, category, form]);
@@ -114,19 +128,78 @@ const SubCategoryFormFields = ({ mode, category }) => {
 
   const normFile = (e) => {
     if (Array.isArray(e)) {
-      return e;
+      return e
+        .filter(
+          (file) =>
+            file &&
+            typeof file === "object" &&
+            file !== null &&
+            (file.originFileObj || file.name || file.uid)
+        )
+        .map((file) => ({
+          uid: file.uid,
+          name: file.name,
+          status: file.status || "done",
+          url: file.url,
+          thumbUrl: file.thumbUrl || file.url,
+          originFileObj: file.originFileObj,
+          id: file.id,
+          type: file.type || "image",
+          mediaType: file.mediaType || "image",
+          ...(file.response && { response: file.response }),
+          ...(file.percent && { percent: file.percent }),
+        }));
     }
-    return e?.fileList || [];
+
+    const fileList = e?.fileList || [];
+    return fileList
+      .filter(
+        (file) =>
+          file &&
+          typeof file === "object" &&
+          file !== null &&
+          (file.originFileObj || file.name || file.uid)
+      )
+      .map((file) => ({
+        uid: file.uid,
+        name: file.name,
+        status: file.status || "done",
+        url: file.url,
+        thumbUrl: file.thumbUrl || file.url,
+        originFileObj: file.originFileObj,
+        id: file.id,
+        type: file.type || "image",
+        mediaType: file.mediaType || "image",
+        ...(file.response && { response: file.response }),
+        ...(file.percent && { percent: file.percent }),
+      }));
   };
-  const handleBeforeUpload = Utils.handleBeforeUpload;
 
   const onFinish = async () => {
     const values = await form.validateFields();
 
     try {
+      // Extract original file objects for later S3 upload
+      const originalFiles = extractFileObjects(values);
+
+      // Store original files in Redux for use in confirmation
+      dispatch(setOriginalFiles(originalFiles));
+
+      // Transform thumbnail_image - always image type
+      const thumbnailData = values.thumbnail_image?.[0]
+        ? {
+            file_name:
+              values.thumbnail_image[0].name ||
+              values.thumbnail_image[0].file_name ||
+              null,
+            media_type: "image",
+          }
+        : null;
+
       if (mode === EDIT) {
         const data = {
           ...values,
+          thumbnail_image: thumbnailData,
           id: category.id,
         };
         console.log("Edit Data:", data);
@@ -155,6 +228,7 @@ const SubCategoryFormFields = ({ mode, category }) => {
 
         const formData = {
           ...values,
+          thumbnail_image: thumbnailData,
         };
 
         const resultAction = await dispatch(
@@ -174,9 +248,11 @@ const SubCategoryFormFields = ({ mode, category }) => {
       console.log("Validation Failed:", errorInfo);
     }
   };
+
   const handleValidationModalCancel = () => {
     dispatch(setCategoryValidationDialogVisible(false));
   };
+
   const handleModalSubmit = async () => {
     dispatch(setCatModalLoading(true));
     const resultAction = await dispatch(
@@ -192,11 +268,8 @@ const SubCategoryFormFields = ({ mode, category }) => {
   const handleModalCancel = () => {
     dispatch(setCatDialogVisible(false));
   };
+
   const handleWarningPagination = (page, size) => {
-    console.log("------------------------");
-
-    console.log("CHANIGN...........");
-
     dispatch(
       editSubCategory({
         data: selectedCat,
@@ -205,10 +278,6 @@ const SubCategoryFormFields = ({ mode, category }) => {
       })
     );
   };
-
-  // const filterOption = (input, option) => {
-  //   return option.children.toLowerCase().indexOf(input.toLowerCase()) >=0;
-  // }
 
   return (
     <Row gutter={16}>
@@ -256,13 +325,23 @@ const SubCategoryFormFields = ({ mode, category }) => {
               <ResizedImgePicker
                 maxCount={1}
                 targetResolution={ThumbnailImageResolutions.CATEGORY}
+                form={form}
+                allowVideo={false}
               />
             </Form.Item>
             <Text
               type="warning"
-              style={{ padding: "00px 00px", fontSize: "11px" }}
+              style={{
+                padding: "0px 0px",
+                fontSize: "11px",
+                display: "block",
+                marginTop: "8px",
+              }}
             >
-              {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}.{" "}
+              {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
+              &{" resolution "}
+              {ResolutionByServices.category || ResolutionByServices.place}{" "}
+              pixels.
             </Text>
             <div
               style={{
@@ -285,8 +364,7 @@ const SubCategoryFormFields = ({ mode, category }) => {
               <Button
                 type="primary"
                 onClick={onFinish}
-                // htmlType="submit"
-                loading={loading}
+                loading={loading || isUploading}
               >
                 {mode === ADD ? "Add" : "Update"}
               </Button>
@@ -294,11 +372,11 @@ const SubCategoryFormFields = ({ mode, category }) => {
           </Form>
         </Card>
       </Col>
-      <LoadingOverlay loading={loading} />
+      <LoadingOverlay loading={loading || isUploading} />
       <ValidationModal
         visible={categoryValidationDialogVisible}
         data={ValidateData?.errors}
-        statusMessage={message}
+        statusMessage={validationMessage}
         onClose={handleValidationModalCancel}
       />
       <WarningModal
@@ -311,7 +389,7 @@ const SubCategoryFormFields = ({ mode, category }) => {
         onCancel={handleModalCancel}
         confirmText="Proceed"
         cancelText="Back"
-        loading={loading}
+        loading={modalLoading}
         tableConfig={{
           title: "Active Schedules",
           dataKey: "items",
@@ -329,6 +407,9 @@ const SubCategoryFormFields = ({ mode, category }) => {
         mode={mode}
         form={form}
         formType={"sub-catgry"}
+        setIsUploading={setIsUploading}
+        extraFieldsFromResponse={EXTRA_FIELDS_FROM_RESPONSE}
+        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.CATEGORY}
       />
     </Row>
   );

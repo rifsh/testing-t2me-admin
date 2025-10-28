@@ -31,9 +31,36 @@ const { Text } = Typography;
 const EventDetailsField = ({ mode, form }) => {
   const { handleDeleteImage } = useS3ImageDelete("event");
 
- const normFile = (e) => {
-  if (Array.isArray(e)) {
-    return e
+  const normFile = (e) => {
+    if (Array.isArray(e)) {
+      return e
+        .filter(
+          (file) =>
+            file &&
+            typeof file === "object" &&
+            file !== null &&
+            (file.originFileObj || file.name || file.uid)
+        )
+        .map((file) => {
+          return {
+            uid: file.uid,
+            name: file.name,
+            status: file.status || "done",
+            url: file.url,
+            thumbUrl: file.thumbUrl || file.url,
+            originFileObj: file.originFileObj,
+            id: file.id,
+            type: file.type || file.mediaType,
+            mediaType: file.mediaType,
+            caption: file.caption,
+            ...(file.response && { response: file.response }),
+            ...(file.percent && { percent: file.percent }),
+          };
+        });
+    }
+
+    const fileList = e?.fileList || [];
+    return fileList
       .filter(
         (file) =>
           file &&
@@ -42,49 +69,23 @@ const EventDetailsField = ({ mode, form }) => {
           (file.originFileObj || file.name || file.uid)
       )
       .map((file) => {
-        // Create a deep clone to avoid frozen object issues
         return {
           uid: file.uid,
           name: file.name,
-          status: file.status || 'done',
+          status: file.status || "done",
           url: file.url,
           thumbUrl: file.thumbUrl || file.url,
           originFileObj: file.originFileObj,
           id: file.id,
+          type: file.type || file.mediaType,
           mediaType: file.mediaType,
           caption: file.caption,
           ...(file.response && { response: file.response }),
           ...(file.percent && { percent: file.percent }),
         };
       });
-  }
+  };
 
-  const fileList = e?.fileList || [];
-  return fileList
-    .filter(
-      (file) =>
-        file &&
-        typeof file === "object" &&
-        file !== null &&
-        (file.originFileObj || file.name || file.uid)
-    )
-    .map((file) => {
-      // Create a deep clone to avoid frozen object issues
-      return {
-        uid: file.uid,
-        name: file.name,
-        status: file.status || 'done',
-        url: file.url,
-        thumbUrl: file.thumbUrl || file.url,
-        originFileObj: file.originFileObj,
-        id: file.id,
-        mediaType: file.mediaType,
-        caption: file.caption,
-        ...(file.response && { response: file.response }),
-        ...(file.percent && { percent: file.percent }),
-      };
-    });
-};
   return (
     <Row gutter={24}>
       {/* Left Column */}
@@ -123,54 +124,99 @@ const EventDetailsField = ({ mode, form }) => {
         <Card title="Media & Images" bordered style={{ marginTop: 16 }}>
           <Row gutter={24}>
             <Col span={12}>
+              {/* Thumbnail - Image Only */}
               <Form.Item
                 name="thumbnail_image"
                 label="Thumbnail"
                 valuePropName="value"
                 getValueFromEvent={normFile}
+                style={{ marginBottom: "0px" }}
               >
                 <ResizedImgePicker
                   maxCount={1}
                   targetResolution={ThumbnailImageResolutions.EVENT}
                   form={form}
                   onDelete={handleDeleteImage}
+                  allowVideo={false}
                 />
               </Form.Item>
+              <Text
+                type="warning"
+                style={{ fontSize: "11px", display: "block", marginTop: "8px" }}
+              >
+                {SupportFormatContent.join(",")}:{" "}
+                {SupportImageFormat.join(", ")}
+                {" & resolution "}
+                {ResolutionByServices.event} pixels.
+              </Text>
             </Col>
+
             <Col span={12}>
+              {/* Banner Images - Images and Videos */}
               <Form.Item
                 name="banner_images"
-                label="Banners"
+                label="Banner Media (Images & Videos)"
                 valuePropName="value"
                 getValueFromEvent={normFile}
+                style={{ marginBottom: "0px" }}
               >
                 <ResizedImgePicker
                   maxCount={20}
                   targetResolution={ThumbnailImageResolutions.EVENT_BANNER}
                   form={form}
                   onDelete={handleDeleteImage}
+                  allowVideo={true}
+                  maxVideoSize={100}
                 />
               </Form.Item>
+              <Text
+                type="warning"
+                style={{ fontSize: "11px", display: "block", marginTop: "8px" }}
+              >
+                Images: {SupportFormatContent.join(",")}:{" "}
+                {SupportImageFormat.join(", ")}
+                {" & resolution "}
+                {ResolutionByServices.event} pixels.
+                <br />
+                Videos: MP4, WebM, OGG formats. Max size: 100MB.
+              </Text>
             </Col>
           </Row>
+
           <Divider />
+
+          {/* Event Images - Images and Videos */}
           <Form.Item
             name="event_images"
-            label="Additional Images"
+            label="Additional Media (Images & Videos)"
             valuePropName="value"
             getValueFromEvent={normFile}
+            style={{ marginBottom: "0px" }}
           >
             <ResizedImgePicker
               maxCount={20}
               targetResolution={ThumbnailImageResolutions.EVENT}
               form={form}
               onDelete={handleDeleteImage}
+              allowVideo={true}
+              maxVideoSize={100}
             />
           </Form.Item>
+          <Text
+            type="warning"
+            style={{ fontSize: "11px", display: "block", marginTop: "8px" }}
+          >
+            Images: {SupportFormatContent.join(",")}:{" "}
+            {SupportImageFormat.join(", ")}
+            {" & resolution "}
+            {ResolutionByServices.event} pixels.
+            <br />
+            Videos: MP4, WebM, OGG formats. Max size: 100MB.
+          </Text>
         </Card>
       </Col>
 
-      {/* Right Column */}
+      {/* Right Column - Add-on Services and Q&A remain the same */}
       <Col xs={24} lg={10}>
         <Card
           title={
