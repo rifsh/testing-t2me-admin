@@ -14,7 +14,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { getSingleUser } from "store/slices/userSlice";
-import { APP_FEATURE_FLAGS } from "configs/AppConfig";
+import { APP_FEATURE_FLAGS, CDN_PATH } from "configs/AppConfig";
 
 const { Title, Text } = Typography;
 
@@ -54,7 +54,7 @@ const UserDetail = () => {
         <Col xs={24} sm={6} md={4} style={{ textAlign: "center" }}>
           {user.thumbnail_image && user.thumbnail_image !== "images" ? (
             <Avatar
-              src={user.thumbnail_image}
+              src={CDN_PATH + "/" + user.thumbnail_image}
               size={96}
               alt={`${user.username} thumbnail`}
               style={{ borderRadius: 16, marginBottom: 12 }}

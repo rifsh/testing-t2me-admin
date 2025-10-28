@@ -208,50 +208,50 @@ const validateBasicSection = async (values = {}) => {
   // }
 
   // Event images validation (if provided)
-  const eventImages = values.event_images;
-  if (eventImages && Array.isArray(eventImages) && eventImages.length > 0) {
-    const validEventImages = eventImages.filter(
-      (file) => file && (file.status === "done" || file.status === "uploading")
-    );
+  // const eventImages = values.event_images;
+  // if (eventImages && Array.isArray(eventImages) && eventImages.length > 0) {
+  //   const validEventImages = eventImages.filter(
+  //     (file) => file && (file.status === "done" || file.status === "uploading")
+  //   );
 
-    if (validEventImages.length > 0) {
-      const invalidFormatEventImages = validEventImages.filter(
-        (file) => !validateImageFormat(file)
-      );
+  //   if (validEventImages.length > 0) {
+  //     const invalidFormatEventImages = validEventImages.filter(
+  //       (file) => !validateImageFormat(file)
+  //     );
 
-      if (invalidFormatEventImages.length > 0) {
-        errors.push(
-          makeFieldError(
-            ["event_images"],
-            "Please replace the event images with supported formats (JPG, PNG, GIF, WebP)"
-          )
-        );
-      }
-    }
-  }
+  //     if (invalidFormatEventImages.length > 0) {
+  //       errors.push(
+  //         makeFieldError(
+  //           ["event_images"],
+  //           "Please replace the event images with supported formats (JPG, PNG, GIF, WebP)"
+  //         )
+  //       );
+  //     }
+  //   }
+  // }
 
-  // Banner images validation (if provided)
-  const bannerImages = values.banner_images;
-  if (bannerImages && Array.isArray(bannerImages) && bannerImages.length > 0) {
-    const validBannerImages = bannerImages.filter(
-      (file) => file && (file.status === "done" || file.status === "uploading")
-    );
+  // // Banner images validation (if provided)
+  // const bannerImages = values.banner_images;
+  // if (bannerImages && Array.isArray(bannerImages) && bannerImages.length > 0) {
+  //   const validBannerImages = bannerImages.filter(
+  //     (file) => file && (file.status === "done" || file.status === "uploading")
+  //   );
 
-    if (validBannerImages.length > 0) {
-      const invalidFormatBannerImages = validBannerImages.filter(
-        (file) => !validateImageFormat(file)
-      );
+  //   if (validBannerImages.length > 0) {
+  //     const invalidFormatBannerImages = validBannerImages.filter(
+  //       (file) => !validateImageFormat(file)
+  //     );
 
-      if (invalidFormatBannerImages.length > 0) {
-        errors.push(
-          makeFieldError(
-            ["banner_images"],
-            "Please replace the banner images with supported formats (JPG, PNG, GIF, WebP)"
-          )
-        );
-      }
-    }
-  }
+  //     if (invalidFormatBannerImages.length > 0) {
+  //       errors.push(
+  //         makeFieldError(
+  //           ["banner_images"],
+  //           "Please replace the banner images with supported formats (JPG, PNG, GIF, WebP)"
+  //         )
+  //       );
+  //     }
+  //   }
+  // }
 
   return {
     isValid: errors.length === 0,

@@ -71,6 +71,7 @@ export default function EventForm({ eventId, mode = "add" }) {
   const isInitialized = useRef(false);
   const [imagesResetWarning, setImagesResetWarning] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
   const {
     formData,
     currentStep,
@@ -116,6 +117,28 @@ export default function EventForm({ eventId, mode = "add" }) {
       event_images:
         currentValues.event_images || currentFormData.event_images || [],
     };
+  };
+
+  // Helper function to determine media type from file
+  const getMediaType = (file) => {
+    // Check if type property exists
+    if (file.type) {
+      return file.type.startsWith("video/") ? "video" : "image";
+    }
+
+    // Check mediaType if available
+    if (file.mediaType) {
+      return file.mediaType;
+    }
+
+    // Check file extension as fallback
+    const fileName = file.name || file.file_name || "";
+    const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+    const isVideo = videoExtensions.some((ext) =>
+      fileName.toLowerCase().endsWith(ext)
+    );
+
+    return isVideo ? "video" : "image";
   };
 
   // Show warning message when images are reset
@@ -203,8 +226,6 @@ export default function EventForm({ eventId, mode = "add" }) {
         event_name: singleLeadEvent.event_name || "",
         description: singleLeadEvent.description || "",
         // Add other fields from singleLeadEvent as needed
-        // Note: Venues handling is commented out in original code
-        // Uncomment and adapt if venue data should be loaded from lead
       };
 
       form.setFieldsValue(formValues);
@@ -228,6 +249,7 @@ export default function EventForm({ eventId, mode = "add" }) {
       dispatch(fetchEventDetails(eventId));
     }
   }, [dispatch, eventId, mode]);
+
   const safeGetFileName = (url) => {
     if (!url || typeof url !== "string") {
       return "image";
@@ -256,7 +278,7 @@ export default function EventForm({ eventId, mode = "add" }) {
       const firstVenueEvent = eventDetails.venue_events?.[0];
       const placeInfo = firstVenueEvent?.venue?.place;
 
-      // Map thumbnail with id if available
+      // Map thumbnail with id if available - always image type
       const thumbnailFile = eventDetails.thumbnail_image
         ? [
             {
@@ -264,32 +286,44 @@ export default function EventForm({ eventId, mode = "add" }) {
               name: eventDetails.thumbnail_image.split("/").pop(),
               status: "done",
               url: `${CDN_PATH}/${eventDetails.thumbnail_image}`,
-              id: null, // Thumbnail typically doesn't have media id
+              id: null,
+              type: "image",
+              mediaType: "image",
             },
           ]
         : [];
 
-      // Map banner images from media array with ids
+      // Map banner images/videos from media array with ids
       const bannerFiles = eventDetails.media
         ? eventDetails.media.map((media, index) => ({
             uid: `banner-${media.id}`,
             name: media.media_url.split("/").pop(),
             status: "done",
             url: `${CDN_PATH}/${media.media_url}`,
+            thumbUrl: media.thumbnail_url
+              ? `${CDN_PATH}/${media.thumbnail_url}`
+              : undefined,
             id: media.id, // Important: media id for deletion
+            type: media.media_type || "image",
             mediaType: media.media_type,
             caption: media.caption,
           }))
         : [];
 
-      // Map event images with ids
+      // Map event images/videos with ids
       const eventImageFiles =
-        eventDetails.event_images?.map((image, index) => ({
-          uid: `event-${image.id || index}`,
-          name: image.image.split("/").pop(),
+        eventDetails.event_images?.map((media, index) => ({
+          uid: `event-${media.id || index}`,
+          name:
+            media.image?.split("/").pop() || media.media_url?.split("/").pop(),
           status: "done",
-          url: `${CDN_PATH}/${image.image}`,
-          id: image.id, // Important: image id for deletion
+          url: `${CDN_PATH}/${media.image || media.media_url}`,
+          thumbUrl: media.thumbnail_url
+            ? `${CDN_PATH}/${media.thumbnail_url}`
+            : undefined,
+          id: media.id, // Important: media id for deletion
+          type: media.media_type || "image",
+          mediaType: media.media_type,
         })) || [];
 
       const formValues = {
@@ -316,6 +350,7 @@ export default function EventForm({ eventId, mode = "add" }) {
 
       form.setFieldsValue(formValues);
       dispatch(setEventFormData(formValues));
+
       // Load related data
       if (eventDetails.taxs && eventDetails.taxs.length > 0) {
         dispatch(setSelectedTaxDetails(eventDetails.taxs));
@@ -587,12 +622,55 @@ export default function EventForm({ eventId, mode = "add" }) {
       const originalFiles = extractFileObjects(completeFormData);
       dispatch(setOriginalFiles(originalFiles));
 
+      // Transform thumbnail_image - always image type
+      const thumbnailData = completeFormData.thumbnail_image?.[0]
+        ? {
+            file_name:
+              completeFormData.thumbnail_image[0].name ||
+              completeFormData.thumbnail_image[0].file_name ||
+              null,
+            media_type: "image",
+          }
+        : null;
+
+      // Transform banner_images - can be images or videos
+      const bannerImagesData =
+        completeFormData.banner_images?.map((media) => {
+          const mediaType = getMediaType(media);
+
+          return {
+            id: media.id || null, // Include id for existing media
+            file_name: media.name || media.file_name,
+            media_type: mediaType,
+          };
+        }) || [];
+
+      // Transform event_images - can be images or videos
+      const eventImagesData =
+        completeFormData.event_images?.map((media) => {
+          const mediaType = getMediaType(media);
+
+          return {
+            id: media.id || null, // Include id for existing media
+            file_name: media.name || media.file_name,
+            media_type: mediaType,
+          };
+        }) || [];
+
+      // Update completeFormData with transformed media
+      const transformedFormData = {
+        ...completeFormData,
+        thumbnail_image: thumbnailData,
+        banner_images: bannerImagesData,
+        event_images: eventImagesData,
+      };
+
       if (mode === EDIT) {
         console.log("🔧 Submission mode: EDIT");
-        await handleEditModeSubmission(completeFormData);
+        await handleEditModeSubmission(transformedFormData);
       } else {
         console.log(`➕ Submission mode: ${mode.toUpperCase()}`);
-        await handleCreateModeSubmission(completeFormData);
+        await handleCreateModeSubmission(transformedFormData);
       }
 
       console.log("🎉 Submission handled successfully");
@@ -853,7 +931,7 @@ export default function EventForm({ eventId, mode = "add" }) {
             "event_images",
           ]}
           style={{ marginRight: 12, display: "inline-block" }}
-          enableAutoSave={mode !== EDIT} // Enable for both "add" and "LEAD"
+          enableAutoSave={mode !== EDIT}
           externalFormData={formData}
           onGetCompleteData={() => {
             const currentValues = form.getFieldsValue();
@@ -943,10 +1021,10 @@ export default function EventForm({ eventId, mode = "add" }) {
             type="primary"
             size="large"
             onClick={handleSubmit}
-            loading={isLoading}
+            loading={isLoading || isUploading}
             className="min-w-[120px] bg-green-600 hover:bg-green-700"
           >
-            {isLoading
+            {isLoading || isUploading
               ? mode === EDIT
                 ? "Updating..."
                 : mode === "LEAD"
@@ -1079,7 +1157,7 @@ export default function EventForm({ eventId, mode = "add" }) {
           "banner_images_upload_url",
           "event_images_upload_url",
         ]}
-        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.EVENT} // You'll need to add this config
+        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.EVENT}
       />
     </div>
   );

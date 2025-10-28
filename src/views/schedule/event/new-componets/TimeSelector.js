@@ -39,7 +39,14 @@ const TimeSelector = ({
   const isEventBlocked = (eventId) => {
     return blockedEventIds.has(eventId);
   };
-
+  const debugSlotRange = (hour) => {
+    if (hour >= 0 && hour < 6) {
+      console.log(`🌅 Early morning slot ${hour}:00`, {
+        slotMinutes: timeToMinutes(hour, 0),
+        description: hour === 0 ? "Midnight/Start of Day 2" : "Early morning",
+      });
+    }
+  };
   const logMidnightEvent = (event, context = "") => {
     if (event.is_midnight_passed) {
       console.log(`🌙 MIDNIGHT EVENT ${context}:`, {
@@ -178,35 +185,59 @@ const TimeSelector = ({
   };
 
   const calculateDayTwoDuration = (event) => {
-    // FIXED: For early morning times (1-5 AM), ensure proper calculation
+    // For midnight events, day 2 duration is from 00:00 to end time
     const endMinutes = timeToMinutes(
       event.endTime.hour,
       event.endTime.minute || 0
     );
 
-    // If end time is early morning (0-6 AM), it's part of the midnight event
-    if (event.endTime.hour < 6) {
-      return endMinutes; // Duration from midnight to end time
-    }
+    console.log(`🌙 Calculating Day 2 duration:`, {
+      eventId: event.id,
+      endHour: event.endTime.hour,
+      endMinute: event.endTime.minute || 0,
+      endMinutes,
+      duration: `${Math.floor(endMinutes / 60)}h ${endMinutes % 60}m`,
+    });
 
+    // Duration is simply the end time in minutes (from midnight)
     return endMinutes;
   };
 
   const getEventDisplayInfo = (event, dayIndex, slotIndex) => {
-    const eventStartHour = event.startTime.hour;
-    const eventStartMinute = event.startTime.minute || 0;
-    const eventStartDay = event.startTime.day;
-    const eventStartSlot = Math.floor(eventStartHour);
+    const normalizedEvent = normalizeEventFields(event);
 
-    // Check if event is blocked
-    const blocked = isEventBlocked(event.id);
+    const eventStartHour = normalizedEvent.startTime.hour;
+    const eventStartMinute = normalizedEvent.startTime.minute || 0;
+    const eventStartDay = normalizedEvent.startTime.day;
+    const eventEndDay = normalizedEvent.endTime.day;
 
-    // FIXED: Enhanced midnight event display
-    if (event.is_midnight_passed || event.ismidnightpassed) {
-      // Day 1: Show from start time to midnight
+    // ✅ FIX: Use exact hour matching for start slot
+    const eventStartSlot = eventStartHour;
+
+    const blocked = isEventBlocked(normalizedEvent.id);
+    const isMidnight = normalizedEvent.is_midnight_passed;
+
+    console.log(`📊 getEventDisplayInfo: Event ${normalizedEvent.id}`, {
+      dayIndex,
+      slotIndex,
+      eventStartDay,
+      eventEndDay,
+      eventStartSlot,
+      eventStartHour,
+      isMidnight,
+      shouldShowHere:
+        dayIndex === eventStartDay && slotIndex === eventStartSlot,
+    });
+
+    if (isMidnight) {
+      // ✅ Day 1: Show ONLY at start slot
       if (dayIndex === eventStartDay && slotIndex === eventStartSlot) {
-        const duration = calculateDayOneDuration(event);
+        const duration = calculateDayOneDuration(normalizedEvent);
         const heightSlots = Math.max(1, Math.ceil(duration / 60));
+
+        console.log(
+          `✅ Displaying midnight Day 1 - Height: ${heightSlots} slots`
+        );
 
         return {
           show: true,
@@ -217,22 +248,15 @@ const TimeSelector = ({
         };
       }
 
-      // Day 2: Show from midnight to end time
-      // FIXED: Check if we're at slot 0 (midnight) on the next day
-      if (dayIndex === eventStartDay + 1 && slotIndex === 0) {
-        const duration = calculateDayTwoDuration(event);
+      // ✅ Day 2: Show ONLY at slot 0 (midnight)
+      if (dayIndex === eventEndDay && slotIndex === 0) {
+        const duration = calculateDayTwoDuration(normalizedEvent);
         if (duration > 0) {
-          // FIXED: For early morning times, ensure minimum height
           const heightSlots = Math.max(1, Math.ceil(duration / 60));
 
-          console.log(`🌙 Midnight Day 2 Display:`, {
-            dayIndex,
-            slotIndex,
-            duration,
-            heightSlots,
-            endHour: event.endTime.hour,
-            endMinute: event.endTime.minute,
-          });
+          console.log(
+            `✅ Displaying midnight Day 2 - Height: ${heightSlots} slots, Duration: ${duration}min`
+          );
 
           return {
             show: true,
@@ -244,18 +268,23 @@ const TimeSelector = ({
         }
       }
     } else {
-      // Regular event display
+      // ✅ Regular event: Show ONLY at start slot
       if (dayIndex === eventStartDay && slotIndex === eventStartSlot) {
         const eventEndMinutes = timeToMinutes(
-          event.endTime.hour,
-          event.endTime.minute || 0
+          normalizedEvent.endTime.hour,
+          normalizedEvent.endTime.minute || 0
         );
         const eventStartMinutes = timeToMinutes(
           eventStartHour,
           eventStartMinute
         );
         const durationMinutes = eventEndMinutes - eventStartMinutes;
+
         const heightSlots = Math.max(1, Math.ceil(durationMinutes / 60));
+
+        console.log(
+          `✅ Displaying regular event - Height: ${heightSlots} slots`
+        );
 
         return {
           show: true,
@@ -266,7 +295,42 @@ const TimeSelector = ({
       }
     }
 
+    // ✅ Don't show in other slots (they're occupied but not rendered)
     return { show: false };
+  };
+
+  const normalizeEventFields = (event) => {
+    // Normalize midnight field
+    const isMidnight =
+      event.is_midnight_passed === true ||
+      event.ismidnightpassed === true ||
+      event.ismidnight === true;
+
+    return {
+      ...event,
+      is_midnight_passed: isMidnight,
+      ismidnightpassed: isMidnight,
+      ismidnight: isMidnight,
+      // Normalize ticket fields
+      ticket_structure_id:
+        event.ticket_structure_id ||
+        event.ticketstructureid ||
+        event.ticketType,
+      ticketstructureid:
+        event.ticket_structure_id ||
+        event.ticketstructureid ||
+        event.ticketType,
+      ticketType:
+        event.ticket_structure_id ||
+        event.ticketstructureid ||
+        event.ticketType,
+      // Normalize seat fields
+      seat_structure_id: event.seat_structure_id || event.seatstructureid,
+      seatstructureid: event.seat_structure_id || event.seatstructureid,
+      // Normalize ticket set
+      ticket_set: event.ticket_set || event.ticketset,
+      ticketset: event.ticket_set || event.ticketset,
+    };
   };
 
   const getDaySpecificColors = (dayIndex) => {
@@ -578,23 +642,33 @@ const TimeSelector = ({
     });
   };
 
-  // FIXED: Enhanced event finder for midnight events - supports multiple days
   const getEventInSlot = (dayIndex, hour, minute) => {
-    const validEvents = events.filter((event) => {
-      const isValid =
-        event &&
-        event.id &&
-        event.startTime &&
-        event.endTime &&
-        typeof event.startTime.day === "number" &&
-        typeof event.startTime.hour === "number" &&
-        typeof event.endTime.day === "number" &&
-        typeof event.endTime.hour === "number";
-      return isValid;
-    });
+    // Filter and normalize valid events
+    const validEvents = events
+      .filter((event) => {
+        const isValid =
+          event &&
+          event.id &&
+          event.startTime &&
+          event.endTime &&
+          typeof event.startTime.day === "number" &&
+          typeof event.startTime.hour === "number" &&
+          typeof event.endTime.day === "number" &&
+          typeof event.endTime.hour === "number";
+
+        if (!isValid) {
+          console.warn("❌ Invalid event structure:", event);
+        }
+
+        return isValid;
+      })
+      .map(normalizeEventFields);
+
+    const slotMinutes = timeToMinutes(hour, minute);
 
     const visibleEvent = validEvents.find((event) => {
       const eventStartDay = event.startTime.day;
+      const eventEndDay = event.endTime.day;
       const eventStartMinutes = timeToMinutes(
         event.startTime.hour,
         event.startTime.minute || 0
@@ -603,27 +677,77 @@ const TimeSelector = ({
         event.endTime.hour,
         event.endTime.minute || 0
       );
-      const slotMinutes = timeToMinutes(hour, minute);
 
-      // Log midnight event for debugging
-      logMidnightEvent(event, `checking slot ${dayIndex}:${hour}:${minute}`);
+      const isMidnight = event.is_midnight_passed;
 
-      if (event.is_midnight_passed) {
-        // FIXED: Midnight events span two days
+      // ✅ FIX: Improved midnight event detection
+      if (isMidnight) {
+        // Day 1: From start time until end of day (23:59)
         if (dayIndex === eventStartDay) {
-          // Day 1: Show from start time to end of day
-          return slotMinutes >= eventStartMinutes;
-        } else if (dayIndex === eventStartDay + 1) {
-          // Day 2: Show from start of day to end time
-          return slotMinutes < eventEndMinutes;
+          // Must be at or after start time
+          const isAfterStart = slotMinutes >= eventStartMinutes;
+          // Must be before midnight (1440 minutes)
+          const isBeforeMidnight = slotMinutes < 1440;
+
+          if (isAfterStart && isBeforeMidnight) {
+            console.log(
+              `✅ Midnight Day 1 match: Event ${event.id} at ${hour}:${minute}`,
+              {
+                slotMinutes,
+                eventStartMinutes,
+                range: `${eventStartMinutes}-1439`,
+              }
+            );
+            return true;
+          }
         }
+
+        // Day 2: From midnight (00:00) until end time
+        if (dayIndex === eventEndDay) {
+          // ✅ CRITICAL FIX: Handle early morning times correctly
+          // For early morning (0-5 AM), this is the continuation from previous day
+          const isAfterMidnight = slotMinutes >= 0;
+          const isBeforeEnd = slotMinutes < eventEndMinutes;
+
+          if (isAfterMidnight && isBeforeEnd) {
+            console.log(
+              `✅ Midnight Day 2 match: Event ${event.id} at ${hour}:${minute}`,
+              {
+                slotMinutes,
+                eventEndMinutes,
+                range: `0-${eventEndMinutes}`,
+              }
+            );
+            return true;
+          }
+        }
+
         return false;
       } else {
-        // Regular same-day events
+        // ✅ FIX: Regular same-day events (NOT crossing midnight)
         if (dayIndex !== eventStartDay) return false;
-        return (
-          slotMinutes >= eventStartMinutes && slotMinutes < eventEndMinutes
-        );
+
+        // Event must be on same day AND end before midnight
+        const isInRange =
+          slotMinutes >= eventStartMinutes && slotMinutes < eventEndMinutes;
+
+        // ✅ CRITICAL: Ensure end time is also on same day (not crossing midnight)
+        const endsOnSameDay = eventEndDay === eventStartDay;
+
+        if (isInRange && endsOnSameDay) {
+          console.log(
+            `✅ Regular event match: Event ${event.id} at ${hour}:${minute}`,
+            {
+              slotMinutes,
+              eventStartMinutes,
+              eventEndMinutes,
+              range: `${eventStartMinutes}-${eventEndMinutes}`,
+            }
+          );
+          return true;
+        }
+
+        return false;
       }
     });
 
@@ -771,6 +895,12 @@ const TimeSelector = ({
             >
               {displaySlots.map((slot, slotIndex) => {
                 const event = getEventInSlot(dayIndex, slot.hour, slot.minute);
+
+                // ✅ Add debug for early morning slots
+                if (dayIndex === 0 && slot.hour < 6) {
+                  debugSlotRange(slot.hour);
+                }
+
                 const isSelected = isSlotSelected(dayIndex, slotIndex);
                 const isBlocked = isSlotBlocked(dayIndex, slotIndex);
                 const isOccupied = !!event || isBlocked;
@@ -779,6 +909,22 @@ const TimeSelector = ({
                   : { show: false };
                 const isOutsideRange = isSlotOutsideEventRange(dayIndex);
 
+                // ✅ Log when event should show but isn't
+                if (event && !eventInfo.show && slot.hour < 6) {
+                  console.error(
+                    `❌ Event ${event.id} should display but show=false`,
+                    {
+                      dayIndex,
+                      slotIndex,
+                      slotHour: slot.hour,
+                      eventStartDay: event.startTime.day,
+                      eventStartHour: event.startTime.hour,
+                      eventEndDay: event.endTime.day,
+                      eventEndHour: event.endTime.hour,
+                      isMidnight: event.is_midnight_passed,
+                    }
+                  );
+                }
                 const selectionColorClass = isSelected
                   ? isSlotInConflict(dayIndex, slotIndex)
                     ? "bg-red-200 border-2 border-red-400 cursor-not-allowed"

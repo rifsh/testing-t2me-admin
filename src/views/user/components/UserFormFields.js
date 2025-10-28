@@ -21,6 +21,7 @@ import {
   SupportImageFormat,
   SupportFormatContent,
   ResolutionByServices,
+  ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
 import Utils from "utils/index";
 import { getCurrentUser } from "configs/UserAccessConfig";
@@ -29,11 +30,12 @@ import { fetchDropdownTheaters } from "store/slices/theaterSlice";
 import { debounce } from "lodash";
 import { EVENT_TYPES } from "constants/PageConstants";
 import { APP_FEATURE_FLAGS } from "configs/AppConfig";
+import ResizedMediaPicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Text } = Typography;
 const { Option } = Select;
 
-function UserFormFields({ mode, user }) {
+function UserFormFields({ mode, user, form }) {
   const dispatch = useDispatch();
   const { roles, loading, selectedRole } = useSelector((state) => state.users);
   const [value, setValue] = useState(1);
@@ -243,17 +245,12 @@ function UserFormFields({ mode, user }) {
             getValueFromEvent={normFile}
             style={{ marginBottom: "0px", padding: "0px" }}
           >
-            <Upload
-              name="thumbnail_image"
-              listType="picture"
+            <ResizedMediaPicker
               maxCount={1}
-              beforeUpload={(file) =>
-                Utils.handleBeforeUpload(file, ResolutionByServices.place)
-              }
-              accept={`.${SupportImageFormat.join(",.")}`}
-            >
-              <Button icon={<UploadOutlined />}>Click to upload</Button>
-            </Upload>
+              targetResolution={ThumbnailImageResolutions.USER}
+              form={form}
+              allowVideo={false}
+            />
           </Form.Item>
         </>
       );
@@ -416,17 +413,12 @@ function UserFormFields({ mode, user }) {
           getValueFromEvent={normFile}
           style={{ marginBottom: "0px", padding: "0px" }}
         >
-          <Upload
-            name="thumbnail_image"
-            listType="picture"
+          <ResizedMediaPicker
             maxCount={1}
-            beforeUpload={(file) =>
-              Utils.handleBeforeUpload(file, ResolutionByServices.place)
-            }
-            accept={`.${SupportImageFormat.join(",.")}`}
-          >
-            <Button icon={<UploadOutlined />}>Click to upload</Button>
-          </Upload>
+            targetResolution={ThumbnailImageResolutions.USER}
+            form={form}
+            allowVideo={false}
+          />
         </Form.Item>
       </>
     );
