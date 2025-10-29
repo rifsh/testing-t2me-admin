@@ -261,7 +261,7 @@ const VenueFormFields = ({ mode, venue }) => {
             dispatch(setPlaceValidationDialogVisible(true));
             return;
           } else if (response.data && response.data[0]?.validation_status) {
-            // dispatch(setSelectedSubmitItem(formData));
+            dispatch(setSelectedSubmitItem(formData));
           }
         } else if (validatePlace.rejected.match(resultAction)) {
           const error = resultAction.error;
