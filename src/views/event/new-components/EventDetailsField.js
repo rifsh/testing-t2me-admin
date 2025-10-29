@@ -124,19 +124,21 @@ const EventDetailsField = ({ mode, form }) => {
         <Card title="Media & Images" bordered style={{ marginTop: 16 }}>
           <Row gutter={24}>
             <Col span={12}>
-              {/* Thumbnail - Image Only */}
+              {/* Thumbnail - Image Only - REQUIRED */}
               <Form.Item
                 name="thumbnail_image"
                 label="Thumbnail"
                 valuePropName="value"
                 getValueFromEvent={normFile}
+                rules={[
+                  { required: true, message: "Thumbnail image is required" },
+                ]}
                 style={{ marginBottom: "0px" }}
               >
                 <ResizedImgePicker
                   maxCount={1}
                   targetResolution={ThumbnailImageResolutions.EVENT}
                   form={form}
-                  onDelete={handleDeleteImage}
                   allowVideo={false}
                 />
               </Form.Item>
@@ -152,12 +154,15 @@ const EventDetailsField = ({ mode, form }) => {
             </Col>
 
             <Col span={12}>
-              {/* Banner Images - Images and Videos */}
+              {/* Banner Images - Images and Videos - REQUIRED */}
               <Form.Item
                 name="banner_images"
                 label="Banner Media (Images & Videos)"
                 valuePropName="value"
                 getValueFromEvent={normFile}
+                rules={[
+                  { required: true, message: "Banner images are required" },
+                ]}
                 style={{ marginBottom: "0px" }}
               >
                 <ResizedImgePicker
@@ -185,7 +190,7 @@ const EventDetailsField = ({ mode, form }) => {
 
           <Divider />
 
-          {/* Event Images - Images and Videos */}
+          {/* Event Images - Images and Videos - NOT REQUIRED */}
           <Form.Item
             name="event_images"
             label="Additional Media (Images & Videos)"
@@ -216,7 +221,7 @@ const EventDetailsField = ({ mode, form }) => {
         </Card>
       </Col>
 
-      {/* Right Column - Add-on Services and Q&A remain the same */}
+      {/* Right Column - Add-on Services and Q&A */}
       <Col xs={24} lg={10}>
         <Card
           title={

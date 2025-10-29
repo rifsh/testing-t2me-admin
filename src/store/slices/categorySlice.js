@@ -376,21 +376,31 @@ const categorySlice = createSlice({
       .addCase(addSubCategory.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.responseMessage = null;
       })
       .addCase(addSubCategory.fulfilled, (state, { payload }) => {
         state.loading = false;
+        state.error = null;
+
+        // ✅ Store response data and message properly
+        state.responseData = payload.data;
+        state.responseMessage =
+          payload.status?.message || "Subcategory added successfully";
+
+        // Optional: Update local state if needed
         const categoryIndex = state.categories.findIndex(
-          (cat) => cat.id === payload.categoryId
+          (cat) => cat.id === payload.data?.[0]?.category_id
         );
-        if (categoryIndex !== -1) {
-          state.categories[categoryIndex].subcategories.push(payload);
-        } else {
-          state.subcategories.push(payload);
+        if (categoryIndex !== -1 && payload.data?.[0]) {
+          state.categories[categoryIndex].subcategories =
+            state.categories[categoryIndex].subcategories || [];
+          state.categories[categoryIndex].subcategories.push(payload.data[0]);
         }
       })
       .addCase(addSubCategory.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Failed to add subcategory";
+        state.responseMessage = null;
       })
       .addCase(fetchCategories.pending, (state) => {
         state.loading = true;

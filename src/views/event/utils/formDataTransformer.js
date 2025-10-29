@@ -1,6 +1,25 @@
 // utils/formDataTransformer.js
 
 /**
+ * Helper function to determine media type from file
+ */
+const getMediaType = (file) => {
+  // Check if type property exists
+  if (file.type) {
+    return file.type.startsWith("video/") ? "video" : "image";
+  }
+
+  // Check file extension as fallback
+  const fileName = file.name || file.file_name || file.fileName || "";
+  const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+  const isVideo = videoExtensions.some((ext) =>
+    fileName.toLowerCase().endsWith(ext)
+  );
+
+  return isVideo ? "video" : "image";
+};
+
+/**
  * Transform form data from current structure to API structure
  */
 export const transformFormDataForAPI = (formData, additionalContext = {}) => {
@@ -20,7 +39,8 @@ export const transformFormDataForAPI = (formData, additionalContext = {}) => {
   // Transform seat structure - Extract seat IDs where selected
   const transformSeatStructure = () => {
     const seatStructure = [];
-    const selectedSeats = formData.selected_seats || {};
+    const selectedSeats =
+      formData.selected_seats || formData.selectedseats || {};
 
     Object.entries(selectedSeats).forEach(([venueId, seatsObj]) => {
       if (seatsObj && typeof seatsObj === "object") {
@@ -45,8 +65,9 @@ export const transformFormDataForAPI = (formData, additionalContext = {}) => {
   // Transform ticket structure from nested object to flat array
   const transformTicketStructure = () => {
     const ticketStructure = [];
-    const selectedTicketTypes = formData.selected_ticket_types || {};
-    const ticketSets = formData.ticket_sets || {};
+    const selectedTicketTypes =
+      formData.selected_ticket_types || formData.selectedtickettypes || {};
+    const ticketSets = formData.ticket_sets || formData.ticketsets || {};
 
     // Iterate through each venue's selected ticket types
     Object.entries(selectedTicketTypes).forEach(([venueId, ticketTypeIds]) => {
@@ -74,7 +95,8 @@ export const transformFormDataForAPI = (formData, additionalContext = {}) => {
 
   // Get seat structure IDs - returns array of integers, not JSON string
   const getSeatStructureIds = () => {
-    const selectedSeats = formData.selected_seats || {};
+    const selectedSeats =
+      formData.selected_seats || formData.selectedseats || {};
     const seatStructureIds = [];
 
     Object.entries(selectedSeats).forEach(([venueId, seatsObj]) => {
@@ -94,8 +116,8 @@ export const transformFormDataForAPI = (formData, additionalContext = {}) => {
 
   // Get max capacity
   const calculateMaxCapacity = () => {
-    if (formData.max_capacity) {
-      return parseInt(formData.max_capacity);
+    if (formData.max_capacity || formData.maxcapacity) {
+      return parseInt(formData.max_capacity || formData.maxcapacity);
     }
 
     if (selectedVenueList && selectedVenueList.length > 0) {
@@ -110,17 +132,18 @@ export const transformFormDataForAPI = (formData, additionalContext = {}) => {
 
   // Get primary venue ID
   const getPrimaryVenue = () => {
-    const venueIds = formData.venue_id || [];
+    const venueIds = formData.venue_id || formData.venueid || [];
     return venueIds.length > 0 ? venueIds[0] : null;
   };
 
   // Get ticket structure ID
   const getTicketStructureId = () => {
-    if (formData.ticket_structure_id) {
-      return formData.ticket_structure_id;
+    if (formData.ticket_structure_id || formData.ticketstructureid) {
+      return formData.ticket_structure_id || formData.ticketstructureid;
     }
 
-    const selectedTicketTypes = formData.selected_ticket_types || {};
+    const selectedTicketTypes =
+      formData.selected_ticket_types || formData.selectedtickettypes || {};
     const venueIds = Object.keys(selectedTicketTypes);
 
     if (venueIds.length > 0) {
@@ -138,56 +161,81 @@ export const transformFormDataForAPI = (formData, additionalContext = {}) => {
    * Returns object with file_name and media_type, or null
    */
   const transformThumbnailImage = (fileField) => {
+    console.log("🔍 transformThumbnailImage input:", fileField);
+
     if (!fileField || !Array.isArray(fileField) || fileField.length === 0) {
+      console.log("❌ Thumbnail is null/empty");
       return null;
     }
 
     const file = fileField[0];
-    return {
-      file_name: file.name || file.file_name || null,
+    console.log("✅ Processing thumbnail file:", file);
+
+    const result = {
+      file_name: file.name || file.file_name || file.fileName || null,
       media_type: "image",
     };
+
+    console.log("✅ Thumbnail result:", result);
+    return result;
   };
 
   /**
-   * Transform multiple images to API format
+   * Transform multiple images/videos to API format
    * Returns array of objects with file_name and media_type
    */
-  const transformMultipleImages = (fileField) => {
+  const transformMultipleMedia = (fileField) => {
+    console.log("🔍 transformMultipleMedia input:", fileField);
+
     if (!fileField || !Array.isArray(fileField) || fileField.length === 0) {
       return [];
     }
 
-    return fileField.map((file) => ({
-      file_name: file.name || file.file_name || null,
-      media_type: "image",
-    }));
+    return fileField.map((file) => {
+      const mediaType = getMediaType(file);
+
+      return {
+        id: file.id || null,
+        file_name: file.name || file.file_name || file.fileName || null,
+        media_type: mediaType,
+      };
+    });
   };
+
+  // ✅ Extract field names with both naming conventions (underscore and camelCase)
+  const thumbnailImage = formData.thumbnail_image || formData.thumbnailimage;
+  const bannerImages = formData.banner_images || formData.bannerimages;
+  const eventImages = formData.event_images || formData.eventimages;
+
+  console.log("🖼️ Raw thumbnail_image from formData:", thumbnailImage);
+  console.log("🖼️ Raw banner_images from formData:", bannerImages);
+  console.log("🖼️ Raw event_images from formData:", eventImages);
 
   // Build the transformed object
   const transformedData = {
     // Basic information
-    event_name: formData.event_name || "",
+    event_name: formData.event_name || formData.eventname || "",
     description: formData.description || "",
 
-    // File uploads - NEW FORMAT
-    thumbnail_image: transformThumbnailImage(formData.thumbnail_image),
-    banner_images: transformMultipleImages(formData.banner_images),
-    event_images: transformMultipleImages(formData.event_images),
+    // ✅ File uploads - Use extracted field variables with both conventions
+    thumbnail_image: transformThumbnailImage(thumbnailImage),
+    banner_images: transformMultipleMedia(bannerImages),
+    event_images: transformMultipleMedia(eventImages),
 
     // Add-on services and QNA
-    event_add_on_services: formData.event_add_on_services || [],
-    event_qna: formData.event_qna || [],
+    event_add_on_services:
+      formData.event_add_on_services || formData.eventaddonservices || [],
+    event_qna: formData.event_qna || formData.eventqna || [],
 
     // Category information
-    category_id: formData.category_id || null,
-    sub_category_id: formData.sub_category_id || null,
+    category_id: formData.category_id || formData.categoryid || null,
+    sub_category_id: formData.sub_category_id || formData.subcategoryid || null,
 
     // Location information
     place: formData.place || "",
-    place_id: formData.place_id || null,
-    venue_ids: formData.venue_id || [],
-    tax_ids: formData.tax_ids || [],
+    place_id: formData.place_id || formData.placeid || null,
+    venue_ids: formData.venue_id || formData.venueid || [],
+    tax_ids: formData.tax_ids || formData.taxids || [],
 
     // Venue and capacity information
     venues: getPrimaryVenue(),
@@ -208,21 +256,28 @@ export const transformFormDataForAPI = (formData, additionalContext = {}) => {
     coupon_ids: selectedCoupons.map((coupon) => coupon.id),
 
     // Additional booking information
-    additional_booking_details: formData.additional_booking_info || [],
-    additional_notes: formData.additional_booking_notes || "",
+    additional_booking_details:
+      formData.additional_booking_info || formData.additionalbookinginfo || [],
+    additional_notes:
+      formData.additional_booking_notes ||
+      formData.additionalbookingnotes ||
+      "",
 
     // Default/calculated fields
-    max_tickets: parseInt(formData.max_tickets || "0", 10),
-    event_type_id: formData.event_type_id,
+    max_tickets: parseInt(
+      formData.max_tickets || formData.maxtickets || "0",
+      10
+    ),
+    event_type_id: formData.event_type_id || formData.eventtypeid,
 
     // Include lead_id if in create mode
     ...(eventId && { lead_id: eventId }),
   };
 
   console.log("📤 Transformed data:", transformedData);
-  console.log("🖼️ Thumbnail image:", transformedData.thumbnail_image);
-  console.log("🖼️ Banner images:", transformedData.banner_images);
-  console.log("🖼️ Event images:", transformedData.event_images);
+  console.log("🖼️ Final thumbnail_image:", transformedData.thumbnail_image);
+  console.log("🖼️ Final banner_images:", transformedData.banner_images);
+  console.log("🖼️ Final event_images:", transformedData.event_images);
   console.log("🪑 Seat structure:", transformedData.seat_structure);
   console.log("🎫 Ticket structure:", transformedData.ticket_structure);
   console.log(

@@ -102,6 +102,12 @@ const CountryFormFields = ({ mode, form }) => {
             label="Thumbnail Image"
             valuePropName="value"
             getValueFromEvent={normFile}
+            rules={[
+              {
+                required: true,
+                  message: "Please select thumbnail image",
+              },
+            ]}
             style={{ marginBottom: "0px", padding: "0px" }}
           >
             <ResizedMediaPicker

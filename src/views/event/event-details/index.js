@@ -32,6 +32,7 @@ import { UserAddOutlined } from "@ant-design/icons";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { CDN_PATH } from "configs/AppConfig";
+import CDNImage from "components/layout-components/Image/CDNImage";
 
 const { Title, Text } = Typography;
 export const getUserRole = () => {
@@ -128,27 +129,44 @@ const EventDetails = () => {
             </div>
           ) : (
             <div style={{ position: "relative", width: "100%" }}>
-              <Carousel autoplay dots={{ className: "custom-carousel-dots" }}>
-                {mediaImages.map((url, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                      width: "100%",
-                    }}
-                  >
-                    <Image
-                      alt={`media image ${index + 1}`}
-                      src={`${url}`}
-                      height={400}
-                      width="100%"
-                      style={{
-                        width: "100%",
-                        objectFit: "cover",
-                        display: "block",
-                      }}
-                    />
+              <Carousel autoplay>
+                {mediaImages.map((item, index) => (
+                  <div key={index}>
+                    {item.media_type === "image" ? (
+                      <CDNImage
+                        src={item.media_url}
+                        alt={item.caption || `media image ${index + 1}`}
+                        height={400}
+                        style={{ width: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <video
+                        controls
+                        style={{
+                          width: "100%",
+                          height: "400px",
+                          objectFit: "cover",
+                          backgroundColor: "#000",
+                        }}
+                      >
+                        <source
+                          src={CDN_PATH + "/" + item.media_url}
+                          type="video/mp4"
+                        />
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
+                    {item.caption && (
+                      <div
+                        style={{
+                          textAlign: "center",
+                          marginTop: "10px",
+                          padding: "10px",
+                        }}
+                      >
+                        <Text type="secondary">{item.caption}</Text>
+                      </div>
+                    )}
                   </div>
                 ))}
               </Carousel>
