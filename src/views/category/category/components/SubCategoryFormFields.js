@@ -175,10 +175,12 @@ const SubCategoryFormFields = ({ mode, category }) => {
       }));
   };
 
-  const onFinish = async () => {
-    const values = await form.validateFields();
+  // Complete fixed SubCategoryFormFields component
 
+  const onFinish = async () => {
     try {
+      const values = await form.validateFields();
+
       // Extract original file objects for later S3 upload
       const originalFiles = extractFileObjects(values);
 
@@ -196,10 +198,15 @@ const SubCategoryFormFields = ({ mode, category }) => {
           }
         : null;
 
+      const formData = {
+        ...values,
+        thumbnail_image: thumbnailData,
+      };
+
       if (mode === EDIT) {
+        // Add ID for edit mode
         const data = {
-          ...values,
-          thumbnail_image: thumbnailData,
+          ...formData,
           id: category.id,
         };
         console.log("Edit Data:", data);
@@ -213,23 +220,20 @@ const SubCategoryFormFields = ({ mode, category }) => {
           if (response.message === "warning") {
             dispatch(setCategoryValidationDialogVisible(true));
           } else if (response.data && response.data[0]?.validation_status) {
-            const resultAction = await dispatch(
+            const editResultAction = await dispatch(
               editSubCategory({ data, action: ActionType.WARNING })
             );
 
-            if (editSubCategory.fulfilled.match(resultAction)) {
+            if (editSubCategory.fulfilled.match(editResultAction)) {
               dispatch(setSelectedCatDetails(data));
               dispatch(setCatDialogVisible(true));
             }
           }
         }
       } else {
-        console.log("HELOOOOOOOOOOO");
-
-        const formData = {
-          ...values,
-          thumbnail_image: thumbnailData,
-        };
+        // ADD mode
+        console.log("ADD mode - Form Data:", formData);
+        console.log("Thumbnail in formData:", formData.thumbnail_image);
 
         const resultAction = await dispatch(
           validateCategory(values.category_id)
@@ -237,15 +241,26 @@ const SubCategoryFormFields = ({ mode, category }) => {
 
         if (validateCategory.fulfilled.match(resultAction)) {
           const response = resultAction.payload;
+
+          console.log("Validation response:", response);
+
           if (response.message === "warning") {
             dispatch(setCategoryValidationDialogVisible(true));
           } else if (response.data && response.data[0]?.validation_status) {
+            // ✅ Only dispatch after successful validation
+            console.log("✅ Setting selected submit item:", formData);
             dispatch(setSelectedSubmitItem(formData));
+          } else {
+            message.error("Validation failed. Please try again.");
           }
+        } else {
+          console.error("❌ Validation action failed");
+          message.error("Category validation failed");
         }
       }
     } catch (errorInfo) {
-      console.log("Validation Failed:", errorInfo);
+      console.log("❌ Validation Failed:", errorInfo);
+      message.error("Please fill in all required fields");
     }
   };
 

@@ -111,11 +111,10 @@ export default function EventForm({ eventId, mode = "add" }) {
     const currentValues = form.getFieldsValue();
     return {
       thumbnail_image:
-        currentValues.thumbnail_image || currentFormData.thumbnail_image || [],
+        currentValues.thumbnail_image || currentFormData.thumbnail_image,
       banner_images:
-        currentValues.banner_images || currentFormData.banner_images || [],
-      event_images:
-        currentValues.event_images || currentFormData.event_images || [],
+        currentValues.banner_images || currentFormData.banner_images,
+      event_images: currentValues.event_images || currentFormData.event_images,
     };
   };
 
@@ -602,14 +601,17 @@ export default function EventForm({ eventId, mode = "add" }) {
   };
 
   const handleSubmit = async () => {
-    console.log("🚀 handleSubmit triggered - Mode:", mode);
+    console.log("handleSubmit triggered - Mode:", mode);
     dispatch(setLoading(true));
 
     try {
       const finalValues = await form.validateFields();
-      console.log("✅ Form validation successful");
+      console.log("Form validation successful");
+      console.log("Final Values from form:", finalValues);
 
       const preservedImages = preserveImages(formData);
+      console.log("Preserved Images:", preservedImages);
+
       const completeFormData = {
         ...formData,
         ...finalValues,
@@ -618,65 +620,31 @@ export default function EventForm({ eventId, mode = "add" }) {
           ?.id,
       };
 
-      // Extract original file objects for S3 upload
+      console.log("Complete Form Data:", completeFormData);
+      console.log(
+        "Thumbnail from completeFormData:",
+        completeFormData.thumbnail_image
+      );
+
+      // ✅ Extract original file objects for S3 upload
       const originalFiles = extractFileObjects(completeFormData);
       dispatch(setOriginalFiles(originalFiles));
 
-      // Transform thumbnail_image - always image type
-      const thumbnailData = completeFormData.thumbnail_image?.[0]
-        ? {
-            file_name:
-              completeFormData.thumbnail_image[0].name ||
-              completeFormData.thumbnail_image[0].file_name ||
-              null,
-            media_type: "image",
-          }
-        : null;
-
-      // Transform banner_images - can be images or videos
-      const bannerImagesData =
-        completeFormData.banner_images?.map((media) => {
-          const mediaType = getMediaType(media);
-
-          return {
-            id: media.id || null, // Include id for existing media
-            file_name: media.name || media.file_name,
-            media_type: mediaType,
-          };
-        }) || [];
-
-      // Transform event_images - can be images or videos
-      const eventImagesData =
-        completeFormData.event_images?.map((media) => {
-          const mediaType = getMediaType(media);
-
-          return {
-            id: media.id || null, // Include id for existing media
-            file_name: media.name || media.file_name,
-            media_type: mediaType,
-          };
-        }) || [];
-
-      // Update completeFormData with transformed media
-      const transformedFormData = {
-        ...completeFormData,
-        thumbnail_image: thumbnailData,
-        banner_images: bannerImagesData,
-        event_images: eventImagesData,
-      };
+      // ✅ REMOVED ALL TRANSFORMATION - Pass RAW data to handleCreateModeSubmission
+      // The transformation will happen inside transformFormDataForAPI
 
       if (mode === EDIT) {
-        console.log("🔧 Submission mode: EDIT");
-        await handleEditModeSubmission(transformedFormData);
+        console.log("Submission mode: EDIT");
+        await handleEditModeSubmission(completeFormData);
       } else {
-        console.log(`➕ Submission mode: ${mode.toUpperCase()}`);
-        await handleCreateModeSubmission(transformedFormData);
+        console.log("Submission mode:", mode.toUpperCase());
+        // ✅ Pass RAW completeFormData with arrays intact
+        await handleCreateModeSubmission(completeFormData);
       }
 
-      console.log("🎉 Submission handled successfully");
+      console.log("Submission handled successfully");
     } catch (error) {
-      console.error("❌ Error during submission:", error);
-
+      console.error("Error during submission:", error);
       if (error.errorFields && error.errorFields.length > 0) {
         const firstError = error.errorFields[0];
         message.error(

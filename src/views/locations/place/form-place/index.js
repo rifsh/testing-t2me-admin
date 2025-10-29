@@ -314,7 +314,7 @@ const CountryForm = ({ mode, placeId }) => {
         formType={"place"}
         setIsUploading={setIsUploading}
         extraFieldsFromResponse={EXTRA_FIELDS_FROM_RESPONSE}
-        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.USER}
+        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.PLACE}
       />
     </>
   );

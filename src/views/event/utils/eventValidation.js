@@ -15,6 +15,10 @@ export const ValidationRules = {
       { min: 10, message: "Description must be at least 10 characters" },
       { max: 1000, message: "Description cannot exceed 1000 characters" },
     ],
+    thumbnail_image: [
+      { required: true, message: "Event Thumbnail image is required" },
+    ],
+    banner_images: [{ required: true, message: "Banner images are required" }],
   },
 
   category: {
@@ -29,9 +33,7 @@ export const ValidationRules = {
     ],
   },
 
-  ticket: {
-    // venue_id: [{ required: true, message: "Please select venues first" }],
-  },
+  ticket: {},
 
   pricing: {},
 
@@ -154,104 +156,18 @@ const validateBasicSection = async (values = {}) => {
   }
 
   // Thumbnail image validation
-  // const thumbnailImage = values.thumbnail_image;
-  // if (
-  //   !thumbnailImage ||
-  //   !Array.isArray(thumbnailImage) ||
-  //   thumbnailImage.length === 0
-  // ) {
-  //   errors.push(
-  //     makeFieldError(["thumbnail_image"], "Thumbnail image is required")
-  //   );
-  // } else {
-  //   // Validate thumbnail image properties
-  //   const validThumbnails = thumbnailImage.filter(
-  //     (file) => file && (file.status === "done" || file.status === "uploading")
-  //   );
+  if (!values.thumbnail_image || values.thumbnail_image.length === 0) {
+    errors.push(
+      makeFieldError(["thumbnail_image"], "Event thumbnail image is required")
+    );
+  }
 
-  //   if (validThumbnails.length === 0) {
-  //     errors.push(
-  //       makeFieldError(
-  //         ["thumbnail_image"],
-  //         "Please upload a valid thumbnail image"
-  //       )
-  //     );
-  //   } else {
-  //     // Check image format
-  //     const invalidFormatThumbnails = validThumbnails.filter(
-  //       (file) => !validateImageFormat(file)
-  //     );
-
-  //     if (invalidFormatThumbnails.length > 0) {
-  //       errors.push(
-  //         makeFieldError(
-  //           ["thumbnail_image"],
-  //           "Please replace the image with a supported format (JPG, PNG, GIF, WebP)"
-  //         )
-  //       );
-  //     }
-  //   }
-
-  //   // Optional: Check file size (if available)
-  //   const largeThumbnails = thumbnailImage.filter(
-  //     (file) => file.size && file.size > 5 * 1024 * 1024 // 5MB limit
-  //   );
-
-  //   if (largeThumbnails.length > 0) {
-  //     errors.push(
-  //       makeFieldError(
-  //         ["thumbnail_image"],
-  //         "Thumbnail image must be less than 5MB"
-  //       )
-  //     );
-  //   }
-  // }
-
-  // Event images validation (if provided)
-  // const eventImages = values.event_images;
-  // if (eventImages && Array.isArray(eventImages) && eventImages.length > 0) {
-  //   const validEventImages = eventImages.filter(
-  //     (file) => file && (file.status === "done" || file.status === "uploading")
-  //   );
-
-  //   if (validEventImages.length > 0) {
-  //     const invalidFormatEventImages = validEventImages.filter(
-  //       (file) => !validateImageFormat(file)
-  //     );
-
-  //     if (invalidFormatEventImages.length > 0) {
-  //       errors.push(
-  //         makeFieldError(
-  //           ["event_images"],
-  //           "Please replace the event images with supported formats (JPG, PNG, GIF, WebP)"
-  //         )
-  //       );
-  //     }
-  //   }
-  // }
-
-  // // Banner images validation (if provided)
-  // const bannerImages = values.banner_images;
-  // if (bannerImages && Array.isArray(bannerImages) && bannerImages.length > 0) {
-  //   const validBannerImages = bannerImages.filter(
-  //     (file) => file && (file.status === "done" || file.status === "uploading")
-  //   );
-
-  //   if (validBannerImages.length > 0) {
-  //     const invalidFormatBannerImages = validBannerImages.filter(
-  //       (file) => !validateImageFormat(file)
-  //     );
-
-  //     if (invalidFormatBannerImages.length > 0) {
-  //       errors.push(
-  //         makeFieldError(
-  //           ["banner_images"],
-  //           "Please replace the banner images with supported formats (JPG, PNG, GIF, WebP)"
-  //         )
-  //       );
-  //     }
-  //   }
-  // }
+  // Banner images validation
+  if (!values.banner_images || values.banner_images.length === 0) {
+    errors.push(
+      makeFieldError(["banner_images"], "Banner images are required")
+    );
+  }
 
   return {
     isValid: errors.length === 0,

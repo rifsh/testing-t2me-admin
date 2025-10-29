@@ -9,12 +9,8 @@ import {
   Button,
   Space,
   message,
-  Upload,
   Typography,
-  Tabs,
-  Checkbox,
   InputNumber,
-  Rate,
 } from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -41,35 +37,23 @@ import {
 } from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import {
-  PlusOutlined,
-  UploadOutlined,
-  MinusCircleOutlined,
-  DesktopOutlined,
-  SoundOutlined,
-  SafetyOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import {
   SupportImageFormat,
   SupportFormatContent,
   ResolutionByServices,
   ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
-import Utils from "utils/index";
 import LoadingOverlay from "components/util-components/Loader/index";
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
-import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
-import VenueTechnology from "./VenueTechnology";
-import ReactQuill from "react-quill";
 import TextEditor from "components/util-components/FormItems/TextEditor";
-import BackButton from "components/Buttons/BackPageButoon";
 import DraftSystem from "drafts/components/DraftSystem";
-import { useDraft } from "drafts/hooks/useDraftManager";
 import { UPLOAD_FIELD_CONFIGS, extractFileObjects } from "utils/s3UploadUtil";
 import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
+import ResizedMediaPicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -102,34 +86,74 @@ const VenueFormFields = ({ mode, venue }) => {
     message: warningMessage,
   } = useSelector((state) => state.locations);
 
-  // ✅ FIXED: Properly map existing images with media IDs for deletion
+  // Helper function to determine media type from file
+  const getMediaType = (file) => {
+    // If it's existing media with mediaType or media_type property, use that directly
+    if (file.mediaType) {
+      return file.mediaType;
+    }
+
+    if (file.media_type) {
+      return file.media_type;
+    }
+
+    // If it's a new file being uploaded, check the originFileObj first (Ant Design Upload)
+    if (file.originFileObj && file.originFileObj.type) {
+      return file.originFileObj.type.startsWith("video/") ? "video" : "image";
+    }
+
+    // Check the type property directly
+    if (file.type) {
+      // If it's a MIME type string
+      if (typeof file.type === "string" && file.type.includes("/")) {
+        return file.type.startsWith("video/") ? "video" : "image";
+      }
+      // If it's already "image" or "video" string
+      return file.type;
+    }
+
+    // Fallback: Check file extension
+    const fileName = file.name || file.file_name || "";
+    const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+    const isVideo = videoExtensions.some((ext) =>
+      fileName.toLowerCase().endsWith(ext)
+    );
+
+    return isVideo ? "video" : "image";
+  };
+  // ✅ Map existing venue data with media IDs for deletion
   useEffect(() => {
     if (venue && mode === "EDIT") {
-      // Map thumbnail image
+      // Map thumbnail image (always image type)
       const thumbnailFile =
         venue.thumbnail_image && venue.thumbnail_image !== "images"
           ? [
-            {
-              uid: "thumbnail-1",
-              name: venue.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: `${CDN_PATH}/${venue.thumbnail_image}`,
-              id: null, // Thumbnail doesn't have media id
-            },
-          ]
+              {
+                uid: "thumbnail-1",
+                name: venue.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${venue.thumbnail_image}`,
+                id: null,
+                type: "image",
+              },
+            ]
           : [];
 
-      // Map banner images with media ids for deletion
+      // Map banner media (images and videos) with media ids
       const bannerFiles = venue?.media
         ? venue.media.map((media, index) => ({
-          uid: `banner-${media.id}`, // Use media id in uid
-          name: media.media_url.split("/").pop(),
-          status: "done",
-          url: `${CDN_PATH}/${media.media_url}`,
-          id: media.id, // ✅ Store media id for deletion
-          mediaType: media.media_type,
-          caption: media.caption,
-        }))
+            uid: `banner-${media.id}`,
+            name: media.media_url.split("/").pop(),
+            status: "done",
+            url: `${CDN_PATH}/${media.media_url}`,
+            thumbUrl: media.thumbnail_url
+              ? `${CDN_PATH}/${media.thumbnail_url}`
+              : undefined,
+            id: media.id,
+            type: media.media_type || "image",
+            mediaType: media.media_type,
+            caption: media.caption,
+          }))
         : [];
 
       form.setFieldsValue({
@@ -147,7 +171,7 @@ const VenueFormFields = ({ mode, venue }) => {
         venue_add_on_services: !venue.venue_add_on_services
           ? []
           : venue.venue_add_on_services,
-        banner_images: bannerFiles, // ✅ Now includes media IDs
+        banner_images: bannerFiles,
         thumbnail_image: thumbnailFile,
       });
     }
@@ -174,19 +198,40 @@ const VenueFormFields = ({ mode, venue }) => {
     try {
       const values = await form.validateFields();
 
-      // ✅ Extract original file objects for S3 upload
+      // Extract original file objects for S3 upload
       const originalFiles = extractFileObjects(values);
-
-      // ✅ Store original files in Redux for confirmation modal
       dispatch(setOriginalFiles(originalFiles));
 
       // Clean and sanitize add-on services
       const cleanedAddOnServices = Array.isArray(values.venue_add_on_services)
         ? values.venue_add_on_services.map((item) => ({
-          title: item.title?.trim(),
-          services: Array.isArray(item.services) ? item.services : [],
-        }))
+            title: item.title?.trim(),
+            services: Array.isArray(item.services) ? item.services : [],
+          }))
         : [];
+
+      // Transform thumbnail_image - always image type
+      const thumbnailData = values.thumbnail_image?.[0]
+        ? {
+            file_name:
+              values.thumbnail_image[0].name ||
+              values.thumbnail_image[0].file_name ||
+              null,
+            media_type: "image",
+          }
+        : null;
+
+      // Transform banner_images - can be images or videos
+      const bannerImagesData =
+        values.banner_images?.map((media) => {
+          const mediaType = getMediaType(media);
+
+          return {
+            id: media.id || null,
+            file_name: media.name || media.file_name,
+            media_type: mediaType,
+          };
+        }) || [];
 
       // Shared base data
       const baseData = {
@@ -198,6 +243,8 @@ const VenueFormFields = ({ mode, venue }) => {
         address: values.address,
         description: values.description,
         venue_add_on_services: cleanedAddOnServices,
+        thumbnail_image: thumbnailData,
+        banner_images: bannerImagesData,
       };
 
       if (mode === "EDIT") {
@@ -233,30 +280,17 @@ const VenueFormFields = ({ mode, venue }) => {
           return;
         }
 
-        // ✅ Transform data with file names for API
         const formData = {
           ...baseData,
           place_id: selectedPlace,
-          thumbnail_image: {
-            file_name:
-              values.thumbnail_image?.[0]?.name ||
-              values.thumbnail_image?.[0]?.file_name ||
-              null,
-            media_type: "image",
-          },
-          banner_images:
-            values.banner_images?.map((img) => ({
-              file_name: img.name || img.file_name,
-              media_type: "image",
-            })) || [],
         };
         console.log("Form values:", formData);
 
         const resultAction = await dispatch(validatePlace(selectedPlace));
-        
+
         if (validatePlace.fulfilled.match(resultAction)) {
           const response = resultAction.payload;
-          console.log("Form values:", response);
+          console.log("Validation response:", response);
           if (response.message === "warning") {
             dispatch(setPlaceValidationDialogVisible(true));
             return;
@@ -272,19 +306,10 @@ const VenueFormFields = ({ mode, venue }) => {
       }
     } catch (errorInfo) {
       console.log("Validation Failed:", errorInfo);
-
-      // if (errorInfo.errorFields) {
-      //   console.log(`Please fill all the required fields`);
-      // } else {
-      //   console.log("An unexpected error occurred. Please try again.");
-      // }
     }
   };
 
   const handleWarningPagination = (page, size) => {
-    console.log("------------------------");
-    console.log("CHANIGN...........");
-
     dispatch(
       editVenue({
         data: selectedVenue,
@@ -405,12 +430,6 @@ const VenueFormFields = ({ mode, venue }) => {
               </Col>
             </Row>
             <Form.Item
-              noStyle
-              shouldUpdate={(prevValues, currentValues) =>
-                prevValues.indoor !== currentValues.indoor
-              }
-            ></Form.Item>
-            <Form.Item
               name="description"
               label="Description"
               rules={[
@@ -420,20 +439,27 @@ const VenueFormFields = ({ mode, venue }) => {
               <TextEditor />
             </Form.Item>
 
-            {/* ✅ FIXED: Added deletingImages prop to thumbnail */}
+            {/* Thumbnail Image - Image Only */}
             <Form.Item
               name="thumbnail_image"
               label="Thumbnail Image"
               valuePropName="value"
+              rules={[
+                {
+                  required: true,
+                  message: "Please select thumbnail image",
+                },
+              ]}
               getValueFromEvent={normFile}
               style={{ marginBottom: "0px", padding: "0px" }}
             >
-              <ResizedImgePicker
+              <ResizedMediaPicker
                 maxCount={1}
                 targetResolution={ThumbnailImageResolutions.VENUE}
                 form={form}
                 onDelete={handleDeleteImage}
                 deletingImages={deletingImages}
+                allowVideo={false}
               />
             </Form.Item>
             <Text
@@ -442,32 +468,36 @@ const VenueFormFields = ({ mode, venue }) => {
             >
               {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
               &{" resolution "}
-              {ResolutionByServices.venue} pixels.{" "}
+              {ResolutionByServices.venue} pixels.
             </Text>
 
-            {/* ✅ Already has onDelete and deletingImages */}
+            {/* Banner Media - Images and Videos */}
             <Form.Item
               name="banner_images"
-              label="Banner Images"
+              label="Banner Media (Images & Videos)"
               valuePropName="value"
               getValueFromEvent={normFile}
-              style={{ marginBottom: "0px", padding: "0px" }}
+              style={{ marginBottom: "0px", padding: "0px", marginTop: "16px" }}
             >
-              <ResizedImgePicker
+              <ResizedMediaPicker
                 maxCount={20}
-                targetResolution={ThumbnailImageResolutions.PLACE}
+                targetResolution={ThumbnailImageResolutions.VENUE}
                 form={form}
                 onDelete={handleDeleteImage}
                 deletingImages={deletingImages}
+                allowVideo={true}
+                maxVideoSize={100}
               />
             </Form.Item>
             <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
-              {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
-              &{" resolution "}
-              {ResolutionByServices.place} pixels.{" "}
+              Images: {SupportFormatContent.join(",")}:{" "}
+              {SupportImageFormat.join(", ")} & resolution{" "}
+              {ResolutionByServices.venue} pixels.
+              <br />
+              Videos: MP4, WebM, OGG formats. Max size: 100MB.
             </Text>
           </Card>
 
@@ -641,7 +671,6 @@ const VenueFormFields = ({ mode, venue }) => {
       />
       <LoadingOverlay loading={loading || isUploading} />
 
-      {/* ✅ FIXED: Added setIsUploading prop */}
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? editVenue : addVenue}
