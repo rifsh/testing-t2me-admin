@@ -109,27 +109,27 @@ const VenueFormFields = ({ mode, venue }) => {
       const thumbnailFile =
         venue.thumbnail_image && venue.thumbnail_image !== "images"
           ? [
-              {
-                uid: "thumbnail-1",
-                name: venue.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: `${CDN_PATH}/${venue.thumbnail_image}`,
-                id: null, // Thumbnail doesn't have media id
-              },
-            ]
+            {
+              uid: "thumbnail-1",
+              name: venue.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${venue.thumbnail_image}`,
+              id: null, // Thumbnail doesn't have media id
+            },
+          ]
           : [];
 
       // Map banner images with media ids for deletion
       const bannerFiles = venue?.media
         ? venue.media.map((media, index) => ({
-            uid: `banner-${media.id}`, // Use media id in uid
-            name: media.media_url.split("/").pop(),
-            status: "done",
-            url: `${CDN_PATH}/${media.media_url}`,
-            id: media.id, // ✅ Store media id for deletion
-            mediaType: media.media_type,
-            caption: media.caption,
-          }))
+          uid: `banner-${media.id}`, // Use media id in uid
+          name: media.media_url.split("/").pop(),
+          status: "done",
+          url: `${CDN_PATH}/${media.media_url}`,
+          id: media.id, // ✅ Store media id for deletion
+          mediaType: media.media_type,
+          caption: media.caption,
+        }))
         : [];
 
       form.setFieldsValue({
@@ -183,9 +183,9 @@ const VenueFormFields = ({ mode, venue }) => {
       // Clean and sanitize add-on services
       const cleanedAddOnServices = Array.isArray(values.venue_add_on_services)
         ? values.venue_add_on_services.map((item) => ({
-            title: item.title?.trim(),
-            services: Array.isArray(item.services) ? item.services : [],
-          }))
+          title: item.title?.trim(),
+          services: Array.isArray(item.services) ? item.services : [],
+        }))
         : [];
 
       // Shared base data
@@ -253,11 +253,13 @@ const VenueFormFields = ({ mode, venue }) => {
         console.log("Form values:", formData);
 
         const resultAction = await dispatch(validatePlace(selectedPlace));
-
+        
         if (validatePlace.fulfilled.match(resultAction)) {
           const response = resultAction.payload;
+          console.log("Form values:", response);
           if (response.message === "warning") {
             dispatch(setPlaceValidationDialogVisible(true));
+            return;
           } else if (response.data && response.data[0]?.validation_status) {
             dispatch(setSelectedSubmitItem(formData));
           }
@@ -269,13 +271,13 @@ const VenueFormFields = ({ mode, venue }) => {
         }
       }
     } catch (errorInfo) {
-      console.error("Validation Failed:", errorInfo);
+      console.log("Validation Failed:", errorInfo);
 
-      if (errorInfo.errorFields) {
-        console.log(`Please fill all the required fields`);
-      } else {
-        console.log("An unexpected error occurred. Please try again.");
-      }
+      // if (errorInfo.errorFields) {
+      //   console.log(`Please fill all the required fields`);
+      // } else {
+      //   console.log("An unexpected error occurred. Please try again.");
+      // }
     }
   };
 
@@ -615,7 +617,7 @@ const VenueFormFields = ({ mode, venue }) => {
       <ValidationModal
         visible={placeValidationDialogVisible}
         data={ValidateData?.errors}
-        statusMessage={message}
+        statusMessage={warningMessage}
         onClose={handleValidationModalCancel}
       />
       <WarningModal
