@@ -62,12 +62,12 @@ export const useS3ImageDelete = (moduleName = "event") => {
             .catch((error) => {
               const errorMessage = error?.message || "Failed to delete image";
               message.error(errorMessage);
-              console.error("Delete error:", error);
+              console.log("Delete error:", error);
 
               if (onError) {
                 onError(error);
               }
-              reject(error);
+              // reject(error);
             });
         },
         onCancel: () => {
