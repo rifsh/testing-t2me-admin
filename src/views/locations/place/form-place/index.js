@@ -76,36 +76,36 @@ const CountryForm = ({ mode, placeId }) => {
 
   // Load existing data in edit mode
   useEffect(() => {
-    if (singlePlace) {
+    if (singlePlace && mode === 'EDIT') {
       // Map thumbnail image
       const thumbnailFile = singlePlace.thumbnail_image
         ? [
-            {
-              uid: "thumbnail-1",
-              name: singlePlace.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: `${CDN_PATH}/${singlePlace.thumbnail_image}`,
-              id: null, // Thumbnail doesn't have id in media array
-              type: "image",
-            },
-          ]
+          {
+            uid: "thumbnail-1",
+            name: singlePlace.thumbnail_image.split("/").pop(),
+            status: "done",
+            url: `${CDN_PATH}/${singlePlace.thumbnail_image}`,
+            id: null, // Thumbnail doesn't have id in media array
+            type: "image",
+          },
+        ]
         : [];
 
       // Map banner media from media array (both images and videos)
       const bannerFiles = singlePlace.media
         ? singlePlace.media.map((media, index) => ({
-            uid: `banner-${media.id}`,
-            name: media.media_url.split("/").pop(),
-            status: "done",
-            url: `${CDN_PATH}/${media.media_url}`,
-            thumbUrl: media.thumbnail_url
-              ? `${CDN_PATH}/${media.thumbnail_url}`
-              : undefined,
-            id: media.id, // Media id for deletion
-            type: media.media_type || "image", // "image" or "video"
-            mediaType: media.media_type,
-            caption: media.caption,
-          }))
+          uid: `banner-${media.id}`,
+          name: media.media_url.split("/").pop(),
+          status: "done",
+          url: `${CDN_PATH}/${media.media_url}`,
+          thumbUrl: media.thumbnail_url
+            ? `${CDN_PATH}/${media.thumbnail_url}`
+            : undefined,
+          id: media.id, // Media id for deletion
+          type: media.media_type || "image", // "image" or "video"
+          mediaType: media.media_type,
+          caption: media.caption,
+        }))
         : [];
 
       form.setFieldsValue({
@@ -153,12 +153,12 @@ const CountryForm = ({ mode, placeId }) => {
       // Transform thumbnail_image - always image type
       const thumbnailData = values.thumbnail_image?.[0]
         ? {
-            file_name:
-              values.thumbnail_image[0].name ||
-              values.thumbnail_image[0].file_name ||
-              null,
-            media_type: "image",
-          }
+          file_name:
+            values.thumbnail_image[0].name ||
+            values.thumbnail_image[0].file_name ||
+            null,
+          media_type: "image",
+        }
         : null;
 
       // Transform banner_images - can be images or videos
