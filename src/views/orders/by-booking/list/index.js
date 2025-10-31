@@ -74,7 +74,7 @@ const BookingList = () => {
     const handleViewDetails = (order) => {
         if (selectedEventType === 'seat') {
             console.log(order);
-            navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${order.order_id}/${selectedEventType}?orderId=${order?.id}`, {
+            navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${order.order_id}/${selectedEventType}?orderId=${order?.id}&show_seat_id=${order?.show_seat_details_id}`, {
                 state: { order },
             });
             return;
@@ -485,7 +485,7 @@ const BookingList = () => {
         setSelectedPaymentStatus("all");
 
         fetchOrders(1, pageSize, { type });
-
+        // navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking?type=${type}`, { replace: true })
         // Reset the flag after a brief delay to allow new data to load
         setTimeout(() => {
             setIsTypeChanging(false);

@@ -16,6 +16,7 @@ import {
     Select,
     Spin,
     Empty,
+    message,
 } from "antd";
 import {
     CalendarOutlined,
@@ -36,6 +37,8 @@ import { fetchAllApschedulerLogs } from "store/slices/apschedulerSlice";
 import Utils from "utils";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { debounce } from "lodash";
+import { useNavigate } from "react-router-dom";
+import { APP_PREFIX_PATH } from "configs/AppConfig";
 
 const { Text, Paragraph, Title } = Typography;
 
@@ -453,6 +456,7 @@ const ActivitySummary = ({ data, typeCountsFromAPI }) => {
 
 const AppSchedulerList = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { pagination, loading, allActivityLogs, countsByTypes } = useSelector(
         (state) => state.apscheduler
     );
@@ -563,10 +567,24 @@ const AppSchedulerList = () => {
             event_type: selectedEventType === 'all' ? null : selectedEventType
         }));
 
-    }, [searchTerm, selectedEventType, selectedType])
+    }, [searchTerm, selectedEventType, selectedType]);
+
+    const handleBookingClick = (bookingId, record) => {
+        if (record?.event_type === 'event_seat' && !record?.show_seat_id) {
+            message.error('Show seat id not found');
+            return;
+        }
+        if (record?.event_type === 'event_seat') {
+            console.log('Booking ID clicked:', bookingId);
+            console.log('Full record:', record);
+            navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${record.booking_id}/seat?orderId=${record?.id}&show_seat_id=${record?.show_seat_id}&isAppscheduler=${true}`);
+            return;
+        } else if (record?.event_type === 'event_ticket') {
+            navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${record.booking_id}/ticket?isAppscheduler=${true}`);
+        }
+    };
 
     const tableColumns = [
-
         {
             title: "Booking ID",
             dataIndex: "booking_id",
@@ -575,11 +593,17 @@ const AppSchedulerList = () => {
                     <Badge
                         style={{ backgroundColor: '#f0f8ff' }}
                     />
-                    <Text strong style={{
-                        color: '#1890ff',
-                        fontSize: '16px',
-                        fontWeight: 600
-                    }}>
+                    <Text
+                        strong
+                        style={{
+                            color: '#1890ff',
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            textDecoration: 'underline'
+                        }}
+                        onClick={() => handleBookingClick(record.booking_id, record)}
+                    >
                         #{record.booking_id}
                     </Text>
                 </Space>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Descriptions, Table, Tag, Badge, Space, Typography, Divider, Empty } from 'antd';
+import { Card, Descriptions, Table, Tag, Badge, Space, Typography, Divider, Empty, Button } from 'antd';
 import {
     ShoppingCartOutlined,
     UserOutlined,
@@ -9,10 +9,12 @@ import {
     DollarOutlined,
     QuestionCircleOutlined
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
-const SeatBookingUI = ({ orderData }) => {
+const SeatBookingUI = ({ orderData, isAppscheduler }) => {
+    const navigate = useNavigate();
     // Check if orderData exists and has required structure
     if (!orderData || !orderData.order_data) {
         return (
@@ -100,8 +102,15 @@ const SeatBookingUI = ({ orderData }) => {
     const seats = Array.isArray(orderInfo.seats) ? orderInfo.seats : [];
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
-            <div className="max-w-6xl mx-auto">
+        <div className="bg-gray-50 min-h-screen">
+            {isAppscheduler && (
+                <div className="mb-4">
+                    <Button type="default" onClick={() => navigate(-1)}>
+                        ← Back
+                    </Button>
+                </div>
+            )}
+            <div className="">
                 {/* Header */}
                 <div className="mb-6">
                     <Title level={2} className="flex items-center gap-2 mb-2">
