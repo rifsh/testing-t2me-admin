@@ -143,7 +143,7 @@ const BatchDetailsDisplay = ({ details, type, eventType }) => {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     {eventType && <Tag color={typeColor}>{eventType}</Tag>}
                     <Tag color={typeColor}>{formatTypeString(type)}</Tag>
-                    {hasMetrics && (
+                    {/* {hasMetrics && (
                         <div style={{ display: "flex", gap: "4px" }}>
                             {metrics.map((metric, index) => (
                                 <Badge
@@ -155,7 +155,7 @@ const BatchDetailsDisplay = ({ details, type, eventType }) => {
                                 />
                             ))}
                         </div>
-                    )}
+                    )} */}
                 </div>
 
                 <div style={{ marginTop: "2px" }}>
