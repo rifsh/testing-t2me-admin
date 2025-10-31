@@ -17,7 +17,7 @@ import {
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { getOrderByBookingDetails } from 'store/slices/ordersSlice';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Loading from 'components/shared-components/Loading';
 import LoadingOverlay from 'components/util-components/Loader';
 import SeatBookingUI from '../components/SeatBookingUI ';
@@ -26,27 +26,32 @@ const { Title, Text } = Typography;
 
 const OrderBookingDetails = () => {
     const dispatch = useDispatch();
+    const [searchParams] = useSearchParams();
     const { id, type } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const searchParams = new URLSearchParams(location.search);
+    const isAppscheduler = searchParams.get("isAppscheduler") === "true";;
     const orderId = searchParams.get("orderId");
+    const showSeatId = searchParams.get("show_seat_id");
     const { ordersByBookingDetails, loading, pagination } = useSelector(
         (state) => state.orderSlice
     );
 
     useEffect(() => {
+        console.log("sample checking", isAppscheduler);
+
         if (id && type && id !== "undefined" && type !== "undefined") {
             let params = {};
 
             if (type === 'seat') {
                 params = {
                     order_id: id,
+                    show_seat_id: showSeatId,
                     type,
-                    id: orderId
+                    // id: orderId
                 };
             } else {
-                params = { id, type };
+                params = { id, type, };
             }
 
             dispatch(getOrderByBookingDetails(params));
@@ -54,7 +59,7 @@ const OrderBookingDetails = () => {
             message.warning("Invalid booking id or type");
             navigate(-1);
         }
-    }, [dispatch, id, type, orderId, navigate]);
+    }, [dispatch, id, type, orderId, showSeatId, navigate]);
 
 
     const getPaymentStatusIcon = (status) => {
@@ -142,6 +147,7 @@ const OrderBookingDetails = () => {
         return (
             <SeatBookingUI
                 orderData={order}
+                isAppscheduler={isAppscheduler}
             />
         )
     }
@@ -150,6 +156,13 @@ const OrderBookingDetails = () => {
         <>
             <LoadingOverlay loading={loading} />
             <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
+                {isAppscheduler && (
+                    <div className="mb-4">
+                        <Button type="default" onClick={() => navigate(-1)}>
+                            ← Back
+                        </Button>
+                    </div>
+                )}
                 {/* Header */}
                 <div className="mb-6">
                     <Title level={2} className="!mb-2 text-gray-800">
@@ -345,7 +358,7 @@ const OrderBookingDetails = () => {
                                 <div className="flex justify-between">
                                     <Title level={5} className="!mb-0">Final Amount</Title>
                                     <Title level={5} className="!mb-0 text-green-600">
-                                        {getSafeValue(order, 'final_amount', 0).toFixed(2)}
+                                        {getSafeValue(order, 'amount', 0).toFixed(2)}
                                     </Title>
                                 </div>
                             </div>

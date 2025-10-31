@@ -13,7 +13,7 @@
   "sidenav.order.appscheduler": "APScheduler Logs",
   "sidenav.activity.logger": "Batch Run Logs",
   "sidenav.apps.admin.reports.batchrun": "Activity Log",
-  "sidenav.order.event": "By Event",
+  "sidenav.order.event": "By Schedule",
   "sidenav.event.add": "add",
   "sidenav.services": "Services",
   "sidenav.general": "General",
