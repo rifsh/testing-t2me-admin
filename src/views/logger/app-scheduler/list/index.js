@@ -39,6 +39,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { debounce } from "lodash";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { BOOKING_TYPE } from "constants/AppConstants";
 
 const { Text, Paragraph, Title } = Typography;
 
@@ -570,16 +571,16 @@ const AppSchedulerList = () => {
     }, [searchTerm, selectedEventType, selectedType]);
 
     const handleBookingClick = (bookingId, record) => {
-        if (record?.event_type === 'event_seat' && !record?.show_seat_id) {
+        if (record?.event_type === BOOKING_TYPE.EVENT_SEAT && !record?.show_seat_id) {
             message.error('Show seat id not found');
             return;
         }
-        if (record?.event_type === 'event_seat') {
+        if (record?.event_type === BOOKING_TYPE.EVENT_SEAT) {
             console.log('Booking ID clicked:', bookingId);
             console.log('Full record:', record);
             navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${record.booking_id}/seat?orderId=${record?.id}&show_seat_id=${record?.show_seat_id}&isAppscheduler=${true}`);
             return;
-        } else if (record?.event_type === 'event_ticket') {
+        } else if (record?.event_type === BOOKING_TYPE.EVENT_TICKET) {
             navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${record.booking_id}/ticket?isAppscheduler=${true}`);
         }
     };

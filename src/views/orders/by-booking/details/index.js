@@ -155,7 +155,7 @@ const OrderBookingDetails = () => {
     return (
         <>
             <LoadingOverlay loading={loading} />
-            <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
+            <div className="bg-gray-50 min-h-screen">
                 {isAppscheduler && (
                     <div className="mb-4">
                         <Button type="default" onClick={() => navigate(-1)}>
