@@ -7,7 +7,8 @@ import {
     CalendarOutlined,
     MailOutlined,
     DollarOutlined,
-    QuestionCircleOutlined
+    QuestionCircleOutlined,
+    FileTextOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
@@ -97,6 +98,20 @@ const SeatBookingUI = ({ orderData, isAppscheduler }) => {
         }
     ];
 
+    const getSafeValue = (obj, path, defaultValue = 'N/A') => {
+        if (!obj) return defaultValue;
+
+        const keys = path.split('.');
+        let value = obj;
+
+        for (const key of keys) {
+            if (value === null || value === undefined) return defaultValue;
+            value = value[key];
+        }
+
+        return value !== null && value !== undefined ? value : defaultValue;
+    };
+
     // Safely extract data with fallbacks
     const orderInfo = orderData.order_data || {};
     const seats = Array.isArray(orderInfo.seats) ? orderInfo.seats : [];
@@ -105,7 +120,7 @@ const SeatBookingUI = ({ orderData, isAppscheduler }) => {
         <div className="bg-gray-50 min-h-screen">
             {isAppscheduler && (
                 <div className="mb-4">
-                    <Button type="default" onClick={() => navigate(-1)}>
+                    <Button type="dashed" onClick={() => navigate(-1)}>
                         ← Back
                     </Button>
                 </div>
@@ -132,18 +147,18 @@ const SeatBookingUI = ({ orderData, isAppscheduler }) => {
                                         <Text type="secondary">Not available</Text>
                                     }
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Internal ID">
+                                {/* <Descriptions.Item label="Internal ID">
                                     {orderData.id ?
                                         <Text strong>#{orderData.id}</Text> :
                                         <Text type="secondary">N/A</Text>
                                     }
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Show Seat Details ID">
+                                </Descriptions.Item> */}
+                                {/* <Descriptions.Item label="Show Seat Details ID">
                                     {orderData.show_seat_details_id ?
                                         <Text strong>#{orderData.show_seat_details_id}</Text> :
                                         <Text type="secondary">N/A</Text>
                                     }
-                                </Descriptions.Item>
+                                </Descriptions.Item> */}
                                 <Descriptions.Item label="Order Reference" span={2}>
                                     {orderInfo.order_reference ?
                                         <Text copyable>{orderInfo.order_reference}</Text> :
@@ -197,6 +212,14 @@ const SeatBookingUI = ({ orderData, isAppscheduler }) => {
                                 />
                             )}
                         </Card>
+                        {/* Payment URL */}
+                        {orderInfo.payment_url && (
+                            <Card title="Payment URL" className="shadow-sm">
+                                <Text copyable={{ text: orderInfo.payment_url }} className="text-xs break-all">
+                                    {orderInfo.payment_url}
+                                </Text>
+                            </Card>
+                        )}
                     </div>
 
                     {/* Right Column - Payment & Financial Details */}
@@ -227,6 +250,14 @@ const SeatBookingUI = ({ orderData, isAppscheduler }) => {
                         {/* Financial Breakdown */}
                         <Card title={<span><DollarOutlined className="mr-2" />Financial Details</span>} className="shadow-sm">
                             <div className="space-y-3">
+                                {orderInfo?.payment_mode && <div className="flex justify-between">
+                                    <Text>Payment Mode:</Text>
+                                    <Text strong>{orderInfo.payment_mode}</Text>
+                                </div>}
+                                {orderInfo?.payment_mode && <div className="flex justify-between">
+                                    <Text>Platform:</Text>
+                                    <Text strong>{orderInfo?.payment_platform}</Text>
+                                </div>}
                                 <div className="flex justify-between">
                                     <Text>Original Amount:</Text>
                                     <Text strong>{formatCurrency(orderInfo.original_amount)}</Text>
@@ -269,14 +300,54 @@ const SeatBookingUI = ({ orderData, isAppscheduler }) => {
                             </div>
                         </Card>
 
-                        {/* Payment URL */}
-                        {orderInfo.payment_url && (
-                            <Card title="Payment URL" className="shadow-sm">
-                                <Text copyable={{ text: orderInfo.payment_url }} className="text-xs break-all">
-                                    {orderInfo.payment_url}
-                                </Text>
-                            </Card>
-                        )}
+                        {/* Order Timeline */}
+                        <Card
+                            className="shadow-sm hover:shadow-md transition-shadow duration-200"
+                            title={
+                                <div className="flex items-center gap-2">
+                                    <FileTextOutlined className="text-blue-500" />
+                                    <span>Order Timeline</span>
+                                </div>
+                            }
+                        >
+                            <div className="space-y-4">
+                                <div className="flex items-start gap-3">
+                                    <div className={`w-3 h-3 rounded-full mt-1.5 ${getSafeValue(orderInfo, 'created_at') ? 'bg-blue-500' : 'bg-gray-300'
+                                        }`} />
+                                    <div className="flex-1">
+                                        <Text strong className="block">Order Created</Text>
+                                        <Text className="text-gray-500 text-sm">
+                                            {formatDate(getSafeValue(orderInfo, 'created_at'))}
+                                        </Text>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3">
+                                    <div className={`w-3 h-3 rounded-full mt-1.5 ${getSafeValue(orderInfo, 'payment_initiated_at') ? 'bg-orange-500' : 'bg-gray-300'
+                                        }`} />
+                                    <div className="flex-1">
+                                        <Text strong className="block">Payment Initiated</Text>
+                                        <Text className="text-gray-500 text-sm">
+                                            {getSafeValue(orderInfo, 'payment_initiated_at')
+                                                ? formatDate(orderInfo.payment_initiated_at)
+                                                : 'Pending'
+                                            }
+                                        </Text>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3">
+                                    <div className={`w-3 h-3 rounded-full mt-1.5 ${getSafeValue(orderInfo, 'payment_status') === 'paid' ? 'bg-green-500' : 'bg-gray-300'
+                                        }`} />
+                                    <div className="flex-1">
+                                        <Text strong className="block">Payment Status</Text>
+                                        <Text className="text-gray-500 text-sm">
+                                            {orderInfo?.payment_status}
+                                        </Text>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
                     </div>
                 </div>
             </div>

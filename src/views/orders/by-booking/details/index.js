@@ -172,7 +172,7 @@ const OrderBookingDetails = () => {
             <div className="bg-gray-50 min-h-screen p-4">
                 {isAppscheduler && (
                     <div className="mb-4">
-                        <Button type="default" onClick={() => navigate(-1)}>
+                        <Button type="dashed" onClick={() => navigate(-1)}>
                             ← Back
                         </Button>
                     </div>
@@ -567,9 +567,9 @@ const OrderBookingDetails = () => {
                                     <div className={`w-3 h-3 rounded-full mt-1.5 ${getSafeValue(order, 'payment_status') === 'paid' ? 'bg-green-500' : 'bg-gray-300'
                                         }`} />
                                     <div className="flex-1">
-                                        <Text strong className="block">Payment Completed</Text>
+                                        <Text strong className="block">Payment Status</Text>
                                         <Text className="text-gray-500 text-sm">
-                                            {getSafeValue(order, 'payment_status') === 'paid' ? 'Completed' : 'Pending'}
+                                            {order?.payment_status}
                                         </Text>
                                     </div>
                                 </div>
