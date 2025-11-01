@@ -12,6 +12,7 @@ import {
 import { ActionType } from "utils/api/warning-submit-util";
 import { message } from "antd";
 import { TextConstants } from "constants/TextConstant";
+import { resetNormalStatus } from "store/slices/fliterSlice";
 
 const UpdateStatusModal = ({
   editFunction,
@@ -56,6 +57,7 @@ const UpdateStatusModal = ({
 
   useEffect(() => {
     if (selectedItem && statusDialogVisible) {
+      dispatch(resetNormalStatus(null));
       dispatch(
         editFunction({
           data: selectedItem,
@@ -109,13 +111,14 @@ const UpdateStatusModal = ({
           pageData: { page: 1, size: 10 },
         })
       );
-      
+
       if (editFunction.fulfilled.match(result)) {
         // Close warning modal and open response modal
         console.log("sampleeditcheck", result);
         dispatch(setDialogVisible(false));
         dispatch(setResponseData(result.payload));
         dispatch(setResponseDialogVisible(true));
+        // dispatch(resetNormalStatus(TextConstants.ResetStatus));
       } else {
         throw new Error();
       }

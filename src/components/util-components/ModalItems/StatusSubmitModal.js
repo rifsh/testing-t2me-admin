@@ -2,6 +2,7 @@ import { message } from "antd";
 import ResponseShowModal from "components/util-components/ModalItems/ResponseShowModal";
 import { TextConstants } from "constants/TextConstant";
 import { useDispatch, useSelector } from "react-redux";
+import { resetNormalStatus } from "store/slices/fliterSlice";
 import {
   setResponseDialogVisible,
   setModalLoading,
@@ -25,9 +26,9 @@ export const StatusSubmitAndConfirmModal = ({
     (state) => state.modalSlice
   );
 
-  console.log(responseData, "DATAAAAAAAAAA RESPONSE STATUS");
 
   const handleModalSubmit = async () => {
+    console.log('sample oneeeeee');
     if (!selectedItem) {
       message.error(TextConstants.NoItemSelected);
       return;
@@ -51,6 +52,7 @@ export const StatusSubmitAndConfirmModal = ({
         message.success(onSubmitMessage);
         dispatch(resetStatusModalState());
         dispatch(setResponseDialogVisible(false));
+        dispatch(resetNormalStatus(TextConstants.ResetStatus));
       } else {
         throw new Error(
           result.error?.message || TextConstants.FailedToConfirmItem

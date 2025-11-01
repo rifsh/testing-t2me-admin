@@ -1,8 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { TextConstants } from "constants/TextConstant";
 
 const initialState = {
     searchValue: null,
-    globalStatus: null
+    globalStatus: null,
+    statusState: null
 };
 
 const FilterSlice = createSlice({
@@ -21,9 +23,12 @@ const FilterSlice = createSlice({
         resetStatusValue: (state, action) => {
             state.globalStatus = null;
         },
+        resetNormalStatus: (state, action) => {
+            state.statusState = action.payload;
+        },
     },
 });
 
-export const { setGlobalSearchValue, setGlobalStatusValue, resetSearchValue, resetStatusValue } = FilterSlice.actions;
+export const { setGlobalSearchValue, setGlobalStatusValue, resetSearchValue, resetStatusValue, resetNormalStatus } = FilterSlice.actions;
 
 export default FilterSlice.reducer;
