@@ -264,7 +264,7 @@ const EventsList = () => {
       title: "",
       dataIndex: "qrHandler",
       width: 200,
-      align: "center",
+      align: "start",
       render: (_, elm) => (
         <Space size="small" className="text-right">
           {currentUser?.role_id === ROLES.EVENT_ORGANIZER && (
