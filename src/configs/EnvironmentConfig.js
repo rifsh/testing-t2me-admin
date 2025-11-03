@@ -27,7 +27,7 @@ const demo = {
   AES_KEY: "your_32_byte_encryption_key_here",
   NEED_ENCRYPT_DECRYPT: false,
   SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS,
-  CDN_PATH: "https://cdn-media.tickets2mecdn.org",
+  CDN_PATH: "https://cdn-demo-media.tickets2mecdn.org",
 };
 // temp
 const prod = {
