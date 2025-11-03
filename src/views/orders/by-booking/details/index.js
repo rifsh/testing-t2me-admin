@@ -201,7 +201,7 @@ const OrderBookingDetails = () => {
                                 />
                             </div>
                         </div>
-                        <div className="mt-4 lg:mt-0">
+                        {/* <div className="mt-4 lg:mt-0">
                             <Button
                                 type="primary"
                                 icon={<FileTextOutlined />}
@@ -209,7 +209,7 @@ const OrderBookingDetails = () => {
                             >
                                 Print Details
                             </Button>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
@@ -380,7 +380,7 @@ const OrderBookingDetails = () => {
                                                 color={getSafeValue(order, 'qr_used', false) ? 'green' : 'blue'}
                                                 className="mt-1"
                                             >
-                                                {getSafeValue(order, 'qr_used', false) ? 'Already Used' : 'Ready to Use'}
+                                                {getSafeValue(order, 'qr_used', false) ? 'Used' : 'Not Used'}
                                             </Tag>
                                         </div>
                                     </div>
