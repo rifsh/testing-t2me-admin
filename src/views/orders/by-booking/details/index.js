@@ -25,6 +25,7 @@ import Loading from 'components/shared-components/Loading';
 import LoadingOverlay from 'components/util-components/Loader';
 import SeatBookingUI from '../components/SeatBookingUI ';
 import { AirplaneTicketOutlined } from '@mui/icons-material';
+import { qrUsed } from 'constants/QrConstants';
 
 const { Title, Text } = Typography;
 
@@ -170,13 +171,11 @@ const OrderBookingDetails = () => {
         <>
             <LoadingOverlay loading={loading} />
             <div className="bg-gray-50 min-h-screen p-4">
-                {isAppscheduler && (
-                    <div className="mb-4">
-                        <Button type="dashed" onClick={() => navigate(-1)}>
-                            ← Back
-                        </Button>
-                    </div>
-                )}
+                <div className="mb-4">
+                    <Button type="dashed" onClick={() => navigate(-1)}>
+                        ← Back
+                    </Button>
+                </div>
 
                 {/* Header Section */}
                 <div className="mb-6 bg-white rounded-lg shadow-sm p-6">
@@ -380,7 +379,7 @@ const OrderBookingDetails = () => {
                                                 color={getSafeValue(order, 'qr_used', false) ? 'green' : 'blue'}
                                                 className="mt-1"
                                             >
-                                                {getSafeValue(order, 'qr_used', false) ? 'Used' : 'Not Used'}
+                                                {getSafeValue(order, 'qr_used', false) ? qrUsed.used : qrUsed.notUsed}
                                             </Tag>
                                         </div>
                                     </div>

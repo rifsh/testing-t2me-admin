@@ -48,6 +48,7 @@ import { debounce } from "lodash";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { BOOKING_TYPE } from "constants/AppConstants";
+import { eventType, paymentFilterTypes, paymentModeFilters, paymentPlatformFilters, statusFilters } from "constants/LoggerConstants";
 
 const { Text, Paragraph, Title } = Typography;
 
@@ -529,10 +530,10 @@ const AppSchedulerList = () => {
 
     const handleFilterChange = (value, type) => {
         switch (type) {
-            case 'payment_mode':
+            case paymentFilterTypes.paymentMode:
                 setSelectedpaymentMode(value);
                 break;
-            case 'payment_platform':
+            case paymentFilterTypes.paymentPlatform:
                 setSelectedPaymentPlatform(value);
                 break;
 
@@ -837,12 +838,7 @@ const AppSchedulerList = () => {
                                     value={selectedEventType}
                                     onChange={handleEventTypeFilter}
                                     style={{ width: '100%' }}
-                                    options={[
-                                        { value: "all", label: "All Event Types" },
-                                        { value: "event_ticket", label: "Event Ticket" },
-                                        { value: "event_seat", label: "Event Seat" },
-                                        { value: "movie_seat", label: "Movie" },
-                                    ]}
+                                    options={eventType}
                                     suffixIcon={<IdcardOutlined />}
                                 />
                             </div>
@@ -858,13 +854,7 @@ const AppSchedulerList = () => {
                                     value={selectedType}
                                     onChange={handleTypeFilter}
                                     style={{ width: '100%' }}
-                                    options={[
-                                        { value: "all", label: "All" },
-                                        { value: "scheduled", label: "Scheduled" },
-                                        { value: "completed", label: "Completed" },
-                                        { value: "failed", label: "Failed" },
-                                        { value: "cancelled", label: "Cancelled" },
-                                    ]}
+                                    options={statusFilters}
                                     suffixIcon={<ClockCircleOutlined />}
                                 />
                             </div>
@@ -876,13 +866,9 @@ const AppSchedulerList = () => {
                                 </Text>
                                 <Select
                                     value={selectedpaymentMode}
-                                    onChange={(value) => handleFilterChange(value, 'payment_mode')}
+                                    onChange={(value) => handleFilterChange(value, paymentFilterTypes.paymentMode)}
                                     style={{ width: '100%' }}
-                                    options={[
-                                        { value: "all", label: "All" },
-                                        { value: "ONLINE", label: "Online" },
-                                        { value: "COUNTER", label: "Counter Sale" },
-                                    ]}
+                                    options={paymentModeFilters}
                                     suffixIcon={<ClockCircleOutlined />}
                                 />
                             </div>
@@ -894,14 +880,9 @@ const AppSchedulerList = () => {
                                 </Text>
                                 <Select
                                     value={selectedPaymentPlatform}
-                                    onChange={(value) => handleFilterChange(value, 'payment_platform')}
+                                    onChange={(value) => handleFilterChange(value, paymentFilterTypes.paymentPlatform)}
                                     style={{ width: '100%' }}
-                                    options={[
-                                        { value: "all", label: "All" },
-                                        { value: "WEB", label: "WEB" },
-                                        { value: "ANDROID", label: "Android" },
-                                        { value: "IOS", label: "IOS" },
-                                    ]}
+                                    options={paymentPlatformFilters}
                                     suffixIcon={<ClockCircleOutlined />}
                                 />
                             </div>

@@ -118,13 +118,11 @@ const SeatBookingUI = ({ orderData, isAppscheduler }) => {
 
     return (
         <div className="bg-gray-50 min-h-screen">
-            {isAppscheduler && (
-                <div className="mb-4">
-                    <Button type="dashed" onClick={() => navigate(-1)}>
-                        ← Back
-                    </Button>
-                </div>
-            )}
+            <div className="mb-4">
+                <Button type="dashed" onClick={() => navigate(-1)}>
+                    ← Back
+                </Button>
+            </div>
             <div className="">
                 {/* Header */}
                 <div className="mb-6">
