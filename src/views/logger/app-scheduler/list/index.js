@@ -916,6 +916,7 @@ const AppSchedulerList = () => {
                                     loading={loading}
                                     style={{ flex: 1 }}
                                 >
+                                    Refresh
                                 </Button>
                             </div>
                         </Col>
