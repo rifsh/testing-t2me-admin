@@ -111,17 +111,17 @@ CategoryService.editSubCategory = function (
   action,
   pageData = { page: 1, size: 10 }
 ) {
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
   return fetch({
     url: `${ApiConstant.SUB_CATEGORY_URL}/${data.id}`,
     method: "put",
-    data: formData,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    data: data,
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
     params: {
       action: handleAction(action),
       ...Utils.filterParams(pageData),
