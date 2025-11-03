@@ -121,15 +121,15 @@ LocationService.editVenue = function (
 ) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
 
   return fetch({
     url: `${ApiConstant.EDIT_VENUE_URL}/${data.id}`,
     method: "put",
-    data: formData,
+    data: data,
     params: {
       ...Utils.filterParams(pageData),
       action: encodedAction,

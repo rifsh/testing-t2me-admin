@@ -121,6 +121,19 @@ const formatDateForAPI = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+export const formatDateTimeForAPI = (dateTime) => {
+  if (!dateTime) return null;
+  if (typeof dateTime === "string") return dateTime;
+
+  const date = new Date(dateTime);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 // Validation functions
 export const validateEventData = (eventData) => {
   const requiredFields = [
@@ -260,21 +273,114 @@ export const normalizeEventData = (eventData) => {
   return normalized;
 };
 
-export const formatDateTimeForAPI = (dateTime) => {
-  if (!dateTime) return null;
-  if (typeof dateTime === "string") return dateTime;
+// FIXED: Process offers and coupons into three levels
+export const processOffersAndCoupons = (
+  items,
+  itemType = "offer",
+  totalAvailableDates = 0
+) => {
+  const scheduleLevelItems = [];
+  const dateLevelItems = new Map();
+  const timeLevelItems = new Map();
 
-  const date = new Date(dateTime);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  items.forEach((item) => {
+    const itemData = itemType === "offer" ? item.offer : item.coupons;
+    const selectedDates = itemData.selected_dates || [];
+    const selectedTimeSlots = itemData.selected_time_slots || [];
+
+    if (selectedTimeSlots.length > 0) {
+      // Time Level - specific time slots selected
+      selectedTimeSlots.forEach((timeSlotId) => {
+        if (!timeLevelItems.has(timeSlotId)) {
+          timeLevelItems.set(timeSlotId, []);
+        }
+        timeLevelItems.get(timeSlotId).push({
+          [`${itemType}_id`]: itemData.id,
+          valid_from: itemData.start_date,
+          valid_to: itemData.end_date,
+        });
+      });
+    } else if (
+      selectedDates.length > 0 &&
+      selectedDates.length < totalAvailableDates
+    ) {
+      // Date Level - specific dates selected (not all dates)
+      selectedDates.forEach((dateStr) => {
+        if (!dateLevelItems.has(dateStr)) {
+          dateLevelItems.set(dateStr, []);
+        }
+        dateLevelItems.get(dateStr).push({
+          [`${itemType}_id`]: itemData.id,
+          valid_from: dateStr,
+          valid_to: dateStr,
+        });
+      });
+    } else {
+      // Schedule Level - no specific selection or all dates selected
+      scheduleLevelItems.push({
+        [`${itemType}_id`]: itemData.id,
+        valid_from: itemData.start_date,
+        valid_to: itemData.end_date,
+      });
+    }
+  });
+
+  return {
+    scheduleLevelItems,
+    dateLevelItems,
+    timeLevelItems,
+  };
 };
 
-// UPDATED: Enhanced data preparation function to handle both ticket and seat booking
+// FIXED: Update prepareEventDataForSubmission
 export const prepareEventDataForSubmission = (formData, scheduleFormData) => {
+  // Calculate total available dates
+  const totalAvailableDates = (formData.show_dates || []).length;
+
+  // Process offers and coupons
+  const offersProcessed = processOffersAndCoupons(
+    formData.selected_offers || [],
+    "offer",
+    totalAvailableDates
+  );
+
+  const couponsProcessed = processOffersAndCoupons(
+    formData.selected_coupons || [],
+    "coupon",
+    totalAvailableDates
+  );
+
+  // Build show_dates with hierarchical offers/coupons
+  const show_dates = (formData.show_dates || []).map((showDate) => {
+    const dateStr = showDate.start_date;
+
+    // Get date-level offers/coupons
+    const dateOffers = offersProcessed.dateLevelItems.get(dateStr) || [];
+    const dateCoupons = couponsProcessed.dateLevelItems.get(dateStr) || [];
+
+    // Process show_times with time-level offers/coupons
+    const show_times = (showDate.show_times || []).map((showTime) => {
+      const timeSlotId = showTime.show_time_id || showTime.id;
+
+      const timeOffers = offersProcessed.timeLevelItems.get(timeSlotId) || [];
+      const timeCoupons = couponsProcessed.timeLevelItems.get(timeSlotId) || [];
+
+      return {
+        ...showTime,
+        offer_ids: timeOffers,
+        coupon_ids: timeCoupons,
+      };
+    });
+
+    return {
+      start_date: dateStr,
+      end_date: showDate.end_date || null,
+      offer_ids: dateOffers,
+      coupon_ids: dateCoupons,
+      show_times: show_times,
+    };
+  });
+
   const baseData = {
     start_date: formatDateForAPI(
       formData.start_date || scheduleFormData.start_date
@@ -300,23 +406,15 @@ export const prepareEventDataForSubmission = (formData, scheduleFormData) => {
     event_id: formData.event_id,
     venue_id: formData.venue_id,
 
-    // UPDATED: Include both show_dates and show_seat_details
-    show_dates: formData.show_dates || [],
+    // Show dates with hierarchical offers/coupons
+    show_dates: show_dates,
     show_seat_details: formData.show_seat_details || [],
 
-    offer_ids: (formData.offer_ids || []).map((offer) => ({
-      offer_id: offer.offer_id,
-      valid_from: offer.valid_from,
-      valid_to: offer.valid_to,
-    })),
-    coupon_ids: (formData.coupon_ids || []).map((coupon) => ({
-      coupon_id: coupon.coupon_id,
-      valid_from: coupon.valid_from,
-      valid_to: coupon.valid_to,
-    })),
+    // Schedule-level offers and coupons
+    offer_ids: offersProcessed.scheduleLevelItems,
+    coupon_ids: couponsProcessed.scheduleLevelItems,
   };
 
-  // Validate and normalize the data
   const normalizedData = normalizeEventData(baseData);
   const validation = validateEventData(normalizedData);
 
@@ -652,5 +750,6 @@ export default {
   normalizeEventData,
   formatDateTimeForAPI,
   prepareEventDataForSubmission,
+  processOffersAndCoupons,
   ScheduleUtil,
 };

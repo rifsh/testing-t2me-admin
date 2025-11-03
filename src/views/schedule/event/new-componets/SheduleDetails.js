@@ -866,134 +866,113 @@ const ScheduleDetails = ({ mode, id }) => {
     }
   };
 
+  // Only showing the updated handleOfferSubmit function
+  // Replace this function in your ScheduleDetails.jsx file
+
   const handleOfferSubmit = (formData) => {
     try {
-      // ✅ Get existing show_dates from Redux state
       const existingShowDates = scheduleFormData.show_dates || [];
-      const isSeatBased = scheduleFormData.available_types === "seat_structure";
 
-      // ✅ Extract date strings for comparison
-      const existingDateStrings = existingShowDates.map((sd) => sd.start_date);
-
-      // Process offers and coupons
-      const processedOffers = formData.offer_ids.map((offer) => {
-        const selectedDates = offer.selected_dates || [];
-        const datesMatch = existingDateStrings.every((date) =>
-          selectedDates.includes(date)
-        );
-        const allShowDatesSelected =
-          selectedDates.length === existingDateStrings.length &&
-          selectedDates.length > 0 &&
-          existingDateStrings.length > 0 &&
-          datesMatch;
-        const isScheduleLevel =
-          selectedDates.length === 0 || allShowDatesSelected;
-
-        return {
-          offer_id: offer.offer_id,
-          valid_from: offer.valid_from,
-          valid_to: offer.valid_to,
-          selected_dates: selectedDates,
-          is_schedule_level: isScheduleLevel,
-        };
+      console.log("🎯 Processing offers and coupons with time slots:", {
+        offerCount: formData.offer_ids.length,
+        couponCount: formData.coupon_ids.length,
       });
 
-      const processedCoupons = formData.coupon_ids.map((coupon) => {
-        const selectedDates = coupon.selected_dates || [];
-        const datesMatch = existingDateStrings.every((date) =>
-          selectedDates.includes(date)
-        );
-        const allShowDatesSelected =
-          selectedDates.length === existingDateStrings.length &&
-          selectedDates.length > 0 &&
-          existingDateStrings.length > 0 &&
-          datesMatch;
-        const isScheduleLevel =
-          selectedDates.length === 0 || allShowDatesSelected;
+      // Build map of time slot IDs to offers/coupons
+      const timeSlotOffersMap = new Map();
+      const timeSlotCouponsMap = new Map();
 
-        return {
-          coupon_id: coupon.coupon_id,
-          valid_from: coupon.valid_from,
-          valid_to: coupon.valid_to,
-          selected_dates: selectedDates,
-          is_schedule_level: isScheduleLevel,
-        };
+      // Process offers
+      formData.offer_ids.forEach((offer) => {
+        const selectedTimeSlots = offer.selected_time_slots || [];
+
+        if (selectedTimeSlots.length === 0) {
+          // Schedule level - will be added at root level
+          return;
+        }
+
+        // Time slot level - add to each specific time slot
+        selectedTimeSlots.forEach((timeSlotId) => {
+          if (!timeSlotOffersMap.has(timeSlotId)) {
+            timeSlotOffersMap.set(timeSlotId, []);
+          }
+          timeSlotOffersMap.get(timeSlotId).push({
+            offer_id: offer.offer_id,
+            valid_from: offer.valid_from,
+            valid_to: offer.valid_to,
+          });
+        });
       });
 
-      const scheduleLevelOffers = processedOffers.filter(
-        (o) => o.is_schedule_level
-      );
-      const dateLevelOffers = processedOffers.filter(
-        (o) => !o.is_schedule_level
-      );
-      const scheduleLevelCoupons = processedCoupons.filter(
-        (c) => c.is_schedule_level
-      );
-      const dateLevelCoupons = processedCoupons.filter(
-        (c) => !c.is_schedule_level
-      );
+      // Process coupons
+      formData.coupon_ids.forEach((coupon) => {
+        const selectedTimeSlots = coupon.selected_time_slots || [];
 
-      // ✅ Preserve existing show_dates structure while adding offers/coupons
+        if (selectedTimeSlots.length === 0) {
+          return;
+        }
+
+        selectedTimeSlots.forEach((timeSlotId) => {
+          if (!timeSlotCouponsMap.has(timeSlotId)) {
+            timeSlotCouponsMap.set(timeSlotId, []);
+          }
+          timeSlotCouponsMap.get(timeSlotId).push({
+            coupon_id: coupon.coupon_id,
+            valid_from: coupon.valid_from,
+            valid_to: coupon.valid_to,
+          });
+        });
+      });
+
+      // Update show_dates with time-slot-level offers/coupons
       const updatedShowDates = existingShowDates.map((showDate) => {
-        const dateStr = showDate.start_date;
+        const updatedShowTimes = (showDate.show_times || []).map((showTime) => {
+          const timeSlotId = showTime.id || showTime.show_time_id;
 
-        const dateOffers = dateLevelOffers
-          .filter((o) => o.selected_dates.includes(dateStr))
-          .map((o) => ({
-            offer_id: o.offer_id,
-            valid_from: dateStr,
-            valid_to: dateStr,
-          }));
-
-        const dateCoupons = dateLevelCoupons
-          .filter((c) => c.selected_dates.includes(dateStr))
-          .map((c) => ({
-            coupon_id: c.coupon_id,
-            valid_from: dateStr,
-            valid_to: dateStr,
-          }));
-
-        const updatedShowTimes = (showDate.show_times || []).map(
-          (showTime) => ({
+          return {
             ...showTime,
-            offer_ids: dateOffers,
-            coupon_ids: dateCoupons,
-            id: showTime.show_time_id || showTime.id,
-          })
-        );
+            offer_ids: timeSlotOffersMap.get(timeSlotId) || [],
+            coupon_ids: timeSlotCouponsMap.get(timeSlotId) || [],
+          };
+        });
 
         return {
           ...showDate,
-          offer_ids: dateOffers,
-          coupon_ids: dateCoupons,
+          offer_ids: [], // No date-level offers in your API structure
+          coupon_ids: [], // No date-level coupons in your API structure
           show_times: updatedShowTimes,
-          id: showDate.show_date_id || showDate.id,
         };
       });
 
-      // ✅ Preserve show_seat_details if seat-based
-      const finalData = {
-        ...scheduleFormData,
-        ...formData,
-        offer_ids: scheduleLevelOffers.map((o) => ({
+      // Schedule-level offers/coupons (those without specific time slots selected)
+      const scheduleLevelOffers = formData.offer_ids
+        .filter(
+          (o) => !o.selected_time_slots || o.selected_time_slots.length === 0
+        )
+        .map((o) => ({
           offer_id: o.offer_id,
           valid_from: o.valid_from,
           valid_to: o.valid_to,
-        })),
-        coupon_ids: scheduleLevelCoupons.map((c) => ({
+        }));
+
+      const scheduleLevelCoupons = formData.coupon_ids
+        .filter(
+          (c) => !c.selected_time_slots || c.selected_time_slots.length === 0
+        )
+        .map((c) => ({
           coupon_id: c.coupon_id,
           valid_from: c.valid_from,
           valid_to: c.valid_to,
-        })),
+        }));
+
+      const finalData = {
+        ...scheduleFormData,
+        offer_ids: scheduleLevelOffers,
+        coupon_ids: scheduleLevelCoupons,
         show_dates: updatedShowDates,
-        show_seat_details: scheduleFormData.show_seat_details || [],
       };
 
-      console.log("Final data with offers/coupons:", {
-        show_dates: finalData.show_dates,
-        show_seat_details: finalData.show_seat_details,
-        available_types: finalData.available_types,
-      });
+      console.log("✅ Final structure with time-slot offers:", finalData);
 
       const updatedData = updateStoreAndForm(finalData);
       handleFinalSubmit(updatedData);
