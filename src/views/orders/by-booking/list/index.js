@@ -11,6 +11,7 @@ import {
     Space,
     Typography,
     Button,
+    Badge,
 } from "antd";
 import {
     EyeOutlined,
@@ -185,20 +186,48 @@ const BookingList = () => {
     };
 
     const tableColumns = [
+        // {
+        //     title: "Order ID",
+        //     dataIndex: "id",
+        //     key: "id",
+        //     render: (id, record) => {
+        //         const orderData = getOrderData(record);
+        //         return (
+        //             <div>
+        //                 <Text strong>#{orderData.id || id}</Text>
+        //             </div>
+        //         );
+        //     },
+        //     sorter: (a, b) => a.id - b.id,
+        //     width: 200,
+        // },
         {
             title: "Order ID",
             dataIndex: "id",
             key: "id",
-            render: (id, record) => {
-                const orderData = getOrderData(record);
-                return (
-                    <div>
-                        <Text strong>#{orderData.id || id}</Text>
-                    </div>
-                );
-            },
-            sorter: (a, b) => a.id - b.id,
-            width: 200,
+            render: (_, record) => record?.id ? (
+                <Space>
+                    <Badge
+                        style={{ backgroundColor: '#f0f8ff' }}
+                    />
+                    <Text
+                        strong
+                        style={{
+                            color: '#000000',
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            textDecoration: 'underline'
+                        }}
+                        onClick={() => handleViewDetails(record)}
+                    >
+                        #{record.id}
+                    </Text>
+                </Space>
+            ) : (
+                <Text type="secondary">----</Text>
+            ),
+            width: "20%",
         },
         {
             title: "Customer Details",

@@ -17,6 +17,8 @@ import {
     Spin,
     Empty,
     message,
+    Col,
+    Row,
 } from "antd";
 import {
     CalendarOutlined,
@@ -30,6 +32,12 @@ import {
     ReloadOutlined,
     HistoryOutlined,
     IdcardOutlined,
+    CreditCardOutlined,
+    DollarOutlined,
+    ClearOutlined,
+    UpOutlined,
+    DownOutlined,
+    SearchOutlined,
 } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import { useDispatch, useSelector } from "react-redux";
@@ -40,6 +48,7 @@ import { debounce } from "lodash";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { BOOKING_TYPE } from "constants/AppConstants";
+import { eventType, paymentFilterTypes, paymentModeFilters, paymentPlatformFilters, statusFilters } from "constants/LoggerConstants";
 
 const { Text, Paragraph, Title } = Typography;
 
@@ -67,7 +76,7 @@ const getColorFromString = (colorStr) => {
 };
 
 // Enhanced component to handle the batch details display with better UI
-const BatchDetailsDisplay = ({ details, type, eventType }) => {
+const BatchDetailsDisplay = ({ details, type, eventType, record }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -147,6 +156,8 @@ const BatchDetailsDisplay = ({ details, type, eventType }) => {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     {eventType && <Tag color={typeColor}>{eventType}</Tag>}
                     <Tag color={typeColor}>{formatTypeString(type)}</Tag>
+                    {record?.payment_platform && <Tag color={'green'}>{record?.payment_platform}</Tag>}
+                    {record?.payment_mode && <Tag color={'purple'}>{record?.payment_mode}</Tag>}
                     {/* {hasMetrics && (
                         <div style={{ display: "flex", gap: "4px" }}>
                             {metrics.map((metric, index) => (
@@ -248,13 +259,27 @@ const BatchDetailsDisplay = ({ details, type, eventType }) => {
                     </div>
                 )}
 
+                {record?.payment_platform && (
+                    <div style={{ marginTop: "16px" }}>
+                        <Text type="secondary">
+                            <CreditCardOutlined /> Payment Platform: {record?.payment_platform}
+                        </Text>
+                    </div>
+                )}
+                {record?.payment_mode && (
+                    <div style={{ marginTop: "16px" }}>
+                        <Text type="secondary">
+                            <DollarOutlined /> Payment Mode: {record?.payment_mode}
+                        </Text>
+                    </div>
+                )}
                 <div style={{ marginTop: "16px" }}>
                     <Text type="secondary">
                         <ClockCircleOutlined /> Processed at: {new Date().toLocaleString()}
                     </Text>
                 </div>
-            </Modal>
-        </div>
+            </Modal >
+        </div >
     );
 };
 
@@ -466,7 +491,11 @@ const AppSchedulerList = () => {
     const [viewMode, setViewMode] = useState("table");
     const [selectedType, setSelectedType] = useState("all");
     const [selectedEventType, setSelectedEventType] = useState("all");
+    const [selectedpaymentMode, setSelectedpaymentMode] = useState("all");
+    const [selectedPaymentPlatform, setSelectedPaymentPlatform] = useState("all");
     const [showSummary, setShowSummary] = useState(true);
+    const [showFilters, setShowFilters] = useState(false);
+    const [activeFilters, setActiveFilters] = useState(0);
 
     useEffect(() => {
         dispatch(fetchAllApschedulerLogs(DEFAULT_PAGE_SIZE));
@@ -483,12 +512,35 @@ const AppSchedulerList = () => {
         }));
     };
 
+    useEffect(() => {
+        let count = 0;
+        if (searchTerm) count++;
+        if (selectedType !== 'all') count++;
+        if (selectedEventType !== 'all') count++;
+        setActiveFilters(count);
+    }, [searchTerm, selectedType, selectedEventType]);
 
     const handleRefresh = () => {
         setSelectedType('all');
         setSelectedEventType('all');
+        setSelectedpaymentMode('all');
+        setSelectedPaymentPlatform('all');
         dispatch(fetchAllApschedulerLogs(DEFAULT_PAGE_SIZE));
     };
+
+    const handleFilterChange = (value, type) => {
+        switch (type) {
+            case paymentFilterTypes.paymentMode:
+                setSelectedpaymentMode(value);
+                break;
+            case paymentFilterTypes.paymentPlatform:
+                setSelectedPaymentPlatform(value);
+                break;
+
+            default:
+                break;
+        }
+    }
 
     const handleTypeFilter = (type) => {
         setSelectedType(type);
@@ -565,10 +617,12 @@ const AppSchedulerList = () => {
             size: 10,
             search: searchTerm,
             type: selectedType === 'all' ? null : selectedType,
-            event_type: selectedEventType === 'all' ? null : selectedEventType
+            event_type: selectedEventType === 'all' ? null : selectedEventType,
+            payment_mode: selectedpaymentMode === 'all' ? null : selectedpaymentMode,
+            payment_platform: selectedPaymentPlatform === 'all' ? null : selectedPaymentPlatform,
         }));
 
-    }, [searchTerm, selectedEventType, selectedType]);
+    }, [searchTerm, selectedEventType, selectedType, selectedpaymentMode, selectedPaymentPlatform]);
 
     const handleBookingClick = (bookingId, record) => {
         if (record?.event_type === BOOKING_TYPE.EVENT_SEAT && !record?.show_seat_id) {
@@ -617,7 +671,7 @@ const AppSchedulerList = () => {
             title: "Details",
             dataIndex: "scheduler_details",
             render: (text, record) => (
-                <BatchDetailsDisplay details={text} type={record.types} eventType={record.event_type} />
+                <BatchDetailsDisplay details={text} type={record.types} eventType={record.event_type} record={record} />
             ),
             width: "50%",
         },
@@ -698,10 +752,160 @@ const AppSchedulerList = () => {
         );
     };
 
+    const handleClearFilters = () => {
+        setSearchTerm("");
+        setSelectedType('all');
+        setSelectedEventType('all');
+        // Refresh data after clearing filters
+        dispatch(fetchAllApschedulerLogs(DEFAULT_PAGE_SIZE));
+    };
+
     const isDataEmpty =
         !allActivityLogs ||
         !Array.isArray(allActivityLogs) ||
         allActivityLogs.length === 0;
+
+    const FilterSection = () => (
+        <Card
+            size="small"
+            style={{ marginBottom: 16, border: '1px solid #d9d9d9' }}
+            bodyStyle={{ padding: '16px' }}
+        >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showFilters ? 16 : 0 }}>
+                <Space>
+                    <FilterOutlined style={{ color: '#1890ff' }} />
+                    <Text strong>Filters</Text>
+                    {activeFilters > 0 && (
+                        <Badge
+                            count={activeFilters}
+                            style={{ backgroundColor: '#1890ff' }}
+                            title={`${activeFilters} active filter(s)`}
+                        />
+                    )}
+                </Space>
+                <Space>
+                    {activeFilters > 0 && (
+                        <Button
+                            size="small"
+                            icon={<ClearOutlined />}
+                            onClick={handleClearFilters}
+                            type="text"
+                        >
+                            Clear All
+                        </Button>
+                    )}
+                    <Button
+                        size="small"
+                        icon={showFilters ? <UpOutlined /> : <DownOutlined />}
+                        onClick={() => setShowFilters(!showFilters)}
+                        type="text"
+                    >
+                        {showFilters ? 'Hide' : 'Show'} Filters
+                    </Button>
+                </Space>
+            </div>
+
+            {showFilters && (
+                <>
+                    <Divider style={{ margin: '12px 0' }} />
+
+                    <Row gutter={[16, 16]} align="middle">
+                        {/* Search Input */}
+                        <Col xs={24} sm={12} md={8} lg={6}>
+                            <div>
+                                <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                                    Search
+                                </Text>
+                                <Input.Search
+                                    placeholder="Search in logs..."
+                                    allowClear
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onSearch={handleSearch}
+                                    prefix={<SearchOutlined />}
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                        </Col>
+
+                        {/* Event Type Filter */}
+                        <Col xs={24} sm={12} md={8} lg={6}>
+                            <div>
+                                <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                                    Event Type
+                                </Text>
+                                <Select
+                                    value={selectedEventType}
+                                    onChange={handleEventTypeFilter}
+                                    style={{ width: '100%' }}
+                                    options={eventType}
+                                    suffixIcon={<IdcardOutlined />}
+                                />
+                            </div>
+                        </Col>
+
+                        {/* Status Filter */}
+                        <Col xs={24} sm={12} md={8} lg={6}>
+                            <div>
+                                <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                                    Status
+                                </Text>
+                                <Select
+                                    value={selectedType}
+                                    onChange={handleTypeFilter}
+                                    style={{ width: '100%' }}
+                                    options={statusFilters}
+                                    suffixIcon={<ClockCircleOutlined />}
+                                />
+                            </div>
+                        </Col>
+                        <Col xs={24} sm={12} md={8} lg={6}>
+                            <div>
+                                <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                                    Payment Mode
+                                </Text>
+                                <Select
+                                    value={selectedpaymentMode}
+                                    onChange={(value) => handleFilterChange(value, paymentFilterTypes.paymentMode)}
+                                    style={{ width: '100%' }}
+                                    options={paymentModeFilters}
+                                    suffixIcon={<ClockCircleOutlined />}
+                                />
+                            </div>
+                        </Col>
+                        <Col xs={24} sm={12} md={8} lg={6}>
+                            <div>
+                                <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                                    Payment Platform
+                                </Text>
+                                <Select
+                                    value={selectedPaymentPlatform}
+                                    onChange={(value) => handleFilterChange(value, paymentFilterTypes.paymentPlatform)}
+                                    style={{ width: '100%' }}
+                                    options={paymentPlatformFilters}
+                                    suffixIcon={<ClockCircleOutlined />}
+                                />
+                            </div>
+                        </Col>
+
+                        {/* Action Buttons */}
+                        <Col xs={24} sm={12} md={8} lg={6}>
+                            <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+                                <Button
+                                    icon={<ReloadOutlined />}
+                                    onClick={handleRefresh}
+                                    loading={loading}
+                                    style={{ flex: 1 }}
+                                >
+                                    Refresh
+                                </Button>
+                            </div>
+                        </Col>
+                    </Row>
+                </>
+            )}
+        </Card>
+    );
 
     return (
         <Card>
@@ -730,99 +934,8 @@ const AppSchedulerList = () => {
                     typeCountsFromAPI={countsByTypes}
                 />
             )}
-            <Flex alignItems="start" className="mb-3 flex flex-col items-start justify-start">
-                <div className="mb-3">
-                    <Space>
 
-                    </Space>
-                </div>
-                <div className="mb-3 w-full flex space-x-4">
-                    <Space>
-                        <Input.Search
-                            placeholder="Search logs..."
-                            allowClear
-                            onChange={(e) => handleSearch(e.target.value)}
-                            style={{ width: 220 }}
-                        />
-                        <FilterOutlined />
-                        {/* <span>Filter by Type:</span> */}
-                        <Select
-                            value={selectedEventType}
-                            onChange={handleEventTypeFilter}
-                            style={{ width: 180 }}
-                            options={[
-                                { value: "all", label: "All" },
-                                { value: "event_ticket", label: "Event Ticket Type" },
-                                { value: "event_seat", label: "Event Seat Type" },
-                                { value: "movie_seat", label: "Movie Type" },
-                            ]}
-                        />
-                    </Space>
-                    {!isDataEmpty && (
-                        <Space>
-                            <FilterOutlined />
-                            {/* <span>Filter by Type:</span> */}
-                            <Select
-                                value={selectedType}
-                                onChange={handleTypeFilter}
-                                style={{ width: 180 }}
-                                options={[
-                                    { value: "all", label: "All" },
-                                    { value: "scheduled", label: "Scheduled" },
-                                    { value: "failed", label: "Failed" },
-                                    { value: "cancelled", label: "Cancelled" },
-                                    { value: "completed", label: "Completed" },
-                                ]}
-                            />
-                        </Space>
-                    )}
-                    <Space>
-                        {/* <Input
-                            placeholder="Enter Hours"
-                            onChange={(e) => Utils.handleChange(e, setNumber)}
-                            value={number}
-                            style={{ width: "120px" }}
-                            suffix={
-                                <Tooltip title="Filter activity logs by hours">
-                                    <InfoCircleOutlined style={{ color: "rgba(0,0,0,.45)" }} />
-                                </Tooltip>
-                            }
-                        /> */}
-                        <Button
-                            icon={<ReloadOutlined />}
-                            onClick={handleRefresh}
-                            title="Refresh logs"
-                            loading={loading}
-                        />
-                        {/* <Button
-                            type="primary"
-                            icon={<CalendarOutlined />}
-                            onClick={handleTimeFilter}
-                            loading={loading}
-                        >
-                            Filter by Hours
-                        </Button> */}
-                    </Space>
-                </div>
-
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                    <Space>
-                        <Button
-                            type={viewMode === "table" ? "primary" : "default"}
-                            onClick={() => setViewMode("table")}
-                        >
-                            Table View
-                        </Button>
-                        <Button
-                            type={viewMode === "timeline" ? "primary" : "default"}
-                            onClick={() => setViewMode("timeline")}
-                        >
-                            Timeline View
-                        </Button>
-                        <Divider type="vertical" />
-                    </Space>
-                </div>
-            </Flex>
+            <FilterSection />
 
             {loading ? (
                 <div style={{ textAlign: "center", padding: "40px 0" }}>

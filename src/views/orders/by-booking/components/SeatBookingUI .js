@@ -118,13 +118,11 @@ const SeatBookingUI = ({ orderData, isAppscheduler }) => {
 
     return (
         <div className="bg-gray-50 min-h-screen">
-            {isAppscheduler && (
-                <div className="mb-4">
-                    <Button type="dashed" onClick={() => navigate(-1)}>
-                        ← Back
-                    </Button>
-                </div>
-            )}
+            <div className="mb-4">
+                <Button type="dashed" onClick={() => navigate(-1)}>
+                    ← Back
+                </Button>
+            </div>
             <div className="">
                 {/* Header */}
                 <div className="mb-6">
@@ -255,7 +253,7 @@ const SeatBookingUI = ({ orderData, isAppscheduler }) => {
                                     <Text strong>{orderInfo.payment_mode}</Text>
                                 </div>}
                                 {orderInfo?.payment_mode && <div className="flex justify-between">
-                                    <Text>Platform:</Text>
+                                    <Text>Payment Platform:</Text>
                                     <Text strong>{orderInfo?.payment_platform}</Text>
                                 </div>}
                                 <div className="flex justify-between">
