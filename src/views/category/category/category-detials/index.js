@@ -1,15 +1,25 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, Row, Col, Typography, Image, Carousel, Alert } from "antd";
 import Loading from "components/shared-components/Loading";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { CDN_PATH } from "configs/AppConfig";
+import { getSingleCateory } from "store/slices/categorySlice";
+import { useParams } from "react-router-dom";
 
 const { Title, Text } = Typography;
 // singleCategory
 const CategoryDetails = () => {
-  const {singleCategory, loading, error } = useSelector(
+  const dispatch = useDispatch();
+  const { categoryId } = useParams();
+  const { singleCategory, loading, error } = useSelector(
     (state) => state.category
   );
+
+  useEffect(() => {
+    if (categoryId) {
+      dispatch(getSingleCateory(categoryId));
+    }
+  }, [categoryId])
 
   if (loading) return <Loading />;
   if (error) return <Alert message={`Error: ${error}`} type="error" />;

@@ -153,7 +153,7 @@ const CategoryList = () => {
             <Menu.Item>
               <Flex alignItems="center" onClick={() => handleViewDetailsub(row.id)}>
                 <EyeOutlined />
-                <span className="ml-2">View subDetails</span>
+                <span className="ml-2">View Details</span>
               </Flex>
             </Menu.Item>
           )
