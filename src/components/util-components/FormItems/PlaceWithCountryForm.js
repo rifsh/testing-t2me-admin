@@ -11,7 +11,7 @@ const PlaceWithCountryForm = ({
   rules,
   label,
   allPlaceVisible,
-  isActivePlaces,
+  isActivePlaces = false,
   disabled,
 }) => {
   const dispatch = useDispatch();
@@ -27,13 +27,13 @@ const PlaceWithCountryForm = ({
   }, [error]);
 
   useEffect(() => {
-    dispatch(fetchPlaceWithCountry({ place: '', active: true }));
+    dispatch(fetchPlaceWithCountry({ place: '', active: isActivePlaces }));
   }, [dispatch]);
 
   // Debounced handler
   const debouncedSearch = useCallback(
     debounce((value) => {
-      dispatch(fetchPlaceWithCountry({ place: value, active: true }));
+      dispatch(fetchPlaceWithCountry({ place: value, active: isActivePlaces }));
     }, 300),
     [dispatch]
   );
@@ -43,7 +43,7 @@ const PlaceWithCountryForm = ({
     if (trimmedValue) {
       debouncedSearch(trimmedValue);
     } else {
-      dispatch(fetchPlaceWithCountry({ place: '', active: true }));
+      dispatch(fetchPlaceWithCountry({ place: '', active: isActivePlaces }));
     }
   };
 
