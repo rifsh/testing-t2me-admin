@@ -1,4 +1,7 @@
 import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+
+dayjs.extend(isBetween);
 
 export class OfferDateValidation {
   static formatDate(date) {
@@ -9,6 +12,89 @@ export class OfferDateValidation {
   static parseDate(dateString) {
     if (!dateString) return null;
     return dayjs(dateString);
+  }
+
+  // Check if offer is currently active
+  static isOfferActive(startDate, endDate, currentDate = new Date()) {
+    if (!startDate || !endDate) {
+      return true; // If no dates required, offer is always active
+    }
+
+    const current = dayjs(currentDate).startOf("day");
+    const start = dayjs(startDate).startOf("day");
+    const end = dayjs(endDate).endOf("day");
+
+    return current.isSameOrAfter(start) && current.isSameOrBefore(end);
+  }
+
+  // Check if offer is expired
+  static isOfferExpired(endDate, currentDate = new Date()) {
+    if (!endDate) return false;
+
+    const current = dayjs(currentDate).startOf("day");
+    const end = dayjs(endDate).endOf("day");
+
+    return current.isAfter(end);
+  }
+
+  // Check if offer is upcoming
+  static isOfferUpcoming(startDate, currentDate = new Date()) {
+    if (!startDate) return false;
+
+    const current = dayjs(currentDate).startOf("day");
+    const start = dayjs(startDate).startOf("day");
+
+    return current.isBefore(start);
+  }
+
+  // Get offer status with label and color
+  static getOfferStatus(
+    startDate,
+    endDate,
+    dateRequired = true,
+    currentDate = new Date()
+  ) {
+    if (!dateRequired || (!startDate && !endDate)) {
+      return {
+        status: "active",
+        label: "Always Active",
+        color: "green",
+      };
+    }
+
+    const isExpired = this.isOfferExpired(endDate, currentDate);
+    const isUpcoming = this.isOfferUpcoming(startDate, currentDate);
+    const isActive = this.isOfferActive(startDate, endDate, currentDate);
+
+    if (isExpired) {
+      return {
+        status: "expired",
+        label: "Expired",
+        color: "red",
+      };
+    }
+
+    if (isUpcoming) {
+      return {
+        status: "upcoming",
+        label: "Upcoming",
+        color: "blue",
+      };
+    }
+
+    if (isActive) {
+      return {
+        status: "active",
+        label: "Active",
+        color: "green",
+      };
+    }
+
+    return {
+      status: "inactive",
+      label: "Inactive",
+      color: "gray",
+    };
   }
 
   static validateDates({
@@ -44,223 +130,116 @@ export class OfferDateValidation {
     const scheduleStart = dayjs(scheduleStartDate);
     const scheduleEnd = dayjs(scheduleEndDate);
 
-    const originalStart = originalItemDates?.start_date
-      ? dayjs(originalItemDates.start_date)
-      : null;
-    const originalEnd = originalItemDates?.end_date
-      ? dayjs(originalItemDates.end_date)
-      : null;
-
-    if (!scheduleStartDate || !scheduleEndDate) {
+    // Check if dates are valid
+    if (!start.isValid() || !end.isValid()) {
       return {
         ...result,
         isValid: false,
-        message: "Schedule dates are required",
+        message: "Invalid date format",
       };
     }
 
-    if (scheduleEnd.isBefore(scheduleStart, "day")) {
+    // Check if start date is before end date
+    if (start.isAfter(end)) {
       return {
         ...result,
         isValid: false,
-        message: "Schedule end date cannot be before start date",
+        message: "Start date must be before end date",
       };
     }
 
-    if (end.isBefore(start, "day")) {
+    // Check if dates overlap with schedule dates
+    const isStartWithinSchedule = start.isBetween(
+      scheduleStart,
+      scheduleEnd,
+      null,
+      "[]"
+    );
+    const isEndWithinSchedule = end.isBetween(
+      scheduleStart,
+      scheduleEnd,
+      null,
+      "[]"
+    );
+
+    if (!isStartWithinSchedule || !isEndWithinSchedule) {
+      // Auto-adjust dates to fit within schedule
+      const adjustedStart = start.isBefore(scheduleStart)
+        ? scheduleStart
+        : start;
+      const adjustedEnd = end.isAfter(scheduleEnd) ? scheduleEnd : end;
+
       return {
         ...result,
-        isValid: false,
-        message: `${itemName} end date cannot be before start date`,
-      };
-    }
-
-    if (originalStart && originalEnd) {
-      if (
-        start.isBefore(originalStart, "day") ||
-        end.isAfter(originalEnd, "day")
-      ) {
-        return {
-          ...result,
-          isValid: false,
-          message: `Selected dates must be within original ${itemName.toLowerCase()} validity period (${originalStart.format(
-            "YYYY-MM-DD"
-          )} - ${originalEnd.format("YYYY-MM-DD")})`,
-        };
-      }
-    }
-
-    if (
-      start.isAfter(scheduleEnd, "day") ||
-      end.isBefore(scheduleStart, "day")
-    ) {
-      return {
-        ...result,
-        isValid: false,
-        message: `${itemName} dates must overlap with schedule dates`,
-      };
-    }
-
-    let adjustedStart = start;
-    let adjustedEnd = end;
-    let needsAdjustment = false;
-
-    if (start.isBefore(scheduleStart, "day")) {
-      if (!originalStart || scheduleStart.isSameOrAfter(originalStart, "day")) {
-        adjustedStart = scheduleStart;
-        needsAdjustment = true;
-      }
-    }
-
-    if (end.isAfter(scheduleEnd, "day")) {
-      if (!originalEnd || scheduleEnd.isSameOrBefore(originalEnd, "day")) {
-        adjustedEnd = scheduleEnd;
-        needsAdjustment = true;
-      }
-    }
-
-    if (needsAdjustment) {
-      return {
         isValid: true,
-        message: `${itemName} dates adjusted to fit within schedule period`,
         wasAdjusted: true,
+        message: `${itemName} dates adjusted to fit schedule range (${scheduleStart.format(
+          "MMM DD"
+        )} - ${scheduleEnd.format("MMM DD, YYYY")})`,
         adjustedDates: {
           start_date: adjustedStart.format("YYYY-MM-DD"),
           end_date: adjustedEnd.format("YYYY-MM-DD"),
-          original_start_date: start.format("YYYY-MM-DD"),
-          original_end_date: end.format("YYYY-MM-DD"),
         },
       };
     }
 
-    return {
-      ...result,
-      adjustedDates: {
-        start_date: start.format("YYYY-MM-DD"),
-        end_date: end.format("YYYY-MM-DD"),
-      },
-    };
+    return result;
   }
 
-  static getDisabledDate(
-    scheduleStartDate,
-    scheduleEndDate,
-    originalItemDates = null
-  ) {
-    return (current) => {
-      if (!current) return false;
+  // Validate if dates overlap with available show dates
+  static validateAvailableDates(startDate, endDate, availableShowDates = []) {
+    if (!startDate || !endDate || availableShowDates.length === 0) {
+      return {
+        isValid: true,
+        hasOverlap: false,
+        overlappingDates: [],
+      };
+    }
 
-      const scheduleStart = dayjs(scheduleStartDate);
-      const scheduleEnd = dayjs(scheduleEndDate);
+    const start = dayjs(startDate);
+    const end = dayjs(endDate);
+    const overlappingDates = [];
 
-      const outsideSchedule =
-        current.isBefore(scheduleStart, "day") ||
-        current.isAfter(scheduleEnd, "day");
-
-      if (originalItemDates?.start_date && originalItemDates?.end_date) {
-        const itemStart = dayjs(originalItemDates.start_date);
-        const itemEnd = dayjs(originalItemDates.end_date);
-
-        const outsideItemDates =
-          current.isBefore(itemStart, "day") || current.isAfter(itemEnd, "day");
-
-        return outsideSchedule || outsideItemDates;
+    availableShowDates.forEach((dateStr) => {
+      const showDate = dayjs(dateStr);
+      if (showDate.isBetween(start, end, null, "[]")) {
+        overlappingDates.push(dateStr);
       }
-
-      return outsideSchedule;
-    };
-  }
-
-  static getDateValidationMessage = (
-    item,
-    scheduleStartDate,
-    scheduleEndDate
-  ) => {
-    if (!item.start_date || !item.end_date) return null;
-
-    const schedule = {
-      start: new Date(scheduleStartDate).setHours(0, 0, 0, 0),
-      end: new Date(scheduleEndDate).setHours(23, 59, 59, 999),
-    };
-
-    const itemDates = {
-      start: new Date(item.start_date).setHours(0, 0, 0, 0),
-      end: new Date(item.end_date).setHours(23, 59, 59, 999),
-    };
-
-    if (item.wasAdjusted) {
-      return {
-        type: "warning",
-        message: `Dates were automatically adjusted to fit within the schedule period`,
-      };
-    }
-
-    if (schedule.end < itemDates.start) {
-      return {
-        type: "error",
-        message: "Schedule ends before item validity period",
-      };
-    }
-
-    if (schedule.start > itemDates.end) {
-      return {
-        type: "error",
-        message: "Schedule starts after item validity period",
-      };
-    }
+    });
 
     return {
-      type: "success",
-      message: "Dates are within the valid schedule period",
+      isValid: overlappingDates.length > 0,
+      hasOverlap: overlappingDates.length > 0,
+      overlappingDates,
+      message:
+        overlappingDates.length === 0
+          ? "No available show dates within this date range"
+          : `${overlappingDates.length} show dates available`,
     };
-  };
-
-  // New utility method for filtering items by date validity
-  static filterValidItems(items, scheduleStartDate, scheduleEndDate) {
-    if (!scheduleStartDate || !scheduleEndDate) return items;
-
-    const scheduleStart = dayjs(scheduleStartDate);
-    const scheduleEnd = dayjs(scheduleEndDate);
-
-    return items.filter((item) => {
-      const itemData = item.offer || item.coupons || item;
-      const itemStart = dayjs(itemData.start_date);
-      const itemEnd = dayjs(itemData.end_date);
-
-      // Item is valid if it overlaps with schedule period
-      return !(
-        itemEnd.isBefore(scheduleStart, "day") ||
-        itemStart.isAfter(scheduleEnd, "day")
-      );
-    });
   }
 
-  // Utility to get overlap status
-  static getOverlapStatus(
-    itemStartDate,
-    itemEndDate,
-    scheduleStartDate,
-    scheduleEndDate
-  ) {
-    const itemStart = dayjs(itemStartDate);
-    const itemEnd = dayjs(itemEndDate);
-    const scheduleStart = dayjs(scheduleStartDate);
-    const scheduleEnd = dayjs(scheduleEndDate);
+  // Check if a specific date is within offer's valid period
+  static isDateWithinOfferPeriod(checkDate, offerStartDate, offerEndDate) {
+    if (!offerStartDate || !offerEndDate) return true;
 
-    if (
-      itemEnd.isBefore(scheduleStart, "day") ||
-      itemStart.isAfter(scheduleEnd, "day")
-    ) {
-      return "no-overlap";
+    const date = dayjs(checkDate);
+    const start = dayjs(offerStartDate);
+    const end = dayjs(offerEndDate);
+
+    return date.isBetween(start, end, null, "[]");
+  }
+
+  // Filter available dates based on offer's date range
+  static filterAvailableDates(availableDates, offerStartDate, offerEndDate) {
+    if (!offerStartDate || !offerEndDate) {
+      return availableDates;
     }
 
-    if (
-      itemStart.isSameOrAfter(scheduleStart, "day") &&
-      itemEnd.isSameOrBefore(scheduleEnd, "day")
-    ) {
-      return "fully-contained";
-    }
-
-    return "partial-overlap";
+    return availableDates.filter((dateStr) =>
+      this.isDateWithinOfferPeriod(dateStr, offerStartDate, offerEndDate)
+    );
   }
 }
+
+// Default export
+export default OfferDateValidation;
