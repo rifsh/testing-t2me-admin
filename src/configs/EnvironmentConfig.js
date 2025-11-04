@@ -1,10 +1,10 @@
 import { COMMON_SKIP_ENCRYPTION_PATHS } from "configs/encryptionConfigs ";
 
 const dev = {
-  // API_ENDPOINT_URL: "http://192.168.29.222:8000",
+  API_ENDPOINT_URL: "http://192.168.29.222:8000",
   // // "http://192.168.29.8:8000/", //"http://192.168.29.221:8000",
   // API_ENDPOINT_URL: "http://192.168.29.222:8000",
-  API_ENDPOINT_URL: "https://uat-tickets2me.mitetechnology.in",
+  // API_ENDPOINT_URL: "https://uat-tickets2me.mitetechnology.in",
   // API_ENDPOINT_URL: "https://api.tickets2me.com",
   // API_ENDPOINT_URL: "http://192.168.29.7:8000",
   AES_KEY: "your_32_byte_encryption_key_here",
@@ -27,7 +27,7 @@ const demo = {
   AES_KEY: "your_32_byte_encryption_key_here",
   NEED_ENCRYPT_DECRYPT: false,
   SKIP_ENCRYPTION_PATHS: COMMON_SKIP_ENCRYPTION_PATHS,
-  CDN_PATH: "https://cdn-demo-media.tickets2mecdn.org",
+  CDN_PATH: "https://cdn-media.tickets2mecdn.org",
 };
 // temp
 const prod = {

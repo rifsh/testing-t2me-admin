@@ -170,10 +170,12 @@ LocationService.addVenue = function (data, action) {
 };
 
 LocationService.placeWithCountry = function (place) {
+  console.log("placelog", place);
+
   return fetch({
     url: ApiConstant.PLACE_WITH_COUNTRY_URL,
     method: "get",
-    params: { place },
+    params: Utils.filterParams(place),
   });
 };
 LocationService.TenantCountry = function () {
