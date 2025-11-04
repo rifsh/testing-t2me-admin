@@ -128,32 +128,32 @@ const VenueFormFields = ({ mode, venue }) => {
       const thumbnailFile =
         venue.thumbnail_image && venue.thumbnail_image !== "images"
           ? [
-              {
-                uid: "thumbnail-1",
-                name: venue.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: `${CDN_PATH}/${venue.thumbnail_image}`,
-                id: null,
-                type: "image",
-              },
-            ]
+            {
+              uid: "thumbnail-1",
+              name: venue.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${venue.thumbnail_image}`,
+              id: null,
+              type: "image",
+            },
+          ]
           : [];
 
       // Map banner media (images and videos) with media ids
       const bannerFiles = venue?.media
         ? venue.media.map((media, index) => ({
-            uid: `banner-${media.id}`,
-            name: media.media_url.split("/").pop(),
-            status: "done",
-            url: `${CDN_PATH}/${media.media_url}`,
-            thumbUrl: media.thumbnail_url
-              ? `${CDN_PATH}/${media.thumbnail_url}`
-              : undefined,
-            id: media.id,
-            type: media.media_type || "image",
-            mediaType: media.media_type,
-            caption: media.caption,
-          }))
+          uid: `banner-${media.id}`,
+          name: media.media_url.split("/").pop(),
+          status: "done",
+          url: `${CDN_PATH}/${media.media_url}`,
+          thumbUrl: media.thumbnail_url
+            ? `${CDN_PATH}/${media.thumbnail_url}`
+            : undefined,
+          id: media.id,
+          type: media.media_type || "image",
+          mediaType: media.media_type,
+          caption: media.caption,
+        }))
         : [];
 
       form.setFieldsValue({
@@ -205,20 +205,20 @@ const VenueFormFields = ({ mode, venue }) => {
       // Clean and sanitize add-on services
       const cleanedAddOnServices = Array.isArray(values.venue_add_on_services)
         ? values.venue_add_on_services.map((item) => ({
-            title: item.title?.trim(),
-            services: Array.isArray(item.services) ? item.services : [],
-          }))
+          title: item.title?.trim(),
+          services: Array.isArray(item.services) ? item.services : [],
+        }))
         : [];
 
       // Transform thumbnail_image - always image type
       const thumbnailData = values.thumbnail_image?.[0]
         ? {
-            file_name:
-              values.thumbnail_image[0].name ||
-              values.thumbnail_image[0].file_name ||
-              null,
-            media_type: "image",
-          }
+          file_name:
+            values.thumbnail_image[0].name ||
+            values.thumbnail_image[0].file_name ||
+            null,
+          media_type: "image",
+        }
         : null;
 
       // Transform banner_images - can be images or videos
@@ -382,6 +382,7 @@ const VenueFormFields = ({ mode, venue }) => {
               label={"Place"}
               onSelect={handlePlaceSelect}
               rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
+              isActivePlaces={true}
             />
 
             <Form.Item
