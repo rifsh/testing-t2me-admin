@@ -494,7 +494,7 @@ const AppSchedulerList = () => {
     const [selectedpaymentMode, setSelectedpaymentMode] = useState("all");
     const [selectedPaymentPlatform, setSelectedPaymentPlatform] = useState("all");
     const [showSummary, setShowSummary] = useState(true);
-    const [showFilters, setShowFilters] = useState(false);
+    const [showFilters, setShowFilters] = useState(true);
     const [activeFilters, setActiveFilters] = useState(0);
 
     useEffect(() => {
