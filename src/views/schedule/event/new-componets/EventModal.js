@@ -931,7 +931,7 @@ const EventModal = ({
                     />
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-3">
+                {/* <div className="grid grid-cols-2 gap-3">
                   <CustomSelect
                     label="Offer"
                     value={formData.offer_ids}
@@ -952,7 +952,7 @@ const EventModal = ({
                     icon={Tag}
                     required={false}
                   />
-                </div>
+                </div> */}
               </div>
             </div>
 

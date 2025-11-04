@@ -1,24 +1,23 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
-  Form,
   Select,
   Button,
   message,
   DatePicker,
   Tag,
-  Tooltip,
-  Empty,
   Alert,
   Collapse,
+  Empty,
+  Divider,
 } from "antd";
 import {
   TagOutlined,
   GiftOutlined,
   SaveOutlined,
-  CheckOutlined,
-  CloseCircleOutlined,
+  CloseOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
+  ArrowLeftOutlined,
 } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import dayjs from "dayjs";
@@ -29,77 +28,121 @@ dayjs.extend(isBetween);
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-const { Panel } = Collapse;
 
-// Helper function to get time slots grouped by date
+// ============ CONSTANTS ============
+
+const SELECTION_LEVELS = {
+  SCHEDULE: "schedule",
+  DATE: "date",
+  TIME: "time",
+};
+
+// ============ HELPER FUNCTIONS ============
+
 const getTimeSlotsByDate = (showDates) => {
   const timeSlotMap = new Map();
 
   showDates.forEach((showDate) => {
     const dateStr = showDate.start_date;
-    const timeSlots = (showDate.show_times || []).map((st, index) => {
-      // Use multiple ID sources, fallback to generated ID
-      const id =
+    const timeSlots = (showDate.show_times || []).map((st) => ({
+      id:
         st.id ||
         st.show_time_id ||
         st.showtimeid ||
-        `${dateStr}-${st.start_time}`;
-
-      return {
-        id,
-        start_time: st.start_time,
-        end_time: st.end_time,
-        ticket_set: st.ticket_set,
-        ticket_structure_id: st.ticket_structure_id,
-        date: dateStr,
-      };
-    });
+        `${dateStr}-${st.start_time}`,
+      start_time: st.start_time,
+      end_time: st.end_time,
+      ticket_set: st.ticket_set,
+      ticket_structure_id: st.ticket_structure_id,
+      date: dateStr,
+    }));
 
     timeSlotMap.set(dateStr, timeSlots);
-  });
-
-  console.log("🗓️ Time slots by date:", {
-    totalDates: timeSlotMap.size,
-    dates: Array.from(timeSlotMap.keys()),
-    sampleTimeSlots: Array.from(timeSlotMap.values())[0],
   });
 
   return timeSlotMap;
 };
 
-// Enhanced Offer Card Component
-const EnhancedOfferCard = ({
+// ============ FILTER VALID & ACTIVE OFFERS/COUPONS ============
+
+const getValidAndActiveOffers = (eventOffers) => {
+  if (!eventOffers || !Array.isArray(eventOffers)) return [];
+
+  const currentDate = new Date();
+
+  return eventOffers.filter((eo) => {
+    if (!eo.offer) return false;
+
+    // Check if offer is active (not expired, not upcoming, or has no date requirement)
+    const status = OfferDateValidation.getOfferStatus(
+      eo.offer.start_date,
+      eo.offer.end_date,
+      eo.offer.date_required,
+      currentDate
+    );
+
+    // Only show active and upcoming offers (not expired)
+    return status.status === "active" || status.status === "always_active";
+  });
+};
+
+const getValidAndActiveCoupons = (eventCoupons) => {
+  if (!eventCoupons || !Array.isArray(eventCoupons)) return [];
+
+  const currentDate = new Date();
+
+  return eventCoupons.filter((ec) => {
+    if (!ec.coupons) return false;
+
+    const status = OfferDateValidation.getOfferStatus(
+      ec.coupons.start_date,
+      ec.coupons.end_date,
+      ec.coupons.date_required,
+      currentDate
+    );
+    
+    return status.status === "active" || status.status === "always_active";
+  });
+};
+
+// ============ OFFER CARD ============
+
+const OfferCard = ({
   item,
   onRemove,
   onDateChange,
   onTimeSlotsChange,
+  onShowDateToggle,
   scheduleStartDate,
   scheduleEndDate,
   existingShowDates,
 }) => {
   const itemData = item.offer;
-  const [selectionLevel, setSelectionLevel] = useState("schedule");
+  const [level, setLevel] = useState(SELECTION_LEVELS.SCHEDULE);
 
-  const offerStatus = useMemo(() => {
-    return OfferDateValidation.getOfferStatus(
-      itemData.start_date,
-      itemData.end_date,
-      itemData.date_required,
-      new Date()
-    );
-  }, [itemData.start_date, itemData.end_date, itemData.date_required]);
+  const offerStatus = useMemo(
+    () =>
+      OfferDateValidation.getOfferStatus(
+        itemData.start_date,
+        itemData.end_date,
+        itemData.date_required,
+        new Date()
+      ),
+    [itemData.start_date, itemData.end_date, itemData.date_required]
+  );
 
-  // Get time slots by date
-  const timeSlotsByDate = useMemo(() => {
-    return getTimeSlotsByDate(existingShowDates);
-  }, [existingShowDates]);
+  const timeSlotsByDate = useMemo(
+    () => getTimeSlotsByDate(existingShowDates),
+    [existingShowDates]
+  );
 
-  // Filter dates within offer range
   const availableDates = useMemo(() => {
+    const dates = Array.from(timeSlotsByDate.keys());
+
     if (!itemData.start_date || !itemData.end_date) {
-      return Array.from(timeSlotsByDate.keys()).map((dateStr) => ({
+      return dates.map((dateStr) => ({
         date: dateStr,
-        display: dayjs(dateStr).format("MMM DD, YYYY"),
+        display: dayjs(dateStr).format("MMM DD"),
         dayName: dayjs(dateStr).format("ddd"),
       }));
     }
@@ -107,53 +150,74 @@ const EnhancedOfferCard = ({
     const start = dayjs(itemData.start_date);
     const end = dayjs(itemData.end_date);
 
-    return Array.from(timeSlotsByDate.keys())
+    return dates
       .filter((dateStr) => {
         const date = dayjs(dateStr);
         return date.isBetween(start, end, "day", "[]");
       })
       .map((dateStr) => ({
         date: dateStr,
-        display: dayjs(dateStr).format("MMM DD, YYYY"),
+        display: dayjs(dateStr).format("MMM DD"),
         dayName: dayjs(dateStr).format("ddd"),
       }));
   }, [itemData.start_date, itemData.end_date, timeSlotsByDate]);
 
   const selectedTimeSlotsCount = itemData.selected_time_slots?.length || 0;
-  const totalTimeSlotsCount = Array.from(timeSlotsByDate.values()).reduce(
-    (sum, slots) => sum + slots.length,
-    0
-  );
+  const selectedShowDatesCount = itemData.selected_show_dates?.length || 0;
 
-  // Determine level based on selection
   useEffect(() => {
     if (selectedTimeSlotsCount > 0) {
-      setSelectionLevel("time");
+      setLevel(SELECTION_LEVELS.TIME);
+    } else if (selectedShowDatesCount > 0) {
+      setLevel(SELECTION_LEVELS.DATE);
     } else {
-      setSelectionLevel("schedule");
+      setLevel(SELECTION_LEVELS.SCHEDULE);
     }
-  }, [selectedTimeSlotsCount]);
+  }, [selectedTimeSlotsCount, selectedShowDatesCount]);
 
-  const handleTimeSlotToggle = (timeSlotId) => {
-    const currentSlots = itemData.selected_time_slots || [];
-    const newSlots = currentSlots.includes(timeSlotId)
-      ? currentSlots.filter((id) => id !== timeSlotId)
-      : [...currentSlots, timeSlotId];
-    onTimeSlotsChange(itemData.id, newSlots);
-  };
+  const handleTimeSlotToggle = useCallback(
+    (timeSlotId) => {
+      const currentSlots = itemData.selected_time_slots || [];
+      const newSlots = currentSlots.includes(timeSlotId)
+        ? currentSlots.filter((id) => id !== timeSlotId)
+        : [...currentSlots, timeSlotId];
+      onTimeSlotsChange(itemData.id, newSlots);
+    },
+    [itemData, onTimeSlotsChange]
+  );
 
-  const handleSelectAllTimeSlots = () => {
-    const allTimeSlotIds = [];
-    availableDates.forEach(({ date }) => {
-      const slots = timeSlotsByDate.get(date) || [];
-      slots.forEach((slot) => allTimeSlotIds.push(slot.id));
-    });
-    onTimeSlotsChange(itemData.id, allTimeSlotIds);
-  };
+  const handleShowDateToggle = useCallback(
+    (showDateId) => {
+      const currentDates = itemData.selected_show_dates || [];
+      const newDates = currentDates.includes(showDateId)
+        ? currentDates.filter((id) => id !== showDateId)
+        : [...currentDates, showDateId];
+      onShowDateToggle(itemData.id, newDates);
+    },
+    [itemData, onShowDateToggle]
+  );
 
-  const handleClearAllTimeSlots = () => {
+  const handleSelectAllTimeSlots = useCallback(() => {
+    const allIds = availableDates.flatMap(
+      ({ date }) => timeSlotsByDate.get(date)?.map((s) => s.id) || []
+    );
+    onTimeSlotsChange(itemData.id, allIds);
+  }, [availableDates, timeSlotsByDate, itemData.id, onTimeSlotsChange]);
+
+  const handleClearAllTimeSlots = useCallback(() => {
     onTimeSlotsChange(itemData.id, []);
-  };
+  }, [itemData.id, onTimeSlotsChange]);
+
+  const handleSelectAllShowDates = useCallback(() => {
+    onShowDateToggle(
+      itemData.id,
+      availableDates.map(({ date }) => date)
+    );
+  }, [availableDates, itemData.id, onShowDateToggle]);
+
+  const handleClearAllShowDates = useCallback(() => {
+    onShowDateToggle(itemData.id, []);
+  }, [itemData.id, onShowDateToggle]);
 
   const getDatePickerLimits = () => {
     const eventStart = scheduleStartDate ? dayjs(scheduleStartDate) : null;
@@ -177,73 +241,37 @@ const EnhancedOfferCard = ({
   const { minDate, maxDate } = getDatePickerLimits();
 
   return (
-    <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 border-2 border-orange-200 hover:border-orange-300 transition-all">
+    <div className="bg-white border border-blue-200 rounded-lg p-4 hover:shadow-sm transition-shadow hover:border-blue-300">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-            <TagOutlined className="text-white text-sm" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-gray-900 text-sm">
-                {itemData.name}
-              </p>
-              <Tag color={offerStatus.color} className="text-xs font-medium">
-                {offerStatus.label}
-              </Tag>
-            </div>
-            {itemData.discount_percentage_amount && (
-              <p className="text-xs text-orange-600 font-medium">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-start gap-2 flex-1 min-w-0">
+          <TagOutlined className="text-blue-500 text-sm flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {itemData.name}
+            </p>
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              <span className="text-xs text-blue-600 font-medium">
                 {itemData.discount_percentage_amount}% OFF
-              </p>
-            )}
-            {itemData.start_date && itemData.end_date && (
-              <p className="text-xs text-gray-500 mt-1">
-                Valid: {dayjs(itemData.start_date).format("MMM DD")} -{" "}
-                {dayjs(itemData.end_date).format("MMM DD, YYYY")}
-              </p>
-            )}
+              </span>
+              <span className="text-xs text-gray-400">•</span>
+              <span className="text-xs text-gray-600">{offerStatus.label}</span>
+            </div>
           </div>
         </div>
-        <Tooltip title="Remove offer">
-          <Button
-            type="text"
-            danger
-            size="small"
-            icon={<CloseCircleOutlined />}
-            onClick={() => onRemove(itemData.id)}
-            className="hover:bg-red-100"
-          />
-        </Tooltip>
+        <button
+          onClick={() => onRemove(itemData.id)}
+          className="text-gray-400 hover:text-red-500 flex-shrink-0 p-1 hover:bg-red-50 rounded transition-colors"
+        >
+          <CloseOutlined className="text-sm" />
+        </button>
       </div>
 
-      {/* Level Indicator */}
-      <div className="mb-3">
-        {selectionLevel === "schedule" ? (
-          <div className="bg-blue-100 border border-blue-300 rounded-lg px-3 py-1.5">
-            <p className="text-xs text-blue-800 font-medium flex items-center">
-              <CheckOutlined className="mr-1" />
-              Schedule Level - Applies to all {totalTimeSlotsCount} time slots
-            </p>
-          </div>
-        ) : (
-          <div className="bg-purple-100 border border-purple-300 rounded-lg px-3 py-1.5">
-            <p className="text-xs text-purple-800 font-medium flex items-center">
-              <ClockCircleOutlined className="mr-1" />
-              Time Slot Level - {selectedTimeSlotsCount} of{" "}
-              {totalTimeSlotsCount} slots selected
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Date Range Picker */}
+      {/* Date Picker */}
       {itemData.date_required && (
         <div className="mb-3">
-          <label className="text-xs text-gray-600 mb-1 block flex items-center">
-            <CalendarOutlined className="mr-1" />
-            Valid Period (within event dates)
+          <label className="text-xs font-medium text-gray-700 block mb-1.5">
+            Valid Period
           </label>
           <RangePicker
             size="small"
@@ -254,12 +282,11 @@ const EnhancedOfferCard = ({
             }
             onChange={(dates) => onDateChange(itemData.id, dates)}
             className="w-full"
-            format="MMM DD, YYYY"
+            format="MMM DD"
             minDate={minDate}
             maxDate={maxDate}
             disabledDate={(current) => {
               if (!current) return false;
-
               if (
                 scheduleStartDate &&
                 current.isBefore(dayjs(scheduleStartDate), "day")
@@ -272,212 +299,129 @@ const EnhancedOfferCard = ({
               ) {
                 return true;
               }
-
               return false;
             }}
+            style={{ fontSize: "12px" }}
           />
-          {availableDates.length === 0 &&
-            itemData.start_date &&
-            itemData.end_date && (
-              <Alert
-                type="warning"
-                message="No show dates available in this date range"
-                className="text-xs mt-2"
-                showIcon
-              />
-            )}
         </div>
       )}
 
-      {/* Selection Level Tabs */}
-      <div className="mb-3">
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setSelectionLevel("schedule");
-              handleClearAllTimeSlots();
-            }}
-            className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              selectionLevel === "schedule"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            Schedule Level
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectionLevel("time")}
-            disabled={availableDates.length === 0}
-            className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              selectionLevel === "time"
-                ? "bg-purple-500 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            }`}
-          >
-            Time Slot Level
-          </button>
-        </div>
+      {/* Level Buttons */}
+      <div className="grid grid-cols-3 gap-1.5 mb-3">
+        <button
+          onClick={() => {
+            setLevel(SELECTION_LEVELS.SCHEDULE);
+            handleClearAllTimeSlots();
+            handleClearAllShowDates();
+          }}
+          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
+            level === SELECTION_LEVELS.SCHEDULE
+              ? "bg-blue-100 border-blue-400 text-blue-900"
+              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => {
+            setLevel(SELECTION_LEVELS.DATE);
+            handleClearAllTimeSlots();
+          }}
+          disabled={availableDates.length === 0}
+          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
+            level === SELECTION_LEVELS.DATE
+              ? "bg-blue-100 border-blue-400 text-blue-900"
+              : availableDates.length === 0
+              ? "bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed"
+              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
+          }`}
+        >
+          Dates
+        </button>
+        <button
+          onClick={() => {
+            setLevel(SELECTION_LEVELS.TIME);
+            handleClearAllShowDates();
+          }}
+          disabled={availableDates.length === 0}
+          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
+            level === SELECTION_LEVELS.TIME
+              ? "bg-blue-100 border-blue-400 text-blue-900"
+              : availableDates.length === 0
+              ? "bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed"
+              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
+          }`}
+        >
+          Slots
+        </button>
       </div>
 
-      {/* Time Slot Selection */}
-      {selectionLevel === "schedule" ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-          <p className="text-xs text-blue-800">
-            This offer will apply to all time slots automatically
-          </p>
+      {/* Content */}
+      {level === SELECTION_LEVELS.SCHEDULE ? (
+        <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded p-2">
+          Applied to all time slots
         </div>
+      ) : level === SELECTION_LEVELS.DATE ? (
+        <DateSelector
+          dates={availableDates}
+          selected={itemData.selected_show_dates || []}
+          onToggle={handleShowDateToggle}
+          onSelectAll={handleSelectAllShowDates}
+          onClearAll={handleClearAllShowDates}
+          timeSlotsByDate={timeSlotsByDate}
+        />
       ) : (
-        <>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs text-gray-600 flex items-center">
-              Select Time Slots
-              <span className="ml-1 text-orange-600 font-medium">
-                {selectedTimeSlotsCount}/{totalTimeSlotsCount}
-              </span>
-            </label>
-            <div className="flex gap-1">
-              <button
-                type="button"
-                onClick={handleSelectAllTimeSlots}
-                className="text-xs px-2 py-0.5 text-orange-600 hover:text-orange-700 hover:underline cursor-pointer"
-              >
-                All
-              </button>
-              <span className="text-gray-300">|</span>
-              <button
-                type="button"
-                onClick={handleClearAllTimeSlots}
-                className="text-xs px-2 py-0.5 text-gray-500 hover:text-gray-700 hover:underline cursor-pointer"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-
-          {availableDates.length > 0 ? (
-            <Collapse
-              accordion
-              className="bg-white border border-orange-200 rounded-lg"
-            >
-              {availableDates.map(({ date, display, dayName }) => {
-                const timeSlots = timeSlotsByDate.get(date) || [];
-                const selectedCount = timeSlots.filter((slot) =>
-                  (itemData.selected_time_slots || []).includes(slot.id)
-                ).length;
-
-                return (
-                  <Panel
-                    header={
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{display}</span>
-                          <span className="text-xs text-gray-500">
-                            ({dayName})
-                          </span>
-                        </div>
-                        <Tag
-                          color={selectedCount > 0 ? "orange" : "default"}
-                          className="text-xs"
-                        >
-                          {selectedCount}/{timeSlots.length}
-                        </Tag>
-                      </div>
-                    }
-                    key={date}
-                  >
-                    <div className="space-y-2 pt-2">
-                      {timeSlots.map((slot) => {
-                        const isSelected = (
-                          itemData.selected_time_slots || []
-                        ).includes(slot.id);
-                        return (
-                          <button
-                            key={slot.id}
-                            type="button"
-                            onClick={() => handleTimeSlotToggle(slot.id)}
-                            className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all ${
-                              isSelected
-                                ? "bg-orange-100 border-orange-400 shadow-sm"
-                                : "bg-gray-50 border-gray-200 hover:border-orange-300 hover:bg-orange-50"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <ClockCircleOutlined
-                                className={
-                                  isSelected
-                                    ? "text-orange-600"
-                                    : "text-gray-400"
-                                }
-                              />
-                              <span
-                                className={`text-sm font-medium ${
-                                  isSelected
-                                    ? "text-orange-900"
-                                    : "text-gray-700"
-                                }`}
-                              >
-                                {slot.start_time} - {slot.end_time}
-                              </span>
-                            </div>
-                            {slot.ticket_set && (
-                              <Tag size="small" color="blue">
-                                {slot.ticket_set}
-                              </Tag>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </Panel>
-                );
-              })}
-            </Collapse>
-          ) : (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
-              <p className="text-xs text-yellow-800">
-                No time slots available in selected date range
-              </p>
-            </div>
-          )}
-        </>
+        <TimeSlotSelector
+          dates={availableDates}
+          selected={itemData.selected_time_slots || []}
+          onToggle={handleTimeSlotToggle}
+          onSelectAll={handleSelectAllTimeSlots}
+          onClearAll={handleClearAllTimeSlots}
+          timeSlotsByDate={timeSlotsByDate}
+        />
       )}
     </div>
   );
 };
 
-// Enhanced Coupon Card Component
-const EnhancedCouponCard = ({
+// ============ COUPON CARD ============
+
+const CouponCard = ({
   item,
   onRemove,
   onDateChange,
   onTimeSlotsChange,
+  onShowDateToggle,
   scheduleStartDate,
   scheduleEndDate,
   existingShowDates,
 }) => {
   const itemData = item.coupons;
-  const [selectionLevel, setSelectionLevel] = useState("schedule");
+  const [level, setLevel] = useState(SELECTION_LEVELS.SCHEDULE);
 
-  const couponStatus = useMemo(() => {
-    return OfferDateValidation.getOfferStatus(
-      itemData.start_date,
-      itemData.end_date,
-      itemData.date_required,
-      new Date()
-    );
-  }, [itemData.start_date, itemData.end_date, itemData.date_required]);
+  const couponStatus = useMemo(
+    () =>
+      OfferDateValidation.getOfferStatus(
+        itemData.start_date,
+        itemData.end_date,
+        itemData.date_required,
+        new Date()
+      ),
+    [itemData.start_date, itemData.end_date, itemData.date_required]
+  );
 
-  const timeSlotsByDate = useMemo(() => {
-    return getTimeSlotsByDate(existingShowDates);
-  }, [existingShowDates]);
+  const timeSlotsByDate = useMemo(
+    () => getTimeSlotsByDate(existingShowDates),
+    [existingShowDates]
+  );
 
   const availableDates = useMemo(() => {
+    const dates = Array.from(timeSlotsByDate.keys());
+
     if (!itemData.start_date || !itemData.end_date) {
-      return Array.from(timeSlotsByDate.keys()).map((dateStr) => ({
+      return dates.map((dateStr) => ({
         date: dateStr,
-        display: dayjs(dateStr).format("MMM DD, YYYY"),
+        display: dayjs(dateStr).format("MMM DD"),
         dayName: dayjs(dateStr).format("ddd"),
       }));
     }
@@ -485,52 +429,74 @@ const EnhancedCouponCard = ({
     const start = dayjs(itemData.start_date);
     const end = dayjs(itemData.end_date);
 
-    return Array.from(timeSlotsByDate.keys())
+    return dates
       .filter((dateStr) => {
         const date = dayjs(dateStr);
         return date.isBetween(start, end, "day", "[]");
       })
       .map((dateStr) => ({
         date: dateStr,
-        display: dayjs(dateStr).format("MMM DD, YYYY"),
+        display: dayjs(dateStr).format("MMM DD"),
         dayName: dayjs(dateStr).format("ddd"),
       }));
   }, [itemData.start_date, itemData.end_date, timeSlotsByDate]);
 
   const selectedTimeSlotsCount = itemData.selected_time_slots?.length || 0;
-  const totalTimeSlotsCount = Array.from(timeSlotsByDate.values()).reduce(
-    (sum, slots) => sum + slots.length,
-    0
-  );
+  const selectedShowDatesCount = itemData.selected_show_dates?.length || 0;
 
   useEffect(() => {
     if (selectedTimeSlotsCount > 0) {
-      setSelectionLevel("time");
+      setLevel(SELECTION_LEVELS.TIME);
+    } else if (selectedShowDatesCount > 0) {
+      setLevel(SELECTION_LEVELS.DATE);
     } else {
-      setSelectionLevel("schedule");
+      setLevel(SELECTION_LEVELS.SCHEDULE);
     }
-  }, [selectedTimeSlotsCount]);
+  }, [selectedTimeSlotsCount, selectedShowDatesCount]);
 
-  const handleTimeSlotToggle = (timeSlotId) => {
-    const currentSlots = itemData.selected_time_slots || [];
-    const newSlots = currentSlots.includes(timeSlotId)
-      ? currentSlots.filter((id) => id !== timeSlotId)
-      : [...currentSlots, timeSlotId];
-    onTimeSlotsChange(itemData.id, newSlots);
-  };
+  const handleTimeSlotToggle = useCallback(
+    (timeSlotId) => {
+      const currentSlots = itemData.selected_time_slots || [];
+      const newSlots = currentSlots.includes(timeSlotId)
+        ? currentSlots.filter((id) => id !== timeSlotId)
+        : [...currentSlots, timeSlotId];
+      onTimeSlotsChange(itemData.id, newSlots);
+    },
+    [itemData, onTimeSlotsChange]
+  );
 
-  const handleSelectAllTimeSlots = () => {
-    const allTimeSlotIds = [];
-    availableDates.forEach(({ date }) => {
-      const slots = timeSlotsByDate.get(date) || [];
-      slots.forEach((slot) => allTimeSlotIds.push(slot.id));
-    });
-    onTimeSlotsChange(itemData.id, allTimeSlotIds);
-  };
+  const handleShowDateToggle = useCallback(
+    (showDateId) => {
+      const currentDates = itemData.selected_show_dates || [];
+      const newDates = currentDates.includes(showDateId)
+        ? currentDates.filter((id) => id !== showDateId)
+        : [...currentDates, showDateId];
+      onShowDateToggle(itemData.id, newDates);
+    },
+    [itemData, onShowDateToggle]
+  );
 
-  const handleClearAllTimeSlots = () => {
+  const handleSelectAllTimeSlots = useCallback(() => {
+    const allIds = availableDates.flatMap(
+      ({ date }) => timeSlotsByDate.get(date)?.map((s) => s.id) || []
+    );
+    onTimeSlotsChange(itemData.id, allIds);
+  }, [availableDates, timeSlotsByDate, itemData.id, onTimeSlotsChange]);
+
+  const handleClearAllTimeSlots = useCallback(() => {
     onTimeSlotsChange(itemData.id, []);
-  };
+  }, [itemData.id, onTimeSlotsChange]);
+
+  const handleSelectAllShowDates = useCallback(() => {
+    onShowDateToggle(
+      itemData.id,
+      availableDates.map(({ date }) => date)
+    );
+  }, [availableDates, itemData.id, onShowDateToggle]);
+
+  const handleClearAllShowDates = useCallback(() => {
+    onShowDateToggle(itemData.id, []);
+  }, [itemData.id, onShowDateToggle]);
 
   const getDatePickerLimits = () => {
     const eventStart = scheduleStartDate ? dayjs(scheduleStartDate) : null;
@@ -554,82 +520,41 @@ const EnhancedCouponCard = ({
   const { minDate, maxDate } = getDatePickerLimits();
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 hover:border-purple-300 transition-all">
+    <div className="bg-white border border-blue-200 rounded-lg p-4 hover:shadow-sm transition-shadow hover:border-blue-300">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-            <GiftOutlined className="text-white text-sm" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-semibold text-gray-900 text-sm">
-                {itemData.name}
-              </p>
-              <Tag color={couponStatus.color} className="text-xs font-medium">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-start gap-2 flex-1 min-w-0">
+          <GiftOutlined className="text-blue-500 text-sm flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {itemData.name}
+            </p>
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              <span className="text-xs text-blue-600 font-medium">
+                {itemData.is_percentage
+                  ? `${itemData.discount_percentage_amount}% OFF`
+                  : `AED ${itemData.discount_percentage_amount} OFF`}
+              </span>
+              <span className="text-xs text-gray-400">•</span>
+              <span className="text-xs text-gray-600">
                 {couponStatus.label}
-              </Tag>
+              </span>
             </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              {itemData.is_percentage ? (
-                <p className="text-xs text-purple-600 font-medium">
-                  {itemData.discount_percentage_amount}% OFF
-                </p>
-              ) : (
-                <p className="text-xs text-purple-600 font-medium">
-                  AED {itemData.discount_percentage_amount} OFF
-                </p>
-              )}
-              {itemData.key_words && itemData.key_words.length > 0 && (
-                <Tag className="text-[10px]">{itemData.key_words[0]}</Tag>
-              )}
-            </div>
-            {itemData.start_date && itemData.end_date && (
-              <p className="text-xs text-gray-500 mt-1">
-                Valid: {dayjs(itemData.start_date).format("MMM DD")} -{" "}
-                {dayjs(itemData.end_date).format("MMM DD, YYYY")}
-              </p>
-            )}
           </div>
         </div>
-        <Tooltip title="Remove coupon">
-          <Button
-            type="text"
-            danger
-            size="small"
-            icon={<CloseCircleOutlined />}
-            onClick={() => onRemove(itemData.id)}
-            className="hover:bg-red-100"
-          />
-        </Tooltip>
+        <button
+          onClick={() => onRemove(itemData.id)}
+          className="text-gray-400 hover:text-red-500 flex-shrink-0 p-1 hover:bg-red-50 rounded transition-colors"
+        >
+          <CloseOutlined className="text-sm" />
+        </button>
       </div>
 
-      {/* Level Indicator */}
-      <div className="mb-3">
-        {selectionLevel === "schedule" ? (
-          <div className="bg-blue-100 border border-blue-300 rounded-lg px-3 py-1.5">
-            <p className="text-xs text-blue-800 font-medium flex items-center">
-              <CheckOutlined className="mr-1" />
-              Schedule Level - Applies to all {totalTimeSlotsCount} time slots
-            </p>
-          </div>
-        ) : (
-          <div className="bg-purple-100 border border-purple-300 rounded-lg px-3 py-1.5">
-            <p className="text-xs text-purple-800 font-medium flex items-center">
-              <ClockCircleOutlined className="mr-1" />
-              Time Slot Level - {selectedTimeSlotsCount} of{" "}
-              {totalTimeSlotsCount} slots selected
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Date Range Picker */}
+      {/* Date Picker */}
       {itemData.date_required && (
         <div className="mb-3">
-          <label className="text-xs text-gray-600 mb-1 block flex items-center">
-            <CalendarOutlined className="mr-1" />
-            Valid Period (within event dates)
+          <label className="text-xs font-medium text-gray-700 block mb-1.5">
+            Valid Period
           </label>
           <RangePicker
             size="small"
@@ -640,12 +565,11 @@ const EnhancedCouponCard = ({
             }
             onChange={(dates) => onDateChange(itemData.id, dates)}
             className="w-full"
-            format="MMM DD, YYYY"
+            format="MMM DD"
             minDate={minDate}
             maxDate={maxDate}
             disabledDate={(current) => {
               if (!current) return false;
-
               if (
                 scheduleStartDate &&
                 current.isBefore(dayjs(scheduleStartDate), "day")
@@ -658,182 +582,248 @@ const EnhancedCouponCard = ({
               ) {
                 return true;
               }
-
               return false;
             }}
+            style={{ fontSize: "12px" }}
           />
-          {availableDates.length === 0 &&
-            itemData.start_date &&
-            itemData.end_date && (
-              <Alert
-                type="warning"
-                message="No show dates available in this date range"
-                className="text-xs mt-2"
-                showIcon
-              />
-            )}
         </div>
       )}
 
-      {/* Selection Level Tabs */}
-      <div className="mb-3">
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setSelectionLevel("schedule");
-              handleClearAllTimeSlots();
-            }}
-            className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              selectionLevel === "schedule"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            Schedule Level
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectionLevel("time")}
-            disabled={availableDates.length === 0}
-            className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              selectionLevel === "time"
-                ? "bg-purple-500 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            }`}
-          >
-            Time Slot Level
-          </button>
-        </div>
+      {/* Level Buttons */}
+      <div className="grid grid-cols-3 gap-1.5 mb-3">
+        <button
+          onClick={() => {
+            setLevel(SELECTION_LEVELS.SCHEDULE);
+            handleClearAllTimeSlots();
+            handleClearAllShowDates();
+          }}
+          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
+            level === SELECTION_LEVELS.SCHEDULE
+              ? "bg-blue-100 border-blue-400 text-blue-900"
+              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => {
+            setLevel(SELECTION_LEVELS.DATE);
+            handleClearAllTimeSlots();
+          }}
+          disabled={availableDates.length === 0}
+          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
+            level === SELECTION_LEVELS.DATE
+              ? "bg-blue-100 border-blue-400 text-blue-900"
+              : availableDates.length === 0
+              ? "bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed"
+              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
+          }`}
+        >
+          Dates
+        </button>
+        <button
+          onClick={() => {
+            setLevel(SELECTION_LEVELS.TIME);
+            handleClearAllShowDates();
+          }}
+          disabled={availableDates.length === 0}
+          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
+            level === SELECTION_LEVELS.TIME
+              ? "bg-blue-100 border-blue-400 text-blue-900"
+              : availableDates.length === 0
+              ? "bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed"
+              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
+          }`}
+        >
+          Slots
+        </button>
       </div>
 
-      {/* Time Slot Selection */}
-      {selectionLevel === "schedule" ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-          <p className="text-xs text-blue-800">
-            This coupon will apply to all time slots automatically
-          </p>
+      {/* Content */}
+      {level === SELECTION_LEVELS.SCHEDULE ? (
+        <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded p-2">
+          Applied to all time slots
         </div>
+      ) : level === SELECTION_LEVELS.DATE ? (
+        <DateSelector
+          dates={availableDates}
+          selected={itemData.selected_show_dates || []}
+          onToggle={handleShowDateToggle}
+          onSelectAll={handleSelectAllShowDates}
+          onClearAll={handleClearAllShowDates}
+          timeSlotsByDate={timeSlotsByDate}
+        />
       ) : (
-        <>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs text-gray-600 flex items-center">
-              Select Time Slots
-              <span className="ml-1 text-purple-600 font-medium">
-                {selectedTimeSlotsCount}/{totalTimeSlotsCount}
-              </span>
-            </label>
-            <div className="flex gap-1">
-              <button
-                type="button"
-                onClick={handleSelectAllTimeSlots}
-                className="text-xs px-2 py-0.5 text-purple-600 hover:text-purple-700 hover:underline cursor-pointer"
-              >
-                All
-              </button>
-              <span className="text-gray-300">|</span>
-              <button
-                type="button"
-                onClick={handleClearAllTimeSlots}
-                className="text-xs px-2 py-0.5 text-gray-500 hover:text-gray-700 hover:underline cursor-pointer"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-
-          {availableDates.length > 0 ? (
-            <Collapse
-              accordion
-              className="bg-white border border-purple-200 rounded-lg"
-            >
-              {availableDates.map(({ date, display, dayName }) => {
-                const timeSlots = timeSlotsByDate.get(date) || [];
-                const selectedCount = timeSlots.filter((slot) =>
-                  (itemData.selected_time_slots || []).includes(slot.id)
-                ).length;
-
-                return (
-                  <Panel
-                    header={
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{display}</span>
-                          <span className="text-xs text-gray-500">
-                            ({dayName})
-                          </span>
-                        </div>
-                        <Tag
-                          color={selectedCount > 0 ? "purple" : "default"}
-                          className="text-xs"
-                        >
-                          {selectedCount}/{timeSlots.length}
-                        </Tag>
-                      </div>
-                    }
-                    key={date}
-                  >
-                    <div className="space-y-2 pt-2">
-                      {timeSlots.map((slot) => {
-                        const isSelected = (
-                          itemData.selected_time_slots || []
-                        ).includes(slot.id);
-                        return (
-                          <button
-                            key={slot.id}
-                            type="button"
-                            onClick={() => handleTimeSlotToggle(slot.id)}
-                            className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all ${
-                              isSelected
-                                ? "bg-purple-100 border-purple-400 shadow-sm"
-                                : "bg-gray-50 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <ClockCircleOutlined
-                                className={
-                                  isSelected
-                                    ? "text-purple-600"
-                                    : "text-gray-400"
-                                }
-                              />
-                              <span
-                                className={`text-sm font-medium ${
-                                  isSelected
-                                    ? "text-purple-900"
-                                    : "text-gray-700"
-                                }`}
-                              >
-                                {slot.start_time} - {slot.end_time}
-                              </span>
-                            </div>
-                            {slot.ticket_set && (
-                              <Tag size="small" color="blue">
-                                {slot.ticket_set}
-                              </Tag>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </Panel>
-                );
-              })}
-            </Collapse>
-          ) : (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
-              <p className="text-xs text-yellow-800">
-                No time slots available in selected date range
-              </p>
-            </div>
-          )}
-        </>
+        <TimeSlotSelector
+          dates={availableDates}
+          selected={itemData.selected_time_slots || []}
+          onToggle={handleTimeSlotToggle}
+          onSelectAll={handleSelectAllTimeSlots}
+          onClearAll={handleClearAllTimeSlots}
+          timeSlotsByDate={timeSlotsByDate}
+        />
       )}
     </div>
   );
 };
 
-// Main Component
+// ============ DATE SELECTOR ============
+
+const DateSelector = ({
+  dates,
+  selected,
+  onToggle,
+  onSelectAll,
+  onClearAll,
+  timeSlotsByDate,
+}) => {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="text-xs font-medium text-gray-700">
+          {selected.length} selected
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onSelectAll}
+            className="text-xs text-blue-600 hover:text-blue-900 px-2 py-0.5 hover:bg-blue-100 rounded transition-colors"
+          >
+            All
+          </button>
+          <button
+            onClick={onClearAll}
+            className="text-xs text-blue-600 hover:text-blue-900 px-2 py-0.5 hover:bg-blue-100 rounded transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-1.5">
+        {dates.map(({ date, display, dayName }) => {
+          const isSelected = selected.includes(date);
+          const timeSlots = timeSlotsByDate.get(date) || [];
+
+          return (
+            <button
+              key={date}
+              onClick={() => onToggle(date)}
+              className={`p-2 rounded border text-left transition-all text-xs ${
+                isSelected
+                  ? "border-blue-400 bg-blue-100 text-blue-900 font-medium"
+                  : "border-blue-200 bg-white hover:bg-blue-50 text-gray-700"
+              }`}
+            >
+              <p className="font-medium">{display}</p>
+              <p
+                className={`text-xs ${
+                  isSelected ? "text-blue-700" : "text-gray-500"
+                }`}
+              >
+                {dayName} • {timeSlots.length}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ============ TIME SLOT SELECTOR ============
+
+const TimeSlotSelector = ({
+  dates,
+  selected,
+  onToggle,
+  onSelectAll,
+  onClearAll,
+  timeSlotsByDate,
+}) => {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="text-xs font-medium text-gray-700">
+          {selected.length} selected
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onSelectAll}
+            className="text-xs text-blue-600 hover:text-blue-900 px-2 py-0.5 hover:bg-blue-100 rounded transition-colors"
+          >
+            All
+          </button>
+          <button
+            onClick={onClearAll}
+            className="text-xs text-blue-600 hover:text-blue-900 px-2 py-0.5 hover:bg-blue-100 rounded transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
+      {dates.length > 0 ? (
+        <Collapse
+          accordion
+          size="small"
+          items={dates.map(({ date, display, dayName }) => {
+            const timeSlots = timeSlotsByDate.get(date) || [];
+            const selectedCount = timeSlots.filter((slot) =>
+              selected.includes(slot.id)
+            ).length;
+
+            return {
+              key: date,
+              label: (
+                <div className="flex items-center justify-between w-full text-xs gap-2">
+                  <span className="font-medium text-gray-900">{display}</span>
+                  <span className="text-gray-500">({dayName})</span>
+                  <span className="text-blue-600 ml-auto">
+                    {selectedCount}/{timeSlots.length}
+                  </span>
+                </div>
+              ),
+              children: (
+                <div className="grid grid-cols-2 gap-1.5">
+                  {timeSlots.map((slot) => {
+                    const isSelected = selected.includes(slot.id);
+                    return (
+                      <button
+                        key={slot.id}
+                        onClick={() => onToggle(slot.id)}
+                        className={`p-2 rounded border text-left transition-all text-xs ${
+                          isSelected
+                            ? "border-blue-400 bg-blue-100 text-blue-900 font-medium"
+                            : "border-blue-200 bg-white hover:bg-blue-50 text-gray-700"
+                        }`}
+                      >
+                        <p className="font-medium">{slot.start_time}</p>
+                        {slot.ticket_set && (
+                          <p
+                            className={`text-xs ${
+                              isSelected ? "text-blue-700" : "text-gray-500"
+                            }`}
+                          >
+                            {slot.ticket_set}
+                          </p>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ),
+            };
+          })}
+        />
+      ) : (
+        <Alert type="warning" message="No slots" className="text-xs" showIcon />
+      )}
+    </div>
+  );
+};
+
+// ============ MAIN COMPONENT ============
+
 const OfferAndCoupons = ({ onSubmit, form, onBack }) => {
   const scheduleFormData = useSelector(
     (state) => state?.schedules?.scheduleFormData || null
@@ -843,447 +833,466 @@ const OfferAndCoupons = ({ onSubmit, form, onBack }) => {
     (state) => state?.event?.eventDetails || null
   );
 
-  const [selectedOfferItems, setSelectedOfferItems] = useState([]);
-  const [selectedCouponItems, setSelectedCouponItems] = useState([]);
-  const [offerSearchValue, setOfferSearchValue] = useState("");
-  const [couponSearchValue, setCouponSearchValue] = useState("");
+  const [selectedOffers, setSelectedOffers] = useState([]);
+  const [selectedCoupons, setSelectedCoupons] = useState([]);
 
-  const existingShowDates = useMemo(() => {
-    return scheduleFormData?.show_dates || [];
-  }, [scheduleFormData]);
+  const existingShowDates = useMemo(
+    () => scheduleFormData?.show_dates || [],
+    [scheduleFormData]
+  );
 
   const scheduleStartDate = scheduleFormData?.start_date || null;
   const scheduleEndDate = scheduleFormData?.end_date || null;
 
-  // Available offers (active and not expired)
-  const availableOffers = useMemo(() => {
-    if (!eventDetails?.offers) return [];
+  // Get only valid and active offers
+  const validAndActiveOffers = useMemo(() => {
+    return getValidAndActiveOffers(eventDetails?.event_offers);
+  }, [eventDetails?.event_offers]);
 
-    const currentDate = new Date();
-    return eventDetails.offers
-      .filter((offer) => {
-        if (!offer.is_active) return false;
+  // Get only valid and active coupons
+  const validAndActiveCoupons = useMemo(() => {
+    return getValidAndActiveCoupons(eventDetails?.event_coupons);
+  }, [eventDetails?.event_coupons]);
 
-        const status = OfferDateValidation.getOfferStatus(
-          offer.start_date,
-          offer.end_date,
-          offer.date_required,
-          currentDate
-        );
-
-        return status.status !== "expired";
-      })
-      .map((offer) => ({ offer }));
-  }, [eventDetails]);
-
-  // Available coupons (active and not expired)
-  const availableCoupons = useMemo(() => {
-    if (!eventDetails?.coupons) return [];
-
-    const currentDate = new Date();
-    return eventDetails.coupons
-      .filter((coupon) => {
-        if (!coupon.is_active) return false;
-
-        const status = OfferDateValidation.getOfferStatus(
-          coupon.start_date,
-          coupon.end_date,
-          coupon.date_required,
-          currentDate
-        );
-
-        return status.status !== "expired";
-      })
-      .map((coupon) => ({ coupons: coupon }));
-  }, [eventDetails]);
-
-  // Load existing offers/coupons on mount
+  // Initialize with valid and active offers from eventDetails
   useEffect(() => {
-    if (eventDetails?.event_offers && eventDetails.event_offers.length > 0) {
-      const mappedOffers = eventDetails.event_offers.map((eo) => ({
+    if (validAndActiveOffers && validAndActiveOffers.length > 0) {
+      const mappedOffers = validAndActiveOffers.map((eo) => ({
         offer: {
           ...eo.offer,
           start_date: eo.valid_from || eo.offer.start_date,
           end_date: eo.valid_to || eo.offer.end_date,
           selected_time_slots: [],
+          selected_show_dates: [],
         },
       }));
-      setSelectedOfferItems(mappedOffers);
+      setSelectedOffers(mappedOffers);
+    } else {
+      setSelectedOffers([]);
     }
+  }, [validAndActiveOffers]);
 
-    if (eventDetails?.event_coupons && eventDetails.event_coupons.length > 0) {
-      const mappedCoupons = eventDetails.event_coupons.map((ec) => ({
+  // Initialize with valid and active coupons from eventDetails
+  useEffect(() => {
+    if (validAndActiveCoupons && validAndActiveCoupons.length > 0) {
+      const mappedCoupons = validAndActiveCoupons.map((ec) => ({
         coupons: {
           ...ec.coupons,
           start_date: ec.valid_from || ec.coupons.start_date,
           end_date: ec.valid_to || ec.coupons.end_date,
           selected_time_slots: [],
+          selected_show_dates: [],
         },
       }));
-      setSelectedCouponItems(mappedCoupons);
+      setSelectedCoupons(mappedCoupons);
+    } else {
+      setSelectedCoupons([]);
     }
-  }, [eventDetails]);
+  }, [validAndActiveCoupons]);
 
-  // Handlers
-  const handleOfferAdd = (offerId) => {
-    const offerToAdd = availableOffers.find((o) => o.offer.id === offerId);
-    if (
-      offerToAdd &&
-      !selectedOfferItems.some((item) => item.offer.id === offerId)
-    ) {
-      setSelectedOfferItems([
-        ...selectedOfferItems,
-        {
-          offer: {
-            ...offerToAdd.offer,
-            selected_time_slots: [],
-          },
-        },
-      ]);
-    }
-  };
-
-  const handleCouponAdd = (couponId) => {
-    const couponToAdd = availableCoupons.find((c) => c.coupons.id === couponId);
-    if (
-      couponToAdd &&
-      !selectedCouponItems.some((item) => item.coupons.id === couponId)
-    ) {
-      setSelectedCouponItems([
-        ...selectedCouponItems,
-        {
-          coupons: {
-            ...couponToAdd.coupons,
-            selected_time_slots: [],
-          },
-        },
-      ]);
-    }
-  };
-
-  const handleOfferRemove = (offerId) => {
-    setSelectedOfferItems(
-      selectedOfferItems.filter((item) => item.offer.id !== offerId)
-    );
-  };
-
-  const handleCouponRemove = (couponId) => {
-    setSelectedCouponItems(
-      selectedCouponItems.filter((item) => item.coupons.id !== couponId)
-    );
-  };
-
-  const handleOfferDateChange = (offerId, dates) => {
-    if (!dates || dates.length !== 2) return;
-
-    setSelectedOfferItems((prevItems) =>
-      prevItems.map((item) => {
-        if (item.offer.id === offerId) {
-          return {
-            ...item,
+  const handleOfferAdd = useCallback(
+    (offerId) => {
+      const offerToAdd = validAndActiveOffers?.find(
+        (eo) => eo.offer.id === offerId
+      );
+      if (
+        offerToAdd &&
+        !selectedOffers.some((item) => item.offer.id === offerId)
+      ) {
+        setSelectedOffers([
+          ...selectedOffers,
+          {
             offer: {
-              ...item.offer,
-              start_date: dates[0].format("YYYY-MM-DD"),
-              end_date: dates[1].format("YYYY-MM-DD"),
-              selected_time_slots: [], // Reset time slots when date range changes
-            },
-          };
-        }
-        return item;
-      })
-    );
-  };
-
-  const handleCouponDateChange = (couponId, dates) => {
-    if (!dates || dates.length !== 2) return;
-
-    setSelectedCouponItems((prevItems) =>
-      prevItems.map((item) => {
-        if (item.coupons.id === couponId) {
-          return {
-            ...item,
-            coupons: {
-              ...item.coupons,
-              start_date: dates[0].format("YYYY-MM-DD"),
-              end_date: dates[1].format("YYYY-MM-DD"),
+              ...offerToAdd.offer,
+              start_date: offerToAdd.valid_from || offerToAdd.offer.start_date,
+              end_date: offerToAdd.valid_to || offerToAdd.offer.end_date,
               selected_time_slots: [],
+              selected_show_dates: [],
             },
-          };
-        }
-        return item;
-      })
-    );
-  };
+          },
+        ]);
+      }
+    },
+    [selectedOffers, validAndActiveOffers]
+  );
 
-  const handleOfferTimeSlotsChange = (offerId, selectedTimeSlots) => {
-    setSelectedOfferItems((prevItems) =>
-      prevItems.map((item) => {
-        if (item.offer.id === offerId) {
-          return {
-            ...item,
-            offer: {
-              ...item.offer,
-              selected_time_slots: selectedTimeSlots,
-            },
-          };
-        }
-        return item;
-      })
-    );
-  };
-
-  const handleCouponTimeSlotsChange = (couponId, selectedTimeSlots) => {
-    setSelectedCouponItems((prevItems) =>
-      prevItems.map((item) => {
-        if (item.coupons.id === couponId) {
-          return {
-            ...item,
+  const handleCouponAdd = useCallback(
+    (couponId) => {
+      const couponToAdd = validAndActiveCoupons?.find(
+        (ec) => ec.coupons.id === couponId
+      );
+      if (
+        couponToAdd &&
+        !selectedCoupons.some((item) => item.coupons.id === couponId)
+      ) {
+        setSelectedCoupons([
+          ...selectedCoupons,
+          {
             coupons: {
-              ...item.coupons,
-              selected_time_slots: selectedTimeSlots,
+              ...couponToAdd.coupons,
+              start_date:
+                couponToAdd.valid_from || couponToAdd.coupons.start_date,
+              end_date: couponToAdd.valid_to || couponToAdd.coupons.end_date,
+              selected_time_slots: [],
+              selected_show_dates: [],
             },
-          };
-        }
-        return item;
-      })
-    );
-  };
+          },
+        ]);
+      }
+    },
+    [selectedCoupons, validAndActiveCoupons]
+  );
 
-  const filteredOffers = useMemo(() => {
-    return availableOffers.filter((offer) =>
-      offer.offer.name.toLowerCase().includes(offerSearchValue.toLowerCase())
+  const handleOfferRemove = useCallback((offerId) => {
+    setSelectedOffers((prev) =>
+      prev.filter((item) => item.offer.id !== offerId)
     );
-  }, [availableOffers, offerSearchValue]);
+  }, []);
 
-  const filteredCoupons = useMemo(() => {
-    return availableCoupons.filter((coupon) =>
-      coupon.coupons.name
-        .toLowerCase()
-        .includes(couponSearchValue.toLowerCase())
+  const handleCouponRemove = useCallback((couponId) => {
+    setSelectedCoupons((prev) =>
+      prev.filter((item) => item.coupons.id !== couponId)
     );
-  }, [availableCoupons, couponSearchValue]);
+  }, []);
 
-  const handleSubmit = () => {
+  const handleOfferDateChange = useCallback((offerId, dates) => {
+    if (!dates || dates.length !== 2) return;
+
+    setSelectedOffers((prev) =>
+      prev.map((item) =>
+        item.offer.id === offerId
+          ? {
+              ...item,
+              offer: {
+                ...item.offer,
+                start_date: dates[0].format("YYYY-MM-DD"),
+                end_date: dates[1].format("YYYY-MM-DD"),
+                selected_time_slots: [],
+                selected_show_dates: [],
+              },
+            }
+          : item
+      )
+    );
+  }, []);
+
+  const handleCouponDateChange = useCallback((couponId, dates) => {
+    if (!dates || dates.length !== 2) return;
+
+    setSelectedCoupons((prev) =>
+      prev.map((item) =>
+        item.coupons.id === couponId
+          ? {
+              ...item,
+              coupons: {
+                ...item.coupons,
+                start_date: dates[0].format("YYYY-MM-DD"),
+                end_date: dates[1].format("YYYY-MM-DD"),
+                selected_time_slots: [],
+                selected_show_dates: [],
+              },
+            }
+          : item
+      )
+    );
+  }, []);
+
+  const handleOfferTimeSlotsChange = useCallback((offerId, selectedSlots) => {
+    setSelectedOffers((prev) =>
+      prev.map((item) =>
+        item.offer.id === offerId
+          ? {
+              ...item,
+              offer: {
+                ...item.offer,
+                selected_time_slots: selectedSlots,
+                selected_show_dates: [],
+              },
+            }
+          : item
+      )
+    );
+  }, []);
+
+  const handleCouponTimeSlotsChange = useCallback((couponId, selectedSlots) => {
+    setSelectedCoupons((prev) =>
+      prev.map((item) =>
+        item.coupons.id === couponId
+          ? {
+              ...item,
+              coupons: {
+                ...item.coupons,
+                selected_time_slots: selectedSlots,
+                selected_show_dates: [],
+              },
+            }
+          : item
+      )
+    );
+  }, []);
+
+  const handleOfferShowDateToggle = useCallback((offerId, selectedDates) => {
+    setSelectedOffers((prev) =>
+      prev.map((item) =>
+        item.offer.id === offerId
+          ? {
+              ...item,
+              offer: {
+                ...item.offer,
+                selected_show_dates: selectedDates,
+                selected_time_slots: [],
+              },
+            }
+          : item
+      )
+    );
+  }, []);
+
+  const handleCouponShowDateToggle = useCallback((couponId, selectedDates) => {
+    setSelectedCoupons((prev) =>
+      prev.map((item) =>
+        item.coupons.id === couponId
+          ? {
+              ...item,
+              coupons: {
+                ...item.coupons,
+                selected_show_dates: selectedDates,
+                selected_time_slots: [],
+              },
+            }
+          : item
+      )
+    );
+  }, []);
+
+  const handleSubmit = useCallback(() => {
     try {
       const finalData = {
-        offer_ids: selectedOfferItems.map((item) => ({
+        offer_ids: selectedOffers.map((item) => ({
           offer_id: item.offer.id,
           valid_from: item.offer.start_date,
           valid_to: item.offer.end_date,
           selected_time_slots: item.offer.selected_time_slots || [],
+          selected_show_dates: item.offer.selected_show_dates || [],
         })),
-        coupon_ids: selectedCouponItems.map((item) => ({
+        coupon_ids: selectedCoupons.map((item) => ({
           coupon_id: item.coupons.id,
           valid_from: item.coupons.start_date,
           valid_to: item.coupons.end_date,
           selected_time_slots: item.coupons.selected_time_slots || [],
+          selected_show_dates: item.coupons.selected_show_dates || [],
         })),
       };
 
-      console.log("📦 Submitting offer/coupon data:", {
-        offers: finalData.offer_ids.map((o) => ({
-          id: o.offer_id,
-          timeSlots: o.selected_time_slots.length,
-          level: o.selected_time_slots.length === 0 ? "schedule" : "time",
-        })),
-        coupons: finalData.coupon_ids.map((c) => ({
-          id: c.coupon_id,
-          timeSlots: c.selected_time_slots.length,
-          level: c.selected_time_slots.length === 0 ? "schedule" : "time",
-        })),
-      });
-
-      message.success("Offers and coupons configured successfully!");
+      message.success("Configured successfully!");
       onSubmit(finalData);
     } catch (error) {
-      console.error("❌ Submit error:", error);
-      message.error("Failed to submit offers and coupons");
+      console.error("Submit error:", error);
+      message.error("Failed to submit");
     }
-  };
+  }, [selectedOffers, selectedCoupons, onSubmit]);
 
   if (!existingShowDates || existingShowDates.length === 0) {
     return (
-      <div className="p-6">
+      <div className="p-6 bg-white">
         <Alert
           type="warning"
-          message="Schedule data not available"
-          description="Please complete the schedule configuration and add time slots first before adding offers and coupons."
+          message="Schedule not configured"
+          description="Please complete schedule setup first"
           showIcon
+          className="mb-4"
         />
-        <Button onClick={onBack} className="mt-4">
-          Go Back to Time Slots
-        </Button>
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded text-sm font-medium transition-colors"
+        >
+          <ArrowLeftOutlined />
+          Back
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Info Alert */}
-      <Alert
-        type="info"
-        message={
-          <div>
-            <strong>Event Period:</strong>{" "}
-            {dayjs(scheduleStartDate).format("MMM DD, YYYY")} -{" "}
-            {dayjs(scheduleEndDate).format("MMM DD, YYYY")}
-            <span className="ml-4">
-              <strong>{existingShowDates.length}</strong> show dates configured
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Offers & Coupons
+            </h1>
+            <span className="text-xs text-gray-500">
+              {dayjs(scheduleStartDate).format("MMM DD")} -{" "}
+              {dayjs(scheduleEndDate).format("MMM DD")}
             </span>
           </div>
-        }
-        className="mb-4"
-      />
-
-      {/* Offers Section */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <TagOutlined className="mr-2 text-orange-500" />
-          Offers
-        </h3>
-
-        <div className="mb-4">
-          <Select
-            showSearch
-            placeholder="Select an offer to add"
-            className="w-full"
-            onSearch={setOfferSearchValue}
-            onSelect={handleOfferAdd}
-            value={null}
-            filterOption={false}
-            notFoundContent={
-              filteredOffers.length === 0 ? (
-                <Empty description="No active offers available" />
-              ) : null
-            }
-          >
-            {filteredOffers.map((item) => (
-              <Option
-                key={item.offer.id}
-                value={item.offer.id}
-                disabled={selectedOfferItems.some(
-                  (selected) => selected.offer.id === item.offer.id
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span>{item.offer.name}</span>
-                  <Tag color="orange">
-                    {item.offer.discount_percentage_amount}% OFF
-                  </Tag>
-                </div>
-              </Option>
-            ))}
-          </Select>
+          <p className="text-sm text-gray-600">
+            Configure {existingShowDates.length} show dates
+          </p>
         </div>
 
-        <div className="space-y-3">
-          {selectedOfferItems.length > 0 ? (
-            selectedOfferItems.map((item) => (
-              <EnhancedOfferCard
-                key={item.offer.id}
-                item={item}
-                onRemove={handleOfferRemove}
-                onDateChange={handleOfferDateChange}
-                onTimeSlotsChange={handleOfferTimeSlotsChange}
-                scheduleStartDate={scheduleStartDate}
-                scheduleEndDate={scheduleEndDate}
-                existingShowDates={existingShowDates}
-              />
-            ))
+        {/* Offers Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <TagOutlined className="text-blue-500" />
+              Offers
+              <span className="text-xs font-normal text-gray-500 bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                {selectedOffers.length}
+              </span>
+            </h2>
+          </div>
+
+          {validAndActiveOffers.length > 0 ? (
+            <div className="mb-4">
+              <Select
+                showSearch
+                placeholder="Add offer..."
+                className="w-full"
+                onSelect={handleOfferAdd}
+                value={null}
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().includes(input.toLowerCase())
+                }
+              >
+                {validAndActiveOffers.map((eo) => (
+                  <Option
+                    key={eo.offer.id}
+                    value={eo.offer.id}
+                    disabled={selectedOffers.some(
+                      (selected) => selected.offer.id === eo.offer.id
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">{eo.offer.name}</span>
+                      <Tag className="text-xs bg-blue-100 text-blue-700 border-blue-300">
+                        {eo.offer.discount_percentage_amount}%
+                      </Tag>
+                    </div>
+                  </Option>
+                ))}
+              </Select>
+            </div>
           ) : (
-            <div className="text-center py-8 text-gray-400">
-              <TagOutlined className="text-4xl mb-2" />
-              <p className="text-sm">No offers added yet</p>
-              <p className="text-xs mt-1">
-                Select an offer from the dropdown above
-              </p>
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+              No active offers available
             </div>
           )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {selectedOffers.length > 0 ? (
+              selectedOffers.map((item) => (
+                <OfferCard
+                  key={item.offer.id}
+                  item={item}
+                  onRemove={handleOfferRemove}
+                  onDateChange={handleOfferDateChange}
+                  onTimeSlotsChange={handleOfferTimeSlotsChange}
+                  onShowDateToggle={handleOfferShowDateToggle}
+                  scheduleStartDate={scheduleStartDate}
+                  scheduleEndDate={scheduleEndDate}
+                  existingShowDates={existingShowDates}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-sm text-gray-500">No offers added</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Coupons Section */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <GiftOutlined className="mr-2 text-purple-500" />
-          Coupons
-        </h3>
+        {/* Coupons Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <GiftOutlined className="text-blue-500" />
+              Coupons
+              <span className="text-xs font-normal text-gray-500 bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                {selectedCoupons.length}
+              </span>
+            </h2>
+          </div>
 
-        <div className="mb-4">
-          <Select
-            showSearch
-            placeholder="Select a coupon to add"
-            className="w-full"
-            onSearch={setCouponSearchValue}
-            onSelect={handleCouponAdd}
-            value={null}
-            filterOption={false}
-            notFoundContent={
-              filteredCoupons.length === 0 ? (
-                <Empty description="No active coupons available" />
-              ) : null
-            }
-          >
-            {filteredCoupons.map((item) => (
-              <Option
-                key={item.coupons.id}
-                value={item.coupons.id}
-                disabled={selectedCouponItems.some(
-                  (selected) => selected.coupons.id === item.coupons.id
-                )}
+          {validAndActiveCoupons.length > 0 ? (
+            <div className="mb-4">
+              <Select
+                showSearch
+                placeholder="Add coupon..."
+                className="w-full"
+                onSelect={handleCouponAdd}
+                value={null}
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().includes(input.toLowerCase())
+                }
               >
-                <div className="flex items-center justify-between">
-                  <span>{item.coupons.name}</span>
-                  <Tag color="purple">
-                    {item.coupons.is_percentage
-                      ? `${item.coupons.discount_percentage_amount}% OFF`
-                      : `AED ${item.coupons.discount_percentage_amount} OFF`}
-                  </Tag>
-                </div>
-              </Option>
-            ))}
-          </Select>
-        </div>
-
-        <div className="space-y-3">
-          {selectedCouponItems.length > 0 ? (
-            selectedCouponItems.map((item) => (
-              <EnhancedCouponCard
-                key={item.coupons.id}
-                item={item}
-                onRemove={handleCouponRemove}
-                onDateChange={handleCouponDateChange}
-                onTimeSlotsChange={handleCouponTimeSlotsChange}
-                scheduleStartDate={scheduleStartDate}
-                scheduleEndDate={scheduleEndDate}
-                existingShowDates={existingShowDates}
-              />
-            ))
+                {validAndActiveCoupons.map((ec) => (
+                  <Option
+                    key={ec.coupons.id}
+                    value={ec.coupons.id}
+                    disabled={selectedCoupons.some(
+                      (selected) => selected.coupons.id === ec.coupons.id
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm">{ec.coupons.name}</span>
+                      <Tag className="text-xs bg-blue-100 text-blue-700 border-blue-300">
+                        {ec.coupons.is_percentage
+                          ? `${ec.coupons.discount_percentage_amount}%`
+                          : `AED ${ec.coupons.discount_percentage_amount}`}
+                      </Tag>
+                    </div>
+                  </Option>
+                ))}
+              </Select>
+            </div>
           ) : (
-            <div className="text-center py-8 text-gray-400">
-              <GiftOutlined className="text-4xl mb-2" />
-              <p className="text-sm">No coupons added yet</p>
-              <p className="text-xs mt-1">
-                Select a coupon from the dropdown above
-              </p>
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+              No active coupons available
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-between">
-        <Button size="large" onClick={onBack}>
-          Back
-        </Button>
-        <Button
-          type="primary"
-          size="large"
-          icon={<SaveOutlined />}
-          onClick={handleSubmit}
-        >
-          Continue
-        </Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {selectedCoupons.length > 0 ? (
+              selectedCoupons.map((item) => (
+                <CouponCard
+                  key={item.coupons.id}
+                  item={item}
+                  onRemove={handleCouponRemove}
+                  onDateChange={handleCouponDateChange}
+                  onTimeSlotsChange={handleCouponTimeSlotsChange}
+                  onShowDateToggle={handleCouponShowDateToggle}
+                  scheduleStartDate={scheduleStartDate}
+                  scheduleEndDate={scheduleEndDate}
+                  existingShowDates={existingShowDates}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-sm text-gray-500">No coupons added</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 border-t border-gray-200 pt-6">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded font-medium text-sm transition-colors"
+          >
+            <ArrowLeftOutlined className="text-sm" />
+            Back
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="ml-auto inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium text-sm transition-colors"
+          >
+            <SaveOutlined className="text-sm" />
+            Continue
+          </button>
+        </div>
       </div>
     </div>
   );

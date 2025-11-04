@@ -956,16 +956,35 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     [dispatch]
   );
 
+  // Replace the getAllDaysInRange function in CalendarViewCard.jsx
+
   const getAllDaysInRange = () => {
     if (!dateRange.startDate || !dateRange.endDate) {
       return [];
     }
 
-    const daysDiff = getDaysDiff(dateRange.startDate, dateRange.endDate);
+    const start = new Date(dateRange.startDate);
+    const end = new Date(dateRange.endDate);
+
+    // Set to start of day to avoid time zone issues
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    // Calculate days difference (inclusive)
+    const daysDiff = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+    console.log("📅 getAllDaysInRange:", {
+      startDate: dateRange.startDate.toISOString(),
+      endDate: dateRange.endDate.toISOString(),
+      daysDiff,
+      expectedDays: daysDiff,
+    });
+
+    // Generate array of dates
     return Array.from({ length: daysDiff }, (_, i) => {
-      const day = new Date(dateRange.startDate);
-      day.setUTCDate(dateRange.startDate.getUTCDate() + i);
-      return new Date(day);
+      const day = new Date(start);
+      day.setDate(start.getDate() + i);
+      return day;
     });
   };
   const hasValidTimeSlots = () => {
@@ -1745,7 +1764,25 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                     let skippedDays = 0;
                     const allDaysInRange = getAllDaysInRange();
 
-                    allDaysInRange.forEach((_, dayIndex) => {
+                    // ✅ ADD THIS VALIDATION
+                    console.log("📊 Applying to days:", {
+                      totalDays: allDaysInRange.length,
+                      dateRange: {
+                        start: dateRange.startDate?.toISOString(),
+                        end: dateRange.endDate?.toISOString(),
+                      },
+                    });
+
+                    allDaysInRange.forEach((currentDay, dayIndex) => {
+                      // ✅ ADD THIS CHECK - Skip if day is after end date
+                      if (currentDay > dateRange.endDate) {
+                        console.warn(
+                          `⚠️ Skipping day ${dayIndex} - after end date:`,
+                          currentDay
+                        );
+                        return;
+                      }
+
                       // Create the event for this day
                       const potentialEvent = {
                         startTime: {
