@@ -137,9 +137,9 @@ const TimeSelector = ({
 
           console.log("✅ Applying template to all days:", templateEvent);
           onApplyToAll(templateEvent);
-          message.success(
-            "Time slot configuration will be applied to all available days!"
-          );
+          // message.success(
+          //   "Time slot configuration will be applied to all available days!"
+          // );
         }
       },
     });
