@@ -245,14 +245,12 @@ const OrderBookingDetails = () => {
                                                 >
                                                     <Row gutter={[16, 16]} align="middle">
                                                         {/* Thumbnail Image */}
-                                                        <Col xs={24} sm={3} className="flex justify-center">
-                                                            <CDNImage
-                                                                src={getSafeValue(offer, 'ticket_offer.offer.thumbnail_image')}
-                                                                alt={`Offer Thumbnail`}
-                                                                height={100}
-                                                                width={100}
-                                                            />
-                                                        </Col>
+                                                        <CDNImage
+                                                            src={getSafeValue(offer, 'ticket_offer.offer.thumbnail_image')}
+                                                            alt={`Offer Thumbnail`}
+                                                            height={100}
+                                                            width={100}
+                                                        />
 
                                                         {/* Offer Details */}
                                                         <Col xs={24} sm={12}>
@@ -279,7 +277,7 @@ const OrderBookingDetails = () => {
 
                                                         {/* Offer Status */}
                                                         <Col xs={24} sm={9}>
-                                                            <div className="space-y-2 text-right">
+                                                            <div className="space-y-2 text-left">
                                                                 <div className="flex justify-between">
                                                                     <Text strong className="text-gray-600">Used Count:</Text>
                                                                     <Badge
@@ -287,6 +285,12 @@ const OrderBookingDetails = () => {
                                                                         showZero
                                                                         style={{ backgroundColor: '#52c41a' }}
                                                                     />
+                                                                </div>
+                                                                <div className="flex justify-between">
+                                                                    <Text strong className="text-gray-600">Offer Type:</Text>
+                                                                    <Tag color={offer.is_offline ? "orange" : "purple"}>
+                                                                        {offer.is_offline ? "Offline Offer" : "Online Offer"}
+                                                                    </Tag>
                                                                 </div>
                                                                 <div className="flex justify-between items-center">
                                                                     <Text strong className="text-gray-600">Status:</Text>
