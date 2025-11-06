@@ -11,7 +11,7 @@ const PlaceWithCountryForm = ({
   rules,
   label,
   allPlaceVisible,
-  isActivePlaces = false,
+  isActivePlaces = true,
   disabled,
 }) => {
   const dispatch = useDispatch();
