@@ -226,14 +226,18 @@ export const ApiConstant = {
   BUCKET_URL:
     "https://de64063e3b101c4412b924b8c25193ae.r2.cloudflarestorage.com",
   BUCKET_NAME: "ticket2me-json",
-  BUCKET_FAQ_KEY: "faq/v1.0.0.json",
-  BUCKET_INFO_KEY: "info/v1.0.0.json",
+  BUCKET_FAQ_KEY: "/faq/v1.0.0.json",
+  BUCKET_TERMS_KEY: "/terms/v1.0.0.json",
+  BUCKET_INFO_KEY: "/info/v1.0.0.json",
+  BUCKET_FOOTER_KEY: "/footer/v1.0.0.json",
   FAQ_UPLOAD_URL: "/api/v1/shared/app_management/secured/upload_faq",
   FAQ_GET_URL: "/api/v1/shared/app_management/public/get_faq",
   INFO_UPLOAD_URL: "/api/v1/shared/app_management/secured/upload_info",
   INFO_GET_URL: "/api/v1/shared/app_management/public/get_info",
   FOOTER_GET_URL: "/api/v1/shared/app_management/public/get_footer",
   FOOTER_UPLOAD_URL: "/api/v1/shared/app_management/secured/upload_footer",
+  GENERATE_PRESIGNED_URL_LAYOUT_JSON:
+    "/api/v1/shared/app_management/public/generate_presigned_url",
 
   //Payment
   PAYMENT_URL: "/api/v1/shared/payment/secured/payment",
