@@ -682,9 +682,9 @@ const AppSchedulerList = () => {
                 <Tooltip title={formatDateTime(text)}>
                     <div>
                         <div>{formatDateTime(text)}</div>
-                        <div>
+                        {/* <div>
                             <Text type="secondary">{getTimeDifference(text)}</Text>
-                        </div>
+                        </div> */}
                     </div>
                 </Tooltip>
             ),
