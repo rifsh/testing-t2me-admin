@@ -7,6 +7,7 @@ export const initialState = {
     allActivityLogs: [],
     error: null,
     message: null,
+    runTime: null,
     responseData: null,
     responseMessage: null,
     editable_status: null,
@@ -62,6 +63,7 @@ const apschedulerSlice = createSlice({
                 state.loading = false;
                 state.coupons = action.payload.items;
                 state.allActivityLogs = action.payload.data.items;
+                state.runTime = action.payload.run_time;
                 state.pagination = action.payload.data;
                 state.countsByTypes = action.payload.counts_by_types;
             })
@@ -75,8 +77,9 @@ const apschedulerSlice = createSlice({
             })
             .addCase(fetchAllActivityLogs.fulfilled, (state, action) => {
                 state.loading = false;
-                state.coupons = action.payload.items; 
+                state.coupons = action.payload.items;
                 state.allActivityLogs = action.payload.data.items;
+                state.runTime = action.payload.run_time;
                 state.pagination = action.payload.data;
                 state.countsByTypes = action.payload.counts_by_types;
             })

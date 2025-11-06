@@ -28,6 +28,7 @@ import {
     FilterOutlined,
     ReloadOutlined,
     HistoryOutlined,
+    FieldTimeOutlined,
 } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import { useDispatch, useSelector } from "react-redux";
@@ -275,7 +276,7 @@ const Statistic = ({ title, value, prefix, valueStyle = {} }) => {
     );
 };
 
-const ActivitySummary = ({ data, typeCountsFromAPI }) => {
+const ActivitySummary = ({ data, typeCountsFromAPI, runTime }) => {
     // Dynamically collect and aggregate metrics from data
     const aggregateMetrics = () => {
         console.log(typeCountsFromAPI, "typecounform api");
@@ -382,6 +383,8 @@ const ActivitySummary = ({ data, typeCountsFromAPI }) => {
             .filter(Boolean);
     };
 
+
+
     return (
         <div style={{ marginBottom: 24 }}>
             <Title level={4}>Activity Summary</Title>
@@ -392,6 +395,13 @@ const ActivitySummary = ({ data, typeCountsFromAPI }) => {
                         title="Total Logs"
                         value={totalLogs}
                         prefix={<HistoryOutlined />}
+                    />
+                </Card>
+                <Card bordered={false} size="small" style={{ width: "200px" }}>
+                    <Statistic
+                        title="Batch Run Time"
+                        value={`${runTime} min`}
+                        prefix={<FieldTimeOutlined />}
                     />
                 </Card>
 
@@ -451,7 +461,7 @@ const ActivitySummary = ({ data, typeCountsFromAPI }) => {
 
 const ActivityLogsList = () => {
     const dispatch = useDispatch();
-    const { pagination, loading, allActivityLogs, countsByTypes } = useSelector(
+    const { pagination, loading, allActivityLogs, runTime, countsByTypes } = useSelector(
         (state) => state.apscheduler
     );
     const [searchTerm, setSearchTerm] = useState("");
@@ -464,6 +474,11 @@ const ActivityLogsList = () => {
     useEffect(() => {
         dispatch(fetchAllActivityLogs(DEFAULT_PAGE_SIZE));
     }, [dispatch]);
+
+    useEffect(() => {
+        console.log("allActivityLogs", countsByTypes);
+
+    }, [countsByTypes])
 
     const handlePagination = (page, size) => {
         // dispatch(fetchAllActivityLogs({ page: page, size: size }));
@@ -704,6 +719,7 @@ const ActivityLogsList = () => {
                 <ActivitySummary
                     data={allActivityLogs}
                     typeCountsFromAPI={countsByTypes}
+                    runTime={runTime}
                 />
             )}
             <Flex alignItems="center" className="mb-3" justifyContent="space-between">

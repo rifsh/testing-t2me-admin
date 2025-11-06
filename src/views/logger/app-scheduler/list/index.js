@@ -38,6 +38,7 @@ import {
     UpOutlined,
     DownOutlined,
     SearchOutlined,
+    FieldTimeOutlined,
 } from "@ant-design/icons";
 import Flex from "components/shared-components/Flex";
 import { useDispatch, useSelector } from "react-redux";
@@ -306,7 +307,7 @@ const Statistic = ({ title, value, prefix, valueStyle = {} }) => {
     );
 };
 
-const ActivitySummary = ({ data, typeCountsFromAPI }) => {
+const ActivitySummary = ({ data, typeCountsFromAPI, runTime }) => {
     // Dynamically collect and aggregate metrics from data
     const aggregateMetrics = () => {
         console.log(typeCountsFromAPI, "typecounform api");
@@ -425,6 +426,13 @@ const ActivitySummary = ({ data, typeCountsFromAPI }) => {
                         prefix={<HistoryOutlined />}
                     />
                 </Card>
+                <Card bordered={false} size="small" style={{ width: "200px" }}>
+                    <Statistic
+                        title="Appscheduler Time"
+                        value={`${runTime} min`}
+                        prefix={<FieldTimeOutlined />}
+                    />
+                </Card>
 
                 {typeCountsFromAPI
                     ? renderTypeCountCards()
@@ -483,7 +491,7 @@ const ActivitySummary = ({ data, typeCountsFromAPI }) => {
 const AppSchedulerList = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { pagination, loading, allActivityLogs, countsByTypes } = useSelector(
+    const { pagination, loading, allActivityLogs, runTime, countsByTypes } = useSelector(
         (state) => state.apscheduler
     );
     const [searchTerm, setSearchTerm] = useState("");
@@ -682,9 +690,9 @@ const AppSchedulerList = () => {
                 <Tooltip title={formatDateTime(text)}>
                     <div>
                         <div>{formatDateTime(text)}</div>
-                        <div>
+                        {/* <div>
                             <Text type="secondary">{getTimeDifference(text)}</Text>
-                        </div>
+                        </div> */}
                     </div>
                 </Tooltip>
             ),
@@ -932,9 +940,19 @@ const AppSchedulerList = () => {
                 <ActivitySummary
                     data={allActivityLogs}
                     typeCountsFromAPI={countsByTypes}
+                    runTime={runTime}
                 />
             )}
-
+            <div className="mb-3">
+                <Button
+                    icon={<ReloadOutlined />}
+                    onClick={handleRefresh}
+                    loading={loading}
+                    style={{ flex: 1 }}
+                >
+                    Refresh
+                </Button>
+            </div>
             <FilterSection />
 
             {loading ? (
