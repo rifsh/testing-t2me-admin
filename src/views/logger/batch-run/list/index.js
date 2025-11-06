@@ -243,11 +243,11 @@ const BatchDetailsDisplay = ({ details, type }) => {
                     </div>
                 )}
 
-                <div style={{ marginTop: "16px" }}>
+                {/* <div style={{ marginTop: "16px" }}>
                     <Text type="secondary">
-                        <ClockCircleOutlined /> Processed at: {new Date().toLocaleString()}
+                        <ClockCircleOutlined /> Current Time: {new Date().toLocaleString()}
                     </Text>
-                </div>
+                </div> */}
             </Modal>
         </div>
     );
@@ -703,15 +703,24 @@ const ActivityLogsList = () => {
                 showIcon
                 style={{ marginBottom: 24 }}
                 action={
-                    !isDataEmpty && (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         <Button
-                            size="small"
-                            type="primary"
-                            onClick={() => setShowSummary(!showSummary)}
+                            icon={<ReloadOutlined />}
+                            onClick={handleRefresh}
+                            loading={loading}
                         >
-                            {showSummary ? "Hide Summary" : "Show Summary"}
+                            Refresh
                         </Button>
-                    )
+                        {!isDataEmpty && (
+                            <Button
+                                size="small"
+                                type="primary"
+                                onClick={() => setShowSummary(!showSummary)}
+                            >
+                                {showSummary ? "Hide Summary" : "Show Summary"}
+                            </Button>
+                        )}
+                    </div>
                 }
             />
 

@@ -274,11 +274,11 @@ const BatchDetailsDisplay = ({ details, type, eventType, record }) => {
                         </Text>
                     </div>
                 )}
-                <div style={{ marginTop: "16px" }}>
+                {/* <div style={{ marginTop: "16px" }}>
                     <Text type="secondary">
                         <ClockCircleOutlined /> Processed at: {new Date().toLocaleString()}
                     </Text>
-                </div>
+                </div> */}
             </Modal >
         </div >
     );
@@ -709,7 +709,7 @@ const AppSchedulerList = () => {
             render: (status) => (
                 <Space>
                     <Text>
-                        {status}
+                        {status?.toUpperCase()}
                     </Text>
                 </Space>
             ),
@@ -924,18 +924,26 @@ const AppSchedulerList = () => {
                 showIcon
                 style={{ marginBottom: 24 }}
                 action={
-                    !isDataEmpty && (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         <Button
-                            size="small"
-                            type="primary"
-                            onClick={() => setShowSummary(!showSummary)}
+                            icon={<ReloadOutlined />}
+                            onClick={handleRefresh}
+                            loading={loading}
                         >
-                            {showSummary ? "Hide Summary" : "Show Summary"}
+                            Refresh
                         </Button>
-                    )
+                        {!isDataEmpty && (
+                            <Button
+                                size="small"
+                                type="primary"
+                                onClick={() => setShowSummary(!showSummary)}
+                            >
+                                {showSummary ? "Hide Summary" : "Show Summary"}
+                            </Button>
+                        )}
+                    </div>
                 }
             />
-
             {!isDataEmpty && showSummary && (
                 <ActivitySummary
                     data={allActivityLogs}
@@ -943,16 +951,6 @@ const AppSchedulerList = () => {
                     runTime={runTime}
                 />
             )}
-            <div className="mb-3">
-                <Button
-                    icon={<ReloadOutlined />}
-                    onClick={handleRefresh}
-                    loading={loading}
-                    style={{ flex: 1 }}
-                >
-                    Refresh
-                </Button>
-            </div>
             <FilterSection />
 
             {loading ? (
