@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Card, Tag, Button, Divider, Row, Col, message, Space, Typography, Descriptions, List, Badge, Statistic } from 'antd';
+import { Card, Tag, Button, Divider, Row, Col, message, Space, Typography, Descriptions, List, Badge, Statistic, Image, Collapse } from 'antd';
 import {
     CalendarOutlined,
     UserOutlined,
@@ -16,7 +16,10 @@ import {
     ExclamationCircleOutlined,
     IdcardOutlined,
     ScheduleOutlined,
-    InfoCircleOutlined
+    InfoCircleOutlined,
+    GiftOutlined,
+    PercentageOutlined,
+    SafetyCertificateOutlined
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { getOrderByBookingDetails } from 'store/slices/ordersSlice';
@@ -26,6 +29,7 @@ import LoadingOverlay from 'components/util-components/Loader';
 import SeatBookingUI from '../components/SeatBookingUI ';
 import { AirplaneTicketOutlined } from '@mui/icons-material';
 import { qrUsed } from 'constants/QrConstants';
+import CDNImage from 'components/layout-components/Image/CDNImage';
 
 const { Title, Text } = Typography;
 
@@ -129,6 +133,11 @@ const OrderBookingDetails = () => {
         return `${start} - ${end}`;
     };
 
+    const getOfferValidityPeriod = (validFrom, validTo) => {
+        if (!validFrom || !validTo) return 'N/A';
+        return `${formatDateOnly(validFrom)} - ${formatDateOnly(validTo)}`;
+    };
+
     // Safe access to nested properties with fallbacks
     const getSafeValue = (obj, path, defaultValue = 'N/A') => {
         if (!obj) return defaultValue;
@@ -157,6 +166,13 @@ const OrderBookingDetails = () => {
     }
 
     const order = ordersByBookingDetails;
+
+    // Calculate total discount from offers
+    const calculateTotalDiscount = () => {
+        const originalAmount = getSafeValue(order, 'original_amount', 0);
+        const finalAmount = getSafeValue(order, 'final_amount', 0);
+        return originalAmount - finalAmount;
+    };
 
     if (type === 'seat') {
         return (
@@ -200,21 +216,133 @@ const OrderBookingDetails = () => {
                                 />
                             </div>
                         </div>
-                        {/* <div className="mt-4 lg:mt-0">
-                            <Button
-                                type="primary"
-                                icon={<FileTextOutlined />}
-                                onClick={() => window.print()}
-                            >
-                                Print Details
-                            </Button>
-                        </div> */}
                     </div>
                 </div>
 
                 <Row gutter={[24, 24]}>
                     {/* Left Column - Main Content */}
                     <Col xs={24} lg={16}>
+                        {/* Applied Offers Section - NEW */}
+                        {getSafeValue(order, 'booking_ticket_offer', []).length > 0 && (
+                            <Collapse accordion className='mb-6 bg-white py-3'>
+                                <Collapse.Panel
+                                    key="1"
+                                    header={
+                                        <div className="flex items-center gap-2">
+                                            <GiftOutlined className="text-green-500 text-lg" />
+                                            <span className='text-lg font-bold'>Applied Offers & Discounts</span>
+                                        </div>
+                                    }
+                                >
+                                    <Card
+                                        className="shadow-sm hover:shadow-md transition-shadow duration-200 mb-6 border-l-4 border-l-green-500"
+                                    >
+                                        <div className="space-y-4">
+                                            {getSafeValue(order, 'booking_ticket_offer', []).map((offer, index) => (
+                                                <div
+                                                    key={offer.id || index}
+                                                    className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 border border-green-100"
+                                                >
+                                                    <Row gutter={[16, 16]} align="middle">
+                                                        {/* Thumbnail Image */}
+                                                        <Col xs={24} sm={3} className="flex justify-center">
+                                                            <CDNImage
+                                                                src={getSafeValue(offer, 'ticket_offer.offer.thumbnail_image')}
+                                                                alt={`Offer Thumbnail`}
+                                                                height={100}
+                                                                width={100}
+                                                            />
+                                                        </Col>
+
+                                                        {/* Offer Details */}
+                                                        <Col xs={24} sm={12}>
+                                                            <div className="space-y-2">
+                                                                <Title level={5} className="!mb-1 text-gray-800">
+                                                                    {getSafeValue(offer, 'ticket_offer.offer.name')}
+                                                                </Title>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    <Tag color="blue" icon={<PercentageOutlined />}>
+                                                                        {getSafeValue(offer, 'ticket_offer.offer.discount_percentage_amount')}% OFF
+                                                                    </Tag>
+                                                                    <Tag color="orange">
+                                                                        Max {getSafeValue(offer, 'ticket_offer.offer.max_uses')} uses
+                                                                    </Tag>
+                                                                </div>
+                                                                <Text className="text-gray-600 text-sm">
+                                                                    Valid: {getOfferValidityPeriod(
+                                                                        getSafeValue(offer, 'ticket_offer.valid_from'),
+                                                                        getSafeValue(offer, 'ticket_offer.valid_to')
+                                                                    )}
+                                                                </Text>
+                                                            </div>
+                                                        </Col>
+
+                                                        {/* Offer Status */}
+                                                        <Col xs={24} sm={9}>
+                                                            <div className="space-y-2 text-right">
+                                                                <div className="flex justify-between">
+                                                                    <Text strong className="text-gray-600">Used Count:</Text>
+                                                                    <Badge
+                                                                        count={getSafeValue(offer, 'ticket_offer.used_count', 0)}
+                                                                        showZero
+                                                                        style={{ backgroundColor: '#52c41a' }}
+                                                                    />
+                                                                </div>
+                                                                <div className="flex justify-between items-center">
+                                                                    <Text strong className="text-gray-600">Status:</Text>
+                                                                    <Tag color="success" icon={<SafetyCertificateOutlined />}>
+                                                                        Applied
+                                                                    </Tag>
+                                                                </div>
+                                                            </div>
+                                                        </Col>
+                                                    </Row>
+
+                                                    {/* Offer Keywords */}
+                                                    {getSafeValue(offer, 'ticket_offer.offer.key_words', []).length > 0 && (
+                                                        <div className="mt-3 pt-3 border-t border-green-200">
+                                                            <Text strong className="text-gray-600 text-sm">Keywords: </Text>
+                                                            <Space size={[0, 4]} wrap>
+                                                                {getSafeValue(offer, 'ticket_offer.offer.key_words', []).map((keyword, keyIndex) => (
+                                                                    <Tag key={keyIndex} color="default" className="text-xs">
+                                                                        #{keyword}
+                                                                    </Tag>
+                                                                ))}
+                                                            </Space>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+
+                                            {/* Offer Summary */}
+                                            <div className="bg-white rounded-lg border border-gray-200 p-4 mt-4">
+                                                <Row gutter={16}>
+                                                    <Col xs={24} sm={12}>
+                                                        <Statistic
+                                                            title="Total Offers Applied"
+                                                            value={getSafeValue(order, 'booking_ticket_offer', []).length}
+                                                            prefix={<GiftOutlined />}
+                                                            valueStyle={{ color: '#1890ff' }}
+                                                        />
+                                                    </Col>
+
+                                                    {/* Uncomment if total discount logic is ready */}
+                                                    {/* <Col xs={24} sm={12}>
+                <Statistic
+                  title="Total Discount"
+                  value={calculateTotalDiscount().toFixed(2)}
+                  valueStyle={{ color: '#52c41a' }}
+                />
+              </Col> */}
+                                                </Row>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </Collapse.Panel>
+                            </Collapse>
+                        )}
+
+
                         {/* Event & Booking Summary */}
                         <Card
                             className="shadow-sm hover:shadow-md transition-shadow duration-200 mb-6"
@@ -474,6 +602,19 @@ const OrderBookingDetails = () => {
                                     </Text>
                                 </div>
 
+                                {/* Applied Offers Discount */}
+                                {getSafeValue(order, 'booking_ticket_offer', []).length > 0 && (
+                                    <div className="flex justify-between items-center py-2 border-t border-gray-100">
+                                        <div className="flex items-center gap-2">
+                                            <GiftOutlined className="text-green-500" />
+                                            <Text className="text-gray-600">Offers Discount</Text>
+                                        </div>
+                                        <Text className="text-green-600 font-semibold">
+                                            {calculateTotalDiscount().toFixed(2)}
+                                        </Text>
+                                    </div>
+                                )}
+
                                 {getSafeValue(order, 'coupon_code') && getSafeValue(order, 'coupon_code') !== 'N/A' && (
                                     <div className="flex justify-between items-center py-2 border-t border-gray-100">
                                         <Text className="text-gray-600">
@@ -490,7 +631,7 @@ const OrderBookingDetails = () => {
                                 <div className="flex justify-between items-center py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg px-3">
                                     <Title level={5} className="!mb-0 text-gray-800">Total Amount</Title>
                                     <Title level={4} className="!mb-0 text-green-600">
-                                        {getSafeValue(order, 'amount', 0).toFixed(2)}
+                                        {getSafeValue(order, 'final_amount', 0).toFixed(2)}
                                     </Title>
                                 </div>
                             </div>
@@ -515,14 +656,16 @@ const OrderBookingDetails = () => {
                                         valueStyle={{ color: '#3f51b5' }}
                                     />
                                 </Col>
-                                <Col span={12}>
-                                    <Statistic
-                                        title="Time Slots"
-                                        value={getSafeValue(order, 'booking_items', []).length}
-                                        prefix={<ScheduleOutlined />}
-                                        valueStyle={{ color: '#f44336' }}
-                                    />
-                                </Col>
+                                {getSafeValue(order, 'booking_ticket_offer', []).length > 0 && (
+                                    <Col span={12}>
+                                        <Statistic
+                                            title="Offers Applied"
+                                            value={getSafeValue(order, 'booking_ticket_offer', []).length}
+                                            prefix={<GiftOutlined />}
+                                            valueStyle={{ color: '#52c41a' }}
+                                        />
+                                    </Col>
+                                )}
                             </Row>
                         </Card>
 
