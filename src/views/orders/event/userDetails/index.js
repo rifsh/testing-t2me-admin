@@ -36,6 +36,7 @@ import { getEventOrderDetailsTime } from "store/slices/ordersSlice";
 import { BOOKING_TYPE } from "constants/AppConstants";
 import { FaTicketAlt } from "react-icons/fa";
 import { CDN_PATH } from "configs/AppConfig";
+import BookingOfferCard from "../components/BookingOfferCard";
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
@@ -161,6 +162,7 @@ const UserOrderDetailsPage = () => {
                 </div>
               }
             >
+              {/* Existing statistics and descriptions */}
               <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
                 <Col span={8}>
                   <Statistic
@@ -223,6 +225,13 @@ const UserOrderDetailsPage = () => {
                 </Descriptions.Item>
               </Descriptions>
 
+              {/* ADD THIS: Booking Offer Component */}
+              {booking.booking_ticket_offer &&
+                booking.booking_ticket_offer.length > 0 && (
+                  <BookingOfferCard offerData={booking.booking_ticket_offer} />
+                )}
+
+              {/* Existing ticket details collapse */}
               <Collapse
                 ghost
                 expandIcon={({ isActive }) =>
@@ -242,6 +251,7 @@ const UserOrderDetailsPage = () => {
                   }
                   key="tickets"
                 >
+                  {/* Existing ticket details rendering code */}
                   <Row gutter={[12, 12]}>
                     {booking.booking_items?.map((item, itemIndex) => (
                       <Col key={item.id} span={24}>
@@ -327,13 +337,13 @@ const UserOrderDetailsPage = () => {
 
                   {(!booking.booking_items ||
                     booking.booking_items.length === 0) && (
-                    <div style={{ textAlign: "center", padding: 20 }}>
-                      <Empty
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        description="No ticket details found for this booking"
-                      />
-                    </div>
-                  )}
+                      <div style={{ textAlign: "center", padding: 20 }}>
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description="No ticket details found for this booking"
+                        />
+                      </div>
+                    )}
                 </Panel>
               </Collapse>
             </Card>
@@ -375,7 +385,7 @@ const UserOrderDetailsPage = () => {
                     <TeamOutlined style={{ fontSize: 16 }} />
                   </Badge>
                   <Text strong style={{ fontSize: 16, color: "#52c41a" }}>
-                    ₹{booking.final_charged_amount || booking.final_amount || 0}
+                    {booking.final_charged_amount || booking.final_amount || 0}
                   </Text>
                 </div>
               </div>
@@ -386,7 +396,7 @@ const UserOrderDetailsPage = () => {
                 <Statistic
                   title="Original Amount"
                   value={booking.original_amount || 0}
-                  prefix="₹"
+                  prefix=""
                   valueStyle={{ fontSize: 16 }}
                 />
               </Col>
@@ -394,7 +404,7 @@ const UserOrderDetailsPage = () => {
                 <Statistic
                   title="Tax Amount"
                   value={booking.tax_amount || 0}
-                  prefix="₹"
+                  prefix=""
                   valueStyle={{ fontSize: 16, color: "#fa8c16" }}
                 />
               </Col>
@@ -402,7 +412,7 @@ const UserOrderDetailsPage = () => {
                 <Statistic
                   title="Payment Charge"
                   value={booking.payment_charge || 0}
-                  prefix="₹"
+                  prefix=""
                   valueStyle={{ fontSize: 16, color: "#722ed1" }}
                 />
               </Col>
@@ -412,7 +422,7 @@ const UserOrderDetailsPage = () => {
                   value={
                     booking.final_charged_amount || booking.final_amount || 0
                   }
-                  prefix="₹"
+                  prefix=""
                   valueStyle={{
                     fontSize: 16,
                     color: "#52c41a",
@@ -445,9 +455,14 @@ const UserOrderDetailsPage = () => {
                 <Tag color="blue">{booking.order_reference}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Discount">
-                ₹{booking.discounted_amount || 0}
+                {booking.discounted_amount || 0}
               </Descriptions.Item>
             </Descriptions>
+
+            {booking.booking_ticket_offer &&
+              booking.booking_ticket_offer.length > 0 && (
+                <BookingOfferCard offerData={booking.booking_ticket_offer} />
+              )}
 
             <Collapse
               ghost
@@ -475,13 +490,12 @@ const UserOrderDetailsPage = () => {
                         size="small"
                         style={{
                           textAlign: "center",
-                          border: `2px solid ${
-                            seat.type === "vip"
-                              ? "#722ed1"
-                              : seat.type === "premium"
+                          border: `2px solid ${seat.type === "vip"
+                            ? "#722ed1"
+                            : seat.type === "premium"
                               ? "#fa8c16"
                               : "#52c41a"
-                          }`,
+                            }`,
                         }}
                       >
                         <div style={{ marginBottom: 8 }}>
@@ -490,8 +504,8 @@ const UserOrderDetailsPage = () => {
                               seat.type === "vip"
                                 ? "purple"
                                 : seat.type === "premium"
-                                ? "orange"
-                                : "green"
+                                  ? "orange"
+                                  : "green"
                             }
                             style={{ fontSize: 12, fontWeight: "bold" }}
                           >
@@ -508,7 +522,7 @@ const UserOrderDetailsPage = () => {
                             strong
                             style={{ color: "#52c41a", fontSize: 14 }}
                           >
-                            ₹{seat.price}
+                            {seat.price}
                           </Text>
                         </div>
                       </Card>
@@ -674,9 +688,8 @@ const UserOrderDetailsPage = () => {
           )
         ) : (
           <Empty
-            description={`No ${
-              isEventTicket ? "ticket" : "seat"
-            } bookings found for this user`}
+            description={`No ${isEventTicket ? "ticket" : "seat"
+              } bookings found for this user`}
             style={{ padding: "40px 0" }}
           />
         )}

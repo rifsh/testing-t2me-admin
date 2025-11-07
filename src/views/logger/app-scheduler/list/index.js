@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Card,
     Table,
@@ -540,6 +540,7 @@ const AppSchedulerList = () => {
     }, [searchTerm, selectedType, selectedEventType]);
 
     const handleRefresh = () => {
+        setSearchTerm("");
         setSelectedType('all');
         setSelectedEventType('all');
         setSelectedpaymentMode('all');
@@ -567,6 +568,48 @@ const AppSchedulerList = () => {
     const handleEventTypeFilter = (type) => {
         setSelectedEventType(type);
     };
+
+    const debouncedSearch = useMemo(
+        () =>
+            debounce((searchValue) => {
+                dispatch(fetchAllApschedulerLogs({
+                    page: 1,
+                    size: 10,
+                    search: searchValue,
+                    type: selectedType === 'all' ? null : selectedType,
+                    event_type: selectedEventType === 'all' ? null : selectedEventType,
+                    payment_mode: selectedpaymentMode === 'all' ? null : selectedpaymentMode,
+                    payment_platform: selectedPaymentPlatform === 'all' ? null : selectedPaymentPlatform,
+                }));
+            }, 500),
+        [selectedType, selectedEventType, selectedpaymentMode, selectedPaymentPlatform, dispatch]
+    );
+
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value); // Update input value immediately
+        debouncedSearch(value); // Trigger debounced API call
+    };
+
+    const handleSearchClear = () => {
+        setSearchTerm(""); // Clear search term
+        dispatch(fetchAllApschedulerLogs({
+            page: 1,
+            size: 10,
+            search: "",
+            type: selectedType === 'all' ? null : selectedType,
+            event_type: selectedEventType === 'all' ? null : selectedEventType,
+            payment_mode: selectedpaymentMode === 'all' ? null : selectedpaymentMode,
+            payment_platform: selectedPaymentPlatform === 'all' ? null : selectedPaymentPlatform,
+        }));
+    };
+
+    useEffect(() => {
+        return () => {
+            debouncedSearch.cancel();
+        };
+    }, [debouncedSearch]);
+
 
     const formatDateTime = (dateTimeString) => {
         if (!dateTimeString) return "N/A";
@@ -841,8 +884,9 @@ const AppSchedulerList = () => {
                                     placeholder="Search in logs..."
                                     allowClear
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    onSearch={handleSearch}
+                                    onChange={handleSearchChange} // Use the new handler
+                                    onSearch={debouncedSearch} // Optional: also search on enter
+                                    onClear={handleSearchClear} // Clear search when X is clicked
                                     prefix={<SearchOutlined />}
                                     style={{ width: '100%' }}
                                 />
