@@ -8,7 +8,7 @@ const initialState = {
   filteredAdCategories: [],
   responseData: null,
   appInfo: null,
-  appInfoData: [],
+  appInfoData: {},
   maintenanceData: null,
   error: null,
   message: null,
@@ -63,8 +63,8 @@ const AppInfoSlice = createSlice({
         console.log("fetchAllFaqs fulfilled", payload);
         state.loading = false;
         state.appInfo = payload;
-        state.appInfoData = payload.data;
-        state.maintenanceData = payload.data[0].details.under_maintenance;
+        state.appInfoData = payload;
+        state.maintenanceData = payload.details.under_maintenance;
       })
       .addCase(fetchAppInfo.rejected, (state, { payload }) => {
         console.log("fetchAllFaqs rejected", payload);

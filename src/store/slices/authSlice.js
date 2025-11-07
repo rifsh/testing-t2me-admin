@@ -137,7 +137,7 @@ export const TermsCondition = createAsyncThunk(
       console.log("FETCHING TERMS AND CONDITIONS");
       const response = await AuthService.TermsCondition();
       console.log(response, "TERMS AND CONDITIONS RESPONSE");
-      return response.data[0];
+      return response;
     } catch (error) {
       return rejectWithValue("Failed to fetch Terms and Conditions");
     }

@@ -23,7 +23,7 @@ export const fetchFooterData = createAsyncThunk(
     try {
       console.log("FETCHING FAQS");
       const response = await FooterService.getFooterData();
-      return response.data[0];
+      return response;
     } catch (error) {
       return rejectWithValue("Failed to fetch FAQs");
     }
