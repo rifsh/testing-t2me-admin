@@ -23,6 +23,7 @@ import { useSelector } from "react-redux";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import OfferDateValidation from "./OfferDateValidation";
+import { COUPON_STATUS } from "constants/CouponStatus";
 
 dayjs.extend(isBetween);
 
@@ -152,11 +153,12 @@ const getValidAndActiveCoupons = (
       currentDate
     );
 
-    // Filter out expired coupons
-    if (status.status === "expired") return false;
+    if (status.status === COUPON_STATUS.EXPIRED) return false;
 
-    // If coupon doesn't require dates (always active), include it
-    if (!ec.coupons.date_required || status.status === "always_active") {
+    if (
+      !ec.coupons.date_required ||
+      status.status === COUPON_STATUS.ALWAYS_ACTIVE
+    ) {
       return true;
     }
 
@@ -178,7 +180,7 @@ const getValidAndActiveCoupons = (
       return hasOverlap;
     }
 
-    return status.status === "active";
+    return status.status === COUPON_STATUS.ACTIVE;
   });
 };
 
