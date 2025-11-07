@@ -49,7 +49,7 @@ import { debounce } from "lodash";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { BOOKING_TYPE } from "constants/AppConstants";
-import { eventType, paymentFilterTypes, paymentModeFilters, paymentPlatformFilters, statusFilters } from "constants/LoggerConstants";
+import { eventType, paymentFilterTypes, paymentModeFilters, paymentPlatformFilters, statusFilters, triggeredText } from "constants/LoggerConstants";
 
 const { Text, Paragraph, Title } = Typography;
 
@@ -76,10 +76,22 @@ const getColorFromString = (colorStr) => {
     return colorMap[colorStr] || colorMap.default;
 };
 
+const getDisplayText = (text) => {
+    if (!text) return "No details available";
+    const triggerIndex = text.indexOf(triggeredText);
+
+    if (triggerIndex !== -1) {
+        return text.slice(0, triggerIndex).trim();
+    }
+
+    return text;
+};
+
 // Enhanced component to handle the batch details display with better UI
 const BatchDetailsDisplay = ({ details, type, eventType, record }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const displayText = getDisplayText(details);
 
     // Extract key metrics from batch details dynamically
     const extractMetrics = (text) => {
@@ -183,7 +195,7 @@ const BatchDetailsDisplay = ({ details, type, eventType, record }) => {
                         }
                         style={{ marginBottom: 0 }}
                     >
-                        {details || "No details available"}
+                        {displayText}
                     </Paragraph>
 
                     <div style={{ marginTop: "4px", display: "flex", gap: "12px" }}>
@@ -495,14 +507,13 @@ const AppSchedulerList = () => {
         (state) => state.apscheduler
     );
     const [searchTerm, setSearchTerm] = useState("");
-    const [number, setNumber] = useState("");
     const [viewMode, setViewMode] = useState("table");
     const [selectedType, setSelectedType] = useState("all");
     const [selectedEventType, setSelectedEventType] = useState("all");
     const [selectedpaymentMode, setSelectedpaymentMode] = useState("all");
     const [selectedPaymentPlatform, setSelectedPaymentPlatform] = useState("all");
     const [showSummary, setShowSummary] = useState(true);
-    const [showFilters, setShowFilters] = useState(true);
+    const [showFilters, setShowFilters] = useState(false);
     const [activeFilters, setActiveFilters] = useState(0);
 
     useEffect(() => {
@@ -679,7 +690,9 @@ const AppSchedulerList = () => {
             title: "Details",
             dataIndex: "scheduler_details",
             render: (text, record) => (
-                <BatchDetailsDisplay details={text} type={record.types} eventType={record.event_type} record={record} />
+                <>
+                    <BatchDetailsDisplay details={text} type={record.types} eventType={record.event_type} record={record} />
+                </>
             ),
             width: "50%",
         },

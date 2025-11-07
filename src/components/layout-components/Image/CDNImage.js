@@ -33,8 +33,17 @@ const CDNImage = ({
         setHasError(false);
     };
 
-    // Generate the full image URL if we have a valid source
-    const imageUrl = src && src !== "images" ? `${CDN_PATH}/${src}` : null;
+    // ✅ Corrected image URL logic
+    let imageUrl = null;
+    if (src && src !== "images") {
+        if (src.startsWith("media")) {
+            imageUrl = `${CDN_PATH}/${src}`;
+        } else if (src.startsWith("http") || src.startsWith("/")) {
+            imageUrl = src;
+        } else {
+            imageUrl = `${CDN_PATH}/${src}`;
+        }
+    }
 
     // Loading indicators
     const renderLoadingIndicator = () => {
@@ -56,7 +65,7 @@ const CDNImage = ({
                         style={{
                             height,
                             width,
-                            ...style
+                            ...style,
                         }}
                         className={className}
                     />
@@ -88,23 +97,7 @@ const CDNImage = ({
             }}
             className={`${className} rounded-lg`}
         >
-            <div className="flex flex-col items-center">
-                <div
-                    style={{
-                        height,
-                        width,
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        backgroundColor: "#f0f0f0",
-                        color: "#888",
-                        ...style,
-                    }}
-                    className={className}
-                >
-                    No Image
-                </div>
-            </div>
+            No Image
         </div>
     );
 
@@ -118,9 +111,7 @@ const CDNImage = ({
     return (
         <div className="relative overflow-hidden" style={{ height, width }}>
             {isLoading && (
-                <div className="absolute inset-0 z-10">
-                    {renderLoadingIndicator()}
-                </div>
+                <div className="absolute inset-0 z-10">{renderLoadingIndicator()}</div>
             )}
 
             <AntImage

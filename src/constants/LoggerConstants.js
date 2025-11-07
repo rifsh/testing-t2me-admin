@@ -29,3 +29,5 @@ export const paymentFilterTypes = {
     paymentMode: 'payment_mode',
     paymentPlatform: 'payment_platform',
 }
+
+export const triggeredText = '--- [Triggered from'
