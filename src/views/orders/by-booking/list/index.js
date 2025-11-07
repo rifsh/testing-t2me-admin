@@ -554,6 +554,7 @@ const BookingList = () => {
         setSelectedEventType(resetType);
         setCurrentPage(resetPage);
         setIsTypeChanging(true);
+        navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking?type=ticket`, { replace: true })
 
         dispatch(
             getOrderByBookings({
