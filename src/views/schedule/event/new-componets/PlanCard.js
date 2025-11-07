@@ -1,5 +1,11 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Calendar, Plus } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Plus,
+  AlertCircle,
+} from "lucide-react";
 import { Button, Modal, message } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { setScheduleFormData } from "store/slices/scheduleSlice";
@@ -19,6 +25,7 @@ import {
   validateDateRange,
   getBlockingMessage,
 } from "../utils/blockingUtils";
+import { EDIT } from "constants/AppConstants";
 
 const formatDateTime = (date) => {
   if (!date) return null;
@@ -61,12 +68,18 @@ const parseTimeString = (timeStr) => {
   return { hour, minute };
 };
 
-const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
+const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
   const dispatch = useDispatch();
   const { eventDetails } = useSelector((state) => state.event || {});
   const { scheduleFormData, scheduleDetails, checkedscheduleDetails } =
     useSelector((state) => state.schedules);
   const [blockedEventIds, setBlockedEventIds] = useState(new Set());
+  // After other useState declarations (around line ~150-180)
+  const [showBlockedDatesWarningModal, setShowBlockedDatesWarningModal] =
+    useState(false);
+  const [excludedBlockedDates, setExcludedBlockedDates] = useState([]);
+  const [pendingBlockedDateChange, setPendingBlockedDateChange] =
+    useState(null);
 
   // ==================== REFS ====================
   const lastSavedData = useRef(null);
@@ -635,7 +648,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     }
 
     // Check date order: ad < booking
-    if (adStartDateTime >= bookingStartDateTime) {
+    if (adStartDateTime > bookingStartDateTime) {
       console.log("❌ Ad time must be before booking time");
       message.error("Advertisement time must be before Booking time");
       return false;
@@ -714,8 +727,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     console.log("✅ All validations passed");
     return true;
   };
-
-  // ==================== EVENT HANDLERS WITH VALIDATION ====================
+  // FIXED: Better validation with immediate response
   const handleAdStartTimeChange = (date) => {
     if (isScheduleBlocked) {
       message.error("Cannot modify: Schedule is locked due to active bookings");
@@ -748,12 +760,22 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       return;
     }
 
-    // VALIDATION: ad < booking
-    if (bookingStartDateTime && date >= bookingStartDateTime) {
-      message.error("Advertisement time must be before Booking time");
-      return; // Don't update - validation failed
+    // ✅ FIX: Check against CURRENT bookingStartDateTime, not stale state
+    if (bookingStartDateTime) {
+      const currentBooking = new Date(bookingStartDateTime);
+      const newAd = new Date(date);
+
+      // Clear milliseconds for fair comparison
+      currentBooking.setMilliseconds(0);
+      newAd.setMilliseconds(0);
+
+      if (newAd >= currentBooking) {
+        message.error("Advertisement time must be BEFORE Booking time");
+        return; // Don't update - validation failed
+      }
     }
 
+    // ✅ Validation passed, update state
     setAdStartDateTime(date);
     form?.setFieldValue("ad_start_date_time", date);
 
@@ -796,10 +818,19 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       return;
     }
 
-    // VALIDATION: booking > ad
-    if (adStartDateTime && date <= adStartDateTime) {
-      message.error("Booking time must be after Advertisement time");
-      return; // Don't update - validation failed
+    // ✅ FIX: Check against CURRENT adStartDateTime, not stale state
+    if (adStartDateTime) {
+      const currentAd = new Date(adStartDateTime);
+      const newBooking = new Date(date);
+
+      // Clear milliseconds for fair comparison
+      currentAd.setMilliseconds(0);
+      newBooking.setMilliseconds(0);
+
+      if (newBooking <= currentAd) {
+        message.error("Booking time must be AFTER Advertisement time");
+        return; // Don't update - validation failed
+      }
     }
 
     // Check if we need to reset event dates
@@ -830,6 +861,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       }
     }
 
+    // ✅ Validation passed, update state
     setBookingStartDateTime(date);
     form?.setFieldValue("booking_start_date_time", date);
 
@@ -843,7 +875,43 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     message.success("Booking time updated successfully");
   };
 
+  // ✅ UPDATED: Helper function to check excluded blocked dates
+  const getExcludedBlockedDates = (startDate, endDate, blockedDatesSet) => {
+    if (!blockedDatesSet || blockedDatesSet.size === 0) {
+      return [];
+    }
+
+    const startDay = dayjs(startDate).tz(timezone).startOf("day");
+    const endDay = dayjs(endDate).tz(timezone).startOf("day");
+    const excluded = [];
+
+    blockedDatesSet.forEach((dateStr) => {
+      const blockedDay = dayjs(dateStr, "YYYY-MM-DD")
+        .tz(timezone)
+        .startOf("day");
+
+      // If blocked date is outside the range, it's excluded
+      if (
+        blockedDay.isBefore(startDay, "day") ||
+        blockedDay.isAfter(endDay, "day")
+      ) {
+        excluded.push(dateStr);
+      }
+    });
+
+    return excluded;
+  };
+
+  // ✅ UPDATED: Main handler
   const handleDateRangeChange = (range) => {
+    console.log("📍 handleDateRangeChange called with:", {
+      rangeStart: range.startDate
+        ? new Date(range.startDate).toISOString()
+        : null,
+      rangeEnd: range.endDate ? new Date(range.endDate).toISOString() : null,
+      isSelecting: range.isSelecting,
+    });
+
     // Check blocking first
     if (isScheduleBlocked) {
       message.error("Cannot modify: Schedule is locked due to active bookings");
@@ -855,6 +923,21 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
         setDateRange(range);
         return;
       }
+
+      // ✅ FIX: In edit mode with blocked dates, prevent clearing
+      const blockedDatesSet = getBlockedDatesSet(
+        scheduleFormData,
+        blockingInfo,
+        checkedscheduleDetails
+      );
+
+      if (mode === EDIT && blockedDatesSet && blockedDatesSet.size > 0) {
+        message.error(
+          "Cannot clear dates when there are active bookings. Please select new dates that include all booking dates."
+        );
+        return;
+      }
+
       setDateRange({ startDate: null, endDate: null, isSelecting: false });
       setAllEvents([]);
       blockingChecked.current = false;
@@ -873,7 +956,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       return;
     }
 
-    // VALIDATION: event start > booking
+    // VALIDATION: event start > booking start date
     if (bookingStartDateTime) {
       const bookingDate = dayjs(bookingStartDateTime)
         .tz(timezone)
@@ -882,14 +965,150 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
 
       if (eventStart.isSameOrBefore(bookingDate)) {
         message.error("Event start date must be after Booking date");
-        return; // Don't update - validation failed
+        return;
       }
     }
 
     // VALIDATION: end > start
     if (range.startDate >= range.endDate) {
       message.error("Event end date must be after start date");
-      return; // Don't update - validation failed
+      return;
+    }
+
+    // ✅ NEW VALIDATION: Check if blocked dates are included
+    const blockedDatesSet = getBlockedDatesSet(
+      scheduleFormData,
+      blockingInfo,
+      checkedscheduleDetails
+    );
+
+    console.log("🔒 Blocked dates found:", blockedDatesSet?.size || 0);
+
+    if (mode === EDIT && blockedDatesSet && blockedDatesSet.size > 0) {
+      // Calculate min and max blocked dates
+      const blockedDatesArray = Array.from(blockedDatesSet).map((dateStr) =>
+        dayjs(dateStr, "YYYY-MM-DD").tz(timezone).startOf("day")
+      );
+
+      const minBlockedDate = blockedDatesArray.reduce((min, date) =>
+        date.isBefore(min) ? date : min
+      );
+
+      const maxBlockedDate = blockedDatesArray.reduce((max, date) =>
+        date.isAfter(max) ? date : max
+      );
+
+      const newStartDay = dayjs(range.startDate).tz(timezone).startOf("day");
+      const newEndDay = dayjs(range.endDate).tz(timezone).startOf("day");
+
+      console.log("📅 Blocked date boundaries:", {
+        minBlocked: minBlockedDate.format("YYYY-MM-DD"),
+        maxBlocked: maxBlockedDate.format("YYYY-MM-DD"),
+        newStart: newStartDay.format("YYYY-MM-DD"),
+        newEnd: newEndDay.format("YYYY-MM-DD"),
+      });
+
+      // ✅ FIX 1: Block if new start date is AFTER min blocked date
+      if (newStartDay.isAfter(minBlockedDate, "day")) {
+        console.log("❌ Start date is AFTER first booking - BLOCKING");
+        Modal.error({
+          title: (
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: "20px" }}>❌</span>
+              <span>Invalid Start Date</span>
+            </div>
+          ),
+          content: (
+            <div style={{ marginTop: "16px" }}>
+              <div
+                style={{
+                  padding: "12px",
+                  backgroundColor: "#fef2f2",
+                  border: "2px solid #fca5a5",
+                  borderRadius: "8px",
+                  marginBottom: "12px",
+                }}
+              >
+                <p
+                  style={{
+                    fontWeight: "bold",
+                    color: "#991b1b",
+                    marginBottom: "8px",
+                  }}
+                >
+                  ⚠️ Start date cannot be AFTER the first booking date:
+                </p>
+                <p
+                  style={{
+                    color: "#dc2626",
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                  }}
+                >
+                  First booking: {minBlockedDate.format("YYYY-MM-DD")}
+                </p>
+              </div>
+            </div>
+          ),
+          okText: "I Understand",
+          centered: true,
+          width: 520,
+          maskClosable: false,
+        });
+        return;
+      }
+
+      // ✅ FIX 2: Block if new end date is BEFORE max blocked date
+      if (newEndDay.isBefore(maxBlockedDate, "day")) {
+        console.log("❌ End date is BEFORE last booking - BLOCKING");
+        Modal.error({
+          title: (
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: "20px" }}>❌</span>
+              <span>Invalid End Date</span>
+            </div>
+          ),
+          content: (
+            <div style={{ marginTop: "16px" }}>
+              <div
+                style={{
+                  padding: "12px",
+                  backgroundColor: "#fef2f2",
+                  border: "2px solid #fca5a5",
+                  borderRadius: "8px",
+                  marginBottom: "12px",
+                }}
+              >
+                <p
+                  style={{
+                    fontWeight: "bold",
+                    color: "#991b1b",
+                    marginBottom: "8px",
+                  }}
+                >
+                  ⚠️ End date cannot be BEFORE the last booking date:
+                </p>
+                <p
+                  style={{
+                    color: "#dc2626",
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                  }}
+                >
+                  Last booking: {maxBlockedDate.format("YYYY-MM-DD")}
+                </p>
+              </div>
+            </div>
+          ),
+          okText: "I Understand",
+          centered: true,
+          width: 520,
+          maskClosable: false,
+        });
+        return;
+      }
+
+      console.log("✅ All blocked dates are included - VALID");
     }
 
     // Validate against blocking info
@@ -912,24 +1131,212 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       dateRange.startDate.getTime() !== range.startDate.getTime() ||
       dateRange.endDate.getTime() !== range.endDate.getTime();
 
-    if (allEvents.length > 0 && isDateRangeChanged) {
-      // Check if just extending end date
-      const isExtendingEndDate =
-        dateRange.startDate &&
-        dateRange.endDate &&
-        range.startDate.getTime() === dateRange.startDate.getTime() &&
-        range.endDate > dateRange.endDate;
+    console.log("📊 Range check:", {
+      oldRangeExists: !!(dateRange.startDate && dateRange.endDate),
+      isDateRangeChanged,
+      allEventsCount: allEvents.length,
+      shouldCheckExtension: allEvents.length > 0 && isDateRangeChanged,
+    });
 
-      if (!isExtendingEndDate) {
-        // Show confirmation modal
+    if (allEvents.length > 0 && isDateRangeChanged) {
+      // ✅ FIX 3: Handle NULL dates on first edit
+      if (!dateRange.startDate || !dateRange.endDate) {
+        console.log("✅ First time setting dates - NO MODAL NEEDED");
+        proceedWithDateRangeChange(range);
+        return;
+      }
+
+      // ✅ FIX 4: Proper timezone-aware extension check
+      const oldStartDay = dayjs(dateRange.startDate)
+        .tz(timezone)
+        .startOf("day");
+      const oldEndDay = dayjs(dateRange.endDate).tz(timezone).startOf("day");
+      const newStartDay = dayjs(range.startDate).tz(timezone).startOf("day");
+      const newEndDay = dayjs(range.endDate).tz(timezone).startOf("day");
+
+      console.log("🔄 Extension check details:", {
+        oldStart: oldStartDay.format("YYYY-MM-DD"),
+        oldEnd: oldEndDay.format("YYYY-MM-DD"),
+        newStart: newStartDay.format("YYYY-MM-DD"),
+        newEnd: newEndDay.format("YYYY-MM-DD"),
+        newStartBeforeOrEqual_OldStart: newStartDay.isSameOrBefore(
+          oldStartDay,
+          "day"
+        ),
+        newEndAfterOrEqual_OldEnd: newEndDay.isSameOrAfter(oldEndDay, "day"),
+      });
+
+      // Check if new range CONTAINS old range (extension-only, no shrinking)
+      const isExtensionOnly =
+        newStartDay.isSameOrBefore(oldStartDay, "day") &&
+        newEndDay.isSameOrAfter(oldEndDay, "day");
+
+      console.log("🎯 Is Extension Only:", isExtensionOnly);
+
+      if (!isExtensionOnly) {
+        // Range modified (not just extension) - show confirmation modal
+        console.log("⚠️ NOT AN EXTENSION - SHOWING RESET MODAL");
         setPendingDateChange({ type: "dateRange", range });
         setShowResetConfirmModal(true);
         return;
       }
+
+      // ✅ It's a valid extension - proceed without modal
+      console.log("✅ VALID EXTENSION - PROCEEDING WITHOUT MODAL");
     }
 
     // Apply changes
+    console.log("✅ FINAL: Proceeding with date range change");
     proceedWithDateRangeChange(range);
+  };
+
+  // ✅ NEW: Handle blocked dates warning modal
+  const handleBlockedDatesWarningOk = () => {
+    // User clicked OK on the warning - show them the correct dates
+    if (excludedBlockedDates.length > 0) {
+      const minBlockedDate = excludedBlockedDates.sort()[0];
+      const maxBlockedDate =
+        excludedBlockedDates.sort()[excludedBlockedDates.length - 1];
+
+      message.warning({
+        content: (
+          <div>
+            <p style={{ marginBottom: "8px", fontWeight: "bold" }}>
+              ℹ️ Please adjust your dates
+            </p>
+            <p>You can only exclude dates that don't have bookings.</p>
+            <p
+              style={{ color: "#dc2626", fontWeight: "bold", marginTop: "8px" }}
+            >
+              Your selection must include: {minBlockedDate} to {maxBlockedDate}
+            </p>
+          </div>
+        ),
+        duration: 0,
+      });
+    }
+
+    setShowBlockedDatesWarningModal(false);
+    setPendingBlockedDateChange(null);
+    setExcludedBlockedDates([]);
+  };
+
+  const handleBlockedDatesWarningCancel = () => {
+    setShowBlockedDatesWarningModal(false);
+    setPendingBlockedDateChange(null);
+    setExcludedBlockedDates([]);
+  };
+
+  // ✅ NEW: Render blocked dates warning modal
+  const renderBlockedDatesWarningModal = () => {
+    if (excludedBlockedDates.length === 0) return null;
+
+    const sortedExcluded = excludedBlockedDates.sort();
+    const minBlocked = sortedExcluded[0];
+    const maxBlocked = sortedExcluded[sortedExcluded.length - 1];
+
+    return (
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <AlertCircle size={20} className="text-red-600" />
+            <span>Booked Dates Excluded</span>
+          </div>
+        }
+        open={showBlockedDatesWarningModal}
+        onOk={handleBlockedDatesWarningOk}
+        onCancel={handleBlockedDatesWarningCancel}
+        okText="Understood"
+        cancelText="Cancel Selection"
+        width={550}
+        maskClosable={false}
+      >
+        <div className="space-y-4">
+          {/* Error Box */}
+          <div className="p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+            <p className="text-sm font-bold text-red-900 mb-2">
+              ❌ Invalid Date Selection
+            </p>
+            <p className="text-sm text-red-800">
+              Your selected date range does NOT include all booking dates.
+            </p>
+          </div>
+
+          {/* Excluded dates box */}
+          <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+            <p className="text-sm font-semibold text-yellow-900 mb-3">
+              ⚠️ These booked dates are excluded:
+            </p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {excludedBlockedDates.sort().map((date) => (
+                <span
+                  key={date}
+                  className="px-3 py-1 bg-red-200 text-red-900 font-semibold rounded-full text-sm"
+                >
+                  {date}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-yellow-800">
+              These dates have active bookings and cannot be excluded from your
+              event date range.
+            </p>
+          </div>
+
+          {/* Required range box */}
+          <div className="p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+            <p className="text-sm font-semibold text-blue-900 mb-2">
+              ✓ Your selection MUST include:
+            </p>
+            <p className="text-sm text-blue-800 font-bold">
+              From: <span className="text-base">{minBlocked}</span>
+            </p>
+            <p className="text-sm text-blue-800 font-bold">
+              To: <span className="text-base">{maxBlocked}</span>
+            </p>
+          </div>
+
+          {/* Instruction box */}
+          <div className="p-4 bg-green-50 border-2 border-green-300 rounded-lg">
+            <p className="text-sm font-semibold text-green-900 mb-2">
+              📋 What to do:
+            </p>
+            <ul className="text-sm text-green-800 space-y-1">
+              <li>
+                ✓ Extend your start date to{" "}
+                <strong>ON or BEFORE {minBlocked}</strong>
+              </li>
+              <li>
+                ✓ Extend your end date to{" "}
+                <strong>ON or AFTER {maxBlocked}</strong>
+              </li>
+              <li>✓ You can add dates before or after the booking dates</li>
+              <li>✓ You CANNOT exclude booking dates</li>
+            </ul>
+          </div>
+
+          {/* Current selection info */}
+          {pendingBlockedDateChange?.range && (
+            <div className="p-3 bg-gray-100 rounded-lg border border-gray-300">
+              <p className="text-xs font-semibold text-gray-700 mb-2">
+                Your Current Selection:
+              </p>
+              <p className="text-xs text-gray-600">
+                <strong>Start:</strong>{" "}
+                {dayjs(pendingBlockedDateChange.range.startDate).format(
+                  "YYYY-MM-DD"
+                )}
+                <br />
+                <strong>End:</strong>{" "}
+                {dayjs(pendingBlockedDateChange.range.endDate).format(
+                  "YYYY-MM-DD"
+                )}
+              </p>
+            </div>
+          )}
+        </div>
+      </Modal>
+    );
   };
 
   const proceedWithDateRangeChange = (range) => {
@@ -1434,20 +1841,20 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       const isVisible = !(eventEndDay < weekStart || eventStartDay > weekEnd);
 
       if (isVisible) {
-        console.log("✅ Event is visible:", {
-          id: event.id,
-          eventStartDay,
-          eventEndDay,
-          weekRange: `${weekStart}-${weekEnd}`,
-        });
+        // console.log("✅ Event is visible:", {
+        //   id: event.id,
+        //   eventStartDay,
+        //   eventEndDay,
+        //   weekRange: `${weekStart}-${weekEnd}`,
+        // });
       }
 
       return isVisible;
     });
 
-    console.log(
-      `📊 Returning ${visibleEvents.length} visible events out of ${allEvents.length} total`
-    );
+    // console.log(
+    //   `📊 Returning ${visibleEvents.length} visible events out of ${allEvents.length} total`
+    // );
 
     return visibleEvents.map((event) => {
       // ✅ NORMALIZE the event before passing to TimeSelector
@@ -1479,12 +1886,12 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
         originalEndDay: event.endTime.day,
       };
 
-      console.log("✅ Normalized event for TimeSelector:", {
-        id: normalized.id,
-        adjustedStartDay: normalized.startTime.day,
-        adjustedEndDay: normalized.endTime.day,
-        is_midnight: normalized.is_midnight_passed,
-      });
+      // console.log("✅ Normalized event for TimeSelector:", {
+      //   id: normalized.id,
+      //   adjustedStartDay: normalized.startTime.day,
+      //   adjustedEndDay: normalized.endTime.day,
+      //   is_midnight: normalized.is_midnight_passed,
+      // });
 
       return normalized;
     });
@@ -1507,6 +1914,12 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
   const canNavigateNext = currentWeekStart + 7 < totalDays;
   const canNavigatePrev = currentWeekStart > 0;
   const hasValidDateRange = dateRange.startDate && dateRange.endDate;
+  // ✅ ADD THIS - Define blockedDatesSet variable BEFORE JSX
+  const blockedDatesSet = getBlockedDatesSet(
+    scheduleFormData,
+    blockingInfo,
+    checkedscheduleDetails
+  );
 
   // ==================== RENDER ====================
   return (
@@ -1560,6 +1973,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
         <div className="col-span-3 space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
+              {/* In CalendarViewCard render section */}
               <CompactDateTimePicker
                 label="Advertisement Start Time"
                 value={adStartDateTime}
@@ -1575,7 +1989,8 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                   checkedscheduleDetails
                 )}
                 isScheduleBlocked={isScheduleBlocked}
-                // REMOVED: disableToday prop
+                isEditMode={mode === EDIT} // ✅ ADD THIS
+                originalDateTime={scheduleFormData?.ad_start_date_time} // ✅ ADD THIS
               />
             </div>
 
@@ -1596,7 +2011,8 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                   checkedscheduleDetails
                 )}
                 isScheduleBlocked={isScheduleBlocked}
-                // REMOVED: disableToday prop
+                isEditMode={mode === EDIT} // ✅ ADD THIS
+                originalDateTime={scheduleFormData?.booking_start_date_time} // ✅ ADD THIS
               />
             </div>
           </div>
@@ -1617,7 +2033,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
                 initialStartDate={dateRange.startDate}
                 initialEndDate={dateRange.endDate}
                 minDate={getEventMinDate()}
-                blockedDates={getBlockedDatesSet()}
+                blockedDates={blockedDatesSet} // ✅ NOW USES DEFINED VARIABLE
                 isScheduleBlocked={isScheduleBlocked}
                 isEditMode={true}
                 timezone={timezone}
@@ -1996,7 +2412,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
         blockingInfo={blockingInfo}
         checkedscheduleDetails={checkedscheduleDetails}
       />
-
+      {renderBlockedDatesWarningModal()}
       {/* RESET CONFIRMATION MODAL */}
       <Modal
         title="Reset All Time Slots"

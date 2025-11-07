@@ -211,7 +211,7 @@ const ResponseShowModal = ({
 
     // Confirm/Submit button (hide when showing retry)
     if (!showRetry) {
-      console.log("Adding submit button");
+      // console.log("Adding submit button");
       buttons.push(
         <Button
           key="submit"
@@ -226,7 +226,7 @@ const ResponseShowModal = ({
       );
     }
 
-    console.log("Footer buttons:", buttons.length);
+    // console.log("Footer buttons:", buttons.length);
     return buttons;
   };
 

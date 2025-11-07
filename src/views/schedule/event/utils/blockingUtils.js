@@ -164,6 +164,7 @@ export const formatDateTimeForAPI = (date) => {
 
 /**
  * Get blocked dates as a Set of YYYY-MM-DD strings
+ * ✅ FIXED: Now works with actual API response structure
  */
 export const getBlockedDatesSet = (
   scheduleFormData,
@@ -172,40 +173,64 @@ export const getBlockedDatesSet = (
 ) => {
   const blockedDates = new Set();
 
-  // FIXED: Return empty set if no blocking info or it's initial load
-  if (!blockingInfo || !scheduleFormData || !checkedScheduleDetails) {
+  console.log("🔍 getBlockedDatesSet called with:", {
+    hasScheduleFormData: !!scheduleFormData,
+    hasBlockingInfo: !!blockingInfo,
+    hasCheckedScheduleDetails: !!checkedScheduleDetails,
+    showDatesLength: checkedScheduleDetails?.show_dates?.length || 0,
+  });
+
+  // ✅ FIX 1: Return empty set if critical data missing
+  if (!checkedScheduleDetails || !checkedScheduleDetails.show_dates) {
+    console.log(
+      "⚠️ No checkedScheduleDetails or show_dates - returning empty set"
+    );
     return blockedDates;
   }
 
-  // FIXED: If schedule is completely blocked, block all dates
-  if (
-    blockingInfo.isScheduleBlocked ||
-    blockingInfo.isVenueBlocked ||
-    blockingInfo.isPlaceBlocked
-  ) {
-    // Block all dates in the event range
-    if (scheduleFormData.timeSlots) {
-      Object.keys(scheduleFormData.timeSlots).forEach((dateStr) => {
-        blockedDates.add(dateStr);
-      });
+  // ✅ FIX 2: Extract dates from show_dates array
+  // Each show_date has: id, start_date, end_date, show_times
+  // show_times has bookings indicated by ticket_used_count > 0
+  checkedScheduleDetails.show_dates.forEach((showDate) => {
+    // Get the date string (YYYY-MM-DD format)
+    const dateStr = showDate.start_date;
+
+    if (!dateStr) {
+      console.log("⚠️ show_date has no start_date:", showDate);
+      return;
     }
-    return blockedDates;
-  }
 
-  // Add dates that are completely blocked
-  if (blockingInfo.blockedDates && blockingInfo.blockedDates.size > 0) {
-    blockingInfo.blockedDates.forEach((showDateId) => {
-      // Find the corresponding date string from show_dates
-      if (checkedScheduleDetails?.show_dates) {
-        const showDate = checkedScheduleDetails.show_dates.find(
-          (sd) => sd.show_date_id === showDateId
-        );
-        if (showDate?.start_date) {
-          blockedDates.add(showDate.start_date);
-        }
-      }
-    });
-  }
+    // ✅ FIX 3: Check if this date has ANY show times with BOOKINGS
+    // A date is "blocked" if it has show_times with ticket_used_count > 0
+    const hasBookings =
+      showDate.show_times && showDate.show_times.length > 0
+        ? showDate.show_times.some((showTime) => {
+            // Check if this time slot has any booked tickets
+            const hasTicketBookings = showTime.show_time_ticket_types
+              ? showTime.show_time_ticket_types.some(
+                  (ticketType) => ticketType.ticket_used_count > 0
+                )
+              : false;
+
+            console.log(`  📅 ${dateStr} - TimeSlot ${showTime.id}:`, {
+              ticketTypesCount: showTime.show_time_ticket_types?.length || 0,
+              hasTicketBookings,
+            });
+
+            return hasTicketBookings;
+          })
+        : false;
+
+    if (hasBookings) {
+      blockedDates.add(dateStr);
+      console.log(`  ✅ Added to blocked dates: ${dateStr}`);
+    }
+  });
+
+  console.log("📊 Final blocked dates set:", {
+    count: blockedDates.size,
+    dates: Array.from(blockedDates),
+  });
 
   return blockedDates;
 };

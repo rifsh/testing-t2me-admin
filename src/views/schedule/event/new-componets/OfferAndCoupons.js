@@ -42,32 +42,37 @@ const SELECTION_LEVELS = {
 const getTimeSlotsByDate = (showDates) => {
   const timeSlotMap = new Map();
 
-  // Add safety check
   if (!showDates || !Array.isArray(showDates)) {
+    console.warn("No showDates provided");
     return timeSlotMap;
   }
 
-  showDates.forEach((showDate) => {
-    // Add safety check for showtimes
-    if (!showDate.showtimes || !Array.isArray(showDate.showtimes)) {
-      return; // Skip this showDate if showtimes is missing
+  showDates.forEach((showDate, index) => {
+    // FIX: Use show_times instead of showtimes
+    if (!showDate.show_times || !Array.isArray(showDate.show_times)) {
+      console.warn(
+        `Skipping showDate ${showDate.start_date} - no valid show_times`
+      );
+      return;
     }
 
     const dateStr = showDate.start_date;
-    const timeSlots = showDate.showtimes.map((st) => ({
-      id:
-        st.id ||
-        st.showtime_id ||
-        `${st.showtime_id}_${dateStr}-${st.start_time}`,
+
+    // Map show_times to timeSlots
+    const timeSlots = showDate.show_times.map((st) => ({
+      id: st.show_time_id || `${st.show_time_id}_${dateStr}-${st.start_time}`,
       start_time: st.start_time,
       end_time: st.end_time,
       ticket_set: st.ticket_set,
       ticket_structure_id: st.ticket_structure_id,
+      seat_structure_id: st.seat_structure_id,
       date: dateStr,
     }));
+
     timeSlotMap.set(dateStr, timeSlots);
   });
 
+  console.log("Final timeSlotsByDate size:", timeSlotMap.size);
   return timeSlotMap;
 };
 
@@ -273,7 +278,11 @@ const OfferCard = ({
 
   const availableDates = useMemo(() => {
     const dates = Array.from(timeSlotsByDate.keys());
-
+    console.log("All show dates:", dates);
+    console.log("Offer date range:", {
+      start: itemData.start_date,
+      end: itemData.end_date,
+    });
     if (!itemData.start_date || !itemData.end_date) {
       return dates.map((dateStr) => ({
         date: dateStr,
@@ -285,6 +294,12 @@ const OfferCard = ({
     const start = dayjs(itemData.start_date);
     const end = dayjs(itemData.end_date);
 
+    const filtered = dates.filter((dateStr) => {
+      const date = dayjs(dateStr);
+      return date.isBetween(start, end, "day", "[]");
+    });
+
+    console.log("Filtered available dates:", filtered);
     // Filter dates that fall within the offer's date range
     return dates
       .filter((dateStr) => {
@@ -1003,9 +1018,8 @@ const OfferAndCoupons = ({ onSubmit, form, onBack }) => {
 
   // Initialize with valid and active offers from eventDetails
   useEffect(() => {
-    if (validAndActiveOffers && validAndActiveOffers.length > 0) {
+    if (validAndActiveOffers?.length > 0) {
       const mappedOffers = validAndActiveOffers.map((eo) => {
-        // For offers that don't require dates
         if (!eo.offer.date_required) {
           return {
             offer: {
@@ -1018,23 +1032,13 @@ const OfferAndCoupons = ({ onSubmit, form, onBack }) => {
           };
         }
 
-        // Auto-adjust dates to fit schedule
+        // Ensure dates fit schedule range
         const adjustedDates = autoAdjustDateToSchedule(
           eo.offer.start_date,
           eo.offer.end_date,
           scheduleStartDate,
           scheduleEndDate
         );
-
-        // if (adjustedDates.adjusted) {
-        //   message.info(
-        //     `Offer "${eo.offer.name}" dates adjusted to fit schedule: ${dayjs(
-        //       adjustedDates.start_date
-        //     ).format("MMM DD")} - ${dayjs(adjustedDates.end_date).format(
-        //       "MMM DD, YYYY"
-        //     )}`
-        //   );
-        // }
 
         return {
           offer: {
@@ -1047,8 +1051,6 @@ const OfferAndCoupons = ({ onSubmit, form, onBack }) => {
         };
       });
       setSelectedOffers(mappedOffers);
-    } else {
-      setSelectedOffers([]);
     }
   }, [validAndActiveOffers, scheduleStartDate, scheduleEndDate]);
 
