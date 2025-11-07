@@ -684,7 +684,7 @@ const AppSchedulerList = () => {
             payment_platform: selectedPaymentPlatform === 'all' ? null : selectedPaymentPlatform,
         }));
 
-    }, [searchTerm, selectedEventType, selectedType, selectedpaymentMode, selectedPaymentPlatform]);
+    }, [searchTerm]);
 
     const handleBookingClick = (bookingId, record) => {
         if (record?.event_type === BOOKING_TYPE.EVENT_SEAT && !record?.show_seat_id) {

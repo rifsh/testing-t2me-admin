@@ -15,7 +15,8 @@ const BookingOfferCard = ({ offerData }) => {
     if (!offerData || offerData.length === 0) {
         return null;
     }
-
+    console.log("offerlogssss", offerData);
+    
     return (
         <div style={{ marginTop: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>

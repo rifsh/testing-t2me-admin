@@ -37,6 +37,7 @@ import { BOOKING_TYPE } from "constants/AppConstants";
 import { FaTicketAlt } from "react-icons/fa";
 import { CDN_PATH } from "configs/AppConfig";
 import BookingOfferCard from "../components/BookingOfferCard";
+import SeatOfferCard from "../components/SeatOfferCard";
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
@@ -119,6 +120,8 @@ const UserOrderDetailsPage = () => {
 
   // Render ticket bookings with collapsible tickets
   const renderTicketBookings = () => {
+    console.log("BookingOffer", bookingsData);
+
     return (
       <div style={{ marginTop: 16 }}>
         {bookingsData.map((booking, index) => {
@@ -156,7 +159,7 @@ const UserOrderDetailsPage = () => {
                       <FaTicketAlt style={{ fontSize: 16 }} />
                     </Badge>
                     <Text strong style={{ fontSize: 16, color: "#52c41a" }}>
-                      ₹{booking.amount || 0}
+                      {booking.amount || 0}
                     </Text>
                   </div>
                 </div>
@@ -168,7 +171,7 @@ const UserOrderDetailsPage = () => {
                   <Statistic
                     title="Total Amount"
                     value={booking.amount || 0}
-                    prefix="₹"
+                    prefix=""
                     valueStyle={{
                       fontSize: 16,
                       color: "#52c41a",
@@ -180,7 +183,7 @@ const UserOrderDetailsPage = () => {
                   <Statistic
                     title="Original Amount"
                     value={booking.original_amount || 0}
-                    prefix="₹"
+                    prefix=""
                     valueStyle={{ fontSize: 16 }}
                   />
                 </Col>
@@ -273,7 +276,7 @@ const UserOrderDetailsPage = () => {
                                 </Text>
                                 <div>
                                   <Tag color="green" style={{ marginTop: 4 }}>
-                                    {item.num_of_tickets} tickets × ₹
+                                    {item.num_of_tickets} tickets ×
                                     {item.ticket_type?.price || 0}
                                   </Tag>
                                 </div>
@@ -310,7 +313,7 @@ const UserOrderDetailsPage = () => {
                                     strong
                                     style={{ color: "#52c41a", fontSize: 18 }}
                                   >
-                                    ₹
+
                                     {(item.ticket_type?.price || 0) *
                                       (item.num_of_tickets || 0)}
                                   </Text>
@@ -355,6 +358,8 @@ const UserOrderDetailsPage = () => {
 
   // Render seat bookings with collapsible seats
   const renderSeatBookings = () => {
+    console.log("sampleofferlist", bookingsData);
+
     return (
       <div style={{ marginTop: 16 }}>
         {bookingsData.map((booking, index) => (
@@ -459,9 +464,11 @@ const UserOrderDetailsPage = () => {
               </Descriptions.Item>
             </Descriptions>
 
-            {booking.booking_ticket_offer &&
-              booking.booking_ticket_offer.length > 0 && (
-                <BookingOfferCard offerData={booking.booking_ticket_offer} />
+            {booking.offer_details &&
+              booking.offer_details.length > 0 && (
+                <SeatOfferCard
+                  offerData={booking.offer_details}
+                />
               )}
 
             <Collapse
