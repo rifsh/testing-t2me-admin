@@ -511,6 +511,7 @@ const ActivityLogsList = () => {
     const handleRefresh = () => {
         setSelectedType('all');
         setSelectedEventType('all');
+        setSearchTerm('');
         dispatch(fetchAllActivityLogs(DEFAULT_PAGE_SIZE));
     };
 

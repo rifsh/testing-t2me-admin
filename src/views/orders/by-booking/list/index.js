@@ -28,7 +28,7 @@ import {
     InfoCircleOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getOrderByBookings } from "store/slices/ordersSlice";
 import utils from "utils";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
@@ -44,12 +44,13 @@ const { Text } = Typography;
 const BookingList = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-
+    const [searchParams] = useSearchParams();
+    const type = searchParams.get("type");
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE.size);
     const [selectedPaymentStatus, setSelectedPaymentStatus] = useState('all');
-    const [selectedEventType, setSelectedEventType] = useState('ticket');
+    const [selectedEventType, setSelectedEventType] = useState(type);
     const [isTypeChanging, setIsTypeChanging] = useState(false); // Track type changes
 
     const { ordersByBooking, loading, pagination } = useSelector(
@@ -59,6 +60,12 @@ const BookingList = () => {
     useEffect(() => {
         fetchOrders(1, pageSize);
     }, []);
+
+    useEffect(() => {
+        setSelectedEventType(type);
+        console.log(type);
+
+    }, [type]);
 
     const fetchOrders = (page = currentPage, size = pageSize, extraParams = {}) => {
         dispatch(
@@ -506,7 +513,6 @@ const BookingList = () => {
 
     const handleSelectEventType = (type) => {
         setIsTypeChanging(true); // Set flag to hide data during transition
-        setSelectedEventType(type);
         setCurrentPage(1);
 
         // Clear search and payment status when changing type to avoid confusion
@@ -514,7 +520,7 @@ const BookingList = () => {
         setSelectedPaymentStatus("all");
 
         fetchOrders(1, pageSize, { type });
-        // navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking?type=${type}`, { replace: true })
+        navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking?type=${type}`, { replace: true })
         // Reset the flag after a brief delay to allow new data to load
         setTimeout(() => {
             setIsTypeChanging(false);
@@ -548,6 +554,7 @@ const BookingList = () => {
         setSelectedEventType(resetType);
         setCurrentPage(resetPage);
         setIsTypeChanging(true);
+        navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking?type=ticket`, { replace: true })
 
         dispatch(
             getOrderByBookings({
