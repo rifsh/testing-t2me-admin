@@ -629,6 +629,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
       !dateRange.startDate ||
       !dateRange.endDate
     ) {
+      message.error("Please set all required dates");
       console.log("❌ Missing required dates");
       return false;
     }
@@ -636,6 +637,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     // Check date order: ad < booking
     if (adStartDateTime >= bookingStartDateTime) {
       console.log("❌ Ad time must be before booking time");
+      message.error("Advertisement time must be before Booking time");
       return false;
     }
 
@@ -663,6 +665,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     // Only fail if event starts BEFORE booking date (not same day)
     if (eventStartOfDay < new Date(bookingDate.setHours(0, 0, 0, 0))) {
       console.log("❌ Event must not start before booking date");
+      message.error("Event start date must be on or after Booking date");
       return false;
     }
 
@@ -671,8 +674,15 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
     const hasEventsInRedux =
       scheduleFormData?.show_dates && scheduleFormData.show_dates.length > 0;
 
-    if (!hasEventsInState && !hasEventsInRedux) {
-      console.log("❌ No time slots found");
+    // ✅ NOW PROPERLY DEFINED
+    const hasTimeSlotsInRedux =
+      scheduleFormData?.timeSlots &&
+      Object.keys(scheduleFormData.timeSlots).length > 0;
+
+    // Then used in validation
+    if (!hasEventsInState && !hasEventsInRedux && !hasTimeSlotsInRedux) {
+      console.log("❌ No time slots found in any source");
+      message.error("Please add at least one time slot");
       return false;
     }
 
@@ -1008,9 +1018,9 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo }) => {
 
     // Validate required dates
     if (!isAllDatesValid()) {
-      message.error(
-        "Please fill in all required dates and configure at least one time slot"
-      );
+      // message.error(
+      //   "Please fill in all required dates and configure at least one time slot"
+      // );
       return;
     }
 

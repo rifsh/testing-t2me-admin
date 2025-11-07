@@ -42,21 +42,29 @@ const SELECTION_LEVELS = {
 const getTimeSlotsByDate = (showDates) => {
   const timeSlotMap = new Map();
 
+  // Add safety check
+  if (!showDates || !Array.isArray(showDates)) {
+    return timeSlotMap;
+  }
+
   showDates.forEach((showDate) => {
+    // Add safety check for showtimes
+    if (!showDate.showtimes || !Array.isArray(showDate.showtimes)) {
+      return; // Skip this showDate if showtimes is missing
+    }
+
     const dateStr = showDate.start_date;
-    const timeSlots = (showDate.show_times || []).map((st) => ({
+    const timeSlots = showDate.showtimes.map((st) => ({
       id:
         st.id ||
-        st.show_time_id ||
-        st.showtimeid ||
-        `${dateStr}-${st.start_time}`,
+        st.showtime_id ||
+        `${st.showtime_id}_${dateStr}-${st.start_time}`,
       start_time: st.start_time,
       end_time: st.end_time,
       ticket_set: st.ticket_set,
       ticket_structure_id: st.ticket_structure_id,
       date: dateStr,
     }));
-
     timeSlotMap.set(dateStr, timeSlots);
   });
 
@@ -65,15 +73,21 @@ const getTimeSlotsByDate = (showDates) => {
 
 // ============ FILTER VALID & ACTIVE OFFERS/COUPONS ============
 
-const getValidAndActiveOffers = (eventOffers) => {
+const getValidAndActiveOffers = (
+  eventOffers,
+  scheduleStartDate,
+  scheduleEndDate
+) => {
   if (!eventOffers || !Array.isArray(eventOffers)) return [];
 
   const currentDate = new Date();
+  const scheduleStart = scheduleStartDate ? dayjs(scheduleStartDate) : null;
+  const scheduleEnd = scheduleEndDate ? dayjs(scheduleEndDate) : null;
 
   return eventOffers.filter((eo) => {
     if (!eo.offer) return false;
 
-    // Check if offer is active (not expired, not upcoming, or has no date requirement)
+    // Check if offer is active (not expired)
     const status = OfferDateValidation.getOfferStatus(
       eo.offer.start_date,
       eo.offer.end_date,
@@ -81,15 +95,47 @@ const getValidAndActiveOffers = (eventOffers) => {
       currentDate
     );
 
-    // Only show active and upcoming offers (not expired)
-    return status.status === "active" || status.status === "always_active";
+    // Filter out expired offers
+    if (status.status === "expired") return false;
+
+    // If offer doesn't require dates (always active), include it
+    if (!eo.offer.date_required || status.status === "always_active") {
+      return true;
+    }
+
+    // If offer has dates, check if they overlap with schedule dates
+    if (
+      scheduleStart &&
+      scheduleEnd &&
+      eo.offer.start_date &&
+      eo.offer.end_date
+    ) {
+      const offerStart = dayjs(eo.offer.start_date);
+      const offerEnd = dayjs(eo.offer.end_date);
+
+      // Check if there's any overlap between offer dates and schedule dates
+      const hasOverlap =
+        offerStart.isSameOrBefore(scheduleEnd, "day") &&
+        offerEnd.isSameOrAfter(scheduleStart, "day");
+
+      return hasOverlap;
+    }
+
+    // Only show active offers
+    return status.status === "active";
   });
 };
 
-const getValidAndActiveCoupons = (eventCoupons) => {
+const getValidAndActiveCoupons = (
+  eventCoupons,
+  scheduleStartDate,
+  scheduleEndDate
+) => {
   if (!eventCoupons || !Array.isArray(eventCoupons)) return [];
 
   const currentDate = new Date();
+  const scheduleStart = scheduleStartDate ? dayjs(scheduleStartDate) : null;
+  const scheduleEnd = scheduleEndDate ? dayjs(scheduleEndDate) : null;
 
   return eventCoupons.filter((ec) => {
     if (!ec.coupons) return false;
@@ -100,9 +146,98 @@ const getValidAndActiveCoupons = (eventCoupons) => {
       ec.coupons.date_required,
       currentDate
     );
-    
-    return status.status === "active" || status.status === "always_active";
+
+    // Filter out expired coupons
+    if (status.status === "expired") return false;
+
+    // If coupon doesn't require dates (always active), include it
+    if (!ec.coupons.date_required || status.status === "always_active") {
+      return true;
+    }
+
+    // If coupon has dates, check if they overlap with schedule dates
+    if (
+      scheduleStart &&
+      scheduleEnd &&
+      ec.coupons.start_date &&
+      ec.coupons.end_date
+    ) {
+      const couponStart = dayjs(ec.coupons.start_date);
+      const couponEnd = dayjs(ec.coupons.end_date);
+
+      // Check if there's any overlap between coupon dates and schedule dates
+      const hasOverlap =
+        couponStart.isSameOrBefore(scheduleEnd, "day") &&
+        couponEnd.isSameOrAfter(scheduleStart, "day");
+
+      return hasOverlap;
+    }
+
+    return status.status === "active";
   });
+};
+
+// ============ AUTO-ADJUST DATES TO SCHEDULE ============
+
+const autoAdjustDateToSchedule = (
+  offerStartDate,
+  offerEndDate,
+  scheduleStartDate,
+  scheduleEndDate
+) => {
+  if (
+    !offerStartDate ||
+    !offerEndDate ||
+    !scheduleStartDate ||
+    !scheduleEndDate
+  ) {
+    return {
+      start_date: offerStartDate,
+      end_date: offerEndDate,
+      adjusted: false,
+    };
+  }
+
+  const offerStart = dayjs(offerStartDate);
+  const offerEnd = dayjs(offerEndDate);
+  const scheduleStart = dayjs(scheduleStartDate);
+  const scheduleEnd = dayjs(scheduleEndDate);
+
+  let adjustedStart = offerStart;
+  let adjustedEnd = offerEnd;
+  let wasAdjusted = false;
+
+  // If offer starts before schedule, adjust to schedule start
+  if (offerStart.isBefore(scheduleStart)) {
+    adjustedStart = scheduleStart;
+    wasAdjusted = true;
+  }
+
+  // If offer ends after schedule, adjust to schedule end
+  if (offerEnd.isAfter(scheduleEnd)) {
+    adjustedEnd = scheduleEnd;
+    wasAdjusted = true;
+  }
+
+  // If offer starts after schedule end, adjust to schedule dates
+  if (adjustedStart.isAfter(scheduleEnd)) {
+    adjustedStart = scheduleStart;
+    adjustedEnd = scheduleEnd;
+    wasAdjusted = true;
+  }
+
+  // If offer ends before schedule start, adjust to schedule dates
+  if (adjustedEnd.isBefore(scheduleStart)) {
+    adjustedStart = scheduleStart;
+    adjustedEnd = scheduleEnd;
+    wasAdjusted = true;
+  }
+
+  return {
+    start_date: adjustedStart.format("YYYY-MM-DD"),
+    end_date: adjustedEnd.format("YYYY-MM-DD"),
+    adjusted: wasAdjusted,
+  };
 };
 
 // ============ OFFER CARD ============
@@ -150,6 +285,7 @@ const OfferCard = ({
     const start = dayjs(itemData.start_date);
     const end = dayjs(itemData.end_date);
 
+    // Filter dates that fall within the offer's date range
     return dates
       .filter((dateStr) => {
         const date = dayjs(dateStr);
@@ -198,9 +334,11 @@ const OfferCard = ({
   );
 
   const handleSelectAllTimeSlots = useCallback(() => {
-    const allIds = availableDates.flatMap(
-      ({ date }) => timeSlotsByDate.get(date)?.map((s) => s.id) || []
-    );
+    const allIds = availableDates.flatMap((date) => {
+      const slots = timeSlotsByDate.get(date.date);
+      // Add safety check
+      return slots && Array.isArray(slots) ? slots.map((s) => s.id) : [];
+    });
     onTimeSlotsChange(itemData.id, allIds);
   }, [availableDates, timeSlotsByDate, itemData.id, onTimeSlotsChange]);
 
@@ -477,9 +615,10 @@ const CouponCard = ({
   );
 
   const handleSelectAllTimeSlots = useCallback(() => {
-    const allIds = availableDates.flatMap(
-      ({ date }) => timeSlotsByDate.get(date)?.map((s) => s.id) || []
-    );
+    const allIds = availableDates.flatMap((date) => {
+      const slots = timeSlotsByDate.get(date.date);
+      return slots && Array.isArray(slots) ? slots.map((s) => s.id) : [];
+    });
     onTimeSlotsChange(itemData.id, allIds);
   }, [availableDates, timeSlotsByDate, itemData.id, onTimeSlotsChange]);
 
@@ -720,7 +859,7 @@ const DateSelector = ({
                   isSelected ? "text-blue-700" : "text-gray-500"
                 }`}
               >
-                {dayName} • {timeSlots.length}
+                {dayName} · {timeSlots.length}
               </p>
             </button>
           );
@@ -777,7 +916,7 @@ const TimeSlotSelector = ({
               label: (
                 <div className="flex items-center justify-between w-full text-xs gap-2">
                   <span className="font-medium text-gray-900">{display}</span>
-                  <span className="text-gray-500">({dayName})</span>
+                  <span className="text-gray-500">{dayName}</span>
                   <span className="text-blue-600 ml-auto">
                     {selectedCount}/{timeSlots.length}
                   </span>
@@ -846,49 +985,125 @@ const OfferAndCoupons = ({ onSubmit, form, onBack }) => {
 
   // Get only valid and active offers
   const validAndActiveOffers = useMemo(() => {
-    return getValidAndActiveOffers(eventDetails?.event_offers);
-  }, [eventDetails?.event_offers]);
+    return getValidAndActiveOffers(
+      eventDetails?.event_offers,
+      scheduleStartDate,
+      scheduleEndDate
+    );
+  }, [eventDetails?.event_offers, scheduleStartDate, scheduleEndDate]);
 
   // Get only valid and active coupons
   const validAndActiveCoupons = useMemo(() => {
-    return getValidAndActiveCoupons(eventDetails?.event_coupons);
-  }, [eventDetails?.event_coupons]);
+    return getValidAndActiveCoupons(
+      eventDetails?.event_coupons,
+      scheduleStartDate,
+      scheduleEndDate
+    );
+  }, [eventDetails?.event_coupons, scheduleStartDate, scheduleEndDate]);
 
   // Initialize with valid and active offers from eventDetails
   useEffect(() => {
     if (validAndActiveOffers && validAndActiveOffers.length > 0) {
-      const mappedOffers = validAndActiveOffers.map((eo) => ({
-        offer: {
-          ...eo.offer,
-          start_date: eo.valid_from || eo.offer.start_date,
-          end_date: eo.valid_to || eo.offer.end_date,
-          selected_time_slots: [],
-          selected_show_dates: [],
-        },
-      }));
+      const mappedOffers = validAndActiveOffers.map((eo) => {
+        // For offers that don't require dates
+        if (!eo.offer.date_required) {
+          return {
+            offer: {
+              ...eo.offer,
+              start_date: scheduleStartDate,
+              end_date: scheduleEndDate,
+              selected_time_slots: [],
+              selected_show_dates: [],
+            },
+          };
+        }
+
+        // Auto-adjust dates to fit schedule
+        const adjustedDates = autoAdjustDateToSchedule(
+          eo.offer.start_date,
+          eo.offer.end_date,
+          scheduleStartDate,
+          scheduleEndDate
+        );
+
+        // if (adjustedDates.adjusted) {
+        //   message.info(
+        //     `Offer "${eo.offer.name}" dates adjusted to fit schedule: ${dayjs(
+        //       adjustedDates.start_date
+        //     ).format("MMM DD")} - ${dayjs(adjustedDates.end_date).format(
+        //       "MMM DD, YYYY"
+        //     )}`
+        //   );
+        // }
+
+        return {
+          offer: {
+            ...eo.offer,
+            start_date: adjustedDates.start_date,
+            end_date: adjustedDates.end_date,
+            selected_time_slots: [],
+            selected_show_dates: [],
+          },
+        };
+      });
       setSelectedOffers(mappedOffers);
     } else {
       setSelectedOffers([]);
     }
-  }, [validAndActiveOffers]);
+  }, [validAndActiveOffers, scheduleStartDate, scheduleEndDate]);
 
   // Initialize with valid and active coupons from eventDetails
   useEffect(() => {
     if (validAndActiveCoupons && validAndActiveCoupons.length > 0) {
-      const mappedCoupons = validAndActiveCoupons.map((ec) => ({
-        coupons: {
-          ...ec.coupons,
-          start_date: ec.valid_from || ec.coupons.start_date,
-          end_date: ec.valid_to || ec.coupons.end_date,
-          selected_time_slots: [],
-          selected_show_dates: [],
-        },
-      }));
+      const mappedCoupons = validAndActiveCoupons.map((ec) => {
+        // For coupons that don't require dates
+        if (!ec.coupons.date_required) {
+          return {
+            coupons: {
+              ...ec.coupons,
+              start_date: scheduleStartDate,
+              end_date: scheduleEndDate,
+              selected_time_slots: [],
+              selected_show_dates: [],
+            },
+          };
+        }
+
+        // Auto-adjust dates to fit schedule
+        const adjustedDates = autoAdjustDateToSchedule(
+          ec.coupons.start_date,
+          ec.coupons.end_date,
+          scheduleStartDate,
+          scheduleEndDate
+        );
+
+        // if (adjustedDates.adjusted) {
+        //   message.info(
+        //     `Coupon "${
+        //       ec.coupons.name
+        //     }" dates adjusted to fit schedule: ${dayjs(
+        //       adjustedDates.start_date
+        //     ).format("MMM DD")} - ${dayjs(adjustedDates.end_date).format(
+        //       "MMM DD, YYYY"
+        //     )}`
+        //   );
+        // }
+
+        return {
+          coupons: {
+            ...ec.coupons,
+            start_date: adjustedDates.start_date,
+            end_date: adjustedDates.end_date,
+            selected_time_slots: [],
+            selected_show_dates: [],
+          },
+        };
+      });
       setSelectedCoupons(mappedCoupons);
     } else {
       setSelectedCoupons([]);
     }
-  }, [validAndActiveCoupons]);
+  }, [validAndActiveCoupons, scheduleStartDate, scheduleEndDate]);
 
   const handleOfferAdd = useCallback(
     (offerId) => {
@@ -955,47 +1170,95 @@ const OfferAndCoupons = ({ onSubmit, form, onBack }) => {
     );
   }, []);
 
-  const handleOfferDateChange = useCallback((offerId, dates) => {
-    if (!dates || dates.length !== 2) return;
+  const handleOfferDateChange = useCallback(
+    (offerId, dates) => {
+      if (!dates || dates.length !== 2) return;
 
-    setSelectedOffers((prev) =>
-      prev.map((item) =>
-        item.offer.id === offerId
-          ? {
-              ...item,
-              offer: {
-                ...item.offer,
-                start_date: dates[0].format("YYYY-MM-DD"),
-                end_date: dates[1].format("YYYY-MM-DD"),
-                selected_time_slots: [],
-                selected_show_dates: [],
-              },
-            }
-          : item
-      )
-    );
-  }, []);
+      const newStartDate = dates[0].format("YYYY-MM-DD");
+      const newEndDate = dates[1].format("YYYY-MM-DD");
 
-  const handleCouponDateChange = useCallback((couponId, dates) => {
-    if (!dates || dates.length !== 2) return;
+      // Auto-adjust if dates are outside schedule range
+      const adjustedDates = autoAdjustDateToSchedule(
+        newStartDate,
+        newEndDate,
+        scheduleStartDate,
+        scheduleEndDate
+      );
 
-    setSelectedCoupons((prev) =>
-      prev.map((item) =>
-        item.coupons.id === couponId
-          ? {
-              ...item,
-              coupons: {
-                ...item.coupons,
-                start_date: dates[0].format("YYYY-MM-DD"),
-                end_date: dates[1].format("YYYY-MM-DD"),
-                selected_time_slots: [],
-                selected_show_dates: [],
-              },
-            }
-          : item
-      )
-    );
-  }, []);
+      if (adjustedDates.adjusted) {
+        message.warning(
+          `Dates adjusted to fit schedule range: ${dayjs(
+            adjustedDates.start_date
+          ).format("MMM DD")} - ${dayjs(adjustedDates.end_date).format(
+            "MMM DD, YYYY"
+          )}`
+        );
+      }
+
+      setSelectedOffers((prev) =>
+        prev.map((item) =>
+          item.offer.id === offerId
+            ? {
+                ...item,
+                offer: {
+                  ...item.offer,
+                  start_date: adjustedDates.start_date,
+                  end_date: adjustedDates.end_date,
+                  selected_time_slots: [],
+                  selected_show_dates: [],
+                },
+              }
+            : item
+        )
+      );
+    },
+    [scheduleStartDate, scheduleEndDate]
+  );
+
+  const handleCouponDateChange = useCallback(
+    (couponId, dates) => {
+      if (!dates || dates.length !== 2) return;
+
+      const newStartDate = dates[0].format("YYYY-MM-DD");
+      const newEndDate = dates[1].format("YYYY-MM-DD");
+
+      // Auto-adjust if dates are outside schedule range
+      const adjustedDates = autoAdjustDateToSchedule(
+        newStartDate,
+        newEndDate,
+        scheduleStartDate,
+        scheduleEndDate
+      );
+
+      if (adjustedDates.adjusted) {
+        message.warning(
+          `Dates adjusted to fit schedule range: ${dayjs(
+            adjustedDates.start_date
+          ).format("MMM DD")} - ${dayjs(adjustedDates.end_date).format(
+            "MMM DD, YYYY"
+          )}`
+        );
+      }
+
+      setSelectedCoupons((prev) =>
+        prev.map((item) =>
+          item.coupons.id === couponId
+            ? {
+                ...item,
+                coupons: {
+                  ...item.coupons,
+                  start_date: adjustedDates.start_date,
+                  end_date: adjustedDates.end_date,
+                  selected_time_slots: [],
+                  selected_show_dates: [],
+                },
+              }
+            : item
+        )
+      );
+    },
+    [scheduleStartDate, scheduleEndDate]
+  );
 
   const handleOfferTimeSlotsChange = useCallback((offerId, selectedSlots) => {
     setSelectedOffers((prev) =>
@@ -1070,15 +1333,15 @@ const OfferAndCoupons = ({ onSubmit, form, onBack }) => {
       const finalData = {
         offer_ids: selectedOffers.map((item) => ({
           offer_id: item.offer.id,
-          valid_from: item.offer.start_date,
-          valid_to: item.offer.end_date,
+          valid_from: item.offer.start_date || scheduleStartDate,
+          valid_to: item.offer.end_date || scheduleEndDate,
           selected_time_slots: item.offer.selected_time_slots || [],
           selected_show_dates: item.offer.selected_show_dates || [],
         })),
         coupon_ids: selectedCoupons.map((item) => ({
           coupon_id: item.coupons.id,
-          valid_from: item.coupons.start_date,
-          valid_to: item.coupons.end_date,
+          valid_from: item.coupons.start_date || scheduleStartDate,
+          valid_to: item.coupons.end_date || scheduleEndDate,
           selected_time_slots: item.coupons.selected_time_slots || [],
           selected_show_dates: item.coupons.selected_show_dates || [],
         })),
@@ -1090,7 +1353,13 @@ const OfferAndCoupons = ({ onSubmit, form, onBack }) => {
       console.error("Submit error:", error);
       message.error("Failed to submit");
     }
-  }, [selectedOffers, selectedCoupons, onSubmit]);
+  }, [
+    selectedOffers,
+    selectedCoupons,
+    onSubmit,
+    scheduleStartDate,
+    scheduleEndDate,
+  ]);
 
   if (!existingShowDates || existingShowDates.length === 0) {
     return (
