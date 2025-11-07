@@ -580,7 +580,8 @@ const EventModal = ({
         .split(":")
         .map(Number);
       const [endHour, endMinute] = formData.end_time.split(":").map(Number);
-
+      const isMidnightEvent =
+        formData.is_midnight_passed || endHour < startHour;
       let endDayIndex = startDayIndex;
       let showEndDate = null;
 
