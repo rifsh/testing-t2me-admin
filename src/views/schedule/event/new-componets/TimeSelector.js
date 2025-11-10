@@ -41,10 +41,10 @@ const TimeSelector = ({
   };
   const debugSlotRange = (hour) => {
     if (hour >= 0 && hour < 6) {
-      console.log(`🌅 Early morning slot ${hour}:00`, {
-        slotMinutes: timeToMinutes(hour, 0),
-        description: hour === 0 ? "Midnight/Start of Day 2" : "Early morning",
-      });
+      // console.log(`🌅 Early morning slot ${hour}:00`, {
+      //   slotMinutes: timeToMinutes(hour, 0),
+      //   description: hour === 0 ? "Midnight/Start of Day 2" : "Early morning",
+      // });
     }
   };
   const logMidnightEvent = (event, context = "") => {
@@ -217,17 +217,17 @@ const TimeSelector = ({
     const blocked = isEventBlocked(normalizedEvent.id);
     const isMidnight = normalizedEvent.is_midnight_passed;
 
-    console.log(`📊 getEventDisplayInfo: Event ${normalizedEvent.id}`, {
-      dayIndex,
-      slotIndex,
-      eventStartDay,
-      eventEndDay,
-      eventStartSlot,
-      eventStartHour,
-      isMidnight,
-      shouldShowHere:
-        dayIndex === eventStartDay && slotIndex === eventStartSlot,
-    });
+    // console.log(`📊 getEventDisplayInfo: Event ${normalizedEvent.id}`, {
+    //   dayIndex,
+    //   slotIndex,
+    //   eventStartDay,
+    //   eventEndDay,
+    //   eventStartSlot,
+    //   eventStartHour,
+    //   isMidnight,
+    //   shouldShowHere:
+    //     dayIndex === eventStartDay && slotIndex === eventStartSlot,
+    // });
 
     if (isMidnight) {
       // ✅ Day 1: Show ONLY at start slot
@@ -235,9 +235,9 @@ const TimeSelector = ({
         const duration = calculateDayOneDuration(normalizedEvent);
         const heightSlots = Math.max(1, Math.ceil(duration / 60));
 
-        console.log(
-          `✅ Displaying midnight Day 1 - Height: ${heightSlots} slots`
-        );
+        // console.log(
+        //   `✅ Displaying midnight Day 1 - Height: ${heightSlots} slots`
+        // );
 
         return {
           show: true,
@@ -254,9 +254,9 @@ const TimeSelector = ({
         if (duration > 0) {
           const heightSlots = Math.max(1, Math.ceil(duration / 60));
 
-          console.log(
-            `✅ Displaying midnight Day 2 - Height: ${heightSlots} slots, Duration: ${duration}min`
-          );
+          // console.log(
+          //   `✅ Displaying midnight Day 2 - Height: ${heightSlots} slots, Duration: ${duration}min`
+          // );
 
           return {
             show: true,
@@ -282,9 +282,9 @@ const TimeSelector = ({
 
         const heightSlots = Math.max(1, Math.ceil(durationMinutes / 60));
 
-        console.log(
-          `✅ Displaying regular event - Height: ${heightSlots} slots`
-        );
+        // console.log(
+        //   `✅ Displaying regular event - Height: ${heightSlots} slots`
+        // );
 
         return {
           show: true,
@@ -735,15 +735,15 @@ const TimeSelector = ({
         const endsOnSameDay = eventEndDay === eventStartDay;
 
         if (isInRange && endsOnSameDay) {
-          console.log(
-            `✅ Regular event match: Event ${event.id} at ${hour}:${minute}`,
-            {
-              slotMinutes,
-              eventStartMinutes,
-              eventEndMinutes,
-              range: `${eventStartMinutes}-${eventEndMinutes}`,
-            }
-          );
+          // console.log(
+          //   `✅ Regular event match: Event ${event.id} at ${hour}:${minute}`,
+          //   {
+          //     slotMinutes,
+          //     eventStartMinutes,
+          //     eventEndMinutes,
+          //     range: `${eventStartMinutes}-${eventEndMinutes}`,
+          //   }
+          // );
           return true;
         }
 

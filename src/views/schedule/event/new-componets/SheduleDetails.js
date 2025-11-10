@@ -1155,6 +1155,7 @@ const ScheduleDetails = ({ mode, id }) => {
           form={form}
           onBack={handleBack}
           blockingInfo={blockingInfo}
+          mode={mode}
         />
       )}
 
