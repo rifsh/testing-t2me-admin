@@ -58,6 +58,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
     responseDataEvent,
     responseMessageEvent,
   } = useSelector((state) => state.organizerUpdates);
+  const { availableOfferDays } = useSelector((state) => state.offers);
 
   useEffect(() => {
     dispatch(setIsDateRequired(false));
@@ -168,6 +169,11 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
 
       // Use the processFormValues function to handle all transformations
       const processedValues = processFormValues(values);
+      values.mapped_offer_weekdays =
+        availableOfferDays?.filter((day) => {
+          const dayName = day.full_name.toUpperCase();
+          return values.applicable_days?.includes(dayName);
+        }) ?? [];
 
       if (mode === "EDIT") {
         const editData = {
@@ -190,12 +196,25 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
           dispatch(setCouponDialogVisible(true));
         }
       } else {
+        let thumbnailData = null;
+        if (values.thumbnail_image && Array.isArray(values.thumbnail_image)) {
+          const thumbnailFile = values.thumbnail_image[0];
+
+          if (thumbnailFile) {
+            thumbnailData = {
+              file_name:
+                thumbnailFile.name || thumbnailFile.originFileObj?.name || null,
+              media_type: "image",
+            };
+          }
+        }
         const formData = {
           ...processedValues,
+          thumbnail_image: thumbnailData,
+          mapped_offer_weekdays: values?.mapped_offer_weekdays
         };
         console.log("couponFormData", formData);
-
-        // dispatch(setSelectedSubmitItem(formData));
+        dispatch(setSelectedSubmitItem(formData));
       }
     } catch (info) {
       console.error("Validation Failed:", info);
