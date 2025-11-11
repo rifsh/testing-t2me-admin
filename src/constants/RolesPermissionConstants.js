@@ -102,7 +102,7 @@ export const PERMISSIONS = {
                     title: 'Offer',
                     GET_OFFERS: 'get_offers',
                     ADD_OFFERS: 'add_offers',
-                    ADD_ORGANIZER_OFFERS: 'add_organizer_offers',
+                    ADD_ORGANIZER_OFFERS: 'add_offers',
                     EDIT_OFFERS: 'edit_offers',
                     EDIT_ORGANIZER_OFFERS: 'edit_offers',
                     UPDATE_OFFER_STATUS: 'update_offer_status',
