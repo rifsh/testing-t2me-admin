@@ -169,7 +169,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
 
       // Use the processFormValues function to handle all transformations
       const processedValues = processFormValues(values);
-      values.mapped_offer_weekdays =
+      values.mapped_coupon_weekdays =
         availableOfferDays?.filter((day) => {
           const dayName = day.full_name.toUpperCase();
           return values.applicable_days?.includes(dayName);
@@ -211,7 +211,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         const formData = {
           ...processedValues,
           thumbnail_image: thumbnailData,
-          mapped_offer_weekdays: values?.mapped_offer_weekdays
+          mapped_coupon_weekdays: values?.mapped_coupon_weekdays
         };
         console.log("couponFormData", formData);
         dispatch(setSelectedSubmitItem(formData));
@@ -387,6 +387,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         mode={mode}
         form={form}
         formType={"coupon"}
+        extraFieldsFromResponse={["thumbnail_image_upload_url"]}
       />
 
       <CommentShowModal
