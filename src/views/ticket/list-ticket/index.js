@@ -83,8 +83,6 @@ const TicketList = () => {
   const handleModalSubmit = async () => {
     dispatch(setTicketModalLoading(true));
     navigate(`${APP_PREFIX_PATH}/ticket/edit/${editItemId}`);
-
-    console.log(editItemId, "9234239423490823498234098234908");
     dispatch(setTicketDialogVisible(false));
     dispatch(setTicketModalLoading(false));
   };
@@ -122,13 +120,17 @@ const TicketList = () => {
         }}
       >
         <SearchBarWithStatus fetchFunction={fetchAllTickets} />
-        {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.TICKET.ADD_TICKET) && <Button
-          type="primary"
-          icon={<PlusCircleOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/ticket/add`)}
-        >
-          Add Ticket
-        </Button>}
+        {hasPermission(
+          PERMISSIONS.APPLICATIONS.SERVICES.EVENT.TICKET.ADD_TICKET
+        ) && (
+          <Button
+            type="primary"
+            icon={<PlusCircleOutlined />}
+            onClick={() => navigate(`${APP_PREFIX_PATH}/ticket/add`)}
+          >
+            Add Ticket
+          </Button>
+        )}
       </div>
 
       <Table
@@ -160,7 +162,7 @@ const TicketList = () => {
             dataIndex: "base_price",
             render: (price, record) => {
               if (price === null || price === undefined) {
-                return '----';
+                return "----";
               }
 
               const currencyCode = record?.venue?.place?.country?.currency_code;
@@ -215,7 +217,13 @@ const TicketList = () => {
                                       fontWeight: "bold",
                                     }}
                                   >
-                                    Price: {ticket?.price != null ? `${record?.venue?.place?.country?.currency_code || ''} ${ticket.price}` : 'N/A'}
+                                    Price:{" "}
+                                    {ticket?.price != null
+                                      ? `${
+                                          record?.venue?.place?.country
+                                            ?.currency_code || ""
+                                        } ${ticket.price}`
+                                      : "N/A"}
                                   </span>
                                 </div>
                               </Col>
@@ -238,17 +246,19 @@ const TicketList = () => {
           {
             title: "Actions",
             dataIndex: "actions",
-            render: (_, elm) => (
-              hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.EVENT.TICKET.EDIT_TICKET_STRUCTURE) ? (
-                < div className="text-right" >
+            render: (_, elm) =>
+              hasPermission(
+                PERMISSIONS.APPLICATIONS.SERVICES.EVENT.TICKET
+                  .EDIT_TICKET_STRUCTURE
+              ) ? (
+                <div className="text-right">
                   <EllipsisDropdown menu={dropdownMenu(elm)} />
                 </div>
-              ) : null
-            ),
+              ) : null,
           },
         ]}
       />
-      < WarningModal
+      <WarningModal
         mode={"itemmodal"}
         visible={dialogVisible}
         title="Edit Ticket"
@@ -321,7 +331,7 @@ const TicketList = () => {
           </div>
         )}
       </Modal>
-    </Card >
+    </Card>
   );
 };
 

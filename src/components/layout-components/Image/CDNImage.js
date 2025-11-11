@@ -3,35 +3,35 @@ import { Image as AntImage, Spin, Skeleton } from "antd";
 import { CDN_PATH } from "configs/AppConfig";
 
 const CDNImage = ({
-    src,
-    alt = "Image",
-    height = 300,
-    width,
-    style = {},
-    className = "",
-    fallbackElement = null,
-    showFallbackOnError = true,
-    preview = false,
-    loadingIndicator = "shimmer",
-    ...imageProps
+  src,
+  alt = "Image",
+  height = 300,
+  width,
+  style = {},
+  className = "",
+  fallbackElement = null,
+  showFallbackOnError = true,
+  preview = false,
+  loadingIndicator = "shimmer",
+  ...imageProps
 }) => {
-    const [hasError, setHasError] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-    // Determine if we should show fallback
-    const shouldShowFallback = !src || src === "images" || hasError;
+  // Determine if we should show fallback
+  const shouldShowFallback = !src || src === "images" || hasError;
 
-    // Handle image loading errors
-    const handleError = () => {
-        setHasError(true);
-        setIsLoading(false);
-    };
+  // Handle image loading errors
+  const handleError = () => {
+    setHasError(true);
+    setIsLoading(false);
+  };
 
-    // Handle successful image load
-    const handleLoad = () => {
-        setIsLoading(false);
-        setHasError(false);
-    };
+  // Handle successful image load
+  const handleLoad = () => {
+    setIsLoading(false);
+    setHasError(false);
+  };
 
     // ✅ Corrected image URL logic
     let imageUrl = null;
@@ -71,16 +71,16 @@ const CDNImage = ({
                     />
                 );
 
-            case "shimmer":
-            default:
-                return (
-                    <div
-                        className="animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer"
-                        style={{ height, width, ...style }}
-                    />
-                );
-        }
-    };
+      case "shimmer":
+      default:
+        return (
+          <div
+            className="animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer"
+            style={{ height, width, ...style }}
+          />
+        );
+    }
+  };
 
     // Default fallback UI
     const defaultFallback = (
@@ -101,12 +101,12 @@ const CDNImage = ({
         </div>
     );
 
-    // Use custom fallback if provided, otherwise use default
-    const fallbackUI = fallbackElement || defaultFallback;
+  // Use custom fallback if provided, otherwise use default
+  const fallbackUI = fallbackElement || defaultFallback;
 
-    if (shouldShowFallback && showFallbackOnError) {
-        return fallbackUI;
-    }
+  if (shouldShowFallback && showFallbackOnError) {
+    return fallbackUI;
+  }
 
     return (
         <div className="relative overflow-hidden" style={{ height, width }}>
@@ -114,25 +114,25 @@ const CDNImage = ({
                 <div className="absolute inset-0 z-10">{renderLoadingIndicator()}</div>
             )}
 
-            <AntImage
-                alt={alt}
-                src={imageUrl}
-                height={height}
-                width={width}
-                preview={preview}
-                style={{
-                    objectFit: "cover",
-                    opacity: isLoading ? 0 : 1,
-                    transition: "opacity 0.3s ease-in-out",
-                    ...style,
-                }}
-                className={`${className} ${isLoading ? "invisible" : "visible"}`}
-                onError={handleError}
-                onLoad={handleLoad}
-                {...imageProps}
-            />
-        </div>
-    );
+      <AntImage
+        alt={alt}
+        src={imageUrl}
+        height={height}
+        width={width}
+        preview={preview}
+        style={{
+          objectFit: "cover",
+          opacity: isLoading ? 0 : 1,
+          transition: "opacity 0.3s ease-in-out",
+          ...style,
+        }}
+        className={`${className} ${isLoading ? "invisible" : "visible"}`}
+        onError={handleError}
+        onLoad={handleLoad}
+        {...imageProps}
+      />
+    </div>
+  );
 };
 
 export default CDNImage;

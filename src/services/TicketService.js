@@ -12,6 +12,16 @@ TicketsService.getAllTickets = function (pageData) {
     params: Utils.filterParams(pageData),
   });
 };
+
+TicketsService.getSingleTicketData = function (ticketId) {
+  return fetch({
+    url: ApiConstant.EVENT_SINGLE_TICKET,
+    method: "get",
+    params: {
+      ticket_id: ticketId,
+    },
+  });
+};
 TicketsService.editTicket = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
   return fetch({
