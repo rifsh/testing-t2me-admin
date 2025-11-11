@@ -44,8 +44,7 @@ const { Text } = Typography;
 const BookingList = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const type = searchParams.get("type");
+    const { type } = useParams();
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE.size);
@@ -520,7 +519,7 @@ const BookingList = () => {
         setSelectedPaymentStatus("all");
 
         fetchOrders(1, pageSize, { type });
-        navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking?type=${type}`, { replace: true })
+        navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/${type}`, { replace: true })
         // Reset the flag after a brief delay to allow new data to load
         setTimeout(() => {
             setIsTypeChanging(false);
@@ -554,7 +553,7 @@ const BookingList = () => {
         setSelectedEventType(resetType);
         setCurrentPage(resetPage);
         setIsTypeChanging(true);
-        navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking?type=ticket`, { replace: true })
+        navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/ticket`, { replace: true })
 
         dispatch(
             getOrderByBookings({

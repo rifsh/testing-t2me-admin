@@ -267,7 +267,7 @@ const ALL_NAVIGATION_ITEMS = {
         },
         {
           key: "reports.orders.booking",
-          path: `${APP_PREFIX_PATH}/reports/orders/by-booking?type=ticket`,
+          path: `${APP_PREFIX_PATH}/reports/orders/by-booking/ticket`,
           title: "sidenav.order.booking",
           icon: DashboardOutlined,
           breadcrumb: false,
