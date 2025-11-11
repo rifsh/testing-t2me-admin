@@ -15,6 +15,7 @@ const initialState = {
   singleCategory: null,
   addingSectionLoading: false,
   isModalVisible: false,
+  uploadingImages: false,
 };
 
 export const fetchFooterData = createAsyncThunk(
@@ -42,6 +43,18 @@ export const createFooter = createAsyncThunk(
   }
 );
 
+export const uploadImageToCdnFooter = createAsyncThunk(
+  "footer/uploadImageToCdnFooter",
+  async ({ file, moduleName }, { rejectWithValue }) => {
+    try {
+      const response = await FooterService.uploadImageToCdn(file, moduleName);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to upload image");
+    }
+  }
+);
+
 const FooterSlice = createSlice({
   name: "footer",
   initialState,
@@ -52,6 +65,18 @@ const FooterSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(uploadImageToCdnFooter.pending, (state) => {
+        state.uploadingImages = true;
+        state.error = null;
+      })
+      .addCase(uploadImageToCdnFooter.fulfilled, (state, { payload }) => {
+        state.uploadingImages = false;
+        console.log("Image uploaded successfully:", payload);
+      })
+      .addCase(uploadImageToCdnFooter.rejected, (state, { payload }) => {
+        state.uploadingImages = false;
+        state.error = payload;
+      })
       .addCase(fetchFooterData.pending, (state) => {
         console.log("fetchAllFaqs pending");
         state.loading = true;

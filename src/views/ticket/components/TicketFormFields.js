@@ -30,6 +30,7 @@ import {
   addOrUpdateTicketSet,
   resetTicketTypes,
   resetTicketSets,
+  getSingleTicket,
 } from "store/slices/ticketSlice";
 import VenueListForm from "components/util-components/FormItems/VenueList";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
@@ -40,7 +41,7 @@ import ValidationModal from "components/util-components/ModalItems/ValidationMod
 import BackButton from "components/Buttons/BackPageButoon";
 import DraftSystem from "drafts/components/DraftSystem";
 
-const TicketFormFields = ({ mode, ticket }) => {
+const TicketFormFields = ({ mode, ticketId }) => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -58,7 +59,7 @@ const TicketFormFields = ({ mode, ticket }) => {
       (venue) => venue.id === form.getFieldValue("venue_id")
     )
   );
-  const { loading, responseData, responseMessage } = useSelector(
+  const { loading, responseData, responseMessage, singleTicket } = useSelector(
     (state) => state.tickets
   );
 
@@ -71,6 +72,12 @@ const TicketFormFields = ({ mode, ticket }) => {
       form.setFieldsValue({ type_number_of_tickets: numberOfTickets });
     }
   }, [numberOfTickets, form]);
+
+  useEffect(() => {
+    if (mode === "EDIT" && ticketId) {
+      dispatch(getSingleTicket(ticketId));
+    }
+  }, [mode, ticketId, dispatch]);
 
   // Enhanced function to get complete form data for draft
   const getCompleteFormData = () => {
