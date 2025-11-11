@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import * as antd from "antd";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import VenueListForm from "components/util-components/FormItems/VenueList";
@@ -20,15 +20,12 @@ const { Option } = Select;
 const { Text } = Typography;
 
 const LocationDetailsField = ({ mode, form }) => {
-  const isEdit = mode === "EDITLEAD";
+  const isEdit = mode === "EDIT" || mode === "EDITLEAD";
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const rules = {
-    place_id: isEdit
-      ? []
-      : [{ required: true, message: RulesMessageConstants.PLACE }],
-    venue_id: isEdit
-      ? []
-      : [{ required: true, message: RulesMessageConstants.VENUE }],
+    place_id: isEdit ? [] : [{ required: true, message: RulesMessageConstants.PLACE }],
+    venue_id: isEdit ? [] : [{ required: true, message: RulesMessageConstants.VENUE }],
     tax_ids: [],
   };
 
@@ -45,59 +42,105 @@ const LocationDetailsField = ({ mode, form }) => {
   const {
     allTax,
     loading: taxLoading,
-    selectedTax,
     taxValidationDialogVisible,
     message: taxMessage,
     ValidateData: taxErrors,
   } = useSelector((state) => state.tax);
 
+  // Initial load - fetch venues and taxes based on current form values
+  useEffect(() => {
+    if (isEdit && isInitialLoad) {
+      const placeId = form.getFieldValue("place_id");
+      console.log("🔄 LocationDetailsField initial load - place_id:", placeId);
+      
+      if (placeId) {
+        console.log("Loading initial venues and taxes for place:", placeId);
+        dispatch(getVenues({ place_id: placeId }));
+        dispatch(fetchAllTax({ place_id: placeId }));
+      }
+      
+      setIsInitialLoad(false);
+    }
+  }, [isEdit, isInitialLoad, form, dispatch]);
+
+  // Watch for place_id changes
   useEffect(() => {
     const placeId = form.getFieldValue("place_id");
-    if (placeId) {
+    
+    if (placeId && !isInitialLoad) {
+      console.log("Place ID changed, fetching related data:", placeId);
       dispatch(fetchAllTax({ place_id: placeId }));
     }
-  }, [dispatch, form]);
+  }, [dispatch, form, isInitialLoad]);
 
   const onPlaceSelect = (placeId) => {
-    // First, set the place_id value
+    console.log("🏙️ Place selected:", placeId);
+     form.setFieldValue('placeid', placeId);
+  form.resetFields(['venueid', 'taxids']);
+    // Set place_id
     form.setFieldValue("place_id", placeId);
 
-    // Then reset dependent fields
+    // Reset dependent fields
     form.resetFields(["venue_id", "tax_ids"]);
 
     const cleanFormData = {
-      place_id: placeId, // Include the selected place
+      place_id: placeId,
+      venue_id: [],
+      tax_ids: [],
       selected_ticket_types: {},
       selected_seats: {},
-      ticket_sets: {},
+      ticket_sets: {},  placeid: placeId,
+    venueid: [],
+    taxids: [],
       ticket_quantities: {},
     };
 
     form.setFieldsValue(cleanFormData);
     dispatch(setEventFormData(cleanFormData));
+    
+    // Load new data
+    console.log("Loading venues and taxes for new place:", placeId);
     dispatch(getVenues({ place_id: placeId }));
+    dispatch(fetchAllTax({ place_id: placeId }));
   };
 
   const onVenueChange = (selectedVenueIds) => {
-    form.resetFields(["tax_ids"]);
+    console.log("🏢 Venues changed:", selectedVenueIds);
+    // Don't reset tax_ids when venue changes in edit mode
+    if (!isEdit) {
+      form.resetFields(["tax_ids"]);
+    }
   };
 
   const onTaxChange = (ids) => {
-    const selected = allTax.filter((tax) => ids.includes(tax.id));
+    console.log("💰 Taxes changed:", ids);
   };
 
-  const closePlaceModal = () =>
-    dispatch(setPlaceValidationDialogVisible(false));
+  const closePlaceModal = () => dispatch(setPlaceValidationDialogVisible(false));
   const closeTaxModal = () => dispatch(setTaxValidationDialogVisible(false));
 
+  // Get current form values
   const selectedPlaceId = form.getFieldValue("place_id");
   const selectedVenueIds = form.getFieldValue("venue_id") || [];
+  const selectedTaxIds = form.getFieldValue("tax_ids") || [];
 
-  const selectedVenues = filteredVenues.filter((v) =>
-    Array.isArray(selectedVenueIds)
-      ? selectedVenueIds.includes(v.id)
-      : v.id === selectedVenueIds
-  );
+  console.log("📊 Current LocationDetailsField state:", {
+    selectedPlaceId,
+    selectedVenueIds,
+    selectedTaxIds,
+    filteredVenues: filteredVenues.length,
+    allTax: allTax.length,
+    venueLoading,
+    taxLoading,
+  });
+
+  // Ensure arrays
+  const venueIdsArray = Array.isArray(selectedVenueIds) 
+    ? selectedVenueIds 
+    : (selectedVenueIds ? [selectedVenueIds] : []);
+
+  const selectedVenues = filteredVenues.filter((v) => venueIdsArray.includes(v.id));
+  const selectedTaxObjects = allTax.filter((tax) => selectedTaxIds.includes(tax.id));
 
   return (
     <>
@@ -107,31 +150,35 @@ const LocationDetailsField = ({ mode, form }) => {
             <Form form={form} layout="vertical" size="large">
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="place_id"
-                    label="Place"
-                    rules={rules.place_id}
-                  >
+                  <Form.Item name="place_id" label="Place" rules={rules.place_id}>
                     <PlaceWithCountryForm
                       form={form}
                       onSelect={onPlaceSelect}
+                      disabled={false}
                     />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="venue_id"
-                    label="Venue"
-                    rules={rules.venue_id}
-                  >
+                  <Form.Item name="venue_id" label="Venue" rules={rules.venue_id}>
                     <VenueListForm
+                    key={`venue-list-${form.getFieldValue('placeid')}`} 
                       form={form}
                       mode="multiple"
-                      disabled={!filteredVenues.length}
+                      disabled={!selectedPlaceId || venueLoading}
                       loading={venueLoading}
                       onChange={onVenueChange}
                     />
                   </Form.Item>
+                  {!selectedPlaceId && (
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Please select a place first
+                    </Text>
+                  )}
+                  {selectedPlaceId && filteredVenues.length === 0 && !venueLoading && (
+                    <Text type="warning" style={{ fontSize: 12 }}>
+                      No venues available for this place
+                    </Text>
+                  )}
                 </Col>
               </Row>
               <Form.Item name="tax_ids" label="Tax (Optional)">
@@ -140,11 +187,12 @@ const LocationDetailsField = ({ mode, form }) => {
                   loading={taxLoading}
                   placeholder="Select tax"
                   onChange={onTaxChange}
-                  notFoundContent={taxLoading ? "Loading..." : "No taxes"}
+                  notFoundContent={taxLoading ? "Loading..." : "No taxes available"}
+                  disabled={!selectedPlaceId || taxLoading}
                 >
                   {allTax.map((tax) => (
                     <Option key={tax.id} value={tax.id}>
-                      {tax.tax_name}
+                      {tax.tax_name} - {tax.percentage}%
                     </Option>
                   ))}
                 </Select>
@@ -153,50 +201,7 @@ const LocationDetailsField = ({ mode, form }) => {
           </Card>
         </Col>
 
-        <Col xs={24} lg={10}>
-          <Card title="Selection Summary" bordered style={{ marginBottom: 16 }}>
-            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-              <div>
-                <Text strong>Selected Place:</Text>
-                <div>
-                  {selectedPlaceId || (
-                    <Text type="secondary">None selected</Text>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <Text strong>Selected Venues:</Text>
-                {selectedVenues.length > 0 ? (
-                  <List
-                    size="small"
-                    dataSource={selectedVenues}
-                    renderItem={(venue) => <List.Item>{venue.name}</List.Item>}
-                  />
-                ) : (
-                  <Text type="secondary">No venues selected</Text>
-                )}
-              </div>
-
-              <div>
-                <Text strong>Selected Taxes:</Text>
-                {selectedTax && selectedTax.length > 0 ? (
-                  <List
-                    size="small"
-                    dataSource={selectedTax}
-                    renderItem={(tax) => (
-                      <List.Item>
-                        {tax.tax_name} - {tax.percentage}%
-                      </List.Item>
-                    )}
-                  />
-                ) : (
-                  <Text type="secondary">No taxes selected</Text>
-                )}
-              </div>
-            </Space>
-          </Card>
-        </Col>
+     
       </Row>
 
       <ValidationModal
