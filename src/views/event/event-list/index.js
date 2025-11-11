@@ -124,7 +124,7 @@ const EventsList = () => {
         checkEventEditAvailability({ event_id: id })
       ).unwrap();
 
-      if (result?.editable === true) {
+      if (!result?.editable === true) {
         navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
       } else {
         Modal.error({

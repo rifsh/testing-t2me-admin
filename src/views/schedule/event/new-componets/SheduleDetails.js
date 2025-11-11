@@ -1161,6 +1161,7 @@ const ScheduleDetails = ({ mode, id }) => {
 
       {tab === 3 && (
         <OfferAndCoupons
+          isEditMode={mode === EDIT}
           form={form}
           onSubmit={handleOfferSubmit}
           onBack={handleBack}

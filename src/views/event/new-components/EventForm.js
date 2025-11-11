@@ -811,7 +811,7 @@ export default function EventForm({ eventId, mode = "add" }) {
       case "category":
         return <CategoryField {...commonProps} />;
       case "location":
-        return <LocationDetailsField {...commonProps} />;
+        return <LocationDetailsField {...commonProps}   mode={mode}/>;
       case "ticket":
         return <TicketSelection {...commonProps} mode={mode} />;
       case "pricing":
