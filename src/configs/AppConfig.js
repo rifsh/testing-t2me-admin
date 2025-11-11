@@ -154,9 +154,34 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
       },
       track_requests: {
         enabled: true,
-        items: {
-          event: { enabled: true },
-          movie: { enabled: false },
+        subitems: {
+          // General track requests (common offer and coupon for both event and movie)
+          general: {
+            enabled: true,
+            items: {
+              offer: { enabled: true },
+              coupon: { enabled: true },
+            },
+          },
+          // Event track requests (event-specific items)
+          event: {
+            enabled: true,
+            items: {
+              organizer: { enabled: true },
+              seat: { enabled: true },
+              schedule: { enabled: true },
+              ticket: { enabled: true },
+            },
+          },
+          // Movie track requests (movie-specific items)
+          movie: {
+            enabled: false,
+            items: {
+              seat: { enabled: true },
+              schedule: { enabled: true },
+              screen: { enabled: true },
+            },
+          },
         },
       },
       lead_events: {
