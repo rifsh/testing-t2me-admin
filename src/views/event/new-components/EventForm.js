@@ -8,7 +8,8 @@ import OfferField from "./OfferField";
 import EventBookingInfo from "./BookingInfo";
 import CategoryField from "./CategoryFileds";
 import LocationDetailsField from "./LocationDetailsField copy";
-
+import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil";
+import { setOriginalFiles } from "store/slices/modalSlice";
 import {
   validateSection,
   clearDependentFields,
@@ -69,6 +70,7 @@ export default function EventForm({ eventId, mode = "add" }) {
   const dispatch = useDispatch();
   const isInitialized = useRef(false);
   const [imagesResetWarning, setImagesResetWarning] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     formData,
@@ -109,12 +111,33 @@ export default function EventForm({ eventId, mode = "add" }) {
     const currentValues = form.getFieldsValue();
     return {
       thumbnail_image:
-        currentValues.thumbnail_image || currentFormData.thumbnail_image || [],
+        currentValues.thumbnail_image || currentFormData.thumbnail_image,
       banner_images:
-        currentValues.banner_images || currentFormData.banner_images || [],
-      event_images:
-        currentValues.event_images || currentFormData.event_images || [],
+        currentValues.banner_images || currentFormData.banner_images,
+      event_images: currentValues.event_images || currentFormData.event_images,
     };
+  };
+
+  // Helper function to determine media type from file
+  const getMediaType = (file) => {
+    // Check if type property exists
+    if (file.type) {
+      return file.type.startsWith("video/") ? "video" : "image";
+    }
+
+    // Check mediaType if available
+    if (file.mediaType) {
+      return file.mediaType;
+    }
+
+    // Check file extension as fallback
+    const fileName = file.name || file.file_name || "";
+    const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+    const isVideo = videoExtensions.some((ext) =>
+      fileName.toLowerCase().endsWith(ext)
+    );
+
+    return isVideo ? "video" : "image";
   };
 
   // Show warning message when images are reset
@@ -202,8 +225,6 @@ export default function EventForm({ eventId, mode = "add" }) {
         event_name: singleLeadEvent.event_name || "",
         description: singleLeadEvent.description || "",
         // Add other fields from singleLeadEvent as needed
-        // Note: Venues handling is commented out in original code
-        // Uncomment and adapt if venue data should be loaded from lead
       };
 
       form.setFieldsValue(formValues);
@@ -227,6 +248,7 @@ export default function EventForm({ eventId, mode = "add" }) {
       dispatch(fetchEventDetails(eventId));
     }
   }, [dispatch, eventId, mode]);
+
   const safeGetFileName = (url) => {
     if (!url || typeof url !== "string") {
       return "image";
@@ -244,16 +266,64 @@ export default function EventForm({ eventId, mode = "add" }) {
     ) {
       console.log("📝 Populating form with event details");
 
-      // Extract venue IDs from venue_ticket_structures
+      // Extract venue IDs
       const venueIds =
         eventDetails.venue_ticket_structures?.map((vts) => vts.venue.id) || [];
 
-      // Extract ticket structure info from venue_ticket_structures
+      // Extract ticket structure info
       const ticketStructureInfo = eventDetails.venue_ticket_structures?.[0];
 
-      // Get place info from the first venue_events
+      // Get place info
       const firstVenueEvent = eventDetails.venue_events?.[0];
       const placeInfo = firstVenueEvent?.venue?.place;
+
+      // Map thumbnail with id if available - always image type
+      const thumbnailFile = eventDetails.thumbnail_image
+        ? [
+            {
+              uid: "thumbnail-1",
+              name: eventDetails.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${eventDetails.thumbnail_image}`,
+              id: null,
+              type: "image",
+              mediaType: "image",
+            },
+          ]
+        : [];
+
+      // Map banner images/videos from media array with ids
+      const bannerFiles = eventDetails.media
+        ? eventDetails.media.map((media, index) => ({
+            uid: `banner-${media.id}`,
+            name: media.media_url.split("/").pop(),
+            status: "done",
+            url: `${CDN_PATH}/${media.media_url}`,
+            thumbUrl: media.thumbnail_url
+              ? `${CDN_PATH}/${media.thumbnail_url}`
+              : undefined,
+            id: media.id, // Important: media id for deletion
+            type: media.media_type || "image",
+            mediaType: media.media_type,
+            caption: media.caption,
+          }))
+        : [];
+
+      // Map event images/videos with ids
+      const eventImageFiles =
+        eventDetails.event_images?.map((media, index) => ({
+          uid: `event-${media.id || index}`,
+          name:
+            media.image?.split("/").pop() || media.media_url?.split("/").pop(),
+          status: "done",
+          url: `${CDN_PATH}/${media.image || media.media_url}`,
+          thumbUrl: media.thumbnail_url
+            ? `${CDN_PATH}/${media.thumbnail_url}`
+            : undefined,
+          id: media.id, // Important: media id for deletion
+          type: media.media_type || "image",
+          mediaType: media.media_type,
+        })) || [];
 
       const formValues = {
         event_name: eventDetails.event_name,
@@ -272,31 +342,9 @@ export default function EventForm({ eventId, mode = "add" }) {
         offer: eventDetails.event_offers?.map((offer) => offer.offer.id) || [],
         coupon:
           eventDetails.event_coupons?.map((coupon) => coupon.coupons.id) || [],
-        banner_images: eventDetails.media
-          ? eventDetails.media.map((image, index) => ({
-              uid: `-${index + 1}`,
-              name: safeGetFileName(image.media_url),
-              status: "done",
-              url: `${CDN_PATH}/${image.media_url}`,
-            }))
-          : [],
-        event_images:
-          eventDetails.event_images?.map((image, index) => ({
-            uid: `-${index + 2}`,
-            name: safeGetFileName(image.image),
-            status: "done",
-            url: `${CDN_PATH}/${image.image}`,
-          })) || [],
-        thumbnail_image: eventDetails.thumbnail_image
-          ? [
-              {
-                uid: "-1",
-                name: safeGetFileName(eventDetails.thumbnail_image),
-                status: "done",
-                url: `${CDN_PATH}/${eventDetails.thumbnail_image}`,
-              },
-            ]
-          : [],
+        banner_images: bannerFiles,
+        event_images: eventImageFiles,
+        thumbnail_image: thumbnailFile,
       };
 
       form.setFieldsValue(formValues);
@@ -553,14 +601,17 @@ export default function EventForm({ eventId, mode = "add" }) {
   };
 
   const handleSubmit = async () => {
-    console.log("🚀 handleSubmit triggered - Mode:", mode);
+    console.log("handleSubmit triggered - Mode:", mode);
     dispatch(setLoading(true));
 
     try {
       const finalValues = await form.validateFields();
-      console.log("✅ Form validation successful");
+      console.log("Form validation successful");
+      console.log("Final Values from form:", finalValues);
 
       const preservedImages = preserveImages(formData);
+      console.log("Preserved Images:", preservedImages);
+
       const completeFormData = {
         ...formData,
         ...finalValues,
@@ -569,19 +620,31 @@ export default function EventForm({ eventId, mode = "add" }) {
           ?.id,
       };
 
+      console.log("Complete Form Data:", completeFormData);
+      console.log(
+        "Thumbnail from completeFormData:",
+        completeFormData.thumbnail_image
+      );
+
+      // ✅ Extract original file objects for S3 upload
+      const originalFiles = extractFileObjects(completeFormData);
+      dispatch(setOriginalFiles(originalFiles));
+
+      // ✅ REMOVED ALL TRANSFORMATION - Pass RAW data to handleCreateModeSubmission
+      // The transformation will happen inside transformFormDataForAPI
+
       if (mode === EDIT) {
-        console.log("🔧 Submission mode: EDIT");
+        console.log("Submission mode: EDIT");
         await handleEditModeSubmission(completeFormData);
       } else {
-        // Handles both "add" and "LEAD" modes
-        console.log(`➕ Submission mode: ${mode.toUpperCase()}`);
+        console.log("Submission mode:", mode.toUpperCase());
+        // ✅ Pass RAW completeFormData with arrays intact
         await handleCreateModeSubmission(completeFormData);
       }
 
-      console.log("🎉 Submission handled successfully");
+      console.log("Submission handled successfully");
     } catch (error) {
-      console.error("❌ Error during submission:", error);
-
+      console.error("Error during submission:", error);
       if (error.errorFields && error.errorFields.length > 0) {
         const firstError = error.errorFields[0];
         message.error(
@@ -662,21 +725,18 @@ export default function EventForm({ eventId, mode = "add" }) {
     const availableSeatsSafe = availableSeats || [];
 
     try {
+      // Transform data using the utility function
       const transformedData = transformFormDataForAPI(completeFormData, {
         selectedOffers: selectedOffersSafe,
         selectedCoupons: selectedCouponsSafe,
         selectedVenueList: selectedVenueListSafe,
         ticketTypes: ticketTypesSafe,
         availableSeats: availableSeatsSafe,
-        eventId: mode === "LEAD" ? eventId : undefined, // Pass lead_id for LEAD mode
+        eventId: mode === "LEAD" ? eventId : undefined,
       });
 
-      // Add lead_id for LEAD mode
-      if (mode === "LEAD") {
-        transformedData.lead_id = eventId;
-      }
-
       console.log("✅ Data transformation completed");
+      console.log("📤 Final transformed data:", transformedData);
 
       const offerValidationResult = await dispatch(
         validateOfferCoupon({
@@ -751,7 +811,7 @@ export default function EventForm({ eventId, mode = "add" }) {
       case "category":
         return <CategoryField {...commonProps} />;
       case "location":
-        return <LocationDetailsField {...commonProps} />;
+        return <LocationDetailsField {...commonProps}   mode={mode}/>;
       case "ticket":
         return <TicketSelection {...commonProps} mode={mode} />;
       case "pricing":
@@ -839,7 +899,7 @@ export default function EventForm({ eventId, mode = "add" }) {
             "event_images",
           ]}
           style={{ marginRight: 12, display: "inline-block" }}
-          enableAutoSave={mode !== EDIT} // Enable for both "add" and "LEAD"
+          enableAutoSave={mode !== EDIT}
           externalFormData={formData}
           onGetCompleteData={() => {
             const currentValues = form.getFieldsValue();
@@ -929,10 +989,10 @@ export default function EventForm({ eventId, mode = "add" }) {
             type="primary"
             size="large"
             onClick={handleSubmit}
-            loading={isLoading}
+            loading={isLoading || isUploading}
             className="min-w-[120px] bg-green-600 hover:bg-green-700"
           >
-            {isLoading
+            {isLoading || isUploading
               ? mode === EDIT
                 ? "Updating..."
                 : mode === "LEAD"
@@ -1059,6 +1119,13 @@ export default function EventForm({ eventId, mode = "add" }) {
         mode={mode}
         form={form}
         formType="event"
+        setIsUploading={setIsUploading}
+        extraFieldsFromResponse={[
+          "thumbnail_image_upload_url",
+          "banner_images_upload_url",
+          "event_images_upload_url",
+        ]}
+        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.EVENT}
       />
     </div>
   );

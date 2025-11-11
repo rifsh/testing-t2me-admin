@@ -32,6 +32,7 @@ import { UserAddOutlined } from "@ant-design/icons";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { CDN_PATH } from "configs/AppConfig";
+import CDNImage from "components/layout-components/Image/CDNImage";
 
 const { Title, Text } = Typography;
 export const getUserRole = () => {
@@ -49,7 +50,8 @@ const EventDetails = () => {
   const { eventId } = useParams();
   const dispatch = useDispatch();
   const { eventDetails, loading, error } = useSelector((state) => state.event);
-  const mediaImages = eventDetails?.media?.map((item) => item.media_url) || [];
+  const mediaImages =
+    eventDetails?.media?.map((item) => `${CDN_PATH}/${item.media_url}`) || [];
   const [form] = Form.useForm();
   const [enrollModalVisible, setEnrollModalVisible] = useState(false);
   const currentUser = getCurrentUser();
@@ -127,27 +129,44 @@ const EventDetails = () => {
             </div>
           ) : (
             <div style={{ position: "relative", width: "100%" }}>
-              <Carousel autoplay dots={{ className: "custom-carousel-dots" }}>
-                {mediaImages.map((url, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                      width: "100%"
-                    }}
-                  >
-                    <Image
-                      alt={`media image ${index + 1}`}
-                      src={`${url}`}
-                      height={400}
-                      width="100%"
-                      style={{
-                        width: "100%",
-                        objectFit: "cover",
-                        display: "block"
-                      }}
-                    />
+              <Carousel autoplay>
+                {mediaImages.map((item, index) => (
+                  <div key={index}>
+                    {item.media_type === "image" ? (
+                      <CDNImage
+                        src={item.media_url}
+                        alt={item.caption || `media image ${index + 1}`}
+                        height={400}
+                        style={{ width: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <video
+                        controls
+                        style={{
+                          width: "100%",
+                          height: "400px",
+                          objectFit: "cover",
+                          backgroundColor: "#000",
+                        }}
+                      >
+                        <source
+                          src={CDN_PATH + "/" + item.media_url}
+                          type="video/mp4"
+                        />
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
+                    {item.caption && (
+                      <div
+                        style={{
+                          textAlign: "center",
+                          marginTop: "10px",
+                          padding: "10px",
+                        }}
+                      >
+                        <Text type="secondary">{item.caption}</Text>
+                      </div>
+                    )}
                   </div>
                 ))}
               </Carousel>
@@ -230,11 +249,19 @@ const EventDetails = () => {
             key="2"
           >
             <div style={{ padding: "24px 24px 0" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                }}
+              >
                 <Typography.Title level={4} style={{ margin: 0 }}>
                   Event Users
                 </Typography.Title>
-                {currentUser.role_id !== UserRoleConstants.eventOrganizerRoleId && (
+                {currentUser.role_id !==
+                  UserRoleConstants.eventOrganizerRoleId && (
                   <Button
                     type="primary"
                     icon={<UserAddOutlined />}

@@ -12,6 +12,7 @@ import {
   Typography,
   Tooltip,
   message,
+  Modal,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { fetchAllCountires } from "store/slices/locationSlice";
@@ -25,9 +26,11 @@ import {
 } from "constants/SupportFileConstants";
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 import Utils from "utils/index";
-import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
 import ReactQuill from "react-quill";
 import TextEditor from "../../../../components/util-components/FormItems/TextEditor";
+import { deleteS3Image } from "store/slices/s3CloudflareSlice";
+import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
+import ResizedMediaPicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -51,29 +54,11 @@ const rules = {
       message: "Please enter country name",
     },
   ],
-  // thumbnail_image: [
-  //   {
-  //     required: true,
-  //     message: "Please upload a thumbnail image",
-  //   },
-  // ],
-  // banner_images: [
-  //   {
-  //     required: true,
-  //     message: "Please upload banner images",
-  //   },
-  // ],
 };
 
 const CountryFormFields = ({ mode, form }) => {
   const dispatch = useDispatch();
   const { loading, countries, error } = useSelector((state) => state.locations);
-
-  // useEffect(() => {
-  //   if (countries.length === 0) {
-  //     dispatch(fetchAllCountires());
-  //   }
-  // }, [dispatch, countries]);
 
   const normFile = (e) => {
     if (Array.isArray(e)) {
@@ -82,25 +67,7 @@ const CountryFormFields = ({ mode, form }) => {
     return e?.fileList || [];
   };
 
-  const handleBeforeUpload = Utils.handleBeforeUpload;
-  const [thumbnailImage, setThumbnailImage] = useState(null); // State for thumbnail image
-  const [bannerImages, setBannerImages] = useState([]);
-  const handleThumbnailChange = (info) => {
-    if (info.file.status === "done") {
-      setThumbnailImage(info.file.originFileObj);
-    } else if (info.file.status === "removed") {
-      setThumbnailImage(null);
-    }
-  };
-
-  // Handle banner images selection
-  const handleBannerChange = (info) => {
-    if (info.file.status === "done") {
-      setBannerImages(info.fileList.map((file) => file.originFileObj));
-    } else if (info.file.status === "removed") {
-      setBannerImages(info.fileList.map((file) => file.originFileObj));
-    }
-  };
+  const { handleDeleteImage } = useS3ImageDelete("place");
 
   if (loading) {
     return (
@@ -118,31 +85,6 @@ const CountryFormFields = ({ mode, form }) => {
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
         <Card title="Basic Info">
-          {/* <Form.Item
-            name="country_id"
-            label="Country name"
-            rules={rules.country}
-          >
-            <Select
-              className="w-100"
-              placeholder="Choose a Country"
-              loading={loading}
-              showSearch
-              filterOption={(input, option) =>
-                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }
-            >
-              {countries && countries.length > 0 ? (
-                countries.map((country) => (
-                  <Option key={country.id} value={country.id}>
-                    {country.country}
-                  </Option>
-                ))
-              ) : (
-                <Option disabled>No countries available</Option>
-              )}
-            </Select>
-          </Form.Item> */}
           <Form.Item name="name" label="Place" rules={rules.name}>
             <Input placeholder="Place Name" />
           </Form.Item>
@@ -153,17 +95,26 @@ const CountryFormFields = ({ mode, form }) => {
           >
             <TextEditor />
           </Form.Item>
+
+          {/* Thumbnail Image - Image Only */}
           <Form.Item
             name="thumbnail_image"
             label="Thumbnail Image"
             valuePropName="value"
             getValueFromEvent={normFile}
+            rules={[
+              {
+                required: true,
+                  message: "Please select thumbnail image",
+              },
+            ]}
             style={{ marginBottom: "0px", padding: "0px" }}
           >
-            <ResizedImgePicker
+            <ResizedMediaPicker
               maxCount={1}
               targetResolution={ThumbnailImageResolutions.PLACE}
               form={form}
+              allowVideo={false}
             />
           </Form.Item>
 
@@ -173,19 +124,24 @@ const CountryFormFields = ({ mode, form }) => {
           >
             {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
             {" resolution "}
-            {ResolutionByServices.place} pixels.{" "}
+            {ResolutionByServices.place} pixels.
           </Text>
+
+          {/* Banner Media - Images and Videos */}
           <Form.Item
             name="banner_images"
-            label="Banner Images"
+            label="Banner Media (Images & Videos)"
             valuePropName="value"
             getValueFromEvent={normFile}
-            style={{ marginBottom: "0px", padding: "0px" }}
+            style={{ marginBottom: "0px", padding: "0px", marginTop: "16px" }}
           >
-            <ResizedImgePicker
+            <ResizedMediaPicker
               maxCount={20}
               targetResolution={ThumbnailImageResolutions.PLACE}
               form={form}
+              onDelete={handleDeleteImage}
+              allowVideo={true}
+              maxVideoSize={100}
             />
           </Form.Item>
 
@@ -193,9 +149,22 @@ const CountryFormFields = ({ mode, form }) => {
             type="warning"
             style={{ padding: "00px 00px", fontSize: "11px" }}
           >
-            {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
-            {" resolution "}
-            {ResolutionByServices.place} pixels.{" "}
+            Images: {SupportFormatContent.join(",")}:{" "}
+            {SupportImageFormat.join(", ")} & resolution{" "}
+            {ResolutionByServices.place} pixels.
+            <br />
+            Videos: MP4, WebM, OGG formats. Max size: 100MB.
+          </Text>
+
+          <Text
+            type="warning"
+            style={{ padding: "00px 00px", fontSize: "11px" }}
+          >
+            Images: {SupportFormatContent.join(",")}:{" "}
+            {SupportImageFormat.join(", ")} & resolution{" "}
+            {ResolutionByServices.place} pixels.
+            <br />
+            Videos: MP4, WebM, OGG formats. Max size: 100MB.
           </Text>
         </Card>
         {mode === "EDIT" && <EditWarningAlert />}

@@ -31,7 +31,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ActionType } from "utils/api/warning-submit-util";
 import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
-import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import {
+  setSelectedSubmitItem,
+  setOriginalFiles,
+} from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { UploadOutlined } from "@ant-design/icons";
@@ -46,6 +49,7 @@ import {
 import Utils from "utils/index";
 import { filterOption } from "components/util-components/FormItems/dropDownSearch";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
+import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil";
 
 const { Option } = Select;
 const ADD = "ADD";
@@ -72,6 +76,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const { eventType } = useSelector((state) => state.event);
   const { places } = useSelector((state) => state.locations);
@@ -96,6 +101,8 @@ const AdBannerFormFields = ({ mode, banner }) => {
     responseImpactData,
     editable_status,
   } = useSelector((state) => state.advertisement);
+
+  const EXTRA_FIELDS_FROM_RESPONSE = ["media_path_upload_url"];
 
   useEffect(() => {
     if (filteredAdCategories.length === 0) {
@@ -131,6 +138,34 @@ const AdBannerFormFields = ({ mode, banner }) => {
         });
       }
 
+      // Determine media type from file extension or category
+      const getMediaType = (path) => {
+        if (!path) return "image";
+        const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+        const isVideo = videoExtensions.some((ext) =>
+          path.toLowerCase().endsWith(ext)
+        );
+        return isVideo ? "video" : "image";
+      };
+
+      // Map media_path with proper structure
+      const mediaFile = banner.media_path
+        ? [
+            {
+              uid: "media-1",
+              name: banner.media_path.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${banner.media_path}`,
+              thumbUrl: banner.thumbnail_url
+                ? `${CDN_PATH}/${banner.thumbnail_url}`
+                : undefined,
+              id: null,
+              type: getMediaType(banner.media_path),
+              mediaType: getMediaType(banner.media_path),
+            },
+          ]
+        : [];
+
       form.setFieldsValue({
         name: banner.name,
         description: banner.description,
@@ -138,25 +173,80 @@ const AdBannerFormFields = ({ mode, banner }) => {
         banner_category_id: banner.banner_category.id,
         place_id: banner.place?.id,
         event_type_id: banner.event_type?.id,
-        media_path: banner.media_path
-          ? [
-              {
-                uid: "-1",
-                name: banner.media_path.split("/").pop(),
-                status: "done",
-                url: `${CDN_PATH}/${banner.media_path}`,
-              },
-            ]
-          : [],
+        media_path: mediaFile,
       });
     }
   }, [mode, banner, form, filteredAdCategories, dispatch]);
 
   const normFile = (e) => {
     if (Array.isArray(e)) {
-      return e;
+      return e
+        .filter(
+          (file) =>
+            file &&
+            typeof file === "object" &&
+            file !== null &&
+            (file.originFileObj || file.name || file.uid)
+        )
+        .map((file) => ({
+          uid: file.uid,
+          name: file.name,
+          status: file.status || "done",
+          url: file.url,
+          thumbUrl: file.thumbUrl || file.url,
+          originFileObj: file.originFileObj,
+          id: file.id,
+          type: file.type || file.mediaType,
+          mediaType: file.mediaType,
+          ...(file.response && { response: file.response }),
+          ...(file.percent && { percent: file.percent }),
+        }));
     }
-    return e?.fileList || [];
+
+    const fileList = e?.fileList || [];
+    return fileList
+      .filter(
+        (file) =>
+          file &&
+          typeof file === "object" &&
+          file !== null &&
+          (file.originFileObj || file.name || file.uid)
+      )
+      .map((file) => ({
+        uid: file.uid,
+        name: file.name,
+        status: file.status || "done",
+        url: file.url,
+        thumbUrl: file.thumbUrl || file.url,
+        originFileObj: file.originFileObj,
+        id: file.id,
+        type: file.type || file.mediaType,
+        mediaType: file.mediaType,
+        ...(file.response && { response: file.response }),
+        ...(file.percent && { percent: file.percent }),
+      }));
+  };
+
+  // Helper function to determine media type from file
+  const getMediaType = (file) => {
+    // Check if type property exists
+    if (file.type) {
+      return file.type.startsWith("video/") ? "video" : "image";
+    }
+
+    // Check mediaType if available
+    if (file.mediaType) {
+      return file.mediaType;
+    }
+
+    // Check file extension as fallback
+    const fileName = file.name || file.file_name || "";
+    const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+    const isVideo = videoExtensions.some((ext) =>
+      fileName.toLowerCase().endsWith(ext)
+    );
+
+    return isVideo ? "video" : "image";
   };
 
   const handlePlaceChange = (placeId) => {
@@ -174,6 +264,29 @@ const AdBannerFormFields = ({ mode, banner }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
+
+      // Extract original file objects for later S3 upload
+      const originalFiles = extractFileObjects(values);
+
+      // Store original files in Redux for use in confirmation
+      dispatch(setOriginalFiles(originalFiles));
+
+      // Transform media_path - can be image or video
+      const mediaData = values.media_path?.[0]
+        ? {
+            file_name:
+              values.media_path[0].name ||
+              values.media_path[0].file_name ||
+              null,
+            media_type: getMediaType(values.media_path[0]),
+          }
+        : null;
+
+      const transformedData = {
+        ...values,
+        media_path: mediaData,
+      };
+
       if (mode === ADD) {
         const resultAction = await dispatch(
           validateAdCategory(values.banner_category_id)
@@ -184,12 +297,12 @@ const AdBannerFormFields = ({ mode, banner }) => {
           if (response.message === "warning") {
             dispatch(setAdCategoryValidationDialogVisible(true));
           } else if (response.data && response.data[0]?.validation_status) {
-            dispatch(setSelectedSubmitItem(values));
+            dispatch(setSelectedSubmitItem(transformedData));
           }
         }
       } else if (mode === EDIT) {
         const data = {
-          ...values,
+          ...transformedData,
           id: banner.id,
         };
 
@@ -308,23 +421,36 @@ const AdBannerFormFields = ({ mode, banner }) => {
             >
               <Input placeholder="Description" />
             </Form.Item>
+
+            {/* Banner Media - Images and Videos */}
             <Form.Item
               name="media_path"
-              label="Banner Media"
-              rules={[{ required: true }]}
+              label="Banner Media (Images & Videos)"
+              rules={[
+                { required: true, message: "Please upload banner media" },
+              ]}
               valuePropName="value"
               getValueFromEvent={normFile}
               style={{ marginBottom: "0px", padding: "0px" }}
             >
               <ResizedImgePicker
-                maxCount={20}
+                maxCount={1}
                 targetResolution={ThumbnailImageResolutions.EVENT_BANNER}
+                form={form}
+                allowVideo={true}
+                maxVideoSize={100}
               />
             </Form.Item>
 
             <Text
               type="warning"
-              style={{ padding: "0px 0px", fontSize: "11px" }}
+              style={{
+                padding: "0px 0px",
+                fontSize: "11px",
+                display: "block",
+                marginTop: "8px",
+                marginBottom: "16px",
+              }}
             >
               {selectedCategory
                 ? `${SupportFormatContent.join(",")}: ${
@@ -335,16 +461,12 @@ const AdBannerFormFields = ({ mode, banner }) => {
                   }, Min size: ${
                     selectedCategory.min_size || "N/A"
                   }, Max size: ${selectedCategory.max_size || "N/A"}`
-                : `${SupportFormatContent.join(",")}: ${SupportImageFormat.join(
+                : `Images: ${SupportImageFormat.join(
                     ", "
-                  )}`}
+                  )}. Videos: MP4, WebM, OGG (Max 100MB)`}
             </Text>
 
-            <Form.Item
-              name="ads_url"
-              label="Banner Redirect Url"
-              // rules={rules.name}
-            >
+            <Form.Item name="ads_url" label="Banner Redirect Url">
               <Input placeholder="Enter banner url" />
             </Form.Item>
 
@@ -406,7 +528,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
               <Button
                 type="primary"
                 onClick={onFinish}
-                loading={createBannerLoading}
+                loading={createBannerLoading || isUploading}
               >
                 {mode === ADD ? "Add" : "Update"}
               </Button>
@@ -414,7 +536,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
           </Form>
         </Card>
       </Col>
-      <LoadingOverlay loading={createBannerLoading} />
+      <LoadingOverlay loading={createBannerLoading || isUploading} />
       <ValidationModal
         visible={adCategoryValidationDialogVisible}
         data={ValidateData?.errors}
@@ -430,7 +552,7 @@ const AdBannerFormFields = ({ mode, banner }) => {
         onCancel={handleModalCancel}
         confirmText="Proceed"
         cancelText="Back"
-        loading={loading}
+        loading={modalLoading}
         responseData={responseImpactData}
         tableConfig={{
           title: "Active Schedules",
@@ -450,6 +572,9 @@ const AdBannerFormFields = ({ mode, banner }) => {
         mode={mode}
         form={form}
         formType={"advBanner"}
+        setIsUploading={setIsUploading}
+        extraFieldsFromResponse={EXTRA_FIELDS_FROM_RESPONSE}
+        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.AD_BANNER}
       />
     </Row>
   );

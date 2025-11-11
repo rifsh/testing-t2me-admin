@@ -580,7 +580,8 @@ const EventModal = ({
         .split(":")
         .map(Number);
       const [endHour, endMinute] = formData.end_time.split(":").map(Number);
-
+      const isMidnightEvent =
+        formData.is_midnight_passed || endHour < startHour;
       let endDayIndex = startDayIndex;
       let showEndDate = null;
 
@@ -931,7 +932,7 @@ const EventModal = ({
                     />
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-3">
+                {/* <div className="grid grid-cols-2 gap-3">
                   <CustomSelect
                     label="Offer"
                     value={formData.offer_ids}
@@ -952,7 +953,7 @@ const EventModal = ({
                     icon={Tag}
                     required={false}
                   />
-                </div>
+                </div> */}
               </div>
             </div>
 

@@ -58,6 +58,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
     responseDataEvent,
     responseMessageEvent,
   } = useSelector((state) => state.organizerUpdates);
+  const { availableOfferDays } = useSelector((state) => state.offers);
 
   useEffect(() => {
     dispatch(setIsDateRequired(false));
@@ -98,13 +99,13 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         thumbnail_image:
           coupon.thumbnail_image && coupon.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: coupon.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: coupon.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: coupon.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: coupon.thumbnail_image,
+              },
+            ]
             : [],
       };
 
@@ -168,6 +169,11 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
 
       // Use the processFormValues function to handle all transformations
       const processedValues = processFormValues(values);
+      values.mapped_coupon_weekdays =
+        availableOfferDays?.filter((day) => {
+          const dayName = day.full_name.toUpperCase();
+          return values.applicable_days?.includes(dayName);
+        }) ?? [];
 
       if (mode === "EDIT") {
         const editData = {
@@ -190,10 +196,24 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
           dispatch(setCouponDialogVisible(true));
         }
       } else {
+        let thumbnailData = null;
+        if (values.thumbnail_image && Array.isArray(values.thumbnail_image)) {
+          const thumbnailFile = values.thumbnail_image[0];
+
+          if (thumbnailFile) {
+            thumbnailData = {
+              file_name:
+                thumbnailFile.name || thumbnailFile.originFileObj?.name || null,
+              media_type: "image",
+            };
+          }
+        }
         const formData = {
           ...processedValues,
+          thumbnail_image: thumbnailData,
+          mapped_coupon_weekdays: values?.mapped_coupon_weekdays
         };
-
+        console.log("couponFormData", formData);
         dispatch(setSelectedSubmitItem(formData));
       }
     } catch (info) {
@@ -300,7 +320,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
               justifyContent="space-between"
               alignItems="center"
             >
-              <h2 className="mb-3">
+              <h2 className="mb-3 text-2xl">
                 {mode === "ADD" ? "Add New Coupon" : `Edit Coupon`}{" "}
               </h2>
               <div className="mb-3">
@@ -367,6 +387,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         mode={mode}
         form={form}
         formType={"coupon"}
+        extraFieldsFromResponse={["thumbnail_image_upload_url"]}
       />
 
       <CommentShowModal
@@ -376,9 +397,8 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         loading={organizerLoading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${
-          actionType.charAt(0).toUpperCase() + actionType.slice(1)
-        } Comment`}
+        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)
+          } Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />
     </>

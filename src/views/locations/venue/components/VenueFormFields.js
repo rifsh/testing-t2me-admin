@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Input,
   Row,
@@ -9,12 +9,8 @@ import {
   Button,
   Space,
   message,
-  Upload,
   Typography,
-  Tabs,
-  Checkbox,
   InputNumber,
-  Rate,
 } from "antd";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -35,36 +31,29 @@ import LocationMarker from "./LocationMarker";
 import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { RulesMessageConstants } from "constants/RulesConstant";
-import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import {
+  setSelectedSubmitItem,
+  setOriginalFiles,
+} from "store/slices/modalSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import {
-  PlusOutlined,
-  UploadOutlined,
-  MinusCircleOutlined,
-  DesktopOutlined,
-  SoundOutlined,
-  SafetyOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import {
   SupportImageFormat,
   SupportFormatContent,
   ResolutionByServices,
   ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
-import Utils from "utils/index";
 import LoadingOverlay from "components/util-components/Loader/index";
 import { EditWarningAlert } from "components/util-components/EditWarningComponent/index";
 import { ActionType } from "utils/api/warning-submit-util";
 import WarningModal from "components/util-components/ModalItems/WarningModal";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
-import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
-import VenueTechnology from "./VenueTechnology";
-import ReactQuill from "react-quill";
 import TextEditor from "components/util-components/FormItems/TextEditor";
-import BackButton from "components/Buttons/BackPageButoon";
 import DraftSystem from "drafts/components/DraftSystem";
-import { useDraft } from "drafts/hooks/useDraftManager";
+import { UPLOAD_FIELD_CONFIGS, extractFileObjects } from "utils/s3UploadUtil";
+import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
+import ResizedMediaPicker from "components/util-components/Image/ResizedImgePicker";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -74,6 +63,9 @@ const VenueFormFields = ({ mode, venue }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [isUploading, setIsUploading] = useState(false);
+
+  const { handleDeleteImage, deletingImages } = useS3ImageDelete("venue");
 
   const {
     coordinates,
@@ -93,14 +85,77 @@ const VenueFormFields = ({ mode, venue }) => {
     placeValidationDialogVisible,
     message: warningMessage,
   } = useSelector((state) => state.locations);
-  // const { deleteDraft } = useDraft({
-  //   form,
-  //   formType: "place",
-  //   mode,
-  //   recordId: venue,
-  // });
+
+  // Helper function to determine media type from file
+  const getMediaType = (file) => {
+    // If it's existing media with mediaType or media_type property, use that directly
+    if (file.mediaType) {
+      return file.mediaType;
+    }
+
+    if (file.media_type) {
+      return file.media_type;
+    }
+
+    // If it's a new file being uploaded, check the originFileObj first (Ant Design Upload)
+    if (file.originFileObj && file.originFileObj.type) {
+      return file.originFileObj.type.startsWith("video/") ? "video" : "image";
+    }
+
+    // Check the type property directly
+    if (file.type) {
+      // If it's a MIME type string
+      if (typeof file.type === "string" && file.type.includes("/")) {
+        return file.type.startsWith("video/") ? "video" : "image";
+      }
+      // If it's already "image" or "video" string
+      return file.type;
+    }
+
+    // Fallback: Check file extension
+    const fileName = file.name || file.file_name || "";
+    const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+    const isVideo = videoExtensions.some((ext) =>
+      fileName.toLowerCase().endsWith(ext)
+    );
+
+    return isVideo ? "video" : "image";
+  };
+  // ✅ Map existing venue data with media IDs for deletion
   useEffect(() => {
     if (venue && mode === "EDIT") {
+      // Map thumbnail image (always image type)
+      const thumbnailFile =
+        venue.thumbnail_image && venue.thumbnail_image !== "images"
+          ? [
+            {
+              uid: "thumbnail-1",
+              name: venue.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${venue.thumbnail_image}`,
+              id: null,
+              type: "image",
+            },
+          ]
+          : [];
+
+      // Map banner media (images and videos) with media ids
+      const bannerFiles = venue?.media
+        ? venue.media.map((media, index) => ({
+          uid: `banner-${media.id}`,
+          name: media.media_url.split("/").pop(),
+          status: "done",
+          url: `${CDN_PATH}/${media.media_url}`,
+          thumbUrl: media.thumbnail_url
+            ? `${CDN_PATH}/${media.thumbnail_url}`
+            : undefined,
+          id: media.id,
+          type: media.media_type || "image",
+          mediaType: media.media_type,
+          caption: media.caption,
+        }))
+        : [];
+
       form.setFieldsValue({
         address: venue.address,
         place: venue.place?.name,
@@ -116,26 +171,8 @@ const VenueFormFields = ({ mode, venue }) => {
         venue_add_on_services: !venue.venue_add_on_services
           ? []
           : venue.venue_add_on_services,
-        banner_images: venue?.media
-          ? venue?.media?.map((banner, index) => ({
-              uid: `-banner-${index}`,
-              name: banner?.media_url.split("/").pop(),
-              status: "done",
-              url: `${CDN_PATH}/${banner?.media_url}`,
-            }))
-          : [],
-
-        thumbnail_image:
-          venue.thumbnail_image && venue.thumbnail_image !== "images"
-            ? [
-                {
-                  uid: "-1",
-                  name: venue.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: `${CDN_PATH}/${venue.thumbnail_image}`,
-                },
-              ]
-            : [],
+        banner_images: bannerFiles,
+        thumbnail_image: thumbnailFile,
       });
     }
   }, [form, venue, mode]);
@@ -161,24 +198,53 @@ const VenueFormFields = ({ mode, venue }) => {
     try {
       const values = await form.validateFields();
 
+      // Extract original file objects for S3 upload
+      const originalFiles = extractFileObjects(values);
+      dispatch(setOriginalFiles(originalFiles));
+
       // Clean and sanitize add-on services
       const cleanedAddOnServices = Array.isArray(values.venue_add_on_services)
         ? values.venue_add_on_services.map((item) => ({
-            title: item.title?.trim(),
-            services: Array.isArray(item.services) ? item.services : [],
-          }))
+          title: item.title?.trim(),
+          services: Array.isArray(item.services) ? item.services : [],
+        }))
         : [];
+
+      // Transform thumbnail_image - always image type
+      const thumbnailData = values.thumbnail_image?.[0]
+        ? {
+          file_name:
+            values.thumbnail_image[0].name ||
+            values.thumbnail_image[0].file_name ||
+            null,
+          media_type: "image",
+        }
+        : null;
+
+      // Transform banner_images - can be images or videos
+      const bannerImagesData =
+        values.banner_images?.map((media) => {
+          const mediaType = getMediaType(media);
+
+          return {
+            id: media.id || null,
+            file_name: media.name || media.file_name,
+            media_type: mediaType,
+          };
+        }) || [];
 
       // Shared base data
       const baseData = {
         ...values,
-        latitude: coordinates.lat || 0,
-        longitude: coordinates.lng || 0,
+        latitude: coordinates.lat || venue?.latitude || 0,
+        longitude: coordinates.lng || venue?.longitude || 0,
         capacity: values.capacity || 0,
         indoor: values.indoor !== undefined ? values.indoor : false,
         address: values.address,
         description: values.description,
         venue_add_on_services: cleanedAddOnServices,
+        thumbnail_image: thumbnailData,
+        banner_images: bannerImagesData,
       };
 
       if (mode === "EDIT") {
@@ -224,8 +290,10 @@ const VenueFormFields = ({ mode, venue }) => {
 
         if (validatePlace.fulfilled.match(resultAction)) {
           const response = resultAction.payload;
+          console.log("Validation response:", response);
           if (response.message === "warning") {
             dispatch(setPlaceValidationDialogVisible(true));
+            return;
           } else if (response.data && response.data[0]?.validation_status) {
             dispatch(setSelectedSubmitItem(formData));
           }
@@ -237,21 +305,11 @@ const VenueFormFields = ({ mode, venue }) => {
         }
       }
     } catch (errorInfo) {
-      console.error("Validation Failed:", errorInfo);
-
-      if (errorInfo.errorFields) {
-        console.log(`Please fill all the required fields`);
-      } else {
-        console.log("An unexpected error occurred. Please try again.");
-      }
+      console.log("Validation Failed:", errorInfo);
     }
   };
 
   const handleWarningPagination = (page, size) => {
-    console.log("------------------------");
-
-    console.log("CHANIGN...........");
-
     dispatch(
       editVenue({
         data: selectedVenue,
@@ -270,9 +328,6 @@ const VenueFormFields = ({ mode, venue }) => {
     dispatch(setLocationDialogVisible(false));
     if (editVenue.fulfilled.match(resultAction)) {
       dispatch(setSelectedSubmitItem(selectedVenue));
-      // antdMessage.success(`Event ${selectedPlace.name} updated successfully`);
-      // form.resetFields();
-      // navigate(`${APP_PREFIX_PATH}/place/list`);
     }
   };
 
@@ -314,7 +369,11 @@ const VenueFormFields = ({ mode, venue }) => {
                 />
                 <DiscardButton form={form} />
               </div>
-              <Button type="primary" onClick={onFinish} loading={loading}>
+              <Button
+                type="primary"
+                onClick={onFinish}
+                loading={loading || isUploading}
+              >
                 {mode === "ADD" ? "Add" : "Save"}
               </Button>
             </Flex>
@@ -323,6 +382,7 @@ const VenueFormFields = ({ mode, venue }) => {
               label={"Place"}
               onSelect={handlePlaceSelect}
               rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
+              isActivePlaces={true}
             />
 
             <Form.Item
@@ -371,12 +431,6 @@ const VenueFormFields = ({ mode, venue }) => {
               </Col>
             </Row>
             <Form.Item
-              noStyle
-              shouldUpdate={(prevValues, currentValues) =>
-                prevValues.indoor !== currentValues.indoor
-              }
-            ></Form.Item>
-            <Form.Item
               name="description"
               label="Description"
               rules={[
@@ -384,19 +438,29 @@ const VenueFormFields = ({ mode, venue }) => {
               ]}
             >
               <TextEditor />
-              {/* <Input.TextArea rows={4} placeholder="Enter venue description" /> */}
             </Form.Item>
+
+            {/* Thumbnail Image - Image Only */}
             <Form.Item
               name="thumbnail_image"
               label="Thumbnail Image"
               valuePropName="value"
+              rules={[
+                {
+                  required: true,
+                  message: "Please select thumbnail image",
+                },
+              ]}
               getValueFromEvent={normFile}
               style={{ marginBottom: "0px", padding: "0px" }}
             >
-              <ResizedImgePicker
+              <ResizedMediaPicker
                 maxCount={1}
                 targetResolution={ThumbnailImageResolutions.VENUE}
                 form={form}
+                onDelete={handleDeleteImage}
+                deletingImages={deletingImages}
+                allowVideo={false}
               />
             </Form.Item>
             <Text
@@ -405,32 +469,40 @@ const VenueFormFields = ({ mode, venue }) => {
             >
               {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
               &{" resolution "}
-              {ResolutionByServices.venue} pixels.{" "}
+              {ResolutionByServices.venue} pixels.
             </Text>
+
+            {/* Banner Media - Images and Videos */}
             <Form.Item
               name="banner_images"
-              label="Banner Images"
+              label="Banner Media (Images & Videos)"
               valuePropName="value"
               getValueFromEvent={normFile}
-              style={{ marginBottom: "0px", padding: "0px" }}
+              style={{ marginBottom: "0px", padding: "0px", marginTop: "16px" }}
             >
-              <ResizedImgePicker
+              <ResizedMediaPicker
                 maxCount={20}
-                targetResolution={ThumbnailImageResolutions.PLACE}
+                targetResolution={ThumbnailImageResolutions.VENUE}
                 form={form}
+                onDelete={handleDeleteImage}
+                deletingImages={deletingImages}
+                allowVideo={true}
+                maxVideoSize={100}
               />
             </Form.Item>
             <Text
               type="warning"
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
-              {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
-              &{" resolution "}
-              {ResolutionByServices.place} pixels.{" "}
+              Images: {SupportFormatContent.join(",")}:{" "}
+              {SupportImageFormat.join(", ")} & resolution{" "}
+              {ResolutionByServices.venue} pixels.
+              <br />
+              Videos: MP4, WebM, OGG formats. Max size: 100MB.
             </Text>
           </Card>
 
-          {/* Rest of the form remains the same */}
+          {/* Add on Services Section */}
           <Card>
             <Form.Item name="venue_add_on_services" label="Add on Services">
               <Form.List name="venue_add_on_services">
@@ -557,7 +629,10 @@ const VenueFormFields = ({ mode, venue }) => {
             <div className="mb-3">
               <h3>Pick Location</h3>
               <MapContainer
-                center={coordinates}
+                center={[
+                  coordinates.lat || venue?.latitude || 25.2048,
+                  coordinates.lng || venue?.longitude || 55.2708,
+                ]}
                 zoom={13}
                 style={{ height: "400px", width: "100%" }}
               >
@@ -573,7 +648,7 @@ const VenueFormFields = ({ mode, venue }) => {
       <ValidationModal
         visible={placeValidationDialogVisible}
         data={ValidateData?.errors}
-        statusMessage={message}
+        statusMessage={warningMessage}
         onClose={handleValidationModalCancel}
       />
       <WarningModal
@@ -595,7 +670,8 @@ const VenueFormFields = ({ mode, venue }) => {
         pagination={warningPagination}
         onPaginationChange={handleWarningPagination}
       />
-      <LoadingOverlay loading={loading} />
+      <LoadingOverlay loading={loading || isUploading} />
+
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === "EDIT" ? editVenue : addVenue}
@@ -604,6 +680,12 @@ const VenueFormFields = ({ mode, venue }) => {
         mode={mode}
         form={form}
         formType={"venue"}
+        setIsUploading={setIsUploading}
+        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.VENUE}
+        extraFieldsFromResponse={[
+          "thumbnail_image_upload_url",
+          "banner_images_upload_url",
+        ]}
       />
     </Row>
   );

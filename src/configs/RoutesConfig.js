@@ -44,6 +44,12 @@ const ALL_PROTECTED_ROUTES = {
     component: React.lazy(() => import("views/app-views/dashboards/default")),
     category: "orders",
   },
+  "reports.dashboard": {
+    key: "super-admin.statistics",
+    path: `${APP_PREFIX_PATH}/dashboards/statics`,
+    component: React.lazy(() => import("views/app-views/statics/index")),
+    category: "orders",
+  },
   "reports.analytic": {
     key: "dashboard.analytic",
     path: `${APP_PREFIX_PATH}/dashboards/analytic`,
@@ -72,7 +78,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "reports.orders.booking": {
     key: "reports.orders.booking",
-    path: `${APP_PREFIX_PATH}/reports/orders/by-booking`,
+    path: `${APP_PREFIX_PATH}/reports/orders/by-booking/:type`,
     component: React.lazy(() => import("views/orders/by-booking/list")),
     category: "orders",
     subcategory: "event",
@@ -130,7 +136,7 @@ const ALL_PROTECTED_ROUTES = {
     key: "organizer.reports",
     path: `${APP_PREFIX_PATH}/organizer/reports`,
     component: React.lazy(() =>
-      import("views/app-views/apps/super-admin/reports")
+      import("views/app-views/apps/organizer/reports")
     ),
     category: "orders",
   },

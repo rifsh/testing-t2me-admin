@@ -346,4 +346,7 @@ export const ApiConstant = {
     "/api/v1/event/booking/seat/public/booking/scan/verify",
   MOVIE_BOOKNG_VERIFICATION:
     "/api/v1/movie/booking/public/theatre/booking/scan/verify",
+
+  //S3 Related items
+  S3_IMAGE_DELETE: "/api/v1/location/secured/media/delete",
 };

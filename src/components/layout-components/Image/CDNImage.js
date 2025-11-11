@@ -33,38 +33,43 @@ const CDNImage = ({
     setHasError(false);
   };
 
-  // Generate the full image URL if we have a valid source
-  const imageUrl =
-    src && src !== "images"
-      ? src.includes("cdn-media")
-        ? src
-        : `${CDN_PATH}/${src}`
-      : null;
-  // Loading indicators
-  const renderLoadingIndicator = () => {
-    switch (loadingIndicator) {
-      case "spinner":
-        return (
-          <div
-            className="flex items-center justify-center bg-gray-100"
-            style={{ height, width, ...style }}
-          >
-            <Spin size="large" />
-          </div>
-        );
+    // ✅ Corrected image URL logic
+    let imageUrl = null;
+    if (src && src !== "images") {
+        if (src.startsWith("media")) {
+            imageUrl = `${CDN_PATH}/${src}`;
+        } else if (src.startsWith("http") || src.startsWith("/")) {
+            imageUrl = src;
+        } else {
+            imageUrl = `${CDN_PATH}/${src}`;
+        }
+    }
 
-      case "skeleton":
-        return (
-          <Skeleton.Image
-            active
-            style={{
-              height,
-              width,
-              ...style,
-            }}
-            className={className}
-          />
-        );
+    // Loading indicators
+    const renderLoadingIndicator = () => {
+        switch (loadingIndicator) {
+            case "spinner":
+                return (
+                    <div
+                        className="flex items-center justify-center bg-gray-100"
+                        style={{ height, width, ...style }}
+                    >
+                        <Spin size="large" />
+                    </div>
+                );
+
+            case "skeleton":
+                return (
+                    <Skeleton.Image
+                        active
+                        style={{
+                            height,
+                            width,
+                            ...style,
+                        }}
+                        className={className}
+                    />
+                );
 
       case "shimmer":
       default:
@@ -77,40 +82,24 @@ const CDNImage = ({
     }
   };
 
-  // Default fallback UI
-  const defaultFallback = (
-    <div
-      style={{
-        height,
-        width,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#f0f0f0",
-        color: "#888",
-        ...style,
-      }}
-      className={`${className} rounded-lg`}
-    >
-      <div className="flex flex-col items-center">
+    // Default fallback UI
+    const defaultFallback = (
         <div
-          style={{
-            height,
-            width,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "#f0f0f0",
-            color: "#888",
-            ...style,
-          }}
-          className={className}
+            style={{
+                height,
+                width,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#f0f0f0",
+                color: "#888",
+                ...style,
+            }}
+            className={`${className} rounded-lg`}
         >
-          No Image
+            No Image
         </div>
-      </div>
-    </div>
-  );
+    );
 
   // Use custom fallback if provided, otherwise use default
   const fallbackUI = fallbackElement || defaultFallback;
@@ -119,11 +108,11 @@ const CDNImage = ({
     return fallbackUI;
   }
 
-  return (
-    <div className="relative overflow-hidden" style={{ height, width }}>
-      {isLoading && (
-        <div className="absolute inset-0 z-10">{renderLoadingIndicator()}</div>
-      )}
+    return (
+        <div className="relative overflow-hidden" style={{ height, width }}>
+            {isLoading && (
+                <div className="absolute inset-0 z-10">{renderLoadingIndicator()}</div>
+            )}
 
       <AntImage
         alt={alt}

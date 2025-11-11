@@ -41,7 +41,6 @@ const { Option } = Select;
 const OrdersList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   // State management
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -91,22 +90,24 @@ const OrdersList = () => {
     </Menu>
   );
 
-  // Table columns configuration
+  // Table columns configuratio
   const tableColumns = [
     {
       title: "Schedule",
       dataIndex: "name",
       key: "name",
       render: (name, record) => (
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div
+          style={{ display: "flex", alignItems: "center" }}
+        >
           <Avatar
             src={`${CDN_PATH}/${record.event?.thumbnail_image}`}
             size={40}
             style={{ marginRight: 12 }}
             icon={<CalendarOutlined />}
           />
-          <div>
-            <div style={{ fontWeight: "bold" }}>{name || "N/A"}</div>
+          <div className="cursor-pointer" onClick={() => { handleViewDetails(record) }}>
+            <div style={{ fontWeight: "bold" }} className="underline">{name || "N/A"}</div>
           </div>
         </div>
       ),

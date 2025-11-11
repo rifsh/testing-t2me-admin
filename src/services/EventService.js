@@ -8,15 +8,15 @@ const EventsService = {};
 EventsService.addEvent = function (data, action) {
   console.log(data, "event dataaaaaa=======================");
   const encodedAction = encodeURIComponent(handleAction(action));
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
 
   return fetch({
     url: `${ApiConstant.EVENT_URL}`,
     method: "POST",
-    data: formData,
+    data: data,
     params: Utils.filterParams({ action: encodedAction }),
   });
 };

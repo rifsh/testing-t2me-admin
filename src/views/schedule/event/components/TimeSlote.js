@@ -583,7 +583,7 @@ const TimeSlots = ({
                 </Col>
               )}
               <Col span={5}>
-                {selectedTicketType === 1 ? (
+                {selectedTicketType === "seat_structure" ? (
                   <Form.Item
                     label="Seat Structure"
                     name={["timeSlots", dateStr, index, "seat_structure_id"]}

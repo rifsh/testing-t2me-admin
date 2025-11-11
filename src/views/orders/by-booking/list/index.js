@@ -11,6 +11,7 @@ import {
     Space,
     Typography,
     Button,
+    Badge,
 } from "antd";
 import {
     EyeOutlined,
@@ -27,7 +28,7 @@ import {
     InfoCircleOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getOrderByBookings } from "store/slices/ordersSlice";
 import utils from "utils";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
@@ -43,12 +44,12 @@ const { Text } = Typography;
 const BookingList = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-
+    const { type } = useParams();
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE.size);
     const [selectedPaymentStatus, setSelectedPaymentStatus] = useState('all');
-    const [selectedEventType, setSelectedEventType] = useState('ticket');
+    const [selectedEventType, setSelectedEventType] = useState(type);
     const [isTypeChanging, setIsTypeChanging] = useState(false); // Track type changes
 
     const { ordersByBooking, loading, pagination } = useSelector(
@@ -58,6 +59,12 @@ const BookingList = () => {
     useEffect(() => {
         fetchOrders(1, pageSize);
     }, []);
+
+    useEffect(() => {
+        setSelectedEventType(type);
+        console.log(type);
+
+    }, [type]);
 
     const fetchOrders = (page = currentPage, size = pageSize, extraParams = {}) => {
         dispatch(
@@ -74,7 +81,7 @@ const BookingList = () => {
     const handleViewDetails = (order) => {
         if (selectedEventType === 'seat') {
             console.log(order);
-            navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${order.order_id}/${selectedEventType}?orderId=${order?.id}`, {
+            navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/detail/${order.order_id}/${selectedEventType}?orderId=${order?.id}&show_seat_id=${order?.show_seat_details_id}`, {
                 state: { order },
             });
             return;
@@ -185,20 +192,48 @@ const BookingList = () => {
     };
 
     const tableColumns = [
+        // {
+        //     title: "Order ID",
+        //     dataIndex: "id",
+        //     key: "id",
+        //     render: (id, record) => {
+        //         const orderData = getOrderData(record);
+        //         return (
+        //             <div>
+        //                 <Text strong>#{orderData.id || id}</Text>
+        //             </div>
+        //         );
+        //     },
+        //     sorter: (a, b) => a.id - b.id,
+        //     width: 200,
+        // },
         {
             title: "Order ID",
             dataIndex: "id",
             key: "id",
-            render: (id, record) => {
-                const orderData = getOrderData(record);
-                return (
-                    <div>
-                        <Text strong>#{orderData.id || id}</Text>
-                    </div>
-                );
-            },
-            sorter: (a, b) => a.id - b.id,
-            width: 200,
+            render: (_, record) => record?.id ? (
+                <Space>
+                    <Badge
+                        style={{ backgroundColor: '#f0f8ff' }}
+                    />
+                    <Text
+                        strong
+                        style={{
+                            color: '#000000',
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            textDecoration: 'underline'
+                        }}
+                        onClick={() => handleViewDetails(record)}
+                    >
+                        #{record.id}
+                    </Text>
+                </Space>
+            ) : (
+                <Text type="secondary">----</Text>
+            ),
+            width: "20%",
         },
         {
             title: "Customer Details",
@@ -477,7 +512,6 @@ const BookingList = () => {
 
     const handleSelectEventType = (type) => {
         setIsTypeChanging(true); // Set flag to hide data during transition
-        setSelectedEventType(type);
         setCurrentPage(1);
 
         // Clear search and payment status when changing type to avoid confusion
@@ -485,7 +519,7 @@ const BookingList = () => {
         setSelectedPaymentStatus("all");
 
         fetchOrders(1, pageSize, { type });
-
+        navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/${type}`, { replace: true })
         // Reset the flag after a brief delay to allow new data to load
         setTimeout(() => {
             setIsTypeChanging(false);
@@ -519,6 +553,7 @@ const BookingList = () => {
         setSelectedEventType(resetType);
         setCurrentPage(resetPage);
         setIsTypeChanging(true);
+        navigate(`${APP_PREFIX_PATH}/reports/orders/by-booking/ticket`, { replace: true })
 
         dispatch(
             getOrderByBookings({

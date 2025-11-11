@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import { Tabs, Form, Button, message } from "antd";
 import Flex from "components/shared-components/Flex";
@@ -18,7 +18,10 @@ import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import moment from "moment/moment";
 import dayjs from "dayjs";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
-import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import {
+  setSelectedSubmitItem,
+  setOriginalFiles,
+} from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
 import { ActionType } from "utils/api/warning-submit-util";
@@ -31,6 +34,7 @@ import {
 } from "store/slices/EventOrganizerSlice";
 import { isOrganizer } from "configs/UserAccessConfig";
 import { EDIT } from "constants/AppConstants";
+import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil";
 
 const OfferForm = ({ mode, offer, type, isMakeChange }) => {
   const {
@@ -49,6 +53,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
     availableOfferDays,
     modalLoading,
   } = useSelector((state) => state.offers);
+
   const {
     singleOrganizerUpdate,
     loading: organizerLoading,
@@ -61,6 +66,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
 
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     dispatch(setIsDateRequired(false));
@@ -80,11 +86,24 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
       // Extract day names from mapped_offer_weekdays
       const applicableDayNames =
         offer.mapped_offer_weekdays?.map((day) => {
-          // Handle both uppercase and mixed case
           return day.full_name.toUpperCase();
         }) || [];
 
       console.log("Applicable Day Names:", applicableDayNames);
+
+      // ✅ Map thumbnail with proper structure for edit mode
+      const thumbnailFile =
+        offer.thumbnail_image && offer.thumbnail_image !== "images"
+          ? [
+              {
+                uid: "thumbnail-1",
+                name: offer.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${offer.thumbnail_image}`,
+                id: null, // Offers typically don't have media id for thumbnail
+              },
+            ]
+          : [];
 
       const formData = {
         name: offer.name,
@@ -95,17 +114,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
         date_required: offer.date_required,
         key_words: offer.key_words || [],
         applicable_days: applicableDayNames,
-        thumbnail_image:
-          offer.thumbnail_image && offer.thumbnail_image !== "images"
-            ? [
-                {
-                  uid: "-1",
-                  name: offer.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: `${CDN_PATH}/${offer.thumbnail_image}`,
-                },
-              ]
-            : [],
+        thumbnail_image: thumbnailFile,
       };
 
       if (offer.date_required && offer.start_date && offer.end_date) {
@@ -116,7 +125,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
       console.log("Final Form Data:", formData);
       form.setFieldsValue(formData);
 
-      // Force re-render after a small delay to ensure state is updated
+      // Force re-render after a small delay
       setTimeout(() => {
         form.setFieldsValue({ applicable_days: applicableDayNames });
       }, 100);
@@ -130,6 +139,12 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
     console.log("Form Values on Submit:", values);
 
     try {
+      // ✅ Extract original file objects for S3 upload FIRST
+      const originalFiles = extractFileObjects(values);
+
+      // ✅ Store original files in Redux
+      dispatch(setOriginalFiles(originalFiles));
+
       // Format dates if required
       if (isDateRequired) {
         values.start_date = Utils.formatDate(values.start_date);
@@ -147,48 +162,33 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
           return values.applicable_days?.includes(dayName);
         }) ?? [];
 
-      // Handle thumbnail_image - store ORIGINAL form data separately
-      let originalThumbnailImage = null;
-
-      if (values.thumbnail_image && Array.isArray(values.thumbnail_image)) {
-        if (values.thumbnail_image.length > 0) {
-          const file = values.thumbnail_image[0];
-
-          // Store the original file reference
-          originalThumbnailImage = file;
-
-          // For WARNING request, send appropriate format
-          if (file.response?.path) {
-            values.thumbnail_image = file.response.path;
-          } else if (file.url && file.status === "done") {
-            const urlPath = file.url.replace(`${CDN_PATH}/`, "");
-            values.thumbnail_image = urlPath;
-          } else if (file.originFileObj) {
-            // For new uploads, we'll handle differently in submit
-            values.thumbnail_image = "images"; // Placeholder for warning
-          } else {
-            delete values.thumbnail_image;
-          }
-        } else {
-          delete values.thumbnail_image;
-        }
-      } else if (!values.thumbnail_image || values.thumbnail_image === null) {
-        delete values.thumbnail_image;
-      }
-
-      console.log("Processed thumbnail_image:", values.thumbnail_image);
-      console.log("Original thumbnail file:", originalThumbnailImage);
-
       if (mode === EDIT) {
         if (isOrganizer() && isMakeChange) {
           dispatch(setCommentModalVisibility(true));
           return;
         }
 
+        // ✅ Transform thumbnail image for edit mode
+        let thumbnailData = null;
+
+        if (values.thumbnail_image && Array.isArray(values.thumbnail_image)) {
+          const thumbnailFile = values.thumbnail_image[0];
+
+          // Check if it's a new file (has originFileObj)
+          if (thumbnailFile && thumbnailFile.originFileObj) {
+            thumbnailData = {
+              file_name: thumbnailFile.name || thumbnailFile.originFileObj.name,
+              media_type: "image",
+            };
+          }
+          // If it's an existing file (has url but no originFileObj), don't send it
+          // The backend will keep the existing image
+        }
+
         const editData = {
           ...values,
           id: offer.id,
-          _originalThumbnail: originalThumbnailImage, // Store original file
+          thumbnail_image: thumbnailData,
         };
 
         const pageData = {
@@ -206,11 +206,26 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
           dispatch(setOfferDialogVisible(true));
         }
       } else {
-        // ADD mode
+        // ✅ ADD mode - transform data for submission
+        let thumbnailData = null;
+
+        if (values.thumbnail_image && Array.isArray(values.thumbnail_image)) {
+          const thumbnailFile = values.thumbnail_image[0];
+
+          if (thumbnailFile) {
+            thumbnailData = {
+              file_name:
+                thumbnailFile.name || thumbnailFile.originFileObj?.name || null,
+              media_type: "image",
+            };
+          }
+        }
+
         const formData = {
           ...values,
-          _originalThumbnail: originalThumbnailImage,
+          thumbnail_image: thumbnailData,
         };
+
         console.log("Add Data:", formData);
         dispatch(setSelectedSubmitItem(formData));
       }
@@ -239,9 +254,8 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
     );
     dispatch(setOfferModalLoading(false));
     dispatch(setOfferDialogVisible(false));
-    console.warn(" entered ");
+
     if (editOffer.fulfilled.match(resultAction)) {
-      console.warn("not entered ");
       dispatch(setSelectedSubmitItem(selectedOffer));
     }
   };
@@ -255,8 +269,14 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
       message.error("Please add a comment!");
       return;
     }
+
     const values = await form.validateFields();
+
     try {
+      // Extract original file objects
+      const originalFiles = extractFileObjects(values);
+      dispatch(setOriginalFiles(originalFiles));
+
       // Format dates if required
       if (isDateRequired) {
         values.start_date = Utils.formatDate(values.start_date);
@@ -265,11 +285,9 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
 
       values.key_words = values.key_words ?? [];
       values.date_required = values.date_required ?? isDateRequired;
-
-      // Ensure applicable_days is always an array
       values.applicable_days = values.applicable_days || [];
 
-      // Map the applicable days back to the weekday objects
+      // Map the applicable days
       values.mapped_offer_weekdays =
         availableOfferDays?.filter((day) => {
           const dayName = day.full_name.toUpperCase();
@@ -279,12 +297,21 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
       const editData = {
         ...values,
         id: offer.id,
+        thumbnail_image: {
+          file_name:
+            values.thumbnail_image?.[0]?.name ||
+            values.thumbnail_image?.[0]?.file_name ||
+            null,
+          media_type: "image",
+        },
       };
+
       const pageData = {
         offer_id: offer.id,
       };
 
       console.log("Make Change Data:", editData);
+
       const resultAction = await dispatch(
         makeChangeOffer({ data: editData, action: ActionType.SUBMIT, pageData })
       );
@@ -295,7 +322,6 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
         dispatch(setSelectedSubmitItem(editData));
         message.success(`Update ${actionType}ed successfully`);
       }
-      dispatch(setSelectedSubmitItem(editData));
     } catch (error) {
       message.error(`Failed to ${actionType} the update`);
     }
@@ -335,7 +361,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
                   type="primary"
                   onClick={() => onFinish()}
                   htmlType="submit"
-                  loading={loading}
+                  loading={loading || isUploading}
                 >
                   {mode === "ADD" ? "Add" : `Save`}
                 </Button>
@@ -357,7 +383,9 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
           />
         </div>
       </Form>
-      <LoadingOverlay loading={loading} />
+
+      <LoadingOverlay loading={loading || isUploading} />
+
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
@@ -377,6 +405,8 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
         pagination={warningPagination}
         onPaginationChange={handleWarningPagination}
       />
+
+      {/* ✅ Added setIsUploading and uploadFieldConfigs */}
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={
@@ -392,7 +422,11 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
         mode={mode}
         form={form}
         formType={"offer"}
+        setIsUploading={setIsUploading}
+        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.OFFER}
+        extraFieldsFromResponse={["thumbnail_image_upload_url"]}
       />
+
       <CommentShowModal
         visible={isCommentModalVisible}
         onSubmit={handleSubmit}

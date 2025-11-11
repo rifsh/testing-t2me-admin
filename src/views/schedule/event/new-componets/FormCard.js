@@ -216,36 +216,71 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
     dispatch(setScheduleFormData(updatedData));
   };
 
-  // Handlers
   const handleSelectEvent = (eventId) => {
     if (!eventId) {
       dispatch(setSelectedEvent(null));
-      form.setFieldsValue({ venue_id: null, available_types: null });
+      form.setFieldsValue({ venueid: null, availabletypes: null });
       dispatch(resetSchedule());
       return;
     }
+
     const event = filteredEvents.find((event) => event.id === eventId);
     if (!event) return;
+
+    // Clear timeslots completely
+    dispatch(
+      setScheduleFormData({
+        eventid: eventId,
+        showdates: [],
+        show_dates: [],
+        timeSlots: {},
+      })
+    );
+
     dispatch(getAvailableTicketsType({ event_id: eventId }));
     dispatch(setScheduleSelectTime(false));
     dispatch(setSelectedEvent(event));
+
     const venueId = event.venues?.[0]?.id || null;
-    if (venueId) dispatch(setSelectedVenue(venueId));
-    form.setFieldsValue({ venue_id: venueId, available_types: null });
-    dispatch(resetSchedule());
-    updateFormData({ event_id: eventId, venue_id: venueId });
+    if (venueId) {
+      dispatch(setSelectedVenue(venueId));
+      form.setFieldsValue({ venueid: venueId, availabletypes: null });
+    }
+
+    message.info("Event changed. Timeslots cleared.");
   };
 
   const handleSelectVenue = (venueId) => {
     if (!venueId) return;
+
+    // Clear timeslots completely
+    dispatch(
+      setScheduleFormData({
+        venueid: venueId,
+        showdates: [],
+        show_dates: [],
+        timeSlots: {},
+      })
+    );
+
     dispatch(setSelectedVenue(venueId));
     dispatch(resetSchedule());
-    updateFormData({ venue_id: venueId });
+    message.info("Venue changed. Timeslots cleared.");
   };
 
   const handleBookingTypeChange = (name) => {
+    // Clear timeslots completely
+    dispatch(
+      setScheduleFormData({
+        availabletypes: name,
+        showdates: [],
+        show_dates: [],
+        timeSlots: {},
+      })
+    );
+
     dispatch(setSelectedTicketType(name));
-    updateFormData({ available_types: name });
+    message.info("Booking type changed. Timeslots cleared.");
   };
 
   const handleSearch = (value) => {
@@ -689,7 +724,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                   Booking Settings
                 </h2>
                 <div className="space-y-3">
-                  <div
+                  {/* <div
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -743,7 +778,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                         <div className="w-5 h-5 border-2 border-gray-300 rounded"></div>
                       )}
                     </div>
-                  </div>
+                  </div> */}
 
                   <div
                     onClick={(e) => {

@@ -367,7 +367,7 @@ const EventDetailsPage = () => {
               src={`${CDN_PATH}/${record?.user?.thumbnail_image}`}
               style={{ marginRight: 8, backgroundColor: "#1890ff" }}
             />
-            <Text strong>{name || "N/A"}</Text>
+            <Text className="underline cursor-pointer" onClick={() => handleUserSelect(record?.user?.id)} strong>{name || "N/A"}</Text>
           </div>
         </div>
       ),

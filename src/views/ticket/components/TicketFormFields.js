@@ -248,10 +248,10 @@ const TicketFormFields = ({ mode, ticketId }) => {
               validator: (_, value) =>
                 value && VenueData?.capacity && value > VenueData.capacity
                   ? Promise.reject(
-                      new Error(
-                        `The number of tickets cannot exceed the venue capacity of ${VenueData.capacity}.`
-                      )
+                    new Error(
+                      `The number of tickets cannot exceed the venue capacity of ${VenueData.capacity}.`
                     )
+                  )
                   : Promise.resolve(),
             },
           ]}
@@ -304,7 +304,12 @@ const TicketFormFields = ({ mode, ticketId }) => {
               },
             ]}
           >
-            <Input placeholder="Enter Ticket Price" type="number" min={0} />
+            <Input
+              placeholder="Enter Ticket Price"
+              type="number"
+              min={0}
+              onWheel={(e) => e.target.blur()}
+            />
           </Form.Item>
 
           <Form.Item

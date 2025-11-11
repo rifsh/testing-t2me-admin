@@ -1,8 +1,9 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { AutoComplete, Input, Select, Button } from "antd";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Flex from "components/shared-components/Flex";
 import { resetSearchValue, resetStatusValue, setGlobalSearchValue, setGlobalStatusValue } from "store/slices/fliterSlice";
+import { TextConstants } from "constants/TextConstant";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -22,6 +23,7 @@ const SearchBarWithStatus = forwardRef(({
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState(null);
   const [filterValues, setFilterValues] = useState({});
+  const { statusState } = useSelector((state) => state.filter)
 
   useImperativeHandle(ref, () => ({
     clearAllFilters,
@@ -32,6 +34,13 @@ const SearchBarWithStatus = forwardRef(({
   useEffect(() => {
     dispatch(resetStatusValue());
   }, []);
+
+  useEffect(() => {
+    if (statusState === TextConstants.ResetStatus) {
+      setSearchValue('');
+      setStatusFilter(null);
+    }
+  }, [statusState]);
 
   // Check if any filters are active
   const hasActiveFilters = () => {

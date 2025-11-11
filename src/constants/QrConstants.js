@@ -14,3 +14,8 @@ export const BOOKING_TYPE = {
     ebs: 'ESB',
     ebm: 'EBM',
 }
+
+export const qrUsed = {
+    used: 'Used',
+    notUsed: 'Not Used'
+}

@@ -229,7 +229,7 @@ export function ScheduleDetails({ form }) {
                   }}
                 >
                   {availableTicketTyps?.available_types?.map((type) => (
-                    <Option key={type.id} value={type.id} label={type.name}>
+                    <Option key={type.id} value={type.code} label={type.name}>
                       {type.name}
                     </Option>
                   ))}

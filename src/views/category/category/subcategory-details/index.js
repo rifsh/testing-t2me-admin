@@ -1,14 +1,25 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, Row, Col, Typography, Image, Carousel, Alert } from "antd";
 import Loading from "components/shared-components/Loading";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { CDN_PATH } from "configs/AppConfig";
+import { useParams } from "react-router-dom";
+import { getSingleSubCateory } from "store/slices/categorySlice";
 
 const { Title, Text } = Typography;
 // singleCategory
 const SubCategoryDetails = () => {
-  const {singleSubcategory, loading, error } = useSelector(
+  const dispatch = useDispatch();
+  const { subcategoryId } = useParams();
+  const { singleSubcategory, loading, error } = useSelector(
     (state) => state.category
   );
+
+  useEffect(() => {
+    if (subcategoryId) {
+      dispatch(getSingleSubCateory(subcategoryId));
+    }
+  }, [subcategoryId])
 
   if (loading) return <Loading />;
   if (error) return <Alert message={`Error: ${error}`} type="error" />;
@@ -40,7 +51,7 @@ const SubCategoryDetails = () => {
             ) : (
               <Image
                 alt="SubCategory thumbnail"
-                src={singleSubcategory.thumbnail_image}
+                src={`${CDN_PATH}/${singleSubcategory.thumbnail_image}`}
                 height={300}
                 style={{ objectFit: "cover" }}
               />

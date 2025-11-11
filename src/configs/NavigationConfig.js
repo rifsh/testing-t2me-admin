@@ -26,6 +26,9 @@ const FEATURE_CATEGORIES = {
   DINE: "services.dine",
   ISSUE_TRACKING: "issues.issue_tracking",
   TRACK_REQUESTS: "issues.track_requests",
+  TRACK_REQUESTS_GENERAL: "issues.track_requests.general",
+  TRACK_REQUESTS_EVENT: "issues.track_requests.event",
+  TRACK_REQUESTS_MOVIE: "issues.track_requests.movie",
   LEAD_EVENTS: "issues.lead_events",
   ADVERTISEMENT: "advertisements",
   NEWSLETTER: "newsletter",
@@ -143,6 +146,47 @@ const buildDynamicSubmenu = (category, subcategory, items) => {
         }
       }
 
+      // For track requests general (offer and coupon)
+      if (subcategory === "track_requests.general") {
+        const itemMap = {
+          "trackRequest.event.offer.status.list": "offer",
+          "trackRequest.event.coupon.status.list": "coupon",
+          "trackRequest.movie.offer.status.list": "offer",
+          "trackRequest.movie.coupon.status.list": "coupon",
+        };
+        const featureItem = itemMap[item.key];
+        if (featureItem) {
+          return isItemEnabled("issues", "track_requests.general", featureItem);
+        }
+      }
+
+      // For track requests event (event-specific items)
+      if (subcategory === "track_requests.event") {
+        const itemMap = {
+          "eventOrganiser.update": "organizer",
+          "trackRequest.event.seat.status.list": "seat",
+          "trackRequest.event.schedule.status.list": "schedule",
+          "trackRequest.event.ticket.status.list": "ticket",
+        };
+        const featureItem = itemMap[item.key];
+        if (featureItem) {
+          return isItemEnabled("issues", "track_requests.event", featureItem);
+        }
+      }
+
+      // For track requests movie (movie-specific items)
+      if (subcategory === "track_requests.movie") {
+        const itemMap = {
+          "trackRequest.movie.seats.status.list": "seat",
+          "trackRequest.movie.schedule.status.list": "schedule",
+          "trackRequest.movie.screen.status.list": "screen",
+        };
+        const featureItem = itemMap[item.key];
+        if (featureItem) {
+          return isItemEnabled("issues", "track_requests.movie", featureItem);
+        }
+      }
+
       // For lead events
       if (subcategory === "lead_events") {
         const itemMap = {
@@ -215,10 +259,39 @@ const ALL_NAVIGATION_ITEMS = {
   "reports.dashboard": {
     key: "super-admin.reports",
     path: `${APP_PREFIX_PATH}/super-admin/reports`,
-    title: "sidenav.dashboard",
+    title: "sidenav.overview.dashboard",
     icon: DashboardOutlined,
     breadcrumb: false,
     submenu: [],
+    category: FEATURE_CATEGORIES.REPORTS,
+  },
+  "reports.dashboard": {
+    key: "super-admin.reports",
+    path: `${APP_PREFIX_PATH}/super-admin/reports`,
+    title: "sidenav.overview",
+    icon: DashboardOutlined,
+    breadcrumb: false,
+    get submenu() {
+      const allSubmenuItems = [
+        {
+          key: "super-admin.reports",
+          path: `${APP_PREFIX_PATH}/super-admin/reports`,
+          title: "sidenav.overview.dashboard",
+          icon: DashboardOutlined,
+          breadcrumb: false,
+          submenu: [],
+        },
+        {
+          key: "super-admin.statistics",
+          path: `${APP_PREFIX_PATH}/dashboards/statics`,
+          title: "sidenav.overview.statics",
+          icon: DashboardOutlined,
+          breadcrumb: false,
+          submenu: [],
+        },
+      ];
+      return buildDynamicSubmenu("orders", null, allSubmenuItems);
+    },
     category: FEATURE_CATEGORIES.REPORTS,
   },
   "reports.orders": {
@@ -239,7 +312,7 @@ const ALL_NAVIGATION_ITEMS = {
         },
         {
           key: "reports.orders.booking",
-          path: `${APP_PREFIX_PATH}/reports/orders/by-booking`,
+          path: `${APP_PREFIX_PATH}/reports/orders/by-booking/ticket`,
           title: "sidenav.order.booking",
           icon: DashboardOutlined,
           breadcrumb: false,
@@ -284,12 +357,13 @@ const ALL_NAVIGATION_ITEMS = {
         },
       ];
       return buildDynamicSubmenu("orders", null, allSubmenuItems);
-    }, category: FEATURE_CATEGORIES.REPORTS,
+    },
+    category: FEATURE_CATEGORIES.REPORTS,
   },
   "organizer.reports.dashboard": {
     key: "organizer.reports",
     path: `${APP_PREFIX_PATH}/organizer/reports`,
-    title: "sidenav.dashboard",
+    title: "sidenav.overview.dashboard",
     icon: DashboardOutlined,
     breadcrumb: false,
     submenu: [],
@@ -566,26 +640,26 @@ const ALL_NAVIGATION_ITEMS = {
     featureItem: "alert",
   },
 
-  // Track Requests - All items under issues.track_requests
-  "track.event.organizer": {
-    key: "eventOrganiser.update",
-    path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
-    title: "sidenav.eventcoordinatorupdates",
+  // Track Requests - General (offer and coupon)
+  "track.event.offer": {
+    key: "trackRequest.event.offer.status.list",
+    path: `${APP_PREFIX_PATH}/track/offer/status/list/event`,
+    title: "sidenav.offer",
     icon: OrderedListOutlined,
     breadcrumb: false,
     submenu: [],
-    category: FEATURE_CATEGORIES.TRACK_REQUESTS,
-    featureItem: "event",
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_GENERAL,
+    featureItem: "offer",
   },
-  "track.movie.seats": {
-    key: "trackRequest.movie.seats.status.list",
-    path: `${APP_PREFIX_PATH}/track/movie-seats/status/list`,
-    title: "sidenav.seat",
+  "track.event.coupon": {
+    key: "trackRequest.event.coupon.status.list",
+    path: `${APP_PREFIX_PATH}/track/coupon/status/list/event`,
+    title: "sidenav.coupon",
     icon: OrderedListOutlined,
     breadcrumb: false,
     submenu: [],
-    category: FEATURE_CATEGORIES.TRACK_REQUESTS,
-    featureItem: "movie",
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_GENERAL,
+    featureItem: "coupon",
   },
   "track.movie.offer": {
     key: "trackRequest.movie.offer.status.list",
@@ -594,8 +668,8 @@ const ALL_NAVIGATION_ITEMS = {
     icon: OrderedListOutlined,
     breadcrumb: false,
     submenu: [],
-    category: FEATURE_CATEGORIES.TRACK_REQUESTS,
-    featureItem: "movie",
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_GENERAL,
+    featureItem: "offer",
   },
   "track.movie.coupon": {
     key: "trackRequest.movie.coupon.status.list",
@@ -604,8 +678,62 @@ const ALL_NAVIGATION_ITEMS = {
     icon: OrderedListOutlined,
     breadcrumb: false,
     submenu: [],
-    category: FEATURE_CATEGORIES.TRACK_REQUESTS,
-    featureItem: "movie",
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_GENERAL,
+    featureItem: "coupon",
+  },
+
+  // Track Requests - Event (event-specific items)
+  "track.event.organizer": {
+    key: "eventOrganiser.update",
+    path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+    title: "sidenav.event",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
+    featureItem: "organizer",
+  },
+  "track.event.seat": {
+    key: "trackRequest.event.seat.status.list",
+    path: `${APP_PREFIX_PATH}/track/event-seats/status/list`,
+    title: "sidenav.seat",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
+    featureItem: "seat",
+  },
+  "track.event.schedule": {
+    key: "trackRequest.event.schedule.status.list",
+    path: `${APP_PREFIX_PATH}/track/event-schedule/status/list`,
+    title: "sidenav.schedule",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
+    featureItem: "schedule",
+  },
+  "track.event.ticket": {
+    key: "trackRequest.event.ticket.status.list",
+    path: `${APP_PREFIX_PATH}/track/event-tickets/status/list`,
+    title: "sidenav.ticket",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
+    featureItem: "ticket",
+  },
+
+  // Track Requests - Movie (movie-specific items)
+  "track.movie.seats": {
+    key: "trackRequest.movie.seats.status.list",
+    path: `${APP_PREFIX_PATH}/track/movie-seats/status/list`,
+    title: "sidenav.seat",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_MOVIE,
+    featureItem: "seat",
   },
   "track.movie.schedule": {
     key: "trackRequest.movie.schedule.status.list",
@@ -614,8 +742,8 @@ const ALL_NAVIGATION_ITEMS = {
     icon: OrderedListOutlined,
     breadcrumb: false,
     submenu: [],
-    category: FEATURE_CATEGORIES.TRACK_REQUESTS,
-    featureItem: "movie",
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_MOVIE,
+    featureItem: "schedule",
   },
   "track.movie.screen": {
     key: "trackRequest.movie.screen.status.list",
@@ -624,8 +752,8 @@ const ALL_NAVIGATION_ITEMS = {
     icon: OrderedListOutlined,
     breadcrumb: false,
     submenu: [],
-    category: FEATURE_CATEGORIES.TRACK_REQUESTS,
-    featureItem: "movie",
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_MOVIE,
+    featureItem: "screen",
   },
 
   // Lead Events - All items under issues.lead_events
@@ -906,8 +1034,16 @@ const ROLE_NAVIGATION_ACCESS = {
     // Reports
     "organizer.reports.dashboard",
 
+    // Reports Orders
+    "reports.orders",
+
     // Event Services
+    "general.offer",
+    "general.coupon",
+    "event.ticket",
+    "event.seat",
     "event.list",
+    "event.schedule",
     "event.schedule.add-on",
 
     // Movie Services (limited access)
@@ -924,9 +1060,15 @@ const ROLE_NAVIGATION_ACCESS = {
 
     // Issues
     "issue.list",
+    "alerts.list",
 
     // Track Requests
     "track.event.organizer",
+    "track.event.seat",
+    "track.event.schedule",
+    "track.event.ticket",
+    "track.event.offer",
+    "track.event.coupon",
     "track.movie.offer",
     "track.movie.coupon",
     "track.movie.screen",
@@ -1028,9 +1170,9 @@ const isNavigationFeatureEnabled = (featureCategory, featureItem = null) => {
 
   if (parts.length === 1) {
     // Special handling for app_management since it has a nested structure
-    if (parts[0] === 'app_management' && featureItem) {
+    if (parts[0] === "app_management" && featureItem) {
       // App management items are under app_management.subitems.layout.items
-      return isItemEnabled('app_management', 'layout', featureItem);
+      return isItemEnabled("app_management", "layout", featureItem);
     }
 
     if (featureItem) {
@@ -1043,6 +1185,15 @@ const isNavigationFeatureEnabled = (featureCategory, featureItem = null) => {
       return isItemEnabled(parts[0], parts[1], featureItem);
     }
     return isSubcategoryEnabled(parts[0], parts[1]);
+  } else if (parts.length === 3) {
+    // Three levels: issues.track_requests.general, issues.track_requests.event
+    if (featureItem) {
+      // For track_requests, check at the nested subcategory level
+      // e.g., isItemEnabled("issues", "track_requests.general", "offer")
+      return isItemEnabled(parts[0], `${parts[1]}.${parts[2]}`, featureItem);
+    }
+    // Check if the subcategory is enabled (e.g., track_requests.general)
+    return isSubcategoryEnabled(parts[0], `${parts[1]}.${parts[2]}`);
   }
 
   return true;
@@ -1066,7 +1217,10 @@ const getFilteredNavigationItems = (allowedKeys) => {
       }
 
       // Check if the feature category and specific item are enabled
-      const isFeatureEnabled = isNavigationFeatureEnabled(item.category, item.featureItem);
+      const isFeatureEnabled = isNavigationFeatureEnabled(
+        item.category,
+        item.featureItem
+      );
 
       // console.log(`🔍 Checking ${key}:`, {
       //   category: item.category,
@@ -1088,7 +1242,8 @@ const getFilteredNavigationItems = (allowedKeys) => {
       // Return item with resolved submenu if it's a getter
       return {
         ...item,
-        submenu: typeof item.submenu === "function" ? item.submenu : item.submenu,
+        submenu:
+          typeof item.submenu === "function" ? item.submenu : item.submenu,
       };
     });
 
@@ -1097,7 +1252,7 @@ const getFilteredNavigationItems = (allowedKeys) => {
 
   // Group by category for debugging
   const debugGroups = filteredResults.reduce((groups, item) => {
-    const category = item.category || 'uncategorized';
+    const category = item.category || "uncategorized";
     if (!groups[category]) groups[category] = [];
     groups[category].push(item.title || item.key);
     return groups;
@@ -1233,53 +1388,58 @@ const buildNavigationTree = (items) => {
     });
   }
 
-  // Track Requests Section
-  if (groupedItems[FEATURE_CATEGORIES.TRACK_REQUESTS]?.length > 0) {
-    const trackingItems = groupedItems[FEATURE_CATEGORIES.TRACK_REQUESTS];
-    const eventTracking = trackingItems.filter(
-      (item) => item.featureItem === "event"
-    );
-    const movieTracking = trackingItems.filter(
-      (item) => item.featureItem === "movie"
-    );
+  // Track Requests Section - Organized like Services with General, Event, and Movie
+  const trackRequestsSubmenu = [];
 
-    const trackingSubmenu = [];
+  // General Track Requests (common offer and coupon for both event and movie)
+  if (groupedItems[FEATURE_CATEGORIES.TRACK_REQUESTS_GENERAL]?.length > 0) {
+    trackRequestsSubmenu.push({
+      key: "trackRequest.general",
+      path: `${APP_PREFIX_PATH}/track/general`,
+      title: "sidenav.general",
+      icon: DashboardOutlined,
+      breadcrumb: false,
+      isGroupTitle: false,
+      submenu: groupedItems[FEATURE_CATEGORIES.TRACK_REQUESTS_GENERAL],
+    });
+  }
 
-    if (eventTracking.length > 0) {
-      trackingSubmenu.push({
-        key: "trackRequest.event",
-        path: `${APP_PREFIX_PATH}/track/event`,
-        title: "sidenav.event",
-        icon: DashboardOutlined,
-        breadcrumb: false,
-        isGroupTitle: false,
-        submenu: eventTracking,
-      });
-    }
+  // Event Track Requests (event-specific items)
+  if (groupedItems[FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT]?.length > 0) {
+    trackRequestsSubmenu.push({
+      key: "trackRequest.event",
+      path: `${APP_PREFIX_PATH}/track/event`,
+      title: "sidenav.event",
+      icon: DashboardOutlined,
+      breadcrumb: false,
+      isGroupTitle: false,
+      submenu: groupedItems[FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT],
+    });
+  }
 
-    if (movieTracking.length > 0) {
-      trackingSubmenu.push({
-        key: "trackRequest.movie",
-        path: `${APP_PREFIX_PATH}/track/movie`,
-        title: "sidenav.movie",
-        icon: DashboardOutlined,
-        breadcrumb: false,
-        isGroupTitle: false,
-        submenu: movieTracking,
-      });
-    }
+  // Movie Track Requests (movie-specific items)
+  if (groupedItems[FEATURE_CATEGORIES.TRACK_REQUESTS_MOVIE]?.length > 0) {
+    trackRequestsSubmenu.push({
+      key: "trackRequest.movie",
+      path: `${APP_PREFIX_PATH}/track/movie`,
+      title: "sidenav.movie",
+      icon: DashboardOutlined,
+      breadcrumb: false,
+      isGroupTitle: false,
+      submenu: groupedItems[FEATURE_CATEGORIES.TRACK_REQUESTS_MOVIE],
+    });
+  }
 
-    if (trackingSubmenu.length > 0) {
-      applicationsSubmenu.push({
-        key: "TrackRequests",
-        path: `${APP_PREFIX_PATH}/track`,
-        title: "Track Requests",
-        icon: DashboardOutlined,
-        breadcrumb: false,
-        isGroupTitle: false,
-        submenu: trackingSubmenu,
-      });
-    }
+  if (trackRequestsSubmenu.length > 0) {
+    applicationsSubmenu.push({
+      key: "TrackRequests",
+      path: `${APP_PREFIX_PATH}/track`,
+      title: "Track Requests",
+      icon: DashboardOutlined,
+      breadcrumb: false,
+      isGroupTitle: false,
+      submenu: trackRequestsSubmenu,
+    });
   }
 
   // Lead Events Section

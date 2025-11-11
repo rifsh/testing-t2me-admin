@@ -23,37 +23,67 @@ import {
   Space,
   Divider,
 } from "antd";
+import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
-const EventDetailsField = ({ mode }) => {
+const EventDetailsField = ({ mode, form }) => {
+  const { handleDeleteImage } = useS3ImageDelete("event");
+
   const normFile = (e) => {
-    console.warn("eeeeeeeeeeeeeeeeeeeee", e);
     if (Array.isArray(e)) {
-      // Filter out empty strings and invalid entries, keep only valid file objects
       return e
         .filter(
           (file) =>
             file &&
             typeof file === "object" &&
             file !== null &&
-            (file.originFileObject || file.name || file.uid)
+            (file.originFileObj || file.name || file.uid)
         )
-        .map((file) => ({ ...file }));
+        .map((file) => {
+          return {
+            uid: file.uid,
+            name: file.name,
+            status: file.status || "done",
+            url: file.url,
+            thumbUrl: file.thumbUrl || file.url,
+            originFileObj: file.originFileObj,
+            id: file.id,
+            type: file.type || file.mediaType,
+            mediaType: file.mediaType,
+            caption: file.caption,
+            ...(file.response && { response: file.response }),
+            ...(file.percent && { percent: file.percent }),
+          };
+        });
     }
 
     const fileList = e?.fileList || [];
-    // Filter out empty strings and invalid entries, keep only valid file objects
     return fileList
       .filter(
         (file) =>
           file &&
           typeof file === "object" &&
           file !== null &&
-          (file.originFileObject || file.name || file.uid)
+          (file.originFileObj || file.name || file.uid)
       )
-      .map((file) => ({ ...file }));
+      .map((file) => {
+        return {
+          uid: file.uid,
+          name: file.name,
+          status: file.status || "done",
+          url: file.url,
+          thumbUrl: file.thumbUrl || file.url,
+          originFileObj: file.originFileObj,
+          id: file.id,
+          type: file.type || file.mediaType,
+          mediaType: file.mediaType,
+          caption: file.caption,
+          ...(file.response && { response: file.response }),
+          ...(file.percent && { percent: file.percent }),
+        };
+      });
   };
 
   return (
@@ -94,65 +124,104 @@ const EventDetailsField = ({ mode }) => {
         <Card title="Media & Images" bordered style={{ marginTop: 16 }}>
           <Row gutter={24}>
             <Col span={12}>
+              {/* Thumbnail - Image Only - REQUIRED */}
               <Form.Item
                 name="thumbnail_image"
                 label="Thumbnail"
-                required={true}
-                valuePropName="fileList"
+                valuePropName="value"
                 getValueFromEvent={normFile}
+                rules={[
+                  { required: true, message: "Thumbnail image is required" },
+                ]}
+                style={{ marginBottom: "0px" }}
               >
                 <ResizedImgePicker
                   maxCount={1}
                   targetResolution={ThumbnailImageResolutions.EVENT}
-                  beforeUpload={() => false} // Prevent auto upload
+                  form={form}
+                  allowVideo={false}
                 />
               </Form.Item>
-              <Text type="secondary" style={{ fontSize: 11 }}>
+              <Text
+                type="warning"
+                style={{ fontSize: "11px", display: "block", marginTop: "8px" }}
+              >
                 {SupportFormatContent.join(",")}:{" "}
                 {SupportImageFormat.join(", ")}
-                <br />
-                {ResolutionByServices.place}px
+                {" & resolution "}
+                {ResolutionByServices.event} pixels.
               </Text>
             </Col>
+
             <Col span={12}>
+              {/* Banner Images - Images and Videos - REQUIRED */}
               <Form.Item
                 name="banner_images"
-                label="Banners"
-                valuePropName="fileList"
+                label="Banner Media (Images & Videos)"
+                valuePropName="value"
                 getValueFromEvent={normFile}
+                rules={[
+                  { required: true, message: "Banner images are required" },
+                ]}
+                style={{ marginBottom: "0px" }}
               >
                 <ResizedImgePicker
                   maxCount={20}
                   targetResolution={ThumbnailImageResolutions.EVENT_BANNER}
-                  beforeUpload={() => false} // Prevent auto upload
+                  form={form}
+                  onDelete={handleDeleteImage}
+                  allowVideo={true}
+                  maxVideoSize={100}
                 />
               </Form.Item>
-              <Form.Item
-                name="banner_image_url"
-                label="Banner URL (Optional)"
-                rules={[{ type: "url", message: "Please enter a valid URL" }]}
+              <Text
+                type="warning"
+                style={{ fontSize: "11px", display: "block", marginTop: "8px" }}
               >
-                <Input placeholder="https://example.com/banner.jpg" />
-              </Form.Item>
+                Images: {SupportFormatContent.join(",")}:{" "}
+                {SupportImageFormat.join(", ")}
+                {" & resolution "}
+                {ResolutionByServices.event} pixels.
+                <br />
+                Videos: MP4, WebM, OGG formats. Max size: 100MB.
+              </Text>
             </Col>
           </Row>
+
           <Divider />
+
+          {/* Event Images - Images and Videos - NOT REQUIRED */}
           <Form.Item
             name="event_images"
-            label="Additional Images"
-            valuePropName="fileList"
+            label="Additional Media (Images & Videos)"
+            valuePropName="value"
             getValueFromEvent={normFile}
+            style={{ marginBottom: "0px" }}
           >
             <ResizedImgePicker
               maxCount={20}
               targetResolution={ThumbnailImageResolutions.EVENT}
-              beforeUpload={() => false} // Prevent auto upload
+              form={form}
+              onDelete={handleDeleteImage}
+              allowVideo={true}
+              maxVideoSize={100}
             />
           </Form.Item>
+          <Text
+            type="warning"
+            style={{ fontSize: "11px", display: "block", marginTop: "8px" }}
+          >
+            Images: {SupportFormatContent.join(",")}:{" "}
+            {SupportImageFormat.join(", ")}
+            {" & resolution "}
+            {ResolutionByServices.event} pixels.
+            <br />
+            Videos: MP4, WebM, OGG formats. Max size: 100MB.
+          </Text>
         </Card>
       </Col>
 
-      {/* Right Column */}
+      {/* Right Column - Add-on Services and Q&A */}
       <Col xs={24} lg={10}>
         <Card
           title={

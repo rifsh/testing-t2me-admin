@@ -74,43 +74,71 @@ const CountryForm = ({ mode, placeId }) => {
     }
   }, [dispatch, placeId]);
 
+  // Load existing data in edit mode
   useEffect(() => {
-    if (singlePlace) {
-      if (mode === "EDIT") {
-        form.setFieldsValue({
-          country_id: singlePlace.country.name,
-          name: singlePlace.name,
-          banner_images: singlePlace?.media
-            ? singlePlace?.media?.map((banner, index) => ({
-                uid: `-banner-${index}`,
-                name: banner?.media_url.split("/").pop(),
-                status: "done",
-                url: `${CDN_PATH}/${banner?.media_url}`,
-              }))
-            : [],
-          thumbnail_image:
-            singlePlace.thumbnail_image &&
-            singlePlace.thumbnail_image !== "images"
-              ? [
-                  {
-                    uid: "-1",
-                    name: singlePlace.thumbnail_image.split("/").pop(),
-                    status: "done",
-                    url: `${CDN_PATH}/${singlePlace.thumbnail_image}`,
-                  },
-                ]
-              : [],
-          description: singlePlace.description,
-        });
-      }
+    if (singlePlace && mode === 'EDIT') {
+      // Map thumbnail image
+      const thumbnailFile = singlePlace.thumbnail_image
+        ? [
+          {
+            uid: "thumbnail-1",
+            name: singlePlace.thumbnail_image.split("/").pop(),
+            status: "done",
+            url: `${CDN_PATH}/${singlePlace.thumbnail_image}`,
+            id: null, // Thumbnail doesn't have id in media array
+            type: "image",
+          },
+        ]
+        : [];
+
+      // Map banner media from media array (both images and videos)
+      const bannerFiles = singlePlace.media
+        ? singlePlace.media.map((media, index) => ({
+          uid: `banner-${media.id}`,
+          name: media.media_url.split("/").pop(),
+          status: "done",
+          url: `${CDN_PATH}/${media.media_url}`,
+          thumbUrl: media.thumbnail_url
+            ? `${CDN_PATH}/${media.thumbnail_url}`
+            : undefined,
+          id: media.id, // Media id for deletion
+          type: media.media_type || "image", // "image" or "video"
+          mediaType: media.media_type,
+          caption: media.caption,
+        }))
+        : [];
+
+      form.setFieldsValue({
+        name: singlePlace.name,
+        description: singlePlace.description,
+        thumbnail_image: thumbnailFile,
+        banner_images: bannerFiles, // Keep as banner_images
+      });
     }
-  }, [singlePlace, form, mode]);
+  }, [singlePlace, form]);
 
   useEffect(() => {
     if (error) {
       antdMessage.error(error);
     }
   }, [error]);
+
+  // Helper function to determine media type from file
+  const getMediaType = (file) => {
+    // Check if type property exists
+    if (file.type) {
+      return file.type;
+    }
+
+    // Check file extension as fallback
+    const fileName = file.name || file.file_name || "";
+    const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+    const isVideo = videoExtensions.some((ext) =>
+      fileName.toLowerCase().endsWith(ext)
+    );
+
+    return isVideo ? "video" : "image";
+  };
 
   const onFinish = async () => {
     try {
@@ -122,21 +150,34 @@ const CountryForm = ({ mode, placeId }) => {
       // Store original files in Redux for use in confirmation
       dispatch(setOriginalFiles(originalFiles));
 
+      // Transform thumbnail_image - always image type
+      const thumbnailData = values.thumbnail_image?.[0]
+        ? {
+          file_name:
+            values.thumbnail_image[0].name ||
+            values.thumbnail_image[0].file_name ||
+            null,
+          media_type: "image",
+        }
+        : null;
+
+      // Transform banner_images - can be images or videos
+      const bannerImagesData =
+        values.banner_images?.map((media) => {
+          const mediaType = getMediaType(media);
+
+          return {
+            id: media.id || null, // Include id for existing media
+            file_name: media.name || media.file_name,
+            media_type: mediaType,
+          };
+        }) || [];
+
       // Transform the data to extract file names
       const data = {
         ...values,
-        thumbnail_image: {
-          file_name:
-            values.thumbnail_image?.[0]?.name ||
-            values.thumbnail_image?.[0]?.file_name ||
-            null,
-          media_type: "image",
-        },
-        banner_images:
-          values.banner_images?.map((img) => ({
-            file_name: img.name || img.file_name,
-            media_type: "image",
-          })) || [],
+        thumbnail_image: thumbnailData,
+        banner_images: bannerImagesData,
       };
 
       if (!placeId) {

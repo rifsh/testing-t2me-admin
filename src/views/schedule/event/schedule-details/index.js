@@ -184,7 +184,7 @@ const ScheduleDetails = () => {
     },
     {
       title: "Status",
-      dataIndex: ["offer", "status"],
+      dataIndex: ["offer", "is_active"],
       key: "status",
       render: (status, record) => (
         <Tag color={status ? "green" : "red"}>

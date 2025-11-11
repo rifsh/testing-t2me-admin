@@ -16,6 +16,7 @@ export const TextConstants = {
   ConfirmationError: "An error occurred during confirmation.",
   ConfirmItemDetails: "Confirm Item Details",
   ConfirmItem: "Confirm Item",
+  ResetStatus: "ResetStatus",
   Cancel: "Cancel",
   Pending: "pending",
   Done: "done",
