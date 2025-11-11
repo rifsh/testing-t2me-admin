@@ -98,13 +98,13 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         thumbnail_image:
           coupon.thumbnail_image && coupon.thumbnail_image !== "images"
             ? [
-                {
-                  uid: "-1",
-                  name: coupon.thumbnail_image.split("/").pop(),
-                  status: "done",
-                  url: coupon.thumbnail_image,
-                },
-              ]
+              {
+                uid: "-1",
+                name: coupon.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: coupon.thumbnail_image,
+              },
+            ]
             : [],
       };
 
@@ -193,8 +193,9 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         const formData = {
           ...processedValues,
         };
+        console.log("couponFormData", formData);
 
-        dispatch(setSelectedSubmitItem(formData));
+        // dispatch(setSelectedSubmitItem(formData));
       }
     } catch (info) {
       console.error("Validation Failed:", info);
@@ -376,9 +377,8 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         loading={organizerLoading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${
-          actionType.charAt(0).toUpperCase() + actionType.slice(1)
-        } Comment`}
+        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)
+          } Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />
     </>

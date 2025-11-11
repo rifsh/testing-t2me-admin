@@ -35,6 +35,8 @@ import { fetchMoviesData } from "store/slices/movieSlice";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
 import { EventType } from "constants/AppConstants";
+import ApplicableDays from "components/layout-components/Cards/ApplicableDays";
+import { getAvailableOfferDays } from "store/slices/offerSlice";
 
 const { Text } = Typography;
 const { Group: RadioGroup } = Radio;
@@ -43,6 +45,7 @@ function CouponFormFields({ form, type }) {
   const dispatch = useDispatch();
   const startDate = Form.useWatch("start_date", form);
   const { isDateRequired } = useSelector((state) => state.coupons);
+  const { availableOfferDays, loading: offerLoading } = useSelector((state) => state.offers);
   const [couponType, setCouponType] = useState(true);
   const [couponCodeType, setCouponCodeType] = useState(false);
   useEffect(() => {
@@ -119,6 +122,7 @@ function CouponFormFields({ form, type }) {
 
   // Ensure isDateRequired is synchronized with form values
   useEffect(() => {
+    dispatch(getAvailableOfferDays({}));
     // When form loads with dates, make sure isDateRequired is set correctly
     const startDateValue = form.getFieldValue("start_date");
     const endDateValue = form.getFieldValue("end_date");
@@ -186,7 +190,7 @@ function CouponFormFields({ form, type }) {
             <TheaterListForm
               rules={[{ required: true }]}
               form={form}
-              onSelect={(theater) => {}}
+              onSelect={(theater) => { }}
               mode="multiple"
               name="theatre_ids"
               label="Theater"
@@ -529,6 +533,11 @@ function CouponFormFields({ form, type }) {
         </Card>
       </Col>
       <Col xs={24} sm={24} md={7}>
+        <ApplicableDays
+          form={form}
+          availableOfferDays={availableOfferDays}
+          loading={offerLoading}
+        />
         <Card title="Coupon Information">
           <Alert
             message="Important Note"
