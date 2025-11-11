@@ -63,6 +63,8 @@ const FooterFormFields = ({ mode }) => {
   const { footerData: allFooterData, loading: footerLoading } = useSelector(
     (state) => state.footer
   );
+  const [uploadedAppLogo, setUploadedAppLogo] = useState(null);
+  const [uploadedPaymentLogos, setUploadedPaymentLogos] = useState([]);
 
   // Get selected footer from location state (passed during navigation)
   const selectedFooterId = location.state?.footerId;
@@ -133,6 +135,13 @@ const FooterFormFields = ({ mode }) => {
       // Get the selected country key
       const countryKey = selectedFooterId;
 
+      // Extract place info from the key (format: "Place Name, Country_ID")
+      const placeIdMatch = countryKey.match(/_(\d+)$/);
+      const placeId = placeIdMatch ? parseInt(placeIdMatch[1]) : null;
+
+      // Extract place name (everything before the underscore and ID)
+      const placeDisplayName = countryKey.replace(/_\d+$/, "");
+
       // Extract data for selected country
       const customerSupport = footerItem.customer_support?.[countryKey] || {};
       const contactUs = footerItem.contact_us?.[countryKey] || {};
@@ -167,6 +176,8 @@ const FooterFormFields = ({ mode }) => {
 
       // Set form values
       form.setFieldsValue({
+        place: placeDisplayName, // Set the display text
+        place_id: placeId, // Set the hidden ID field
         footer_name: footerItem.footer_text || "",
         description: footerItem.platform_description || "",
         whatsapp_number: customerSupport?.whatsapp_contact || "",
@@ -184,11 +195,10 @@ const FooterFormFields = ({ mode }) => {
           paymentLogosForForm.length > 0 ? paymentLogosForForm : [],
       });
 
-      // Set selected place if available in the key
-      const placeIdMatch = countryKey.match(/_(\d+)$/);
-      if (placeIdMatch) {
-        setSelectedPlaceId(parseInt(placeIdMatch[1]));
-        dispatch(setSelectedPlace(parseInt(placeIdMatch[1])));
+      // Set selected place ID in state
+      if (placeId) {
+        setSelectedPlaceId(placeId);
+        dispatch(setSelectedPlace(placeId));
       }
     } catch (err) {
       console.error("Error populating form:", err);
@@ -217,7 +227,7 @@ const FooterFormFields = ({ mode }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-      console.log(JSON.stringify(values, null, 2), "THIS IS VALUES DATA");
+      console.log("Form values:", JSON.stringify(values, null, 2));
 
       const days_available = `${values.start_day} to ${values.end_day}`;
       const operating_hours = `${values.start_time.format(
@@ -225,14 +235,27 @@ const FooterFormFields = ({ mode }) => {
       )} - ${values.end_time.format("HH:mm")}`;
       const availability = `${values.start_day.toUpperCase()} TO ${values.end_day.toUpperCase()}`;
 
+      const appLogoUrl = values.app_logo_url;
+
+      const paymentLogosData =
+        values.payment_logos?.map((pm) => ({
+          method_name: pm.method_name,
+          method_logo: pm.method_logo_url,
+        })) || [];
+
+      console.log("App Logo URL:", appLogoUrl);
+      console.log("Payment Logos Data:", paymentLogosData);
+
       const data = {
         footer_text: values.footer_name,
-        app_logo: values.app_logo,
+        app_logo: appLogoUrl,
         platform_description: values.description,
         customer_support_keys: `${values.place}_${String(selectedPlaceId)}`,
         whatsapp_contact: values.whatsapp_number,
         hotline_number: values.phone_number,
+        availability: availability,
         payment_keys: `${values.place}_${String(selectedPlaceId)}`,
+        payment_logos: paymentLogosData,
         contact_us_keys: `${values.place}_${String(selectedPlaceId)}`,
         contact_heading: values.contact_heading,
         contact_subheading: values.contact_subheading,
@@ -241,25 +264,14 @@ const FooterFormFields = ({ mode }) => {
         support_hours_keys: `${values.place}_${String(selectedPlaceId)}`,
         days_available: days_available,
         operating_hours: operating_hours,
-        availability: availability,
       };
 
-      if (values?.payment_logos && values?.payment_logos?.length > 0) {
-        data.payment_logos = values.payment_logos;
-      }
-
-      console.log("THIS IS THE DATA", data);
+      console.log("Final data to submit:", data);
 
       let resultAction;
-      if (mode === "EDIT") {
-        data.footer_key = selectedFooterId;
-        console.log("UPDATED DATA", data);
 
-        message.success("Footer updated successfully");
-      } else {
-        resultAction = await dispatch(createFooter(data)).unwrap();
-        message.success("Footer created successfully");
-      }
+      resultAction = await dispatch(createFooter(data)).unwrap();
+      message.success("Footer created successfully");
 
       navigate(`${APP_PREFIX_PATH}/app/management/layout/footer/list`);
       dispatch(fetchFooterData());
@@ -267,7 +279,6 @@ const FooterFormFields = ({ mode }) => {
       console.error("Validation Failed:", errorInfo);
     }
   };
-
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
@@ -280,6 +291,10 @@ const FooterFormFields = ({ mode }) => {
           <Card
             title={mode === "EDIT" ? "Edit Footer Details" : "Footer Details"}
           >
+            <Form.Item name="place_id" hidden>
+              <Input type="hidden" />
+            </Form.Item>
+
             <PlaceWithCountryForm
               form={form}
               label={"Place (Optional)"}
@@ -371,7 +386,7 @@ const FooterFormFields = ({ mode }) => {
             </Form.Item>
           </Card>
           <WorkingPeriodForm />
-          <PaymentLogoForm />
+          <PaymentLogoForm form={form} />
           <Flex
             className="py-2"
             mobileFlex={false}

@@ -38,7 +38,22 @@ export const initialState = {
   pagination: { size: 10, page: 1 },
   editable_status: null,
   numberOfTicket: 0,
+  singleTicket: null,
 };
+
+export const getSingleTicket = createAsyncThunk(
+  "ticket/getSingleTicket",
+  async (ticketId, { rejectWithValue }) => {
+    try {
+      const response = await TicketsService.getSingleTicketData(ticketId);
+      console.log("TICKET DATA:-", response.data);
+
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
 
 export const fetchAllTickets = createAsyncThunk(
   "ticket/fetchAllTickets",
@@ -349,6 +364,19 @@ export const ticketSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
+      .addCase(getSingleTicket.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getSingleTicket.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleTicket = action.payload;
+      })
+      .addCase(getSingleTicket.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(validateTicket.pending, (state) => {
         state.loading = true;
         state.error = null;

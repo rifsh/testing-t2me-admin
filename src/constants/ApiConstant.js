@@ -238,6 +238,8 @@ export const ApiConstant = {
   FOOTER_UPLOAD_URL: "/api/v1/shared/app_management/secured/upload_footer",
   GENERATE_PRESIGNED_URL_LAYOUT_JSON:
     "/api/v1/shared/app_management/public/generate_presigned_url",
+  GENERATE_PRESIGNED_MEDIA_URL:
+    "/api/v1/shared/app_management/public/generate_presigned_media_url",
 
   //Payment
   PAYMENT_URL: "/api/v1/shared/payment/secured/payment",
@@ -339,6 +341,7 @@ export const ApiConstant = {
   //Event-booking-verification
   EVENT_TICKET_BOOKNG_VERIFICATION:
     "/api/v1/event/booking/ticket/public/booking/scan/verify",
+  EVENT_SINGLE_TICKET: "/api/v1/event/tickets/secured/single_ticketstructure",
   EVENT_SEAT_BOOKNG_VERIFICATION:
     "/api/v1/event/booking/seat/public/booking/scan/verify",
   MOVIE_BOOKNG_VERIFICATION:

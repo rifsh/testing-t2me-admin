@@ -1,20 +1,78 @@
 import React from "react";
-import { Card, Form, Upload, Button, Input, Typography } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { Card, Form, Upload, Button, Input, Typography, message } from "antd";
+import {
+  UploadOutlined,
 
-const { Title } = Typography;
+} from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { uploadImageToCdnFooter } from "store/slices/footerSlice";
 
-const PaymentLogoForm = () => {
-  const normFile = (e) => {
-    if (Array.isArray(e)) {
-      return e;
+const { Title, Text } = Typography;
+
+const PaymentLogoForm = ({ form }) => {  // Accept form as prop
+  const dispatch = useDispatch();
+  const { uploadingImages } = useSelector((state) => state.footer);
+
+  // Handle app logo upload
+  const handleAppLogoUpload = async (file) => {
+    try {
+      message.loading({ content: "Uploading app logo...", key: "app_logo" });
+
+      const result = await dispatch(
+        uploadImageToCdnFooter({ file: file, moduleName: "footer" })
+      ).unwrap();
+
+      if (result.public_url) {
+        form.setFieldsValue({ app_logo_url: result.public_url });
+        
+        message.success({
+          content: "App logo uploaded successfully!",
+          key: "app_logo",
+        });
+      }
+      return false; // Prevent auto upload
+    } catch (error) {
+      console.error("Upload error:", error);
+      message.error({ content: `Upload failed: ${error}`, key: "app_logo" });
+      return Upload.LIST_IGNORE;
     }
+  };
 
-    if (e && e.fileList) {
-      return e.fileList;
+  // Handle payment logo upload
+  const handlePaymentLogoUpload = async (file, index) => {
+    try {
+      const uploadKey = `payment_logo_${index}`;
+      message.loading({
+        content: "Uploading payment logo...",
+        key: uploadKey,
+      });
+
+      const result = await dispatch(
+        uploadImageToCdnFooter({ file: file, moduleName: "footer" })
+      ).unwrap();
+
+      if (result.public_url) {
+        const paymentLogos = form.getFieldValue('payment_logos') || [];
+        paymentLogos[index] = {
+          ...paymentLogos[index],
+          method_logo_url: result.public_url  // Store as separate field
+        };
+        form.setFieldsValue({ payment_logos: paymentLogos });
+        
+        message.success({
+          content: "Payment logo uploaded successfully!",
+          key: uploadKey,
+        });
+      }
+      return false;
+    } catch (error) {
+      console.error("Upload error:", error);
+      message.error({
+        content: `Upload failed: ${error}`,
+        key: `payment_logo_${index}`,
+      });
+      return Upload.LIST_IGNORE;
     }
-
-    return [];
   };
 
   return (
@@ -23,20 +81,46 @@ const PaymentLogoForm = () => {
         {/* Main App Logo Section */}
         <div>
           <Title level={4}>Main App Logo</Title>
+          
+          {/* Hidden field to store the URL */}
+          <Form.Item name="app_logo_url" hidden>
+            <Input />
+          </Form.Item>
+
           <Form.Item
             name="app_logo"
             valuePropName="fileList"
-            getValueFromEvent={normFile}
+            getValueFromEvent={(e) => {
+              if (Array.isArray(e)) return e;
+              return e?.fileList;
+            }}
             rules={[{ required: true, message: "Logo is required" }]}
           >
             <Upload
               name="app_logo"
               listType="picture"
               maxCount={1}
-              beforeUpload={() => false}
+              beforeUpload={(file) => {
+                handleAppLogoUpload(file);
+                return false; // Prevent auto upload
+              }}
             >
-              <Button icon={<UploadOutlined />}>Upload App Logo</Button>
+              <Button icon={<UploadOutlined />} loading={uploadingImages}>
+                Upload App Logo
+              </Button>
             </Upload>
+          </Form.Item>
+          
+          {/* Show uploaded URL */}
+          <Form.Item noStyle shouldUpdate>
+            {() => {
+              const url = form.getFieldValue('app_logo_url');
+              return url ? (
+                <Text type="success" style={{ fontSize: "11px" }}>
+                  Image uploaded: {url}
+                </Text>
+              ) : null;
+            }}
           </Form.Item>
         </div>
 
@@ -58,25 +142,57 @@ const PaymentLogoForm = () => {
                       </Button>
                     }
                   >
-                    <div style={{ display: "flex", gap: 16 }}>
+                    <div style={{ display: "flex", gap: 16, flexDirection: "column" }}>
+                      
+                      {/* Hidden field for storing URL */}
+                      <Form.Item
+                        {...restField}
+                        name={[name, "method_logo_url"]}
+                        fieldKey={[fieldKey, "method_logo_url"]}
+                        hidden
+                      >
+                        <Input />
+                      </Form.Item>
+
                       <Form.Item
                         {...restField}
                         name={[name, "method_logo"]}
                         fieldKey={[fieldKey, "method_logo"]}
                         valuePropName="fileList"
-                        getValueFromEvent={normFile}
+                        getValueFromEvent={(e) => {
+                          if (Array.isArray(e)) return e;
+                          return e?.fileList;
+                        }}
                         rules={[{ required: true, message: "Upload required" }]}
-                        style={{ flex: 2 }}
                       >
                         <Upload
                           name="method_logo"
                           listType="picture"
                           maxCount={1}
-                          beforeUpload={() => false}
+                          beforeUpload={(file) => {
+                            handlePaymentLogoUpload(file, index);
+                            return false; // Prevent auto upload
+                          }}
                         >
-                          <Button icon={<UploadOutlined />}>Upload Logo</Button>
+                          <Button icon={<UploadOutlined />} loading={uploadingImages}>
+                            Upload Logo
+                          </Button>
                         </Upload>
                       </Form.Item>
+
+                      {/* Show uploaded URL */}
+                      <Form.Item noStyle shouldUpdate>
+                        {() => {
+                          const logos = form.getFieldValue('payment_logos') || [];
+                          const url = logos[index]?.method_logo_url;
+                          return url ? (
+                            <Text type="success" style={{ fontSize: "11px" }}>
+                              Uploaded: {url}
+                            </Text>
+                          ) : null;
+                        }}
+                      </Form.Item>
+
                       <Form.Item
                         {...restField}
                         name={[name, "method_name"]}
@@ -84,7 +200,6 @@ const PaymentLogoForm = () => {
                         rules={[
                           { required: true, message: "Enter payment name" },
                         ]}
-                        style={{ flex: 1 }}
                       >
                         <Input placeholder="Payment Name" />
                       </Form.Item>
