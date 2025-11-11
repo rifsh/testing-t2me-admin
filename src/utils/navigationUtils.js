@@ -13,29 +13,69 @@ export const isCategoryEnabled = (category) => {
 /**
  * Check if a subcategory is enabled
  * @param {string} category - Main category
- * @param {string} subcategory - Subcategory name
+ * @param {string} subcategory - Subcategory name (can be nested like "track_requests.general")
  * @returns {boolean}
  */
 export const isSubcategoryEnabled = (category, subcategory) => {
   if (!isCategoryEnabled(category)) return false;
   
   const categoryConfig = NAVIGATION_BAR_FEATURE_FLAGS[category];
-  const subConfig = categoryConfig.subitems && categoryConfig.subitems[subcategory];
   
+  // Handle nested subcategories (e.g., "track_requests.general")
+  if (subcategory.includes('.')) {
+    const parts = subcategory.split('.');
+    let currentConfig = categoryConfig;
+    
+    // Traverse the nested structure
+    for (let i = 0; i < parts.length; i++) {
+      if (!currentConfig.subitems) return false;
+      currentConfig = currentConfig.subitems[parts[i]];
+      if (!currentConfig) return false;
+      if (i < parts.length - 1 && currentConfig.enabled !== true) return false;
+    }
+    
+    return currentConfig && currentConfig.enabled === true;
+  }
+  
+  // Handle single-level subcategory
+  const subConfig = categoryConfig.subitems && categoryConfig.subitems[subcategory];
   return subConfig && subConfig.enabled === true;
 };
 
 /**
  * Check if a specific item is enabled (for 3-level structure)
  * @param {string} category - Main category
- * @param {string} subcategory - Subcategory
+ * @param {string} subcategory - Subcategory (can be nested like "track_requests.general")
  * @param {string} item - Specific item
  * @returns {boolean}
  */
 export const isItemEnabled = (category, subcategory, item) => {
   if (!isSubcategoryEnabled(category, subcategory)) return false;
   
-  const subConfig = NAVIGATION_BAR_FEATURE_FLAGS[category].subitems[subcategory];
+  const categoryConfig = NAVIGATION_BAR_FEATURE_FLAGS[category];
+  
+  // Handle nested subcategories (e.g., "track_requests.general")
+  if (subcategory.includes('.')) {
+    const parts = subcategory.split('.');
+    let currentConfig = categoryConfig;
+    
+    // Traverse the nested structure to find the subcategory
+    for (const part of parts) {
+      if (!currentConfig.subitems) return false;
+      currentConfig = currentConfig.subitems[part];
+      if (!currentConfig) return false;
+    }
+    
+    // Handle 2-level structure (no items property)
+    if (!currentConfig.items) return true;
+    
+    // Handle 3-level structure
+    const itemConfig = currentConfig.items[item];
+    return itemConfig && itemConfig.enabled === true;
+  }
+  
+  // Handle single-level subcategory
+  const subConfig = categoryConfig.subitems[subcategory];
   
   // Handle 2-level structure (no items property)
   if (!subConfig.items) return true;
