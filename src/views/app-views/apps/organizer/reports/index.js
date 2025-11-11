@@ -361,7 +361,7 @@ const OrganizerReport = () => {
                   </button>
                 ))}
               </div>
-          <div>
+          {/* <div>
             <p className="text-gray-500 text-sm mt-1">
               <span className="ml-2">
                 {timeFilter === "custom" && customDateRange.length === 2
@@ -377,7 +377,7 @@ const OrganizerReport = () => {
                   : ""}
               </span>
             </p>
-          </div>
+          </div> */}
 
           <div className="flex flex-col sm:flex-row gap-3 md:w-auto">
             {/* Mobile Expand Button */}
@@ -403,7 +403,7 @@ const OrganizerReport = () => {
              
 
               {/* Country Select */}
-              <Select
+              {/* <Select
                 showSearch
                 placeholder="Select Country"
                 optionFilterProp="children"
@@ -419,7 +419,7 @@ const OrganizerReport = () => {
                     {country.name}
                   </Option>
                 ))}
-              </Select>
+              </Select> */}
 
               {/* Date Filters */}
               <div className="flex flex-col sm:flex-row gap-2">
@@ -468,30 +468,7 @@ const OrganizerReport = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {data?.[0]?.username || data?.username}
-              </h1>
-              <p className="text-gray-600 mt-2">{data?.[0]?.email}</p>
-              <p className="text-gray-600">
-                Registered: {new Date(data?.[0]?.created_at).toLocaleDateString()||"01/01/01"}
-              </p>
-            </div>
-            <div className="text-right">
-              <span
-                className={`px-3 py-1 rounded-md text-sm ${
-                  data?.[0]?.is_active
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                {data?.[0]?.is_active ? "Active" : "Inactive"}
-              </span>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Enhanced Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
