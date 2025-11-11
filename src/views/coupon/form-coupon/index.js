@@ -320,7 +320,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
               justifyContent="space-between"
               alignItems="center"
             >
-              <h2 className="mb-3">
+              <h2 className="mb-3 text-2xl">
                 {mode === "ADD" ? "Add New Coupon" : `Edit Coupon`}{" "}
               </h2>
               <div className="mb-3">
