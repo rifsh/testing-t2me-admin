@@ -338,7 +338,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "general.offer.edit": {
     key: "offer.edit",
-    path: `${APP_PREFIX_PATH}/offer/edit/:offerId`,
+    path: `${APP_PREFIX_PATH}/offer/edit/:offerId/:type`,
     component: React.lazy(() => import("views/offer/edit-offer/index")),
     category: "services",
     subcategory: "general",
@@ -449,6 +449,22 @@ const ALL_PROTECTED_ROUTES = {
     category: "services",
     subcategory: "event",
     item: "ticket",
+  },
+  "event.offer": {
+    key: "offer.event.list",
+    path: `${APP_PREFIX_PATH}/offer/list/:type`,
+    component: React.lazy(() => import("views/offer/list-offer")),
+    category: "services",
+    subcategory: "event",
+    item: "offer",
+  },
+  "event.coupon": {
+    key: "coupon.event.list",
+    path: `${APP_PREFIX_PATH}/coupon/list/:type`,
+    component: React.lazy(() => import("views/coupon/list-coupon")),
+    category: "services",
+    subcategory: "event",
+    item: "coupon",
   },
   "event.seat": {
     key: "seat.event.list",
@@ -674,7 +690,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "movie.seat.edit": {
     key: "seat.movie.edit",
-    path: `${APP_PREFIX_PATH}/seat/movie/edit/:seatId/:pageType?`,
+    path: `${APP_PREFIX_PATH}/seat/movie/edit/:seatId/:pageType`,
     component: React.lazy(() => import("views/seat/movie/edit-seat")),
     category: "services",
     subcategory: "movie",
@@ -778,7 +794,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "movie.offer": {
     key: "movie.offer",
-    path: `${APP_PREFIX_PATH}/offer/list/movie`,
+    path: `${APP_PREFIX_PATH}/offer/list/:type`,
     component: React.lazy(() => import("views/offer/list-offer")),
     category: "services",
     subcategory: "movie",
@@ -786,7 +802,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "movie.coupon": {
     key: "movie.coupon",
-    path: `${APP_PREFIX_PATH}/coupon/list/movie`,
+    path: `${APP_PREFIX_PATH}/coupon/list/:type`,
     component: React.lazy(() => import("views/coupon/list-coupon")),
     category: "services",
     subcategory: "movie",
@@ -895,6 +911,16 @@ const ALL_PROTECTED_ROUTES = {
       import("views/track-team/event-organizer/update-list")
     ),
     category: "issues",
+    subcategory: "track_requests.event",
+    item: "event",
+  },
+  "track.event.offer": {
+    key: "trackRequest.offer.status",
+    path: `${APP_PREFIX_PATH}/track/offer/status/list/:type`,
+    component: React.lazy(() =>
+      import("views/track-team/offer-organizer/status-list")
+    ),
+    category: "issues",
     subcategory: "track_requests",
     item: "event",
   },
@@ -950,7 +976,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "track.movie.offer.details": {
     key: "trackRequest.offer.status.details",
-    path: `${APP_PREFIX_PATH}/track/offer/status/details/:offerId`,
+    path: `${APP_PREFIX_PATH}/track/offer/status/details/:offerId/:type`,
     component: React.lazy(() =>
       import("views/track-team/offer-organizer/status-details")
     ),

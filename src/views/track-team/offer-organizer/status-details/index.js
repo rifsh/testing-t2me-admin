@@ -24,7 +24,7 @@ import {
   Badge,
 } from "antd";
 import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ActionType } from "utils/api/warning-submit-util";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
@@ -36,17 +36,16 @@ import {
   setComment,
   toggleComments,
 } from "store/slices/EventOrganizerSlice";
-import { APPROVAL_STATUS } from "constants/AppConstants";
+import { APPROVAL_STATUS, EventType } from "constants/AppConstants";
 import StatusTimelineCard from "components/layout-components/Cards/StatusTimelineCard ";
 
 const { Title, Text, Paragraph } = Typography;
 
 const OrganizerOfferDetail = () => {
-  const { offerId } = useParams();
+  const { offerId ,type} = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
-
   const {
     singleOrganizerUpdate,
     loading,
@@ -68,9 +67,11 @@ const OrganizerOfferDetail = () => {
   };
 
   const handleMakeChanges = () => {
-    navigate(
-      `${APP_PREFIX_PATH}/offer/edit/${offerId}?type=movie&isMakeChange=${true}`
-    );
+
+      navigate(
+        `${APP_PREFIX_PATH}/offer/edit/${offerId}/${type}?isMakeChange=${true}`
+      );
+  
   };
 
   const getApprovalStatus = (action) => {

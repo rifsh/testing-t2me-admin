@@ -66,11 +66,6 @@ OfferService.makeChangeOffer = function (data, action, pageData) {
 
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
-
   const offerUrl = ApiConstant.ORGANIZER_OFFER_MAKE_CHANGES_URL;
   const params = {
     action: encodedAction,
@@ -80,7 +75,7 @@ OfferService.makeChangeOffer = function (data, action, pageData) {
   return fetch({
     url: `${offerUrl}`,
     method: "put",
-    data: formData,
+    data: data,
     params: params,
     headers: {
       "Content-Type": "multipart/form-data",

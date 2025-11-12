@@ -107,7 +107,21 @@ const buildDynamicSubmenu = (category, subcategory, items) => {
           return isItemEnabled("services", "movie", featureItem);
         }
       }
-
+      if (subcategory === "event") {
+        const itemMap = {
+          "event.type.list": "event_type",
+          "ticket.list": "ticket",
+          "seat.event.list": "seat",
+          "event.list": "event",
+          "schedule.list": "schedule",
+          "offer.event.list": "offer", // ADD THIS
+          "coupon.event.list": "coupon", // ADD THIS
+        };
+        const featureItem = itemMap[item.key];
+        if (featureItem) {
+          return isItemEnabled("services", "event", featureItem);
+        }
+      }
       // For dine services
       if (subcategory === "dine") {
         const itemMap = {
@@ -163,6 +177,8 @@ const buildDynamicSubmenu = (category, subcategory, items) => {
       // For track requests event (event-specific items)
       if (subcategory === "track_requests.event") {
         const itemMap = {
+          "trackRequest.event.offer.status.list": "offer",
+          "trackRequest.event.coupon.status.list": "coupon",
           "eventOrganiser.update": "organizer",
           "trackRequest.event.seat.status.list": "seat",
           "trackRequest.event.schedule.status.list": "schedule",
@@ -180,6 +196,8 @@ const buildDynamicSubmenu = (category, subcategory, items) => {
           "trackRequest.movie.seats.status.list": "seat",
           "trackRequest.movie.schedule.status.list": "schedule",
           "trackRequest.movie.screen.status.list": "screen",
+          "trackRequest.movie.offer.status.list": "offer",
+          "trackRequest.movie.coupon.status.list": "coupon",
         };
         const featureItem = itemMap[item.key];
         if (featureItem) {
@@ -504,6 +522,27 @@ const ALL_NAVIGATION_ITEMS = {
     featureItem: "schedule",
   },
 
+  "event.offer": {
+    key: "offer.event.list",
+    path: `${APP_PREFIX_PATH}/offer/list/event`,
+    title: "sidenav.offer",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.EVENT,
+    featureItem: "offer",
+  },
+  "event.coupon": {
+    key: "coupon.event.list",
+    path: `${APP_PREFIX_PATH}/coupon/list/event`,
+    title: "sidenav.coupon",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.EVENT,
+    featureItem: "coupon",
+  },
+
   // Movie Services - All items under services.movie
   "movie.theater": {
     key: "movie.theater",
@@ -640,11 +679,11 @@ const ALL_NAVIGATION_ITEMS = {
     featureItem: "alert",
   },
 
-  // Track Requests - General (offer and coupon)
+  // Track Requests - General (for Super Admin only - common offer and coupon)
   "track.event.offer": {
     key: "trackRequest.event.offer.status.list",
     path: `${APP_PREFIX_PATH}/track/offer/status/list/event`,
-    title: "sidenav.offer",
+    title: "Event Offer",
     icon: OrderedListOutlined,
     breadcrumb: false,
     submenu: [],
@@ -654,7 +693,7 @@ const ALL_NAVIGATION_ITEMS = {
   "track.event.coupon": {
     key: "trackRequest.event.coupon.status.list",
     path: `${APP_PREFIX_PATH}/track/coupon/status/list/event`,
-    title: "sidenav.coupon",
+    title: "Event Coupon",
     icon: OrderedListOutlined,
     breadcrumb: false,
     submenu: [],
@@ -664,7 +703,7 @@ const ALL_NAVIGATION_ITEMS = {
   "track.movie.offer": {
     key: "trackRequest.movie.offer.status.list",
     path: `${APP_PREFIX_PATH}/track/offer/status/list/movie`,
-    title: "sidenav.offer",
+    title: "Movie Offer",
     icon: OrderedListOutlined,
     breadcrumb: false,
     submenu: [],
@@ -674,7 +713,47 @@ const ALL_NAVIGATION_ITEMS = {
   "track.movie.coupon": {
     key: "trackRequest.movie.coupon.status.list",
     path: `${APP_PREFIX_PATH}/track/coupon/status/list/movie`,
-    title: "sidenav.coupon",
+    title: "Movie Coupon",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_GENERAL,
+    featureItem: "coupon",
+  },
+  "track.general.event.offer": {
+    key: "trackRequest.event.offer.status.list",
+    path: `${APP_PREFIX_PATH}/track/offer/status/list/event`,
+    title: "Event Offer",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_GENERAL,
+    featureItem: "offer",
+  },
+  "track.general.event.coupon": {
+    key: "trackRequest.event.coupon.status.list",
+    path: `${APP_PREFIX_PATH}/track/coupon/status/list/event`,
+    title: "Event Coupon",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_GENERAL,
+    featureItem: "coupon",
+  },
+  "track.general.movie.offer": {
+    key: "trackRequest.movie.offer.status.list",
+    path: `${APP_PREFIX_PATH}/track/offer/status/list/movie`,
+    title: "Movie Offer",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_GENERAL,
+    featureItem: "offer",
+  },
+  "track.general.movie.coupon": {
+    key: "trackRequest.movie.coupon.status.list",
+    path: `${APP_PREFIX_PATH}/track/coupon/status/list/movie`,
+    title: "Movie Coupon",
     icon: OrderedListOutlined,
     breadcrumb: false,
     submenu: [],
@@ -682,7 +761,38 @@ const ALL_NAVIGATION_ITEMS = {
     featureItem: "coupon",
   },
 
-  // Track Requests - Event (event-specific items)
+  // Track Requests - Event (for ALL roles including Event Organizer)
+  "track.event.offer.organizer": {
+    key: "trackRequest.event.offer.status.list.organizer",
+    path: `${APP_PREFIX_PATH}/track/offer/status/list/event`,
+    title: "Offer",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
+    featureItem: "offer",
+  },
+  "track.event.coupon.organizer": {
+    key: "trackRequest.event.coupon.status.list.organizer",
+    path: `${APP_PREFIX_PATH}/track/coupon/status/list/event`,
+    title: "Coupon",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
+    featureItem: "coupon",
+  },
+  "track.event.organizer": {
+    key: "eventOrganiser.update",
+    path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+    title: "Organizer",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
+    featureItem: "organizer",
+  },
+  // Track Requests - Event (event-specific items only)
   "track.event.organizer": {
     key: "eventOrganiser.update",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
@@ -724,7 +834,7 @@ const ALL_NAVIGATION_ITEMS = {
     featureItem: "ticket",
   },
 
-  // Track Requests - Movie (movie-specific items)
+  // Track Requests - Movie (movie-specific items only)
   "track.movie.seats": {
     key: "trackRequest.movie.seats.status.list",
     path: `${APP_PREFIX_PATH}/track/movie-seats/status/list`,
@@ -754,6 +864,26 @@ const ALL_NAVIGATION_ITEMS = {
     submenu: [],
     category: FEATURE_CATEGORIES.TRACK_REQUESTS_MOVIE,
     featureItem: "screen",
+  },
+  "track.movie.offer.organizer": {
+    key: "trackRequest.movie.offer.status.list.organizer",
+    path: `${APP_PREFIX_PATH}/track/offer/status/list/movie`,
+    title: "Offer",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_MOVIE,
+    featureItem: "offer",
+  },
+  "track.movie.coupon.organizer": {
+    key: "trackRequest.movie.coupon.status.list.organizer",
+    path: `${APP_PREFIX_PATH}/track/coupon/status/list/movie`,
+    title: "Coupon",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_MOVIE,
+    featureItem: "coupon",
   },
 
   // Lead Events - All items under issues.lead_events
@@ -932,12 +1062,16 @@ const ROLE_NAVIGATION_ACCESS = {
     "issue.list",
     "alerts.list",
 
-    // Track Requests
-    "track.event.organizer",
-    "track.movie.seats",
-    "track.movie.offer",
-    "track.movie.coupon",
-    "track.movie.schedule",
+    "track.event.offer", // General section
+    "track.event.coupon", // General section
+    "track.movie.offer", // General section
+    "track.movie.coupon", // General section
+    "track.event.organizer", // Event section
+    "track.event.seat", // Event section
+    "track.event.schedule", // Event section
+    "track.event.ticket", // Event section
+    "track.movie.seats", // Movie section
+    "track.movie.schedule", // Movie section
     "track.movie.screen",
 
     // Lead Events
@@ -1000,14 +1134,17 @@ const ROLE_NAVIGATION_ACCESS = {
     "issue.list",
     "alerts.list",
 
-    // Track Requests
-    "track.event.organizer",
-    "track.movie.seats",
-    "track.movie.offer",
-    "track.movie.coupon",
-    "track.movie.schedule",
+    "track.event.offer", // General section
+    "track.event.coupon", // General section
+    "track.movie.offer", // General section
+    "track.movie.coupon", // General section
+    "track.event.organizer", // Event section
+    "track.event.seat", // Event section
+    "track.event.schedule", // Event section
+    "track.event.ticket", // Event section
+    "track.movie.seats", // Movie section
+    "track.movie.schedule", // Movie section
     "track.movie.screen",
-
     // Lead Events
     "lead.event",
 
@@ -1038,13 +1175,12 @@ const ROLE_NAVIGATION_ACCESS = {
     "reports.orders",
 
     // Event Services
-    "general.offer",
-    "general.coupon",
+    "event.offer",
+    "event.coupon",
     "event.ticket",
     "event.seat",
     "event.list",
     "event.schedule",
-    "event.schedule.add-on",
 
     // Movie Services (limited access)
     "movie.offer",
@@ -1052,7 +1188,6 @@ const ROLE_NAVIGATION_ACCESS = {
     "movie.screen",
     "movie.seat",
     "movie.schedule",
-
     // Dine Services
     "dine.list",
     "dine.restaurant",
@@ -1062,18 +1197,17 @@ const ROLE_NAVIGATION_ACCESS = {
     "issue.list",
     "alerts.list",
 
-    // Track Requests
-    "track.event.organizer",
-    "track.event.seat",
-    "track.event.schedule",
-    "track.event.ticket",
-    "track.event.offer",
-    "track.event.coupon",
-    "track.movie.offer",
-    "track.movie.coupon",
+    "track.event.offer.organizer", // Event section only
+    "track.event.coupon.organizer", // Event section only
+    "track.event.organizer", // Event section
+    "track.event.seat", // Event section
+    "track.event.schedule", // Event section
+    "track.event.ticket", // Event section
+    "track.movie.offer.organizer", // Movie section only
+    "track.movie.coupon.organizer", // Movie section only
+    "track.movie.seats", // Movie section
+    "track.movie.schedule", // Movie section
     "track.movie.screen",
-    "track.movie.seats",
-    "track.movie.schedule",
   ],
 
   [UserRoleConstants.techSupportingTeamRoleId]: [

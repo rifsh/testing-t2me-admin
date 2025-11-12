@@ -76,63 +76,59 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
     }
   }, [error]);
 
-  useEffect(() => {
-    if (offer && mode === EDIT && availableOfferDays.length > 0) {
-      console.log("=== Setting Form Values ===");
-      console.log("Offer Data:", offer);
-      console.log("Available Days:", availableOfferDays);
-      console.log("Mapped Offer Weekdays:", offer.mapped_offer_weekdays);
+ useEffect(() => {
+  dispatch(setIsDateRequired(false));
+  if (offer && mode === EDIT && availableOfferDays.length > 0) {
+    // Extract day names from mapped_offer_weekdays
+    const applicableDayNames =
+      offer.mapped_offer_weekdays?.map((day) => {
+        return day.full_name.toUpperCase();
+      }) || [];
 
-      // Extract day names from mapped_offer_weekdays
-      const applicableDayNames =
-        offer.mapped_offer_weekdays?.map((day) => {
-          return day.full_name.toUpperCase();
-        }) || [];
+    // ✅ Map thumbnail with proper structure for edit mode
+    const thumbnailFile =
+      offer.thumbnail_image && offer.thumbnail_image !== "images"
+        ? [
+            {
+              uid: "thumbnail-1",
+              name: offer.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${offer.thumbnail_image}`,
+              id: null,
+            },
+          ]
+        : [];
 
-      console.log("Applicable Day Names:", applicableDayNames);
+    const formData = {
+      name: offer.name,
+      theatre_ids: offer.theatre_ids?.map((item) => item) || [],
+      discount_percentage_amount: offer.discount_percentage_amount,
+      is_percentage: offer.is_percentage,
+      max_uses: offer.max_uses,
+      date_required: offer.date_required,
+      key_words: offer.key_words || [],
+      applicable_days: applicableDayNames,
+      thumbnail_image: thumbnailFile,
+      event_ids: offer.event_ids || [], // ✅ Added event_ids from API response
+    };
 
-      // ✅ Map thumbnail with proper structure for edit mode
-      const thumbnailFile =
-        offer.thumbnail_image && offer.thumbnail_image !== "images"
-          ? [
-              {
-                uid: "thumbnail-1",
-                name: offer.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: `${CDN_PATH}/${offer.thumbnail_image}`,
-                id: null, // Offers typically don't have media id for thumbnail
-              },
-            ]
-          : [];
-
-      const formData = {
-        name: offer.name,
-        theatre_ids: offer.theatre_ids?.map((item) => item) || [],
-        discount_percentage_amount: offer.discount_percentage_amount,
-        is_percentage: offer.is_percentage,
-        max_uses: offer.max_uses,
-        date_required: offer.date_required,
-        key_words: offer.key_words || [],
-        applicable_days: applicableDayNames,
-        thumbnail_image: thumbnailFile,
-      };
-
-      if (offer.date_required && offer.start_date && offer.end_date) {
-        formData.start_date = dayjs(offer.start_date);
-        formData.end_date = dayjs(offer.end_date);
-      }
-
-      console.log("Final Form Data:", formData);
-      form.setFieldsValue(formData);
-
-      // Force re-render after a small delay
-      setTimeout(() => {
-        form.setFieldsValue({ applicable_days: applicableDayNames });
-      }, 100);
+    if (offer.date_required && offer.start_date && offer.end_date) {
+      formData.start_date = dayjs(offer.start_date);
+      formData.end_date = dayjs(offer.end_date);
     }
 
-    dispatch(setIsDateRequired(offer?.date_required));
-  }, [form, offer, availableOfferDays]);
+    console.log("Final Form Data:", formData);
+    form.setFieldsValue(formData);
+
+    // Force re-render after a small delay
+    setTimeout(() => {
+      form.setFieldsValue({ applicable_days: applicableDayNames });
+    }, 100);
+  }
+
+  dispatch(setIsDateRequired(offer?.date_required));
+}, [form, offer, availableOfferDays]);
+
 
   const onFinish = async () => {
     const values = await form.validateFields();
