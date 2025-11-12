@@ -7,20 +7,21 @@ import {
   Form,
   DatePicker,
   Checkbox,
-  Upload,
   Button,
   Typography,
   Radio,
   Alert,
   InputNumber,
   Select,
+  Divider,
 } from "antd";
 import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  UploadOutlined,
   PlusOutlined,
   DeleteOutlined,
+  SearchOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import { setIsDateRequired } from "store/slices/couponSlice";
 import {
@@ -29,32 +30,50 @@ import {
   ResolutionByServices,
   ThumbnailImageResolutions,
 } from "constants/SupportFileConstants";
-import Utils from "utils/index";
 import ResizedImgePicker from "components/util-components/Image/ResizedImgePicker";
-import { fetchMoviesData } from "store/slices/movieSlice";
-import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import { fetchAllEvent } from "store/slices/eventSlice";
+import { EVENT_TYPES, DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
 import { EventType } from "constants/AppConstants";
+import { isOrganizer } from "configs/UserAccessConfig";
+import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
 
 const { Text } = Typography;
 const { Group: RadioGroup } = Radio;
+const { Option } = Select;
 
 function CouponFormFields({ form, type }) {
   const dispatch = useDispatch();
   const startDate = Form.useWatch("start_date", form);
   const { isDateRequired } = useSelector((state) => state.coupons);
+  const { handleDeleteImage, deletingImages } = useS3ImageDelete("coupon");
+  
+  const {
+    filteredEvents = [],
+    loading = false,
+  } = useSelector((state) => state.event || {});
+
   const [couponType, setCouponType] = useState(true);
   const [couponCodeType, setCouponCodeType] = useState(false);
-  useEffect(() => {
-    if (type === "movie") {
-      dispatch(fetchMoviesData(DEFAULT_PAGE_SIZE));
-    }
-  }, [dispatch]);
+
+  // ✅ Check if user is organizer
+  const userIsOrganizer = isOrganizer();
+
   // Each row can have up to MAX_FIELDS_PER_ROW fields
   const MAX_FIELDS_PER_ROW = 3;
 
   // Store the coupon code fields as a flat array
   const [couponFields, setCouponFields] = useState([{ id: 1 }]);
+
+  // ✅ Fetch events only if type is EVENT and user is organizer
+  useEffect(() => {
+    if (type === EventType.EVENT && userIsOrganizer) {
+      dispatch(fetchAllEvent({ 
+        event_type: EVENT_TYPES.event,
+        organizer: true 
+      }));
+    }
+  }, [dispatch, type, userIsOrganizer]);
 
   // Add a new coupon field
   const addCouponField = () => {
@@ -176,31 +195,72 @@ function CouponFormFields({ form, type }) {
 
   // Get rows for rendering
   const rows = getRows();
-  const { movieResponse } = useSelector((state) => state.movie);
-  const { Option } = Select;
+
   return (
     <Row gutter={16}>
       <Col xs={24} sm={24} md={17}>
-        <Card title="Coupon Details">
-          {type === EventType.MOVIE && (
-            <TheaterListForm
-              rules={[{ required: true }]}
-              form={form}
-              onSelect={(theater) => {}}
-              mode="multiple"
-              name="theatre_ids"
-              label="Theater"
-              apiParams={{
-                organizer: true,
-              }}
-            />
-          )}
+        <Card title="Coupon Details" bordered={false}>
+          {/* ✅ Conditional rendering based on organizer status AND type */}
+          {userIsOrganizer && type === EventType.MOVIE ? (
+            <>
+              <TheaterListForm
+                rules={[{ required: true }]}
+                form={form}
+                mode="multiple"
+                name="theatre_ids"
+                label="Theaters"
+                apiParams={{
+                  organizer: true,
+                }}
+              />
+              <Divider style={{ margin: "16px 0" }} />
+            </>
+          ) : userIsOrganizer && type === EventType.EVENT ? (
+            <>
+              <Form.Item
+                name="event_ids"
+                label="Events"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please select at least one event!",
+                  },
+                ]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Search and select events"
+                  mode="multiple"
+                  allowClear
+                  suffixIcon={<SearchOutlined />}
+                  loading={loading}
+                  filterOption={(input, option) =>
+                    option.children.props.children[1]
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                  size="large"
+                >
+                  {filteredEvents?.map((event) => (
+                    <Option key={event.id} value={event.id}>
+                      <div className="font-medium text-gray-900 flex items-center">
+                        <CalendarOutlined className="mr-2 text-blue-500" />
+                        {event.event_name}
+                      </div>
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              <Divider style={{ margin: "16px 0" }} />
+            </>
+          ) : null}
+
           <Form.Item
             name="name"
             label="Coupon Name"
             rules={[{ required: true, message: "Please enter coupon name" }]}
           >
-            <Input placeholder="Enter Coupon Name" />
+            <Input placeholder="Enter Coupon Name" size="large" />
           </Form.Item>
 
           <Form.Item
@@ -262,6 +322,7 @@ function CouponFormFields({ form, type }) {
               <Input
                 type="number"
                 placeholder="How many times can this coupon be used?"
+                size="large"
                 onWheel={(e) => e.target.blur()}
               />
             </Form.Item>
@@ -293,7 +354,7 @@ function CouponFormFields({ form, type }) {
                           ]}
                           style={{ marginBottom: 0, flex: 1 }}
                         >
-                          <Input placeholder="Coupon code" />
+                          <Input placeholder="Coupon code" size="large" />
                         </Form.Item>
 
                         {/* Only show delete button when there's more than one coupon field */}
@@ -317,6 +378,7 @@ function CouponFormFields({ form, type }) {
                           type="dashed"
                           icon={<PlusOutlined />}
                           onClick={addCouponField}
+                          size="large"
                         >
                           Add Coupon Code
                         </Button>
@@ -333,6 +395,7 @@ function CouponFormFields({ form, type }) {
                         type="dashed"
                         icon={<PlusOutlined />}
                         onClick={addCouponField}
+                        size="large"
                         style={{ marginTop: "4px" }}
                       >
                         Add Coupon Code
@@ -343,142 +406,89 @@ function CouponFormFields({ form, type }) {
             </div>
           </Form.Item>
 
-          <Form.Item
-            name="is_percentage"
-            label="Discount Type"
-            initialValue={false}
-          >
-            <Radio.Group>
-              <Radio value={true}>Percentage</Radio>
-              <Radio value={false}>Amount</Radio>
-            </Radio.Group>
-          </Form.Item>
+          <Divider style={{ margin: "24px 0" }} />
 
-          <Form.Item
-            noStyle
-            shouldUpdate={(prevValues, currentValues) =>
-              prevValues.is_percentage !== currentValues.is_percentage
-            }
-          >
-            {({ getFieldValue }) =>
-              getFieldValue("is_percentage") === true ? (
-                <Form.Item
-                  name="discount_percentage_amount"
-                  label="Discount Percentage"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter discount percentage",
-                    },
-                    {
-                      type: "number",
-                      min: 0,
-                      max: 100,
-                      message: "Discount must be between 0 and 100",
-                    },
-                  ]}
-                >
-                  <InputNumber
-                    placeholder="Enter discount percentage"
-                    min={0}
-                    style={{ width: "100%" }}
-                    max={100}
-                    formatter={(value) => `${value}`}
-                    parser={(value) => value.replace("", "")}
-                  />
-                </Form.Item>
-              ) : (
-                <Form.Item
-                  style={{ width: "100%" }}
-                  name="discount_percentage_amount"
-                  label="Discount Amount"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter discount amount",
-                    },
-                    {
-                      type: "number",
-                      min: 0,
-                      message:
-                        "Discount amount must be greater than or equal to 0",
-                    },
-                  ]}
-                >
-                  <InputNumber
-                    style={{ width: "100%" }}
-                    placeholder="Enter discount amount"
-                    min={0}
-                    formatter={(value) => `${value}`}
-                    parser={(value) => value.replace("", "")}
-                  />
-                </Form.Item>
-              )
-            }
-          </Form.Item>
-          <Form.Item
-            name="date_required"
-            label="Date Settings"
-            valuePropName="checked"
-          >
-            <Checkbox
-              checked={isDateRequired}
-              onChange={handleDateRequiredChange}
-            >
-              Set Validity Period
-            </Checkbox>
-          </Form.Item>
-
-          {isDateRequired && (
-            <>
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
               <Form.Item
-                name="start_date"
-                label="Start Date"
-                rules={[
-                  { required: true, message: "Please select the start date" },
-                ]}
+                name="is_percentage"
+                label="Discount Type"
+                initialValue={false}
               >
-                <DatePicker
-                  className="w-100"
-                  placeholder="Select start date"
-                  format="YYYY-MM-DD"
-                  disabledDate={disablePastDates}
-                  onChange={handleStartDateChange}
-                  showToday={false}
-                />
+                <Radio.Group size="large">
+                  <Radio value={true}>Percentage</Radio>
+                  <Radio value={false}>Amount</Radio>
+                </Radio.Group>
               </Form.Item>
+            </Col>
 
+            <Col xs={24} sm={12}>
               <Form.Item
-                name="end_date"
-                label="End Date"
-                rules={[
-                  { required: true, message: "Please select the end date" },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      const startDate = getFieldValue("start_date");
-                      if (!startDate || !value) {
-                        return Promise.resolve();
-                      }
-                      if (value.isBefore(startDate, "day")) {
-                        return Promise.reject(
-                          new Error("End date must be after start date")
-                        );
-                      }
-                      return Promise.resolve();
-                    },
-                  }),
-                ]}
+                noStyle
+                shouldUpdate={(prevValues, currentValues) =>
+                  prevValues.is_percentage !== currentValues.is_percentage
+                }
               >
-                <DatePicker
-                  className="w-100"
-                  placeholder="Select end date"
-                  format="YYYY-MM-DD"
-                  disabledDate={disableEndDate}
-                  showToday={false}
-                />
+                {({ getFieldValue }) =>
+                  getFieldValue("is_percentage") === true ? (
+                    <Form.Item
+                      name="discount_percentage_amount"
+                      label="Discount Value"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please enter discount percentage",
+                        },
+                        {
+                          type: "number",
+                          min: 0,
+                          max: 100,
+                          message: "Discount must be between 0 and 100",
+                        },
+                      ]}
+                    >
+                      <InputNumber
+                        placeholder="Enter percentage"
+                        min={0}
+                        max={100}
+                        size="large"
+                        style={{ width: "100%" }}
+                        formatter={(value) => `${value}`}
+                        parser={(value) => value.replace("", "")}
+                      />
+                    </Form.Item>
+                  ) : (
+                    <Form.Item
+                      name="discount_percentage_amount"
+                      label="Discount Value"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please enter discount amount",
+                        },
+                        {
+                          type: "number",
+                          min: 0,
+                          message:
+                            "Discount amount must be greater than or equal to 0",
+                        },
+                      ]}
+                    >
+                      <InputNumber
+                        placeholder="Enter amount"
+                        min={0}
+                        size="large"
+                        style={{ width: "100%" }}
+                        formatter={(value) => `${value}`}
+                        parser={(value) => value.replace("", "")}
+                      />
+                    </Form.Item>
+                  )
+                }
               </Form.Item>
-            </>
-          )}
+            </Col>
+          </Row>
+
           <Form.Item
             name="min_purchase_amount"
             label="Minimum Purchase Amount"
@@ -498,38 +508,133 @@ function CouponFormFields({ form, type }) {
             <Input
               type="number"
               placeholder="Enter minimum purchase amount"
+              size="large"
               onWheel={(e) => e.target.blur()}
             />
           </Form.Item>
+
+          <Divider style={{ margin: "24px 0" }} />
+
+          <Row gutter={16}>
+            <Col xs={24}>
+              <Form.Item
+                name="date_required"
+                label="Date Range"
+                valuePropName="checked"
+              >
+                <Checkbox
+                  checked={isDateRequired}
+                  onChange={handleDateRequiredChange}
+                  style={{ fontSize: "14px" }}
+                >
+                  Enable specific date range for this coupon
+                </Checkbox>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {isDateRequired && (
+            <Row gutter={16}>
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  name="start_date"
+                  label="Start Date"
+                  rules={[
+                    { required: true, message: "Please select the start date" },
+                  ]}
+                >
+                  <DatePicker
+                    className="w-100"
+                    placeholder="Select start date"
+                    format="YYYY-MM-DD"
+                    size="large"
+                    disabledDate={disablePastDates}
+                    onChange={handleStartDateChange}
+                    showToday={false}
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  name="end_date"
+                  label="End Date"
+                  rules={[
+                    { required: true, message: "Please select the end date" },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const startDate = getFieldValue("start_date");
+                        if (!startDate || !value) {
+                          return Promise.resolve();
+                        }
+                        if (value.isBefore(startDate, "day")) {
+                          return Promise.reject(
+                            new Error("End date must be after start date")
+                          );
+                        }
+                        return Promise.resolve();
+                      },
+                    }),
+                  ]}
+                >
+                  <DatePicker
+                    className="w-100"
+                    placeholder="Select end date"
+                    format="YYYY-MM-DD"
+                    size="large"
+                    disabledDate={disableEndDate}
+                    showToday={false}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          )}
+
+          <Divider style={{ margin: "24px 0" }} />
+
           <Form.Item name="is_offline" label="Coupon Type" initialValue={true}>
-            <Radio.Group>
+            <Radio.Group size="large">
               <Radio value={true}>Offline</Radio>
               <Radio value={false}>Online</Radio>
             </Radio.Group>
           </Form.Item>
-          <Form.Item
-            name="thumbnail_image"
-            label="Thumbnail Image"
-            valuePropName="value"
-            getValueFromEvent={normFile}
-            style={{ marginBottom: "0px", padding: "0px" }}
-          >
-            <ResizedImgePicker
-              maxCount={1}
-              targetResolution={ThumbnailImageResolutions.COUPON}
-              form={form}
-            />
-          </Form.Item>
 
-          <Text type="warning" style={{ padding: "0px 0px", fontSize: "11px" }}>
-            {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")} &
-            {" resolution "}
-            {ResolutionByServices.place} pixels.{" "}
-          </Text>
+          <Row gutter={16}>
+            <Col xs={24}>
+              <Form.Item
+                name="thumbnail_image"
+                label={
+                  <span style={{ fontSize: "14px", fontWeight: 500 }}>
+                    Thumbnail Image
+                  </span>
+                }
+                valuePropName="value"
+                getValueFromEvent={normFile}
+                style={{ marginBottom: "8px" }}
+              >
+                <ResizedImgePicker
+                  maxCount={1}
+                  targetResolution={ThumbnailImageResolutions.COUPON}
+                  form={form}
+                  onDelete={handleDeleteImage}
+                  deletingImages={deletingImages}
+                />
+              </Form.Item>
+              <Text
+                type="secondary"
+                style={{ fontSize: "12px", display: "block" }}
+              >
+                {SupportFormatContent.join(", ")}:{" "}
+                {SupportImageFormat.join(", ")} | Resolution:{" "}
+                {ResolutionByServices.place} pixels
+              </Text>
+            </Col>
+          </Row>
         </Card>
       </Col>
+
       <Col xs={24} sm={24} md={7}>
-        <Card title="Coupon Information">
+        <Card title="Coupon Information" bordered={false}>
           <Alert
             message="Important Note"
             description="Expired coupons cannot be edited."
@@ -545,7 +650,6 @@ function CouponFormFields({ form, type }) {
             showIcon
             className="mb-2"
           />
-
           <Alert
             message="User-Specific Multiple Use"
             description="Each user can use this coupon multiple times. Example: 'LOYALTY20' can be used repeatedly by the same customer."
@@ -553,7 +657,6 @@ function CouponFormFields({ form, type }) {
             showIcon
             className="mb-2"
           />
-
           <Alert
             message="One-Time Only"
             description="Can only be used once by the first customer who applies it. Example: 'FLASH50' works only for the first person who uses it."
