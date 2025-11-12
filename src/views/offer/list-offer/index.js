@@ -189,7 +189,7 @@ const OfferList = () => {
                 type="primary"
                 icon={<FormOutlined />}
                 onClick={() =>
-                  navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)
+                  navigate(`${APP_PREFIX_PATH}/offer/add/${type}`)
                 }
               >
                 Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
@@ -202,7 +202,7 @@ const OfferList = () => {
                 type="primary"
                 icon={<FormOutlined />}
                 onClick={() =>
-                  navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)
+                  navigate(`${APP_PREFIX_PATH}/offer/add/${type}`)
                 }
               >
                 Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer

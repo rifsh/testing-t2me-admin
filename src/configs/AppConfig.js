@@ -179,7 +179,7 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
           },
           // Movie track requests
           movie: {
-            enabled: true,
+            enabled: false,
             items: {
               offer: { enabled: true },      // Event Organizer sees this
               coupon: { enabled: true },     // Event Organizer sees this
