@@ -6,7 +6,7 @@ import CouponFormFields from "../components/CouponFormFields";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
-import { APP_PREFIX_PATH } from "configs/AppConfig";
+import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import {
   addCoupon,
   editCoupon,
@@ -87,8 +87,18 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
           return day.weekday?.toUpperCase();
         }) || [];
 
-      console.log("Applicable Day Names:", applicableDayNames);
-      console.log("couponsdata", coupon);
+      const thumbnailFile =
+        coupon.thumbnail_image && coupon.thumbnail_image !== "images"
+          ? [
+            {
+              uid: "thumbnail-1",
+              name: coupon.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${coupon.thumbnail_image}`,
+              id: null, // Offers typically don't have media id for thumbnail
+            },
+          ]
+          : [];
 
       const formData = {
         name: coupon.name,
@@ -106,17 +116,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         min_purchase_amount: coupon.min_purchase_amount,
         date_required: Boolean(coupon.date_required),
         applicable_days: applicableDayNames,
-        thumbnail_image:
-          coupon.thumbnail_image && coupon.thumbnail_image !== "images"
-            ? [
-              {
-                uid: "-1",
-                name: coupon.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: coupon.thumbnail_image,
-              },
-            ]
-            : [],
+        thumbnail_image: thumbnailFile,
       };
 
       // Handle dates properly
@@ -186,7 +186,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         // Check if it's a new file (has originFileObj)
         if (thumbnailFile && thumbnailFile.originFileObj) {
           thumbnailData = {
-            file_name: thumbnailFile.name || thumbnailFile.originFileObj.name,
+            filename: thumbnailFile.name || thumbnailFile.originFileObj.name,
             media_type: "image",
           };
         }
