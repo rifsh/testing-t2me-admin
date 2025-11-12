@@ -212,6 +212,9 @@ const EventTypeList = () => {
             <Descriptions.Item label="Display Name">
               {selectedEventType.display_name}
             </Descriptions.Item>
+            <Descriptions.Item label="Redirect URL">
+              {selectedEventType.redirect_url}
+            </Descriptions.Item>
             <Descriptions.Item label="Description">
               {selectedEventType.description || "No description available"}
             </Descriptions.Item>
