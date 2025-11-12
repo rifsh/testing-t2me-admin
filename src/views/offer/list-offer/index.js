@@ -91,7 +91,7 @@ const OfferList = () => {
   };
   const handleModalSubmit = async () => {
     dispatch(setOfferModalLoading(true));
-    navigate(`${APP_PREFIX_PATH}/offer/edit/${editItemId}?type=${type}`);
+    navigate(`${APP_PREFIX_PATH}/offer/edit/${editItemId}/${type}`);
     dispatch(setOfferDialogVisible(false));
     dispatch(setOfferModalLoading(false));
   };
@@ -220,7 +220,7 @@ const OfferList = () => {
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={fetchAllOffers} />
         {isOrganizer ? (
-          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_ORGANIZER_OFFERS) && (
+          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS) && (
             <Button
               type="primary"
               icon={<FormOutlined />}

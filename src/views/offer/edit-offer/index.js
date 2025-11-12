@@ -9,10 +9,10 @@ import { EDIT } from "constants/AppConstants";
 const EditOffer = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const type = params.get("type");
+
   const isMakeChange = params.get("isMakeChange");
   const dispatch = useDispatch();
-  const { offerId } = useParams();
+  const { type, offerId } = useParams();
   const { offerDetails } = useSelector((state) => state.offers);
   useEffect(() => {
     if (offerId) {
@@ -20,7 +20,14 @@ const EditOffer = () => {
     }
   }, [dispatch, offerId]);
 
-  return <OfferForm mode={EDIT} offer={offerDetails} type={type} isMakeChange={isMakeChange} />;
+  return (
+    <OfferForm
+      mode={EDIT}
+      offer={offerDetails}
+      type={type}
+      isMakeChange={isMakeChange}
+    />
+  );
 };
 
 export default EditOffer;

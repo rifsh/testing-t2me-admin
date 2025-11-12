@@ -13,7 +13,18 @@ import {
   Radio,
   Divider,
   Tag,
+  Select,
 } from "antd";
+import {
+  SearchOutlined,
+  EnvironmentOutlined,
+  CalendarOutlined,
+  UserOutlined,
+  DollarOutlined,
+  TagsOutlined,
+  SaveOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getAvailableOfferDays,
@@ -31,8 +42,12 @@ import { EventType } from "constants/AppConstants";
 import TheaterListForm from "components/util-components/FormItems/TheaterListForm";
 import { isOrganizer } from "configs/UserAccessConfig";
 import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
+import { fetchAllEvent } from "store/slices/eventSlice";
+import { EVENT_TYPES } from "constants/PageConstants";
 
 const { Text } = Typography;
+
+const { Option } = Select;
 
 const rules = {
   name: [
@@ -80,7 +95,11 @@ function OfferFormFields({ type }) {
     (state) => state.offers
   );
   const { handleDeleteImage, deletingImages } = useS3ImageDelete("offer");
-
+  const {
+    filteredEvents = [],
+    loading = false,
+    selectedEvent = null,
+  } = useSelector((state) => state.event || {});
   // Local state to force re-renders
   const [selectedDays, setSelectedDays] = useState([]);
 
@@ -194,28 +213,24 @@ function OfferFormFields({ type }) {
       newDays = [...currentDays, normalizedDayName];
     }
 
-    console.log("Day clicked:", normalizedDayName);
-    console.log("New days:", newDays);
-
     form.setFieldsValue({ applicable_days: newDays });
     setSelectedDays(newDays);
   };
-
+  useEffect(() => {
+    if (type === EventType.EVENT) {
+      dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
+    }
+  }, [dispatch, type]);
   const allSelected =
     availableOfferDays?.length > 0 &&
     selectedDays.length === availableOfferDays.length;
-
-  console.log("=== Render State ===");
-  console.log("Selected Days:", selectedDays);
-  console.log("All Selected:", allSelected);
-  console.log("Available Days:", availableOfferDays);
 
   return (
     <Row gutter={16}>
       {/* Left Column - Main Form */}
       <Col xs={24} sm={24} md={17}>
         <Card title="Offer Details" bordered={false}>
-          {type === EventType.MOVIE && isOrganizer() && (
+          {isOrganizer() && type === EventType.MOVIE ? (
             <>
               <TheaterListForm
                 rules={[{ required: true }]}
@@ -226,6 +241,43 @@ function OfferFormFields({ type }) {
                   organizer: true,
                 }}
               />
+              <Divider style={{ margin: "16px 0" }} />
+            </>
+          ) : (
+            <>
+              <Form.Item
+                name="event_ids"
+                label="Events"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please select at least one event!",
+                  },
+                ]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Search and select events"
+                  mode="multiple"
+                  allowClear
+                  suffixIcon={<SearchOutlined />}
+                  filterOption={(input, option) =>
+                    option.children.props.children[1]
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                  size="large"
+                >
+                  {filteredEvents?.map((event) => (
+                    <Option key={event.id} value={event.id}>
+                      <div className="font-medium text-gray-900 flex items-center">
+                        <CalendarOutlined className="mr-2 text-blue-500" />
+                        {event.event_name}
+                      </div>
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
               <Divider style={{ margin: "16px 0" }} />
             </>
           )}

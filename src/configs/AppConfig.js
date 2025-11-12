@@ -114,6 +114,8 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
           seat: { enabled: true },
           event: { enabled: true },
           schedule: { enabled: true },
+          offer: { enabled: true }, // ADD THIS
+          coupon: { enabled: true }, // ADD THIS
         },
       },
       // Movie services subcategory
@@ -155,7 +157,7 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
       track_requests: {
         enabled: true,
         subitems: {
-          // General track requests (common offer and coupon for both event and movie)
+          // General track requests (for Super Admin and Tech Admin ONLY)
           general: {
             enabled: true,
             items: {
@@ -163,20 +165,24 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
               coupon: { enabled: true },
             },
           },
-          // Event track requests (event-specific items)
+          // Event track requests
           event: {
             enabled: true,
             items: {
+              offer: { enabled: true },      // Event Organizer sees this
+              coupon: { enabled: true },     // Event Organizer sees this
               organizer: { enabled: true },
               seat: { enabled: true },
               schedule: { enabled: true },
               ticket: { enabled: true },
             },
           },
-          // Movie track requests (movie-specific items)
+          // Movie track requests
           movie: {
-            enabled: false,
+            enabled: true,
             items: {
+              offer: { enabled: true },      // Event Organizer sees this
+              coupon: { enabled: true },     // Event Organizer sees this
               seat: { enabled: true },
               schedule: { enabled: true },
               screen: { enabled: true },
