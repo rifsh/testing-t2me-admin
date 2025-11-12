@@ -161,7 +161,29 @@ const OfferList = () => {
         PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.UPDATE_OFFER_STATUS
       )
     ),
-
+    {
+      title: "Validity Status",
+      dataIndex: "validity_status",
+      render: (_, record) => {
+        const status = Utils.getCouponPeriodStatus(record);
+        const colorMap = {
+          Upcoming: "gold",
+          Running: "green",
+          Expired: "red",
+          "No Validity": "gray",
+        };
+        return (
+          <span
+            style={{
+              color: colorMap[status],
+              fontWeight: 600,
+            }}
+          >
+            {status}
+          </span>
+        );
+      },
+    },
     {
       title: "",
       dataIndex: "actions",
@@ -183,31 +205,31 @@ const OfferList = () => {
         <SearchBarWithStatus fetchFunction={fetchAllOffers} />
         {isOrganizer
           ? hasPermission(
-              PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS
-            ) && (
-              <Button
-                type="primary"
-                icon={<FormOutlined />}
-                onClick={() =>
-                  navigate(`${APP_PREFIX_PATH}/offer/add/${type}`)
-                }
-              >
-                Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
-              </Button>
-            )
+            PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS
+          ) && (
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              onClick={() =>
+                navigate(`${APP_PREFIX_PATH}/offer/add/${type}`)
+              }
+            >
+              Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
+            </Button>
+          )
           : hasPermission(
-              PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS
-            ) && (
-              <Button
-                type="primary"
-                icon={<FormOutlined />}
-                onClick={() =>
-                  navigate(`${APP_PREFIX_PATH}/offer/add/${type}`)
-                }
-              >
-                Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
-              </Button>
-            )}
+            PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS
+          ) && (
+            <Button
+              type="primary"
+              icon={<FormOutlined />}
+              onClick={() =>
+                navigate(`${APP_PREFIX_PATH}/offer/add/${type}`)
+              }
+            >
+              Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
+            </Button>
+          )}
       </Flex>
       <Table
         columns={tableColumns}

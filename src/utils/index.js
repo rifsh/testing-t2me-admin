@@ -463,12 +463,12 @@ class Utils {
       .split(";")
       .forEach(
         (cookie) =>
-          (document.cookie = cookie
-            .replace(/^ +/, "")
-            .replace(
-              /=.*/,
-              "=;expires=" + new Date(0).toUTCString() + ";path=/"
-            ))
+        (document.cookie = cookie
+          .replace(/^ +/, "")
+          .replace(
+            /=.*/,
+            "=;expires=" + new Date(0).toUTCString() + ";path=/"
+          ))
       );
 
     // Unregister Service Workers
@@ -1291,6 +1291,20 @@ class Utils {
       };
     }
   };
+
+  static getCouponPeriodStatus(coupon) {
+    if (!coupon?.date_required) return "No Validity";
+
+    const today = new Date();
+    const start = coupon?.start_date ? new Date(coupon.start_date) : null;
+    const end = coupon?.end_date ? new Date(coupon.end_date) : null;
+
+    if (start && today < start) return "Upcoming";
+    if (end && today > end) return "Expired";
+    if (start && end && today >= start && today <= end) return "Running";
+
+    return "Unknown";
+  }
 }
 
 export default Utils;

@@ -175,6 +175,29 @@ const CouponList = () => {
     },
     Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.COUPON.UPDATE_COUPON_STATUS)),
     {
+      title: "Validity Status",
+      dataIndex: "validity_status",
+      render: (_, record) => {
+        const status = Utils.getCouponPeriodStatus(record);
+        const colorMap = {
+          Upcoming: "gold",
+          Running: "green",
+          Expired: "red",
+          "No Date": "gray",
+        };
+        return (
+          <span
+            style={{
+              color: colorMap[status],
+              fontWeight: 600,
+            }}
+          >
+            {status}
+          </span>
+        );
+      },
+    },
+    {
       title: "",
       dataIndex: "actions",
       render: (_, row) => (
