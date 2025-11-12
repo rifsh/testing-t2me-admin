@@ -41,10 +41,10 @@ import { getAvailableOfferDays } from "store/slices/offerSlice";
 const { Text } = Typography;
 const { Group: RadioGroup } = Radio;
 
-function CouponFormFields({ form, type }) {
+function CouponFormFields({ form, type, mode }) {
   const dispatch = useDispatch();
   const startDate = Form.useWatch("start_date", form);
-  const { isDateRequired } = useSelector((state) => state.coupons);
+  const { isDateRequired, selectedCouponsDays } = useSelector((state) => state.coupons);
   const { availableOfferDays, loading: offerLoading } = useSelector((state) => state.offers);
   const [couponType, setCouponType] = useState(true);
   const [couponCodeType, setCouponCodeType] = useState(false);
@@ -537,6 +537,8 @@ function CouponFormFields({ form, type }) {
           form={form}
           availableOfferDays={availableOfferDays}
           loading={offerLoading}
+          mode={mode}
+          selectedCouponsDays={selectedCouponsDays}
         />
         <Card title="Coupon Information">
           <Alert

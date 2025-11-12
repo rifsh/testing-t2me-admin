@@ -370,7 +370,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
               {
                 label: "General",
                 key: "1",
-                children: <CouponFormFields form={form} type={type} />,
+                children: <CouponFormFields mode={mode} form={form} type={type} />,
               },
             ]}
           />

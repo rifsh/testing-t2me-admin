@@ -6,6 +6,7 @@ import CouponService from "services/CouponService";
 export const initialState = {
   loading: false,
   coupons: [],
+  selectedCouponsDays: [],
   filteredCoupons: [],
   error: null,
   message: null,
@@ -170,6 +171,7 @@ const couponSlice = createSlice({
         state.loading = false;
         const couponData = { ...action.payload[0] };
         state.couponDetails = couponData;
+        state.selectedCouponsDays = couponData?.weekday_associations || null;
       })
       .addCase(fetchCouponDetails.rejected, (state, action) => {
         state.loading = false;
