@@ -1,4 +1,5 @@
 import { Card, Checkbox, Form, Tag, Skeleton } from "antd";
+import { EDIT } from "constants/AppConstants";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAvailableOfferDays } from "store/slices/offerSlice";
@@ -6,9 +7,26 @@ import { getAvailableOfferDays } from "store/slices/offerSlice";
 const ApplicableDays = ({
     form,
     availableOfferDays,
+    selectedCouponsDays,
+    mode,
     loading,
 }) => {
     const [selectedDays, setSelectedDays] = useState([]);
+
+    useEffect(() => {
+        if (selectedCouponsDays && mode === EDIT.toUpperCase()) {
+            const formDays = selectedCouponsDays?.map((days) => days.weekday?.toUpperCase()) || [];
+            console.log("Form days changed:", selectedCouponsDays?.map((days) => days.weekday?.toUpperCase()));
+            setSelectedDays(formDays);
+        }
+    }, [selectedCouponsDays]);
+
+    const watchedDays = Form.useWatch("applicable_days", form) || [];
+
+    // useEffect(() => {
+    //     console.log("Watched days changed:", watchedDays);
+    //     setSelectedDays(watchedDays);
+    // }, [watchedDays]);
 
     const getDayDisplayInfo = (dayName) => {
         const dayColors = {
@@ -132,7 +150,7 @@ const ApplicableDays = ({
                                 }}
                             >
                                 <Skeleton.Avatar active size={32} shape="circle" />
-                                <Skeleton.Button active size={12}  />
+                                <Skeleton.Button active size={12} />
                             </div>
 
                         </Card>
