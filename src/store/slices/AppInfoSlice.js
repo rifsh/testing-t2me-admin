@@ -4,6 +4,7 @@ import AppInfoService from "services/AppInfoService";
 const initialState = {
   loading: false,
   submitting: false,
+  uploadingImages: false,
   adCategories: [],
   filteredAdCategories: [],
   responseData: null,
@@ -28,6 +29,19 @@ export const fetchAppInfo = createAsyncThunk(
       return response;
     } catch (error) {
       return rejectWithValue("Failed to fetch FAQs");
+    }
+  }
+);
+
+// New thunk to upload image to CDN
+export const uploadImageToCdn = createAsyncThunk(
+  "appinfo/uploadImageToCdn",
+  async ({ file, moduleName }, { rejectWithValue }) => {
+    try {
+      const response = await AppInfoService.uploadImageToCdn(file, moduleName);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to upload image");
     }
   }
 );
@@ -71,17 +85,25 @@ const AppInfoSlice = createSlice({
         state.loading = false;
         state.error = payload;
       })
+      .addCase(uploadImageToCdn.pending, (state) => {
+        state.uploadingImages = true;
+        state.error = null;
+      })
+      .addCase(uploadImageToCdn.fulfilled, (state, { payload }) => {
+        state.uploadingImages = false;
+        console.log("Image uploaded successfully:", payload);
+      })
+      .addCase(uploadImageToCdn.rejected, (state, { payload }) => {
+        state.uploadingImages = false;
+        state.error = payload;
+      })
       .addCase(updateInfo.pending, (state) => {
         state.loading = true;
       })
       .addCase(updateInfo.fulfilled, (state, { payload }) => {
         state.loading = false;
-        // state.responseData = payload.data;
         if (payload.status) {
           state.message = payload.status.message;
-          // state.responseImpactData = payload.status.data?.active_schedules;
-          // state.editable_status = payload.status?.editable_status;
-          // state.warningPagination = payload.status?.data?.active_schedules;
         }
       })
       .addCase(updateInfo.rejected, (state, action) => {

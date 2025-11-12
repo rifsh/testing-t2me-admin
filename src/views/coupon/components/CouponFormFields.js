@@ -37,22 +37,28 @@ import TheaterListForm from "components/util-components/FormItems/TheaterListFor
 import { EventType } from "constants/AppConstants";
 import { isOrganizer } from "configs/UserAccessConfig";
 import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
+import ApplicableDays from "components/layout-components/Cards/ApplicableDays";
+import { getAvailableOfferDays } from "store/slices/offerSlice";
 
 const { Text } = Typography;
 const { Group: RadioGroup } = Radio;
 const { Option } = Select;
 
-function CouponFormFields({ form, type }) {
+function CouponFormFields({ form, type, mode }) {
   const dispatch = useDispatch();
   const startDate = Form.useWatch("start_date", form);
-  const { isDateRequired } = useSelector((state) => state.coupons);
+  const { isDateRequired, selectedCouponsDays } = useSelector(
+    (state) => state.coupons
+  );
   const { handleDeleteImage, deletingImages } = useS3ImageDelete("coupon");
-  
-  const {
-    filteredEvents = [],
-    loading = false,
-  } = useSelector((state) => state.event || {});
 
+  const { filteredEvents = [], loading = false } = useSelector(
+    (state) => state.event || {}
+  );
+
+  const { availableOfferDays, loading: offerLoading } = useSelector(
+    (state) => state.offers
+  );
   const [couponType, setCouponType] = useState(true);
   const [couponCodeType, setCouponCodeType] = useState(false);
 
@@ -68,10 +74,12 @@ function CouponFormFields({ form, type }) {
   // ✅ Fetch events only if type is EVENT and user is organizer
   useEffect(() => {
     if (type === EventType.EVENT && userIsOrganizer) {
-      dispatch(fetchAllEvent({ 
-        event_type: EVENT_TYPES.event,
-        organizer: true 
-      }));
+      dispatch(
+        fetchAllEvent({
+          event_type: EVENT_TYPES.event,
+          organizer: true,
+        })
+      );
     }
   }, [dispatch, type, userIsOrganizer]);
 
@@ -138,6 +146,7 @@ function CouponFormFields({ form, type }) {
 
   // Ensure isDateRequired is synchronized with form values
   useEffect(() => {
+    dispatch(getAvailableOfferDays({}));
     // When form loads with dates, make sure isDateRequired is set correctly
     const startDateValue = form.getFieldValue("start_date");
     const endDateValue = form.getFieldValue("end_date");
@@ -634,7 +643,14 @@ function CouponFormFields({ form, type }) {
       </Col>
 
       <Col xs={24} sm={24} md={7}>
-        <Card title="Coupon Information" bordered={false}>
+        <ApplicableDays
+          form={form}
+          availableOfferDays={availableOfferDays}
+          loading={offerLoading}
+          mode={mode}
+          selectedCouponsDays={selectedCouponsDays}
+        />
+        <Card title="Coupon Information" bordered={false} style={{ marginTop: "16px" }}>
           <Alert
             message="Important Note"
             description="Expired coupons cannot be edited."

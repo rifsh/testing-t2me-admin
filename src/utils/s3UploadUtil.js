@@ -299,4 +299,12 @@ export const UPLOAD_FIELD_CONFIGS = {
       isArray: false,
     },
   ],
+  COUPON: [
+    {
+      dataField: "thumbnail_image",
+      uploadUrlField: "thumbnail_image_upload_url",
+      fileField: "thumbnail_image",
+      isArray: false,
+    },
+  ],
 };
