@@ -186,7 +186,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         // Check if it's a new file (has originFileObj)
         if (thumbnailFile && thumbnailFile.originFileObj) {
           thumbnailData = {
-            filename: thumbnailFile.name || thumbnailFile.originFileObj.name,
+            file_name: thumbnailFile.name || thumbnailFile.originFileObj.name,
             media_type: "image",
           };
         }
