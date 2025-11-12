@@ -243,7 +243,7 @@ function OfferFormFields({ type }) {
               />
               <Divider style={{ margin: "16px 0" }} />
             </>
-          ) : (
+          ) : isOrganizer() && type === EventType.EVENT ? (
             <>
               <Form.Item
                 name="event_ids"
@@ -280,6 +280,8 @@ function OfferFormFields({ type }) {
               </Form.Item>
               <Divider style={{ margin: "16px 0" }} />
             </>
+          ) : (
+            <></>
           )}
 
           <Row gutter={16}>
