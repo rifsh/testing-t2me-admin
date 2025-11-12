@@ -109,7 +109,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
       key_words: offer.key_words || [],
       applicable_days: applicableDayNames,
       thumbnail_image: thumbnailFile,
-      event_ids: offer.event_ids || [], // ✅ Added event_ids from API response
+      event_ids: offer.event_ids || [],
     };
 
     if (offer.date_required && offer.start_date && offer.end_date) {

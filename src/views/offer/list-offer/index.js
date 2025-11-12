@@ -102,74 +102,29 @@ const OfferList = () => {
   const getDropdownMenu = (row) => [
     {
       key: "view",
-      label: (
-        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.GET_OFFER_DETAIL) ? (
-          <Flex alignItems="center">
-            <EyeOutlined />
-            <span className="ml-2">View Details</span>
-          </Flex >
-
-        ) : null
-      ),
+      label: hasPermission(
+        PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.GET_OFFER_DETAIL
+      ) ? (
+        <Flex alignItems="center">
+          <EyeOutlined />
+          <span className="ml-2">View Details</span>
+        </Flex>
+      ) : null,
       onClick: () => showModal(row),
     },
     {
       key: "remark",
-      label: (
-        hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.EDIT_OFFERS) ? (
-          <Flex alignItems="center">
-            <EditOutlined />
-            <span className="ml-2">Edit Offer</span>
-          </Flex >
-        ) : null
-      ),
+      label: hasPermission(
+        PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.EDIT_OFFERS
+      ) ? (
+        <Flex alignItems="center">
+          <EditOutlined />
+          <span className="ml-2">Edit Offer</span>
+        </Flex>
+      ) : null,
       onClick: () => handleEditTax(row.id),
     },
   ];
-
-  const dropdownMenu = (row) => (
-    <Menu>
-      {/* View Details Menu Item */}
-      {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.GET_OFFER_DETAIL) && (
-        <Menu.Item key="view">
-          <Flex alignItems="center"
-            onClick={() => showModal(row)}
-          >
-            <EyeOutlined />
-            <span className="ml-2">View Details</span>
-          </Flex >
-        </Menu.Item>
-      )
-      }
-
-      {/* Edit Seat Structure Menu Item */}
-      {
-        isOrganizer() ? (
-          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.GET_OFFER_DETAIL) && (
-            <Menu.Item key="edit-organizer">
-              <Flex alignItems="center"
-                onClick={() => handleEditTax(row.id)}
-              >
-                <EditOutlined />
-                <span className="ml-2">Edit Offer</span>
-              </Flex >
-            </Menu.Item>
-          )
-        ) : (
-          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.EDIT_OFFERS) && (
-            <Menu.Item key="edit">
-              <Flex alignItems="center"
-                onClick={() => handleEditTax(row.id)}
-              >
-                <EditOutlined />
-                <span className="ml-2">Edit Offer</span>
-              </Flex >
-            </Menu.Item >
-          )
-        )
-      }
-    </Menu >
-  );
 
   const tableColumns = [
     {
@@ -200,18 +155,25 @@ const OfferList = () => {
       sorter: (a, b) => a.max_uses - b.max_uses,
     },
     // Utils.statusColumnUtil(handleUpdateStatus),
-    Utils.statusColumnUtil(handleUpdateStatus, !hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.UPDATE_OFFER_STATUS)),
+    Utils.statusColumnUtil(
+      handleUpdateStatus,
+      !hasPermission(
+        PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.UPDATE_OFFER_STATUS
+      )
+    ),
 
     {
       title: "",
       dataIndex: "actions",
-      render: (_, row) => (
-        hasAnyPermission([PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.GET_OFFER_DETAIL, PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.EDIT_OFFERS]) ? (
+      render: (_, row) =>
+        hasAnyPermission([
+          PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.GET_OFFER_DETAIL,
+          PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.EDIT_OFFERS,
+        ]) ? (
           <Dropdown menu={{ items: getDropdownMenu(row) }} trigger={["click"]}>
             <Button type="text" icon={<MoreOutlined />} />
           </Dropdown>
-        ) : null
-      ),
+        ) : null,
     },
   ];
 
@@ -219,27 +181,33 @@ const OfferList = () => {
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
         <SearchBarWithStatus fetchFunction={fetchAllOffers} />
-        {isOrganizer ? (
-          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS) && (
-            <Button
-              type="primary"
-              icon={<FormOutlined />}
-              onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)}
-            >
-              Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
-            </Button>
-          )
-        ) : (
-          hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS) && (
-            <Button
-              type="primary"
-              icon={<FormOutlined />}
-              onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)}
-            >
-              Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
-            </Button>
-          )
-        )}
+        {isOrganizer
+          ? hasPermission(
+              PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS
+            ) && (
+              <Button
+                type="primary"
+                icon={<FormOutlined />}
+                onClick={() =>
+                  navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)
+                }
+              >
+                Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
+              </Button>
+            )
+          : hasPermission(
+              PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS
+            ) && (
+              <Button
+                type="primary"
+                icon={<FormOutlined />}
+                onClick={() =>
+                  navigate(`${APP_PREFIX_PATH}/offer/add?type=${type}`)
+                }
+              >
+                Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
+              </Button>
+            )}
       </Flex>
       <Table
         columns={tableColumns}
