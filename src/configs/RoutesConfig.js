@@ -330,7 +330,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "general.offer.add": {
     key: "offer.add",
-    path: `${APP_PREFIX_PATH}/offer/add`,
+    path: `${APP_PREFIX_PATH}/offer/add/:type`,
     component: React.lazy(() => import("views/offer/add-offer")),
     category: "services",
     subcategory: "general",
