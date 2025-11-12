@@ -183,7 +183,7 @@ const CouponList = () => {
           Upcoming: "gold",
           Running: "green",
           Expired: "red",
-          "No Date": "gray",
+          "No Validity": "gray",
         };
         return (
           <span
