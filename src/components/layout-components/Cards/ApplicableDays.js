@@ -10,6 +10,19 @@ const ApplicableDays = ({
 }) => {
     const [selectedDays, setSelectedDays] = useState([]);
 
+    useEffect(() => {
+        const formDays = form.getFieldsValue() || [];
+        console.log("Form days changed:", formDays);
+        // setSelectedDays(formDays);
+    }, [form]);
+
+    const watchedDays = Form.useWatch("applicable_days", form) || [];
+
+    // useEffect(() => {
+    //     console.log("Watched days changed:", watchedDays);
+    //     setSelectedDays(watchedDays);
+    // }, [watchedDays]);
+
     const getDayDisplayInfo = (dayName) => {
         const dayColors = {
             MONDAY: "#1890ff",
@@ -132,7 +145,7 @@ const ApplicableDays = ({
                                 }}
                             >
                                 <Skeleton.Avatar active size={32} shape="circle" />
-                                <Skeleton.Button active size={12}  />
+                                <Skeleton.Button active size={12} />
                             </div>
 
                         </Card>

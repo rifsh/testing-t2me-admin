@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import PageHeaderAlt from "components/layout-components/PageHeaderAlt";
 import { Tabs, Form, Button, message, Alert, Col } from "antd";
 import Flex from "components/shared-components/Flex";
@@ -17,7 +17,7 @@ import {
   makeChangesCoupon,
 } from "store/slices/couponSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
-import { setSelectedSubmitItem } from "store/slices/modalSlice";
+import { setOriginalFiles, setSelectedSubmitItem } from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
 import dayjs from "dayjs";
@@ -29,6 +29,7 @@ import {
   setCommentModalVisibility,
 } from "store/slices/EventOrganizerSlice";
 import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
+import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil";
 
 const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
   const {
@@ -59,6 +60,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
     responseMessageEvent,
   } = useSelector((state) => state.organizerUpdates);
   const { availableOfferDays } = useSelector((state) => state.offers);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     dispatch(setIsDateRequired(false));
@@ -80,6 +82,13 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         // If already in object format, use directly
         formattedKeyWords = coupon.key_words;
       }
+      const applicableDayNames =
+        coupon.weekday_associations?.map((day) => {
+          return day.weekday?.toUpperCase();
+        }) || [];
+
+      console.log("Applicable Day Names:", applicableDayNames);
+      console.log("couponsdata", coupon);
 
       const formData = {
         name: coupon.name,
@@ -96,6 +105,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         max_uses: coupon.max_uses,
         min_purchase_amount: coupon.min_purchase_amount,
         date_required: Boolean(coupon.date_required),
+        applicable_days: applicableDayNames,
         thumbnail_image:
           coupon.thumbnail_image && coupon.thumbnail_image !== "images"
             ? [
@@ -166,6 +176,21 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
+      const originalFiles = extractFileObjects(values);
+      dispatch(setOriginalFiles(originalFiles));
+
+      let thumbnailData = null;
+      if (values.thumbnail_image && Array.isArray(values.thumbnail_image)) {
+        const thumbnailFile = values.thumbnail_image[0];
+
+        // Check if it's a new file (has originFileObj)
+        if (thumbnailFile && thumbnailFile.originFileObj) {
+          thumbnailData = {
+            file_name: thumbnailFile.name || thumbnailFile.originFileObj.name,
+            media_type: "image",
+          };
+        }
+      }
 
       // Use the processFormValues function to handle all transformations
       const processedValues = processFormValues(values);
@@ -178,8 +203,8 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
       if (mode === "EDIT") {
         const editData = {
           ...processedValues,
-
           id: coupon.id,
+          thumbnail_image: thumbnailData,
         };
 
         if (isMakeChanges) {
@@ -329,7 +354,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
                   type="primary"
                   onClick={() => onFinish()}
                   htmlType="submit"
-                  loading={loading}
+                  loading={loading || isUploading}
                 >
                   {mode === "ADD" ? "Add" : `Save`}
                 </Button>
@@ -351,7 +376,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
           />
         </div>
       </Form>
-      <LoadingOverlay loading={loading} />
+      <LoadingOverlay loading={loading || isUploading} />
       <WarningModal
         visible={dialogVisible}
         title="Confirm Action"
@@ -385,8 +410,10 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         responseMessage={responseMessage}
         pagination={submitPagination}
         mode={mode}
+        setIsUploading={setIsUploading}
         form={form}
         formType={"coupon"}
+        uploadFieldConfigs={UPLOAD_FIELD_CONFIGS.COUPON}
         extraFieldsFromResponse={["thumbnail_image_upload_url"]}
       />
 
