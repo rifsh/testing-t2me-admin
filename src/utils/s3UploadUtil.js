@@ -101,7 +101,6 @@ export const uploadImagesAfterConfirm = async (
     // Process each upload field configuration
     uploadFields.forEach((config) => {
       const { dataField, uploadUrlField, fileField, isArray = false } = config;
-      console.log('filedschecking', responseData);
 
       if (isArray) {
         // Handle array of files (like banner_images)
@@ -124,8 +123,6 @@ export const uploadImagesAfterConfirm = async (
         // Handle single file (like thumbnail_image)
         const uploadUrlData = data[uploadUrlField];
         const fileData = originalFiles[fileField];
-        console.log('filedschecking', uploadUrlData, fileData);
-        console.log('filedschecking', data);
 
         if (uploadUrlData?.upload_url && fileData) {
           uploads.push({
