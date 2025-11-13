@@ -42,6 +42,7 @@ import OfferDetailsTable from "../components/OfferDetailsTable";
 import CouponDetailsTable from "../components/CouponDetailsTable";
 import { CDN_PATH } from "configs/AppConfig";
 import CDNImage from "components/layout-components/Image/CDNImage";
+import Utils from "utils";
 
 const { Panel } = Collapse;
 const { TabPane } = Tabs;
@@ -184,13 +185,36 @@ const ScheduleDetails = () => {
     },
     {
       title: "Status",
-      dataIndex: ["offer", "is_active"],
+      dataIndex: ["offer", "status"],
       key: "status",
       render: (status, record) => (
         <Tag color={status ? "green" : "red"}>
           {status ? "Active" : "Inactive"}
         </Tag>
       ),
+    },
+    {
+      title: "Validity Status",
+      dataIndex: "validity_status",
+      render: (_, record) => {
+        const status = Utils.getCouponPeriodStatus(record);
+        const colorMap = {
+          Upcoming: "gold",
+          Running: "green",
+          Expired: "red",
+          "No Validity": "gray",
+        };
+        return (
+          <span
+            style={{
+              color: colorMap[status],
+              fontWeight: 600,
+            }}
+          >
+            {status}
+          </span>
+        );
+      },
     },
   ];
 
@@ -591,9 +615,9 @@ const ScheduleDetails = () => {
                 {available_types === "seat_structure"
                   ? show_seat_details?.length || 0
                   : show_dates?.reduce(
-                      (total, date) => total + (date.show_times?.length || 0),
-                      0
-                    ) || 0}
+                    (total, date) => total + (date.show_times?.length || 0),
+                    0
+                  ) || 0}
               </Title>
             </div>
           </Col>
