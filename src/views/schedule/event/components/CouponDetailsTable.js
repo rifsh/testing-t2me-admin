@@ -94,7 +94,7 @@ const CouponDetailsTable = ({ coupon_schedule }) => {
     },
     {
       title: "Status",
-      dataIndex: ["coupons", "is_active"],
+      dataIndex: ["coupons", "status"],
       key: "status",
       render: (isActive) => (
         <Tag color={isActive ? "green" : "red"}>
