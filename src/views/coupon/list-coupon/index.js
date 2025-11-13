@@ -272,7 +272,7 @@ const CouponList = () => {
                       {selectedCoupon.status ? 'Active Schedule' : 'Inactive Schedule'}
                     </span>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedCoupon.is_active ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {selectedCoupon.is_active ? 'Active Offer' : 'Inactive Offer'}
+                      {selectedCoupon.is_active ? 'Active Coupon' : 'Inactive Coupon'}
                     </span>
                   </div>
                 </div>

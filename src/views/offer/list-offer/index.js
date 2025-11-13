@@ -245,7 +245,7 @@ const OfferList = () => {
       />
 
       <Modal
-        title="Coupon Details"
+        title="Offer Details"
         open={isModalVisible}
         onCancel={handleModalClose}
         footer={null}
@@ -369,7 +369,7 @@ const OfferList = () => {
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Coupon Type</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Offer Type</h3>
                   <div className="grid grid-cols-2 gap-2">
                     <div className={`text-center py-2 rounded ${selectedOffer.is_general ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
                       <div className="text-sm font-medium">General</div>

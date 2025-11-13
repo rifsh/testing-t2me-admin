@@ -56,6 +56,7 @@ export const uploadMultipleToS3 = async (uploadData) => {
     successful: [],
     failed: [],
   };
+  console.log('checkinggggggggg', uploadData);
 
   for (const { upload_url, file, type, index } of uploadData) {
     try {
@@ -73,9 +74,8 @@ export const uploadMultipleToS3 = async (uploadData) => {
   }
 
   if (results.failed.length > 0) {
-    const errorMsg = `Failed to upload ${
-      results.failed.length
-    } file(s): ${results.failed.map((f) => f.file).join(", ")}`;
+    const errorMsg = `Failed to upload ${results.failed.length
+      } file(s): ${results.failed.map((f) => f.file).join(", ")}`;
     throw new Error(errorMsg);
   }
 
@@ -128,6 +128,12 @@ export const uploadImagesAfterConfirm = async (
           uploads.push({
             upload_url: uploadUrlData.upload_url,
             file: fileData,
+            type: dataField,
+          });
+        } else {
+          uploads.push({
+            upload_url: responseData?.thumbnail_image_url?.upload_url,
+            file: data?.thumbnail_image,
             type: dataField,
           });
         }

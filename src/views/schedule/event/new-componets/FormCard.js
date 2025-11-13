@@ -90,7 +90,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
     const fetchInitialData = async () => {
       try {
         await Promise.all([
-          dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event })).unwrap(),
+          dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event, active: true })).unwrap(),
           dispatch(getPaymentAddOnService()),
         ]);
       } catch (error) {
@@ -185,7 +185,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
       if (!value?.trim()) return;
       try {
         await dispatch(
-          fetchAllEvent({ event_type: EVENT_TYPES.event, search: value })
+          fetchAllEvent({ event_type: EVENT_TYPES.event, search: value, active: true })
         ).unwrap();
       } catch {
         message.error("Failed to search events");
@@ -288,7 +288,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
     if (value?.trim()) {
       debouncedSearch(value.trim());
     } else {
-      dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event }));
+      dispatch(fetchAllEvent({ event_type: EVENT_TYPES.event, active: true }));
     }
   };
 
@@ -497,7 +497,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                       onClear={() => {
                         setSearchValue("");
                         dispatch(
-                          fetchAllEvent({ event_type: EVENT_TYPES.event })
+                          fetchAllEvent({ event_type: EVENT_TYPES.event, active: true })
                         );
                       }}
                       dropdownStyle={{
@@ -538,29 +538,29 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                   </Form.Item>
                   {(selectedEvent?.venues?.length > 0 ||
                     scheduleDetails?.venue) && (
-                    <Form.Item
-                      name="venue_id"
-                      label={
-                        <span className="text-sm font-medium text-gray-700">
-                          Venue <span className="text-red-500">*</span>
-                        </span>
-                      }
-                      rules={[
-                        { required: true, message: "Please select a venue!" },
-                      ]}
-                    >
-                      <Select
-                        disabled={mode === EDIT}
-                        placeholder="Select venue"
-                        onChange={handleSelectVenue}
-                        allowClear
-                        dropdownStyle={{
-                          borderRadius: "8px",
-                          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-                        }}
+                      <Form.Item
+                        name="venue_id"
+                        label={
+                          <span className="text-sm font-medium text-gray-700">
+                            Venue <span className="text-red-500">*</span>
+                          </span>
+                        }
+                        rules={[
+                          { required: true, message: "Please select a venue!" },
+                        ]}
                       >
-                        {selectedEvent?.venues?.length > 0
-                          ? selectedEvent.venues.map((venue) => (
+                        <Select
+                          disabled={mode === EDIT}
+                          placeholder="Select venue"
+                          onChange={handleSelectVenue}
+                          allowClear
+                          dropdownStyle={{
+                            borderRadius: "8px",
+                            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                          }}
+                        >
+                          {selectedEvent?.venues?.length > 0
+                            ? selectedEvent.venues.map((venue) => (
                               <Option key={venue.id} value={venue.id}>
                                 <div className="flex items-center">
                                   <EnvironmentOutlined className="mr-2 text-green-500" />
@@ -568,7 +568,7 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                                 </div>
                               </Option>
                             ))
-                          : scheduleDetails?.venue && (
+                            : scheduleDetails?.venue && (
                               <Option
                                 key={scheduleDetails.venue.id}
                                 value={scheduleDetails.venue.id}
@@ -579,9 +579,9 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                                 </div>
                               </Option>
                             )}
-                      </Select>
-                    </Form.Item>
-                  )}
+                        </Select>
+                      </Form.Item>
+                    )}
 
                   {(availableTypes.length > 0 || mode === EDIT) && (
                     <Form.Item
@@ -786,11 +786,10 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                       e.stopPropagation();
                       handleBookingLimitToggle(e, !limitBookingsPerUser);
                     }}
-                    className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${
-                      limitBookingsPerUser
-                        ? "bg-blue-50 border-2 border-blue-200"
-                        : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
-                    }`}
+                    className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${limitBookingsPerUser
+                      ? "bg-blue-50 border-2 border-blue-200"
+                      : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
+                      }`}
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded flex items-center justify-center bg-blue-500">
@@ -798,20 +797,18 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                       </div>
                       <div>
                         <p
-                          className={`text-sm font-medium ${
-                            limitBookingsPerUser
-                              ? "text-blue-900"
-                              : "text-gray-900"
-                          }`}
+                          className={`text-sm font-medium ${limitBookingsPerUser
+                            ? "text-blue-900"
+                            : "text-gray-900"
+                            }`}
                         >
                           Limit Bookings Per User
                         </p>
                         <p
-                          className={`text-xs ${
-                            limitBookingsPerUser
-                              ? "text-blue-700"
-                              : "text-gray-500"
-                          }`}
+                          className={`text-xs ${limitBookingsPerUser
+                            ? "text-blue-700"
+                            : "text-gray-500"
+                            }`}
                         >
                           Set booking limitations per user account
                         </p>
@@ -842,11 +839,10 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                       e.stopPropagation();
                       handlePaymentRequiredToggle(e, !isPaymentRequired);
                     }}
-                    className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${
-                      isPaymentRequired
-                        ? "bg-green-50 border-2 border-green-200"
-                        : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
-                    }`}
+                    className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${isPaymentRequired
+                      ? "bg-green-50 border-2 border-green-200"
+                      : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
+                      }`}
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded flex items-center justify-center bg-green-500">
@@ -854,20 +850,18 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                       </div>
                       <div>
                         <p
-                          className={`text-sm font-medium ${
-                            isPaymentRequired
-                              ? "text-green-900"
-                              : "text-gray-900"
-                          }`}
+                          className={`text-sm font-medium ${isPaymentRequired
+                            ? "text-green-900"
+                            : "text-gray-900"
+                            }`}
                         >
                           Is Payment Required
                         </p>
                         <p
-                          className={`text-xs ${
-                            isPaymentRequired
-                              ? "text-green-700"
-                              : "text-gray-500"
-                          }`}
+                          className={`text-xs ${isPaymentRequired
+                            ? "text-green-700"
+                            : "text-gray-500"
+                            }`}
                         >
                           Enable payment requirement for bookings
                         </p>
@@ -914,17 +908,15 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                             e.stopPropagation();
                             handleAddOnsChange(addon.name, !isSelected);
                           }}
-                          className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${
-                            isSelected
-                              ? "bg-yellow-50 border-2 border-yellow-200"
-                              : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
-                          }`}
+                          className={`p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 ${isSelected
+                            ? "bg-yellow-50 border-2 border-yellow-200"
+                            : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
+                            }`}
                         >
                           <div className="flex items-center space-x-3">
                             <div
-                              className={`w-8 h-8 rounded flex items-center justify-center ${
-                                isSelected ? "bg-yellow-500" : "bg-gray-400"
-                              }`}
+                              className={`w-8 h-8 rounded flex items-center justify-center ${isSelected ? "bg-yellow-500" : "bg-gray-400"
+                                }`}
                             >
                               <span className="text-white text-sm">
                                 {addon.name.charAt(0)}
@@ -932,11 +924,10 @@ const FormCard = ({ onSubmit, form, onCancel, mode }) => {
                             </div>
                             <div>
                               <p
-                                className={`text-sm font-medium ${
-                                  isSelected
-                                    ? "text-yellow-900"
-                                    : "text-gray-900"
-                                }`}
+                                className={`text-sm font-medium ${isSelected
+                                  ? "text-yellow-900"
+                                  : "text-gray-900"
+                                  }`}
                               >
                                 {addon.name}
                               </p>

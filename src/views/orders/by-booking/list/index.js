@@ -62,8 +62,6 @@ const BookingList = () => {
 
     useEffect(() => {
         setSelectedEventType(type);
-        console.log(type);
-
     }, [type]);
 
     const fetchOrders = (page = currentPage, size = pageSize, extraParams = {}) => {
