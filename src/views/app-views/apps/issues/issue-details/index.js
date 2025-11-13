@@ -30,6 +30,7 @@ import { fetchAllRoles } from 'store/slices/userSlice';
 import { UserRoleConstants } from 'constants/UserRoleConstant';
 import { TextConstants } from 'constants/TextConstant';
 import { PERMISSIONS } from 'constants/RolesPermissionConstants';
+import { imageUrlStartWith } from 'constants/AppConstants';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -383,7 +384,7 @@ const IssueDetails = () => {
         {IssueDetails.issue_ticket_file.map((fileItem, index) => (
           <div className='mb-3' key={index} style={{ position: 'relative' }}>
             <Image
-              src={`${fileItem.file.startsWith("media") ? `${CDN_PATH}/${fileItem.file}` : `${fileItem.file}`}`}
+              src={`${fileItem.file.startsWith(imageUrlStartWith) ? `${CDN_PATH}/${fileItem.file}` : `${fileItem.file}`}`}
               alt={`Issue attachment ${index + 1}`}
               style={{
                 width: '200px',
