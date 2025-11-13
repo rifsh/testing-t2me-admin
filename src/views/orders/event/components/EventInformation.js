@@ -45,7 +45,7 @@ export default function EventInformation({ data }) {
                     style={{ marginRight: 8, color: "#1890ff" }}
                   />
                   <Text style={{ fontSize: "14px" }}>
-                    {data?.schedule?.event?.name || "N/A"}
+                    {data?.schedule?.event?.event_name || "N/A"}
                   </Text>
                 </div>
               </div>
