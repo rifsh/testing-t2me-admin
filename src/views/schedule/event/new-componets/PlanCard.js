@@ -10,7 +10,7 @@ import { Button, Modal, message } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { setScheduleFormData } from "store/slices/scheduleSlice";
 
-import CalendarWidget from "./CalendarWidget";
+import CustomRangeDatePicker from "./CustomRangeDatePicker";
 import TimeSelector from "./TimeSelector";
 import EventModal from "./EventModal";
 import { getDaysDiff, ScheduleUtil } from "../utils";
@@ -827,7 +827,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
       currentAd.setMilliseconds(0);
       newBooking.setMilliseconds(0);
 
-      if (newBooking <= currentAd) {
+      if (newBooking < currentAd) {
         message.error("Booking time must be AFTER Advertisement time");
         return; // Don't update - validation failed
       }
@@ -1979,8 +1979,8 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
                 value={adStartDateTime}
                 onDateTimeChange={handleAdStartTimeChange}
                 timezone={timezone}
-                disablePastDates={true}
-                disablePastTimes={true}
+                disablePastDates={false}
+                disablePastTimes={false}
                 maxDateTime={bookingStartDateTime}
                 disabled={isScheduleBlocked}
                 blockedDates={getBlockedDatesSet(
@@ -2018,9 +2018,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Event Dates *
-            </label>
+           
             <div
               className={
                 !bookingStartDateTime || isScheduleBlocked
@@ -2028,12 +2026,12 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
                   : ""
               }
             >
-              <CalendarWidget
+              <CustomRangeDatePicker
                 onDateRangeChange={handleDateRangeChange}
                 initialStartDate={dateRange.startDate}
                 initialEndDate={dateRange.endDate}
                 minDate={getEventMinDate()}
-                blockedDates={blockedDatesSet} // ✅ NOW USES DEFINED VARIABLE
+                blockedDates={blockedDatesSet} 
                 isScheduleBlocked={isScheduleBlocked}
                 isEditMode={true}
                 timezone={timezone}

@@ -4,56 +4,58 @@ import { Card, Table, Select, Menu, Row, Form, Tag } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
+import { fetchAllOffers } from "store/slices/offerSlice";
 import Utils from "utils";
-import { fetchAllCoupons, fetchAllTrackCoupons } from "store/slices/couponSlice";
+import usePaginationHook from "utils/hooks/usePaginationHandler";
 
 const { Option } = Select;
 
 const OrganizerOfferStatusList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const type = params.get("type");
-  const { filteredCoupons, pagination, loading } = useSelector(
-    (state) => state.coupons
+  const { type } = useParams(); 
+  const { filteredOffers, pagination, loading } = useSelector(
+    (state) => state.offers
   );
   const [activeStatus, setactiveStatus] = useState();
+  const handlePagination = usePaginationHook(fetchAllOffers);
 
   useEffect(() => {
     dispatch(
-      fetchAllTrackCoupons({
+      fetchAllOffers({
         ...DEFAULT_PAGE_SIZE,
+        organizer: true,
+        isOrganizer: true,
         event_code: Utils.getEventTypeCodeWithType(type),
       })
     );
   }, [dispatch]);
 
-  const handlePagination = (page, size) => {
-    dispatch(
-      fetchAllCoupons({
-        page: page,
-        size: size,
-        isOrganizer: true,
-        event_code: Utils.getEventTypeCodeWithType(type),
-      })
-    );
-  };
+  // const handlePagination = (page, size) => {
+  //   dispatch(
+  //     fetchAllOffers({
+  //       page: page,
+  //       size: size,
+  //       isOrganizer: true,
+  //       event_code: Utils.getEventTypeCodeWithType(type),
+  //     })
+  //   );
+  // };
 
   const handleViewDetails = async (id) => {
     console.log(id);
-    navigate(`${APP_PREFIX_PATH}/track/coupon/status/details/${id}`);
+    navigate(`${APP_PREFIX_PATH}/track/offer/status/details/${id}/${type}`);
   };
 
   const handleShowStatus = (status) => {
     setactiveStatus(status);
     dispatch(
-      fetchAllCoupons({
+      fetchAllOffers({
         page: 1,
         size: 10,
         filters: status,
@@ -76,7 +78,7 @@ const OrganizerOfferStatusList = () => {
 
   const tableColumns = [
     {
-      title: "Coupon Name",
+      title: "Event Name",
       dataIndex: "name",
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
@@ -131,13 +133,15 @@ const OrganizerOfferStatusList = () => {
     <Card>
       <Row gutter={16} justify="start" align="" wrap={false}>
         <SearchBarWithStatus
-          fetchFunction={fetchAllCoupons}
-          isOrganizer={true}
+          fetchFunction={fetchAllOffers}
           isStatus={false}
+          isOrganizer={true}
           additionalParams={{
-            event_code: Utils.getEventTypeCodeWithType(type),
+            event_code: Utils.getEventTypeCodeWithType(type)
           }}
+          additionalFilters={[]}
         />
+
 
         <div className="mb-3">
           <Select
@@ -157,7 +161,7 @@ const OrganizerOfferStatusList = () => {
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={filteredCoupons}
+          dataSource={filteredOffers}
           rowKey="id"
           loading={loading}
           pagination={{

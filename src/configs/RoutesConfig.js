@@ -924,6 +924,46 @@ const ALL_PROTECTED_ROUTES = {
     subcategory: "track_requests",
     item: "event",
   },
+  "track.event.ticket": {
+    key: "trackRequest.ticket.status",
+    path: `${APP_PREFIX_PATH}/track/event-tickets/status/list`,
+    component: React.lazy(() =>
+      import("views/track-team/ticket-organizer/status-list")
+    ),
+    category: "issues",
+    subcategory: "track_requests",
+    item: "event",
+  },
+  "track.event.seat": {
+    key: "trackRequest.seat.status",
+    path: `${APP_PREFIX_PATH}/track/event-seats/status/list`,
+    component: React.lazy(() =>
+      import("views/track-team/seat-organizer/status-list")
+    ),
+    category: "issues",
+    subcategory: "track_requests",
+    item: "event",
+  },
+  "track.event.event": {
+    key: "trackRequest.organizer.status",
+    path: `${APP_PREFIX_PATH}/track/event/status/list`,
+    component: React.lazy(() =>
+      import("views/track-team/event-organizer/status-list")
+    ),
+    category: "issues",
+    subcategory: "track_requests",
+    item: "event",
+  },
+  "track.schedule.organizer": {
+    key: "trackRequest.organizer.status",
+    path: `${APP_PREFIX_PATH}/track/event-schedule/status/list`,
+    component: React.lazy(() =>
+      import("views/track-team/schedule-organizer/status-list")
+    ),
+    category: "issues",
+    subcategory: "track_requests",
+    item: "event",
+  },
   "track.event.organizer.details": {
     key: "org.details",
     path: `${APP_PREFIX_PATH}/track-team/event-organizer/details/:eventUpId`,

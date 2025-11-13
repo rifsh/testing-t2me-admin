@@ -782,9 +782,9 @@ const ALL_NAVIGATION_ITEMS = {
     category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
     featureItem: "coupon",
   },
-  "track.event.organizer": {
+  "track.event.event": {
     key: "eventOrganiser.update",
-    path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+    path: `${APP_PREFIX_PATH}/track/event/list`,
     title: "Organizer",
     icon: OrderedListOutlined,
     breadcrumb: false,
@@ -793,15 +793,25 @@ const ALL_NAVIGATION_ITEMS = {
     featureItem: "organizer",
   },
   // Track Requests - Event (event-specific items only)
-  "track.event.organizer": {
+  "track.event.event": {
     key: "eventOrganiser.update",
-    path: `${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`,
+    path: `${APP_PREFIX_PATH}/track/event/status/list`,
     title: "sidenav.event",
     icon: OrderedListOutlined,
     breadcrumb: false,
     submenu: [],
     category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
     featureItem: "organizer",
+  },
+  "track.event.ticket": {
+    key: "trackRequest.event.ticket.status.list",
+    path: `${APP_PREFIX_PATH}/track/event-tickets/status/list`,
+    title: "sidenav.ticket",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
+    featureItem: "ticket",
   },
   "track.event.seat": {
     key: "trackRequest.event.seat.status.list",
@@ -822,16 +832,6 @@ const ALL_NAVIGATION_ITEMS = {
     submenu: [],
     category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
     featureItem: "schedule",
-  },
-  "track.event.ticket": {
-    key: "trackRequest.event.ticket.status.list",
-    path: `${APP_PREFIX_PATH}/track/event-tickets/status/list`,
-    title: "sidenav.ticket",
-    icon: OrderedListOutlined,
-    breadcrumb: false,
-    submenu: [],
-    category: FEATURE_CATEGORIES.TRACK_REQUESTS_EVENT,
-    featureItem: "ticket",
   },
 
   // Track Requests - Movie (movie-specific items only)
@@ -1066,10 +1066,10 @@ const ROLE_NAVIGATION_ACCESS = {
     "track.event.coupon", // General section
     "track.movie.offer", // General section
     "track.movie.coupon", // General section
-    "track.event.organizer", // Event section
+    "track.event.event", // Event section
+    "track.event.ticket", // Event section
     "track.event.seat", // Event section
     "track.event.schedule", // Event section
-    "track.event.ticket", // Event section
     "track.movie.seats", // Movie section
     "track.movie.schedule", // Movie section
     "track.movie.screen",
@@ -1138,10 +1138,10 @@ const ROLE_NAVIGATION_ACCESS = {
     "track.event.coupon", // General section
     "track.movie.offer", // General section
     "track.movie.coupon", // General section
-    "track.event.organizer", // Event section
+    "track.event.event", // Event section
+    "track.event.ticket", // Event section
     "track.event.seat", // Event section
     "track.event.schedule", // Event section
-    "track.event.ticket", // Event section
     "track.movie.seats", // Movie section
     "track.movie.schedule", // Movie section
     "track.movie.screen",
@@ -1199,10 +1199,10 @@ const ROLE_NAVIGATION_ACCESS = {
 
     "track.event.offer.organizer", // Event section only
     "track.event.coupon.organizer", // Event section only
-    "track.event.organizer", // Event section
+    "track.event.event", // Event section
+    "track.event.ticket", // Event section
     "track.event.seat", // Event section
     "track.event.schedule", // Event section
-    "track.event.ticket", // Event section
     "track.movie.offer.organizer", // Movie section only
     "track.movie.coupon.organizer", // Movie section only
     "track.movie.seats", // Movie section
@@ -1244,7 +1244,7 @@ const ROLE_NAVIGATION_ACCESS = {
     "alerts.list",
 
     // Track Requests
-    "track.event.organizer",
+    "track.event.event",
     "track.movie.seats",
     "track.movie.offer",
     "track.movie.coupon",
@@ -1288,7 +1288,7 @@ const ROLE_NAVIGATION_ACCESS = {
     "issue.list",
 
     // Track Requests
-    "track.event.organizer",
+    "track.event.event",
     "track.movie.screen",
     "track.movie.seats",
     "track.movie.offer",
