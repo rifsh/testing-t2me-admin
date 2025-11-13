@@ -56,16 +56,13 @@ const IssueList = () => {
 
 
   const handleSearch = (value) => {
-    console.log('Search value:', value);
-
-    // Always update the search term state
     setSearchTerm(value);
 
     if (value) {
       dispatch(setGlobalSearchValue(value));
       dispatch(
         fetchAllissues({
-          search: value, // Make sure this matches your API parameter name
+          search: value,
           page: 1,
           size: 10,
           active: activeStatus,
@@ -73,16 +70,14 @@ const IssueList = () => {
         })
       );
     } else {
-      // Handle empty search
       handleClearSearch();
     }
   };
 
   const handleSearchIsEmpty = (e) => {
     const value = e.target.value;
-    setSearchTerm(value); // Always update the local state
+    setSearchTerm(value);
 
-    // Use debounce or timeout to avoid too many API calls
     if (value === '') {
       handleClearSearch();
     }
@@ -310,7 +305,7 @@ const IssueList = () => {
           <div className="mr-md-3 mb-3">
             <Search
               placeholder="Search Issues"
-              onChange={handleSearchIsEmpty} // Use the modified handler
+              onChange={handleSearchIsEmpty}
               onSearch={handleSearch}
               style={{ width: 200 }}
               value={searchTerm}
