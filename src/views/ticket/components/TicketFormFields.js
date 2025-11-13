@@ -26,6 +26,7 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import {
   addTicket,
+  editTicket,
   currentStepSaveUpdate,
   addOrUpdateTicketSet,
   resetTicketTypes,
@@ -79,6 +80,115 @@ const TicketFormFields = ({ mode, ticketId }) => {
     }
   }, [mode, ticketId, dispatch]);
 
+  useEffect(() => {
+    if (mode === "EDIT" && ticketId && singleTicket) {
+      console.log("📝 [EDIT MODE] Single ticket data received:", singleTicket);
+      console.log(
+        "📍 [EDIT MODE] Venue place data:",
+        singleTicket.venue?.place
+      );
+
+      // Determine ticket type
+      const ticketType = determineTicketType(
+        singleTicket.ticket_types,
+        singleTicket.is_dynamic
+      );
+      console.log("🎫 [EDIT MODE] Determined ticket type:", ticketType);
+
+      // Prepare form values
+      const formValues = {
+        place_id: singleTicket.venue?.place?.id,
+        place: `${singleTicket.venue.place.name}, ${singleTicket.venue.place.country.name}`,
+        name: singleTicket.name,
+        number_of_tickets: singleTicket.number_of_tickets,
+        ticket_type: ticketType,
+      };
+
+      console.log("📋 [EDIT MODE] Form values to populate:", formValues);
+
+      // If normal ticket type, populate the single ticket details
+      if (ticketType === "normal" && singleTicket.ticket_types.length > 0) {
+        const normalTicket = singleTicket.ticket_types[0];
+        formValues.type_name = normalTicket.name;
+        formValues.type_price = normalTicket.price;
+        formValues.type_number_of_tickets = normalTicket.number_of_tickets;
+        console.log("✅ [EDIT MODE] Normal ticket data added to form");
+      }
+
+      // Set form values
+      form.setFieldsValue(formValues);
+      console.log("✅ [EDIT MODE] Form values set");
+
+      // If dynamic, populate Redux store properly for multi-step form
+      if (ticketType === "dynamic") {
+        console.log("🔄 [EDIT MODE] Setting up dynamic ticket data in Redux");
+
+        // STEP 1: Initialize the base ticket structure FIRST
+        console.log("🏗️ [EDIT MODE] Step 1: Initializing base ticket data");
+        dispatch(
+          addOrUpdateTicketSet({
+            venue_id: singleTicket.venue?.id,
+            place_id: singleTicket.venue?.place?.id,
+            name: singleTicket.name,
+            number_of_tickets: singleTicket.number_of_tickets,
+
+            base_price: singleTicket.base_price,
+          })
+        );
+
+        console.log("✅ [EDIT MODE] Base ticket data initialized");
+
+        // STEP 2: Now add each ticket set one by one
+        console.log("🎟️ [EDIT MODE] Step 2: Adding individual ticket sets");
+        singleTicket.ticket_types.forEach((tt, index) => {
+          const ticketSetData = {
+            id: index,
+            ticket_set: tt.ticket_set,
+            tickets: [
+              {
+                id: `${index}-ticket-1`,
+                name: tt.name,
+                price: tt.price,
+                number_of_tickets: tt.number_of_tickets,
+                ticket_set: tt.ticket_set,
+              },
+            ],
+          };
+
+          console.log(
+            `🎟️ [EDIT MODE] Dispatching ticket set ${index}:`,
+            ticketSetData
+          );
+          dispatch(addOrUpdateTicketSet(ticketSetData));
+          console.log(`✅ [EDIT MODE] Ticket set ${index} dispatched`);
+        });
+
+        console.log("✅ [EDIT MODE] All ticket sets dispatched to Redux");
+      }
+
+      // Trigger venue list if place_id is set
+      if (formValues.place_id) {
+        console.log(
+          "🏢 [EDIT MODE] Fetching venues for place_id:",
+          formValues.place_id
+        );
+        dispatch(getVenues({ place_id: formValues.place_id }));
+      }
+
+      console.log("✅ [EDIT MODE] Edit data population complete");
+    }
+  }, [mode, ticketId, singleTicket, dispatch, form]);
+
+  const venueId = singleTicket?.venue?.id;
+
+  useEffect(() => {
+    if (mode === "EDIT" && venueId && filteredVenues.length > 0) {
+      // Re-set venue only after venues list arrives
+      form.setFieldsValue({ venue_id: venueId });
+      console.log("✅ Venue populated after venue list loaded:", venueId);
+    }
+  }, [filteredVenues, venueId, mode]);
+
   // Enhanced function to get complete form data for draft
   const getCompleteFormData = () => {
     const mainFormValues = form.getFieldsValue();
@@ -107,6 +217,27 @@ const TicketFormFields = ({ mode, ticketId }) => {
     });
 
     return completeData;
+  };
+
+  // Add this function before the component or as a utility
+  const determineTicketType = (ticketTypes, isDynamic) => {
+    // 1️⃣ If backend provides isDynamic explicitly
+    if (isDynamic !== null && isDynamic !== undefined) {
+      return isDynamic ? "dynamic" : "normal";
+    }
+
+    // 2️⃣ Fallback to old logic
+    if (!ticketTypes || ticketTypes.length === 0) return "normal";
+
+    if (ticketTypes.length === 1) {
+      const singleTicket = ticketTypes[0];
+
+      if (singleTicket.name?.toLowerCase().includes("normal")) {
+        return "normal";
+      }
+    }
+
+    return "dynamic";
   };
 
   // Handle draft loaded - restore all form data
@@ -141,11 +272,30 @@ const TicketFormFields = ({ mode, ticketId }) => {
 
   const addTicketType = async () => {
     try {
+      console.log("🚀 [ADD TICKET TYPE] Starting navigation to multi-step");
       const formValues = await form.validateFields();
-      dispatch(addOrUpdateTicketSet(formValues));
-      navigate(`${APP_PREFIX_PATH}/ticket/type/add`);
+      console.log("📋 [ADD TICKET TYPE] Form values validated:", formValues);
+
+      // In edit mode, we don't need to dispatch here because data is already in Redux
+      if (mode !== "EDIT") {
+        console.log("➕ [ADD TICKET TYPE] ADD mode - dispatching form values");
+        dispatch(addOrUpdateTicketSet(formValues));
+      } else {
+        console.log("✏️ [ADD TICKET TYPE] EDIT mode - data already in Redux");
+        console.log("📦 [ADD TICKET TYPE] Current tickets in Redux:", tickets);
+      }
+
+      const navigationState = { mode, ticketId };
+      console.log("🧭 [ADD TICKET TYPE] Navigation state:", navigationState);
+
+      // Pass mode and ticketId as state to the multi-step form
+      navigate(`${APP_PREFIX_PATH}/ticket/type/add`, {
+        state: navigationState,
+      });
+
+      console.log("✅ [ADD TICKET TYPE] Navigation triggered");
     } catch (error) {
-      console.error("Validation failed:", error);
+      console.error("❌ [ADD TICKET TYPE] Validation failed:", error);
     }
   };
 
@@ -153,11 +303,14 @@ const TicketFormFields = ({ mode, ticketId }) => {
     try {
       const values = await form.validateFields();
 
+      const isDynamic = values.ticket_type === "dynamic";
+
       const ticketData = {
         venue_id: values.venue_id,
         number_of_tickets: values.number_of_tickets,
         base_price: values.type_price,
         name: values.name,
+        is_dynamic: isDynamic,
         ticket_types: [
           {
             id: "0-ticket-1",
@@ -168,6 +321,11 @@ const TicketFormFields = ({ mode, ticketId }) => {
           },
         ],
       };
+
+      if (mode === "EDIT" && ticketId) {
+        ticketData.id = ticketId;
+      }
+
       console.log(ticketData, "ticketData, from page");
 
       const resultAction = await dispatch(validateVenue(values.venue_id));
@@ -177,6 +335,8 @@ const TicketFormFields = ({ mode, ticketId }) => {
         if (response.message === "warning") {
           dispatch(setPlaceValidationDialogVisible(true));
         } else if (response.data && response.data[0]?.validation_status) {
+          console.log("TICKET DATAXxxxxxxxxx ", ticketData);
+
           dispatch(setSelectedSubmitItem(ticketData));
         }
       }
@@ -248,10 +408,10 @@ const TicketFormFields = ({ mode, ticketId }) => {
               validator: (_, value) =>
                 value && VenueData?.capacity && value > VenueData.capacity
                   ? Promise.reject(
-                    new Error(
-                      `The number of tickets cannot exceed the venue capacity of ${VenueData.capacity}.`
+                      new Error(
+                        `The number of tickets cannot exceed the venue capacity of ${VenueData.capacity}.`
+                      )
                     )
-                  )
                   : Promise.resolve(),
             },
           ]}
@@ -355,11 +515,11 @@ const TicketFormFields = ({ mode, ticketId }) => {
             onClick={addTicketType}
             style={{ marginRight: "10px" }}
           >
-            Add Sub Ticket Type
+            {mode === "EDIT" ? "Edit Sub Ticket Type" : "Add Sub Ticket Type"}
           </Button>
         ) : (
           <Button onClick={onSubmit} type="primary" htmlType="submit">
-            Submit
+            {mode === "EDIT" ? "Update" : "Submit"}
           </Button>
         )}
       </Flex>
@@ -373,7 +533,7 @@ const TicketFormFields = ({ mode, ticketId }) => {
       />
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={addTicket}
+        addFunction={mode == "EDIT" ? editTicket : addTicket}
         navigationPath={`${APP_PREFIX_PATH}/ticket/list`}
         responseMessage={responseMessage}
         mode={mode}
