@@ -27,7 +27,6 @@ const SearchBarWithStatus = forwardRef(({
 
   useEffect(() => {
     return () => {
-      console.log("User exited component!");
       dispatch(resetSearchValue());
     };
   }, []);
