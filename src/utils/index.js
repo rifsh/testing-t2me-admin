@@ -1295,7 +1295,7 @@ class Utils {
   static getCouponPeriodStatus(coupon) {
     if (!coupon?.date_required) return "No Validity";
 
-    const today = new Date();
+    const today = coupon?.current_date ? new Date(coupon?.current_date) : new Date();
     const start = coupon?.start_date ? new Date(coupon.start_date) : null;
     const end = coupon?.end_date ? new Date(coupon.end_date) : null;
 
