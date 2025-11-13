@@ -205,6 +205,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
           ...processedValues,
           id: coupon.id,
           thumbnail_image: thumbnailData,
+          mapped_coupon_weekdays: values?.mapped_coupon_weekdays
         };
 
         if (isMakeChanges) {

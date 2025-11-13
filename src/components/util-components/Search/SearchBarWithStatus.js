@@ -260,7 +260,7 @@ const SearchBarWithStatus = forwardRef(({
             onChange={handleStatusChange}
             className="mr-2"
             style={{ minWidth: 180 }}
-            allowClear
+            allowClear={false}
             onClear={() => handleStatusChange(null)}
           >
             <Option value={null}>All</Option>
@@ -320,7 +320,7 @@ const SearchBarWithStatus = forwardRef(({
                 filterOption={(inputValue, option) =>
                   option?.label?.toLowerCase().includes(inputValue.toLowerCase())
                 }
-                allowClear
+                allowClear={false}
               />
 
             ) : (
@@ -331,7 +331,7 @@ const SearchBarWithStatus = forwardRef(({
                 style={{ minWidth: 180 }}
                 className="mr-2"
                 value={filterValues[filter.formName] || null}
-                allowClear
+                allowClear={false}
                 onClear={() => handleFilterChange(null, filter.formName)}
               >
                 <Option value={null}>All</Option>
