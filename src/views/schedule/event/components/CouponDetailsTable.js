@@ -22,7 +22,7 @@ const CouponDetailsTable = ({ coupon_schedule }) => {
       render: (text, record) => (
         <div className="flex items-center">
           {record.coupons?.thumbnail_image !== "images" &&
-          record.coupons?.thumbnail_image ? (
+            record.coupons?.thumbnail_image ? (
             <Image
               src={record.coupons.thumbnail_image}
               width={40}
@@ -101,6 +101,29 @@ const CouponDetailsTable = ({ coupon_schedule }) => {
           {isActive ? "Active" : "Inactive"}
         </Tag>
       ),
+    },
+    {
+      title: "Validity Status",
+      dataIndex: "validity_status",
+      render: (_, record) => {
+        const status = Utils.getCouponPeriodStatus(record);
+        const colorMap = {
+          Upcoming: "gold",
+          Running: "green",
+          Expired: "red",
+          "No Validity": "gray",
+        };
+        return (
+          <span
+            style={{
+              color: colorMap[status],
+              fontWeight: 600,
+            }}
+          >
+            {status}
+          </span>
+        );
+      },
     },
   ];
 
