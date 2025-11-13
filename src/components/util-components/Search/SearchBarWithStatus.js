@@ -23,7 +23,14 @@ const SearchBarWithStatus = forwardRef(({
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState(null);
   const [filterValues, setFilterValues] = useState({});
-  const { statusState } = useSelector((state) => state.filter)
+  const { statusState } = useSelector((state) => state.filter);
+
+  useEffect(() => {
+    return () => {
+      console.log("User exited component!");
+      dispatch(resetSearchValue());
+    };
+  }, []);
 
   useImperativeHandle(ref, () => ({
     clearAllFilters,
