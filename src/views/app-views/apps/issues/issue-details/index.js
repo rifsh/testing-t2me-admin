@@ -383,7 +383,7 @@ const IssueDetails = () => {
         {IssueDetails.issue_ticket_file.map((fileItem, index) => (
           <div className='mb-3' key={index} style={{ position: 'relative' }}>
             <Image
-              src={`${CDN_PATH}/${fileItem.file}`}
+              src={`${fileItem.file.startsWith("media") ? `${CDN_PATH}/${fileItem.file}` : `${fileItem.file}`}`}
               alt={`Issue attachment ${index + 1}`}
               style={{
                 width: '200px',
