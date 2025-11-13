@@ -54,45 +54,47 @@ const IssueList = () => {
     navigate(`${APP_PREFIX_PATH}/issue/details/${id}`);
   };
 
-  // const handlePagination = (page, size) => {
-  //   dispatch(
-  //     fetchAllissues({
-  //       page: page,
-  //       size: size,
-  //       filter: activeStatus,
-  //       role_id: userFilter,
-  //     })
-  //   );
-  // };
 
   const handleSearch = (value) => {
-    console.log(value);
+    setSearchTerm(value);
 
     if (value) {
       dispatch(setGlobalSearchValue(value));
-      setSearchTerm(value);
       dispatch(
         fetchAllissues({
           search: value,
           page: 1,
           size: 10,
           active: activeStatus,
+          role_id: userFilter,
         })
       );
+    } else {
+      handleClearSearch();
     }
   };
 
-  const handleSearchIsEmpty = (value) => {
-    if (value) {
-      dispatch(setGlobalSearchValue(value));
-      setSearchTerm(value);
+  const handleSearchIsEmpty = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    if (value === '') {
+      handleClearSearch();
     }
-    if (!value) {
-      dispatch(resetSearchValue());
-      dispatch(
-        fetchAllissues({ search: null, page: 1, size: 10, active: activeStatus })
-      );
-    }
+  };
+
+  const handleClearSearch = () => {
+    dispatch(resetSearchValue());
+    setSearchTerm('');
+    dispatch(
+      fetchAllissues({
+        page: 1,
+        size: 10,
+        active: activeStatus,
+        role_id: userFilter,
+        search: null, // or empty string depending on your API
+      })
+    );
   };
 
   const handleShowStatus = (status) => {
@@ -303,8 +305,8 @@ const IssueList = () => {
           <div className="mr-md-3 mb-3">
             <Search
               placeholder="Search Issues"
-              onChange={(e) => handleSearchIsEmpty(e.target.value)}
-              onSearch={(value) => handleSearch(value)}
+              onChange={handleSearchIsEmpty}
+              onSearch={handleSearch}
               style={{ width: 200 }}
               value={searchTerm}
             />

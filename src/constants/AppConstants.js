@@ -10,6 +10,7 @@ import {
 } from "@ant-design/icons";
 
 export const EDIT = "edit";
+export const imageUrlStartWith = "media";
 export const ADD = "add";
 export const ApiActions = {
   SUBMIT: "submit",
