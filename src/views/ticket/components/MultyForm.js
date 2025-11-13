@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Button,
   Form,
@@ -19,7 +20,7 @@ import {
   resetTicketSets,
 } from "store/slices/ticketSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { addTicket } from "store/slices/ticketSlice";
+import { addTicket, editTicket } from "store/slices/ticketSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import { setSelectedSubmitItem } from "store/slices/modalSlice";
@@ -28,6 +29,9 @@ import DraftSystem from "drafts/components/DraftSystem";
 const { Step } = Steps;
 
 const MultyStepTicketForm = () => {
+  const location = useLocation();
+  const { mode: parentMode, ticketId } = location.state || {};
+  const [isEditMode, setIsEditMode] = useState(false);
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
@@ -49,6 +53,99 @@ const MultyStepTicketForm = () => {
   ]);
   const [showNormalTicketModal, setShowNormalTicketModal] = useState(false);
   const [remainingTickets, setRemainingTickets] = useState(0);
+
+  useEffect(() => {
+    if (parentMode === "EDIT" && tickets && tickets.length > 0) {
+      console.log("🎯 [MULTI-STEP EDIT] Starting edit mode population");
+      console.log(
+        "📦 [MULTI-STEP EDIT] Tickets from Redux:",
+        JSON.stringify(tickets, null, 2)
+      );
+
+      const ticketData = tickets[0];
+
+      if (!ticketData?.ticket_types || ticketData.ticket_types.length === 0) {
+        console.warn("⚠️ [MULTI-STEP EDIT] No ticket types found in Redux");
+        return;
+      }
+
+      setIsEditMode(true);
+      console.log("✅ [MULTI-STEP EDIT] Edit mode enabled");
+
+      const ticketTypesData = ticketData.ticket_types;
+      console.log(
+        `📊 [MULTI-STEP EDIT] Found ${ticketTypesData.length} ticket type sets`
+      );
+
+      // Set up ticket structures based on existing ticket types
+      const structures = ticketTypesData.map((tt, index) => {
+        console.log(`🏗️ [MULTI-STEP EDIT] Building structure ${index}:`, tt);
+
+        // Check if tickets array exists, if not, create from the ticket type itself
+        const ticketsList =
+          tt.tickets && tt.tickets.length > 0
+            ? tt.tickets
+            : [
+                {
+                  name: tt.name,
+                  price: tt.price,
+                  number_of_tickets: tt.number_of_tickets,
+                },
+              ];
+
+        console.log(
+          `📋 [MULTI-STEP EDIT] Tickets list for structure ${index}:`,
+          ticketsList
+        );
+
+        return {
+          id: Date.now() + index,
+          values: {
+            ticket_types: ticketsList,
+          },
+        };
+      });
+
+      console.log("🏗️ [MULTI-STEP EDIT] All structures built:", structures);
+      setTicketStructures(structures);
+
+      // Set up ticket categories (titles)
+      const categories = ticketTypesData.map((tt, index) => {
+        const category = {
+          step: index,
+          value: tt.ticket_set || tt.name || "",
+        };
+        console.log(`🏷️ [MULTI-STEP EDIT] Category ${index}:`, category);
+        return category;
+      });
+
+      console.log("🏷️ [MULTI-STEP EDIT] All categories:", categories);
+      setTicketCategory(categories);
+
+      // Set first step as current
+      if (structures.length > 0) {
+        console.log("➡️ [MULTI-STEP EDIT] Setting current step to 0");
+        setCurrentStep(0);
+        console.log(
+          "📝 [MULTI-STEP EDIT] Setting form values:",
+          structures[0].values
+        );
+        form.setFieldsValue(structures[0].values);
+      }
+
+      // Mark as saved so user can navigate
+      dispatch(currentStepSaveUpdate(true));
+      console.log(
+        "✅ [MULTI-STEP EDIT] Multi-step edit data population complete"
+      );
+    } else {
+      console.log("ℹ️ [MULTI-STEP EDIT] Conditions not met:", {
+        parentMode,
+        hasTickets: tickets && tickets.length > 0,
+        ticketTypes: tickets?.[0]?.ticket_types?.length,
+      });
+    }
+  }, [parentMode, tickets, dispatch, form]);
 
   const nextStep = async () => {
     try {
@@ -206,7 +303,6 @@ const MultyStepTicketForm = () => {
       message.warning("At least one Ticket Structure must remain.");
     }
   };
-
   const onSubmit = async () => {
     try {
       const remaining = calculateRemainingTickets();
@@ -217,11 +313,14 @@ const MultyStepTicketForm = () => {
         return;
       }
 
-      // Create a shallow copy of tickets[0] to avoid mutating the original object
       let ticketData = { ...tickets[0] };
-      let venue_id = ticketData.venue_id;
-      console.log(ticketData);
-      console.log(ticketData.ticket_types);
+
+      // Add ticketId if in edit mode
+      if (isEditMode && ticketId) {
+        ticketData.id = ticketId;
+      }
+
+      console.warn("Original Ticket Data:", ticketData);
 
       if (
         Array.isArray(ticketData.ticket_types) &&
@@ -231,15 +330,11 @@ const MultyStepTicketForm = () => {
         return;
       }
 
-      console.warn("Original Ticket Data:", ticketData);
-
-      // Flatten the ticket_types and replace it with the extracted tickets
       if (ticketData.ticket_types && Array.isArray(ticketData.ticket_types)) {
         let extractedTickets = ticketData.ticket_types.flatMap(
           (type) => type.tickets
         );
 
-        // Replace the original `ticket_types` with the extracted tickets in the copied object
         ticketData = {
           ...ticketData,
           ticket_types: extractedTickets,
@@ -249,8 +344,7 @@ const MultyStepTicketForm = () => {
         throw new Error("Invalid ticket data format.");
       }
 
-      console.log("Updated Ticket Data with Flattened Tickets:", ticketData);
-      // Dispatch the updated ticket data
+      console.log("Updated Ticket Data:", ticketData);
       dispatch(setSelectedSubmitItem(ticketData));
     } catch (error) {
       console.error("Submission failed:", error);
@@ -564,7 +658,9 @@ const MultyStepTicketForm = () => {
                 }
               >
                 {currentStep === ticketStructures.length - 1
-                  ? "Submit"
+                  ? isEditMode
+                    ? "Update"
+                    : "Submit"
                   : "Next"}
               </Button>
             </div>
@@ -573,10 +669,10 @@ const MultyStepTicketForm = () => {
       </Row>
       <SubmitAndConfirmModal
         responseData={mappedTicketData}
-        addFunction={addTicket}
+        addFunction={isEditMode ? editTicket : addTicket}
         navigationPath={`${APP_PREFIX_PATH}/ticket/list`}
         responseMessage={responseMessage}
-        mode={"ADD"}
+        mode={isEditMode ? "EDIT" : "ADD"}
         form={form}
         formType={"ticket-type"}
       />
