@@ -39,33 +39,7 @@ const TimeSelector = ({
   const isEventBlocked = (eventId) => {
     return blockedEventIds.has(eventId);
   };
-  const debugSlotRange = (hour) => {
-    if (hour >= 0 && hour < 6) {
-      // console.log(`🌅 Early morning slot ${hour}:00`, {
-      //   slotMinutes: timeToMinutes(hour, 0),
-      //   description: hour === 0 ? "Midnight/Start of Day 2" : "Early morning",
-      // });
-    }
-  };
-  const logMidnightEvent = (event, context = "") => {
-    if (event.is_midnight_passed) {
-      console.log(`🌙 MIDNIGHT EVENT ${context}:`, {
-        id: event.id,
-        startDay: event.startTime.day,
-        endDay: event.endTime.day,
-        startTime: `${event.startTime.hour}:${String(
-          event.startTime.minute || 0
-        ).padStart(2, "0")}`,
-        endTime: `${event.endTime.hour}:${String(
-          event.endTime.minute || 0
-        ).padStart(2, "0")}`,
-        show_end_date: event.show_end_date,
-        totalDuration: calculateMidnightDuration(event),
-        dayOneDuration: calculateDayOneDuration(event),
-        dayTwoDuration: calculateDayTwoDuration(event),
-      });
-    }
-  };
+  
   const handleApplyToAll = (event, dayIndex) => {
     if (isEventBlocked(event.id)) {
       message.error("Cannot apply: This time slot is locked");
@@ -843,7 +817,7 @@ const TimeSelector = ({
   return (
     <div
       ref={scrollContainerRef}
-      className="h-full bg-white rounded-xl border border-gray-200 relative overflow-auto"
+      className="h-full  rounded-xl relative overflow-auto"
       style={{
         scrollbarWidth: "thin",
         scrollbarColor: "#CBD5E0 #F7FAFC",
@@ -855,7 +829,7 @@ const TimeSelector = ({
       {/* Overlap message */}
       {overlapMessage && (
         <div
-          className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-50 p-3 rounded-lg shadow-lg border flex items-center space-x-2 ${
+          className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-50 p-3 rounded-xl shadow-lg border flex items-center space-x-2 ${
             overlapMessage.type === "error"
               ? "bg-red-50 border-red-200 text-red-800"
               : "bg-yellow-50 border-yellow-200 text-yellow-800"
@@ -868,12 +842,12 @@ const TimeSelector = ({
 
       <div>
         {/* Time column */}
-        <div className="sticky left-0 z-20 w-20 bg-gray-50 border-r border-gray-200 float-left">
+        <div className="sticky  left-0 z-20 w-20 pr-2 float-left">
           {displaySlots.map((slot, i) => (
             <div
               key={`time-${i}`}
-              className="h-16 flex items-center justify-center text-xs text-gray-600 font-medium border-b border-gray-300 bg-gray-50"
-              style={{ minHeight: "64px" }}
+              className="h-14 flex bg-white rounded-xl m-1 items-center justify-center text-xs text-gray-600 font-medium border-b border-gray-50 "
+              style={{ minHeight: "60px" }}
             >
               {slot.time12}
             </div>
@@ -882,7 +856,7 @@ const TimeSelector = ({
 
         {/* Days grid */}
         <div
-          className="ml-20 grid min-h-full"
+          className="ml-20 grid min-h-full bg-white rounded-xl"
           style={{
             gridTemplateColumns: `repeat(${Math.max(days.length, 1)}, 1fr)`,
             minHeight: `${displaySlots.length * 64}px`,
@@ -891,16 +865,12 @@ const TimeSelector = ({
           {days.map((day, dayIndex) => (
             <div
               key={`day-${dayIndex}`}
-              className="border-r border-gray-100 last:border-r-0 relative"
+              className="border-r border-gray-50 last:border-r-0 relative"
             >
               {displaySlots.map((slot, slotIndex) => {
                 const event = getEventInSlot(dayIndex, slot.hour, slot.minute);
 
-                // ✅ Add debug for early morning slots
-                if (dayIndex === 0 && slot.hour < 6) {
-                  debugSlotRange(slot.hour);
-                }
-
+              
                 const isSelected = isSlotSelected(dayIndex, slotIndex);
                 const isBlocked = isSlotBlocked(dayIndex, slotIndex);
                 const isOccupied = !!event || isBlocked;
@@ -986,7 +956,7 @@ const TimeSelector = ({
                       >
                         {/* Color bar */}
                         <div
-                          className={`rounded-l transition-all ${
+                          className={`rounded-xl mr-1 transition-all ${
                             eventInfo.blocked
                               ? "bg-gray-400"
                               : getEventColors(event, dayIndex).main
@@ -1003,7 +973,7 @@ const TimeSelector = ({
                             eventInfo.blocked
                               ? "border-gray-300"
                               : getEventColors(event, dayIndex).border
-                          } border-l-0 border rounded-r p-2 overflow-hidden relative transition-all ${
+                          } border-l-0  rounded-xl p-2 overflow-hidden relative transition-all ${
                             isEventSelected(event)
                               ? "bg-opacity-100 border-2 border-blue-400"
                               : ""

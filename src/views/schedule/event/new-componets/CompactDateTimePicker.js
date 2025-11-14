@@ -349,7 +349,7 @@ const CompactDateTimePicker = ({
         className={`w-full px-4 py-4 flex items-center justify-between gap-3 rounded-xl transition-all ${
           isScheduleBlocked
             ? "bg-gray-50 border-gray-200 cursor-not-allowed"
-            : "bg-blue-50 border-gray-300 hover:border-blue-500 hover:shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            : "bg-white border-gray-300 hover:border-blue-500 hover:shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         }`}
       >
         <div className="flex items-center gap-3">
