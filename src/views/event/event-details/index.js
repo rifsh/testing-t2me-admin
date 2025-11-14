@@ -93,6 +93,8 @@ const EventDetails = () => {
   if (error) return <div>Error: {error}</div>;
   if (!eventDetails) return <div>No Event Details Found</div>;
 
+
+
   return (
     <div
       style={{
@@ -130,7 +132,7 @@ const EventDetails = () => {
           ) : (
             <div style={{ position: "relative", width: "100%" }}>
               <Carousel autoplay>
-                {mediaImages.map((item, index) => (
+                {eventDetails?.media.map((item, index) => (
                   <div key={index}>
                     {item.media_type === "image" ? (
                       <CDNImage
@@ -262,14 +264,14 @@ const EventDetails = () => {
                 </Typography.Title>
                 {currentUser.role_id !==
                   UserRoleConstants.eventOrganizerRoleId && (
-                  <Button
-                    type="primary"
-                    icon={<UserAddOutlined />}
-                    onClick={handleEnrollUser}
-                  >
-                    Add User
-                  </Button>
-                )}
+                    <Button
+                      type="primary"
+                      icon={<UserAddOutlined />}
+                      onClick={handleEnrollUser}
+                    >
+                      Add User
+                    </Button>
+                  )}
               </div>
 
               {eventDetails.users?.length > 0 ? (

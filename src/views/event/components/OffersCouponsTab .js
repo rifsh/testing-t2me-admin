@@ -1,8 +1,21 @@
 import { Row, Col, Card, Typography, Empty, Image } from "antd";
+import CDNImage from "components/layout-components/Image/CDNImage";
+import { discounts } from "constants/AppConstants";
+import OfferDetailsModal from "./OfferDetailsModal";
+import { useState } from "react";
 
 const { Title } = Typography;
 
 const OffersCouponsTab = ({ eventDetails }) => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [offers, setOffers] = useState();
+
+  const handleCardClick = (data, type) => {
+    console.log(data);
+    setOffers(data)
+    setIsModalVisible(true);
+  }
+
   return (
     <div style={{ padding: "24px" }}>
       <Row gutter={[24, 24]}>
@@ -17,6 +30,7 @@ const OffersCouponsTab = ({ eventDetails }) => {
                 <Col span={24} key={index}>
                   <Card
                     hoverable
+                    onClick={() => { handleCardClick(offer, discounts.offer) }}
                     style={{
                       borderRadius: "12px",
                       border: "1px solid #d9f7be",
@@ -28,17 +42,21 @@ const OffersCouponsTab = ({ eventDetails }) => {
                     <Row gutter={[16, 16]} align="middle">
                       <Col xs={24} md={8}>
                         {offer.offer.thumbnail_image !== "images" &&
-                        offer.offer.thumbnail_image ? (
-                          <Image
-                            alt="offer thumbnail"
+                          offer.offer.thumbnail_image ? (
+                          // <Image
+                          //   alt="offer thumbnail"
+                          //   src={offer.offer.thumbnail_image}
+                          //   height={100}
+                          //   style={{
+                          //     objectFit: "cover",
+                          //     width: "100%",
+                          //     borderRadius: "8px",
+                          //     border: "1px solid #b7eb8f",
+                          //   }}
+                          // />
+                          <CDNImage
                             src={offer.offer.thumbnail_image}
-                            height={100}
-                            style={{
-                              objectFit: "cover",
-                              width: "100%",
-                              borderRadius: "8px",
-                              border: "1px solid #b7eb8f",
-                            }}
+                            height={'200px'}
                           />
                         ) : (
                           <div
@@ -65,20 +83,38 @@ const OffersCouponsTab = ({ eventDetails }) => {
                         >
                           {offer.offer.name}
                         </Title>
-                        <div
-                          style={{
-                            padding: "4px 12px",
-                            backgroundColor: "#f6ffed",
-                            borderRadius: "16px",
-                            display: "inline-block",
-                            fontWeight: "bold",
-                            color: "#389e0d",
-                            marginBottom: "12px",
-                            border: "1px solid #b7eb8f",
-                          }}
-                        >
-                          {offer.offer.discount_percentage}% OFF
-                        </div>
+                        {offer.offer.is_percentage ? (
+                          < div
+                            style={{
+                              padding: "4px 12px",
+                              backgroundColor: "#f6ffed",
+                              borderRadius: "16px",
+                              display: "inline-block",
+                              fontWeight: "bold",
+                              color: "#389e0d",
+                              marginBottom: "12px",
+                              border: "1px solid #b7eb8f",
+                            }}
+                          >
+                            {offer.offer.discount_percentage_amount}% OFF
+                          </div>
+                        ) : (
+                          < div
+                            style={{
+                              padding: "4px 12px",
+                              backgroundColor: "#f6ffed",
+                              borderRadius: "16px",
+                              display: "inline-block",
+                              fontWeight: "bold",
+                              color: "#389e0d",
+                              marginBottom: "12px",
+                              border: "1px solid #b7eb8f",
+                            }}
+                          >
+                            {offer.offer.discount_percentage_amount?.toFixed(2)}
+                          </div>
+                        )
+                        }
                         <div
                           style={{
                             display: "flex",
@@ -141,7 +177,7 @@ const OffersCouponsTab = ({ eventDetails }) => {
                     <Row gutter={[16, 16]} align="middle">
                       <Col xs={24} md={8}>
                         {coupon.coupons.thumbnail_image !== "images" &&
-                        coupon.coupons.thumbnail_image ? (
+                          coupon.coupons.thumbnail_image ? (
                           <Image
                             alt="coupon thumbnail"
                             src={coupon.coupons.thumbnail_image}
@@ -227,13 +263,18 @@ const OffersCouponsTab = ({ eventDetails }) => {
           ) : (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="No special offers available"
+              description="No special coupons available"
               style={{ margin: "20px 0" }}
             />
           )}
         </Col>
-      </Row>
-    </div>
+      </Row >
+      <OfferDetailsModal
+        open={isModalVisible}
+        onClose={() => { setIsModalVisible(false) }}
+        offer={offers?.offer}
+      />
+    </div >
   );
 };
 
