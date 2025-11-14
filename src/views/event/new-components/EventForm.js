@@ -269,7 +269,6 @@ export default function EventForm({ eventId, mode = "add" }) {
       // Extract venue IDs
       const venueIds =
         eventDetails.venue_ticket_structures?.map((vts) => vts.venue.id) || [];
-
       // Extract ticket structure info
       const ticketStructureInfo = eventDetails.venue_ticket_structures?.[0];
 
@@ -333,6 +332,7 @@ export default function EventForm({ eventId, mode = "add" }) {
         place: placeInfo?.id ?? placeInfo?.name,
         place_id: placeInfo?.id ?? placeInfo?.name,
         venue_id: venueIds,
+        venue_ids: venueIds,
         tax_ids: eventDetails.taxs?.map((tax) => tax.id) || [],
         available_types: eventDetails.available_types,
         max_capacity: eventDetails.max_capacity || 0,
@@ -670,8 +670,17 @@ export default function EventForm({ eventId, mode = "add" }) {
       coupon_ids: selectedCoupons?.map((coupon) => coupon.id) || [],
     };
 
+    // ✅ Transform images for EDIT mode using the utility function
+    const transformedData = transformFormDataForAPI(completeFormData, {
+      selectedOffers,
+      selectedCoupons,
+      selectedVenueList,
+      ticketTypes,
+      availableSeats,
+    });
+
     const editData = {
-      ...completeFormData,
+      ...transformedData,
       ...offers,
       max_tickets: parseInt(completeFormData.max_tickets || "0", 10),
       id: eventId,
@@ -811,7 +820,7 @@ export default function EventForm({ eventId, mode = "add" }) {
       case "category":
         return <CategoryField {...commonProps} />;
       case "location":
-        return <LocationDetailsField {...commonProps}   mode={mode}/>;
+        return <LocationDetailsField {...commonProps} mode={mode} />;
       case "ticket":
         return <TicketSelection {...commonProps} mode={mode} />;
       case "pricing":
