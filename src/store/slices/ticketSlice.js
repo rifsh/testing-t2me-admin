@@ -120,7 +120,7 @@ export const editTicket = createAsyncThunk(
   async ({ data, action }, { rejectWithValue }) => {
     try {
       const response = await TicketsService.editTicket(data, action);
-      return response.status;
+      return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
     }
@@ -188,12 +188,27 @@ export const ticketSlice = createSlice({
         tickets,
         id,
       } = action.payload;
-      console.log(state, ticket_set, tickets, "Saving Ticket Set");
+
+      console.log(
+        "🔧 [REDUX addOrUpdateTicketSet] Called with payload:",
+        action.payload
+      );
+      console.log(
+        "📦 [REDUX addOrUpdateTicketSet] Current ticketTypes state:",
+        JSON.stringify(state.ticketTypes, null, 2)
+      );
 
       if (venue_id && number_of_tickets) {
+        console.log(
+          "🏗️ [REDUX addOrUpdateTicketSet] Initializing base ticket data"
+        );
         state.numberOfTicket += number_of_tickets;
+
         // First time adding venue data and ticket set
         if (state.ticketTypes.length === 0) {
+          console.log(
+            "🆕 [REDUX addOrUpdateTicketSet] Creating new ticketTypes structure"
+          );
           state.ticketTypes.push({
             venue_id,
             number_of_tickets,
@@ -202,14 +217,73 @@ export const ticketSlice = createSlice({
             place_id,
             ticket_types: [],
           });
+        } else {
+          // Update existing base data
+          console.log(
+            "✏️ [REDUX addOrUpdateTicketSet] Updating existing base data"
+          );
+          state.ticketTypes[0] = {
+            ...state.ticketTypes[0],
+            venue_id,
+            number_of_tickets,
+            name,
+            base_price,
+            place_id,
+          };
         }
       } else {
+        console.log(
+          "🎟️ [REDUX addOrUpdateTicketSet] Adding/updating ticket set"
+        );
+
+        // CRITICAL FIX: Check if ticketTypes[0] exists before accessing ticket_types
+        if (!state.ticketTypes || state.ticketTypes.length === 0) {
+          console.error(
+            "❌ [REDUX addOrUpdateTicketSet] ERROR: ticketTypes[0] doesn't exist!"
+          );
+          console.error(
+            "💡 [REDUX addOrUpdateTicketSet] You must initialize base ticket data first"
+          );
+
+          // Initialize with empty base structure
+          console.log(
+            "🆕 [REDUX addOrUpdateTicketSet] Auto-initializing empty base structure"
+          );
+          state.ticketTypes = [
+            {
+              venue_id: null,
+              number_of_tickets: 0,
+              name: null,
+              base_price: 0,
+              place_id: null,
+              ticket_types: [],
+            },
+          ];
+        }
+
+        // Ensure ticket_types array exists
+        if (!state.ticketTypes[0].ticket_types) {
+          console.log(
+            "🆕 [REDUX addOrUpdateTicketSet] Initializing ticket_types array"
+          );
+          state.ticketTypes[0].ticket_types = [];
+        }
+
         // Subsequent times: Add new ticket set (ticket types only)
         const existingTicketSetIndex =
-          state.ticketTypes[0]?.ticket_types.findIndex((set) => set.id === id);
+          state.ticketTypes[0].ticket_types.findIndex((set) => set.id === id);
+
+        console.log(
+          "🔍 [REDUX addOrUpdateTicketSet] Existing ticket set index:",
+          existingTicketSetIndex
+        );
 
         if (existingTicketSetIndex !== -1) {
           // If the ticket set already exists, update it
+          console.log(
+            "✏️ [REDUX addOrUpdateTicketSet] Updating existing ticket set at index:",
+            existingTicketSetIndex
+          );
           state.ticketTypes[0].ticket_types[existingTicketSetIndex] = {
             ticket_set,
             tickets,
@@ -217,9 +291,15 @@ export const ticketSlice = createSlice({
           };
         } else {
           // Otherwise, add the new ticket set
+          console.log("➕ [REDUX addOrUpdateTicketSet] Adding new ticket set");
           state.ticketTypes[0].ticket_types.push({ ticket_set, tickets, id });
         }
       }
+
+      console.log(
+        "✅ [REDUX addOrUpdateTicketSet] Final ticketTypes state:",
+        JSON.stringify(state.ticketTypes, null, 2)
+      );
     },
     addOrUpdateTicketSetforEvent(state, action) {
       const {
@@ -408,10 +488,12 @@ export const ticketSlice = createSlice({
       })
       .addCase(editTicket.fulfilled, (state, { payload }) => {
         state.loading = false;
-        if (payload.message) {
-          state.message = payload.message;
-          state.editable_status = payload.editable_status;
-        }
+        state.responseData = payload.data;
+        state.responseMessage = payload.status.message;
+        // if (payload.message) {
+        //   state.message = payload.message;
+        //   state.editable_status = payload.editable_status;
+        // }
       })
       .addCase(editTicket.rejected, (state, { payload }) => {
         state.loading = false;

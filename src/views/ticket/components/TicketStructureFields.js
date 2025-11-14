@@ -85,36 +85,48 @@ const TicketStructureFields = ({ ticket_states }) => {
     }
     console.log(values, form, "Saved Step Data");
   };
-
   useEffect(() => {
-    console.log(tickets, tickets.length, "Current Step");
+    console.log("🔄 [STRUCTURE FIELDS] Effect triggered");
+    console.log("📦 [STRUCTURE FIELDS] Tickets:", tickets);
+    console.log("📍 [STRUCTURE FIELDS] Current step:", currentStep);
+
     if (tickets && tickets.length > 0) {
-      const ticketss = tickets[0]; // Access the first item in the tickets array
-      console.log(ticketss, "Ticket Data");
+      const ticketss = tickets[0];
+      console.log("🎫 [STRUCTURE FIELDS] Ticket data:", ticketss);
 
       // Find the ticket set corresponding to the current step
       const existingData = ticketss.ticket_types?.find(
         (ticket) => ticket.id === currentStep
       );
-      console.log(existingData, "Existing Data");
+      console.log(
+        "🔍 [STRUCTURE FIELDS] Existing data for step:",
+        existingData
+      );
 
       if (existingData) {
-        // Set form fields using existing data if found
-        form.setFieldsValue({
-          ticket_types: existingData.tickets || [], // Use 'tickets' data
-        });
+        const formData = {
+          ticket_types: existingData.tickets || [],
+        };
+
+        console.log("📝 [STRUCTURE FIELDS] Setting form data:", formData);
+        form.setFieldsValue(formData);
 
         // Update ticketTypes state to match the existing data
-        setTicketTypes(
-          existingData.tickets.map((_, index) => ({ id: index + 1 }))
+        const newTicketTypes = existingData.tickets.map((_, index) => ({
+          id: index + 1,
+        }));
+        console.log(
+          "🎟️ [STRUCTURE FIELDS] Setting ticket types state:",
+          newTicketTypes
         );
+        setTicketTypes(newTicketTypes);
       } else {
-        // Reset the form and ticketTypes for this step
+        console.log("⚠️ [STRUCTURE FIELDS] No existing data found, resetting");
         form.resetFields();
-        setTicketTypes([{ id: 1 }]); // Default to one ticket form
+        setTicketTypes([{ id: 1 }]);
       }
     } else {
-      // If no tickets exist, reset everything
+      console.log("⚠️ [STRUCTURE FIELDS] No tickets in Redux, navigating back");
       form.resetFields();
       setTicketTypes([{ id: 1 }]);
       nav(`${APP_PREFIX_PATH}/ticket/add`);
