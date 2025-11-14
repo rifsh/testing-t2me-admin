@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import * as antd from "antd";
-import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
-import VenueListForm from "components/util-components/FormItems/VenueList";
 import {
   getVenues,
   setPlaceValidationDialogVisible,
+  fetchPlaceWithCountry,
 } from "store/slices/locationSlice";
 import {
   fetchAllTax,
@@ -15,13 +14,14 @@ import { RulesMessageConstants } from "constants/RulesConstant";
 import ValidationModal from "components/util-components/ModalItems/ValidationModal";
 import { setEventFormData } from "store/slices/eventSlice";
 
-const { Row, Col, Card, Form, Select, Typography, List, Space } = antd;
+const { Row, Col, Card, Form, Select, Typography } = antd;
 const { Option } = Select;
 const { Text } = Typography;
 
 const LocationDetailsField = ({ mode, form }) => {
   const isEdit = mode === "EDIT" || mode === "EDITLEAD";
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [searchPlace, setSearchPlace] = useState("");
+  const [searchVenue, setSearchVenue] = useState("");
 
   const rules = {
     place_id: isEdit ? [] : [{ required: true, message: RulesMessageConstants.PLACE }],
@@ -37,6 +37,8 @@ const LocationDetailsField = ({ mode, form }) => {
     placeValidationDialogVisible,
     message: placeMessage,
     ValidateData: placeErrors,
+    placeWithCountryList,
+    loading: placeLoading,
   } = useSelector((state) => state.locations);
 
   const {
@@ -47,41 +49,31 @@ const LocationDetailsField = ({ mode, form }) => {
     ValidateData: taxErrors,
   } = useSelector((state) => state.tax);
 
-  // Initial load - fetch venues and taxes based on current form values
+  // Load places on mount
   useEffect(() => {
-    if (isEdit && isInitialLoad) {
-      const placeId = form.getFieldValue("place_id");
-      console.log("🔄 LocationDetailsField initial load - place_id:", placeId);
-      
-      if (placeId) {
-        console.log("Loading initial venues and taxes for place:", placeId);
-        dispatch(getVenues({ place_id: placeId }));
-        dispatch(fetchAllTax({ place_id: placeId }));
-      }
-      
-      setIsInitialLoad(false);
-    }
-  }, [isEdit, isInitialLoad, form, dispatch]);
+    dispatch(fetchPlaceWithCountry({ place: "", active: true }));
+  }, [dispatch]);
 
-  // Watch for place_id changes
+  // Load venues and taxes when place_id exists (for EDIT mode)
   useEffect(() => {
     const placeId = form.getFieldValue("place_id");
     
-    if (placeId && !isInitialLoad) {
-      console.log("Place ID changed, fetching related data:", placeId);
+    if (placeId && isEdit) {
+      console.log("📍 EDIT mode - Loading data for place_id:", placeId);
+      dispatch(getVenues({ place_id: placeId, search: "" }));
       dispatch(fetchAllTax({ place_id: placeId }));
     }
-  }, [dispatch, form, isInitialLoad]);
+  }, [dispatch, form, isEdit]);
 
-  const onPlaceSelect = (placeId) => {
-    console.log("🏙️ Place selected:", placeId);
-     form.setFieldValue('placeid', placeId);
-  form.resetFields(['venueid', 'taxids']);
-    // Set place_id
-    form.setFieldValue("place_id", placeId);
-
+  const onPlaceChange = (placeId) => {
+    console.log("🏙️ Place changed to:", placeId);
+    
     // Reset dependent fields
-    form.resetFields(["venue_id", "tax_ids"]);
+    form.setFieldsValue({
+      place_id: placeId,
+      venue_id: [],
+      tax_ids: [],
+    });
 
     const cleanFormData = {
       place_id: placeId,
@@ -89,31 +81,40 @@ const LocationDetailsField = ({ mode, form }) => {
       tax_ids: [],
       selected_ticket_types: {},
       selected_seats: {},
-      ticket_sets: {},  placeid: placeId,
-    venueid: [],
-    taxids: [],
+      ticket_sets: {},
       ticket_quantities: {},
     };
 
-    form.setFieldsValue(cleanFormData);
     dispatch(setEventFormData(cleanFormData));
     
     // Load new data
-    console.log("Loading venues and taxes for new place:", placeId);
-    dispatch(getVenues({ place_id: placeId }));
-    dispatch(fetchAllTax({ place_id: placeId }));
+    if (placeId) {
+      dispatch(getVenues({ place_id: placeId, search: "" }));
+      dispatch(fetchAllTax({ place_id: placeId }));
+    }
   };
 
   const onVenueChange = (selectedVenueIds) => {
     console.log("🏢 Venues changed:", selectedVenueIds);
-    // Don't reset tax_ids when venue changes in edit mode
-    if (!isEdit) {
-      form.resetFields(["tax_ids"]);
-    }
+    form.setFieldValue("venue_id", selectedVenueIds);
   };
 
   const onTaxChange = (ids) => {
     console.log("💰 Taxes changed:", ids);
+    form.setFieldValue("tax_ids", ids);
+  };
+
+  const handlePlaceSearch = (value) => {
+    setSearchPlace(value);
+    dispatch(fetchPlaceWithCountry({ place: value.trim(), active: true }));
+  };
+
+  const handleVenueSearch = (value) => {
+    setSearchVenue(value);
+    const placeId = form.getFieldValue("place_id");
+    if (placeId) {
+      dispatch(getVenues({ place_id: placeId, search: value.trim() }));
+    }
   };
 
   const closePlaceModal = () => dispatch(setPlaceValidationDialogVisible(false));
@@ -130,17 +131,8 @@ const LocationDetailsField = ({ mode, form }) => {
     selectedTaxIds,
     filteredVenues: filteredVenues.length,
     allTax: allTax.length,
-    venueLoading,
-    taxLoading,
+    mode,
   });
-
-  // Ensure arrays
-  const venueIdsArray = Array.isArray(selectedVenueIds) 
-    ? selectedVenueIds 
-    : (selectedVenueIds ? [selectedVenueIds] : []);
-
-  const selectedVenues = filteredVenues.filter((v) => venueIdsArray.includes(v.id));
-  const selectedTaxObjects = allTax.filter((tax) => selectedTaxIds.includes(tax.id));
 
   return (
     <>
@@ -150,37 +142,66 @@ const LocationDetailsField = ({ mode, form }) => {
             <Form form={form} layout="vertical" size="large">
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
-                  <Form.Item name="place_id" label="Place" rules={rules.place_id}>
-                    <PlaceWithCountryForm
-                      form={form}
-                      onSelect={onPlaceSelect}
-                      disabled={false}
-                    />
+                  <Form.Item 
+                    name="place_id" 
+                    label="Place" 
+                    rules={rules.place_id}
+                  >
+                    <Select
+                      showSearch
+                      placeholder="Select a place"
+                      loading={placeLoading}
+                      onSearch={handlePlaceSearch}
+                      onChange={onPlaceChange}
+                      filterOption={false}
+                      allowClear
+                      notFoundContent={placeLoading ? "Loading..." : "No places available"}
+                    >
+                      {placeWithCountryList.map((place) => (
+                        <Option key={place.id} value={place.id}>
+                          {place.name}, {place.country?.name || ""}
+                        </Option>
+                      ))}
+                    </Select>
                   </Form.Item>
                 </Col>
+                
                 <Col xs={24} sm={12}>
-                  <Form.Item name="venue_id" label="Venue" rules={rules.venue_id}>
-                    <VenueListForm
-                    key={`venue-list-${form.getFieldValue('placeid')}`} 
-                      form={form}
+                  <Form.Item 
+                    name="venue_id" 
+                    label="Venue" 
+                    rules={rules.venue_id}
+                  >
+                    <Select
                       mode="multiple"
-                      disabled={!selectedPlaceId || venueLoading}
+                      placeholder="Select venues"
+                      showSearch
                       loading={venueLoading}
+                      onSearch={handleVenueSearch}
                       onChange={onVenueChange}
-                    />
+                      filterOption={false}
+                      disabled={!selectedPlaceId}
+                      notFoundContent={
+                        venueLoading 
+                          ? "Loading venues..." 
+                          : "No venues available"
+                      }
+                    >
+                      {filteredVenues.map((venue) => (
+                        <Option key={venue.id} value={venue.id}>
+                          {venue.name}
+                        </Option>
+                      ))}
+                    </Select>
                   </Form.Item>
                   {!selectedPlaceId && (
                     <Text type="secondary" style={{ fontSize: 12 }}>
                       Please select a place first
                     </Text>
                   )}
-                  {selectedPlaceId && filteredVenues.length === 0 && !venueLoading && (
-                    <Text type="warning" style={{ fontSize: 12 }}>
-                      No venues available for this place
-                    </Text>
-                  )}
                 </Col>
               </Row>
+              
               <Form.Item name="tax_ids" label="Tax (Optional)">
                 <Select
                   mode="multiple"
@@ -200,8 +221,6 @@ const LocationDetailsField = ({ mode, form }) => {
             </Form>
           </Card>
         </Col>
-
-     
       </Row>
 
       <ValidationModal
