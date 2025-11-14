@@ -16,6 +16,10 @@ export const ApiActions = {
   SUBMIT: "submit",
   CONFIRM: "confirm",
 };
+export const discounts = {
+  offer: 'offer',
+  coupon: 'coupon'
+}
 export const SUCCESS_CODE = "00000";
 export const AdvCategoryCode = [
   "payment-bottom-banner",
