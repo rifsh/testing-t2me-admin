@@ -260,7 +260,7 @@ const OfferList = () => {
                 {selectedOffer.thumbnail_image && selectedOffer.thumbnail_image !== "images" ? (
                   <div className="flex-shrink-0">
                     <CDNImage
-                      src={selectedOffer.thumbnail_image}
+                      src={`${selectedOffer.thumbnail_image}?v=${selectedOffer?.updated_at}`}
                       alt="Coupon Thumbnail"
                       height={80}
                       width={80}

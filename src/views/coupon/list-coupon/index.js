@@ -21,10 +21,8 @@ import Flex from "components/shared-components/Flex";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  editCoupon,
   editCouponStatus,
   fetchAllCoupons,
-  filterCoupons,
   setEditItemId,
   setCouponDialogVisible,
   setCouponModalLoading,
@@ -55,6 +53,7 @@ const CouponList = () => {
     filteredCoupons,
     pagination,
     editable_status,
+    couponDetails,
     loading,
     message,
     editItemId,
@@ -83,8 +82,6 @@ const CouponList = () => {
   };
   const showModal = (coupon) => {
     setSelectedCoupon(coupon);
-    console.log(coupon);
-
     setIsModalVisible(true);
   };
 
@@ -211,6 +208,7 @@ const CouponList = () => {
     },
   ];
 
+
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
@@ -250,10 +248,10 @@ const CouponList = () => {
             {/* Header Section */}
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-4">
-                {selectedCoupon.thumbnail_image && selectedCoupon.thumbnail_image !== "images" ? (
+                {selectedCoupon?.thumbnail_image && selectedCoupon?.thumbnail_image !== "images" ? (
                   <div className="flex-shrink-0">
                     <CDNImage
-                      src={selectedCoupon.thumbnail_image}
+                      src={`${selectedCoupon?.thumbnail_image}?v=${selectedCoupon?.updated_at}`}
                       alt="Coupon Thumbnail"
                       height={80}
                       width={80}
@@ -266,7 +264,7 @@ const CouponList = () => {
                   </div>
                 )}
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedCoupon.name}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">{selectedCoupon?.name}</h2>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedCoupon.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {selectedCoupon.status ? 'Active Schedule' : 'Inactive Schedule'}

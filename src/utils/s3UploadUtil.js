@@ -130,7 +130,7 @@ export const uploadImagesAfterConfirm = async (
             file: fileData,
             type: dataField,
           });
-        } else {
+        } else if (responseData?.thumbnail_image_url?.upload_url && data?.thumbnail_image) {
           uploads.push({
             upload_url: responseData?.thumbnail_image_url?.upload_url,
             file: data?.thumbnail_image,
