@@ -1253,7 +1253,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
       >
         <div className="space-y-4">
           {/* Error Box */}
-          <div className="p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+          <div className="p-4 bg-red-50 border-2 border-red-300 rounded-xl">
             <p className="text-sm font-bold text-red-900 mb-2">
               ❌ Invalid Date Selection
             </p>
@@ -1263,7 +1263,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
           </div>
 
           {/* Excluded dates box */}
-          <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+          <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-xl">
             <p className="text-sm font-semibold text-yellow-900 mb-3">
               ⚠️ These booked dates are excluded:
             </p>
@@ -1284,7 +1284,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
           </div>
 
           {/* Required range box */}
-          <div className="p-4 bg-blue-50 border-2 border-blue-300 rounded-lg">
+          <div className="p-4 bg-blue-50 border-2 border-blue-300 rounded-xl">
             <p className="text-sm font-semibold text-blue-900 mb-2">
               ✓ Your selection MUST include:
             </p>
@@ -1297,7 +1297,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
           </div>
 
           {/* Instruction box */}
-          <div className="p-4 bg-green-50 border-2 border-green-300 rounded-lg">
+          <div className="p-4 bg-green-50 border-2 border-green-300 rounded-xl">
             <p className="text-sm font-semibold text-green-900 mb-2">
               📋 What to do:
             </p>
@@ -1317,7 +1317,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
 
           {/* Current selection info */}
           {pendingBlockedDateChange?.range && (
-            <div className="p-3 bg-gray-100 rounded-lg border border-gray-300">
+            <div className="p-3 bg-gray-100 rounded-xl border border-gray-300">
               <p className="text-xs font-semibold text-gray-700 mb-2">
                 Your Current Selection:
               </p>
@@ -1923,7 +1923,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
 
   // ==================== RENDER ====================
   return (
-    <div className="max-w-full mx-auto bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+    <div className="max-w-full mx-auto bg-gray-50 rounded-2xl p-2">
       {/* HEADER SECTION */}
       <div className="mb-6">
         {/* Schedule Blocked Warning */}
@@ -1954,23 +1954,32 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
                 : `Select dates to start scheduling (${timezone})`}
             </p>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-500">
-              Events: {allEvents.length} | Days: {allDaysInRange.length}
-              {blockedEventIds.size > 0 && (
-                <span className="ml-2 text-red-600">
-                  🔒 {blockedEventIds.size} locked
-                </span>
-              )}
-            </div>
-          </div>
+          <div className="flex items-center space-x-3">
+                  <Button onClick={onBack} type="default">
+                    <span>Go Back</span>
+                  </Button>
+                  <Button
+                    onClick={handleSubmit}
+                    type="primary"
+                    // disabled={!isAllDatesValid() || isScheduleBlocked}
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                    // loading={loading}
+                  >
+                    <Plus size={16} />
+                    <span>
+                      {allEvents.length > 0
+                        ? `Save Schedule (${allEvents.length} time slots)`
+                        : "Save Schedule"}
+                    </span>
+                  </Button>
+                </div>
         </div>
       </div>
 
       {/* MAIN GRID */}
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-12 gap-1">
         {/* LEFT SIDEBAR */}
-        <div className="col-span-3 space-y-6">
+        <div className="col-span-2 space-y-2">
           <div className="space-y-4">
             <div className="space-y-2">
               {/* In CalendarViewCard render section */}
@@ -2018,7 +2027,6 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
           </div>
 
           <div>
-           
             <div
               className={
                 !bookingStartDateTime || isScheduleBlocked
@@ -2031,7 +2039,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
                 initialStartDate={dateRange.startDate}
                 initialEndDate={dateRange.endDate}
                 minDate={getEventMinDate()}
-                blockedDates={blockedDatesSet} 
+                blockedDates={blockedDatesSet}
                 isScheduleBlocked={isScheduleBlocked}
                 isEditMode={true}
                 timezone={timezone}
@@ -2041,10 +2049,10 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
         </div>
 
         {/* MAIN CONTENT AREA */}
-        <div className="col-span-9">
+        <div className="col-span-10">
           {hasValidDateRange ? (
             <div>
-              <div className="flex items-center justify-between mb-6">
+              {/* <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-4">
                   <Button
                     onClick={() =>
@@ -2074,45 +2082,51 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
                       : "Select Date Range"}
                   </h2>
                   {totalDays > 7 && (
-                    <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
+                    <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full ">
                       Days {currentWeekStart + 1}-
                       {Math.min(currentWeekStart + 7, totalDays)} of {totalDays}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center space-x-3">
-                  <Button onClick={onBack} type="default">
-                    <span>Go Back</span>
-                  </Button>
-                  <Button
-                    onClick={handleSubmit}
-                    type="primary"
-                    // disabled={!isAllDatesValid() || isScheduleBlocked}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                    // loading={loading}
-                  >
-                    <Plus size={16} />
-                    <span>
-                      {allEvents.length > 0
-                        ? `Save Schedule (${allEvents.length} time slots)`
-                        : "Save Schedule"}
-                    </span>
-                  </Button>
-                </div>
-              </div>
+                
+              </div> */}
 
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <div className=" rounded-xl p-4 ">
                 <div
-                  className="grid gap-4 mb-4"
+                  className="grid gap-4 mb-2"
                   style={{
                     gridTemplateColumns:
                       "64px repeat(" + visibleDays.length + ", 1fr)",
                   }}
                 >
-                  <div></div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() =>
+                        setCurrentWeekStart(Math.max(0, currentWeekStart - 7))
+                      }
+                      disabled={!canNavigatePrev}
+                      className="p-1 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft size={20} className="text-gray-600" />
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setCurrentWeekStart(
+                          Math.min(currentWeekStart + 7, totalDays - 7)
+                        )
+                      }
+                      disabled={!canNavigateNext}
+                      className="p-1 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRight size={20} className="text-gray-600" />
+                    </Button>
+                  </div>
                   {visibleDays.map((day, index) => (
-                    <div key={index} className="text-center">
-                      <div className="text-sm text-gray-500 font-medium mb-1">
+                    <div
+                      key={index}
+                      className="text-center bg-white rounded-xl p-2"
+                    >
+                      <div className="text-sm  text-gray-500 font-medium ">
                         {
                           weekDayNames[
                             day.getDay() === 0 ? 6 : day.getDay() - 1
@@ -2375,7 +2389,7 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
               </div>
             </div>
           ) : (
-            <div className="h-full flex items-center justify-center bg-gray-50 rounded-xl border border-gray-100">
+            <div className="h-full flex items-center justify-center bg-gray-50 rounded-xl ">
               <div className="text-center p-8">
                 <Calendar size={64} className="text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-600 mb-2">

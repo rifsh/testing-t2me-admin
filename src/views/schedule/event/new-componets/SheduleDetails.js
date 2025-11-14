@@ -3,7 +3,7 @@ import { Form, Button, message, Modal } from "antd";
 import { LockOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import FormCard from "./FormCard";
-import CalendarViewCard from "./PlanCard";
+import CalendarViewCard from "./CalendarViewCard";
 import OfferAndCoupons from "./OfferAndCoupons";
 import { useDispatch, useSelector } from "react-redux";
 import {
