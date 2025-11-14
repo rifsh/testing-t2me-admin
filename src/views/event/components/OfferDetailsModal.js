@@ -1,8 +1,9 @@
 import React from "react";
 import { Modal } from "antd";
 import CDNImage from "components/layout-components/Image/CDNImage";
+import { discounts } from "constants/AppConstants";
 
-const OfferDetailsModal = ({ open, onClose, offer }) => {
+const OfferDetailsModal = ({ open, onClose, offer, type }) => {
     if (!offer) return null;
 
     const WEEKDAYS = [
@@ -35,7 +36,7 @@ const OfferDetailsModal = ({ open, onClose, offer }) => {
 
     return (
         <Modal
-            title="Offer Details"
+            title={`${type === discounts.offer ? 'Offer' : 'Coupon'} Details`}
             open={open}
             onCancel={onClose}
             footer={null}
@@ -48,7 +49,7 @@ const OfferDetailsModal = ({ open, onClose, offer }) => {
                     <div className="flex items-center space-x-4">
                         {offer.thumbnail_image && offer.thumbnail_image !== "images" ? (
                             <CDNImage
-                                src={`${offer.thumbnail_image}?v=${offer?.updated_at}`}
+                                src={`${offer.thumbnail_image}?v = ${offer?.updated_at} `}
                                 alt="Offer Thumbnail"
                                 height={80}
                                 width={80}
@@ -65,20 +66,20 @@ const OfferDetailsModal = ({ open, onClose, offer }) => {
                             <div className="flex items-center space-x-2 mt-1">
                                 <span
                                     className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.status
-                                            ? "bg-green-100 text-green-800"
-                                            : "bg-red-100 text-red-800"
-                                        }`}
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-red-100 text-red-800"
+                                        } `}
                                 >
                                     {offer.status ? "Active Schedule" : "Inactive Schedule"}
                                 </span>
 
                                 <span
                                     className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.is_active
-                                            ? "bg-blue-100 text-blue-800"
-                                            : "bg-gray-100 text-gray-800"
-                                        }`}
+                                        ? "bg-blue-100 text-blue-800"
+                                        : "bg-gray-100 text-gray-800"
+                                        } `}
                                 >
-                                    {offer.is_active ? "Active Offer" : "Inactive Offer"}
+                                    {offer.is_active ? `Active ${type === discounts.offer ? 'offer' : 'coupon'}` : `Inactive ${type === discounts.offer ? 'offer' : 'coupon'}`}
                                 </span>
                             </div>
                         </div>
@@ -145,7 +146,7 @@ const OfferDetailsModal = ({ open, onClose, offer }) => {
 
                     {/* Offer Types */}
                     <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                        <h3 className="text-lg font-semibold">Offer Type</h3>
+                        <h3 className="text-lg font-semibold">{type === discounts.offer ? 'Offer' : 'Coupon'} Type</h3>
 
                         <div className="grid grid-cols-2 gap-2">
                             {[
@@ -157,9 +158,9 @@ const OfferDetailsModal = ({ open, onClose, offer }) => {
                                 <div
                                     key={item.key}
                                     className={`rounded text-center py-2 ${offer[item.key]
-                                            ? `bg-${item.color}-100 text-${item.color}-800`
-                                            : "bg-gray-100 text-gray-600"
-                                        }`}
+                                        ? `bg-${item.color}-100 text-${item.color}-800`
+                                        : "bg-gray-100 text-gray-600"
+                                        } `}
                                 >
                                     <div className="font-medium text-sm">{item.label}</div>
                                     <div className="text-xs">{offer[item.key] ? "Yes" : "No"}</div>
@@ -200,9 +201,9 @@ const OfferDetailsModal = ({ open, onClose, offer }) => {
                                     <div
                                         key={day}
                                         className={`text-center py-2 rounded-lg ${active
-                                                ? "bg-green-500 text-white"
-                                                : "bg-gray-200 text-gray-500"
-                                            }`}
+                                            ? "bg-green-500 text-white"
+                                            : "bg-gray-200 text-gray-500"
+                                            } `}
                                     >
                                         {day.slice(0, 3)}
                                     </div>

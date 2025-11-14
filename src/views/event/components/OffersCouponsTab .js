@@ -8,12 +8,21 @@ const { Title } = Typography;
 
 const OffersCouponsTab = ({ eventDetails }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [offers, setOffers] = useState();
+  const [data, setData] = useState();
+  const [type, setType] = useState(null);
 
   const handleCardClick = (data, type) => {
-    console.log(data);
-    setOffers(data)
-    setIsModalVisible(true);
+    if (type === discounts.offer) {
+      console.log(data);
+      setData(data?.offer);
+      setType(type)
+      setIsModalVisible(true);
+    } else if (type === discounts.coupon) {
+      console.log(data);
+      setData(data?.coupons);
+      setType(type)
+      setIsModalVisible(true);
+    }
   }
 
   return (
@@ -166,6 +175,7 @@ const OffersCouponsTab = ({ eventDetails }) => {
                 <Col span={24} key={index}>
                   <Card
                     hoverable
+                    onClick={() => { handleCardClick(coupon, discounts.coupon) }}
                     style={{
                       borderRadius: "12px",
                       border: "1px solid #bae7ff",
@@ -178,16 +188,20 @@ const OffersCouponsTab = ({ eventDetails }) => {
                       <Col xs={24} md={8}>
                         {coupon.coupons.thumbnail_image !== "images" &&
                           coupon.coupons.thumbnail_image ? (
-                          <Image
-                            alt="coupon thumbnail"
+                          // <Image
+                          //   alt="coupon thumbnail"
+                          //   src={coupon.coupons.thumbnail_image}
+                          //   height={100}
+                          //   style={{
+                          //     objectFit: "cover",
+                          //     width: "100%",
+                          //     borderRadius: "8px",
+                          //     border: "1px solid #91d5ff",
+                          //   }}
+                          // />
+                          <CDNImage
                             src={coupon.coupons.thumbnail_image}
-                            height={100}
-                            style={{
-                              objectFit: "cover",
-                              width: "100%",
-                              borderRadius: "8px",
-                              border: "1px solid #91d5ff",
-                            }}
+                            height={'200px'}
                           />
                         ) : (
                           <div
@@ -214,20 +228,38 @@ const OffersCouponsTab = ({ eventDetails }) => {
                         >
                           {coupon.coupons.name}
                         </Title>
-                        <div
-                          style={{
-                            padding: "4px 12px",
-                            backgroundColor: "#e6f7ff",
-                            borderRadius: "16px",
-                            display: "inline-block",
-                            fontWeight: "bold",
-                            color: "#096dd9",
-                            marginBottom: "12px",
-                            border: "1px solid #91d5ff",
-                          }}
-                        >
-                          {coupon.coupons.discount_percentage}% OFF
-                        </div>
+                        {!coupon?.is_percentage ? (
+                          <div
+                            style={{
+                              padding: "4px 12px",
+                              backgroundColor: "#e6f7ff",
+                              borderRadius: "16px",
+                              display: "inline-block",
+                              fontWeight: "bold",
+                              color: "#096dd9",
+                              marginBottom: "12px",
+                              border: "1px solid #91d5ff",
+                            }}
+                          >
+                            {coupon.coupons.discount_percentage_amount}% OFF
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              padding: "4px 12px",
+                              backgroundColor: "#e6f7ff",
+                              borderRadius: "16px",
+                              display: "inline-block",
+                              fontWeight: "bold",
+                              color: "#096dd9",
+                              marginBottom: "12px",
+                              border: "1px solid #91d5ff",
+                            }}
+                          >
+                            {coupon.coupons.discount_percentage_amount?.toFixed(2)}
+                          </div>
+                        )
+                        }
                         <div
                           style={{
                             display: "flex",
@@ -272,7 +304,8 @@ const OffersCouponsTab = ({ eventDetails }) => {
       <OfferDetailsModal
         open={isModalVisible}
         onClose={() => { setIsModalVisible(false) }}
-        offer={offers?.offer}
+        offer={data}
+        type={type}
       />
     </div >
   );
