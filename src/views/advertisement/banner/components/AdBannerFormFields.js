@@ -151,19 +151,19 @@ const AdBannerFormFields = ({ mode, banner }) => {
       // Map media_path with proper structure
       const mediaFile = banner.media_path
         ? [
-          {
-            uid: "media-1",
-            name: banner.media_path.split("/").pop(),
-            status: "done",
-            url: `${CDN_PATH}/${banner.media_path}`,
-            thumbUrl: banner.thumbnail_url
-              ? `${CDN_PATH}/${banner.thumbnail_url}`
-              : undefined,
-            id: null,
-            type: getMediaType(banner.media_path),
-            mediaType: getMediaType(banner.media_path),
-          },
-        ]
+            {
+              uid: "media-1",
+              name: banner.media_path.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${banner.media_path}`,
+              thumbUrl: banner.thumbnail_url
+                ? `${CDN_PATH}/${banner.thumbnail_url}`
+                : undefined,
+              id: null,
+              type: getMediaType(banner.media_path),
+              mediaType: getMediaType(banner.media_path),
+            },
+          ]
         : [];
 
       form.setFieldsValue({
@@ -229,31 +229,17 @@ const AdBannerFormFields = ({ mode, banner }) => {
 
   // Helper function to determine media type from file
   const getMediaType = (file) => {
-    // If it's existing media with mediaType or media_type property, use that directly
+    // Check if type property exists
+    if (file.type) {
+      return file.type.startsWith("video/") ? "video" : "image";
+    }
+
+    // Check mediaType if available
     if (file.mediaType) {
       return file.mediaType;
     }
 
-    if (file.media_type) {
-      return file.media_type;
-    }
-
-    // If it's a new file being uploaded, check the originFileObj first (Ant Design Upload)
-    if (file.originFileObj && file.originFileObj.type) {
-      return file.originFileObj.type.startsWith("video/") ? "video" : "image";
-    }
-
-    // Check the type property directly
-    if (file.type) {
-      // If it's a MIME type string
-      if (typeof file.type === "string" && file.type.includes("/")) {
-        return file.type.startsWith("video/") ? "video" : "image";
-      }
-      // If it's already "image" or "video" string
-      return file.type;
-    }
-
-    // Fallback: Check file extension
+    // Check file extension as fallback
     const fileName = file.name || file.file_name || "";
     const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
     const isVideo = videoExtensions.some((ext) =>
@@ -288,12 +274,12 @@ const AdBannerFormFields = ({ mode, banner }) => {
       // Transform media_path - can be image or video
       const mediaData = values.media_path?.[0]
         ? {
-          file_name:
-            values.media_path[0].name ||
-            values.media_path[0].file_name ||
-            null,
-          media_type: getMediaType(values.media_path[0]),
-        }
+            file_name:
+              values.media_path[0].name ||
+              values.media_path[0].file_name ||
+              null,
+            media_type: getMediaType(values.media_path[0]),
+          }
         : null;
 
       const transformedData = {
@@ -467,14 +453,17 @@ const AdBannerFormFields = ({ mode, banner }) => {
               }}
             >
               {selectedCategory
-                ? `${SupportFormatContent.join(",")}: ${selectedCategory.file_types?.join(", ") ||
-                SupportImageFormat.join(", ")
-                }, Resolution: ${selectedCategory.resolution || "N/A"
-                }, Min size: ${selectedCategory.min_size || "N/A"
-                }, Max size: ${selectedCategory.max_size || "N/A"}`
+                ? `${SupportFormatContent.join(",")}: ${
+                    selectedCategory.file_types?.join(", ") ||
+                    SupportImageFormat.join(", ")
+                  }, Resolution: ${
+                    selectedCategory.resolution || "N/A"
+                  }, Min size: ${
+                    selectedCategory.min_size || "N/A"
+                  }, Max size: ${selectedCategory.max_size || "N/A"}`
                 : `Images: ${SupportImageFormat.join(
-                  ", "
-                )}. Videos: MP4, WebM, OGG (Max 100MB)`}
+                    ", "
+                  )}. Videos: MP4, WebM, OGG (Max 100MB)`}
             </Text>
 
             <Form.Item name="ads_url" label="Banner Redirect Url">
@@ -516,10 +505,11 @@ const AdBannerFormFields = ({ mode, banner }) => {
                 >
                   {eventOnPlaces.map((event) => (
                     <Option key={event.id} value={event.id}>
-                      {`${event.event_name} - ${event.schedules && event.schedules.length > 0
-                        ? event.schedules[0]?.name ?? ""
-                        : "No Schedule"
-                        }`}
+                      {`${event.event_name} - ${
+                        event.schedules && event.schedules.length > 0
+                          ? event.schedules[0]?.name ?? ""
+                          : "No Schedule"
+                      }`}
                     </Option>
                   ))}
                 </Select>
