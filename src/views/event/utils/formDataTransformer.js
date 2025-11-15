@@ -4,20 +4,40 @@
  * Helper function to determine media type from file
  */
 const getMediaType = (file) => {
-  // Check if type property exists
-  if (file.type) {
-    return file.type.startsWith("video/") ? "video" : "image";
-  }
+    // If it's existing media with mediaType or media_type property, use that directly
+    if (file.mediaType) {
+      return file.mediaType;
+    }
 
-  // Check file extension as fallback
-  const fileName = file.name || file.file_name || file.fileName || "";
-  const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
-  const isVideo = videoExtensions.some((ext) =>
-    fileName.toLowerCase().endsWith(ext)
-  );
+    if (file.media_type) {
+      return file.media_type;
+    }
 
-  return isVideo ? "video" : "image";
-};
+    // If it's a new file being uploaded, check the originFileObj first (Ant Design Upload)
+    if (file.originFileObj && file.originFileObj.type) {
+      return file.originFileObj.type.startsWith("video/") ? "video" : "image";
+    }
+
+    // Check the type property directly
+    if (file.type) {
+      // If it's a MIME type string
+      if (typeof file.type === "string" && file.type.includes("/")) {
+        return file.type.startsWith("video/") ? "video" : "image";
+      }
+      // If it's already "image" or "video" string
+      return file.type;
+    }
+
+    // Fallback: Check file extension
+    const fileName = file.name || file.file_name || "";
+    const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+    const isVideo = videoExtensions.some((ext) =>
+      fileName.toLowerCase().endsWith(ext)
+    );
+
+    return isVideo ? "video" : "image";
+  };
+
 
 /**
  * Transform form data from current structure to API structure
