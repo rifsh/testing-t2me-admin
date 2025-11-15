@@ -109,6 +109,20 @@ export const addPayment = createAsyncThunk(
   }
 );
 
+export const editPayment = createAsyncThunk(
+  "payment/edit",
+  async ({ data, action }, { rejectWithValue }) => {
+    console.log("Payment Edited in Store:", data);
+    try {
+      const response = await PaymentService.editPayment(data, action);
+      return response;
+    } catch (error) {
+      console.error("Error in addPayment:", error);
+      return rejectWithValue(error.response?.data || "Error Adding Payment");
+    }
+  }
+);
+
 const paymentSlice = createSlice({
   name: "payment",
   initialState,
@@ -195,6 +209,23 @@ const paymentSlice = createSlice({
         state.error = null;
       })
       .addCase(addPayment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.responseMessage = "Failed to add payment";
+      })
+
+      .addCase(editPayment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.responseMessage = null;
+      })
+      .addCase(editPayment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.responseData = action.payload.data;
+        state.responseMessage = action.payload.status.message;
+        state.error = null;
+      })
+      .addCase(editPayment.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.responseMessage = "Failed to add payment";

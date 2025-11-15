@@ -29,6 +29,7 @@ import {
   setEditItemId,
   setTicketDialogVisible,
   setTicketModalLoading,
+  CheckTicketEditAvailability,
 } from "store/slices/ticketSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedItem } from "store/slices/modalSlice";
@@ -76,13 +77,32 @@ const TicketList = () => {
   const handleCancel = () => {
     setIsModalVisible(false);
   };
-  const handleEditTicket = (id) => {
+  const handleEditTicket = async (id) => {
     dispatch(setEditItemId(id));
-    dispatch(setTicketDialogVisible(true));
+    // dispatch(setTicketDialogVisible(true));
+    try {
+      const result = await dispatch(
+        CheckTicketEditAvailability({ ticket_id: id })
+      ).unwrap();
+
+      if (result?.editable === true) {
+        navigate(`${APP_PREFIX_PATH}/ticket/edit/${id}`);
+      } else {
+        Modal.error({
+          content:
+            "Sorry, this ticket already has bookings in all time slots. You cannot edit this ticket.",
+        });
+      }
+    } catch (error) {
+      console.error("Error checking schedule edit:", error);
+      Modal.error({
+        content: "Something went wrong while checking the schedule.",
+      });
+    }
   };
   const handleModalSubmit = async () => {
     dispatch(setTicketModalLoading(true));
-    navigate(`${APP_PREFIX_PATH}/ticket/edit/${editItemId}`);
+
     dispatch(setTicketDialogVisible(false));
     dispatch(setTicketModalLoading(false));
   };
@@ -258,7 +278,7 @@ const TicketList = () => {
           },
         ]}
       />
-      <WarningModal
+      {/* <WarningModal
         mode={"itemmodal"}
         visible={dialogVisible}
         title="Edit Ticket"
@@ -269,7 +289,7 @@ const TicketList = () => {
         confirmText="Proceed to Edit"
         cancelText="Cancel"
         loading={modalLoading}
-      />
+      /> */}
       <UpdateStatusModal
         responseMessage={message}
         editFunction={editTicket}
