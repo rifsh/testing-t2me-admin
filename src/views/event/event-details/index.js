@@ -133,7 +133,7 @@ const EventDetails = () => {
             <div style={{ position: "relative", width: "100%" }}>
               <Carousel autoplay>
                 {eventDetails?.media.map((item, index) => (
-                  <div key={index}>
+                  <div key={index} style={{ pointerEvents: item.media_type === "video" ? "none" : "auto" }}>
                     {item.media_type === "image" ? (
                       <CDNImage
                         src={item.media_url}
@@ -144,6 +144,8 @@ const EventDetails = () => {
                     ) : (
                       <video
                         controls
+                        loop={true}
+                        autoPlay={true}
                         style={{
                           width: "100%",
                           height: "400px",
