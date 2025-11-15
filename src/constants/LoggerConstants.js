@@ -30,4 +30,4 @@ export const paymentFilterTypes = {
     paymentPlatform: 'payment_platform',
 }
 
-export const triggeredText = '--- [Triggered from'
+export const triggeredText = '-- [Triggered from'
