@@ -82,6 +82,7 @@ export const ApiConstant = {
   TAX_STATUS_URL: "/api/v1/location/secured/taxes_status",
   AVAILABLE_TAX_CATEGORY_URL: "/api/v1/location/secured/available_tax_category",
   TICKET_URL: "/api/v1/event/tickets/secured/ticketstructure",
+  EVENT_ORGANIZER_TICKET_URL: "/api/v1/event/tickets/secured/ticketstructure/organizer",
   AVAILABLE_TICKET_TYPE_URL: "/api/v1/event/schedule/secured/available_types",
   SCHEDULE_URL: "/api/v1/event/schedule/secured/schedules",
   EDIT_SCHEDULE_URL: "/api/v2/event/schedule/secured/schedules/",

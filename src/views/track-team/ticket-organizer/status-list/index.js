@@ -12,6 +12,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { fetchAllOffers } from "store/slices/offerSlice";
 import Utils from "utils";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { fetchAllTickets } from "store/slices/ticketSlice";
 
 const { Option } = Select;
 
@@ -19,22 +20,22 @@ const OrganizerOfferStatusList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { type } = useParams(); 
-  const { filteredOffers, pagination, loading } = useSelector(
-    (state) => state.offers
+  const { filteredTickets, pagination, loading } = useSelector(
+    (state) => state.tickets
   );
   const [activeStatus, setactiveStatus] = useState();
   const handlePagination = usePaginationHook(fetchAllOffers);
 
-  // useEffect(() => {
-  //   dispatch(
-  //     fetchAllOffers({
-  //       ...DEFAULT_PAGE_SIZE,
-  //       organizer: true,
-  //       isOrganizer: true,
-  //       event_code: Utils.getEventTypeCodeWithType(type),
-  //     })
-  //   );
-  // }, [dispatch]);
+  useEffect(() => {
+    dispatch(
+      fetchAllTickets({
+        ...DEFAULT_PAGE_SIZE,
+        organizer: true,
+        isOrganizer: true,
+        event_code: Utils.getEventTypeCodeWithType(type),
+      })
+    );
+  }, [dispatch]);
 
   // const handlePagination = (page, size) => {
   //   dispatch(
@@ -161,7 +162,7 @@ const OrganizerOfferStatusList = () => {
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={filteredOffers}
+          dataSource={filteredTickets}
           rowKey="id"
           loading={loading}
           pagination={{
