@@ -33,6 +33,7 @@ import { ActionType } from "utils/api/warning-submit-util";
 import dayjs from "dayjs";
 import Utils from "utils";
 import { ScheduleUtil } from "../utils";
+import { formatDateForAPI, formatDateTimeForAPIShort } from "../utils/dateTimeValidation";
 
 const getBlockingInfo = (checkedScheduleDetails) => {
   if (!checkedScheduleDetails) {
@@ -594,13 +595,20 @@ const ScheduleDetails = ({ mode, id }) => {
   };
   const transformSubmitData = (values) => {
     console.log("🔍 Starting transform with values:", values);
+    const timezone =
+      eventDetails?.venue_events?.[0]?.venue?.place?.country?.time_zone ||
+      "UTC";
 
-    const startDate = dayjs(
-      values.start_date || scheduleFormData.start_date
-    ).format("YYYY-MM-DD");
-    const endDate = dayjs(values.end_date || scheduleFormData.end_date).format(
-      "YYYY-MM-DD"
+    const startDate = formatDateForAPI(
+      values.start_date || scheduleFormData.start_date,
+      timezone
     );
+
+    const endDate = formatDateForAPI(
+      values.end_date || scheduleFormData.end_date,
+      timezone
+    );
+
     const isSeatBased =
       (values.available_types || scheduleFormData.available_types) ===
       "seat_structure";
@@ -760,13 +768,15 @@ const ScheduleDetails = ({ mode, id }) => {
       is_multi_date: Boolean(
         values.is_multi_date || scheduleFormData.is_multi_date
       ),
-      booking_start_date_time: dayjs(
+      booking_start_date_time: formatDateTimeForAPIShort(
         values.booking_start_date_time ||
-          scheduleFormData.booking_start_date_time
-      ).format("YYYY-MM-DDTHH:mm"),
-      ad_start_date_time: dayjs(
-        values.ad_start_date_time || scheduleFormData.ad_start_date_time
-      ).format("YYYY-MM-DDTHH:mm"),
+          scheduleFormData.booking_start_date_time,
+        timezone
+      ),
+      ad_start_date_time: formatDateTimeForAPIShort(
+        values.ad_start_date_time || scheduleFormData.ad_start_date_time,
+        timezone
+      ),
       booking_limit_per_user: values.booking_limit_per_user_toggle
         ? values.booking_limit_per_user
         : null,

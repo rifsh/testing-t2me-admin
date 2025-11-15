@@ -1,4 +1,5 @@
 import fetch from "auth/FetchInterceptor";
+import { isOrganizer } from "configs/UserAccessConfig";
 import { ApiConstant } from "constants/ApiConstant";
 import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
@@ -6,8 +7,13 @@ import { handleAction } from "utils/api/warning-submit-util";
 const TicketsService = {};
 
 TicketsService.getAllTickets = function (pageData) {
+  const url = Utils.getUrlByUserRole(
+      ApiConstant.TICKET_URL,
+      ApiConstant.EVENT_ORGANIZER_TICKET_URL,
+      isOrganizer()
+    );
   return fetch({
-    url: ApiConstant.TICKET_URL,
+    url: url,
     method: "get",
     params: Utils.filterParams(pageData),
   });
@@ -44,17 +50,22 @@ TicketsService.addTicket = function (data, action) {
     skipEmpty: true,
   });
 
+  const url = Utils.getUrlByUserRole(
+      ApiConstant.TICKET_URL,
+      ApiConstant.EVENT_ORGANIZER_TICKET_URL,
+      isOrganizer()
+    );
   return fetch({
-    url: ApiConstant.TICKET_URL,
+    url:url,
     method: "post",
-    data: formData,
+    data: data,
     params: {
       venue_id: data.venue_id,
       action: encodedAction,
     },
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
   });
 };
 

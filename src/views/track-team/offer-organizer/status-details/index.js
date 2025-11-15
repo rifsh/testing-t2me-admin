@@ -111,7 +111,7 @@ const OrganizerOfferDetail = () => {
       if (submitOrganizerOfferUpdate.fulfilled.match(resultAction)) {
         message.success(`Update ${actionType}ed successfully`);
         dispatch(fetchOrganizerSingleOfferUpdate({ offer_id: offerId }));
-        navigate(`${APP_PREFIX_PATH}/track/offer/status/list/movie`);
+        navigate(`${APP_PREFIX_PATH}/track/offer/status/list/${type}`);
       }
     } catch (error) {
       message.error(`Failed to ${actionType} the update`);

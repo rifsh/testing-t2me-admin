@@ -7,10 +7,10 @@ import { handleAction } from "utils/api/warning-submit-util";
 const CouponService = {};
 
 CouponService.addCoupon = function (data, action) {
-  // const formData = Utils.createFormData(data, {
-  //   fileKeys: ["thumbnail_image"],
-  //   skipEmpty: true,
-  // });
+  const formData = Utils.createFormData(data, {
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
+  });
 
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
@@ -21,10 +21,10 @@ CouponService.addCoupon = function (data, action) {
   return fetch({
     url: offreUrl,
     method: "post",
-    data: data,
-    // headers: {
-    //   "Content-Type": "multipart/form-data",
-    // },
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
     params: {
       action: handleAction(action),
     },
