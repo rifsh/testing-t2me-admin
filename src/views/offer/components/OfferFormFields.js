@@ -337,7 +337,7 @@ function OfferFormFields({ type }) {
                         max={100}
                         size="large"
                         style={{ width: "100%" }}
-                        suffix="%"
+                        // suffix="%"
                       />
                     </Form.Item>
                   ) : (
