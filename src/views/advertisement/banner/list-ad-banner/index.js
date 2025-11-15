@@ -178,11 +178,19 @@ const AdBannerlist = () => {
     {
       title: "Url",
       dataIndex: "ads_url",
-      render: (_, record) => (
-        <a href={record.ads_url} target="_blank" rel="noopener noreferrer">
-          {record.ads_url}
-        </a>
-      ),
+      width: 120,
+      render: (_, record) => {
+        const url = record.ads_url || "";
+        const maxLength = 30;
+        const displayText =
+          url.length > maxLength ? url.substring(0, maxLength) + "..." : url;
+
+        return (
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            {displayText}
+          </a>
+        );
+      },
       sorter: (a, b) => a.ads_url.localeCompare(b.ads_url),
     },
     Utils.statusColumnUtil(handleUpdateStatus),
