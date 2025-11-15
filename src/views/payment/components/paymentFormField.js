@@ -3,7 +3,11 @@ import { Form, Card, Button, Input, message, Select, Row, Col } from "antd";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import Flex from "components/shared-components/Flex";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
-import { addPayment, getSinglePayment } from "store/slices/paymentSlice";
+import {
+  addPayment,
+  getSinglePayment,
+  editPayment,
+} from "store/slices/paymentSlice";
 import { RulesMessageConstants } from "constants/RulesConstant";
 import { fetchAllEvent } from "store/slices/eventSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -154,14 +158,14 @@ const PaymentFormFields = ({ mode, paymentId }) => {
         return;
       }
 
-      if (mode === "EDIT") {
-      } else {
-        const formData = {
-          ...submitData,
-        };
+      // if (mode === "EDIT") {
+      // } else {
+      const formData = {
+        ...submitData,
+      };
 
-        dispatch(setSelectedSubmitItem(formData));
-      }
+      dispatch(setSelectedSubmitItem(formData));
+      // }
     } catch (error) {
       console.error("Validation Failed:", error);
       message.error(
@@ -274,7 +278,7 @@ const PaymentFormFields = ({ mode, paymentId }) => {
       </Form>
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={mode === "EDIT" ? addPayment : addPayment}
+        addFunction={mode === "EDIT" ? editPayment : addPayment}
         navigationPath={`${APP_PREFIX_PATH}/payment/list`}
         responseMessage={responseMessage}
         mode={mode}

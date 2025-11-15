@@ -214,6 +214,8 @@ export const ApiConstant = {
   MULT_EVENT_VALIDATE_URL:
     "/api/v1/shared/validation/secured/validate_multiple_event",
   TICKET_VALIDATE_URL: "/api/v1/shared/validation/secured/validate_ticket",
+  CHECK_TICKET_EDIT_URL:
+    "/api/v1/event/tickets/secured/ticketstructure/edit/check",
   OFFER_COUPON_VALIDATE_URL:
     "/api/v1/shared/validation/secured/validate_offer_coupon",
   ADCATEGORY_VALIDATE_URL:

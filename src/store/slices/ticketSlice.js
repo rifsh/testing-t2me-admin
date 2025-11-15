@@ -38,6 +38,7 @@ export const initialState = {
   pagination: { size: 10, page: 1 },
   editable_status: null,
   numberOfTicket: 0,
+  ticket_edit_availability: null,
   singleTicket: null,
 };
 
@@ -123,6 +124,18 @@ export const editTicket = createAsyncThunk(
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+
+export const CheckTicketEditAvailability = createAsyncThunk(
+  "ticket/checkTicketEditAvailability",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response = await TicketsService.checkTicketEditAvailability(params);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
     }
   }
 );
@@ -444,6 +457,19 @@ export const ticketSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
+      .addCase(CheckTicketEditAvailability.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(CheckTicketEditAvailability.fulfilled, (state, action) => {
+        state.loading = false;
+        state.ticket_edit_availability = action.payload;
+      })
+      .addCase(CheckTicketEditAvailability.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
 
       .addCase(getSingleTicket.pending, (state) => {
         state.loading = true;

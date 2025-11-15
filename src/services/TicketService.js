@@ -13,6 +13,13 @@ TicketsService.getAllTickets = function (pageData) {
   });
 };
 
+TicketsService.checkTicketEditAvailability = function (params) {
+  return fetch({
+    url: ApiConstant.CHECK_TICKET_EDIT_URL,
+    method: "get",
+    params: Utils.filterParams(params),
+  });
+};
 TicketsService.getSingleTicketData = function (ticketId) {
   return fetch({
     url: ApiConstant.EVENT_SINGLE_TICKET,
