@@ -42,7 +42,7 @@ import StatusTimelineCard from "components/layout-components/Cards/StatusTimelin
 const { Title, Text, Paragraph } = Typography;
 
 const OrganizerOfferDetail = () => {
-  const { offerId } = useParams();
+  const { offerId,type } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
@@ -69,7 +69,7 @@ const OrganizerOfferDetail = () => {
 
   const handleMakeChanges = () => {
     navigate(
-      `${APP_PREFIX_PATH}/coupon/edit/${offerId}?type=movie&isMakeChanges=${true}`
+      `${APP_PREFIX_PATH}/coupon/edit/${offerId}?type=${type}&isMakeChanges=${true}`
     );
   };
 
@@ -110,7 +110,7 @@ const OrganizerOfferDetail = () => {
       if (submitOrganizerCouponUpdate.fulfilled.match(resultAction)) {
         message.success(`Update ${actionType}ed successfully`);
         dispatch(fetchOrganizerSingleCouponUpdate({ coupon_id: offerId }));
-        navigate(`${APP_PREFIX_PATH}/track/coupon/status/list/movie`);
+        navigate(`${APP_PREFIX_PATH}/track/coupon/status/list/${type}`);
       }
     } catch (error) {
       message.error(`Failed to ${actionType} the update`);

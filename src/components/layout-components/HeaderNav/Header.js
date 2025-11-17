@@ -5,7 +5,7 @@ const Header = styled.div(({headerNavColor, isDarkTheme}) => ({
 	position: 'fixed',
 	width: '100%',
 	left: 0,
-	zIndex: 1000,
+	zIndex: 999,
 	display: 'flex',
 	flex: '0 0 auto',
 	height: TEMPLATE.HEADER_HEIGHT,

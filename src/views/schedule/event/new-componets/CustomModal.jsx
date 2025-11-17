@@ -47,7 +47,7 @@ const CustomModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center">
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-white/50 transition-opacity"
