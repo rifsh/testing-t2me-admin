@@ -114,6 +114,7 @@ export const PERMISSIONS = {
                     GET_COUPONS: 'get_coupons',
                     UPDATE_COUPON_STATUS: 'update_coupon_status',
                     GET_COUPON_DETAIL: 'get_coupon_detail',
+                    
                 },
                 SEAT: {
                     title: 'Seat',

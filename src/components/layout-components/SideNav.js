@@ -20,7 +20,7 @@ export const SideNav = ({navCollapsed, routeInfo, hideGroupTitle, currentTheme }
         position: fixed !important;
         top: ${TEMPLATE.HEADER_HEIGHT}px;
         box-shadow: 0 1px 4px -1px rgba(0,0,0,.15);
-        z-index: 999;
+        z-index: 998;
         direction: ltr;
         ${currentTheme === 'light' && sideNavTheme !== SIDE_NAV_DARK ? `background-color: ${GRAY_SCALE.WHITE} !important;`  : `background-color: ${TEMPLATE.SIDE_NAV_DARK_BG_COLOR} !important;`}
         ${currentTheme === 'dark' && sideNavTheme !== SIDE_NAV_DARK ? `background-color: ${DARK_MODE.BG_COLOR} !important`  : ``}

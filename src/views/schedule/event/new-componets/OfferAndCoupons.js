@@ -1,1389 +1,1050 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
+  Form,
   Select,
   Button,
-  message,
-  DatePicker,
   Tag,
+  Table,
+  DatePicker,
+  Space,
   Alert,
-  Collapse,
+  message,
 } from "antd";
 import {
-  TagOutlined,
-  GiftOutlined,
+  ClockCircleOutlined,
+  CalendarOutlined,
+  EditOutlined,
+  CheckCircleOutlined,
+  InfoCircleOutlined,
+  WarningOutlined,
   SaveOutlined,
-  CloseOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import { useSelector } from "react-redux";
 import dayjs from "dayjs";
-import isBetween from "dayjs/plugin/isBetween";
-import OfferDateValidation from "./OfferDateValidation";
-import { COUPON_STATUS } from "constants/CouponStatus";
-dayjs.extend(isBetween);
+import CustomModal from "./CustomModal";
+import {
+  validateCompleteConfiguration,
+  filterAvailableDates,
+  getWeekdayMessage,
+  getDisabledDate,
+  validateOfferWithinSchedule,
+} from "../utils/offerCouponValidation";
+import { useSelector } from "react-redux";
+
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
-const SELECTION_LEVELS = {
-  SCHEDULE: "schedule",
-  DATE: "date",
-  TIME: "time",
+// Weekday mapping
+const WEEKDAY_MAP = {
+  MONDAY: 1,
+  TUESDAY: 2,
+  WEDNESDAY: 3,
+  THURSDAY: 4,
+  FRIDAY: 5,
+  SATURDAY: 6,
+  SUNDAY: 0,
 };
 
-const getTimeSlotsByDate = (showDates) => {
-  const timeSlotMap = new Map();
-  if (!showDates || !Array.isArray(showDates)) return timeSlotMap;
+// Helper functions
+const extractAvailableDates = (showDates) => {
+  if (!showDates || !Array.isArray(showDates)) return [];
+  return showDates.map((sd) => sd.start_date || sd.startdate);
+};
+
+const extractAvailableTimeSlots = (showDates) => {
+  if (!showDates || !Array.isArray(showDates)) return [];
+
+  const timeSlotSet = new Set();
+  const timeSlots = [];
+
   showDates.forEach((showDate) => {
-    if (!showDate.show_times || !Array.isArray(showDate.show_times)) return;
-    const dateStr = showDate.start_date;
-    const timeSlots = showDate.show_times.map((st) => ({
-      id: st.show_time_id || st.id || `${st.show_time_id}_${dateStr}-${st.start_time}`,
-      start_time: st.start_time,
-      end_time: st.end_time,
-      ticket_set: st.ticket_set,
-      ticket_structure_id: st.ticket_structure_id,
-      seat_structure_id: st.seat_structure_id,
-      date: dateStr,
-    }));
-    timeSlotMap.set(dateStr, timeSlots);
-  });
-  return timeSlotMap;
-};
+    const showtimes = showDate.show_times || showDate.showtimes || [];
+    showtimes.forEach((slot) => {
+      const startTime = slot.start_time || slot.starttime;
+      const endTime = slot.end_time || slot.endtime;
+      const timeKey = `${startTime}-${endTime}`;
 
-const getValidAndActiveOffers = (
-  eventOffers,
-  scheduleStartDate,
-  scheduleEndDate
-) => {
-  if (!eventOffers || !Array.isArray(eventOffers)) return [];
-  const currentDate = new Date();
-  const scheduleStart = scheduleStartDate ? dayjs(scheduleStartDate) : null;
-  const scheduleEnd = scheduleEndDate ? dayjs(scheduleEndDate) : null;
-  return eventOffers.filter((eo) => {
-    if (!eo.offer) return false;
-    const status = OfferDateValidation.getOfferStatus(
-      eo.offer.start_date,
-      eo.offer.end_date,
-      eo.offer.date_required,
-      currentDate
-    );
-    if (status.status === "expired") return false;
-    if (!eo.offer.date_required || status.status === "always_active") {
-      return true;
-    }
-    if (
-      scheduleStart &&
-      scheduleEnd &&
-      eo.offer.start_date &&
-      eo.offer.end_date
-    ) {
-      const offerStart = dayjs(eo.offer.start_date);
-      const offerEnd = dayjs(eo.offer.end_date);
-      const hasOverlap =
-        offerStart.isSameOrBefore(scheduleEnd, "day") &&
-        offerEnd.isSameOrAfter(scheduleStart, "day");
-      return hasOverlap;
-    }
-    return status.status === "active";
-  });
-};
-
-const getValidAndActiveCoupons = (
-  eventCoupons,
-  scheduleStartDate,
-  scheduleEndDate
-) => {
-  if (!eventCoupons || !Array.isArray(eventCoupons)) return [];
-  const currentDate = new Date();
-  const scheduleStart = scheduleStartDate ? dayjs(scheduleStartDate) : null;
-  const scheduleEnd = scheduleEndDate ? dayjs(scheduleEndDate) : null;
-  return eventCoupons.filter((ec) => {
-    if (!ec.coupons) return false;
-    const status = OfferDateValidation.getOfferStatus(
-      ec.coupons.start_date,
-      ec.coupons.end_date,
-      ec.coupons.date_required,
-      currentDate
-    );
-    if (status.status === COUPON_STATUS.EXPIRED) return false;
-    if (
-      !ec.coupons.date_required ||
-      status.status === COUPON_STATUS.ALWAYS_ACTIVE
-    ) {
-      return true;
-    }
-    if (
-      scheduleStart &&
-      scheduleEnd &&
-      ec.coupons.start_date &&
-      ec.coupons.end_date
-    ) {
-      const couponStart = dayjs(ec.coupons.start_date);
-      const couponEnd = dayjs(ec.coupons.end_date);
-      const hasOverlap =
-        couponStart.isSameOrBefore(scheduleEnd, "day") &&
-        couponEnd.isSameOrAfter(scheduleStart, "day");
-      return hasOverlap;
-    }
-    return status.status === COUPON_STATUS.ACTIVE;
-  });
-};
-
-const autoAdjustDateToSchedule = (
-  offerStartDate,
-  offerEndDate,
-  scheduleStartDate,
-  scheduleEndDate
-) => {
-  if (
-    !offerStartDate ||
-    !offerEndDate ||
-    !scheduleStartDate ||
-    !scheduleEndDate
-  ) {
-    return {
-      start_date: offerStartDate,
-      end_date: offerEndDate,
-      adjusted: false,
-    };
-  }
-  const offerStart = dayjs(offerStartDate);
-  const offerEnd = dayjs(offerEndDate);
-  const scheduleStart = dayjs(scheduleStartDate);
-  const scheduleEnd = dayjs(scheduleEndDate);
-  let adjustedStart = offerStart;
-  let adjustedEnd = offerEnd;
-  let wasAdjusted = false;
-  if (offerStart.isBefore(scheduleStart)) {
-    adjustedStart = scheduleStart;
-    wasAdjusted = true;
-  }
-  if (offerEnd.isAfter(scheduleEnd)) {
-    adjustedEnd = scheduleEnd;
-    wasAdjusted = true;
-  }
-  if (adjustedStart.isAfter(scheduleEnd)) {
-    adjustedStart = scheduleStart;
-    adjustedEnd = scheduleEnd;
-    wasAdjusted = true;
-  }
-  if (adjustedEnd.isBefore(scheduleStart)) {
-    adjustedStart = scheduleStart;
-    adjustedEnd = scheduleEnd;
-    wasAdjusted = true;
-  }
-  return {
-    start_date: adjustedStart.format("YYYY-MM-DD"),
-    end_date: adjustedEnd.format("YYYY-MM-DD"),
-    adjusted: wasAdjusted,
-  };
-};
-
-const OfferCard = ({
-  item,
-  onRemove,
-  onDateChange,
-  onTimeSlotsChange,
-  onShowDateToggle,
-  scheduleStartDate,
-  scheduleEndDate,
-  existingShowDates,
-}) => {
-  const itemData = item.offer;
-  const [level, setLevel] = useState(SELECTION_LEVELS.SCHEDULE);
-  const offerStatus = useMemo(
-    () =>
-      OfferDateValidation.getOfferStatus(
-        itemData.start_date,
-        itemData.end_date,
-        itemData.date_required,
-        new Date()
-      ),
-    [itemData.start_date, itemData.end_date, itemData.date_required]
-  );
-  const timeSlotsByDate = useMemo(
-    () => getTimeSlotsByDate(existingShowDates),
-    [existingShowDates]
-  );
-  const availableDates = useMemo(() => {
-    const dates = Array.from(timeSlotsByDate.keys());
-    if (!itemData.start_date || !itemData.end_date) {
-      return dates.map((dateStr) => ({
-        date: dateStr,
-        display: dayjs(dateStr).format("MMM DD"),
-        dayName: dayjs(dateStr).format("ddd"),
-      }));
-    }
-    const start = dayjs(itemData.start_date);
-    const end = dayjs(itemData.end_date);
-    return dates
-      .filter((dateStr) => {
-        const date = dayjs(dateStr);
-        return date.isBetween(start, end, "day", "[]");
-      })
-      .map((dateStr) => ({
-        date: dateStr,
-        display: dayjs(dateStr).format("MMM DD"),
-        dayName: dayjs(dateStr).format("ddd"),
-      }));
-  }, [itemData.start_date, itemData.end_date, timeSlotsByDate]);
-  const selectedTimeSlotsCount = itemData.selected_time_slots?.length || 0;
-  const selectedShowDatesCount = itemData.selected_show_dates?.length || 0;
-  useEffect(() => {
-    if (selectedTimeSlotsCount > 0) setLevel(SELECTION_LEVELS.TIME);
-    else if (selectedShowDatesCount > 0) setLevel(SELECTION_LEVELS.DATE);
-    else setLevel(SELECTION_LEVELS.SCHEDULE);
-  }, [selectedTimeSlotsCount, selectedShowDatesCount]);
-  const handleTimeSlotToggle = useCallback(
-    (timeSlotId) => {
-      const currentSlots = itemData.selected_time_slots || [];
-      const newSlots = currentSlots.includes(timeSlotId)
-        ? currentSlots.filter((id) => id !== timeSlotId)
-        : [...currentSlots, timeSlotId];
-      onTimeSlotsChange(itemData.id, newSlots);
-    },
-    [itemData, onTimeSlotsChange]
-  );
-  const handleShowDateToggle = useCallback(
-    (showDateId) => {
-      const currentDates = itemData.selected_show_dates || [];
-      const newDates = currentDates.includes(showDateId)
-        ? currentDates.filter((id) => id !== showDateId)
-        : [...currentDates, showDateId];
-      onShowDateToggle(itemData.id, newDates);
-    },
-    [itemData, onShowDateToggle]
-  );
-  const handleSelectAllTimeSlots = useCallback(() => {
-    const allIds = availableDates.flatMap((date) => {
-      const slots = timeSlotsByDate.get(date.date);
-      return slots && Array.isArray(slots) ? slots.map((s) => s.id) : [];
+      if (!timeSlotSet.has(timeKey)) {
+        timeSlotSet.add(timeKey);
+        timeSlots.push({
+          id: slot.show_time_id || slot.id || `slot-${timeSlots.length}`,
+          label: `${startTime} - ${endTime}`,
+          start_time: startTime,
+          end_time: endTime,
+        });
+      }
     });
-    onTimeSlotsChange(itemData.id, allIds);
-  }, [availableDates, timeSlotsByDate, itemData.id, onTimeSlotsChange]);
-  const handleClearAllTimeSlots = useCallback(() => {
-    onTimeSlotsChange(itemData.id, []);
-  }, [itemData.id, onTimeSlotsChange]);
-  const handleSelectAllShowDates = useCallback(() => {
-    onShowDateToggle(
-      itemData.id,
-      availableDates.map(({ date }) => date)
-    );
-  }, [availableDates, itemData.id, onShowDateToggle]);
-  const handleClearAllShowDates = useCallback(() => {
-    onShowDateToggle(itemData.id, []);
-  }, [itemData.id, onShowDateToggle]);
-  const getDatePickerLimits = () => {
-    const eventStart = scheduleStartDate ? dayjs(scheduleStartDate) : null;
-    const eventEnd = scheduleEndDate ? dayjs(scheduleEndDate) : null;
-    const offerStart = itemData.start_date ? dayjs(itemData.start_date) : null;
-    const offerEnd = itemData.end_date ? dayjs(itemData.end_date) : null;
-    let minDate = eventStart;
-    if (offerStart && (!minDate || offerStart.isAfter(minDate))) {
-      minDate = offerStart;
-    }
-    let maxDate = eventEnd;
-    if (offerEnd && (!maxDate || offerEnd.isBefore(maxDate))) {
-      maxDate = offerEnd;
-    }
-    return { minDate, maxDate };
-  };
-  const { minDate, maxDate } = getDatePickerLimits();
+  });
 
-  return (
-    <div className="bg-white border border-blue-200 rounded-lg p-4 hover:shadow-sm transition-shadow hover:border-blue-300">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-start gap-2 flex-1 min-w-0">
-          <TagOutlined className="text-blue-500 text-sm flex-shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {itemData.name}
-            </p>
-            <div className="flex items-center gap-1 mt-1 flex-wrap">
-              <span className="text-xs text-blue-600 font-medium">
-                {itemData.discount_percentage_amount}% OFF
-              </span>
-              <span className="text-xs text-gray-400">•</span>
-              <span className="text-xs text-gray-600">{offerStatus.label}</span>
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={() => onRemove(itemData.id)}
-          className="text-gray-400 hover:text-red-500 flex-shrink-0 p-1 hover:bg-red-50 rounded transition-colors"
-        >
-          <CloseOutlined className="text-sm" />
-        </button>
-      </div>
-      {itemData.date_required && (
-        <div className="mb-3">
-          <label className="text-xs font-medium text-gray-700 block mb-1.5">
-            Valid Period
-          </label>
-          <RangePicker
-            size="small"
-            value={
-              itemData.start_date && itemData.end_date
-                ? [dayjs(itemData.start_date), dayjs(itemData.end_date)]
-                : null
-            }
-            onChange={(dates) => onDateChange(itemData.id, dates)}
-            className="w-full"
-            format="MMM DD"
-            minDate={minDate}
-            maxDate={maxDate}
-            disabledDate={(current) => {
-              if (!current) return false;
-              if (
-                scheduleStartDate &&
-                current.isBefore(dayjs(scheduleStartDate), "day")
-              ) {
-                return true;
-              }
-              if (
-                scheduleEndDate &&
-                current.isAfter(dayjs(scheduleEndDate), "day")
-              ) {
-                return true;
-              }
-              return false;
-            }}
-            style={{ fontSize: "12px" }}
-          />
-        </div>
-      )}
-      <div className="grid grid-cols-3 gap-1.5 mb-3">
-        <button
-          onClick={() => {
-            setLevel(SELECTION_LEVELS.SCHEDULE);
-            handleClearAllTimeSlots();
-            handleClearAllShowDates();
-          }}
-          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
-            level === SELECTION_LEVELS.SCHEDULE
-              ? "bg-blue-100 border-blue-400 text-blue-900"
-              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
-          }`}
-        >
-          All
-        </button>
-        <button
-          onClick={() => {
-            setLevel(SELECTION_LEVELS.DATE);
-            handleClearAllTimeSlots();
-          }}
-          disabled={availableDates.length === 0}
-          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
-            level === SELECTION_LEVELS.DATE
-              ? "bg-blue-100 border-blue-400 text-blue-900"
-              : availableDates.length === 0
-              ? "bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed"
-              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
-          }`}
-        >
-          Dates
-        </button>
-        <button
-          onClick={() => {
-            setLevel(SELECTION_LEVELS.TIME);
-            handleClearAllShowDates();
-          }}
-          disabled={availableDates.length === 0}
-          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
-            level === SELECTION_LEVELS.TIME
-              ? "bg-blue-100 border-blue-400 text-blue-900"
-              : availableDates.length === 0
-              ? "bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed"
-              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
-          }`}
-        >
-          Slots
-        </button>
-      </div>
-      {level === SELECTION_LEVELS.SCHEDULE ? (
-        <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded p-2">
-          Applied to all time slots
-        </div>
-      ) : level === SELECTION_LEVELS.DATE ? (
-        <DateSelector
-          dates={availableDates}
-          selected={itemData.selected_show_dates || []}
-          onToggle={handleShowDateToggle}
-          onSelectAll={handleSelectAllShowDates}
-          onClearAll={handleClearAllShowDates}
-          timeSlotsByDate={timeSlotsByDate}
-        />
-      ) : (
-        <TimeSlotSelector
-          dates={availableDates}
-          selected={itemData.selected_time_slots || []}
-          onToggle={handleTimeSlotToggle}
-          onSelectAll={handleSelectAllTimeSlots}
-          onClearAll={handleClearAllTimeSlots}
-          timeSlotsByDate={timeSlotsByDate}
-        />
-      )}
-    </div>
-  );
+  return timeSlots;
 };
 
-const CouponCard = ({
-  item,
-  onRemove,
-  onDateChange,
-  onTimeSlotsChange,
-  onShowDateToggle,
-  scheduleStartDate,
-  scheduleEndDate,
-  existingShowDates,
-}) => {
-  const itemData = item.coupons;
-  const [level, setLevel] = useState(SELECTION_LEVELS.SCHEDULE);
-  const couponStatus = useMemo(
-    () =>
-      OfferDateValidation.getOfferStatus(
-        itemData.start_date,
-        itemData.end_date,
-        itemData.date_required,
-        new Date()
-      ),
-    [itemData.start_date, itemData.end_date, itemData.date_required]
+// Filter dates by weekday associations
+const filterDatesByWeekdays = (dates, weekdayAssociations) => {
+  if (!weekdayAssociations || weekdayAssociations.length === 0) {
+    return dates;
+  }
+
+  const allowedWeekdays = weekdayAssociations.map(
+    (w) => WEEKDAY_MAP[w.weekday]
   );
-  const timeSlotsByDate = useMemo(
-    () => getTimeSlotsByDate(existingShowDates),
-    [existingShowDates]
+
+  return dates.filter((date) => {
+    const dayOfWeek = dayjs(date).day();
+    return allowedWeekdays.includes(dayOfWeek);
+  });
+};
+
+// Filter time slots for a specific date based on weekday
+const filterTimeSlotsForDate = (
+  date,
+  allTimeSlots,
+  showDates,
+  weekdayAssociations
+) => {
+  if (!weekdayAssociations || weekdayAssociations.length === 0) {
+    return allTimeSlots;
+  }
+
+  const dayOfWeek = dayjs(date).day();
+  const allowedWeekdays = weekdayAssociations.map(
+    (w) => WEEKDAY_MAP[w.weekday]
   );
-  const availableDates = useMemo(() => {
-    const dates = Array.from(timeSlotsByDate.keys());
-    if (!itemData.start_date || !itemData.end_date) {
-      return dates.map((dateStr) => ({
-        date: dateStr,
-        display: dayjs(dateStr).format("MMM DD"),
-        dayName: dayjs(dateStr).format("ddd"),
-      }));
-    }
-    const start = dayjs(itemData.start_date);
-    const end = dayjs(itemData.end_date);
-    return dates
-      .filter((dateStr) => {
-        const date = dayjs(dateStr);
-        return date.isBetween(start, end, "day", "[]");
-      })
-      .map((dateStr) => ({
-        date: dateStr,
-        display: dayjs(dateStr).format("MMM DD"),
-        dayName: dayjs(dateStr).format("ddd"),
-      }));
-  }, [itemData.start_date, itemData.end_date, timeSlotsByDate]);
-  const selectedTimeSlotsCount = itemData.selected_time_slots?.length || 0;
-  const selectedShowDatesCount = itemData.selected_show_dates?.length || 0;
-  useEffect(() => {
-    if (selectedTimeSlotsCount > 0) setLevel(SELECTION_LEVELS.TIME);
-    else if (selectedShowDatesCount > 0) setLevel(SELECTION_LEVELS.DATE);
-    else setLevel(SELECTION_LEVELS.SCHEDULE);
-  }, [selectedTimeSlotsCount, selectedShowDatesCount]);
-  const handleTimeSlotToggle = useCallback(
-    (timeSlotId) => {
-      const currentSlots = itemData.selected_time_slots || [];
-      const newSlots = currentSlots.includes(timeSlotId)
-        ? currentSlots.filter((id) => id !== timeSlotId)
-        : [...currentSlots, timeSlotId];
-      onTimeSlotsChange(itemData.id, newSlots);
-    },
-    [itemData, onTimeSlotsChange]
+
+  if (!allowedWeekdays.includes(dayOfWeek)) {
+    return [];
+  }
+
+  const showDate = showDates.find(
+    (sd) => (sd.start_date || sd.startdate) === date
   );
-  const handleShowDateToggle = useCallback(
-    (showDateId) => {
-      const currentDates = itemData.selected_show_dates || [];
-      const newDates = currentDates.includes(showDateId)
-        ? currentDates.filter((id) => id !== showDateId)
-        : [...currentDates, showDateId];
-      onShowDateToggle(itemData.id, newDates);
-    },
-    [itemData, onShowDateToggle]
-  );
-  const handleSelectAllTimeSlots = useCallback(() => {
-    const allIds = availableDates.flatMap((date) => {
-      const slots = timeSlotsByDate.get(date.date);
-      return slots && Array.isArray(slots) ? slots.map((s) => s.id) : [];
+
+  if (!showDate) {
+    return allTimeSlots;
+  }
+
+  const showtimes = showDate.show_times || showDate.showtimes || [];
+  return allTimeSlots.filter((slot) => {
+    return showtimes.some((st) => {
+      const startTime = st.start_time || st.starttime;
+      const endTime = st.end_time || st.endtime;
+      return slot.start_time === startTime && slot.end_time === endTime;
     });
-    onTimeSlotsChange(itemData.id, allIds);
-  }, [availableDates, timeSlotsByDate, itemData.id, onTimeSlotsChange]);
-  const handleClearAllTimeSlots = useCallback(() => {
-    onTimeSlotsChange(itemData.id, []);
-  }, [itemData.id, onTimeSlotsChange]);
-  const handleSelectAllShowDates = useCallback(() => {
-    onShowDateToggle(
-      itemData.id,
-      availableDates.map(({ date }) => date)
-    );
-  }, [availableDates, itemData.id, onShowDateToggle]);
-  const handleClearAllShowDates = useCallback(() => {
-    onShowDateToggle(itemData.id, []);
-  }, [itemData.id, onShowDateToggle]);
-  const getDatePickerLimits = () => {
-    const eventStart = scheduleStartDate ? dayjs(scheduleStartDate) : null;
-    const eventEnd = scheduleEndDate ? dayjs(scheduleEndDate) : null;
-    const couponStart = itemData.start_date ? dayjs(itemData.start_date) : null;
-    const couponEnd = itemData.end_date ? dayjs(itemData.end_date) : null;
-    let minDate = eventStart;
-    if (couponStart && (!minDate || couponStart.isAfter(minDate))) {
-      minDate = couponStart;
-    }
-    let maxDate = eventEnd;
-    if (couponEnd && (!maxDate || couponEnd.isBefore(maxDate))) {
-      maxDate = couponEnd;
-    }
-    return { minDate, maxDate };
-  };
-  const { minDate, maxDate } = getDatePickerLimits();
-
-  return (
-    <div className="bg-white border border-blue-200 rounded-lg p-4 hover:shadow-sm transition-shadow hover:border-blue-300">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-start gap-2 flex-1 min-w-0">
-          <GiftOutlined className="text-blue-500 text-sm flex-shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {itemData.name}
-            </p>
-            <div className="flex items-center gap-1 mt-1 flex-wrap">
-              <span className="text-xs text-blue-600 font-medium">
-                {itemData.is_percentage
-                  ? `${itemData.discount_percentage_amount}% OFF`
-                  : `AED ${itemData.discount_percentage_amount} OFF`}
-              </span>
-              <span className="text-xs text-gray-400">•</span>
-              <span className="text-xs text-gray-600">
-                {couponStatus.label}
-              </span>
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={() => onRemove(itemData.id)}
-          className="text-gray-400 hover:text-red-500 flex-shrink-0 p-1 hover:bg-red-50 rounded transition-colors"
-        >
-          <CloseOutlined className="text-sm" />
-        </button>
-      </div>
-      {itemData.date_required && (
-        <div className="mb-3">
-          <label className="text-xs font-medium text-gray-700 block mb-1.5">
-            Valid Period
-          </label>
-          <RangePicker
-            size="small"
-            value={
-              itemData.start_date && itemData.end_date
-                ? [dayjs(itemData.start_date), dayjs(itemData.end_date)]
-                : null
-            }
-            onChange={(dates) => onDateChange(itemData.id, dates)}
-            className="w-full"
-            format="MMM DD"
-            minDate={minDate}
-            maxDate={maxDate}
-            disabledDate={(current) => {
-              if (!current) return false;
-              if (
-                scheduleStartDate &&
-                current.isBefore(dayjs(scheduleStartDate), "day")
-              ) {
-                return true;
-              }
-              if (
-                scheduleEndDate &&
-                current.isAfter(dayjs(scheduleEndDate), "day")
-              ) {
-                return true;
-              }
-              return false;
-            }}
-            style={{ fontSize: "12px" }}
-          />
-        </div>
-      )}
-      <div className="grid grid-cols-3 gap-1.5 mb-3">
-        <button
-          onClick={() => {
-            setLevel(SELECTION_LEVELS.SCHEDULE);
-            handleClearAllTimeSlots();
-            handleClearAllShowDates();
-          }}
-          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
-            level === SELECTION_LEVELS.SCHEDULE
-              ? "bg-blue-100 border-blue-400 text-blue-900"
-              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
-          }`}
-        >
-          All
-        </button>
-        <button
-          onClick={() => {
-            setLevel(SELECTION_LEVELS.DATE);
-            handleClearAllTimeSlots();
-          }}
-          disabled={availableDates.length === 0}
-          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
-            level === SELECTION_LEVELS.DATE
-              ? "bg-blue-100 border-blue-400 text-blue-900"
-              : availableDates.length === 0
-              ? "bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed"
-              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
-          }`}
-        >
-          Dates
-        </button>
-        <button
-          onClick={() => {
-            setLevel(SELECTION_LEVELS.TIME);
-            handleClearAllShowDates();
-          }}
-          disabled={availableDates.length === 0}
-          className={`text-xs font-medium py-2 px-2 rounded border transition-colors ${
-            level === SELECTION_LEVELS.TIME
-              ? "bg-blue-100 border-blue-400 text-blue-900"
-              : availableDates.length === 0
-              ? "bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed"
-              : "bg-white border-blue-200 text-blue-600 hover:bg-blue-50"
-          }`}
-        >
-          Slots
-        </button>
-      </div>
-      {level === SELECTION_LEVELS.SCHEDULE ? (
-        <div className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded p-2">
-          Applied to all time slots
-        </div>
-      ) : level === SELECTION_LEVELS.DATE ? (
-        <DateSelector
-          dates={availableDates}
-          selected={itemData.selected_show_dates || []}
-          onToggle={handleShowDateToggle}
-          onSelectAll={handleSelectAllShowDates}
-          onClearAll={handleClearAllShowDates}
-          timeSlotsByDate={timeSlotsByDate}
-        />
-      ) : (
-        <TimeSlotSelector
-          dates={availableDates}
-          selected={itemData.selected_time_slots || []}
-          onToggle={handleTimeSlotToggle}
-          onSelectAll={handleSelectAllTimeSlots}
-          onClearAll={handleClearAllTimeSlots}
-          timeSlotsByDate={timeSlotsByDate}
-        />
-      )}
-    </div>
-  );
+  });
 };
 
-const DateSelector = ({
-  dates,
-  selected,
-  onToggle,
-  onSelectAll,
-  onClearAll,
-  timeSlotsByDate,
+// Calculate the valid date range intersection
+const getValidDateRangeIntersection = (
+  offerStart,
+  offerEnd,
+  scheduleStart,
+  scheduleEnd
+) => {
+  if (!offerStart || !offerEnd) return null;
+  if (!scheduleStart || !scheduleEnd) {
+    return [dayjs(offerStart), dayjs(offerEnd)];
+  }
+
+  const offerStartDate = dayjs(offerStart);
+  const offerEndDate = dayjs(offerEnd);
+  const scheduleStartDate = dayjs(scheduleStart);
+  const scheduleEndDate = dayjs(scheduleEnd);
+
+  const validStart = offerStartDate.isAfter(scheduleStartDate)
+    ? offerStartDate
+    : scheduleStartDate;
+
+  const validEnd = offerEndDate.isBefore(scheduleEndDate)
+    ? offerEndDate
+    : scheduleEndDate;
+
+  if (validStart.isAfter(validEnd)) {
+    return null;
+  }
+
+  return [validStart, validEnd];
+};
+
+// Configuration Modal Component
+const ConfigModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  itemData,
+  availableDates,
+  availableTimeSlots,
+  scheduleRange,
+  showDates,
 }) => {
+  const [form] = Form.useForm();
+  const [offerLevel, setOfferLevel] = useState(null);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [timeSlotsByDate, setTimeSlotsByDate] = useState({});
+
+  const offerOrCoupon = itemData?.offer || itemData?.coupons || {};
+  const startDate = offerOrCoupon.start_date;
+  const endDate = offerOrCoupon.end_date;
+  const weekdayAssociations = offerOrCoupon.weekday_associations || [];
+
+  useEffect(() => {
+    if (isOpen && itemData) {
+      setOfferLevel(itemData.offerLevel || null);
+      setSelectedDates(itemData.dates || []);
+      setTimeSlotsByDate(itemData.timeSlotsByDate || {});
+
+      const intersection = getValidDateRangeIntersection(
+        startDate,
+        endDate,
+        scheduleRange?.start_date,
+        scheduleRange?.end_date
+      );
+
+      if (intersection) {
+        form.setFieldsValue({
+          validityDates: intersection,
+        });
+      } else if (itemData.valid_from && itemData.valid_to) {
+        form.setFieldsValue({
+          validityDates: [dayjs(itemData.valid_from), dayjs(itemData.valid_to)],
+        });
+      }
+    }
+  }, [isOpen, itemData, form, scheduleRange, startDate, endDate]);
+
+  const filteredDates = filterDatesByWeekdays(
+    filterAvailableDates(
+      availableDates,
+      startDate,
+      endDate,
+      weekdayAssociations,
+      scheduleRange?.start_date,
+      scheduleRange?.end_date
+    ),
+    weekdayAssociations
+  );
+
+  const disabledDate = (current) => {
+    return getDisabledDate(
+      current,
+      startDate,
+      endDate,
+      scheduleRange?.start_date,
+      scheduleRange?.end_date
+    );
+  };
+
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      const [validFrom, validTo] = values.validityDates;
+
+      const validation = validateCompleteConfiguration(
+        {
+          offerLevel,
+          selectedDates,
+          timeSlotsByDate,
+          validFrom,
+          validTo,
+        },
+        itemData,
+        scheduleRange
+      );
+
+      if (!validation.isValid) {
+        message.error(validation.message);
+        return;
+      }
+
+      // Convert timeSlotsByDate to flat array of time slot IDs for API
+      let selectedTimeSlots = [];
+      if (offerLevel === "timeslot") {
+        selectedTimeSlots = Object.values(timeSlotsByDate).flat();
+      }
+
+      onSave({
+        offerLevel,
+        dates: selectedDates,
+        timeSlotsByDate,
+        valid_from: validFrom.format("YYYY-MM-DD"),
+        valid_to: validTo.format("YYYY-MM-DD"),
+        selected_time_slots: selectedTimeSlots,
+        selected_show_dates: offerLevel === "date" ? selectedDates : [],
+      });
+
+      setOfferLevel(null);
+      setSelectedDates([]);
+      setTimeSlotsByDate({});
+      form.resetFields();
+    } catch (error) {
+      console.error("Validation failed:", error);
+    }
+  };
+
+  const handleCancel = () => {
+    setOfferLevel(null);
+    setSelectedDates([]);
+    setTimeSlotsByDate({});
+    form.resetFields();
+    onClose();
+  };
+
+  const toggleDate = (date) => {
+    setSelectedDates((prev) =>
+      prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
+    );
+  };
+
+  const toggleTimeSlot = (date, slotId) => {
+    setTimeSlotsByDate((prev) => {
+      const current = prev[date] || [];
+      const updated = current.includes(slotId)
+        ? current.filter((id) => id !== slotId)
+        : [...current, slotId];
+      return { ...prev, [date]: updated };
+    });
+  };
+
+  const footer = (
+    <>
+      <button
+        onClick={handleCancel}
+        className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSave}
+        className="px-6 py-2 text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-sm"
+      >
+        Save Configuration
+      </button>
+    </>
+  );
+
   return (
-    <div>
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="text-xs font-medium text-gray-700">
-          {selected.length} selected
-        </span>
+    <CustomModal
+      isOpen={isOpen}
+      onClose={handleCancel}
+      title={
         <div className="flex items-center gap-2">
-          <button
-            onClick={onSelectAll}
-            className="text-xs text-blue-600 hover:text-blue-900 px-2 py-0.5 hover:bg-blue-100 rounded transition-colors"
-          >
-            All
-          </button>
-          <button
-            onClick={onClearAll}
-            className="text-xs text-blue-600 hover:text-blue-900 px-2 py-0.5 hover:bg-blue-100 rounded transition-colors"
-          >
-            Clear
-          </button>
+          <EditOutlined className="text-blue-600" />
+          <span>Configure: {itemData?.name || itemData?.code}</span>
         </div>
-      </div>
-      <div className="grid grid-cols-2 gap-1.5">
-        {dates.map(({ date, display, dayName }) => {
-          const isSelected = selected.includes(date);
-          const timeSlots = timeSlotsByDate.get(date) || [];
-          return (
-            <button
-              key={date}
-              onClick={() => onToggle(date)}
-              className={`p-2 rounded border text-left transition-all text-xs ${
-                isSelected
-                  ? "border-blue-400 bg-blue-100 text-blue-900 font-medium"
-                  : "border-blue-200 bg-white hover:bg-blue-50 text-gray-700"
-              }`}
-            >
-              <p className="font-medium">{display}</p>
-              <p
-                className={`text-xs ${
-                  isSelected ? "text-blue-700" : "text-gray-500"
+      }
+      size="lg"
+      footer={footer}
+    >
+      <Form form={form} layout="vertical" className="space-y-6">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
+          <Form.Item
+            label={
+              <span className="font-semibold text-gray-700">
+                Validity Period (Must be within{" "}
+                {dayjs(startDate).format("MMM DD")} -{" "}
+                {dayjs(endDate).format("MMM DD, YYYY")})
+              </span>
+            }
+            name="validityDates"
+            rules={[
+              { required: true, message: "Please select validity dates" },
+            ]}
+            className="mb-0"
+          >
+            <RangePicker
+              className="w-full"
+              size="large"
+              format="YYYY-MM-DD"
+              placeholder={["Start Date", "End Date"]}
+              disabledDate={disabledDate}
+            />
+          </Form.Item>
+        </div>
+
+        {scheduleRange && (
+          <Alert
+            message="Schedule Period"
+            description={`All offers/coupons must be configured within the event schedule: ${dayjs(
+              scheduleRange.start_date
+            ).format("MMM DD, YYYY")} - ${dayjs(scheduleRange.end_date).format(
+              "MMM DD, YYYY"
+            )}`}
+            type="info"
+            showIcon
+            icon={<InfoCircleOutlined />}
+          />
+        )}
+
+        {offerLevel === "schedule" && weekdayAssociations.length > 0 && (
+          <Alert
+            message={getWeekdayMessage(weekdayAssociations)}
+            type="warning"
+            showIcon
+          />
+        )}
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            Configuration Type
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[
+              {
+                value: "schedule",
+                icon: CalendarOutlined,
+                label: "Schedule Level",
+                desc: "Apply to entire schedule",
+              },
+              {
+                value: "date",
+                icon: CalendarOutlined,
+                label: "Date Based",
+                desc: "Select specific dates",
+              },
+              {
+                value: "timeslot",
+                icon: ClockCircleOutlined,
+                label: "Time Slot Level",
+                desc: "Configure per time slot",
+              },
+            ].map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setOfferLevel(option.value)}
+                className={`p-3 rounded-xl border-2 transition-all text-left relative ${
+                  offerLevel === option.value
+                    ? "border-blue-500 bg-blue-50 shadow-md"
+                    : "border-gray-200 bg-white hover:border-blue-300 hover:shadow"
                 }`}
               >
-                {dayName} · {timeSlots.length}
-              </p>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-const TimeSlotSelector = ({
-  dates,
-  selected,
-  onToggle,
-  onSelectAll,
-  onClearAll,
-  timeSlotsByDate,
-}) => {
-  return (
-    <div>
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="text-xs font-medium text-gray-700">
-          {selected.length} selected
-        </span>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onSelectAll}
-            className="text-xs text-blue-600 hover:text-blue-900 px-2 py-0.5 hover:bg-blue-100 rounded transition-colors"
-          >
-            All
-          </button>
-          <button
-            onClick={onClearAll}
-            className="text-xs text-blue-600 hover:text-blue-900 px-2 py-0.5 hover:bg-blue-100 rounded transition-colors"
-          >
-            Clear
-          </button>
-        </div>
-      </div>
-      {dates.length > 0 ? (
-        <Collapse
-          accordion
-          size="small"
-          items={dates.map(({ date, display, dayName }) => {
-            const timeSlots = timeSlotsByDate.get(date) || [];
-            const selectedCount = timeSlots.filter((slot) =>
-              selected.includes(slot.id)
-            ).length;
-            return {
-              key: date,
-              label: (
-                <div className="flex items-center justify-between w-full text-xs gap-2">
-                  <span className="font-medium text-gray-900">{display}</span>
-                  <span className="text-gray-500">{dayName}</span>
-                  <span className="text-blue-600 ml-auto">
-                    {selectedCount}/{timeSlots.length}
-                  </span>
+                <div className="flex items-start gap-3">
+                  <option.icon
+                    className={`text-xl mt-1 ${
+                      offerLevel === option.value
+                        ? "text-blue-600"
+                        : "text-gray-400"
+                    }`}
+                  />
+                  <div>
+                    <div className="font-semibold text-gray-800">
+                      {option.label}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {option.desc}
+                    </div>
+                  </div>
                 </div>
-              ),
-              children: (
-                <div className="grid grid-cols-2 gap-1.5">
-                  {timeSlots.map((slot) => {
-                    const isSelected = selected.includes(slot.id);
-                    return (
-                      <button
-                        key={slot.id}
-                        onClick={() => onToggle(slot.id)}
-                        className={`p-2 rounded border text-left transition-all text-xs ${
-                          isSelected
-                            ? "border-blue-400 bg-blue-100 text-blue-900 font-medium"
-                            : "border-blue-200 bg-white hover:bg-blue-50 text-gray-700"
-                        }`}
-                      >
-                        <p className="font-medium">{slot.start_time}</p>
-                        {slot.ticket_set && (
-                          <p
-                            className={`text-xs ${
-                              isSelected ? "text-blue-700" : "text-gray-500"
+                {offerLevel === option.value && (
+                  <CheckCircleOutlined className="text-blue-600 absolute top-2 right-2" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {(offerLevel === "date" || offerLevel === "timeslot") && (
+          <div className="rounded-xl">
+            <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <CalendarOutlined className="text-blue-600" />
+              Select Dates
+              {weekdayAssociations.length > 0 && (
+                <span className="text-xs text-gray-500 font-normal">
+                  (Filtered by available weekdays)
+                </span>
+              )}
+            </h3>
+            {filteredDates.length === 0 ? (
+              <Alert
+                message="No dates available"
+                description="No dates match the offer's validity period, weekday restrictions, and schedule range."
+                type="warning"
+                showIcon
+              />
+            ) : (
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                {filteredDates.map((date) => {
+                  const isSelected = selectedDates.includes(date);
+                  const dayOfWeek = dayjs(date)
+                    .format("ddd")
+                    .toUpperCase()
+                    .substring(0, 3);
+                  return (
+                    <button
+                      key={date}
+                      type="button"
+                      onClick={() => toggleDate(date)}
+                      className={`p-2 rounded-xl transition-all text-center ${
+                        isSelected
+                          ? "bg-blue-600 text-white shadow-md scale-105"
+                          : "bg-white text-gray-700 hover:bg-blue-50 hover:border-blue-300 border border-gray-200"
+                      }`}
+                    >
+                      <div className="text-lg font-bold">
+                        {dayjs(date).format("DD")}
+                      </div>
+                      <div className="text-xs opacity-80">
+                        {dayjs(date).format("MMM")}
+                      </div>
+                      <div className="text-[10px] opacity-70">{dayOfWeek}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {offerLevel === "timeslot" && selectedDates.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-semibold text-gray-700 flex items-center gap-2">
+              <ClockCircleOutlined className="text-green-600" />
+              Configure Time Slots
+              {weekdayAssociations.length > 0 && (
+                <span className="text-xs text-gray-500 font-normal ml-2">
+                  (Showing slots available for selected weekdays)
+                </span>
+              )}
+            </h3>
+            {selectedDates.map((date) => {
+              const slots = timeSlotsByDate[date] || [];
+              const filteredTimeSlots = filterTimeSlotsForDate(
+                date,
+                availableTimeSlots,
+                showDates,
+                weekdayAssociations
+              );
+
+              return (
+                <div
+                  key={date}
+                  className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm"
+                >
+                  <div className="font-medium text-gray-800 mb-3 flex items-center gap-2">
+                    <CalendarOutlined className="text-blue-500" />
+                    {dayjs(date).format("dddd, MMMM DD, YYYY")}
+                  </div>
+                  {filteredTimeSlots.length === 0 ? (
+                    <Alert
+                      message="No time slots available for this date"
+                      type="warning"
+                      showIcon
+                      size="small"
+                    />
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      {filteredTimeSlots.map((slot) => {
+                        const isSelected = slots.includes(slot.id);
+                        return (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            onClick={() => toggleTimeSlot(date, slot.id)}
+                            className={`p-2 rounded-xl transition-all text-center text-sm ${
+                              isSelected
+                                ? "bg-green-600 text-white shadow-md"
+                                : "bg-gray-50 text-gray-700 hover:bg-green-50 hover:border-green-300 border border-gray-200"
                             }`}
                           >
-                            {slot.ticket_set}
-                          </p>
-                        )}
-                      </button>
-                    );
-                  })}
+                            <ClockCircleOutlined
+                              className={`mb-1 ${
+                                isSelected ? "text-white" : "text-gray-400"
+                              }`}
+                            />
+                            <div className="font-medium text-xs leading-tight">
+                              {slot.label}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              ),
-            };
-          })}
-        />
-      ) : (
-        <Alert type="warning" message="No slots" className="text-xs" showIcon />
-      )}
-    </div>
+              );
+            })}
+          </div>
+        )}
+      </Form>
+    </CustomModal>
   );
 };
 
-const OfferAndCoupons = ({ onSubmit, form, onBack, isEditMode }) => {
+// Main Component
+const OfferCouponConfig = ({ onSubmit, onBack }) => {
+  const [form] = Form.useForm();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+  const [configurations, setConfigurations] = useState([]);
+  const [pendingSelection, setPendingSelection] = useState(null);
+
+  const hasMountedRef = useRef(false);
+
+  const { eventDetails } = useSelector((state) => state.event);
   const scheduleFormData = useSelector(
-    (state) => state?.schedules?.scheduleFormData || null
+    (state) => state?.schedules?.scheduleFormData || {}
   );
-  const eventDetails = useSelector(
-    (state) => state?.event?.eventDetails || null
-  );
-  const [selectedOffers, setSelectedOffers] = useState([]);
-  const [selectedCoupons, setSelectedCoupons] = useState([]);
-  const existingShowDates = useMemo(
-    () => scheduleFormData?.show_dates || [],
-    [scheduleFormData]
-  );
-  const scheduleStartDate = scheduleFormData?.start_date || null;
-  const scheduleEndDate = scheduleFormData?.end_date || null;
 
-  const validAndActiveOffers = useMemo(() => {
-    return getValidAndActiveOffers(
-      eventDetails?.event_offers,
-      scheduleStartDate,
-      scheduleEndDate
-    );
-  }, [eventDetails?.event_offers, scheduleStartDate, scheduleEndDate]);
-  
-  const validAndActiveCoupons = useMemo(() => {
-    return getValidAndActiveCoupons(
-      eventDetails?.event_coupons,
-      scheduleStartDate,
-      scheduleEndDate
-    );
-  }, [eventDetails?.event_coupons, scheduleStartDate, scheduleEndDate]);
-
-  // Load offers in edit mode from BOTH offer_ids AND offer_schedule
   useEffect(() => {
-    if (isEditMode) {
-      const assignedOffers = [];
-      
-      // First check offer_ids (original structure)
-      if (scheduleFormData?.offer_ids && Array.isArray(scheduleFormData.offer_ids)) {
-        const offersFromIds = scheduleFormData.offer_ids
-          .map(({ offer_id, selected_show_dates, selected_time_slots, valid_from, valid_to }) => {
-            const offerDetail = eventDetails?.event_offers?.find(
-              (eo) => eo.offer.id === offer_id
-            )?.offer;
-            if (!offerDetail) return null;
-            return {
-              offer: {
-                ...offerDetail,
-                selected_show_dates: selected_show_dates || [],
-                selected_time_slots: selected_time_slots || [],
-                start_date: valid_from || offerDetail.start_date,
-                end_date: valid_to || offerDetail.end_date,
-              },
-            };
-          })
-          .filter(Boolean);
-        assignedOffers.push(...offersFromIds);
-      }
-      
-      // Then check offer_schedule (API response structure)
-      if (scheduleFormData?.offer_schedule && Array.isArray(scheduleFormData.offer_schedule)) {
-        const offersFromSchedule = scheduleFormData.offer_schedule
-          .map(({ offer, id, valid_from, valid_to, selected_show_dates, selected_time_slots }) => {
-            if (!offer) return null;
-            return {
-              offer: {
-                ...offer,
-                selected_show_dates: selected_show_dates || [],
-                selected_time_slots: selected_time_slots || [],
-                start_date: valid_from || offer.start_date,
-                end_date: valid_to || offer.end_date,
-              },
-            };
-          })
-          .filter(Boolean);
-        assignedOffers.push(...offersFromSchedule);
-      }
-      
-      // Remove duplicates based on offer id
-      const uniqueOffers = assignedOffers.filter((offer, index, self) =>
-        index === self.findIndex((o) => o.offer.id === offer.offer.id)
-      );
-      
-      setSelectedOffers(uniqueOffers);
-    } else {
-      setSelectedOffers([]);
-    }
-  }, [isEditMode, scheduleFormData, eventDetails]);
+    hasMountedRef.current = true;
+  }, []);
 
-  // Load coupons in edit mode from BOTH coupon_ids AND coupon_schedule
-  useEffect(() => {
-    if (isEditMode) {
-      const assignedCoupons = [];
-      
-      // First check coupon_ids (original structure)
-      if (scheduleFormData?.coupon_ids && Array.isArray(scheduleFormData.coupon_ids)) {
-        const couponsFromIds = scheduleFormData.coupon_ids
-          .map(({ coupon_id, selected_show_dates, selected_time_slots, valid_from, valid_to }) => {
-            const couponDetail = eventDetails?.event_coupons?.find(
-              (ec) => ec.coupons.id === coupon_id
-            )?.coupons;
-            if (!couponDetail) return null;
-            return {
-              coupons: {
-                ...couponDetail,
-                selected_show_dates: selected_show_dates || [],
-                selected_time_slots: selected_time_slots || [],
-                start_date: valid_from || couponDetail.start_date,
-                end_date: valid_to || couponDetail.end_date,
-              },
-            };
-          })
-          .filter(Boolean);
-        assignedCoupons.push(...couponsFromIds);
-      }
-      
-      // Then check coupon_schedule (API response structure)
-      if (scheduleFormData?.coupon_schedule && Array.isArray(scheduleFormData.coupon_schedule)) {
-        const couponsFromSchedule = scheduleFormData.coupon_schedule
-          .map(({ coupons, id, valid_from, valid_to, selected_show_dates, selected_time_slots }) => {
-            if (!coupons) return null;
-            return {
-              coupons: {
-                ...coupons,
-                selected_show_dates: selected_show_dates || [],
-                selected_time_slots: selected_time_slots || [],
-                start_date: valid_from || coupons.start_date,
-                end_date: valid_to || coupons.end_date,
-              },
-            };
-          })
-          .filter(Boolean);
-        assignedCoupons.push(...couponsFromSchedule);
-      }
-      
-      // Remove duplicates based on coupon id
-      const uniqueCoupons = assignedCoupons.filter((coupon, index, self) =>
-        index === self.findIndex((c) => c.coupons.id === coupon.coupons.id)
-      );
-      
-      setSelectedCoupons(uniqueCoupons);
-    } else {
-      setSelectedCoupons([]);
-    }
-  }, [isEditMode, scheduleFormData, eventDetails]);
+  const scheduleRange = {
+    start_date: scheduleFormData.start_date,
+    end_date: scheduleFormData.end_date,
+  };
 
-  const handleOfferAdd = useCallback(
-    (offerId) => {
-      if (
-        selectedOffers.some((item) => item.offer.id === offerId) ||
-        !validAndActiveOffers.find((eo) => eo.offer.id === offerId)
-      ) {
+  const showDates =
+    scheduleFormData.show_dates || scheduleFormData.showdates || [];
+  const availableDates = extractAvailableDates(showDates);
+  const availableTimeSlots = extractAvailableTimeSlots(showDates);
+
+  const offers = (eventDetails?.event_offers || []).map((item) => {
+    const offerValidation = validateOfferWithinSchedule(
+      item.offer.start_date,
+      item.offer.end_date,
+      scheduleRange.start_date,
+      scheduleRange.end_date
+    );
+
+    return {
+      id: item.offer.id,
+      name: item.offer.name,
+      discount: item.offer.discount_percentage_amount,
+      type: "offer",
+      offer: item.offer,
+      valid_from: item.valid_from,
+      valid_to: item.valid_to,
+      isValid: offerValidation.isValid,
+      validationMessage: offerValidation.message,
+    };
+  });
+
+  const coupons = (eventDetails?.event_coupons || []).map((item) => {
+    const couponValidation = validateOfferWithinSchedule(
+      item.coupons.start_date,
+      item.coupons.end_date,
+      scheduleRange.start_date,
+      scheduleRange.end_date
+    );
+
+    return {
+      id: item.coupons.id,
+      code: item.coupons.name,
+      discount: item.coupons.discount_percentage_amount,
+      type: "coupon",
+      coupons: item.coupons,
+      valid_from: item.valid_from,
+      valid_to: item.valid_to,
+      isValid: couponValidation.isValid,
+      validationMessage: couponValidation.message,
+    };
+  });
+
+  const handleOfferSelect = (selectedIds) => {
+    if (!hasMountedRef.current) return;
+
+    const newIds = selectedIds.filter(
+      (id) =>
+        !configurations.some((c) => c.itemId === id && c.itemType === "offer")
+    );
+
+    if (newIds.length > 0) {
+      const newId = newIds[newIds.length - 1];
+      const selectedOffer = offers.find((o) => o.id === newId);
+
+      if (!selectedOffer.isValid) {
+        message.error({
+          content: selectedOffer.validationMessage,
+          duration: 5,
+        });
+        form.setFieldsValue({
+          offers: selectedIds.filter((id) => id !== newId),
+        });
         return;
       }
-      const offerToAdd = validAndActiveOffers.find(
-        (eo) => eo.offer.id === offerId
-      );
-      setSelectedOffers((prev) => [
-        ...prev,
-        {
-          offer: {
-            ...offerToAdd.offer,
-            selected_show_dates: [],
-            selected_time_slots: [],
-            start_date: offerToAdd.offer.start_date,
-            end_date: offerToAdd.offer.end_date,
-          },
-        },
-      ]);
-    },
-    [selectedOffers, validAndActiveOffers]
-  );
 
-  const handleCouponAdd = useCallback(
-    (couponId) => {
-      if (
-        selectedCoupons.some((item) => item.coupons.id === couponId) ||
-        !validAndActiveCoupons.find((ec) => ec.coupons.id === couponId)
-      ) {
+      setPendingSelection({ type: "offer", ids: selectedIds });
+      setCurrentItem(selectedOffer);
+      setModalVisible(true);
+    }
+  };
+
+  const handleCouponSelect = (selectedIds) => {
+    if (!hasMountedRef.current) return;
+
+    const newIds = selectedIds.filter(
+      (id) =>
+        !configurations.some((c) => c.itemId === id && c.itemType === "coupon")
+    );
+
+    if (newIds.length > 0) {
+      const newId = newIds[newIds.length - 1];
+      const selectedCoupon = coupons.find((c) => c.id === newId);
+
+      if (!selectedCoupon.isValid) {
+        message.error({
+          content: selectedCoupon.validationMessage,
+          duration: 5,
+        });
+        form.setFieldsValue({
+          coupons: selectedIds.filter((id) => id !== newId),
+        });
         return;
       }
-      const couponToAdd = validAndActiveCoupons.find(
-        (ec) => ec.coupons.id === couponId
+
+      setPendingSelection({ type: "coupon", ids: selectedIds });
+      setCurrentItem(selectedCoupon);
+      setModalVisible(true);
+    }
+  };
+
+  const handleConfigureItem = (item) => {
+    const existingConfig = configurations.find(
+      (c) => c.itemId === item.id && c.itemType === item.type
+    );
+    setCurrentItem({
+      ...item,
+      ...existingConfig,
+    });
+    setModalVisible(true);
+  };
+
+  const handleSaveConfig = (config) => {
+    const newConfig = {
+      itemId: currentItem.id,
+      itemType: currentItem.type,
+      name: currentItem.name || currentItem.code,
+      ...config,
+    };
+
+    setConfigurations((prev) => {
+      const filtered = prev.filter(
+        (c) => !(c.itemId === currentItem.id && c.itemType === currentItem.type)
       );
-      setSelectedCoupons((prev) => [
-        ...prev,
-        {
-          coupons: {
-            ...couponToAdd.coupons,
-            selected_show_dates: [],
-            selected_time_slots: [],
-            start_date: couponToAdd.coupons.start_date,
-            end_date: couponToAdd.coupons.end_date,
-          },
-        },
-      ]);
-    },
-    [selectedCoupons, validAndActiveCoupons]
-  );
+      return [...filtered, newConfig];
+    });
 
-  const handleOfferRemove = useCallback((offerId) => {
-    setSelectedOffers((prev) =>
-      prev.filter((item) => item.offer.id !== offerId)
+    if (pendingSelection) {
+      if (pendingSelection.type === "offer") {
+        form.setFieldsValue({ offers: pendingSelection.ids });
+      } else {
+        form.setFieldsValue({ coupons: pendingSelection.ids });
+      }
+      setPendingSelection(null);
+    }
+
+    message.success(
+      `${
+        currentItem.type === "offer" ? "Offer" : "Coupon"
+      } configured successfully!`
     );
-  }, []);
+    setModalVisible(false);
+  };
 
-  const handleCouponRemove = useCallback((couponId) => {
-    setSelectedCoupons((prev) =>
-      prev.filter((item) => item.coupons.id !== couponId)
-    );
-  }, []);
+  const handleModalClose = () => {
+    if (pendingSelection) {
+      const currentFormValues = form.getFieldsValue();
+      if (pendingSelection.type === "offer") {
+        const filteredOffers = currentFormValues.offers.filter((id) =>
+          configurations.some((c) => c.itemId === id && c.itemType === "offer")
+        );
+        form.setFieldsValue({ offers: filteredOffers });
+      } else {
+        const filteredCoupons = currentFormValues.coupons.filter((id) =>
+          configurations.some((c) => c.itemId === id && c.itemType === "coupon")
+        );
+        form.setFieldsValue({ coupons: filteredCoupons });
+      }
+      setPendingSelection(null);
+    }
+    setModalVisible(false);
+  };
 
-  const handleOfferDateChange = useCallback(
-    (offerId, dates) => {
-      if (!dates || dates.length !== 2) return;
-      const newStartDate = dates[0].format("YYYY-MM-DD");
-      const newEndDate = dates[1].format("YYYY-MM-DD");
-      const adjustedDates = autoAdjustDateToSchedule(
-        newStartDate,
-        newEndDate,
-        scheduleStartDate,
-        scheduleEndDate
-      );
-      setSelectedOffers((prev) =>
-        prev.map((item) =>
-          item.offer.id === offerId
-            ? {
-                ...item,
-                offer: {
-                  ...item.offer,
-                  start_date: adjustedDates.start_date,
-                  end_date: adjustedDates.end_date,
-                  selected_time_slots: [],
-                  selected_show_dates: [],
-                },
-              }
-            : item
-        )
-      );
-    },
-    [scheduleStartDate, scheduleEndDate]
-  );
+  const configuredOffers = configurations
+    .filter((c) => c.itemType === "offer")
+    .map((c) => c.itemId);
 
-  const handleCouponDateChange = useCallback(
-    (couponId, dates) => {
-      if (!dates || dates.length !== 2) return;
-      const newStartDate = dates[0].format("YYYY-MM-DD");
-      const newEndDate = dates[1].format("YYYY-MM-DD");
-      const adjustedDates = autoAdjustDateToSchedule(
-        newStartDate,
-        newEndDate,
-        scheduleStartDate,
-        scheduleEndDate
-      );
-      setSelectedCoupons((prev) =>
-        prev.map((item) =>
-          item.coupons.id === couponId
-            ? {
-                ...item,
-                coupons: {
-                  ...item.coupons,
-                  start_date: adjustedDates.start_date,
-                  end_date: adjustedDates.end_date,
-                  selected_time_slots: [],
-                  selected_show_dates: [],
-                },
-              }
-            : item
-        )
-      );
-    },
-    [scheduleStartDate, scheduleEndDate]
-  );
+  const configuredCoupons = configurations
+    .filter((c) => c.itemType === "coupon")
+    .map((c) => c.itemId);
 
-  const handleOfferTimeSlotsChange = useCallback((offerId, selectedSlots) => {
-    setSelectedOffers((prev) =>
-      prev.map((item) =>
-        item.offer.id === offerId
-          ? {
-              ...item,
-              offer: {
-                ...item.offer,
-                selected_time_slots: selectedSlots,
-                selected_show_dates: [],
-              },
-            }
-          : item
-      )
-    );
-  }, []);
+  const allSelectedItems = [
+    ...configuredOffers.map((id) => offers.find((o) => o.id === id)),
+    ...configuredCoupons.map((id) => coupons.find((c) => c.id === id)),
+  ].filter(Boolean);
 
-  const handleCouponTimeSlotsChange = useCallback((couponId, selectedSlots) => {
-    setSelectedCoupons((prev) =>
-      prev.map((item) =>
-        item.coupons.id === couponId
-          ? {
-              ...item,
-              coupons: {
-                ...item.coupons,
-                selected_time_slots: selectedSlots,
-                selected_show_dates: [],
-              },
-            }
-          : item
-      )
-    );
-  }, []);
-
-  const handleOfferShowDateToggle = useCallback((offerId, selectedDates) => {
-    setSelectedOffers((prev) =>
-      prev.map((item) =>
-        item.offer.id === offerId
-          ? {
-              ...item,
-              offer: {
-                ...item.offer,
-                selected_show_dates: selectedDates,
-                selected_time_slots: [],
-              },
-            }
-          : item
-      )
-    );
-  }, []);
-
-  const handleCouponShowDateToggle = useCallback((couponId, selectedDates) => {
-    setSelectedCoupons((prev) =>
-      prev.map((item) =>
-        item.coupons.id === couponId
-          ? {
-              ...item,
-              coupons: {
-                ...item.coupons,
-                selected_show_dates: selectedDates,
-                selected_time_slots: [],
-              },
-            }
-          : item
-      )
-    );
-  }, []);
-
+  // Handle submit similar to reference file
   const handleSubmit = useCallback(() => {
     try {
       const finalData = {
-        offer_ids: selectedOffers.map((item) => ({
-          offer_id: item.offer.id,
-          valid_from: item.offer.start_date || scheduleStartDate,
-          valid_to: item.offer.end_date || scheduleEndDate,
-          selected_time_slots: item.offer.selected_time_slots || [],
-          selected_show_dates: item.offer.selected_show_dates || [],
-        })),
-        coupon_ids: selectedCoupons.map((item) => ({
-          coupon_id: item.coupons.id,
-          valid_from: item.coupons.start_date || scheduleStartDate,
-          valid_to: item.coupons.end_date || scheduleEndDate,
-          selected_time_slots: item.coupons.selected_time_slots || [],
-          selected_show_dates: item.coupons.selected_show_dates || [],
-        })),
+        offer_ids: configurations
+          .filter((c) => c.itemType === "offer")
+          .map((config) => ({
+            offer_id: config.itemId,
+            valid_from: config.valid_from || scheduleRange.start_date,
+            valid_to: config.valid_to || scheduleRange.end_date,
+            selected_time_slots: config.selected_time_slots || [],
+            selected_show_dates: config.selected_show_dates || [],
+          })),
+        coupon_ids: configurations
+          .filter((c) => c.itemType === "coupon")
+          .map((config) => ({
+            coupon_id: config.itemId,
+            valid_from: config.valid_from || scheduleRange.start_date,
+            valid_to: config.valid_to || scheduleRange.end_date,
+            selected_time_slots: config.selected_time_slots || [],
+            selected_show_dates: config.selected_show_dates || [],
+          })),
       };
-      message.success("Configured successfully!");
+
+      message.success("Offers and Coupons configured successfully!");
       onSubmit(finalData);
     } catch (error) {
-      message.error("Failed to submit");
+      message.error("Failed to submit configuration");
+      console.error("Submit error:", error);
     }
-  }, [
-    selectedOffers,
-    selectedCoupons,
-    onSubmit,
-    scheduleStartDate,
-    scheduleEndDate,
-  ]);
+  }, [configurations, scheduleRange, onSubmit]);
 
-  if (!existingShowDates || existingShowDates.length === 0) {
+  const tableColumns = [
+    {
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
+      render: (type) => (
+        <Tag color={type === "offer" ? "green" : "blue"}>
+          {type.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      render: (text, record) => <strong>{record.name || record.code}</strong>,
+    },
+    {
+      title: "Discount",
+      dataIndex: "discount",
+      key: "discount",
+      render: (discount) => `${discount}% off`,
+    },
+    {
+      title: "Configuration",
+      key: "config",
+      render: (_, record) => {
+        const config = configurations.find(
+          (c) => c.itemId === record.id && c.itemType === record.type
+        );
+        if (!config) return "-";
+
+        const levelLabels = {
+          schedule: "Schedule Level",
+          date: "Date Based",
+          timeslot: "Time Slot Level",
+        };
+
+        return (
+          <Space direction="vertical" size={0}>
+            <Tag color="blue">{levelLabels[config.offerLevel]}</Tag>
+            {config.offerLevel === "date" && (
+              <small>{config.dates?.length || 0} dates selected</small>
+            )}
+            {config.offerLevel === "timeslot" && (
+              <small>
+                {config.selected_time_slots?.length || 0} time slots
+              </small>
+            )}
+          </Space>
+        );
+      },
+    },
+    {
+      title: "Validity",
+      key: "validity",
+      render: (_, record) => {
+        const config = configurations.find(
+          (c) => c.itemId === record.id && c.itemType === record.type
+        );
+        return config?.valid_from && config?.valid_to ? (
+          <Space direction="vertical" size={0}>
+            <small>{dayjs(config.valid_from).format("MMM DD, YYYY")}</small>
+            <small>to {dayjs(config.valid_to).format("MMM DD, YYYY")}</small>
+          </Space>
+        ) : (
+          "-"
+        );
+      },
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <Button
+          type="primary"
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => handleConfigureItem(record)}
+        >
+          Reconfigure
+        </Button>
+      ),
+    },
+  ];
+
+  const hasScheduleData =
+    scheduleFormData &&
+    scheduleFormData.start_date &&
+    scheduleFormData.end_date &&
+    availableDates.length > 0;
+
+  if (!hasScheduleData) {
     return (
       <div className="p-6 bg-white">
         <Alert
+          message="Schedule Not Configured"
+          description="Please configure your event schedule (dates and time slots) before setting up offers and coupons."
           type="warning"
-          message="Schedule not configured"
-          description="Please complete schedule setup first"
           showIcon
-          className="mb-4"
+          icon={<WarningOutlined />}
+          className="mb-6"
         />
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded text-sm font-medium transition-colors"
-        >
-          <ArrowLeftOutlined />
-          Back
-        </button>
+        <Button onClick={onBack} icon={<ArrowLeftOutlined />}>
+          Back to Schedule
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Offers & Coupons
-            </h1>
-            <span className="text-xs text-gray-500">
-              {dayjs(scheduleStartDate).format("MMM DD")} -{" "}
-              {dayjs(scheduleEndDate).format("MMM DD")}
-            </span>
-          </div>
-          <p className="text-sm text-gray-600">
-            Configure {existingShowDates.length} show dates
+    <div className="max-w-full bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Offer & Coupon Configuration
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {dayjs(scheduleRange.start_date).format("MMM DD, YYYY")} -{" "}
+            {dayjs(scheduleRange.end_date).format("MMM DD, YYYY")}
           </p>
         </div>
-
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <TagOutlined className="text-blue-500" />
-              Offers
-              <span className="text-xs font-normal text-gray-500 bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                {selectedOffers.length}
-              </span>
-            </h2>
-          </div>
-          <div className="mb-4">
-            {!isEditMode && validAndActiveOffers.length > 0 && (
-              <Select
-                showSearch
-                placeholder="Add offer..."
-                className="w-full"
-                onSelect={handleOfferAdd}
-                value={null}
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().includes(input.toLowerCase())
-                }
-              >
-                {validAndActiveOffers.map((eo) => (
-                  <Option
-                    key={eo.offer.id}
-                    value={eo.offer.id}
-                    disabled={selectedOffers.some(
-                      (selected) => selected.offer.id === eo.offer.id
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm">{eo.offer.name}</span>
-                      <Tag className="text-xs bg-blue-100 text-blue-700 border-blue-300">
-                        {eo.offer.discount_percentage_amount}%
-                      </Tag>
-                    </div>
-                  </Option>
-                ))}
-              </Select>
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {selectedOffers.length > 0 ? (
-              selectedOffers.map((item) => (
-                <OfferCard
-                  key={item.offer.id}
-                  item={item}
-                  onRemove={handleOfferRemove}
-                  onDateChange={handleOfferDateChange}
-                  onTimeSlotsChange={handleOfferTimeSlotsChange}
-                  onShowDateToggle={handleOfferShowDateToggle}
-                  scheduleStartDate={scheduleStartDate}
-                  scheduleEndDate={scheduleEndDate}
-                  existingShowDates={existingShowDates}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-8">
-                <p className="text-sm text-gray-500">No offers added</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <GiftOutlined className="text-blue-500" />
-              Coupons
-              <span className="text-xs font-normal text-gray-500 bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                {selectedCoupons.length}
-              </span>
-            </h2>
-          </div>
-          <div className="mb-4">
-            {!isEditMode && validAndActiveCoupons.length > 0 && (
-              <Select
-                showSearch
-                placeholder="Add coupon..."
-                className="w-full"
-                onSelect={handleCouponAdd}
-                value={null}
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().includes(input.toLowerCase())
-                }
-              >
-                {validAndActiveCoupons.map((ec) => (
-                  <Option
-                    key={ec.coupons.id}
-                    value={ec.coupons.id}
-                    disabled={selectedCoupons.some(
-                      (selected) => selected.coupons.id === ec.coupons.id
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm">{ec.coupons.name}</span>
-                      <Tag className="text-xs bg-blue-100 text-blue-700 border-blue-300">
-                        {ec.coupons.is_percentage
-                          ? `${ec.coupons.discount_percentage_amount}%`
-                          : `AED ${ec.coupons.discount_percentage_amount}`}
-                      </Tag>
-                    </div>
-                  </Option>
-                ))}
-              </Select>
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {selectedCoupons.length > 0 ? (
-              selectedCoupons.map((item) => (
-                <CouponCard
-                  key={item.coupons.id}
-                  item={item}
-                  onRemove={handleCouponRemove}
-                  onDateChange={handleCouponDateChange}
-                  onTimeSlotsChange={handleCouponTimeSlotsChange}
-                  onShowDateToggle={handleCouponShowDateToggle}
-                  scheduleStartDate={scheduleStartDate}
-                  scheduleEndDate={scheduleEndDate}
-                  existingShowDates={existingShowDates}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-8">
-                <p className="text-sm text-gray-500">No coupons added</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex gap-3 border-t border-gray-200 pt-6">
-          <Button onClick={onBack} icon={<ArrowLeftOutlined />}>
+        <div className="flex gap-3">
+          <Button size="large" onClick={onBack} icon={<ArrowLeftOutlined />}>
             Back
           </Button>
           <Button
             type="primary"
-            icon={<SaveOutlined />}
+            size="large"
             onClick={handleSubmit}
-            className="ml-auto"
+            icon={<SaveOutlined />}
+            disabled={allSelectedItems.length === 0}
           >
-            Continue
+            Save & Continue
           </Button>
         </div>
       </div>
+
+      <Form form={form} layout="vertical">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <Form.Item
+            label="Select Offers (Multiple)"
+            name="offers"
+            initialValue={[]}
+          >
+            <Select
+              mode="multiple"
+              placeholder="Choose one or more offers"
+              size="large"
+              showSearch
+              maxTagCount="responsive"
+              allowClear
+              onChange={handleOfferSelect}
+              value={configuredOffers}
+            >
+              {offers.map((offer) => (
+                <Option
+                  key={offer.id}
+                  value={offer.id}
+                  disabled={!offer.isValid}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>
+                      {offer.name} ({offer.discount}% off)
+                    </span>
+                    {!offer.isValid && (
+                      <Tag color="error" className="ml-2">
+                        Invalid
+                      </Tag>
+                    )}
+                  </div>
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Select Coupons (Multiple)"
+            name="coupons"
+            initialValue={[]}
+          >
+            <Select
+              mode="multiple"
+              placeholder="Choose one or more coupons"
+              size="large"
+              showSearch
+              maxTagCount="responsive"
+              allowClear
+              onChange={handleCouponSelect}
+              value={configuredCoupons}
+            >
+              {coupons.map((coupon) => (
+                <Option
+                  key={coupon.id}
+                  value={coupon.id}
+                  disabled={!coupon.isValid}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>
+                      {coupon.code} ({coupon.discount}% off)
+                    </span>
+                    {!coupon.isValid && (
+                      <Tag color="error" className="ml-2">
+                        Invalid
+                      </Tag>
+                    )}
+                  </div>
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </div>
+
+        {allSelectedItems.length > 0 && (
+          <div className="rounded-xl p-4 border border-gray-200 mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Configured Items ({allSelectedItems.length})
+            </h3>
+            <Table
+              columns={tableColumns}
+              dataSource={allSelectedItems}
+              rowKey={(record) => `${record.type}-${record.id}`}
+              pagination={false}
+              size="small"
+            />
+          </div>
+        )}
+      </Form>
+
+      <ConfigModal
+        isOpen={modalVisible}
+        onClose={handleModalClose}
+        onSave={handleSaveConfig}
+        itemData={currentItem}
+        availableDates={availableDates}
+        availableTimeSlots={availableTimeSlots}
+        scheduleRange={scheduleRange}
+        showDates={showDates}
+      />
     </div>
   );
 };
 
-export default OfferAndCoupons;
+export default OfferCouponConfig;
