@@ -65,6 +65,11 @@ const UserOrderDetailsPage = () => {
     );
   }, [dispatch, schedule_id, date_id, time_id, user_id]);
 
+  useEffect(() => {
+    console.log("bookingTicketsssssss", bookingTickets);
+
+  }, [bookingTickets])
+
   // Get user data based on booking type
   const selectedUser =
     type === BOOKING_TYPE.EVENT_TICKET
@@ -170,7 +175,7 @@ const UserOrderDetailsPage = () => {
                 <Col span={8}>
                   <Statistic
                     title="Total Amount"
-                    value={booking.amount || 0}
+                    value={booking.amount?.toFixed(2) || 0}
                     prefix=""
                     valueStyle={{
                       fontSize: 16,

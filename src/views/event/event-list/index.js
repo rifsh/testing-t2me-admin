@@ -55,6 +55,7 @@ import { setScannerType } from "store/slices/qrVerificationSlice";
 import { SCANNER_TYPES } from "constants/QrConstants";
 import { checkScheduleEdit } from "store/slices/scheduleSlice";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
+import { getPlaces } from "store/slices/locationSlice";
 const { Panel } = Collapse;
 
 const { Option } = Select;
@@ -80,6 +81,7 @@ const EventsList = () => {
   console.log(pagination, "pag");
 
   const { responseData } = useSelector((state) => state.modalSlice);
+  const { places } = useSelector((state) => state.locations);
   const eventParams = {
     size: DEFAULT_PAGE_SIZE.size,
     page: DEFAULT_PAGE_SIZE.page,
@@ -92,6 +94,7 @@ const EventsList = () => {
 
   useEffect(() => {
     dispatch(fetchAllEvent(eventParams));
+    dispatch(getPlaces({}));
   }, [dispatch]);
 
   const handleViewDetails = async (id) => {
@@ -414,17 +417,17 @@ const EventsList = () => {
           </div> */}
           <SearchBarWithStatus
             fetchFunction={fetchAllEvent}
-          // additionalFilters={[
-          //   {
-          //     options: detailedCountryList,
-          //     placeholder: "Please choose a country",
-          //     formName: "country_id",
-          //     isAutoComplete: true,
-          //     onClick: () => {
-          //       dispatch(getCoutryDetails());
-          //     },
-          //   },
-          // ]}
+            additionalFilters={[
+              {
+                options: places,
+                placeholder: "Please choose a country",
+                formName: "place_id",
+                isAutoComplete: true,
+                // onClick: () => {
+                //   dispatch(getCoutryDetails());
+                // },
+              },
+            ]}
           />
           {/* <div className="mb-3">
             <Button onClick={handleClearFilters}>Clear</Button>
