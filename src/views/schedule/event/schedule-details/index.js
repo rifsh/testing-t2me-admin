@@ -73,20 +73,20 @@ const ScheduleDetails = () => {
   }, [dispatch, scheduleId]);
   const processedScheduleDetails =
     scheduleDetails?.data?.[0] || scheduleDetails;
-const venueTimezone =
-  processedScheduleDetails?.venue?.place?.country?.time_zone || "UTC";
+  const venueTimezone =
+    processedScheduleDetails?.venue?.place?.country?.time_zone || "UTC";
 
-const timezoneAbbr = getTimezoneAbbr(venueTimezone);
+  const timezoneAbbr = getTimezoneAbbr(venueTimezone);
 
-// ✅ ONLY UPDATE THIS FUNCTION - just append timezone:
-const formatDateTime = (dateTimeStr) =>
-  dateTimeStr ? `${dayjs(dateTimeStr).format("MMMM D, YYYY h:mm A")} ${timezoneAbbr}` : "-";
+  // ✅ ONLY UPDATE THIS FUNCTION - just append timezone:
+  const formatDateTime = (dateTimeStr) =>
+    dateTimeStr ? `${dayjs(dateTimeStr).format("MMMM D, YYYY h:mm A")} ${timezoneAbbr}` : "-";
   // ✅ Use the utility functions
   const formatDate = (dateStr) => formatDateInTimezone(dateStr, venueTimezone);
 
   const formatTime = (timeStr) => formatTimeInTimezone(timeStr, venueTimezone);
 
-  
+
   if (loading) {
     return <Loading />;
   }
@@ -161,7 +161,7 @@ const formatDateTime = (dateTimeStr) =>
             <CDNImage
               src={record.offer.thumbnail_image}
               alt={`Image Thumbnail`}
-              height={50}
+              height={80}
               width={80}
             />
           )}
@@ -188,7 +188,23 @@ const formatDateTime = (dateTimeStr) =>
       ),
     },
     {
-      title: "Validity",
+      title: "Offer Validity",
+      dataIndex: ["offer", "start_date"],
+      key: "offer_validity",
+      render: (_, record) => (
+        <Text>
+          {record.offer?.start_date
+            ? Utils.formatDate(record.offer.start_date)
+            : "No start date"}{" "}
+          -{" "}
+          {record.offer?.end_date
+            ? Utils.formatDate(record.offer.end_date)
+            : "No end date"}
+        </Text>
+      ),
+    },
+    {
+      title: "Event Validity",
       dataIndex: "valid_from",
       key: "validity",
       render: (_, record) => (
@@ -211,7 +227,7 @@ const formatDateTime = (dateTimeStr) =>
       title: "Validity Status",
       dataIndex: "validity_status",
       render: (_, record) => {
-        const status = Utils.getCouponPeriodStatus(record);
+        const status = Utils.getCouponPeriodStatus(record.offer);
         const colorMap = {
           Upcoming: "gold",
           Running: "green",
@@ -629,9 +645,9 @@ const formatDateTime = (dateTimeStr) =>
                 {available_types === "seat_structure"
                   ? show_seat_details?.length || 0
                   : show_dates?.reduce(
-                      (total, date) => total + (date.show_times?.length || 0),
-                      0
-                    ) || 0}
+                    (total, date) => total + (date.show_times?.length || 0),
+                    0
+                  ) || 0}
               </Title>
             </div>
           </Col>

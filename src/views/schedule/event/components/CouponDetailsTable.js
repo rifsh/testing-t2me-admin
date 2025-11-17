@@ -11,6 +11,7 @@ import {
 } from "antd";
 import Utils from "utils";
 import dayjs from "dayjs";
+import CDNImage from "components/layout-components/Image/CDNImage";
 const { Text, Title } = Typography;
 
 const CouponDetailsTable = ({ coupon_schedule }) => {
@@ -23,12 +24,18 @@ const CouponDetailsTable = ({ coupon_schedule }) => {
         <div className="flex items-center">
           {record.coupons?.thumbnail_image !== "images" &&
             record.coupons?.thumbnail_image ? (
-            <Image
-              src={record.coupons.thumbnail_image}
-              width={40}
-              height={40}
-              className="rounded mr-2"
-              preview={false}
+            // <Image
+            //   src={record.coupons.thumbnail_image}
+            //   width={40}
+            //   height={40}
+            //   className="rounded mr-2"
+            //   preview={false}
+            // />
+            <CDNImage
+              src={record.coupons?.thumbnail_image}
+              alt={`Image Thumbnail`}
+              height={80}
+              width={80}
             />
           ) : (
             <div
@@ -106,7 +113,7 @@ const CouponDetailsTable = ({ coupon_schedule }) => {
       title: "Validity Status",
       dataIndex: "validity_status",
       render: (_, record) => {
-        const status = Utils.getCouponPeriodStatus(record);
+        const status = Utils.getCouponPeriodStatus(record?.coupons);
         const colorMap = {
           Upcoming: "gold",
           Running: "green",
