@@ -11,7 +11,7 @@ CouponService.addCoupon = function (data, action) {
   //   fileKeys: ["thumbnail_image"],
   //   skipEmpty: true,
   // });
-  console.log('couponFormdatasssss', data);
+  console.log("couponFormdatasssss", data);
 
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
@@ -64,22 +64,15 @@ CouponService.editCoupon = function (
 
 CouponService.makeChangeCoupon = function (data, action, pageData) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  // const formData = Utils.createFormData(data, {
-  //   fileKeys: ["thumbnail_image"],
-  //   skipEmpty: true,
-  // });
-  const offreUrl = ApiConstant.ORGANIZER_COUPON_MAKE_CHANGES_URL;
   return fetch({
-    url: `${offreUrl}`,
+    url: ApiConstant.ORGANIZER_COUPON_MAKE_CHANGES_URL,
     method: "put",
     data: data,
     params: {
       action: handleAction(encodedAction),
-      coupon_id: data.get("id"),
+      coupon_id: data.id,
+      
     },
-    // headers: {
-    //   "Content-Type": "multipart/form-data",
-    // },
   });
 };
 

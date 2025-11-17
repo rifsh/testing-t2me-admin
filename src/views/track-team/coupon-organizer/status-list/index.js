@@ -4,22 +4,23 @@ import { Card, Table, Select, Menu, Row, Form, Tag } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import EllipsisDropdown from "components/shared-components/EllipsisDropdown";
 import Flex from "components/shared-components/Flex";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBarWithStatus from "components/util-components/Search/SearchBarWithStatus";
 import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import Utils from "utils";
-import { fetchAllCoupons, fetchAllTrackCoupons } from "store/slices/couponSlice";
+import {
+  fetchAllCoupons,
+  fetchAllTrackCoupons,
+} from "store/slices/couponSlice";
 
 const { Option } = Select;
 
 const OrganizerOfferStatusList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const type = params.get("type");
+  const { type } = useParams();
   const { filteredCoupons, pagination, loading } = useSelector(
     (state) => state.coupons
   );
@@ -47,7 +48,7 @@ const OrganizerOfferStatusList = () => {
 
   const handleViewDetails = async (id) => {
     console.log(id);
-    navigate(`${APP_PREFIX_PATH}/track/coupon/status/details/${id}`);
+    navigate(`${APP_PREFIX_PATH}/track/coupon/status/details/${id}/${type}`);
   };
 
   const handleShowStatus = (status) => {
@@ -102,10 +103,10 @@ const OrganizerOfferStatusList = () => {
           text?.toLowerCase() === "approved"
             ? "green"
             : text?.toLowerCase() === "rejected"
-              ? "red"
-              : text?.toLowerCase() === "update"
-                ? "blue"
-                : "orange";
+            ? "red"
+            : text?.toLowerCase() === "update"
+            ? "blue"
+            : "orange";
 
         return (
           <Tag color={color}>{mappedText[text?.toLowerCase()] || text}</Tag>

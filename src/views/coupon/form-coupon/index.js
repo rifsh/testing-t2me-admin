@@ -17,7 +17,10 @@ import {
   makeChangesCoupon,
 } from "store/slices/couponSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
-import { setOriginalFiles, setSelectedSubmitItem } from "store/slices/modalSlice";
+import {
+  setOriginalFiles,
+  setSelectedSubmitItem,
+} from "store/slices/modalSlice";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import Utils from "utils";
 import dayjs from "dayjs";
@@ -90,14 +93,14 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
       const thumbnailFile =
         coupon.thumbnail_image && coupon.thumbnail_image !== "images"
           ? [
-            {
-              uid: "thumbnail-1",
-              name: coupon.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: `${CDN_PATH}/${coupon.thumbnail_image}`,
-              id: null, // Offers typically don't have media id for thumbnail
-            },
-          ]
+              {
+                uid: "thumbnail-1",
+                name: coupon.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${coupon.thumbnail_image}`,
+                id: null, // Offers typically don't have media id for thumbnail
+              },
+            ]
           : [];
 
       const formData = {
@@ -106,17 +109,18 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         is_single: coupon.is_single !== undefined ? coupon.is_single : true,
         is_reusable: coupon.is_reusable || false,
         key_words: formattedKeyWords,
-        theatre_ids: coupon.theatre_ids?.map((item) => item) || [],
-        is_percentage:
-          coupon.is_percentage !== undefined ? coupon.is_percentage : true,
-        discount_percentage_amount:
-          coupon.discount_percentage_amount ||
-          coupon.discount_percentage_amount,
+        theatre_ids: coupon.theatre_ids ?? [],
+        event_ids: coupon.event_ids ?? [], // Add this line
+        is_general: coupon.is_general ?? false, // Add this line
+        is_offline: coupon.is_offline ?? false, // Add this line
+        is_percentage: coupon.is_percentage ?? true,
+        discount_percentage_amount: coupon.discount_percentage_amount,
         max_uses: coupon.max_uses,
         min_purchase_amount: coupon.min_purchase_amount,
         date_required: Boolean(coupon.date_required),
         applicable_days: applicableDayNames,
         thumbnail_image: thumbnailFile,
+        approval_status: coupon.approval_status, // Optional, display only
       };
 
       // Handle dates properly
@@ -179,16 +183,26 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
       const originalFiles = extractFileObjects(values);
       dispatch(setOriginalFiles(originalFiles));
 
+      // ✅ Transform thumbnail image properly
       let thumbnailData = null;
+
       if (values.thumbnail_image && Array.isArray(values.thumbnail_image)) {
         const thumbnailFile = values.thumbnail_image[0];
 
-        // Check if it's a new file (has originFileObj)
-        if (thumbnailFile && thumbnailFile.originFileObj) {
-          thumbnailData = {
-            file_name: thumbnailFile.name || thumbnailFile.originFileObj.name,
-            media_type: "image",
-          };
+        if (thumbnailFile) {
+          // Check if it's a new file upload (has originFileObj)
+          if (thumbnailFile.originFileObj) {
+            thumbnailData = {
+              file_name: thumbnailFile.name || thumbnailFile.originFileObj.name,
+              media_type: "image",
+            };
+          }
+          // If it's an existing file (has url but no originFileObj)
+          else if (thumbnailFile.url && !thumbnailFile.originFileObj) {
+            // Extract relative path from CDN URL
+            const relativePath = thumbnailFile.url.replace(`${CDN_PATH}/`, "");
+            thumbnailData = relativePath;
+          }
         }
       }
 
@@ -205,7 +219,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
           ...processedValues,
           id: coupon.id,
           thumbnail_image: thumbnailData,
-          mapped_coupon_weekdays: values?.mapped_coupon_weekdays
+          mapped_coupon_weekdays: values?.mapped_coupon_weekdays,
         };
 
         if (isMakeChanges) {
@@ -222,22 +236,11 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
           dispatch(setCouponDialogVisible(true));
         }
       } else {
-        let thumbnailData = null;
-        if (values.thumbnail_image && Array.isArray(values.thumbnail_image)) {
-          const thumbnailFile = values.thumbnail_image[0];
-
-          if (thumbnailFile) {
-            thumbnailData = {
-              file_name:
-                thumbnailFile.name || thumbnailFile.originFileObj?.name || null,
-              media_type: "image",
-            };
-          }
-        }
+        // ADD mode - thumbnailData is already set above
         const formData = {
           ...processedValues,
           thumbnail_image: thumbnailData,
-          mapped_coupon_weekdays: values?.mapped_coupon_weekdays
+          mapped_coupon_weekdays: values?.mapped_coupon_weekdays,
         };
         console.log("couponFormData", formData);
         dispatch(setSelectedSubmitItem(formData));
@@ -283,6 +286,13 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
     const processedValues = processFormValues(values);
     const editData = {
       ...processedValues,
+      thumbnail_image: {
+          file_name:
+            values.thumbnail_image?.[0]?.name ||
+            values.thumbnail_image?.[0]?.file_name ||
+            null,
+          media_type: "image",
+        },
       id: coupon.id,
     };
     const pageData = {
@@ -371,7 +381,9 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
               {
                 label: "General",
                 key: "1",
-                children: <CouponFormFields mode={mode} form={form} type={type} />,
+                children: (
+                  <CouponFormFields mode={mode} form={form} type={type} />
+                ),
               },
             ]}
           />
@@ -425,8 +437,9 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         loading={organizerLoading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)
-          } Comment`}
+        title={`${
+          actionType.charAt(0).toUpperCase() + actionType.slice(1)
+        } Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />
     </>

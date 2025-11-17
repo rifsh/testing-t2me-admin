@@ -1036,7 +1036,7 @@ const ALL_PROTECTED_ROUTES = {
   },
   "track.movie.coupon.details": {
     key: "trackRequest.coupon.status.details",
-    path: `${APP_PREFIX_PATH}/track/coupon/status/details/:offerId`,
+    path: `${APP_PREFIX_PATH}/track/coupon/status/details/:offerId/:type`,
     component: React.lazy(() =>
       import("views/track-team/coupon-organizer/status-details")
     ),
