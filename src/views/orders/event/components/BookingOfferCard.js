@@ -118,8 +118,11 @@ const BookingOfferCard = ({ offerData }) => {
                                                         fontSize: 16,
                                                     }}
                                                 >
-                                                    {/* <PercentageOutlined style={{ marginRight: 4 }} /> */}
-                                                    {offer.discount_percentage_amount}% OFF
+                                                    {offer.is_percentage ? (
+                                                        `${offer.discount_percentage_amount} % OFF`
+                                                    ) : (
+                                                        offer.discount_percentage_amount?.toFixed(2)
+                                                    )}
                                                 </div>
                                             </div>
 
