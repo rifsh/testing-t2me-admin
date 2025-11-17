@@ -8,6 +8,7 @@ import {
     TagsOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import CDNImage from "components/layout-components/Image/CDNImage";
 
 const { Text, Title } = Typography;
 
@@ -16,7 +17,7 @@ const BookingOfferCard = ({ offerData }) => {
         return null;
     }
     console.log("offerlogssss", offerData);
-    
+
     return (
         <div style={{ marginTop: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
@@ -46,7 +47,7 @@ const BookingOfferCard = ({ offerData }) => {
                             >
                                 <Row gutter={16} align="middle">
                                     {/* Offer Image */}
-                                    <Col xs={24} sm={6} md={4}>
+                                    <Col>
                                         <div
                                             style={{
                                                 textAlign: "center",
@@ -57,15 +58,21 @@ const BookingOfferCard = ({ offerData }) => {
                                             }}
                                         >
                                             {offer.thumbnail_image ? (
-                                                <Image
+                                                // <Image
+                                                //     src={offer.thumbnail_image}
+                                                //     alt={offer.name}
+                                                //     style={{
+                                                //         maxHeight: 60,
+                                                //         maxWidth: "100%",
+                                                //         borderRadius: 4,
+                                                //     }}
+                                                //     preview={false}
+                                                // />
+                                                <CDNImage
                                                     src={offer.thumbnail_image}
-                                                    alt={offer.name}
-                                                    style={{
-                                                        maxHeight: 60,
-                                                        maxWidth: "100%",
-                                                        borderRadius: 4,
-                                                    }}
-                                                    preview={false}
+                                                    alt={`Image Thumbnail`}
+                                                    height={50}
+                                                    width={80}
                                                 />
                                             ) : (
                                                 <GiftOutlined
@@ -111,7 +118,7 @@ const BookingOfferCard = ({ offerData }) => {
                                                         fontSize: 16,
                                                     }}
                                                 >
-                                                    <PercentageOutlined style={{ marginRight: 4 }} />
+                                                    {/* <PercentageOutlined style={{ marginRight: 4 }} /> */}
                                                     {offer.discount_percentage_amount}% OFF
                                                 </div>
                                             </div>
