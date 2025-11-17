@@ -56,4 +56,34 @@ PaymentService.addPayment = function (paymentData, action) {
   });
 };
 
+PaymentService.addPayment = function (paymentData, action) {
+  console.log(paymentData, "paymentData");
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(paymentData, {
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
+  });
+
+  return fetch({
+    url: `${ApiConstant.PAYMENT_URL}?action=${encodedAction}`,
+    method: "POST",
+    data: formData,
+  });
+};
+
+PaymentService.editPayment = function (paymentData, action) {
+  console.log(paymentData, "PaymentEditDataInService ---------");
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const formData = Utils.createFormData(paymentData, {
+    fileKeys: ["thumbnail_image"],
+    skipEmpty: true,
+  });
+
+  return fetch({
+    url: `${ApiConstant.PAYMENT_URL}?action=${encodedAction}`,
+    method: "put",
+    data: formData,
+  });
+};
+
 export default PaymentService;

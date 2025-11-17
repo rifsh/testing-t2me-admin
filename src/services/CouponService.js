@@ -22,10 +22,10 @@ CouponService.addCoupon = function (data, action) {
   return fetch({
     url: offreUrl,
     method: "post",
-    data: data,
-    // headers: {
-    //   "Content-Type": "multipart/form-data",
-    // },
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
     params: {
       action: handleAction(action),
     },

@@ -26,6 +26,7 @@ import {
   getBlockingMessage,
 } from "../utils/blockingUtils";
 import { EDIT } from "constants/AppConstants";
+import { formatDateTimeForAPIShort } from "../utils/dateTimeValidation";
 
 const formatDateTime = (date) => {
   if (!date) return null;
@@ -727,28 +728,121 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
     console.log("✅ All validations passed");
     return true;
   };
-  // FIXED: Better validation with immediate response
-  const handleAdStartTimeChange = (date) => {
-    if (isScheduleBlocked) {
-      message.error("Cannot modify: Schedule is locked due to active bookings");
+ const handleAdStartTimeChange = (date) => {
+  if (isScheduleBlocked) {
+    message.error("Cannot modify: Schedule is locked due to active bookings");
+    return;
+  }
+
+  if (!date) {
+    setAdStartDateTime(null);
+    setBookingStartDateTime(null);
+    setDateRange({ startDate: null, endDate: null, isSelecting: false });
+    setAllEvents([]);
+    blockingChecked.current = false;
+
+    form?.setFieldValue("ad_start_date_time", null);
+    form?.setFieldValue("booking_start_date_time", null);
+
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        ad_start_date_time: null,
+        booking_start_date_time: null,
+        start_date: null,
+        end_date: null,
+        show_dates: [],
+        timeSlots: {},
+      })
+    );
+
+    message.warning("All dates have been cleared.");
+    return;
+  }
+
+  if (bookingStartDateTime) {
+    const currentBooking = new Date(bookingStartDateTime);
+    const newAd = new Date(date);
+
+    currentBooking.setMilliseconds(0);
+    newAd.setMilliseconds(0);
+
+    if (newAd >= currentBooking) {
+      message.error("Advertisement time must be BEFORE Booking time");
       return;
     }
+  }
 
-    if (!date) {
-      setAdStartDateTime(null);
-      setBookingStartDateTime(null);
+  setAdStartDateTime(date);
+  form?.setFieldValue("ad_start_date_time", date);
+
+  // ✅ FIX: Use timezone-aware formatting
+  dispatch(
+    setScheduleFormData({
+      ...scheduleFormData,
+      ad_start_date_time: formatDateTimeForAPIShort(date, timezone),
+    })
+  );
+
+  message.success("Advertisement time updated successfully");
+};
+
+const handleBookingStartTimeChange = (date) => {
+  if (isScheduleBlocked) {
+    message.error("Cannot modify: Schedule is locked due to active bookings");
+    return;
+  }
+
+  if (!date) {
+    setBookingStartDateTime(null);
+    setDateRange({ startDate: null, endDate: null, isSelecting: false });
+    setAllEvents([]);
+    blockingChecked.current = false;
+
+    form?.setFieldValue("booking_start_date_time", null);
+
+    dispatch(
+      setScheduleFormData({
+        ...scheduleFormData,
+        booking_start_date_time: null,
+        start_date: null,
+        end_date: null,
+        show_dates: [],
+        timeSlots: {},
+      })
+    );
+
+    message.warning("Booking date cleared. Event dates have been reset.");
+    return;
+  }
+
+  if (adStartDateTime) {
+    const currentAd = new Date(adStartDateTime);
+    const newBooking = new Date(date);
+
+    currentAd.setMilliseconds(0);
+    newBooking.setMilliseconds(0);
+
+    if (newBooking < currentAd) {
+      message.error("Booking time must be AFTER Advertisement time");
+      return;
+    }
+  }
+
+  // Check if we need to reset event dates
+  if (dateRange.startDate) {
+    const bookingDate = dayjs(date).tz(timezone).startOf("day");
+    const eventStart = dayjs(dateRange.startDate).tz(timezone).startOf("day");
+
+    if (bookingDate.isSameOrAfter(eventStart)) {
       setDateRange({ startDate: null, endDate: null, isSelecting: false });
       setAllEvents([]);
       blockingChecked.current = false;
 
-      form?.setFieldValue("ad_start_date_time", null);
-      form?.setFieldValue("booking_start_date_time", null);
-
       dispatch(
         setScheduleFormData({
           ...scheduleFormData,
-          ad_start_date_time: null,
-          booking_start_date_time: null,
+          booking_start_date_time: formatDateTimeForAPIShort(date, timezone), // ✅ WITH TIMEZONE
           start_date: null,
           end_date: null,
           show_dates: [],
@@ -756,125 +850,26 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
         })
       );
 
-      message.warning("All dates have been cleared.");
+      message.warning("Event dates reset - must be after new Booking time");
+      setBookingStartDateTime(date);
+      form?.setFieldValue("booking_start_date_time", date);
       return;
     }
+  }
 
-    // ✅ FIX: Check against CURRENT bookingStartDateTime, not stale state
-    if (bookingStartDateTime) {
-      const currentBooking = new Date(bookingStartDateTime);
-      const newAd = new Date(date);
+  setBookingStartDateTime(date);
+  form?.setFieldValue("booking_start_date_time", date);
 
-      // Clear milliseconds for fair comparison
-      currentBooking.setMilliseconds(0);
-      newAd.setMilliseconds(0);
+  // ✅ FIX: Use timezone-aware formatting
+  dispatch(
+    setScheduleFormData({
+      ...scheduleFormData,
+      booking_start_date_time: formatDateTimeForAPIShort(date, timezone),
+    })
+  );
 
-      if (newAd >= currentBooking) {
-        message.error("Advertisement time must be BEFORE Booking time");
-        return; // Don't update - validation failed
-      }
-    }
-
-    // ✅ Validation passed, update state
-    setAdStartDateTime(date);
-    form?.setFieldValue("ad_start_date_time", date);
-
-    dispatch(
-      setScheduleFormData({
-        ...scheduleFormData,
-        ad_start_date_time: formatDateTime(date),
-      })
-    );
-
-    message.success("Advertisement time updated successfully");
-  };
-
-  const handleBookingStartTimeChange = (date) => {
-    if (isScheduleBlocked) {
-      message.error("Cannot modify: Schedule is locked due to active bookings");
-      return;
-    }
-
-    if (!date) {
-      setBookingStartDateTime(null);
-      setDateRange({ startDate: null, endDate: null, isSelecting: false });
-      setAllEvents([]);
-      blockingChecked.current = false;
-
-      form?.setFieldValue("booking_start_date_time", null);
-
-      dispatch(
-        setScheduleFormData({
-          ...scheduleFormData,
-          booking_start_date_time: null,
-          start_date: null,
-          end_date: null,
-          show_dates: [],
-          timeSlots: {},
-        })
-      );
-
-      message.warning("Booking date cleared. Event dates have been reset.");
-      return;
-    }
-
-    // ✅ FIX: Check against CURRENT adStartDateTime, not stale state
-    if (adStartDateTime) {
-      const currentAd = new Date(adStartDateTime);
-      const newBooking = new Date(date);
-
-      // Clear milliseconds for fair comparison
-      currentAd.setMilliseconds(0);
-      newBooking.setMilliseconds(0);
-
-      if (newBooking < currentAd) {
-        message.error("Booking time must be AFTER Advertisement time");
-        return; // Don't update - validation failed
-      }
-    }
-
-    // Check if we need to reset event dates
-    if (dateRange.startDate) {
-      const bookingDate = dayjs(date).tz(timezone).startOf("day");
-      const eventStart = dayjs(dateRange.startDate).tz(timezone).startOf("day");
-
-      if (bookingDate.isSameOrAfter(eventStart)) {
-        setDateRange({ startDate: null, endDate: null, isSelecting: false });
-        setAllEvents([]);
-        blockingChecked.current = false;
-
-        dispatch(
-          setScheduleFormData({
-            ...scheduleFormData,
-            booking_start_date_time: formatDateTime(date),
-            start_date: null,
-            end_date: null,
-            show_dates: [],
-            timeSlots: {},
-          })
-        );
-
-        message.warning("Event dates reset - must be after new Booking time");
-        setBookingStartDateTime(date);
-        form?.setFieldValue("booking_start_date_time", date);
-        return;
-      }
-    }
-
-    // ✅ Validation passed, update state
-    setBookingStartDateTime(date);
-    form?.setFieldValue("booking_start_date_time", date);
-
-    dispatch(
-      setScheduleFormData({
-        ...scheduleFormData,
-        booking_start_date_time: formatDateTime(date),
-      })
-    );
-
-    message.success("Booking time updated successfully");
-  };
-
+  message.success("Booking time updated successfully");
+};
   // ✅ UPDATED: Helper function to check excluded blocked dates
   const getExcludedBlockedDates = (startDate, endDate, blockedDatesSet) => {
     if (!blockedDatesSet || blockedDatesSet.size === 0) {
@@ -1340,25 +1335,25 @@ const CalendarViewCard = ({ form, onSubmit, onBack, blockingInfo, mode }) => {
   };
 
   const proceedWithDateRangeChange = (range) => {
-    setDateRange(range);
-    setCurrentWeekStart(0);
-    setAllEvents([]);
-    blockingChecked.current = false;
-    setBlockedEventIds(new Set());
+  setDateRange(range);
+  setCurrentWeekStart(0);
+  setAllEvents([]);
+  blockingChecked.current = false;
+  setBlockedEventIds(new Set());
 
-    dispatch(
-      setScheduleFormData({
-        ...scheduleFormData,
-        start_date: formatDateForAPI(range.startDate),
-        end_date: formatDateForAPI(range.endDate),
-        show_dates: [],
-        timeSlots: {},
-      })
-    );
+  // ✅ FIX: Use timezone-aware formatting
+  dispatch(
+    setScheduleFormData({
+      ...scheduleFormData,
+      start_date: formatDateForAPI(range.startDate, timezone),
+      end_date: formatDateForAPI(range.endDate, timezone),
+      show_dates: [],
+      timeSlots: {},
+    })
+  );
 
-    message.success("Event dates updated successfully");
-  };
-
+  message.success("Event dates updated successfully");
+};
   const debouncedSave = useCallback(
     (dataToSave) => {
       if (saveTimeout.current) {

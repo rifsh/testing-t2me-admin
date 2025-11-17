@@ -43,7 +43,18 @@ import CouponDetailsTable from "../components/CouponDetailsTable";
 import { CDN_PATH } from "configs/AppConfig";
 import CDNImage from "components/layout-components/Image/CDNImage";
 import Utils from "utils";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import {
+  getTimezoneAbbr,
+  formatDateTimeWithTimezone,
+  formatDateInTimezone,
+  formatTimeInTimezone,
+} from "utils/time_zone_util";
 
+// Add after imports
+dayjs.extend(utc);
+dayjs.extend(timezone);
 const { Panel } = Collapse;
 const { TabPane } = Tabs;
 const { Text, Title } = Typography;
@@ -60,22 +71,25 @@ const ScheduleDetails = () => {
       dispatch(fetchSingleSchedules({ id: scheduleId }));
     }
   }, [dispatch, scheduleId]);
+  const processedScheduleDetails =
+    scheduleDetails?.data?.[0] || scheduleDetails;
+const venueTimezone =
+  processedScheduleDetails?.venue?.place?.country?.time_zone || "UTC";
 
-  const formatDate = (dateStr) =>
-    dateStr ? dayjs(dateStr).format("MMMM D, YYYY") : "-";
+const timezoneAbbr = getTimezoneAbbr(venueTimezone);
 
-  const formatTime = (timeStr) =>
-    timeStr ? dayjs(`2000-01-01T${timeStr}`).format("h:mm A") : "-";
+// ✅ ONLY UPDATE THIS FUNCTION - just append timezone:
+const formatDateTime = (dateTimeStr) =>
+  dateTimeStr ? `${dayjs(dateTimeStr).format("MMMM D, YYYY h:mm A")} ${timezoneAbbr}` : "-";
+  // ✅ Use the utility functions
+  const formatDate = (dateStr) => formatDateInTimezone(dateStr, venueTimezone);
 
-  const formatDateTime = (dateTimeStr) =>
-    dateTimeStr ? dayjs(dateTimeStr).format("MMMM D, YYYY h:mm A") : "-";
+  const formatTime = (timeStr) => formatTimeInTimezone(timeStr, venueTimezone);
 
+  
   if (loading) {
     return <Loading />;
   }
-
-  const processedScheduleDetails =
-    scheduleDetails?.data?.[0] || scheduleDetails;
 
   if (!processedScheduleDetails) {
     return <Empty description="No schedule data found" />;
@@ -615,9 +629,9 @@ const ScheduleDetails = () => {
                 {available_types === "seat_structure"
                   ? show_seat_details?.length || 0
                   : show_dates?.reduce(
-                    (total, date) => total + (date.show_times?.length || 0),
-                    0
-                  ) || 0}
+                      (total, date) => total + (date.show_times?.length || 0),
+                      0
+                    ) || 0}
               </Title>
             </div>
           </Col>

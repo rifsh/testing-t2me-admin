@@ -77,55 +77,71 @@ const OrganizerOfferStatusList = () => {
   );
 
   const tableColumns = [
-    {
-      title: "Offer Name",
-      dataIndex: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name),
+  {
+    title: "Offer Name",
+    dataIndex: "name",
+    sorter: (a, b) => a?.name?.localeCompare(b?.name),
+    render: (name) => name || "-",
+  },
+  {
+    title: "Organizer",
+    dataIndex: "user",
+    render: (user) => user?.username || "N/A",
+  },
+  {
+    title: "Theaters",
+    dataIndex: "theatre_ids",
+    render: (theatreIds) => {
+      if (Array.isArray(theatreIds) && theatreIds.length > 0) {
+        return `${theatreIds.length} Theater(s) selected`;
+      }
+      return "No Theater Assigned";
     },
-    {
-      title: "Theaters",
-      dataIndex: "theatre_ids",
-      render: (theatreIds) => {
-        return theatreIds ? `${theatreIds.length} theaters selected` : "None";
-      },
+  },
+  {
+    title: "Events",
+    dataIndex: "event_ids",
+    render: (eventIds) => {
+      if (Array.isArray(eventIds) && eventIds.length > 0) {
+        return `${eventIds.length} Event(s) linked`;
+      }
+      return "No Event Linked";
     },
-    {
-      title: "Status",
-      dataIndex: "approval_status",
-      render: (text) => {
-        const mappedText = {
-          pending: "Pending Approval",
-          rejected: "Rejected",
-          approved: "Approved",
-          update: "Change Requested",
-        };
+  },
+  {
+    title: "Status",
+    dataIndex: "approval_status",
+    render: (status) => {
+      const mappedText = {
+        pending: "Pending Approval",
+        rejected: "Rejected",
+        approved: "Approved",
+        update: "Change Requested",
+      };
 
-        const color =
-          text?.toLowerCase() === "approved"
-            ? "green"
-            : text?.toLowerCase() === "rejected"
-              ? "red"
-              : text?.toLowerCase() === "update"
-                ? "blue"
-                : "orange";
+      const color = {
+        approved: "green",
+        rejected: "red",
+        update: "blue",
+        pending: "orange",
+      }[status?.toLowerCase()] || "default";
 
-        return (
-          <Tag color={color}>{mappedText[text?.toLowerCase()] || text}</Tag>
-        );
-      },
-      sorter: (a, b) => a.approval_status.localeCompare(b.approval_status),
-      sortDirections: ["ascend", "descend"],
+      return <Tag color={color}>{mappedText[status?.toLowerCase()] || status}</Tag>;
     },
-    {
-      title: "",
-      dataIndex: "actions",
-      render: (_, elm) => (
-        <div className="text-right">
-          <EllipsisDropdown menu={dropdownMenu(elm)} />
-        </div>
-      ),
-    },
-  ];
+    sorter: (a, b) => a?.approval_status?.localeCompare(b?.approval_status),
+    sortDirections: ["ascend", "descend"],
+  },
+  {
+    title: "",
+    dataIndex: "actions",
+    render: (_, elm) => (
+      <div className="text-right">
+        <EllipsisDropdown menu={dropdownMenu(elm)} />
+      </div>
+    ),
+  },
+];
+
 
   const [form] = Form.useForm();
 
