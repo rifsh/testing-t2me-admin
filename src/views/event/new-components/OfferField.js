@@ -177,9 +177,10 @@ const OfferField = ({ mode, form, eventDetails }) => {
                     value={selectedOffers.length ? selectedOffers[0].id : undefined}
                     onChange={handleOfferSelect}
                     onClear={handleOfferClear}
-                    onSearch={handleOfferSearch}   // <── API search
+                    onSearch={handleOfferSearch}
+                    onDeselect={handleOfferClear}
                     allowClear
-                    filterOption={false}           // <── important (server-side)
+                    filterOption={false}
                   >
                     {filteredOffer.map((offer) => {
                       const isSubmitted = isSubmittedOffer(offer.id);
@@ -202,19 +203,21 @@ const OfferField = ({ mode, form, eventDetails }) => {
               <Col xs={24} sm={12}>
                 <Form.Item name="coupon" label="Coupon (Optional)">
                   <Select
-                    showSearch
                     loading={couponLoading}
                     placeholder="Select a coupon"
-                    value={selectedCoupons.length ? selectedCoupons[0].id : undefined}
+                    value={
+                      selectedCoupons.length ? selectedCoupons[0].id : undefined
+                    }
                     onChange={handleCouponSelect}
                     onClear={handleCouponClear}
-                    onSearch={handleCouponSearch}  // <── API search
+                    onDeselect={handleCouponClear}
                     allowClear
-                    filterOption={false}           // <── must disable local search
                   >
                     {filteredCoupons.map((coupon) => {
                       const isSubmitted = isSubmittedCoupon(coupon.id);
-                      const isSelected = selectedCoupons.some((c) => c.id === coupon.id);
+                      const isSelected = selectedCoupons.some(
+                        (c) => c.id === coupon.id
+                      );
 
                       return (
                         <Option
@@ -222,7 +225,12 @@ const OfferField = ({ mode, form, eventDetails }) => {
                           value={coupon.id}
                           disabled={isSubmitted && isSelected}
                         >
-                          {coupon.name}
+                          <Space>
+                            <Text>{coupon.name}</Text>
+                            {isSubmitted && isSelected && (
+                              <Text type="warning">(Submitted)</Text>
+                            )}
+                          </Space>
                         </Option>
                       );
                     })}
