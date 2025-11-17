@@ -47,7 +47,7 @@ const BookingOfferCard = ({ offerData }) => {
                             >
                                 <Row gutter={16} align="middle">
                                     {/* Offer Image */}
-                                    <Col xs={24} sm={6} md={4}>
+                                    <Col>
                                         <div
                                             style={{
                                                 textAlign: "center",
