@@ -80,7 +80,7 @@ PaymentService.editPayment = function (paymentData, action) {
   });
 
   return fetch({
-    url: `${ApiConstant.PAYMENT_URL}?action=${encodedAction}`,
+    url: `${ApiConstant.PAYMENT_URL}?payment_id=${paymentData.id}&action=${encodedAction}`,
     method: "put",
     data: formData,
   });

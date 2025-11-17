@@ -55,9 +55,18 @@ const PaymentFormFields = ({ mode, paymentId }) => {
         event_id: singlePayment.event?.id || null,
         terms_and_conditions: singlePayment.terms_and_conditions || "",
         additional_urls: singlePayment.additional_urls || "",
-        payment_methods: singlePayment.payment_methods || [{}],
+        payment_methods: singlePayment.payment_methods?.map((method) => ({
+          id: method.id, // Include existing ID
+          payment_type: method.payment_type, // Keep as snake_case to match form field
+          paymentType: method.payment_type, // Also include camelCase in case form uses this
+          authorized_url: method.authorized_url,
+          payment_charge: method.payment_charge,
+          is_percentage: method.is_percentage,
+          additional_details: method.additional_details || {},
+        })) || [{}],
         add_on_services:
           singlePayment.add_on_services?.map((service) => ({
+            id: service.id, // Include existing ID
             service_name: service.service_name,
             description: service.description,
             is_percentage: service.is_percentage,
@@ -65,6 +74,8 @@ const PaymentFormFields = ({ mode, paymentId }) => {
             service_features: service.service_features || [],
           })) || [],
       };
+
+      console.log("✅ Edit data loaded - Payment Methods:", formValues.payment_methods);
 
       form.setFieldsValue(formValues);
 
@@ -87,7 +98,6 @@ const PaymentFormFields = ({ mode, paymentId }) => {
     const completeData = {
       ...mainFormValues,
       place_id: placeId,
-
       payment_methods: mainFormValues.payment_methods || [],
       add_on_services: mainFormValues.add_on_services || [],
     };
@@ -158,14 +168,39 @@ const PaymentFormFields = ({ mode, paymentId }) => {
         return;
       }
 
-      // if (mode === "EDIT") {
-      // } else {
+      // Prepare form data with ID included in edit mode
       const formData = {
         ...submitData,
+        // Include payment ID in edit mode
+        ...(mode === "EDIT" && { id: paymentId }),
       };
 
+      // In edit mode, ensure IDs are included in nested arrays
+      if (mode === "EDIT") {
+        // Payment methods with IDs
+        formData.payment_methods = submitData.payment_methods?.map((method, index) => {
+          const existingMethod = singlePayment?.payment_methods?.[index];
+          return {
+            ...method,
+            // Include ID if it exists from the original data
+            ...(existingMethod?.id && { id: existingMethod.id }),
+          };
+        });
+
+        // Add-on services with IDs
+        formData.add_on_services = submitData.add_on_services?.map((service, index) => {
+          const existingService = singlePayment?.add_on_services?.[index];
+          return {
+            ...service,
+            // Include ID if it exists from the original data
+            ...(existingService?.id && { id: existingService.id }),
+          };
+        });
+      }
+
+      console.log("📤 Submit data:", formData);
+
       dispatch(setSelectedSubmitItem(formData));
-      // }
     } catch (error) {
       console.error("Validation Failed:", error);
       message.error(
