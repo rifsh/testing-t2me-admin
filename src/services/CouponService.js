@@ -11,6 +11,7 @@ CouponService.addCoupon = function (data, action) {
   //   fileKeys: ["thumbnail_image"],
   //   skipEmpty: true,
   // });
+  console.log('couponFormdatasssss', data);
 
   const offreUrl = Utils.getUrlByUserRole(
     ApiConstant.COUPON_URL,
