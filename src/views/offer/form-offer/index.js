@@ -81,8 +81,8 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
   if (offer && mode === EDIT && availableOfferDays.length > 0) {
     // Extract day names from mapped_offer_weekdays
     const applicableDayNames =
-      offer.mapped_offer_weekdays?.map((day) => {
-        return day.full_name.toUpperCase();
+      offer.weekday_associations?.map((day) => {
+        return day.weekday.toUpperCase();
       }) || [];
 
     // ✅ Map thumbnail with proper structure for edit mode
