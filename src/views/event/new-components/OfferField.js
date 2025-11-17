@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import * as antd from "antd";
 import {
   CloseCircleOutlined,
@@ -16,6 +16,7 @@ import {
   toggleSelectedCoupon,
   toggleSelectedOffer,
 } from "store/slices/eventSlice";
+import { debounce } from "lodash";
 
 const {
   Row,
@@ -80,6 +81,20 @@ const OfferField = ({ mode, form, eventDetails }) => {
       dispatch(toggleSelectedOffer(selectedOffer));
     }
   };
+
+  const handleOfferSearch = useCallback(
+    debounce((value) => {
+      dispatch(fetchAllOffers({ active: true, search: value }));
+    }, 500),
+    []
+  );
+
+  const handleCouponSearch = useCallback(
+    debounce((value) => {
+      dispatch(fetchAllCoupons({ search: value }));
+    }, 500),
+    []
+  );
 
   const handleCouponSelect = (couponId) => {
     const selectedCoupon = filteredCoupons.find(
@@ -156,21 +171,19 @@ const OfferField = ({ mode, form, eventDetails }) => {
               <Col xs={24} sm={12}>
                 <Form.Item name="offer" label="Offer (Optional)">
                   <Select
+                    showSearch
                     loading={offerLoading}
                     placeholder="Select an offer"
-                    value={
-                      selectedOffers.length ? selectedOffers[0].id : undefined
-                    }
+                    value={selectedOffers.length ? selectedOffers[0].id : undefined}
                     onChange={handleOfferSelect}
                     onClear={handleOfferClear}
-                    onDeselect={handleOfferClear}
+                    onSearch={handleOfferSearch}   // <── API search
                     allowClear
+                    filterOption={false}           // <── important (server-side)
                   >
                     {filteredOffer.map((offer) => {
                       const isSubmitted = isSubmittedOffer(offer.id);
-                      const isSelected = selectedOffers.some(
-                        (o) => o.id === offer.id
-                      );
+                      const isSelected = selectedOffers.some((o) => o.id === offer.id);
 
                       return (
                         <Option
@@ -178,36 +191,30 @@ const OfferField = ({ mode, form, eventDetails }) => {
                           value={offer.id}
                           disabled={isSubmitted && isSelected}
                         >
-                          <Space>
-                            <Text>{offer.name}</Text>
-                            {isSubmitted && isSelected && (
-                              <Text type="warning">(Submitted)</Text>
-                            )}
-                          </Space>
+                          {offer.name}
                         </Option>
                       );
                     })}
                   </Select>
+
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12}>
                 <Form.Item name="coupon" label="Coupon (Optional)">
                   <Select
+                    showSearch
                     loading={couponLoading}
                     placeholder="Select a coupon"
-                    value={
-                      selectedCoupons.length ? selectedCoupons[0].id : undefined
-                    }
+                    value={selectedCoupons.length ? selectedCoupons[0].id : undefined}
                     onChange={handleCouponSelect}
                     onClear={handleCouponClear}
-                    onDeselect={handleCouponClear}
+                    onSearch={handleCouponSearch}  // <── API search
                     allowClear
+                    filterOption={false}           // <── must disable local search
                   >
                     {filteredCoupons.map((coupon) => {
                       const isSubmitted = isSubmittedCoupon(coupon.id);
-                      const isSelected = selectedCoupons.some(
-                        (c) => c.id === coupon.id
-                      );
+                      const isSelected = selectedCoupons.some((c) => c.id === coupon.id);
 
                       return (
                         <Option
@@ -215,12 +222,7 @@ const OfferField = ({ mode, form, eventDetails }) => {
                           value={coupon.id}
                           disabled={isSubmitted && isSelected}
                         >
-                          <Space>
-                            <Text>{coupon.name}</Text>
-                            {isSubmitted && isSelected && (
-                              <Text type="warning">(Submitted)</Text>
-                            )}
-                          </Space>
+                          {coupon.name}
                         </Option>
                       );
                     })}
@@ -258,16 +260,16 @@ const OfferField = ({ mode, form, eventDetails }) => {
                           actions={
                             mode !== "EDIT"
                               ? [
-                                  <Button
-                                    type="text"
-                                    danger
-                                    size="small"
-                                    icon={<CloseCircleOutlined />}
-                                    onClick={() => handleDeleteOffer(offer)}
-                                  />,
-                                ]
+                                <Button
+                                  type="text"
+                                  danger
+                                  size="small"
+                                  icon={<CloseCircleOutlined />}
+                                  onClick={() => handleDeleteOffer(offer)}
+                                />,
+                              ]
                               : isSubmitted
-                              ? [
+                                ? [
                                   <Button
                                     type="text"
                                     disabled
@@ -276,7 +278,7 @@ const OfferField = ({ mode, form, eventDetails }) => {
                                     title="Cannot delete submitted offer"
                                   />,
                                 ]
-                              : []
+                                : []
                           }
                         >
                           <List.Item.Meta
