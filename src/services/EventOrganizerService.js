@@ -64,8 +64,6 @@ EventOrganizerService.submitOrganizerUpdate = function (data, action) {
 };
 
 EventOrganizerService.updateOrganizerEvent = function (data, action) {
-
-
   console.log("DATE IN SERVICE -------------", data);
 
   const formData = Utils.createFormData(data, {
@@ -92,10 +90,23 @@ EventOrganizerService.submitOrganizerOfferUpdate = function (
   action,
   params
 ) {
-
-
   return fetch({
     url: ApiConstant.ORGANIZER_OFFER_APPROVAL_URL,
+    method: "put",
+    data: data,
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(params),
+    },
+  });
+};
+EventOrganizerService.submitOrganizerTicketUpdate = function (
+  data,
+  action,
+  params
+) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_TICKET_APPROVAL_URL,
     method: "put",
     data: data,
     params: {
@@ -112,13 +123,18 @@ EventOrganizerService.fetchOrganizerSingleOfferUpdate = function (params) {
     params: Utils.filterParams(params),
   });
 };
+EventOrganizerService.fetchOrganizerSingleTicket = function (params) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_TICKET_DETAIL_URL,
+    method: "get",
+    params: Utils.filterParams(params),
+  });
+};
 EventOrganizerService.submitOrganizerCouponUpdate = function (
   data,
   action,
   params
 ) {
-
-
   return fetch({
     url: ApiConstant.ORGANIZER_COUPON_APPROVAL_URL,
     method: "put",

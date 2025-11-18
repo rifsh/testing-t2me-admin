@@ -59,7 +59,7 @@ const TicketList = () => {
 
   useEffect(() => {
     dispatch(resetTicketSets());
-    dispatch(fetchAllTickets(DEFAULT_PAGE_SIZE));
+    dispatch(fetchAllTickets({ ...DEFAULT_PAGE_SIZE, isOrganizer: false }));
   }, [dispatch]);
 
   // const handlePagination = (page, pageSize) => {

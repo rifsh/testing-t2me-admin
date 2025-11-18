@@ -120,6 +120,21 @@ export const submitOrganizerOfferUpdate = createAsyncThunk(
     }
   }
 );
+export const submitOrganizerTicketUpdate = createAsyncThunk(
+  "organizerUpdates/submitOrganizerTicketUpdate",
+  async ({ data, action, params }, { rejectWithValue }) => {
+    try {
+      const response = await EventOrganizerService.submitOrganizerTicketUpdate(
+        data,
+        action,
+        params
+      );
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to update category");
+    }
+  }
+);
 export const submitOrganizerCouponUpdate = createAsyncThunk(
   "organizerUpdates/submitOrganizerCouponUpdate",
   async ({ data, action, params }, { rejectWithValue }) => {
@@ -142,6 +157,19 @@ export const fetchOrganizerSingleOfferUpdate = createAsyncThunk(
     try {
       const response =
         await EventOrganizerService.fetchOrganizerSingleOfferUpdate(params);
+      console.log("-----------Fetching Organizer Updates", response.data[0]);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+export const fetchOrganizerSingleTicket = createAsyncThunk(
+  "organizerUpdates/fetchOrganizerSingleTicket",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response =
+        await EventOrganizerService.fetchOrganizerSingleTicket(params);
       console.log("-----------Fetching Organizer Updates", response.data[0]);
       return response.data[0];
     } catch (error) {
@@ -260,6 +288,25 @@ const OrganizerUpdateSlice = createSlice({
           state.error = payload;
         }
       )
+      .addCase(fetchOrganizerSingleTicket.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchOrganizerSingleTicket.fulfilled,
+        (state, { payload }) => {
+          state.loading = false;
+          state.singleOrganizerUpdate = payload;
+          state.pagination = payload;
+        }
+      )
+      .addCase(
+        fetchOrganizerSingleTicket.rejected,
+        (state, { payload }) => {
+          state.loading = false;
+          state.error = payload;
+        }
+      )
       .addCase(submitOrganizerCouponUpdate.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -354,6 +401,21 @@ const OrganizerUpdateSlice = createSlice({
         }
       })
       .addCase(submitOrganizerOfferUpdate.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Faileds";
+      })
+      .addCase(submitOrganizerTicketUpdate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitOrganizerTicketUpdate.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+          state.editable_status = payload.editable_status;
+        }
+      })
+      .addCase(submitOrganizerTicketUpdate.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Faileds";
       });

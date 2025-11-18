@@ -12,6 +12,7 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { fetchAllOffers } from "store/slices/offerSlice";
 import Utils from "utils";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { getEventAllSeatStructures } from "store/slices/movieSeatSlice";
 
 const { Option } = Select;
 
@@ -25,27 +26,18 @@ const OrganizerOfferStatusList = () => {
   const [activeStatus, setactiveStatus] = useState();
   const handlePagination = usePaginationHook(fetchAllOffers);
 
-  // useEffect(() => {
-  //   dispatch(
-  //     fetchAllOffers({
-  //       ...DEFAULT_PAGE_SIZE,
-  //       organizer: true,
-  //       isOrganizer: true,
-  //       event_code: Utils.getEventTypeCodeWithType(type),
-  //     })
-  //   );
-  // }, [dispatch]);
+  useEffect(() => {
+    dispatch(
+      getEventAllSeatStructures({
+        ...DEFAULT_PAGE_SIZE,
+        organizer: true,
+        isOrganizer: true,
+        event_code: Utils.getEventTypeCodeWithType(type),
+      })
+    );
+  }, [dispatch]);
 
-  // const handlePagination = (page, size) => {
-  //   dispatch(
-  //     fetchAllOffers({
-  //       page: page,
-  //       size: size,
-  //       isOrganizer: true,
-  //       event_code: Utils.getEventTypeCodeWithType(type),
-  //     })
-  //   );
-  // };
+ 
 
   const handleViewDetails = async (id) => {
     console.log(id);
