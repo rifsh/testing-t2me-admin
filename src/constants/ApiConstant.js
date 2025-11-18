@@ -59,12 +59,18 @@ export const ApiConstant = {
   ORGANIZER_OFFER_URL: "/api/v1/shared/offers/secured/offers/organizer",
   ORGANIZER_OFFER_MAKE_CHANGES_URL:
     "/api/v1/shared/offers/secured/offers/organizer/make_changes",
+  ORGANIZER_TICKET_MAKE_CHANGES_URL:
+    "/api/v1/event/tickets/secured/ticketstructure/organizer/make_changes",
   ORGANIZER_OFFER_STATUS_URL:
     "/api/v1/shared/offers/secured/offers_status/organizer",
   ORGANIZER_OFFER_APPROVAL_URL:
     "/api/v1/shared/offers/secured/offers/organizer/approval",
+  ORGANIZER_TICKET_APPROVAL_URL:
+    "/api/v1/event/tickets/secured/ticketstructure/organizer/approval",
   ORGANIZER_OFFER_DETAIL_URL:
     "/api/v1/shared/offers/secured/offers/organizer/detail",
+  ORGANIZER_TICKET_DETAIL_URL:
+    "/api/v1/event/tickets/secured/single_ticketstructure/organizer",
 
   ORGANIZER_COUPON_URL: "/api/v1/shared/offers/secured/coupons/organizer",
   ORGANIZER_COUPON_MAKE_CHANGES_URL:
@@ -265,6 +271,7 @@ export const ApiConstant = {
     "/api/v1/movie/seats/secured/seatstructure/edit/status",
   MOVIE_SEAT_DETAILS_URL: "/api/v1/movie/seats/secured/seatstructure/single",
   EVENT_SEAT_URL: "/api/v1/event/seats/secured/seatstructure",
+  ORGANIZER_EVENT_SEAT_URL: "/api/v1/event/seats/secured/seatstructure/organizer",
   EVENT_SEAT_EDIT_URL: "/api/v1/event/seats/secured/seatstructure/edit",
   EVENT_SEAT_STATUS_URL:
     "/api/v1/event/seats/secured/seatstructure/edit/status",

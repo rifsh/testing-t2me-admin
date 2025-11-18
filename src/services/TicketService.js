@@ -10,12 +10,32 @@ TicketsService.getAllTickets = function (pageData) {
   const url = Utils.getUrlByUserRole(
       ApiConstant.TICKET_URL,
       ApiConstant.EVENT_ORGANIZER_TICKET_URL,
-      isOrganizer()
+     pageData.isOrganizer
     );
   return fetch({
     url: url,
     method: "get",
     params: Utils.filterParams(pageData),
+  });
+};
+
+TicketsService.makeChangeTicket = function (data, action, pageData) {
+  console.log(data, "DATA IN SERVICE");
+
+  const encodedAction = encodeURIComponent(handleAction(action));
+
+  const offerUrl = ApiConstant.ORGANIZER_TICKET_MAKE_CHANGES_URL;
+  const params = {
+    action: encodedAction,
+    ...Utils.filterParams(pageData),
+  };
+
+  return fetch({
+    url: `${offerUrl}`,
+    method: "put",
+    data: data,
+    params: params,
+    
   });
 };
 
@@ -27,11 +47,18 @@ TicketsService.checkTicketEditAvailability = function (params) {
   });
 };
 TicketsService.getSingleTicketData = function (ticketId) {
+  const url = Utils.getUrlByUserRole(
+    ApiConstant.EVENT_SINGLE_TICKET,
+    ApiConstant.ORGANIZER_TICKET_DETAIL_URL,
+    isOrganizer()
+  );
+
   return fetch({
-    url: ApiConstant.EVENT_SINGLE_TICKET,
+    url: url,
     method: "get",
     params: {
       ticket_id: ticketId,
+      ticket_structure_id:ticketId
     },
   });
 };

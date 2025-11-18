@@ -47,21 +47,21 @@ MovieSeatService.addSeatStructure = function (data, action) {
 //   });
 // };
 
-// new 
+// new
 MovieSeatService.editSeatStructure = function (
   data,
   action,
   pageData = { page: 1, size: 10 }
 ) {
   const seatUrlBase = Utils.getUrlByUserRole(
-    ApiConstant.MOVIE_SEAT_EDIT_URL,           // Admin URL
+    ApiConstant.MOVIE_SEAT_EDIT_URL, // Admin URL
     ApiConstant.MOVIE_ORGANIZER_SEAT_EDIT_URL, // Organizer URL
     isOrganizer()
   );
 
   const url = isOrganizer()
-    ? `${seatUrlBase}/${data.id}`  // Organizer uses path param
-    : seatUrlBase;                 // Admin uses query param
+    ? `${seatUrlBase}/${data.id}` // Organizer uses path param
+    : seatUrlBase; // Admin uses query param
 
   const params = {
     action: handleAction(action),
@@ -89,7 +89,7 @@ MovieSeatService.makeEditSeatStructure = function (
     data: data,
     params: {
       action: encodedAction,
-      ...Utils.filterParams(pageData)
+      ...Utils.filterParams(pageData),
     },
   });
 };
@@ -110,7 +110,6 @@ MovieSeatService.editSeatStructureStatus = function (
     },
   });
 };
-
 
 MovieSeatService.getSeatStructureDetails = function (pageData) {
   return fetch({
@@ -146,11 +145,18 @@ MovieSeatService.getTrackrequestSeatStructuresDetails = function (params) {
 
 MovieSeatService.addEventSeatStructure = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-
+  const offreUrl = Utils.getUrlByUserRole(
+    ApiConstant.EVENT_SEAT_URL,
+    ApiConstant.ORGANIZER_EVENT_SEAT_URL,
+    isOrganizer()
+  );
   return fetch({
-    url: `${ApiConstant.EVENT_SEAT_URL}?action=${encodedAction}`,
+    url: offreUrl,
     method: "post",
     data: data,
+    params: {
+      action: encodedAction,
+    },
   });
 };
 
@@ -208,8 +214,13 @@ MovieSeatService.getEventSeatStructureDetails = function (pageData) {
 };
 
 MovieSeatService.getEventAllSeatStructures = function (params) {
+  const url = Utils.getUrlByUserRole(
+    ApiConstant.EVENT_SEAT_URL,
+    ApiConstant.ORGANIZER_EVENT_SEAT_URL,
+    params.isOrganizer
+  );
   return fetch({
-    url: ApiConstant.EVENT_SEAT_URL,
+    url: url,
     method: "get",
     params: Utils.filterParams(params),
   });

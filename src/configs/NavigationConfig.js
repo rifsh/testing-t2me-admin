@@ -805,7 +805,7 @@ const ALL_NAVIGATION_ITEMS = {
   },
   "track.event.ticket": {
     key: "trackRequest.event.ticket.status.list",
-    path: `${APP_PREFIX_PATH}/track/event-tickets/status/list`,
+    path: `${APP_PREFIX_PATH}/track/event-tickets/status/list/event`,
     title: "sidenav.ticket",
     icon: OrderedListOutlined,
     breadcrumb: false,

@@ -73,6 +73,23 @@ export const fetchAllTickets = createAsyncThunk(
   }
 );
 
+export const makeChangeTicket = createAsyncThunk(
+  "offer/makeChangeTicket",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      console.log(data, "DATA IN SERVICE");
+      const response = await TicketsService.makeChangeTicket(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
+
 export const validateTicket = createAsyncThunk(
   "ticket/validateTicket",
   async (ticketId, { rejectWithValue }) => {
