@@ -331,12 +331,12 @@ const CouponList = () => {
                       <span className="text-sm font-medium text-gray-600">Used Count</span>
                       <span className="text-sm text-gray-900">{selectedCoupon.used_count}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    {/* <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-gray-600">Remaining Uses</span>
                       <span className="text-sm font-semibold text-blue-600">
                         {selectedCoupon.max_uses - selectedCoupon.used_count}
                       </span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
