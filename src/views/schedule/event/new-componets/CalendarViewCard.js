@@ -1371,34 +1371,42 @@ const handleBookingStartTimeChange = (date) => {
   // Replace the getAllDaysInRange function in CalendarViewCard.jsx
 
   const getAllDaysInRange = () => {
-    if (!dateRange.startDate || !dateRange.endDate) {
-      return [];
-    }
+  if (!dateRange.startDate || !dateRange.endDate) return [];
+  
+  const start = new Date(dateRange.startDate);
+  const end = new Date(dateRange.endDate);
+  
+  // Set to start of day to avoid timezone issues
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  
+  // Calculate days difference - FIX: Use Math.ceil and don't add 1
+  const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  
+  console.log("getAllDaysInRange:", {
+    startDate: dateRange.startDate.toISOString(),
+    endDate: dateRange.endDate.toISOString(),
+    daysDiff,
+    expectedDays: daysDiff
+  });
+  
+  // Generate array of dates - FIX: Adjust the array generation
+  const dates = [];
+  for (let i = 0; i <= daysDiff - 1; i++) {
+    const day = new Date(start);
+    day.setDate(start.getDate() + i);
+    dates.push(day);
+  }
+  
+  console.log("Generated dates:", {
+    count: dates.length,
+    first: dates[0]?.toLocaleDateString(),
+    last: dates[dates.length - 1]?.toLocaleDateString()
+  });
+  
+  return dates;
+};
 
-    const start = new Date(dateRange.startDate);
-    const end = new Date(dateRange.endDate);
-
-    // Set to start of day to avoid time zone issues
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-
-    // Calculate days difference (inclusive)
-    const daysDiff = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-
-    console.log("📅 getAllDaysInRange:", {
-      startDate: dateRange.startDate.toISOString(),
-      endDate: dateRange.endDate.toISOString(),
-      daysDiff,
-      expectedDays: daysDiff,
-    });
-
-    // Generate array of dates
-    return Array.from({ length: daysDiff }, (_, i) => {
-      const day = new Date(start);
-      day.setDate(start.getDate() + i);
-      return day;
-    });
-  };
   const hasValidTimeSlots = () => {
     if (!allEvents || allEvents.length === 0) {
       return false;

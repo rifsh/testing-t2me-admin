@@ -35,11 +35,12 @@ export const validateOfferWithinSchedule = (
     return { isValid: true, message: "" };
   }
 
-  // If no offer dates provided, it's invalid
+  // NEW: If no offer dates provided, use schedule dates
   if (!offerStartDate || !offerEndDate) {
-    return { 
-      isValid: false, 
-      message: "Offer dates are missing" 
+    return {
+      isValid: true,
+      message: "Using schedule dates as offer validity period",
+      useScheduleDates: true, // Flag to indicate we should use schedule dates
     };
   }
 
@@ -49,8 +50,7 @@ export const validateOfferWithinSchedule = (
   const scheduleEnd = dayjs(scheduleEndDate);
 
   // Check if there's ANY overlap between offer and schedule ranges
-  // Overlap exists if: offer_start <= schedule_end AND offer_end >= schedule_start
-  const hasOverlap = 
+  const hasOverlap =
     offerStart.isSameOrBefore(scheduleEnd, "day") &&
     offerEnd.isSameOrAfter(scheduleStart, "day");
 
@@ -63,7 +63,9 @@ export const validateOfferWithinSchedule = (
         "MMM DD, YYYY"
       )}) has no overlap with the schedule period (${scheduleStart.format(
         "MMM DD, YYYY"
-      )} - ${scheduleEnd.format("MMM DD, YYYY")}). Please select an offer that falls within or overlaps with your event schedule.`,
+      )} - ${scheduleEnd.format(
+        "MMM DD, YYYY"
+      )}). Please select an offer that falls within or overlaps with your event schedule.`,
     };
   }
 

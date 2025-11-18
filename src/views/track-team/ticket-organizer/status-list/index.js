@@ -32,7 +32,6 @@ const OrganizerOfferStatusList = () => {
         ...DEFAULT_PAGE_SIZE,
         organizer: true,
         isOrganizer: true,
-        event_code: Utils.getEventTypeCodeWithType(type),
       })
     );
   }, [dispatch]);
@@ -50,7 +49,7 @@ const OrganizerOfferStatusList = () => {
 
   const handleViewDetails = async (id) => {
     console.log(id);
-    navigate(`${APP_PREFIX_PATH}/track/offer/status/details/${id}/${type}`);
+    navigate(`${APP_PREFIX_PATH}/track/ticket/status/details/${id}/${type}`);
   };
 
   const handleShowStatus = (status) => {

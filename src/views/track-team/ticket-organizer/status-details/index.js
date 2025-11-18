@@ -5,9 +5,10 @@ import {
   UserOutlined,
   CommentOutlined,
   CalendarOutlined,
-  PercentageOutlined,
   TagOutlined,
   ShopOutlined,
+  NumberOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -21,28 +22,29 @@ import {
   message,
   Tag,
   Image,
-  Badge,
+  Divider,
+  Descriptions,
 } from "antd";
 import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ActionType } from "utils/api/warning-submit-util";
 import { getCurrentUser } from "configs/UserAccessConfig";
 import { UserRoleConstants } from "constants/UserRoleConstant";
 import {
-  fetchOrganizerSingleOfferUpdate,
-  submitOrganizerOfferUpdate,
+  submitOrganizerTicketUpdate,
   setCommentModalVisibility,
   setActionType,
   setComment,
   toggleComments,
+  fetchOrganizerSingleTicket,
 } from "store/slices/EventOrganizerSlice";
-import { APPROVAL_STATUS, EventType } from "constants/AppConstants";
+import { APPROVAL_STATUS } from "constants/AppConstants";
 import StatusTimelineCard from "components/layout-components/Cards/StatusTimelineCard ";
 
 const { Title, Text, Paragraph } = Typography;
 
 const OrganizerOfferDetail = () => {
-  const { offerId ,type} = useParams();
+  const { ticketId, type } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
@@ -56,10 +58,10 @@ const OrganizerOfferDetail = () => {
   } = useSelector((state) => state.organizerUpdates);
 
   useEffect(() => {
-    if (offerId) {
-      dispatch(fetchOrganizerSingleOfferUpdate({ offer_id: offerId }));
+    if (ticketId) {
+      dispatch(fetchOrganizerSingleTicket({ ticket_structure_id: ticketId }));
     }
-  }, [dispatch, offerId]);
+  }, [dispatch, ticketId]);
 
   const handleOpenModal = (action) => {
     dispatch(setActionType(action));
@@ -67,11 +69,9 @@ const OrganizerOfferDetail = () => {
   };
 
   const handleMakeChanges = () => {
-
-      navigate(
-        `${APP_PREFIX_PATH}/offer/edit/${offerId}/${type}?isMakeChange=${true}`
-      );
-  
+    navigate(
+      `${APP_PREFIX_PATH}/ticket/edit/${ticketId}?type=${type}&isMakeChange=${true}`
+    );
   };
 
   const getApprovalStatus = (action) => {
@@ -95,23 +95,23 @@ const OrganizerOfferDetail = () => {
 
     try {
       const data = {
-        offer_id: offerId,
+        ticket_id: ticketId,
         status: getApprovalStatus(actionType),
         comment: comment,
       };
 
       const resultAction = await dispatch(
-        submitOrganizerOfferUpdate({
+        submitOrganizerTicketUpdate({
           data: data,
-          params: { offer_id: offerId },
+          params: { organizer_ticket_id: ticketId },
           action: ActionType.WARNING,
         })
       );
 
-      if (submitOrganizerOfferUpdate.fulfilled.match(resultAction)) {
+      if (submitOrganizerTicketUpdate.fulfilled.match(resultAction)) {
         message.success(`Update ${actionType}ed successfully`);
-        dispatch(fetchOrganizerSingleOfferUpdate({ offer_id: offerId }));
-        navigate(`${APP_PREFIX_PATH}/track/offer/status/list/movie`);
+        dispatch(fetchOrganizerSingleTicket({ ticket_structure_id: ticketId }));
+        navigate(`${APP_PREFIX_PATH}/track/event-tickets/status/list/event`);
       }
     } catch (error) {
       message.error(`Failed to ${actionType} the update`);
@@ -122,7 +122,8 @@ const OrganizerOfferDetail = () => {
   };
 
   const renderCommentList = () => {
-    const comments = singleOrganizerUpdate?.organizer_offer_comments || [];
+    const comments =
+      singleOrganizerUpdate?.organizer_ticketstructure_comments || [];
 
     if (comments.length === 0) {
       return <Text type="secondary">No comments yet</Text>;
@@ -193,7 +194,13 @@ const OrganizerOfferDetail = () => {
   const formatDate = (dateString) => {
     if (!dateString) return "Not specified";
     const date = new Date(dateString);
-    return date.toLocaleDateString();
+    return date.toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const renderActionButtons = () => {
@@ -259,49 +266,77 @@ const OrganizerOfferDetail = () => {
     return null;
   };
 
-  return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "24px" }}>
-      <Card style={{ marginTop: 16 }}>
-        <Title level={4}>Offer Information</Title>
-        <Row gutter={[24, 24]}>
-          <Col xs={12} md={8}>
-            <Image
-              src={
-                singleOrganizerUpdate?.thumbnail_image ||
-                "/img/pexels-teddy-2263436.jpg"
-              }
-              alt="Offer Thumbnail"
+  const renderTicketTypes = () => {
+    const ticketTypes = singleOrganizerUpdate?.organizer_ticket_types || [];
+
+    if (ticketTypes.length === 0) {
+      return <Text type="secondary">No ticket types available</Text>;
+    }
+
+    return (
+      <Row gutter={[16, 16]}>
+        {ticketTypes.map((ticketType) => (
+          <Col xs={24} md={12} lg={8} key={ticketType.id}>
+            <Card
+              size="small"
               style={{
-                width: "150px",
-                height: "100px",
-                objectFit: "cover",
                 borderRadius: "8px",
+                border: "1px solid #f0f0f0",
               }}
-              fallback="/img/pexels-teddy-2263436.jpg"
-            />
+            >
+              <Space direction="vertical" style={{ width: "100%" }}>
+                <Title level={5} style={{ margin: 0 }}>
+                  {ticketType.name}
+                </Title>
+                <Descriptions column={1} size="small">
+                  <Descriptions.Item label="Ticket Set">
+                    <Tag color="blue">{ticketType.ticket_set}</Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Price">
+                    <Text strong>₹{ticketType.price}</Text>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Available">
+                    <Text>{ticketType.number_of_tickets} tickets</Text>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Status">
+                    <Tag color={ticketType.status ? "green" : "red"}>
+                      {ticketType.status ? "Active" : "Inactive"}
+                    </Tag>
+                  </Descriptions.Item>
+                </Descriptions>
+              </Space>
+            </Card>
           </Col>
-          <Col xs={24} md={8}>
-            <Text type="secondary">Offer Name</Text>
-            <div>
-              <Text strong>{singleOrganizerUpdate?.name || "N/A"}</Text>
-            </div>
-          </Col>
-          <Col xs={24} md={8}>
-            <Text type="secondary">Created At</Text>
-            <div>
-              <Text strong>
-                {formatDate(singleOrganizerUpdate?.created_at)}
-              </Text>
-            </div>
-          </Col>
-          <Col xs={24} md={8}>
-            <Text type="secondary">Status</Text>
-            <div>
+        ))}
+      </Row>
+    );
+  };
+
+  return (
+    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px" }}>
+      <Card>
+        <Space
+          direction="vertical"
+          size="middle"
+          style={{ width: "100%", marginBottom: 16 }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Title level={3} style={{ margin: 0 }}>
+              {singleOrganizerUpdate?.name || "Ticket Structure"}
+            </Title>
+            <Space>
               {singleOrganizerUpdate?.approval_status && (
                 <Tag
                   color={getStatusTagColor(
                     singleOrganizerUpdate.approval_status
                   )}
+                  style={{ fontSize: "14px", padding: "4px 12px" }}
                 >
                   {singleOrganizerUpdate.approval_status
                     .charAt(0)
@@ -311,158 +346,113 @@ const OrganizerOfferDetail = () => {
                       .toLowerCase()}
                 </Tag>
               )}
-              {singleOrganizerUpdate?.is_active !== undefined && (
+              {singleOrganizerUpdate?.status !== undefined && (
                 <Tag
-                  color={singleOrganizerUpdate.is_active ? "green" : "red"}
-                  style={{ marginLeft: 8 }}
+                  color={singleOrganizerUpdate.status ? "green" : "red"}
+                  style={{ fontSize: "14px", padding: "4px 12px" }}
                 >
-                  {singleOrganizerUpdate.is_active ? "Active" : "Inactive"}
+                  {singleOrganizerUpdate.status ? "Active" : "Inactive"}
                 </Tag>
               )}
-            </div>
-          </Col>
-          {renderActionButtons()}
-        </Row>
-      </Card>
-      <Card style={{ marginTop: 16 }}>
-        <Title level={4}>Offer Details</Title>
+            </Space>
+          </div>
+        </Space>
+
+        <Divider />
+
         <Row gutter={[24, 24]}>
           <Col xs={24} md={8}>
             <Space>
-              <PercentageOutlined />
-              <Text type="secondary">Discount Type</Text>
+              <NumberOutlined />
+              <Text type="secondary">Ticket Structure ID</Text>
             </Space>
             <div>
-              <Text strong>
-                {singleOrganizerUpdate?.is_percentage
-                  ? "Percentage"
-                  : "Fixed Amount"}
-              </Text>
-            </div>
-          </Col>
-          <Col xs={24} md={8}>
-            <Space>
-              <PercentageOutlined />
-              <Text type="secondary">Discount Value</Text>
-            </Space>
-            <div>
-              <Text strong>
-                {singleOrganizerUpdate?.discount_percentage_amount || 0}
-                {singleOrganizerUpdate?.is_percentage ? "%" : " units"}
-              </Text>
-            </div>
-          </Col>
-          <Col xs={24} md={8}>
-            <Space>
-              <TagOutlined />
-              <Text type="secondary">Offer Type</Text>
-            </Space>
-            <div>
-              <Text strong>
-                {singleOrganizerUpdate?.is_general
-                  ? "General Offer"
-                  : "Specific Offer"}
-              </Text>
+              <Text strong>{singleOrganizerUpdate?.id || "N/A"}</Text>
             </div>
           </Col>
           <Col xs={24} md={8}>
             <Space>
               <ShopOutlined />
-              <Text type="secondary">Redemption Type</Text>
+              <Text type="secondary">Venue ID</Text>
             </Space>
             <div>
-              <Text strong>
-                {singleOrganizerUpdate?.is_offline ? "Offline" : "Online"}
-              </Text>
+              <Text strong>{singleOrganizerUpdate?.venue_id || "N/A"}</Text>
             </div>
           </Col>
           <Col xs={24} md={8}>
             <Space>
               <UserOutlined />
-              <Text type="secondary">Maximum Uses</Text>
+              <Text type="secondary">User ID</Text>
+            </Space>
+            <div>
+              <Text strong>{singleOrganizerUpdate?.user_id || "N/A"}</Text>
+            </div>
+          </Col>
+          <Col xs={24} md={8}>
+            <Space>
+              <NumberOutlined />
+              <Text type="secondary">Total Tickets</Text>
             </Space>
             <div>
               <Text strong>
-                {singleOrganizerUpdate?.max_uses || "Unlimited"}
+                {singleOrganizerUpdate?.number_of_tickets || 0}
               </Text>
             </div>
           </Col>
           <Col xs={24} md={8}>
             <Space>
-              <UserOutlined />
-              <Text type="secondary">Used Count</Text>
+              <DollarOutlined />
+              <Text type="secondary">Base Price</Text>
             </Space>
             <div>
-              <Text strong>{singleOrganizerUpdate?.used_count || 0}</Text>
+              <Text strong>₹{singleOrganizerUpdate?.base_price || 0}</Text>
             </div>
           </Col>
           <Col xs={24} md={8}>
             <Space>
+              <TagOutlined />
+              <Text type="secondary">Dynamic Pricing</Text>
+            </Space>
+            <div>
+              <Tag
+                color={singleOrganizerUpdate?.is_dynamic ? "blue" : "default"}
+              >
+                {singleOrganizerUpdate?.is_dynamic ? "Enabled" : "Disabled"}
+              </Tag>
+            </div>
+          </Col>
+          <Col xs={24} md={12}>
+            <Space>
               <CalendarOutlined />
-              <Text type="secondary">Date Required</Text>
+              <Text type="secondary">Created At</Text>
             </Space>
             <div>
               <Text strong>
-                {singleOrganizerUpdate?.date_required ? "Yes" : "No"}
+                {formatDate(singleOrganizerUpdate?.created_at)}
               </Text>
             </div>
           </Col>
-          <Col xs={24} md={8}>
+          <Col xs={24} md={12}>
             <Space>
               <CalendarOutlined />
-              <Text type="secondary">Start Date</Text>
+              <Text type="secondary">Updated At</Text>
             </Space>
             <div>
               <Text strong>
-                {singleOrganizerUpdate?.start_date
-                  ? formatDate(singleOrganizerUpdate.start_date)
-                  : "Not specified"}
-              </Text>
-            </div>
-          </Col>
-          <Col xs={24} md={8}>
-            <Space>
-              <CalendarOutlined />
-              <Text type="secondary">End Date</Text>
-            </Space>
-            <div>
-              <Text strong>
-                {singleOrganizerUpdate?.end_date
-                  ? formatDate(singleOrganizerUpdate.end_date)
-                  : "Not specified"}
+                {formatDate(singleOrganizerUpdate?.updated_at)}
               </Text>
             </div>
           </Col>
         </Row>
+
+        {renderActionButtons()}
       </Card>
 
-      {singleOrganizerUpdate?.theatre_ids &&
-        singleOrganizerUpdate.theatre_ids.length > 0 && (
-          <Card style={{ marginTop: 16 }}>
-            <Title level={4}>Applicable Theatres</Title>
-            <Row gutter={[16, 16]}>
-              {singleOrganizerUpdate.theatre_ids.map((theatreId) => (
-                <Col key={theatreId}>
-                  <Tag color="blue">Theatre ID: {theatreId}</Tag>
-                </Col>
-              ))}
-            </Row>
-          </Card>
-        )}
-
-      {singleOrganizerUpdate?.key_words &&
-        singleOrganizerUpdate.key_words.length > 0 && (
-          <Card style={{ marginTop: 16 }}>
-            <Title level={4}>Keywords</Title>
-            <Row gutter={[16, 16]}>
-              {singleOrganizerUpdate.key_words.map((keyword, index) => (
-                <Col key={index}>
-                  <Tag color="cyan">{keyword}</Tag>
-                </Col>
-              ))}
-            </Row>
-          </Card>
-        )}
+      <Card style={{ marginTop: 16 }}>
+        <Title level={4}>Ticket Types</Title>
+        <Divider />
+        {renderTicketTypes()}
+      </Card>
 
       <Card style={{ marginTop: 16 }}>
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>
@@ -483,15 +473,16 @@ const OrganizerOfferDetail = () => {
         loading={loading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)
-          } Comment`}
+        title={`${
+          actionType.charAt(0).toUpperCase() + actionType.slice(1)
+        } Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />
 
       <StatusTimelineCard
-        createdAt={singleOrganizerUpdate.created_at}
-        updatedAt={singleOrganizerUpdate.updated_at}
-        status={singleOrganizerUpdate.approval_status}
+        createdAt={singleOrganizerUpdate?.created_at}
+        updatedAt={singleOrganizerUpdate?.updated_at}
+        status={singleOrganizerUpdate?.approval_status}
       />
     </div>
   );

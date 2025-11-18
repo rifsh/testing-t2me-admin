@@ -192,9 +192,13 @@ const ConfigModal = ({
       setSelectedDates(itemData.dates || []);
       setTimeSlotsByDate(itemData.timeSlotsByDate || {});
 
+      // Use schedule dates if offer dates are missing
+      const effectiveStartDate = startDate || scheduleRange?.start_date;
+      const effectiveEndDate = endDate || scheduleRange?.end_date;
+
       const intersection = getValidDateRangeIntersection(
-        startDate,
-        endDate,
+        effectiveStartDate,
+        effectiveEndDate,
         scheduleRange?.start_date,
         scheduleRange?.end_date
       );
@@ -320,6 +324,8 @@ const ConfigModal = ({
       </button>
     </>
   );
+  const effectiveStartDate = startDate || scheduleRange?.start_date;
+  const effectiveEndDate = endDate || scheduleRange?.end_date;
 
   return (
     <CustomModal
@@ -340,8 +346,13 @@ const ConfigModal = ({
             label={
               <span className="font-semibold text-gray-700">
                 Validity Period (Must be within{" "}
-                {dayjs(startDate).format("MMM DD")} -{" "}
-                {dayjs(endDate).format("MMM DD, YYYY")})
+                {dayjs(effectiveStartDate).format("MMM DD")} -{" "}
+                {dayjs(effectiveEndDate).format("MMM DD, YYYY")})
+                {itemData?.useScheduleDates && (
+                  <Tag color="orange" size="small" style={{ marginLeft: 8 }}>
+                    Using Schedule Dates
+                  </Tag>
+                )}
               </span>
             }
             name="validityDates"
@@ -597,10 +608,14 @@ const OfferCouponConfig = ({ onSubmit, onBack }) => {
   const availableDates = extractAvailableDates(showDates);
   const availableTimeSlots = extractAvailableTimeSlots(showDates);
 
+  // Update the offers mapping to handle missing dates
   const offers = (eventDetails?.event_offers || []).map((item) => {
+    const offerStartDate = item.offer.start_date || scheduleRange.start_date;
+    const offerEndDate = item.offer.end_date || scheduleRange.end_date;
+
     const offerValidation = validateOfferWithinSchedule(
-      item.offer.start_date,
-      item.offer.end_date,
+      offerStartDate,
+      offerEndDate,
       scheduleRange.start_date,
       scheduleRange.end_date
     );
@@ -610,18 +625,27 @@ const OfferCouponConfig = ({ onSubmit, onBack }) => {
       name: item.offer.name,
       discount: item.offer.discount_percentage_amount,
       type: "offer",
-      offer: item.offer,
+      offer: {
+        ...item.offer,
+        start_date: offerStartDate, // Use schedule dates if missing
+        end_date: offerEndDate,
+      },
       valid_from: item.valid_from,
       valid_to: item.valid_to,
       isValid: offerValidation.isValid,
       validationMessage: offerValidation.message,
+      useScheduleDates: offerValidation.useScheduleDates,
     };
   });
 
+  // Update the coupons mapping similarly
   const coupons = (eventDetails?.event_coupons || []).map((item) => {
+    const couponStartDate = item.coupons.start_date || scheduleRange.start_date;
+    const couponEndDate = item.coupons.end_date || scheduleRange.end_date;
+
     const couponValidation = validateOfferWithinSchedule(
-      item.coupons.start_date,
-      item.coupons.end_date,
+      couponStartDate,
+      couponEndDate,
       scheduleRange.start_date,
       scheduleRange.end_date
     );
@@ -631,14 +655,162 @@ const OfferCouponConfig = ({ onSubmit, onBack }) => {
       code: item.coupons.name,
       discount: item.coupons.discount_percentage_amount,
       type: "coupon",
-      coupons: item.coupons,
+      coupons: {
+        ...item.coupons,
+        start_date: couponStartDate, // Use schedule dates if missing
+        end_date: couponEndDate,
+      },
       valid_from: item.valid_from,
       valid_to: item.valid_to,
       isValid: couponValidation.isValid,
       validationMessage: couponValidation.message,
+      useScheduleDates: couponValidation.useScheduleDates,
     };
   });
 
+  // Add handler to remove individual items
+  const handleRemoveOffer = (offerId) => {
+    const currentOffers = form.getFieldValue("offers") || [];
+    const updatedOffers = currentOffers.filter((id) => id !== offerId);
+
+    // Remove from configurations
+    setConfigurations((prev) =>
+      prev.filter((c) => !(c.itemId === offerId && c.itemType === "offer"))
+    );
+
+    // Update form
+    form.setFieldsValue({ offers: updatedOffers });
+    message.success("Offer removed successfully");
+  };
+
+  const handleRemoveCoupon = (couponId) => {
+    const currentCoupons = form.getFieldValue("coupons") || [];
+    const updatedCoupons = currentCoupons.filter((id) => id !== couponId);
+
+    // Remove from configurations
+    setConfigurations((prev) =>
+      prev.filter((c) => !(c.itemId === couponId && c.itemType === "coupon"))
+    );
+
+    // Update form
+    form.setFieldsValue({ coupons: updatedCoupons });
+    message.success("Coupon removed successfully");
+  };
+
+  // Update the table columns to add delete action
+  const tableColumns = [
+    {
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
+      render: (type) => (
+        <Tag color={type === "offer" ? "green" : "blue"}>
+          {type.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      render: (text, record) => (
+        <div>
+          <strong>{record.name || record.code}</strong>
+          {record.useScheduleDates && (
+            <div>
+              <Tag color="orange" size="small" style={{ marginTop: 4 }}>
+                Using Schedule Dates
+              </Tag>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: "Discount",
+      dataIndex: "discount",
+      key: "discount",
+      render: (discount) => `${discount}% off`,
+    },
+    {
+      title: "Configuration",
+      key: "config",
+      render: (_, record) => {
+        const config = configurations.find(
+          (c) => c.itemId === record.id && c.itemType === record.type
+        );
+        if (!config) return "-";
+
+        const levelLabels = {
+          schedule: "Schedule Level",
+          date: "Date Based",
+          timeslot: "Time Slot Level",
+        };
+
+        return (
+          <Space direction="vertical" size={0}>
+            <Tag color="blue">{levelLabels[config.offerLevel]}</Tag>
+            {config.offerLevel === "date" && (
+              <small>{config.dates?.length || 0} dates selected</small>
+            )}
+            {config.offerLevel === "timeslot" && (
+              <small>
+                {config.selected_time_slots?.length || 0} time slots
+              </small>
+            )}
+          </Space>
+        );
+      },
+    },
+    {
+      title: "Validity",
+      key: "validity",
+      render: (_, record) => {
+        const config = configurations.find(
+          (c) => c.itemId === record.id && c.itemType === record.type
+        );
+        return config?.valid_from && config?.valid_to ? (
+          <Space direction="vertical" size={0}>
+            <small>{dayjs(config.valid_from).format("MMM DD, YYYY")}</small>
+            <small>to {dayjs(config.valid_to).format("MMM DD, YYYY")}</small>
+          </Space>
+        ) : (
+          "-"
+        );
+      },
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="primary"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => handleConfigureItem(record)}
+          >
+            Edit
+          </Button>
+          <Button
+            danger
+            size="small"
+            onClick={() => {
+              if (record.type === "offer") {
+                handleRemoveOffer(record.id);
+              } else {
+                handleRemoveCoupon(record.id);
+              }
+            }}
+          >
+            Remove
+          </Button>
+        </Space>
+      ),
+    },
+  ];
+  const offerSelectRef = useRef(null);
+  const couponSelectRef = useRef(null);
   const handleOfferSelect = (selectedIds) => {
     if (!hasMountedRef.current) return;
 
@@ -664,10 +836,17 @@ const OfferCouponConfig = ({ onSubmit, onBack }) => {
 
       setPendingSelection({ type: "offer", ids: selectedIds });
       setCurrentItem(selectedOffer);
+
+      // Close the dropdown before opening modal
+      if (offerSelectRef.current) {
+        offerSelectRef.current.blur();
+      }
+
       setModalVisible(true);
     }
   };
 
+  // Update handleCouponSelect to close dropdown
   const handleCouponSelect = (selectedIds) => {
     if (!hasMountedRef.current) return;
 
@@ -693,6 +872,12 @@ const OfferCouponConfig = ({ onSubmit, onBack }) => {
 
       setPendingSelection({ type: "coupon", ids: selectedIds });
       setCurrentItem(selectedCoupon);
+
+      // Close the dropdown before opening modal
+      if (couponSelectRef.current) {
+        couponSelectRef.current.blur();
+      }
+
       setModalVisible(true);
     }
   };
@@ -804,92 +989,6 @@ const OfferCouponConfig = ({ onSubmit, onBack }) => {
     }
   }, [configurations, scheduleRange, onSubmit]);
 
-  const tableColumns = [
-    {
-      title: "Type",
-      dataIndex: "type",
-      key: "type",
-      render: (type) => (
-        <Tag color={type === "offer" ? "green" : "blue"}>
-          {type.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
-      render: (text, record) => <strong>{record.name || record.code}</strong>,
-    },
-    {
-      title: "Discount",
-      dataIndex: "discount",
-      key: "discount",
-      render: (discount) => `${discount}% off`,
-    },
-    {
-      title: "Configuration",
-      key: "config",
-      render: (_, record) => {
-        const config = configurations.find(
-          (c) => c.itemId === record.id && c.itemType === record.type
-        );
-        if (!config) return "-";
-
-        const levelLabels = {
-          schedule: "Schedule Level",
-          date: "Date Based",
-          timeslot: "Time Slot Level",
-        };
-
-        return (
-          <Space direction="vertical" size={0}>
-            <Tag color="blue">{levelLabels[config.offerLevel]}</Tag>
-            {config.offerLevel === "date" && (
-              <small>{config.dates?.length || 0} dates selected</small>
-            )}
-            {config.offerLevel === "timeslot" && (
-              <small>
-                {config.selected_time_slots?.length || 0} time slots
-              </small>
-            )}
-          </Space>
-        );
-      },
-    },
-    {
-      title: "Validity",
-      key: "validity",
-      render: (_, record) => {
-        const config = configurations.find(
-          (c) => c.itemId === record.id && c.itemType === record.type
-        );
-        return config?.valid_from && config?.valid_to ? (
-          <Space direction="vertical" size={0}>
-            <small>{dayjs(config.valid_from).format("MMM DD, YYYY")}</small>
-            <small>to {dayjs(config.valid_to).format("MMM DD, YYYY")}</small>
-          </Space>
-        ) : (
-          "-"
-        );
-      },
-    },
-    {
-      title: "Action",
-      key: "action",
-      render: (_, record) => (
-        <Button
-          type="primary"
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => handleConfigureItem(record)}
-        >
-          Reconfigure
-        </Button>
-      ),
-    },
-  ];
-
   const hasScheduleData =
     scheduleFormData &&
     scheduleFormData.start_date &&
@@ -950,6 +1049,7 @@ const OfferCouponConfig = ({ onSubmit, onBack }) => {
             initialValue={[]}
           >
             <Select
+              ref={offerSelectRef} // Add ref here
               mode="multiple"
               placeholder="Choose one or more offers"
               size="large"
@@ -958,6 +1058,7 @@ const OfferCouponConfig = ({ onSubmit, onBack }) => {
               allowClear
               onChange={handleOfferSelect}
               value={configuredOffers}
+              open={modalVisible ? false : undefined} // Force close when modal opens
             >
               {offers.map((offer) => (
                 <Option
@@ -986,6 +1087,7 @@ const OfferCouponConfig = ({ onSubmit, onBack }) => {
             initialValue={[]}
           >
             <Select
+              ref={couponSelectRef} // Add ref here
               mode="multiple"
               placeholder="Choose one or more coupons"
               size="large"
@@ -994,6 +1096,7 @@ const OfferCouponConfig = ({ onSubmit, onBack }) => {
               allowClear
               onChange={handleCouponSelect}
               value={configuredCoupons}
+              open={modalVisible ? false : undefined} // Force close when modal opens
             >
               {coupons.map((coupon) => (
                 <Option

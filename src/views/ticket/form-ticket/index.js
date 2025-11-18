@@ -19,6 +19,12 @@ const TicketForm = (props) => {
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const onFinish = () => {
+    if (mode === EDIT) {
+      if (isOrganizer() && isMakeChange) {
+        dispatch(setCommentModalVisibility(true));
+        return;
+      }
+    }
     setSubmitLoading(true);
     form
       .validateFields()
@@ -73,7 +79,6 @@ const TicketForm = (props) => {
               </h2>
               <div className="mb-3">
                 {" "}
-                
                 <DiscardButton form={form} />
                 <Button
                   type="primary"
