@@ -93,14 +93,14 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
       const thumbnailFile =
         coupon.thumbnail_image && coupon.thumbnail_image !== "images"
           ? [
-              {
-                uid: "thumbnail-1",
-                name: coupon.thumbnail_image.split("/").pop(),
-                status: "done",
-                url: `${CDN_PATH}/${coupon.thumbnail_image}`,
-                id: null, // Offers typically don't have media id for thumbnail
-              },
-            ]
+            {
+              uid: "thumbnail-1",
+              name: coupon.thumbnail_image.split("/").pop(),
+              status: "done",
+              url: `${CDN_PATH}/${coupon.thumbnail_image}`,
+              id: null, // Offers typically don't have media id for thumbnail
+            },
+          ]
           : [];
 
       const formData = {
@@ -215,6 +215,22 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         }) ?? [];
 
       if (mode === "EDIT") {
+
+        let thumbnailData = null;
+
+        if (values.thumbnail_image && Array.isArray(values.thumbnail_image)) {
+          const thumbnailFile = values.thumbnail_image[0];
+
+          // Check if it's a new file (has originFileObj)
+          if (thumbnailFile && thumbnailFile.originFileObj) {
+            thumbnailData = {
+              file_name: thumbnailFile.name || thumbnailFile.originFileObj.name,
+              media_type: "image",
+            };
+          }
+          // If it's an existing file (has url but no originFileObj), don't send it
+          // The backend will keep the existing image
+        }
         const editData = {
           ...processedValues,
           id: coupon.id,
@@ -287,12 +303,12 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
     const editData = {
       ...processedValues,
       thumbnail_image: {
-          file_name:
-            values.thumbnail_image?.[0]?.name ||
-            values.thumbnail_image?.[0]?.file_name ||
-            null,
-          media_type: "image",
-        },
+        file_name:
+          values.thumbnail_image?.[0]?.name ||
+          values.thumbnail_image?.[0]?.file_name ||
+          null,
+        media_type: "image",
+      },
       id: coupon.id,
     };
     const pageData = {
@@ -437,9 +453,8 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
         loading={organizerLoading}
         comment={comment}
         setComment={(value) => dispatch(setComment(value))}
-        title={`${
-          actionType.charAt(0).toUpperCase() + actionType.slice(1)
-        } Comment`}
+        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)
+          } Comment`}
         warningMessage={`Please provide a reason for the update.`}
       />
     </>
