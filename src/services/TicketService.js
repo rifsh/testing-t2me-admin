@@ -32,29 +32,29 @@ TicketsService.getSingleTicketData = function (ticketId) {
 TicketsService.editTicket = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
 
   return fetch({
     url: `${ApiConstant.TICKET_URL}/${data.id}?action=${encodedAction}`,
     method: "put",
-    data: formData,
+    data: data,
   });
 };
 TicketsService.addTicket = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const formData = Utils.createFormData(data, {
-    fileKeys: ["thumbnail_image"],
-    skipEmpty: true,
-  });
+  // const formData = Utils.createFormData(data, {
+  //   fileKeys: ["thumbnail_image"],
+  //   skipEmpty: true,
+  // });
 
   return fetch({
     url: ApiConstant.TICKET_URL,
     method: "post",
-    data: formData,
+    data: data,
     params: {
       venue_id: data.venue_id,
       action: encodedAction,
