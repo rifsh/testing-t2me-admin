@@ -338,6 +338,7 @@ const MultyStepTicketForm = () => {
         ticketData = {
           ...ticketData,
           ticket_types: extractedTickets,
+          is_dynamic: true,
         };
       } else {
         console.warn("No ticket_types found or invalid format.");
