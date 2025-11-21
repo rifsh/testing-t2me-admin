@@ -149,7 +149,15 @@ const buildDynamicSubmenu = (category, subcategory, items) => {
           return isItemEnabled("issues", "issue_tracking", featureItem);
         }
       }
-
+      if (subcategory === "track_requests.general") {
+        const itemMap = {
+          "track.general.venue": "venue",
+        };
+        const featureItem = itemMap[item.key];
+        if (featureItem) {
+          return isItemEnabled("issues", "track_requests.general", featureItem);
+        }
+      }
       // For track requests
       if (subcategory === "track_requests") {
         if (item.key && item.key.includes("event")) {
@@ -680,6 +688,17 @@ const ALL_NAVIGATION_ITEMS = {
   },
 
   // Track Requests - General (for Super Admin only - common offer and coupon)
+
+  "track.general.venue": {
+    key: "track.general.venue",
+    path: `${APP_PREFIX_PATH}/track/venue/status/list`,
+    title: "Venue",
+    icon: OrderedListOutlined,
+    breadcrumb: false,
+    submenu: [],
+    category: FEATURE_CATEGORIES.TRACK_REQUESTS_GENERAL,
+    featureItem: "venue",
+  },
   "track.event.offer": {
     key: "trackRequest.event.offer.status.list",
     path: `${APP_PREFIX_PATH}/track/offer/status/list/event`,
@@ -1061,7 +1080,7 @@ const ROLE_NAVIGATION_ACCESS = {
     // Issues
     "issue.list",
     "alerts.list",
-
+    "track.general.venue",
     "track.event.offer", // General section
     "track.event.coupon", // General section
     "track.movie.offer", // General section
@@ -1170,11 +1189,13 @@ const ROLE_NAVIGATION_ACCESS = {
   [UserRoleConstants.eventOrganizerRoleId]: [
     // Reports
     "organizer.reports.dashboard",
-
-    // Reports Orders
     "reports.orders",
 
+    // General Services - ADDED venue
+    "general.venue",
+
     // Event Services
+    "event.type",
     "event.offer",
     "event.coupon",
     "event.ticket",
@@ -1188,6 +1209,7 @@ const ROLE_NAVIGATION_ACCESS = {
     "movie.screen",
     "movie.seat",
     "movie.schedule",
+
     // Dine Services
     "dine.list",
     "dine.restaurant",
@@ -1197,16 +1219,22 @@ const ROLE_NAVIGATION_ACCESS = {
     "issue.list",
     "alerts.list",
 
-    "track.event.offer.organizer", // Event section only
-    "track.event.coupon.organizer", // Event section only
-    "track.event.event", // Event section
-    "track.event.ticket", // Event section
-    "track.event.seat", // Event section
-    "track.event.schedule", // Event section
-    "track.movie.offer.organizer", // Movie section only
-    "track.movie.coupon.organizer", // Movie section only
-    "track.movie.seats", // Movie section
-    "track.movie.schedule", // Movie section
+    // Track Requests
+
+    "track.general.venue",
+
+    "track.event.offer.organizer",
+    "track.event.coupon.organizer",
+    "track.event.event",
+    "track.event.ticket",
+    "track.event.seat",
+    "track.event.schedule",
+
+    // Track Requests - Movie
+    "track.movie.offer.organizer",
+    "track.movie.coupon.organizer",
+    "track.movie.seats",
+    "track.movie.schedule",
     "track.movie.screen",
   ],
 
