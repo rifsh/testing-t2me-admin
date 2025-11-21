@@ -242,6 +242,7 @@ const ResizedMediaPicker = ({
         itemRender={(originNode, file) => {
           const isHovered = hoveredItem === file.uid;
           const isVideo = file.type === "video";
+          console.log("isvideofilechecking", file);
 
           return (
             <div
@@ -275,7 +276,7 @@ const ResizedMediaPicker = ({
                     left: "50%",
                     transform: "translate(-50%, -50%)",
                     fontSize: "32px",
-                    color: "white",
+                    color: "black",
                     opacity: 0.8,
                     pointerEvents: "none",
                   }}
