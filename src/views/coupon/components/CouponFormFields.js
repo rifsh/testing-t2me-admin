@@ -14,6 +14,7 @@ import {
   InputNumber,
   Select,
   Divider,
+  message,
 } from "antd";
 import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
@@ -39,6 +40,7 @@ import { isOrganizer } from "configs/UserAccessConfig";
 import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
 import ApplicableDays from "components/layout-components/Cards/ApplicableDays";
 import { getAvailableOfferDays } from "store/slices/offerSlice";
+import CouponGenerator from "./CouponGenerator";
 
 const { Text } = Typography;
 const { Group: RadioGroup } = Radio;
@@ -47,6 +49,7 @@ const { Option } = Select;
 function CouponFormFields({ form, type, mode }) {
   const dispatch = useDispatch();
   const startDate = Form.useWatch("start_date", form);
+  const [generatedCoupons, setGeneratedCoupons] = useState([]);
   const { isDateRequired, selectedCouponsDays } = useSelector(
     (state) => state.coupons
   );
@@ -83,17 +86,11 @@ function CouponFormFields({ form, type, mode }) {
     }
   }, [dispatch, type, userIsOrganizer]);
 
-  // Add a new coupon field
-  const addCouponField = () => {
-    const newId =
-      couponFields.length > 0
-        ? Math.max(...couponFields.map((field) => field.id)) + 1
-        : 1;
-
-    setCouponFields([...couponFields, { id: newId }]);
+  const handleCouponsChange = (coupons) => {
+    setGeneratedCoupons(coupons);
   };
 
-  // Delete a coupon field
+  // Delete a coupon field with validation
   const deleteCouponField = (idToDelete) => {
     // Only allow deletion if there's more than one field
     if (couponFields.length > 1) {
@@ -107,8 +104,40 @@ function CouponFormFields({ form, type, mode }) {
       const newValues = { ...currentValues };
       delete newValues[idToDelete];
       form.setFieldsValue({ key_words: newValues });
+    } else {
+      message.warning('At least one coupon field is required');
     }
   };
+
+  // Add validation for duplicate coupon codes
+  const validateCouponUniqueness = (rule, value) => {
+    if (!value) return Promise.resolve();
+
+    const allCoupons = form.getFieldValue('generated_coupons') || [];
+    const duplicate = allCoupons.filter(coupon => coupon.code === value).length > 1;
+
+    if (duplicate) {
+      return Promise.reject('Coupon code must be unique');
+    }
+    return Promise.resolve();
+  };
+
+  // Delete a coupon field
+  // const deleteCouponField = (idToDelete) => {
+  //   // Only allow deletion if there's more than one field
+  //   if (couponFields.length > 1) {
+  //     const updatedFields = couponFields.filter(
+  //       (field) => field.id !== idToDelete
+  //     );
+  //     setCouponFields(updatedFields);
+
+  //     // Clear the form value for the deleted field
+  //     const currentValues = form.getFieldValue("key_words") || {};
+  //     const newValues = { ...currentValues };
+  //     delete newValues[idToDelete];
+  //     form.setFieldsValue({ key_words: newValues });
+  //   }
+  // };
 
   // Calculate rows based on coupon fields
   const getRows = () => {
@@ -336,85 +365,9 @@ function CouponFormFields({ form, type, mode }) {
               />
             </Form.Item>
           )}
-
-          <Form.Item label="Coupon Codes">
-            <div>
-              {rows.map((row, rowIndex) => (
-                <Row
-                  gutter={8}
-                  key={`row-${rowIndex}`}
-                  style={{ marginBottom: "8px" }}
-                >
-                  {row.map((field) => (
-                    <Col
-                      key={`field-${field.id}`}
-                      xs={24}
-                      sm={8}
-                      style={{ marginBottom: "8px" }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center" }}>
-                        <Form.Item
-                          name={["key_words", `${field.id}`]}
-                          rules={[
-                            {
-                              required: true,
-                              message: `Please enter coupon code`,
-                            },
-                          ]}
-                          style={{ marginBottom: 0, flex: 1 }}
-                        >
-                          <Input placeholder="Coupon code" size="large" />
-                        </Form.Item>
-
-                        {/* Only show delete button when there's more than one coupon field */}
-                        {couponFields.length > 1 && (
-                          <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => deleteCouponField(field.id)}
-                            style={{ marginLeft: "8px" }}
-                          />
-                        )}
-                      </div>
-                    </Col>
-                  ))}
-
-                  {row.length < MAX_FIELDS_PER_ROW &&
-                    rowIndex === rows.length - 1 && (
-                      <Col xs={24} sm={8}>
-                        <Button
-                          type="dashed"
-                          icon={<PlusOutlined />}
-                          onClick={addCouponField}
-                          size="large"
-                        >
-                          Add Coupon Code
-                        </Button>
-                      </Col>
-                    )}
-                </Row>
-              ))}
-
-              {rows.length > 0 &&
-                rows[rows.length - 1].length === MAX_FIELDS_PER_ROW && (
-                  <Row>
-                    <Col>
-                      <Button
-                        type="dashed"
-                        icon={<PlusOutlined />}
-                        onClick={addCouponField}
-                        size="large"
-                        style={{ marginTop: "4px" }}
-                      >
-                        Add Coupon Code
-                      </Button>
-                    </Col>
-                  </Row>
-                )}
-            </div>
-          </Form.Item>
-
+          <div className="border-t pt-6">
+            <CouponGenerator onCouponsChange={handleCouponsChange} />
+          </div>
           <Divider style={{ margin: "24px 0" }} />
 
           <Row gutter={16}>
