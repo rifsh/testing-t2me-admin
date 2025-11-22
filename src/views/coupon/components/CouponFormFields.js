@@ -86,9 +86,11 @@ function CouponFormFields({ form, type, mode }) {
     }
   }, [dispatch, type, userIsOrganizer]);
 
-  const handleCouponsChange = (coupons) => {
-    setGeneratedCoupons(coupons);
-  };
+  // const handleCouponsChange = (coupons) => {
+  //   console.log("couponschanges", coupons);
+  //   form.setFieldsValue(formData);
+  //   setGeneratedCoupons(coupons);
+  // };
 
   // Delete a coupon field with validation
   const deleteCouponField = (idToDelete) => {
@@ -366,7 +368,10 @@ function CouponFormFields({ form, type, mode }) {
             </Form.Item>
           )}
           <div className="border-t pt-6">
-            <CouponGenerator onCouponsChange={handleCouponsChange} />
+            <Form.Item name="key_words" hidden>
+              <Input type="hidden" />
+            </Form.Item>
+            <CouponGenerator form={form} />
           </div>
           <Divider style={{ margin: "24px 0" }} />
 

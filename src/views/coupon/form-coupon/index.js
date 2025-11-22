@@ -180,6 +180,10 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
+      if (values?.key_words?.length === 0) {
+        message.warning("Coupon is requiered");
+        return;
+      }
       const originalFiles = extractFileObjects(values);
       dispatch(setOriginalFiles(originalFiles));
 
@@ -258,7 +262,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
           thumbnail_image: thumbnailData,
           mapped_coupon_weekdays: values?.mapped_coupon_weekdays,
         };
-        console.log("couponFormData", formData);
+        console.log("couponFormData", values?.key_words);
         dispatch(setSelectedSubmitItem(formData));
       }
     } catch (info) {

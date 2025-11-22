@@ -31,6 +31,13 @@ CouponService.addCoupon = function (data, action) {
     },
   });
 };
+CouponService.generateCouponCode = function (data) {
+  return fetch({
+    url: ApiConstant.COUPON_CODE_GENERATE_URL,
+    method: "post",
+    data: data,
+  });
+};
 
 CouponService.editCoupon = function (
   data,
@@ -71,7 +78,7 @@ CouponService.makeChangeCoupon = function (data, action, pageData) {
     params: {
       action: handleAction(encodedAction),
       coupon_id: data.id,
-      
+
     },
   });
 };

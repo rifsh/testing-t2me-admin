@@ -1,11 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { message } from "antd";
 import { ALL_COUPONS_MOCK_API, ENABLE_MOCK_API } from "configs/MockConfig";
+import { SUCCESS_CODE } from "constants/AppConstants";
 import CouponMockData from "mock/data/couponData";
 import CouponService from "services/CouponService";
 
 export const initialState = {
   loading: false,
+  couponCodeLoading: false,
   coupons: [],
+  generatedCouponCodes: [],
   selectedCouponsDays: [],
   filteredCoupons: [],
   error: null,
@@ -72,6 +76,17 @@ export const addCoupon = createAsyncThunk(
   async ({ data, action }, { rejectWithValue }) => {
     try {
       const response = await CouponService.addCoupon(data, action);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Error creating user");
+    }
+  }
+);
+export const generateCouponCodes = createAsyncThunk(
+  "coupon/generateCouponCodes",
+  async ({ data }, { rejectWithValue }) => {
+    try {
+      const response = await CouponService.generateCouponCode(data);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Error creating user");
@@ -278,6 +293,25 @@ const couponSlice = createSlice({
       })
       .addCase(addCoupon.rejected, (state, action) => {
         state.createPlaceLoading = false;
+        state.error = action.payload.data;
+      })
+      .addCase(generateCouponCodes.pending, (state) => {
+        state.couponCodeLoading = true;
+        state.error = null;
+      })
+      .addCase(generateCouponCodes.fulfilled, (state, action) => {
+        state.couponCodeLoading = false;
+        if (action.payload.status?.status_code === SUCCESS_CODE) {
+          state.generatedCouponCodes = action.payload.data?.coupon_codes;
+          message.success('Coupon codes Generated successfully');
+          return;
+        } else {
+          message.success(action.payload.status?.message || 'Error generating coupon codes');
+        }
+        state.error = null;
+      })
+      .addCase(generateCouponCodes.rejected, (state, action) => {
+        state.couponCodeLoading = false;
         state.error = action.payload.data;
       });
   },
