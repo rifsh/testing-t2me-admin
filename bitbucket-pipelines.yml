@@ -6,7 +6,7 @@ pipelines:
       - step:
           name: Pipe Line Test
           script:
-            - echo "🧪 Running Pipe Line Test"
+            - echo "🧪 Running Pipe Line Test.."
             # Check Flutter version            
             - echo "✅ All tests passed successfully"  
       
