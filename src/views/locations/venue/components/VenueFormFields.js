@@ -23,11 +23,10 @@ import {
   setPlaceValidationDialogVisible,
   setLocationModalLoading,
   validatePlace,
+  makeChangeVenue,
 } from "store/slices/locationSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Flex from "components/shared-components/Flex";
-import { useNavigate } from "react-router-dom";
-import LocationMarker from "./LocationMarker";
 import { APP_PREFIX_PATH, CDN_PATH } from "configs/AppConfig";
 import PlaceWithCountryForm from "components/util-components/FormItems/PlaceWithCountryForm";
 import { RulesMessageConstants } from "constants/RulesConstant";
@@ -35,7 +34,6 @@ import {
   setSelectedSubmitItem,
   setOriginalFiles,
 } from "store/slices/modalSlice";
-import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import DiscardButton from "components/shared-components/Buttons/DiscardButton";
 import { PlusOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import {
@@ -54,15 +52,21 @@ import DraftSystem from "drafts/components/DraftSystem";
 import { UPLOAD_FIELD_CONFIGS, extractFileObjects } from "utils/s3UploadUtil";
 import useS3ImageDelete from "utils/hooks/useS3ImageDelete";
 import ResizedMediaPicker from "components/util-components/Image/ResizedImgePicker";
+import {
+  setComment,
+  setCommentModalVisibility,
+} from "store/slices/EventOrganizerSlice";
+import { isOrganizer } from "configs/UserAccessConfig";
+import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
+import LocationMarker from "./LocationMarker";
+import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 
 const { Option } = Select;
 const { Text } = Typography;
 
-const VenueFormFields = ({ mode, venue }) => {
-  console.log(venue, "VENUEEEEEEEEEE FOR EDIT -------------");
+const VenueFormFields = ({ mode, venue, isMakeChanges }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const [isUploading, setIsUploading] = useState(false);
 
   const { handleDeleteImage, deletingImages } = useS3ImageDelete("venue");
@@ -81,11 +85,76 @@ const VenueFormFields = ({ mode, venue }) => {
     responseImpactData,
     warningPagination,
     ValidateData,
-    validationStatus,
     placeValidationDialogVisible,
     message: warningMessage,
   } = useSelector((state) => state.locations);
 
+  const {
+    isCommentModalVisible,
+    comment,
+    actionType,
+    loading: organizerLoading,
+  } = useSelector((state) => state.organizerUpdates);
+
+  useEffect(() => {
+    if (venue && mode === "EDIT") {
+      const thumbnailFile =
+        venue.thumbnail_image && venue.thumbnail_image !== "images"
+          ? [
+              {
+                uid: "thumbnail-1",
+                name: venue.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${venue.thumbnail_image}`,
+                id: null,
+                type: "image",
+              },
+            ]
+          : [];
+      const bannerFiles = venue?.media
+        ? venue.media.map((media) => ({
+            uid: `banner-${media.id}`,
+            name: media.media_url.split("/").pop(),
+            status: "done",
+            url: `${CDN_PATH}/${media.media_url}`,
+            thumbUrl: media.thumbnail_url
+              ? `${CDN_PATH}/${media.thumbnail_url}`
+              : undefined,
+            id: media.id,
+            type: media.media_type || "image",
+            mediaType: media.media_type,
+            caption: media.caption,
+          }))
+        : [];
+      form.setFieldsValue({
+        address: venue.address,
+        place: venue.place?.name,
+        name: venue.name,
+        capacity: venue.capacity,
+        indoor: venue.indoor,
+        latitude: venue.latitude,
+        longitude: venue.longitude,
+        description: venue.description,
+        screen_tech: venue.screen_tech || [],
+        audios: venue.audio || [],
+        accessbility_feature: venue.accessibility || [],
+        venue_add_on_services: !venue.venue_add_on_services
+          ? []
+          : venue.venue_add_on_services,
+        banner_images: bannerFiles,
+        thumbnail_image: thumbnailFile,
+      });
+    }
+  }, [form, venue, mode]);
+
+  useEffect(() => {
+    if (error) {
+      message.error(error);
+    }
+  }, [error]);
+
+  const handlePlaceSelect = (id) => dispatch(setSelectedPlace(id));
+  const normFile = (e) => (Array.isArray(e) ? e : e?.fileList || []);
   // Helper function to determine media type from file
   const getMediaType = (file) => {
     // If it's existing media with mediaType or media_type property, use that directly
@@ -121,119 +190,36 @@ const VenueFormFields = ({ mode, venue }) => {
 
     return isVideo ? "video" : "image";
   };
-  // ✅ Map existing venue data with media IDs for deletion
-  useEffect(() => {
-    if (venue && mode === "EDIT") {
-      // Map thumbnail image (always image type)
-      const thumbnailFile =
-        venue.thumbnail_image && venue.thumbnail_image !== "images"
-          ? [
-            {
-              uid: "thumbnail-1",
-              name: venue.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: `${CDN_PATH}/${venue.thumbnail_image}`,
-              id: null,
-              type: "image",
-            },
-          ]
-          : [];
-
-      // Map banner media (images and videos) with media ids
-      const bannerFiles = venue?.media
-        ? venue.media.map((media, index) => ({
-          uid: `banner-${media.id}`,
-          name: media.media_url.split("/").pop(),
-          status: "done",
-          url: `${CDN_PATH}/${media.media_url}`,
-          thumbUrl: media.thumbnail_url
-            ? `${CDN_PATH}/${media.thumbnail_url}`
-            : undefined,
-          id: media.id,
-          type: media.media_type || "image",
-          mediaType: media.media_type,
-          caption: media.caption,
-        }))
-        : [];
-
-      form.setFieldsValue({
-        address: venue.address,
-        place: venue.place?.name,
-        name: venue.name,
-        capacity: venue.capacity,
-        indoor: venue.indoor,
-        latitude: venue.latitude,
-        longitude: venue.longitude,
-        description: venue.description,
-        screen_tech: venue.screen_tech || [],
-        audios: venue.audio || [],
-        accessbility_feature: venue.accessibility || [],
-        venue_add_on_services: !venue.venue_add_on_services
-          ? []
-          : venue.venue_add_on_services,
-        banner_images: bannerFiles,
-        thumbnail_image: thumbnailFile,
-      });
-    }
-  }, [form, venue, mode]);
-
-  useEffect(() => {
-    if (error) {
-      message.error(error);
-    }
-  }, [error]);
-
-  const handlePlaceSelect = (id) => {
-    dispatch(setSelectedPlace(id));
-  };
-
-  const normFile = (e) => {
-    if (Array.isArray(e)) {
-      return e;
-    }
-    return e?.fileList || [];
-  };
 
   const onFinish = async () => {
     try {
       const values = await form.validateFields();
-
-      // Extract original file objects for S3 upload
       const originalFiles = extractFileObjects(values);
       dispatch(setOriginalFiles(originalFiles));
-
-      // Clean and sanitize add-on services
       const cleanedAddOnServices = Array.isArray(values.venue_add_on_services)
         ? values.venue_add_on_services.map((item) => ({
-          title: item.title?.trim(),
-          services: Array.isArray(item.services) ? item.services : [],
-        }))
+            title: item.title?.trim(),
+            services: Array.isArray(item.services) ? item.services : [],
+          }))
         : [];
-
-      // Transform thumbnail_image - always image type
       const thumbnailData = values.thumbnail_image?.[0]
         ? {
-          file_name:
-            values.thumbnail_image[0].name ||
-            values.thumbnail_image[0].file_name ||
-            null,
-          media_type: "image",
-        }
+            file_name:
+              values.thumbnail_image[0].name ||
+              values.thumbnail_image[0].file_name ||
+              null,
+            media_type: "image",
+          }
         : null;
-
-      // Transform banner_images - can be images or videos
       const bannerImagesData =
         values.banner_images?.map((media) => {
           const mediaType = getMediaType(media);
-
           return {
             id: media.id || null,
             file_name: media.name || media.file_name,
             media_type: mediaType,
           };
         }) || [];
-
-      // Shared base data
       const baseData = {
         ...values,
         latitude: coordinates.lat || venue?.latitude || 0,
@@ -246,15 +232,16 @@ const VenueFormFields = ({ mode, venue }) => {
         thumbnail_image: thumbnailData,
         banner_images: bannerImagesData,
       };
-
       if (mode === "EDIT") {
+        if (isOrganizer() && isMakeChanges) {
+          dispatch(setCommentModalVisibility(true));
+          return;
+        }
         const data = {
           ...baseData,
           place_id: selectedPlace ?? venue.place?.id,
           id: venue?.id,
         };
-        console.log(data, "data");
-
         const resultAction = await dispatch(validatePlace(data.place_id));
         if (validatePlace.fulfilled.match(resultAction)) {
           const response = resultAction.payload;
@@ -264,7 +251,6 @@ const VenueFormFields = ({ mode, venue }) => {
             const editResultAction = await dispatch(
               editVenue({ data, action: ActionType.WARNING })
             );
-
             if (editVenue.fulfilled.match(editResultAction)) {
               dispatch(setSelectedVenue(data));
               dispatch(setLocationDialogVisible(true));
@@ -274,23 +260,17 @@ const VenueFormFields = ({ mode, venue }) => {
           }
         }
       } else {
-        // ADD MODE
         if (!selectedPlace) {
           message.error("Place ID is missing. Please select a place.");
           return;
         }
-
         const formData = {
           ...baseData,
           place_id: selectedPlace,
         };
-        console.log("Form values:", formData);
-
         const resultAction = await dispatch(validatePlace(selectedPlace));
-
         if (validatePlace.fulfilled.match(resultAction)) {
           const response = resultAction.payload;
-          console.log("Validation response:", response);
           if (response.message === "warning") {
             dispatch(setPlaceValidationDialogVisible(true));
             return;
@@ -308,6 +288,84 @@ const VenueFormFields = ({ mode, venue }) => {
       console.log("Validation Failed:", errorInfo);
     }
   };
+
+  const handleSubmit = async () => {
+  if (!comment || comment.trim().length === 0) {
+    message.error("Please add a comment!");
+    return;
+  }
+  
+  try {
+    const values = await form.validateFields();
+    const originalFiles = extractFileObjects(values);
+    dispatch(setOriginalFiles(originalFiles));
+    
+    const cleanedAddOnServices = Array.isArray(values.venue_add_on_services)
+      ? values.venue_add_on_services.map((item) => ({
+          title: item.title?.trim(),
+          services: Array.isArray(item.services) ? item.services : [],
+        }))
+      : [];
+      
+    const thumbnailData = values.thumbnail_image?.[0]
+      ? {
+          file_name:
+            values.thumbnail_image[0].name ||
+            values.thumbnail_image[0].file_name ||
+            null,
+          media_type: "image",
+        }
+      : null;
+      
+    const bannerImagesData =
+      values.banner_images?.map((media) => {
+        const mediaType = getMediaType(media);
+        return {
+          id: media.id || null,
+          file_name: media.name || media.file_name,
+          media_type: mediaType,
+        };
+      }) || [];
+      
+    const editData = {
+      ...values,
+      latitude: coordinates.lat || venue?.latitude || 0,
+      longitude: coordinates.lng || venue?.longitude || 0,
+      capacity: values.capacity || 0,
+      indoor: values.indoor !== undefined ? values.indoor : false,
+      address: values.address,
+      description: values.description,
+      venue_add_on_services: cleanedAddOnServices,
+      thumbnail_image: thumbnailData,
+      banner_images: bannerImagesData,
+      place_id: selectedPlace ?? venue.place?.id,
+      id: venue?.id,
+      comment,
+    };
+    
+    const pageData = { venue_id: venue.id };
+    
+    // ✅ Dispatch makeChangeVenue with ActionType.SUBMIT
+    const resultAction = await dispatch(
+      makeChangeVenue({ data: editData, action: ActionType.SUBMIT, pageData })
+    );
+    
+    // ✅ Check if the action was fulfilled using .match()
+    if (makeChangeVenue.fulfilled.match(resultAction)) {
+      dispatch(setComment(""));
+      dispatch(setCommentModalVisibility(false));
+      dispatch(setSelectedSubmitItem(editData));
+      message.success(`Update ${actionType}ed successfully`);
+    } else {
+      // ✅ Handle rejection case
+      message.error(`Failed to ${actionType} the update`);
+    }
+  } catch (error) {
+    console.error("Validation or submission error:", error);
+    message.error(`Failed to ${actionType} the update`);
+  }
+};
+
 
   const handleWarningPagination = (page, size) => {
     dispatch(
@@ -384,7 +442,6 @@ const VenueFormFields = ({ mode, venue }) => {
               rules={[{ required: true, message: RulesMessageConstants.PLACE }]}
               isActivePlaces={true}
             />
-
             <Form.Item
               name="name"
               label="Venue"
@@ -439,17 +496,12 @@ const VenueFormFields = ({ mode, venue }) => {
             >
               <TextEditor />
             </Form.Item>
-
-            {/* Thumbnail Image - Image Only */}
             <Form.Item
               name="thumbnail_image"
               label="Thumbnail Image"
               valuePropName="value"
               rules={[
-                {
-                  required: true,
-                  message: "Please select thumbnail image",
-                },
+                { required: true, message: "Please select thumbnail image" },
               ]}
               getValueFromEvent={normFile}
               style={{ marginBottom: "0px", padding: "0px" }}
@@ -468,11 +520,8 @@ const VenueFormFields = ({ mode, venue }) => {
               style={{ padding: "00px 00px", fontSize: "11px" }}
             >
               {SupportFormatContent.join(",")}: {SupportImageFormat.join(", ")}{" "}
-              &{" resolution "}
-              {ResolutionByServices.venue} pixels.
+              & resolution {ResolutionByServices.venue} pixels.
             </Text>
-
-            {/* Banner Media - Images and Videos */}
             <Form.Item
               name="banner_images"
               label="Banner Media (Images & Videos)"
@@ -500,151 +549,145 @@ const VenueFormFields = ({ mode, venue }) => {
               <br />
               Videos: MP4, WebM, OGG formats. Max size: 100MB.
             </Text>
-          </Card>
-
-          {/* Add on Services Section */}
-          <Card>
-            <Form.Item name="venue_add_on_services" label="Add on Services">
-              <Form.List name="venue_add_on_services">
-                {(fields, { add, remove }) => (
-                  <>
-                    {fields.map(({ key, name, ...restField }) => (
-                      <div key={key}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, "title"]}
-                          label="Title"
-                        >
-                          <Input placeholder="Enter title" />
-                        </Form.Item>
-
-                        <Form.List name={[name, "services"]}>
-                          {(
-                            serviceFields,
-                            { add: addService, remove: removeService }
-                          ) => (
-                            <>
-                              <Row gutter={16}>
-                                {serviceFields.map(
-                                  ({
-                                    key: serviceKey,
-                                    name: serviceName,
-                                    ...serviceRestField
-                                  }) => (
-                                    <Col span={12} key={serviceKey}>
-                                      <Space
-                                        style={{
-                                          display: "flex",
-                                          marginBottom: 8,
-                                        }}
-                                        align="baseline"
-                                      >
-                                        <Form.Item
-                                          {...serviceRestField}
-                                          name={[serviceName]}
-                                          style={{ width: "100%" }}
+            <Card>
+              <Form.Item name="venue_add_on_services" label="Add on Services">
+                <Form.List name="venue_add_on_services">
+                  {(fields, { add, remove }) => (
+                    <>
+                      {fields.map(({ key, name, ...restField }) => (
+                        <div key={key}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, "title"]}
+                            label="Title"
+                          >
+                            <Input placeholder="Enter title" />
+                          </Form.Item>
+                          <Form.List name={[name, "services"]}>
+                            {(
+                              serviceFields,
+                              { add: addService, remove: removeService }
+                            ) => (
+                              <>
+                                <Row gutter={16}>
+                                  {serviceFields.map(
+                                    ({
+                                      key: serviceKey,
+                                      name: serviceName,
+                                      ...serviceRestField
+                                    }) => (
+                                      <Col span={12} key={serviceKey}>
+                                        <Space
+                                          style={{
+                                            display: "flex",
+                                            marginBottom: 8,
+                                          }}
+                                          align="baseline"
                                         >
-                                          <Input placeholder="Enter service" />
-                                        </Form.Item>
-                                        <MinusCircleOutlined
-                                          onClick={() =>
-                                            removeService(serviceName)
-                                          }
-                                        />
-                                      </Space>
-                                    </Col>
-                                  )
-                                )}
-                              </Row>
-                              <Row gutter={16}>
-                                <Col span={12}>
-                                  <Button
-                                    type="dashed"
-                                    onClick={() => addService("")}
-                                    block
-                                    icon={<PlusOutlined />}
-                                  >
-                                    Add Service
-                                  </Button>
-                                </Col>
-                                <Col span={12}>
-                                  <Button
-                                    type="dashed"
-                                    danger
-                                    onClick={() => remove(name)}
-                                    block
-                                    icon={<MinusCircleOutlined />}
-                                  >
-                                    Remove Title Section
-                                  </Button>
-                                </Col>
-                              </Row>
-                            </>
-                          )}
-                        </Form.List>
-                      </div>
-                    ))}
-                    <Form.Item style={{ marginTop: "16px" }}>
-                      <Button
-                        type="dashed"
-                        onClick={() => add({ title: "", services: [] })}
-                        block
-                        icon={<PlusOutlined />}
-                      >
-                        Add Title Section
-                      </Button>
-                    </Form.Item>
-                  </>
-                )}
-              </Form.List>
+                                          <Form.Item
+                                            {...serviceRestField}
+                                            name={[serviceName]}
+                                            style={{ width: "100%" }}
+                                          >
+                                            <Input placeholder="Enter service" />
+                                          </Form.Item>
+                                          <MinusCircleOutlined
+                                            onClick={() =>
+                                              removeService(serviceName)
+                                            }
+                                          />
+                                        </Space>
+                                      </Col>
+                                    )
+                                  )}
+                                </Row>
+                                <Row gutter={16}>
+                                  <Col span={12}>
+                                    <Button
+                                      type="dashed"
+                                      onClick={() => addService("")}
+                                      block
+                                      icon={<PlusOutlined />}
+                                    >
+                                      Add Service
+                                    </Button>
+                                  </Col>
+                                  <Col span={12}>
+                                    <Button
+                                      type="dashed"
+                                      danger
+                                      onClick={() => remove(name)}
+                                      block
+                                      icon={<MinusCircleOutlined />}
+                                    >
+                                      Remove Title Section
+                                    </Button>
+                                  </Col>
+                                </Row>
+                              </>
+                            )}
+                          </Form.List>
+                        </div>
+                      ))}
+                      <Form.Item style={{ marginTop: "16px" }}>
+                        <Button
+                          type="dashed"
+                          onClick={() => add({ title: "", services: [] })}
+                          block
+                          icon={<PlusOutlined />}
+                        >
+                          Add Title Section
+                        </Button>
+                      </Form.Item>
+                    </>
+                  )}
+                </Form.List>
+              </Form.Item>
+            </Card>
+            <Form.Item
+              name="latitude"
+              label="Latitude"
+              rules={[
+                {
+                  required: true,
+                  message: "Please select a location on the map",
+                },
+              ]}
+            >
+              <Input value={coordinates.lat} readOnly />
             </Form.Item>
+            <Form.Item
+              name="longitude"
+              label="Longitude"
+              rules={[
+                {
+                  required: true,
+                  message: "Please select a location on the map",
+                },
+              ]}
+            >
+              <Input value={coordinates.lng} readOnly />
+            </Form.Item>
+            <Card>
+              <div className="mb-3">
+                <h3>Pick Location</h3>
+                <MapContainer
+                  center={[
+                    coordinates.lat || venue?.latitude || 25.2048,
+                    coordinates.lng || venue?.longitude || 55.2708,
+                  ]}
+                  zoom={13}
+                  style={{ height: "400px", width: "100%" }}
+                >
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <LocationMarker form={form} />
+                </MapContainer>
+              </div>
+            </Card>
+            {mode === "EDIT" && <EditWarningAlert />}
           </Card>
-
-          <Form.Item
-            name="latitude"
-            label="Latitude"
-            rules={[
-              {
-                required: true,
-                message: "Please select a location on the map",
-              },
-            ]}
-          >
-            <Input value={coordinates.lat} readOnly />
-          </Form.Item>
-
-          <Form.Item
-            name="longitude"
-            label="Longitude"
-            rules={[
-              {
-                required: true,
-                message: "Please select a location on the map",
-              },
-            ]}
-          >
-            <Input value={coordinates.lng} readOnly />
-          </Form.Item>
-          <Card>
-            <div className="mb-3">
-              <h3>Pick Location</h3>
-              <MapContainer
-                center={[
-                  coordinates.lat || venue?.latitude || 25.2048,
-                  coordinates.lng || venue?.longitude || 55.2708,
-                ]}
-                zoom={13}
-                style={{ height: "400px", width: "100%" }}
-              >
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <LocationMarker form={form} />
-              </MapContainer>
-            </div>
-          </Card>
-          {mode === "EDIT" && <EditWarningAlert />}
         </Form>
       </Col>
-
       <ValidationModal
         visible={placeValidationDialogVisible}
         data={ValidateData?.errors}
@@ -662,19 +705,21 @@ const VenueFormFields = ({ mode, venue }) => {
         confirmText="Proceed"
         cancelText="Back"
         loading={loading}
-        tableConfig={{
-          title: "Active Schedules",
-          dataKey: "items",
-        }}
+        tableConfig={{ title: "Active Schedules", dataKey: "items" }}
         editable_status={editable_status}
         pagination={warningPagination}
         onPaginationChange={handleWarningPagination}
       />
       <LoadingOverlay loading={loading || isUploading} />
-
       <SubmitAndConfirmModal
         responseData={responseData}
-        addFunction={mode === "EDIT" ? editVenue : addVenue}
+        addFunction={
+          mode === "EDIT"
+            ? isMakeChanges
+              ? makeChangeVenue
+              : editVenue
+            : addVenue
+        }
         navigationPath={`${APP_PREFIX_PATH}/venue/list`}
         responseMessage={responseMessage}
         mode={mode}
@@ -686,6 +731,18 @@ const VenueFormFields = ({ mode, venue }) => {
           "thumbnail_image_upload_url",
           "banner_images_upload_url",
         ]}
+      />
+      <CommentShowModal
+        visible={isCommentModalVisible}
+        onSubmit={handleSubmit}
+        onCancel={() => dispatch(setCommentModalVisibility(false))}
+        loading={organizerLoading}
+        comment={comment}
+        setComment={(value) => dispatch(setComment(value))}
+        title={`${
+          actionType?.charAt(0).toUpperCase() + actionType?.slice(1) || "Change"
+        } Comment`}
+        warningMessage="Please provide a reason for the update."
       />
     </Row>
   );

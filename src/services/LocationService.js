@@ -1,4 +1,5 @@
 import fetch from "auth/FetchInterceptor";
+import { isOrganizer } from "configs/UserAccessConfig";
 import { ApiConstant } from "constants/ApiConstant";
 import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
@@ -79,7 +80,22 @@ LocationService.editPlace = function (
     // },
   });
 };
+LocationService.makeChangeVenue = function (data, action, pageData) {
+  const encodedAction = encodeURIComponent(handleAction(action));
 
+  const url = ApiConstant.ORGANIZER_VENUE_MAKE_CHANGES_URL;
+  const params = {
+    action: encodedAction,
+    ...Utils.filterParams(pageData),
+  };
+
+  return fetch({
+    url: `${url}`,
+    method: "put",
+    data: data,
+    params: params,
+  });
+};
 LocationService.editPlaceStatus = function (
   data,
   action,
@@ -150,13 +166,14 @@ LocationService.editVenue = function (
 // };
 LocationService.addVenue = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  // const formData = Utils.createFormData(data, {
-  //   fileKeys: ["thumbnail_image"],
-  //   skipEmpty: true,
-  // });
+  const url = Utils.getUrlByUserRole(
+    ApiConstant.VENUE_URL,
+    ApiConstant.ORGANIZER_VENUE_URL,
+    isOrganizer()
+  );
 
   return fetch({
-    url: ApiConstant.VENUE_URL,
+    url: url,
     method: "POST",
     data: data,
     params: {
@@ -185,18 +202,32 @@ LocationService.TenantCountry = function () {
   });
 };
 LocationService.getVenues = function (pageData) {
+  const url = Utils.getUrlByUserRole(
+    ApiConstant.VENUE_URL,
+    ApiConstant.ORGANIZER_VENUE_URL,
+    pageData.isOrganizer
+  );
   return fetch({
-    url: ApiConstant.VENUE_URL,
+    url: url,
     method: "get",
     params: Utils.filterParams(pageData),
   });
 };
 
 LocationService.getSingleVenues = function (venue_id) {
+  const url = Utils.getUrlByUserRole(
+    ApiConstant.SINGLE_VENUE_URL,
+    ApiConstant.ORGANIZER_VENUE_DETAIL_URL,
+    isOrganizer()
+  );
+  const params = isOrganizer()
+    ? { organizer_venue_id: venue_id }
+    : { venue_id: venue_id };
+
   return fetch({
-    url: ApiConstant.SINGLE_VENUE_URL,
+    url: url,
     method: "get",
-    params: { venue_id },
+    params: params,
   });
 };
 

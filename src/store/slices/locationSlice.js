@@ -18,7 +18,7 @@ export const initialState = {
   error: null,
   singleVenues: null,
   singlePlace: null,
-  tenant_country : [],
+  tenant_country: [],
   venues: [],
   detailedCountryList: [],
   places: [],
@@ -39,6 +39,7 @@ export const initialState = {
   editable_status: null,
   validationStatus: false,
   ValidateData: null,
+  submitPagination: { size: 10, page: 1 },
   placeValidationDialogVisible: false,
   pagination: { size: 10, page: 1 },
   listPagination: { size: 10, page: 1 },
@@ -165,6 +166,22 @@ export const getVenues = createAsyncThunk(
       }
     } catch (error) {
       return rejectWithValue(error.message || "Failed to fetch places");
+    }
+  }
+);
+export const makeChangeVenue = createAsyncThunk(
+  "Venue/makeChangeVenue",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      console.log(data, "DATA IN SERVICE");
+      const response = await LocationService.makeChangeVenue(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
     }
   }
 );
@@ -312,7 +329,6 @@ const locationSlice = createSlice({
     },
     setSelectedVenueList(state, action) {
       if (action.payload === "clear") {
-
         state.selectedVenueList = [];
       } else {
         console.log(state.selectedVenueList, "selectedVenueList");
@@ -473,6 +489,27 @@ const locationSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      .addCase(makeChangeVenue.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(makeChangeVenue.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+        if (payload.data?.list_of_updated_Schedules) {
+          state.submitPagination = payload.data?.list_of_updated_Schedules;
+        }
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseMessage = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(makeChangeVenue.rejected, (state, action) => {
+              state.loading = false;
+              state.error = action.payload;
+            })
       .addCase(getSingleVenues.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -627,7 +664,7 @@ const locationSlice = createSlice({
         state.loading = true;
       })
       .addCase(getTenantCoutry.fulfilled, (state, { payload }) => {
-        console.warn(payload,'....')
+        console.warn(payload, "....");
         state.loading = false;
         state.tenant_country = payload;
       })

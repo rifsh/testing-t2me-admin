@@ -28,6 +28,7 @@ export const ApiConstant = {
   EDIT_VENUE_URL: "/api/v1/location/secured/edit_venue",
   EDIT_VENUE_STATUS_URL: "/api/v1/location/secured/edit_venue_status",
   VENUE_URL: "/api/v1/location/secured/venue",
+  ORGANIZER_VENUE_URL: "/api/v1/location/secured/venue/organizer",
   SINGLE_VENUE_URL: "/api/v1/location/secured/singlevenue",
   SINGLE_PLACE_URL: "/api/v1/location/secured/singleplace",
   COUNTRY_DETAILS_URL: "/api/v1/location/secured/country/details",
@@ -59,6 +60,8 @@ export const ApiConstant = {
   ORGANIZER_OFFER_URL: "/api/v1/shared/offers/secured/offers/organizer",
   ORGANIZER_OFFER_MAKE_CHANGES_URL:
     "/api/v1/shared/offers/secured/offers/organizer/make_changes",
+  ORGANIZER_VENUE_MAKE_CHANGES_URL:
+    "/api/v1/location/secured/venue/organizer/make_changes",
   ORGANIZER_TICKET_MAKE_CHANGES_URL:
     "/api/v1/event/tickets/secured/ticketstructure/organizer/make_changes",
   ORGANIZER_OFFER_STATUS_URL:
@@ -71,6 +74,8 @@ export const ApiConstant = {
     "/api/v1/shared/offers/secured/offers/organizer/detail",
   ORGANIZER_TICKET_DETAIL_URL:
     "/api/v1/event/tickets/secured/single_ticketstructure/organizer",
+  ORGANIZER_VENUE_DETAIL_URL:
+    "/api/v1/location/secured/venue/organizer/detail",
 
   ORGANIZER_COUPON_URL: "/api/v1/shared/offers/secured/coupons/organizer",
   ORGANIZER_COUPON_MAKE_CHANGES_URL:
@@ -83,6 +88,8 @@ export const ApiConstant = {
     "/api/v1/shared/offers/secured/coupons/organizer/detail",
   ORGANIZER_COUPON_APPROVAL_URL:
     "/api/v1/shared/offers/secured/coupons/organizer/approval",
+  ORGANIZER_VENUE_APPROVAL_URL:
+    "/api/v1/location/secured/venue/organizer/approval",
 
   TAX_URL: "/api/v1/location/secured/taxes",
   TAX_STATUS_URL: "/api/v1/location/secured/taxes_status",

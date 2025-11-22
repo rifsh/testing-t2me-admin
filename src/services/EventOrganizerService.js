@@ -130,6 +130,13 @@ EventOrganizerService.fetchOrganizerSingleTicket = function (params) {
     params: Utils.filterParams(params),
   });
 };
+EventOrganizerService.fetchOrganizerSingleVenue = function (params) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_VENUE_DETAIL_URL,
+    method: "get",
+    params: Utils.filterParams(params),
+  });
+};
 EventOrganizerService.submitOrganizerCouponUpdate = function (
   data,
   action,
@@ -137,6 +144,21 @@ EventOrganizerService.submitOrganizerCouponUpdate = function (
 ) {
   return fetch({
     url: ApiConstant.ORGANIZER_COUPON_APPROVAL_URL,
+    method: "put",
+    data: data,
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(params),
+    },
+  });
+};
+EventOrganizerService.submitOrganizerVenueUpdate = function (
+  data,
+  action,
+  params
+) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_VENUE_APPROVAL_URL,
     method: "put",
     data: data,
     params: {

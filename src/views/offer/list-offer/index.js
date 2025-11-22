@@ -202,34 +202,33 @@ const OfferList = () => {
   return (
     <Card>
       <Flex alignItems="center" className="mb-3" justifyContent="space-between">
-        <SearchBarWithStatus fetchFunction={fetchAllOffers} />
+        <SearchBarWithStatus
+          fetchFunction={fetchAllOffers}
+          additionalParams={{ organizer: isOrganizer() ? false : null }}
+        />
         {isOrganizer
           ? hasPermission(
-            PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS
-          ) && (
-            <Button
-              type="primary"
-              icon={<FormOutlined />}
-              onClick={() =>
-                navigate(`${APP_PREFIX_PATH}/offer/add/${type}`)
-              }
-            >
-              Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
-            </Button>
-          )
+              PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS
+            ) && (
+              <Button
+                type="primary"
+                icon={<FormOutlined />}
+                onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add/${type}`)}
+              >
+                Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
+              </Button>
+            )
           : hasPermission(
-            PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS
-          ) && (
-            <Button
-              type="primary"
-              icon={<FormOutlined />}
-              onClick={() =>
-                navigate(`${APP_PREFIX_PATH}/offer/add/${type}`)
-              }
-            >
-              Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
-            </Button>
-          )}
+              PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.OFFER.ADD_OFFERS
+            ) && (
+              <Button
+                type="primary"
+                icon={<FormOutlined />}
+                onClick={() => navigate(`${APP_PREFIX_PATH}/offer/add/${type}`)}
+              >
+                Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Offer
+              </Button>
+            )}
       </Flex>
       <Table
         columns={tableColumns}
@@ -257,7 +256,8 @@ const OfferList = () => {
             {/* Header Section */}
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-4">
-                {selectedOffer.thumbnail_image && selectedOffer.thumbnail_image !== "images" ? (
+                {selectedOffer.thumbnail_image &&
+                selectedOffer.thumbnail_image !== "images" ? (
                   <div className="flex-shrink-0">
                     <CDNImage
                       src={`${selectedOffer.thumbnail_image}?v=${selectedOffer?.updated_at}`}
@@ -269,17 +269,37 @@ const OfferList = () => {
                   </div>
                 ) : (
                   <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-                    <span className="text-gray-400 text-xs text-center px-2">No Image</span>
+                    <span className="text-gray-400 text-xs text-center px-2">
+                      No Image
+                    </span>
                   </div>
                 )}
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedOffer.name}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {selectedOffer.name}
+                  </h2>
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedOffer.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {selectedOffer.status ? 'Active Schedule' : 'Inactive Schedule'}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        selectedOffer.status
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {selectedOffer.status
+                        ? "Active Schedule"
+                        : "Inactive Schedule"}
                     </span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedOffer.is_active ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {selectedOffer.is_active ? 'Active Offer' : 'Inactive Offer'}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        selectedOffer.is_active
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {selectedOffer.is_active
+                        ? "Active Offer"
+                        : "Inactive Offer"}
                     </span>
                   </div>
                 </div>
@@ -293,8 +313,7 @@ const OfferList = () => {
                   <div className="text-3xl font-bold text-blue-600">
                     {selectedOffer.discount_percentage_amount?.toFixed(2)}
                   </div>
-                )
-                }
+                )}
                 <div className="text-sm text-gray-500 mt-1">Discount</div>
               </div>
             </div>
@@ -304,44 +323,71 @@ const OfferList = () => {
               {/* Left Column - Core Information */}
               <div className="space-y-4">
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Validity Period</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Validity Period
+                  </h3>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Start Date</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        Start Date
+                      </span>
                       <span className="text-sm text-gray-900">
-                        {selectedOffer.start_date ? new Date(selectedOffer.start_date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        }) : "N/A"}
+                        {selectedOffer.start_date
+                          ? new Date(
+                              selectedOffer.start_date
+                            ).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })
+                          : "N/A"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">End Date</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        End Date
+                      </span>
                       <span className="text-sm text-gray-900">
-                        {selectedOffer.end_date ? new Date(selectedOffer.end_date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        }) : "N/A"}
+                        {selectedOffer.end_date
+                          ? new Date(selectedOffer.end_date).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )
+                          : "N/A"}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Usage Limits</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Usage Limits
+                  </h3>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Max Uses</span>
-                      <span className="text-sm text-gray-900">{selectedOffer.max_uses}</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        Max Uses
+                      </span>
+                      <span className="text-sm text-gray-900">
+                        {selectedOffer.max_uses}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Used Count</span>
-                      <span className="text-sm text-gray-900">{selectedOffer.used_count}</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        Used Count
+                      </span>
+                      <span className="text-sm text-gray-900">
+                        {selectedOffer.used_count}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Remaining Uses</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        Remaining Uses
+                      </span>
                       <span className="text-sm font-semibold text-blue-600">
                         {selectedOffer.max_uses - selectedOffer.used_count}
                       </span>
@@ -353,39 +399,87 @@ const OfferList = () => {
               {/* Right Column - Additional Details */}
               <div className="space-y-4">
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Requirements</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Requirements
+                  </h3>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Min Purchase</span>
-                      <span className="text-sm text-gray-900">{selectedOffer.min_purchase_amount?.toFixed(2)}</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        Min Purchase
+                      </span>
+                      <span className="text-sm text-gray-900">
+                        {selectedOffer.min_purchase_amount?.toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Date Required</span>
-                      <span className={`text-sm ${selectedOffer.date_required ? 'text-green-600' : 'text-gray-600'}`}>
-                        {selectedOffer.date_required ? 'Yes' : 'No'}
+                      <span className="text-sm font-medium text-gray-600">
+                        Date Required
+                      </span>
+                      <span
+                        className={`text-sm ${
+                          selectedOffer.date_required
+                            ? "text-green-600"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        {selectedOffer.date_required ? "Yes" : "No"}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Offer Type</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Offer Type
+                  </h3>
                   <div className="grid grid-cols-2 gap-2">
-                    <div className={`text-center py-2 rounded ${selectedOffer.is_general ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'}`}>
+                    <div
+                      className={`text-center py-2 rounded ${
+                        selectedOffer.is_general
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
                       <div className="text-sm font-medium">General</div>
-                      <div className="text-xs">{selectedOffer.is_general ? 'Yes' : 'No'}</div>
+                      <div className="text-xs">
+                        {selectedOffer.is_general ? "Yes" : "No"}
+                      </div>
                     </div>
-                    <div className={`text-center py-2 rounded ${selectedOffer.is_single ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                    <div
+                      className={`text-center py-2 rounded ${
+                        selectedOffer.is_single
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
                       <div className="text-sm font-medium">Single Use</div>
-                      <div className="text-xs">{selectedOffer.is_single ? 'Yes' : 'No'}</div>
+                      <div className="text-xs">
+                        {selectedOffer.is_single ? "Yes" : "No"}
+                      </div>
                     </div>
-                    <div className={`text-center py-2 rounded ${selectedOffer.is_offline ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-600'}`}>
+                    <div
+                      className={`text-center py-2 rounded ${
+                        selectedOffer.is_offline
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
                       <div className="text-sm font-medium">Offline</div>
-                      <div className="text-xs">{selectedOffer.is_offline ? 'Yes' : 'No'}</div>
+                      <div className="text-xs">
+                        {selectedOffer.is_offline ? "Yes" : "No"}
+                      </div>
                     </div>
-                    <div className={`text-center py-2 rounded ${selectedOffer.is_reusable ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-600'}`}>
+                    <div
+                      className={`text-center py-2 rounded ${
+                        selectedOffer.is_reusable
+                          ? "bg-orange-100 text-orange-800"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
                       <div className="text-sm font-medium">Reusable</div>
-                      <div className="text-xs">{selectedOffer.is_reusable ? 'Yes' : 'No'}</div>
+                      <div className="text-xs">
+                        {selectedOffer.is_reusable ? "Yes" : "No"}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -395,7 +489,9 @@ const OfferList = () => {
             {/* Keywords Section */}
             {selectedOffer.key_words?.length > 0 && (
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Keywords</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Keywords
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedOffer.key_words.map((keyword, index) => (
                     <span
@@ -412,16 +508,34 @@ const OfferList = () => {
             {/* Weekday Associations */}
             {selectedOffer.weekday_associations?.length > 0 && (
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Valid Days</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Valid Days
+                </h3>
                 <div className="grid grid-cols-7 gap-2">
-                  {['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'].map((day) => {
-                    const isActive = selectedOffer.weekday_associations.some(assoc => assoc.weekday === day);
+                  {[
+                    "MONDAY",
+                    "TUESDAY",
+                    "WEDNESDAY",
+                    "THURSDAY",
+                    "FRIDAY",
+                    "SATURDAY",
+                    "SUNDAY",
+                  ].map((day) => {
+                    const isActive = selectedOffer.weekday_associations.some(
+                      (assoc) => assoc.weekday === day
+                    );
                     return (
                       <div
                         key={day}
-                        className={`text-center py-2 rounded-lg ${isActive ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}`}
+                        className={`text-center py-2 rounded-lg ${
+                          isActive
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-200 text-gray-500"
+                        }`}
                       >
-                        <div className="text-sm font-medium">{day.slice(0, 3)}</div>
+                        <div className="text-sm font-medium">
+                          {day.slice(0, 3)}
+                        </div>
                       </div>
                     );
                   })}
@@ -431,30 +545,42 @@ const OfferList = () => {
 
             {/* Timeline */}
             <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Timeline</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                Timeline
+              </h3>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">Created</span>
+                  <span className="text-sm font-medium text-gray-600">
+                    Created
+                  </span>
                   <span className="text-sm text-gray-900">
-                    {new Date(selectedOffer.created_at).toLocaleString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {new Date(selectedOffer.created_at).toLocaleString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">Last Updated</span>
+                  <span className="text-sm font-medium text-gray-600">
+                    Last Updated
+                  </span>
                   <span className="text-sm text-gray-900">
-                    {new Date(selectedOffer.updated_at).toLocaleString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {new Date(selectedOffer.updated_at).toLocaleString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
                   </span>
                 </div>
               </div>

@@ -12,6 +12,8 @@ import { DEFAULT_PAGE_SIZE } from "constants/PageConstants";
 import { fetchAllOffers } from "store/slices/offerSlice";
 import Utils from "utils";
 import usePaginationHook from "utils/hooks/usePaginationHandler";
+import { fetchAllTickets } from "store/slices/ticketSlice";
+import { getVenues } from "store/slices/locationSlice";
 
 const { Option } = Select;
 
@@ -19,19 +21,19 @@ const OrganizerOfferStatusList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { type } = useParams();
-  const { filteredOffers, pagination, loading } = useSelector(
-    (state) => state.offers
+  const { filteredVenues, selectedVenue, pagination, loading } = useSelector(
+    (state) => state.locations
   );
+
   const [activeStatus, setactiveStatus] = useState();
   const handlePagination = usePaginationHook(fetchAllOffers);
 
   useEffect(() => {
     dispatch(
-      fetchAllOffers({
+      getVenues({
         ...DEFAULT_PAGE_SIZE,
-
+        organizer: true,
         isOrganizer: true,
-        event_code: Utils.getEventTypeCodeWithType(type),
       })
     );
   }, [dispatch]);
@@ -49,7 +51,7 @@ const OrganizerOfferStatusList = () => {
 
   const handleViewDetails = async (id) => {
     console.log(id);
-    navigate(`${APP_PREFIX_PATH}/track/offer/status/details/${id}/${type}`);
+    navigate(`${APP_PREFIX_PATH}/track/venue/status/details/${id}`);
   };
 
   const handleShowStatus = (status) => {
@@ -78,40 +80,21 @@ const OrganizerOfferStatusList = () => {
 
   const tableColumns = [
     {
-      title: "Offer Name",
+      title: "Ticket Name",
       dataIndex: "name",
-      sorter: (a, b) => a?.name?.localeCompare(b?.name),
-      render: (name) => name || "-",
-    },
-    {
-      title: "Organizer",
-      dataIndex: "user",
-      render: (user) => user?.username || "N/A",
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
       title: "Theaters",
       dataIndex: "theatre_ids",
       render: (theatreIds) => {
-        if (Array.isArray(theatreIds) && theatreIds.length > 0) {
-          return `${theatreIds.length} Theater(s) selected`;
-        }
-        return "No Theater Assigned";
-      },
-    },
-    {
-      title: "Events",
-      dataIndex: "event_ids",
-      render: (eventIds) => {
-        if (Array.isArray(eventIds) && eventIds.length > 0) {
-          return `${eventIds.length} Event(s) linked`;
-        }
-        return "No Event Linked";
+        return theatreIds ? `${theatreIds.length} theaters selected` : "None";
       },
     },
     {
       title: "Status",
       dataIndex: "approval_status",
-      render: (status) => {
+      render: (text) => {
         const mappedText = {
           pending: "Pending Approval",
           rejected: "Rejected",
@@ -120,18 +103,19 @@ const OrganizerOfferStatusList = () => {
         };
 
         const color =
-          {
-            approved: "green",
-            rejected: "red",
-            update: "blue",
-            pending: "orange",
-          }[status?.toLowerCase()] || "default";
+          text?.toLowerCase() === "approved"
+            ? "green"
+            : text?.toLowerCase() === "rejected"
+            ? "red"
+            : text?.toLowerCase() === "update"
+            ? "blue"
+            : "orange";
 
         return (
-          <Tag color={color}>{mappedText[status?.toLowerCase()] || status}</Tag>
+          <Tag color={color}>{mappedText[text?.toLowerCase()] || text}</Tag>
         );
       },
-      sorter: (a, b) => a?.approval_status?.localeCompare(b?.approval_status),
+      sorter: (a, b) => a.approval_status.localeCompare(b.approval_status),
       sortDirections: ["ascend", "descend"],
     },
     {
@@ -155,7 +139,6 @@ const OrganizerOfferStatusList = () => {
           isStatus={false}
           isOrganizer={true}
           additionalParams={{
-            isOrganizer: true,
             event_code: Utils.getEventTypeCodeWithType(type),
           }}
           additionalFilters={[]}
@@ -179,7 +162,7 @@ const OrganizerOfferStatusList = () => {
       <div className="table-responsive">
         <Table
           columns={tableColumns}
-          dataSource={filteredOffers}
+          dataSource={filteredVenues}
           rowKey="id"
           loading={loading}
           pagination={{
