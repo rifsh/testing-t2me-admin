@@ -150,9 +150,7 @@ LocationService.editVenue = function (
       ...Utils.filterParams(pageData),
       action: encodedAction,
     },
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    
   });
 };
 

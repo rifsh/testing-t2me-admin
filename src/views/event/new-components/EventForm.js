@@ -35,6 +35,7 @@ import {
   clearSelectedCoupons,
   clearAllTicketData,
   resetEventForm,
+  makeChangeEvent,
 } from "store/slices/eventSlice";
 
 import { fetchSubcategories } from "store/slices/categorySlice";
@@ -59,13 +60,21 @@ import { SubmitAndConfirmModal } from "components/util-components/ModalItems/Sub
 import { transformFormDataForAPI } from "../utils/formDataTransformer";
 import { EVENT_TYPES } from "constants/PageConstants";
 import DraftSystem from "drafts/components/DraftSystem";
-import { getRoleBasedEventSections } from "configs/UserAccessConfig";
+import {
+  getRoleBasedEventSections,
+  isOrganizer,
+} from "configs/UserAccessConfig";
 import { getSingleLeadEvents, addLeadEvent } from "store/slices/leadEventSlice";
 import { EDIT } from "constants/AppConstants";
+import {
+  setComment,
+  setCommentModalVisibility,
+} from "store/slices/EventOrganizerSlice";
+import CommentShowModal from "components/util-components/ModalItems/CommentShowModal";
 
 const { Step } = Steps;
 
-export default function EventForm({ eventId, mode = "add" }) {
+export default function EventForm({ eventId, mode = "add", isMakeChange }) {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
   const isInitialized = useRef(false);
@@ -97,7 +106,15 @@ export default function EventForm({ eventId, mode = "add" }) {
   const { singleLeadEvent, error: leadError } = useSelector(
     (state) => state.leadEvents
   );
-
+  const {
+    singleOrganizerUpdate,
+    loading: organizerLoading,
+    isCommentModalVisible,
+    comment,
+    actionType,
+    responseDataEvent,
+    responseMessageEvent,
+  } = useSelector((state) => state.organizerUpdates);
   const { selectedTax } = useSelector((state) => state.tax);
   const { selectedVenueList } = useSelector((state) => state.locations);
   const { ticketTypes, availableSeats, availableTicketTyps } = useSelector(
@@ -119,41 +136,6 @@ export default function EventForm({ eventId, mode = "add" }) {
   };
 
   // Helper function to determine media type from file
-  const getMediaType = (file) => {
-    // If it's existing media with mediaType or media_type property, use that directly
-    if (file.mediaType) {
-      return file.mediaType;
-    }
-
-    if (file.media_type) {
-      return file.media_type;
-    }
-
-    // If it's a new file being uploaded, check the originFileObj first (Ant Design Upload)
-    if (file.originFileObj && file.originFileObj.type) {
-      return file.originFileObj.type.startsWith("video/") ? "video" : "image";
-    }
-
-    // Check the type property directly
-    if (file.type) {
-      // If it's a MIME type string
-      if (typeof file.type === "string" && file.type.includes("/")) {
-        return file.type.startsWith("video/") ? "video" : "image";
-      }
-      // If it's already "image" or "video" string
-      return file.type;
-    }
-
-    // Fallback: Check file extension
-    const fileName = file.name || file.file_name || "";
-    const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
-    const isVideo = videoExtensions.some((ext) =>
-      fileName.toLowerCase().endsWith(ext)
-    );
-
-    return isVideo ? "video" : "image";
-  };
-
 
   // Show warning message when images are reset
   const showImageResetWarning = () => {
@@ -307,21 +289,25 @@ export default function EventForm({ eventId, mode = "add" }) {
         : [];
 
       // Map banner images/videos from media array with ids
-      const bannerFiles = eventDetails.media
-        ? eventDetails.media.map((media, index) => ({
-            uid: `banner-${media.id}`,
-            name: media.media_url.split("/").pop(),
-            status: "done",
-            url: `${CDN_PATH}/${media.media_url}`,
-            thumbUrl: media.thumbnail_url
-              ? `${CDN_PATH}/${media.thumbnail_url}`
-              : undefined,
-            id: media.id, // Important: media id for deletion
-            type: media.media_type || "image",
-            mediaType: media.media_type,
-            caption: media.caption,
-          }))
-        : [];
+      const bannerFiles =
+        (eventDetails.media && eventDetails.media.length > 0) ||
+        (eventDetails.banner_images && eventDetails.banner_images.length > 0)
+          ? (eventDetails.media || eventDetails.banner_images).map(
+              (media, index) => ({
+                uid: `banner-${media.id || index}`,
+                name: media.media_url.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${media.media_url}`,
+                thumbUrl: media.thumbnail_url
+                  ? `${CDN_PATH}/${media.thumbnail_url}`
+                  : undefined,
+                id: media.id,
+                type: media.media_type || "image",
+                mediaType: media.media_type,
+                caption: media.caption,
+              })
+            )
+          : [];
 
       // Map event images/videos with ids
       const eventImageFiles =
@@ -649,6 +635,11 @@ export default function EventForm({ eventId, mode = "add" }) {
       // The transformation will happen inside transformFormDataForAPI
 
       if (mode === EDIT) {
+        if (isOrganizer() && isMakeChange) {
+          dispatch(setCommentModalVisibility(true));
+          return;
+        }
+
         console.log("Submission mode: EDIT");
         await handleEditModeSubmission(completeFormData);
       } else {
@@ -813,7 +804,56 @@ export default function EventForm({ eventId, mode = "add" }) {
       dispatch(setSelectedSubmitItem(selectedEvent));
     }
   };
+  const handleCommentSubmit = async () => {
+    if (comment.trim().length === 0) {
+      message.error("Please add a comment!");
+      return;
+    }
 
+    try {
+      const finalValues = await form.validateFields();
+      console.log("Form validation successful");
+      console.log("Final Values from form:", finalValues);
+
+      const preservedImages = preserveImages(formData);
+      console.log("Preserved Images:", preservedImages);
+
+      const completeFormData = {
+        ...formData,
+        ...finalValues,
+        ...preservedImages,
+        event_type_id: eventType.find((item) => item.name === EVENT_TYPES.event)
+          ?.id,
+      };
+
+      const pageData = {
+        event_id: eventId,
+      };
+
+      console.log("Make Change Data:", completeFormData);
+
+      const resultAction = await dispatch(
+        makeChangeEvent({
+          data: completeFormData,
+          action: ActionType.SUBMIT, // Or use ActionType.SUBMIT
+          pageData,
+        })
+      );
+
+      if (makeChangeEvent.fulfilled.match(resultAction)) {
+        dispatch(setComment(""));
+        dispatch(setCommentModalVisibility(false));
+        dispatch(setSelectedSubmitItem(completeFormData));
+        message.success(`Update ${actionType}ed successfully`);
+      }
+    } catch (error) {
+      console.error("Failed to submit change:", error);
+      message.error(`Failed to ${actionType} the update`);
+    }
+
+    dispatch(setComment(""));
+    dispatch(setCommentModalVisibility(false));
+  };
   const handleModalCancel = () => {
     dispatch(setDialogVisible(false));
   };
@@ -1134,7 +1174,18 @@ export default function EventForm({ eventId, mode = "add" }) {
         pagination={warningPagination}
         onPaginationChange={handleWarningPagination}
       />
-
+      <CommentShowModal
+        visible={isCommentModalVisible}
+        onSubmit={handleCommentSubmit}
+        onCancel={() => dispatch(setCommentModalVisibility(false))}
+        loading={organizerLoading}
+        comment={comment}
+        setComment={(value) => dispatch(setComment(value))}
+        title={`${
+          actionType.charAt(0).toUpperCase() + actionType.slice(1)
+        } Comment`}
+        warningMessage={`Please provide a reason for the update.`}
+      />
       <SubmitAndConfirmModal
         responseData={responseData}
         addFunction={mode === EDIT ? editEvent : addEvent}

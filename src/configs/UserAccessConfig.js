@@ -201,7 +201,7 @@ export const getRoleBasedEventSections = () => {
       return EVENT_SECTIONS;
 
     case UserRoleConstants.eventOrganizerRoleId:
-      return EVENT_SECTIONS.filter((item) => item.key === "basic");
+      return EVENT_SECTIONS;
 
     default:
       console.warn("Unknown role ID:", currentUser.role_id);

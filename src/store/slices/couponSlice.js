@@ -96,7 +96,11 @@ export const makeChangesCoupon = createAsyncThunk(
   async ({ data, action, pageData }, { rejectWithValue }) => {
     try {
       console.log(pageData, "DATA IN SERVICE");
-      const response = await CouponService.makeChangeCoupon(data, action, pageData);
+      const response = await CouponService.makeChangeCoupon(
+        data,
+        action,
+        pageData
+      );
       return response;
     } catch (error) {
       return rejectWithValue(error.message || "Failed to edit event");
@@ -216,7 +220,7 @@ const couponSlice = createSlice({
       .addCase(makeChangesCoupon.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        console.log("action.payload", action.payload)
+        console.log("action.payload", action.payload);
       })
       .addCase(editCouponStatus.pending, (state) => {
         state.loading = true;

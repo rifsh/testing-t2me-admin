@@ -33,7 +33,7 @@ import {
   setCommentModalVisibility,
 } from "store/slices/EventOrganizerSlice";
 import { isOrganizer } from "configs/UserAccessConfig";
-import { EDIT } from "constants/AppConstants";
+import { ADD, EDIT } from "constants/AppConstants";
 import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil";
 
 const OfferForm = ({ mode, offer, type, isMakeChange }) => {
@@ -76,59 +76,58 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
     }
   }, [error]);
 
- useEffect(() => {
-  dispatch(setIsDateRequired(false));
-  if (offer && mode === EDIT && availableOfferDays.length > 0) {
-    // Extract day names from mapped_offer_weekdays
-    const applicableDayNames =
-      offer.weekday_associations?.map((day) => {
-        return day.weekday.toUpperCase();
-      }) || [];
+  useEffect(() => {
+    dispatch(setIsDateRequired(false));
+    if (offer && mode === EDIT && availableOfferDays.length > 0) {
+      // Extract day names from mapped_offer_weekdays
+      const applicableDayNames =
+        offer.weekday_associations?.map((day) => {
+          return day.weekday.toUpperCase();
+        }) || [];
 
-    // ✅ Map thumbnail with proper structure for edit mode
-    const thumbnailFile =
-      offer.thumbnail_image && offer.thumbnail_image !== "images"
-        ? [
-            {
-              uid: "thumbnail-1",
-              name: offer.thumbnail_image.split("/").pop(),
-              status: "done",
-              url: `${CDN_PATH}/${offer.thumbnail_image}`,
-              id: null,
-            },
-          ]
-        : [];
+      // ✅ Map thumbnail with proper structure for edit mode
+      const thumbnailFile =
+        offer.thumbnail_image && offer.thumbnail_image !== "images"
+          ? [
+              {
+                uid: "thumbnail-1",
+                name: offer.thumbnail_image.split("/").pop(),
+                status: "done",
+                url: `${CDN_PATH}/${offer.thumbnail_image}`,
+                id: null,
+              },
+            ]
+          : [];
 
-    const formData = {
-      name: offer.name,
-      theatre_ids: offer.theatre_ids?.map((item) => item) || [],
-      discount_percentage_amount: offer.discount_percentage_amount,
-      is_percentage: offer.is_percentage,
-      max_uses: offer.max_uses,
-      date_required: offer.date_required,
-      key_words: offer.key_words || [],
-      applicable_days: applicableDayNames,
-      thumbnail_image: thumbnailFile,
-      event_ids: offer.event_ids || [],
-    };
+      const formData = {
+        name: offer.name,
+        theatre_ids: offer.theatre_ids?.map((item) => item) || [],
+        discount_percentage_amount: offer.discount_percentage_amount,
+        is_percentage: offer.is_percentage,
+        max_uses: offer.max_uses,
+        date_required: offer.date_required,
+        key_words: offer.key_words || [],
+        applicable_days: applicableDayNames,
+        thumbnail_image: thumbnailFile,
+        event_ids: offer.event_ids || [],
+      };
 
-    if (offer.date_required && offer.start_date && offer.end_date) {
-      formData.start_date = dayjs(offer.start_date);
-      formData.end_date = dayjs(offer.end_date);
+      if (offer.date_required && offer.start_date && offer.end_date) {
+        formData.start_date = dayjs(offer.start_date);
+        formData.end_date = dayjs(offer.end_date);
+      }
+
+      console.log("Final Form Data:", formData);
+      form.setFieldsValue(formData);
+
+      // Force re-render after a small delay
+      setTimeout(() => {
+        form.setFieldsValue({ applicable_days: applicableDayNames });
+      }, 100);
     }
 
-    console.log("Final Form Data:", formData);
-    form.setFieldsValue(formData);
-
-    // Force re-render after a small delay
-    setTimeout(() => {
-      form.setFieldsValue({ applicable_days: applicableDayNames });
-    }, 100);
-  }
-
-  dispatch(setIsDateRequired(offer?.date_required));
-}, [form, offer, availableOfferDays]);
-
+    dispatch(setIsDateRequired(offer?.date_required));
+  }, [form, offer, availableOfferDays]);
 
   const onFinish = async () => {
     const values = await form.validateFields();
@@ -268,56 +267,62 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
 
     const values = await form.validateFields();
 
+    // Extract original file objects
+    const originalFiles = extractFileObjects(values);
+    dispatch(setOriginalFiles(originalFiles));
+
+    // Format dates if required
+    if (isDateRequired) {
+      values.start_date = Utils.formatDate(values.start_date);
+      values.end_date = Utils.formatDate(values.end_date);
+    }
+
+    values.key_words = values.key_words ?? [];
+    values.date_required = values.date_required ?? isDateRequired;
+    values.applicable_days = values.applicable_days || [];
+
+    // Map the applicable days
+    values.mapped_offer_weekdays =
+      availableOfferDays?.filter((day) => {
+        const dayName = day.full_name.toUpperCase();
+        return values.applicable_days?.includes(dayName);
+      }) ?? [];
+
+    const editData = {
+      ...values,
+      id: offer.id,
+      thumbnail_image: {
+        file_name:
+          values.thumbnail_image?.[0]?.name ||
+          values.thumbnail_image?.[0]?.file_name ||
+          null,
+        media_type: "image",
+      },
+    };
+
+    const pageData = {
+      offer_id: offer.id,
+    };
     try {
-      // Extract original file objects
-      const originalFiles = extractFileObjects(values);
-      dispatch(setOriginalFiles(originalFiles));
-
-      // Format dates if required
-      if (isDateRequired) {
-        values.start_date = Utils.formatDate(values.start_date);
-        values.end_date = Utils.formatDate(values.end_date);
-      }
-
-      values.key_words = values.key_words ?? [];
-      values.date_required = values.date_required ?? isDateRequired;
-      values.applicable_days = values.applicable_days || [];
-
-      // Map the applicable days
-      values.mapped_offer_weekdays =
-        availableOfferDays?.filter((day) => {
-          const dayName = day.full_name.toUpperCase();
-          return values.applicable_days?.includes(dayName);
-        }) ?? [];
-
-      const editData = {
-        ...values,
-        id: offer.id,
-        thumbnail_image: {
-          file_name:
-            values.thumbnail_image?.[0]?.name ||
-            values.thumbnail_image?.[0]?.file_name ||
-            null,
-          media_type: "image",
-        },
-      };
-
-      const pageData = {
-        offer_id: offer.id,
-      };
-
-      console.log("Make Change Data:", editData);
-
       const resultAction = await dispatch(
-        makeChangeOffer({ data: editData, action: ActionType.SUBMIT, pageData })
+        makeChangeOffer({
+          data: editData,
+          action: ActionType.SUBMIT,
+          pageData,
+        })
       );
 
       if (makeChangeOffer.fulfilled.match(resultAction)) {
         dispatch(setComment(""));
+        console.warn("first compelted")
+        // dispatch(setSelectedCoupon(editData));
         dispatch(setCommentModalVisibility(false));
         dispatch(setSelectedSubmitItem(editData));
         message.success(`Update ${actionType}ed successfully`);
+        // navigate(`${APP_PREFIX_PATH}/track-team/event-organizer/updatelist`);
       }
+
+      dispatch(setSelectedSubmitItem(editData));
     } catch (error) {
       message.error(`Failed to ${actionType} the update`);
     }
@@ -349,7 +354,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
               alignItems="center"
             >
               <h2 className="mb-3">
-                {mode === "ADD" ? "Add New Offer" : `Edit Offer`}{" "}
+                {mode === ADD ? "Add New Offer" : `Edit Offer`}{" "}
               </h2>
               <div className="mb-3">
                 <DiscardButton form={form} />
@@ -359,7 +364,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
                   htmlType="submit"
                   loading={loading || isUploading}
                 >
-                  {mode === "ADD" ? "Add" : `Save`}
+                  {mode === ADD ? "Add" : `Save`}
                 </Button>
               </div>
             </Flex>

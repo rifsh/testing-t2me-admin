@@ -11,12 +11,15 @@ const EditEvent = () => {
   const currentUser = getCurrentUser();
   const location = useLocation();
   const { eventId } = useParams();
+  const params = new URLSearchParams(location.search);
+
+  const isMakeChange = params.get("isMakeChange");
   const { mode = EDIT, id = eventId } = location.state || {};
-  if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
-    return <MultyStepEventFormOrganizer eventId={id} mode={EDIT} />;
-  } else {
-    return <EventForm eventId={id} mode={EDIT} />;
-  }
+  // if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
+  //   return <MultyStepEventFormOrganizer eventId={id} mode={EDIT} />;
+  // } else {
+  // }
+  return <EventForm eventId={id} mode={EDIT} isMakeChange={isMakeChange} />;
 };
 
 export default EditEvent;

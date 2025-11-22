@@ -53,6 +53,7 @@ import {
 } from "store/slices/EventOrganizerSlice"; // ✅ Add this
 import { isOrganizer } from "configs/UserAccessConfig"; // ✅ Add this
 import { extractFileObjects, UPLOAD_FIELD_CONFIGS } from "utils/s3UploadUtil"; // ✅ Add this
+import { ActionType } from "utils/api/warning-submit-util";
 
 const TicketFormFields = ({ mode, ticketId, isMakeChange }) => {
   const [form] = Form.useForm();
@@ -373,7 +374,7 @@ const TicketFormFields = ({ mode, ticketId, isMakeChange }) => {
           ticketData.id = ticketId;
 
           // Store ticket data in Redux for later use
-          dispatch(setSelectedSubmitItem(ticketData));
+          // dispatch(setSelectedSubmitItem(ticketData));
 
           // Open comment modal
           dispatch(setCommentModalVisibility(true));
@@ -445,7 +446,7 @@ const TicketFormFields = ({ mode, ticketId, isMakeChange }) => {
       const resultAction = await dispatch(
         makeChangeTicket({
           data: ticketData,
-          action: "SUBMIT", // Or use ActionType.SUBMIT
+          action: ActionType.SUBMIT, // Or use ActionType.SUBMIT
           pageData,
         })
       );

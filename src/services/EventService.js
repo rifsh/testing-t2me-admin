@@ -1,4 +1,5 @@
 import fetch from "auth/FetchInterceptor";
+import { isOrganizer } from "configs/UserAccessConfig";
 import { ApiConstant } from "constants/ApiConstant";
 import Utils from "utils";
 import { handleAction } from "utils/api/warning-submit-util";
@@ -6,15 +7,14 @@ import { handleAction } from "utils/api/warning-submit-util";
 const EventsService = {};
 
 EventsService.addEvent = function (data, action) {
-  console.log(data, "event dataaaaaa=======================");
   const encodedAction = encodeURIComponent(handleAction(action));
-  // const formData = Utils.createFormData(data, {
-  //   fileKeys: ["thumbnail_image"],
-  //   skipEmpty: true,
-  // });
-
+  const url = Utils.getUrlByUserRole(
+    ApiConstant.EVENT_URL,
+    ApiConstant.ORGANIZER_EVENT_URL,
+    isOrganizer()
+  );
   return fetch({
-    url: `${ApiConstant.EVENT_URL}`,
+    url: url,
     method: "POST",
     data: data,
     params: Utils.filterParams({ action: encodedAction }),
@@ -22,10 +22,6 @@ EventsService.addEvent = function (data, action) {
 };
 EventsService.addEventType = function (data, action) {
   const encodedAction = encodeURIComponent(handleAction(action));
-  // const formData = Utils.createFormData(data, {
-  //   fileKeys: ["thumbnail_image"],
-  //   skipEmpty: true,
-  // });
 
   return fetch({
     url: `${ApiConstant.EVENT_TYPE_URL}`,
@@ -34,15 +30,28 @@ EventsService.addEventType = function (data, action) {
     params: Utils.filterParams({ action: encodedAction }),
   });
 };
-
-EventsService.getAllEvent = function (pageData) {
-  // const params = {};
-  // if (pageData.page !== null) params.page = pageData.page;
-  // if (pageData.size !== null) params.size = pageData.size;
-  // if (pageData.search !== null) params.search = pageData.search;
-
+EventsService.makeChangeEvent = function (data, action, pageData) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const url = ApiConstant.ORGANIZER_EVENT_MAKE_CHANGES_URL;
+  const params = {
+    action: encodedAction,
+    ...Utils.filterParams(pageData),
+  };
   return fetch({
-    url: ApiConstant.EVENT_URL,
+    url: url,
+    method: "put",
+    data: data,
+    params: params,
+  });
+};
+EventsService.getAllEvent = function (pageData) {
+  const url = Utils.getUrlByUserRole(
+    ApiConstant.EVENT_URL,
+    ApiConstant.ORGANIZER_EVENT_URL,
+    pageData.isOrganizer
+  );
+  return fetch({
+    url: url,
     method: "get",
     params: Utils.filterParams(pageData),
   });
@@ -67,10 +76,19 @@ EventsService.checkValidation = function () {
   });
 };
 EventsService.fetchEventDetails = function (eventId) {
+  const url = Utils.getUrlByUserRole(
+    ApiConstant.EVENT_DETAILS_URL,
+    ApiConstant.ORGANIZER_EVENT_DETAIL_URL,
+    isOrganizer()
+  );
+
+  const params = isOrganizer()
+    ? { organizer_event_id: eventId }
+    : { event_id: eventId };
   return fetch({
-    url: ApiConstant.EVENT_DETAILS_URL,
+    url: url,
     method: "get",
-    params: Utils.filterParams({ event_id: eventId }),
+    params: Utils.filterParams(params),
   });
 };
 EventsService.checkEventEditAvailblily = function (params) {

@@ -489,27 +489,7 @@ const locationSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(makeChangeVenue.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(makeChangeVenue.fulfilled, (state, { payload }) => {
-        state.loading = false;
-        state.responseData = payload.data;
-        if (payload.data?.list_of_updated_Schedules) {
-          state.submitPagination = payload.data?.list_of_updated_Schedules;
-        }
-        if (payload.status) {
-          state.message = payload.status.message;
-          state.responseMessage = payload.status.message;
-          state.responseImpactData = payload.status.data?.active_schedules;
-          state.editable_status = payload.status?.editable_status;
-          state.warningPagination = payload.status?.data?.active_schedules;
-        }
-      })
-      .addCase(makeChangeVenue.rejected, (state, action) => {
-              state.loading = false;
-              state.error = action.payload;
-            })
+
       .addCase(getSingleVenues.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -648,6 +628,27 @@ const locationSlice = createSlice({
       .addCase(createPlace.rejected, (state, action) => {
         state.createPlaceLoading = false;
         state.error = action.payload.data;
+      })
+      // In locationSlice.js extraReducers builder, add:
+
+      .addCase(makeChangeVenue.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(makeChangeVenue.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.responseData = payload.data;
+
+        if (payload.status) {
+          state.message = payload.status.message;
+          state.responseImpactData = payload.status.data?.active_schedules;
+          state.editable_status = payload.status?.editable_status;
+          state.warningPagination = payload.status?.data?.active_schedules;
+        }
+      })
+      .addCase(makeChangeVenue.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Failed to make changes to venue";
       })
       .addCase(fetchPlaceWithCountry.pending, (state) => {
         state.loading = true;

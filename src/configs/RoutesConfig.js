@@ -974,6 +974,16 @@ const ALL_PROTECTED_ROUTES = {
     subcategory: "track_requests",
     item: "event",
   },
+  "track.event.event.details": {
+    key: "trackRequest.organizer.status",
+    path: `${APP_PREFIX_PATH}/track/event/status/details/:eventId`,
+    component: React.lazy(() =>
+      import("views/track-team/event-organizer/status-details")
+    ),
+    category: "issues",
+    subcategory: "track_requests",
+    item: "event",
+  },
   "track.schedule.organizer": {
     key: "trackRequest.organizer.status",
     path: `${APP_PREFIX_PATH}/track/event-schedule/status/list`,
