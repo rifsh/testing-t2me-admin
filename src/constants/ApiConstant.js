@@ -33,6 +33,7 @@ export const ApiConstant = {
   SINGLE_PLACE_URL: "/api/v1/location/secured/singleplace",
   COUNTRY_DETAILS_URL: "/api/v1/location/secured/country/details",
   EVENT_URL: "/api/v1/event/events/secured/event",
+  ORGANIZER_EVENT_URL: "/api/v1/event/events/secured/events/organizer",
   LEAD_EVENT_URL: "/api/v1/event/events/secured/lead_event/creation",
   EVENT_VALIDATION_URL: "/api/v1/event/events/secured/validation_event",
   EVENT_DETAILS_URL: "/api/v1/event/events/secured/events/detail",
@@ -68,10 +69,14 @@ export const ApiConstant = {
     "/api/v1/shared/offers/secured/offers_status/organizer",
   ORGANIZER_OFFER_APPROVAL_URL:
     "/api/v1/shared/offers/secured/offers/organizer/approval",
+  ORGANIZER_EVENT_APPROVAL_URL:
+    "/api/v1/event/events/secured/events/organizer/approval",
   ORGANIZER_TICKET_APPROVAL_URL:
     "/api/v1/event/tickets/secured/ticketstructure/organizer/approval",
   ORGANIZER_OFFER_DETAIL_URL:
     "/api/v1/shared/offers/secured/offers/organizer/detail",
+  ORGANIZER_EVENT_DETAIL_URL:
+    "/api/v1/event/events/secured/events/organizer/detail",
   ORGANIZER_TICKET_DETAIL_URL:
     "/api/v1/event/tickets/secured/single_ticketstructure/organizer",
   ORGANIZER_VENUE_DETAIL_URL:
