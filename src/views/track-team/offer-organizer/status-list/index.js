@@ -18,7 +18,7 @@ const { Option } = Select;
 const OrganizerOfferStatusList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { type } = useParams(); 
+  const { type } = useParams();
   const { filteredOffers, pagination, loading } = useSelector(
     (state) => state.offers
   );
@@ -29,7 +29,7 @@ const OrganizerOfferStatusList = () => {
     dispatch(
       fetchAllOffers({
         ...DEFAULT_PAGE_SIZE,
-        organizer: true,
+
         isOrganizer: true,
         event_code: Utils.getEventTypeCodeWithType(type),
       })
@@ -77,71 +77,73 @@ const OrganizerOfferStatusList = () => {
   );
 
   const tableColumns = [
-  {
-    title: "Offer Name",
-    dataIndex: "name",
-    sorter: (a, b) => a?.name?.localeCompare(b?.name),
-    render: (name) => name || "-",
-  },
-  {
-    title: "Organizer",
-    dataIndex: "user",
-    render: (user) => user?.username || "N/A",
-  },
-  {
-    title: "Theaters",
-    dataIndex: "theatre_ids",
-    render: (theatreIds) => {
-      if (Array.isArray(theatreIds) && theatreIds.length > 0) {
-        return `${theatreIds.length} Theater(s) selected`;
-      }
-      return "No Theater Assigned";
+    {
+      title: "Offer Name",
+      dataIndex: "name",
+      sorter: (a, b) => a?.name?.localeCompare(b?.name),
+      render: (name) => name || "-",
     },
-  },
-  {
-    title: "Events",
-    dataIndex: "event_ids",
-    render: (eventIds) => {
-      if (Array.isArray(eventIds) && eventIds.length > 0) {
-        return `${eventIds.length} Event(s) linked`;
-      }
-      return "No Event Linked";
+    {
+      title: "Organizer",
+      dataIndex: "user",
+      render: (user) => user?.username || "N/A",
     },
-  },
-  {
-    title: "Status",
-    dataIndex: "approval_status",
-    render: (status) => {
-      const mappedText = {
-        pending: "Pending Approval",
-        rejected: "Rejected",
-        approved: "Approved",
-        update: "Change Requested",
-      };
-
-      const color = {
-        approved: "green",
-        rejected: "red",
-        update: "blue",
-        pending: "orange",
-      }[status?.toLowerCase()] || "default";
-
-      return <Tag color={color}>{mappedText[status?.toLowerCase()] || status}</Tag>;
+    {
+      title: "Theaters",
+      dataIndex: "theatre_ids",
+      render: (theatreIds) => {
+        if (Array.isArray(theatreIds) && theatreIds.length > 0) {
+          return `${theatreIds.length} Theater(s) selected`;
+        }
+        return "No Theater Assigned";
+      },
     },
-    sorter: (a, b) => a?.approval_status?.localeCompare(b?.approval_status),
-    sortDirections: ["ascend", "descend"],
-  },
-  {
-    title: "",
-    dataIndex: "actions",
-    render: (_, elm) => (
-      <div className="text-right">
-        <EllipsisDropdown menu={dropdownMenu(elm)} />
-      </div>
-    ),
-  },
-];
+    {
+      title: "Events",
+      dataIndex: "event_ids",
+      render: (eventIds) => {
+        if (Array.isArray(eventIds) && eventIds.length > 0) {
+          return `${eventIds.length} Event(s) linked`;
+        }
+        return "No Event Linked";
+      },
+    },
+    {
+      title: "Status",
+      dataIndex: "approval_status",
+      render: (status) => {
+        const mappedText = {
+          pending: "Pending Approval",
+          rejected: "Rejected",
+          approved: "Approved",
+          update: "Change Requested",
+        };
 
+        const color =
+          {
+            approved: "green",
+            rejected: "red",
+            update: "blue",
+            pending: "orange",
+          }[status?.toLowerCase()] || "default";
+
+        return (
+          <Tag color={color}>{mappedText[status?.toLowerCase()] || status}</Tag>
+        );
+      },
+      sorter: (a, b) => a?.approval_status?.localeCompare(b?.approval_status),
+      sortDirections: ["ascend", "descend"],
+    },
+    {
+      title: "",
+      dataIndex: "actions",
+      render: (_, elm) => (
+        <div className="text-right">
+          <EllipsisDropdown menu={dropdownMenu(elm)} />
+        </div>
+      ),
+    },
+  ];
 
   const [form] = Form.useForm();
 
@@ -153,11 +155,11 @@ const OrganizerOfferStatusList = () => {
           isStatus={false}
           isOrganizer={true}
           additionalParams={{
-            event_code: Utils.getEventTypeCodeWithType(type)
+            isOrganizer: true,
+            event_code: Utils.getEventTypeCodeWithType(type),
           }}
           additionalFilters={[]}
         />
-
 
         <div className="mb-3">
           <Select

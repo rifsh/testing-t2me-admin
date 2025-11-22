@@ -120,6 +120,21 @@ export const submitOrganizerOfferUpdate = createAsyncThunk(
     }
   }
 );
+export const submitOrganizerEventUpdate = createAsyncThunk(
+  "organizerUpdates/submitOrganizerEventUpdate",
+  async ({ data, action, params }, { rejectWithValue }) => {
+    try {
+      const response = await EventOrganizerService.submitOrganizerEventUpdate(
+        data,
+        action,
+        params
+      );
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to update category");
+    }
+  }
+);
 export const submitOrganizerTicketUpdate = createAsyncThunk(
   "organizerUpdates/submitOrganizerTicketUpdate",
   async ({ data, action, params }, { rejectWithValue }) => {
@@ -150,6 +165,21 @@ export const submitOrganizerCouponUpdate = createAsyncThunk(
     }
   }
 );
+export const submitOrganizerVenueUpdate = createAsyncThunk(
+  "organizerUpdates/submitOrganizerVenueUpdate",
+  async ({ data, action, params }, { rejectWithValue }) => {
+    try {
+      const response = await EventOrganizerService.submitOrganizerVenueUpdate(
+        data,
+        action,
+        params
+      );
+      return response.status;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to update category");
+    }
+  }
+);
 
 export const fetchOrganizerSingleOfferUpdate = createAsyncThunk(
   "organizerUpdates/fetchOrganizerSingleOfferUpdate",
@@ -164,12 +194,40 @@ export const fetchOrganizerSingleOfferUpdate = createAsyncThunk(
     }
   }
 );
+export const fetchOrganizerSingleEventUpdate = createAsyncThunk(
+  "organizerUpdates/fetchOrganizerSingleEventUpdate",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response =
+        await EventOrganizerService.fetchOrganizerSingleEventUpdate(params);
+      console.log("-----------Fetching Organizer Updates", response.data[0]);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
 export const fetchOrganizerSingleTicket = createAsyncThunk(
   "organizerUpdates/fetchOrganizerSingleTicket",
   async (params, { rejectWithValue }) => {
     try {
-      const response =
-        await EventOrganizerService.fetchOrganizerSingleTicket(params);
+      const response = await EventOrganizerService.fetchOrganizerSingleTicket(
+        params
+      );
+      console.log("-----------Fetching Organizer Updates", response.data[0]);
+      return response.data[0];
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch event details");
+    }
+  }
+);
+export const fetchOrganizerSingleVenue = createAsyncThunk(
+  "organizerUpdates/fetchOrganizerSingleVenue",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response = await EventOrganizerService.fetchOrganizerSingleVenue(
+        params
+      );
       console.log("-----------Fetching Organizer Updates", response.data[0]);
       return response.data[0];
     } catch (error) {
@@ -288,12 +346,12 @@ const OrganizerUpdateSlice = createSlice({
           state.error = payload;
         }
       )
-      .addCase(fetchOrganizerSingleTicket.pending, (state) => {
+      .addCase(fetchOrganizerSingleEventUpdate.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(
-        fetchOrganizerSingleTicket.fulfilled,
+        fetchOrganizerSingleEventUpdate.fulfilled,
         (state, { payload }) => {
           state.loading = false;
           state.singleOrganizerUpdate = payload;
@@ -301,12 +359,38 @@ const OrganizerUpdateSlice = createSlice({
         }
       )
       .addCase(
-        fetchOrganizerSingleTicket.rejected,
+        fetchOrganizerSingleEventUpdate.rejected,
         (state, { payload }) => {
           state.loading = false;
           state.error = payload;
         }
       )
+      .addCase(fetchOrganizerSingleTicket.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchOrganizerSingleTicket.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.singleOrganizerUpdate = payload;
+        state.pagination = payload;
+      })
+      .addCase(fetchOrganizerSingleTicket.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+      })
+      .addCase(fetchOrganizerSingleVenue.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchOrganizerSingleVenue.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.singleOrganizerUpdate = payload;
+        state.pagination = payload;
+      })
+      .addCase(fetchOrganizerSingleVenue.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+      })
       .addCase(submitOrganizerCouponUpdate.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -317,6 +401,19 @@ const OrganizerUpdateSlice = createSlice({
         state.pagination = payload;
       })
       .addCase(submitOrganizerCouponUpdate.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload;
+      })
+      .addCase(submitOrganizerVenueUpdate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitOrganizerVenueUpdate.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.singleOrganizerUpdate = payload;
+        state.pagination = payload;
+      })
+      .addCase(submitOrganizerVenueUpdate.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
       })
@@ -401,6 +498,21 @@ const OrganizerUpdateSlice = createSlice({
         }
       })
       .addCase(submitOrganizerOfferUpdate.rejected, (state, { payload }) => {
+        state.loading = false;
+        state.error = payload || "Faileds";
+      })
+      .addCase(submitOrganizerEventUpdate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitOrganizerEventUpdate.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        if (payload.message) {
+          state.message = payload.message;
+          state.editable_status = payload.editable_status;
+        }
+      })
+      .addCase(submitOrganizerEventUpdate.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload || "Faileds";
       })

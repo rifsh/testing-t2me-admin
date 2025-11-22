@@ -66,19 +66,13 @@ OfferService.makeChangeOffer = function (data, action, pageData) {
 
   const encodedAction = encodeURIComponent(handleAction(action));
 
-  const offerUrl = ApiConstant.ORGANIZER_OFFER_MAKE_CHANGES_URL;
-  const params = {
-    action: encodedAction,
-    ...Utils.filterParams(pageData),
-  };
-
   return fetch({
-    url: `${offerUrl}`,
+    url: ApiConstant.ORGANIZER_OFFER_MAKE_CHANGES_URL,
     method: "put",
     data: data,
-    params: params,
-    headers: {
-      "Content-Type": "multipart/form-data",
+    params: {
+      action: handleAction(encodedAction),
+      ...Utils.filterParams(pageData),
     },
   });
 };

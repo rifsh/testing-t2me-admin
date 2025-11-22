@@ -100,6 +100,21 @@ EventOrganizerService.submitOrganizerOfferUpdate = function (
     },
   });
 };
+EventOrganizerService.submitOrganizerEventUpdate = function (
+  data,
+  action,
+  params
+) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_EVENT_APPROVAL_URL,
+    method: "put",
+    data: data,
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(params),
+    },
+  });
+};
 EventOrganizerService.submitOrganizerTicketUpdate = function (
   data,
   action,
@@ -123,9 +138,23 @@ EventOrganizerService.fetchOrganizerSingleOfferUpdate = function (params) {
     params: Utils.filterParams(params),
   });
 };
+EventOrganizerService.fetchOrganizerSingleEventUpdate = function (params) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_EVENT_DETAIL_URL,
+    method: "get",
+    params: Utils.filterParams(params),
+  });
+};
 EventOrganizerService.fetchOrganizerSingleTicket = function (params) {
   return fetch({
     url: ApiConstant.ORGANIZER_TICKET_DETAIL_URL,
+    method: "get",
+    params: Utils.filterParams(params),
+  });
+};
+EventOrganizerService.fetchOrganizerSingleVenue = function (params) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_VENUE_DETAIL_URL,
     method: "get",
     params: Utils.filterParams(params),
   });
@@ -137,6 +166,21 @@ EventOrganizerService.submitOrganizerCouponUpdate = function (
 ) {
   return fetch({
     url: ApiConstant.ORGANIZER_COUPON_APPROVAL_URL,
+    method: "put",
+    data: data,
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(params),
+    },
+  });
+};
+EventOrganizerService.submitOrganizerVenueUpdate = function (
+  data,
+  action,
+  params
+) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_VENUE_APPROVAL_URL,
     method: "put",
     data: data,
     params: {

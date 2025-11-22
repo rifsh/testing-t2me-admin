@@ -16,7 +16,7 @@ import VenueFormFields from "../components/VenueFormFields";
 const ADD = "ADD";
 const EDIT = "EDIT";
 
-const VenueForm = ({ mode, venueId }) => {
+const VenueForm = ({ mode, venueId, isMakeChanges }) => {
   const dispatch = useDispatch();
 
   const { singleVenues } = useSelector((state) => state.locations);
@@ -41,7 +41,7 @@ const VenueForm = ({ mode, venueId }) => {
         }}
       >
         <div style={{ width: "100%" }}>
-          <VenueFormFields mode={mode} venue={singleVenues} />
+          <VenueFormFields mode={mode} venue={singleVenues} isMakeChanges={isMakeChanges} />
         </div>
       </Form>
     </>

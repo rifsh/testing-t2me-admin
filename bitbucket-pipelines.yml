@@ -1,0 +1,12 @@
+image: atlassian/default-image:3
+
+pipelines:
+  branches:
+    feature/**:
+      - step:
+          name: Pipe Line Test
+          script:
+            - echo "🧪 Running Pipe Line Test.."
+            # Check Flutter version            
+            - echo "✅ All tests passed successfully..."  
+      

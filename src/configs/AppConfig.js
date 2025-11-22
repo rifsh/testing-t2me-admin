@@ -161,6 +161,7 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
           general: {
             enabled: true,
             items: {
+              venue: { enabled: true },
               offer: { enabled: true },
               coupon: { enabled: true },
             },
@@ -169,8 +170,8 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
           event: {
             enabled: true,
             items: {
-              offer: { enabled: true },      // Event Organizer sees this
-              coupon: { enabled: true },     // Event Organizer sees this
+              offer: { enabled: true }, // Event Organizer sees this
+              coupon: { enabled: true }, // Event Organizer sees this
               organizer: { enabled: true },
               seat: { enabled: true },
               schedule: { enabled: true },
@@ -181,8 +182,8 @@ export const NAVIGATION_BAR_FEATURE_FLAGS = {
           movie: {
             enabled: false,
             items: {
-              offer: { enabled: true },      // Event Organizer sees this
-              coupon: { enabled: true },     // Event Organizer sees this
+              offer: { enabled: true }, // Event Organizer sees this
+              coupon: { enabled: true }, // Event Organizer sees this
               seat: { enabled: true },
               schedule: { enabled: true },
               screen: { enabled: true },

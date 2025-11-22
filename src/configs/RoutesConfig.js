@@ -924,6 +924,26 @@ const ALL_PROTECTED_ROUTES = {
     subcategory: "track_requests",
     item: "event",
   },
+  "track.general.venue": {
+    key: "trackRequest.general.status",
+    path: `${APP_PREFIX_PATH}/track/venue/status/list`,
+    component: React.lazy(() =>
+      import("views/track-team/venue-organizer/status-list")
+    ),
+    category: "issues",
+    subcategory: "track_requests",
+    item: "event",
+  },
+  "track.general.venue.details": {
+    key: "trackRequest.venue.status.details",
+    path: `${APP_PREFIX_PATH}/track/venue/status/details/:venueId`,
+    component: React.lazy(() =>
+      import("views/track-team/venue-organizer/status-details")
+    ),
+    category: "issues",
+    subcategory: "track_requests",
+    item: "movie",
+  },
   "track.event.ticket": {
     key: "trackRequest.ticket.status",
     path: `${APP_PREFIX_PATH}/track/event-tickets/status/list/:type`,
@@ -949,6 +969,16 @@ const ALL_PROTECTED_ROUTES = {
     path: `${APP_PREFIX_PATH}/track/event/status/list`,
     component: React.lazy(() =>
       import("views/track-team/event-organizer/status-list")
+    ),
+    category: "issues",
+    subcategory: "track_requests",
+    item: "event",
+  },
+  "track.event.event.details": {
+    key: "trackRequest.organizer.status",
+    path: `${APP_PREFIX_PATH}/track/event/status/details/:eventId`,
+    component: React.lazy(() =>
+      import("views/track-team/event-organizer/status-details")
     ),
     category: "issues",
     subcategory: "track_requests",
