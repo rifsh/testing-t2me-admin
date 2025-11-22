@@ -8,5 +8,5 @@ pipelines:
           script:
             - echo "🧪 Running Pipe Line Test.."
             # Check Flutter version            
-            - echo "✅ All tests passed successfully"  
+            - echo "✅ All tests passed successfully..."  
       
