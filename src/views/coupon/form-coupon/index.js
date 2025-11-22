@@ -181,7 +181,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
     try {
       const values = await form.validateFields();
       if (values?.key_words?.length === 0) {
-        message.warning("Coupon is requiered");
+        message.warning("Coupon code is required");
         return;
       }
       const originalFiles = extractFileObjects(values);
