@@ -30,7 +30,20 @@ EventsService.addEventType = function (data, action) {
     params: Utils.filterParams({ action: encodedAction }),
   });
 };
-
+EventsService.makeChangeEvent = function (data, action, pageData) {
+  const encodedAction = encodeURIComponent(handleAction(action));
+  const url = ApiConstant.ORGANIZER_EVENT_MAKE_CHANGES_URL;
+  const params = {
+    action: encodedAction,
+    ...Utils.filterParams(pageData),
+  };
+  return fetch({
+    url: url,
+    method: "put",
+    data: data,
+    params: params,
+  });
+};
 EventsService.getAllEvent = function (pageData) {
   const url = Utils.getUrlByUserRole(
     ApiConstant.EVENT_URL,
@@ -63,10 +76,19 @@ EventsService.checkValidation = function () {
   });
 };
 EventsService.fetchEventDetails = function (eventId) {
+  const url = Utils.getUrlByUserRole(
+    ApiConstant.EVENT_DETAILS_URL,
+    ApiConstant.ORGANIZER_EVENT_DETAIL_URL,
+    isOrganizer()
+  );
+
+  const params = isOrganizer()
+    ? { organizer_event_id: eventId }
+    : { event_id: eventId };
   return fetch({
-    url: ApiConstant.EVENT_DETAILS_URL,
+    url: url,
     method: "get",
-    params: Utils.filterParams({ event_id: eventId }),
+    params: Utils.filterParams(params),
   });
 };
 EventsService.checkEventEditAvailblily = function (params) {

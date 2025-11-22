@@ -103,44 +103,46 @@ const EventsList = () => {
   };
 
   const handleEditEvent = async (id) => {
-    console.log("TRYING TO EDIT ");
-    console.log(UserRoleConstants.eventOrganizerRoleId, "ORGANIZER ID");
-    console.log(currentUser.role_id, "CURRENT USER  ID");
+  navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
 
-    if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
-      const hasPendingUpdates = filteredEvents
-        .find((event) => event.id === id)
-        ?.updates?.some(
-          (update) =>
-            update.approval_status === "pending" ||
-            update.approval_status === "updates"
-        );
+    // console.log("TRYING TO EDIT ");
+    // console.log(UserRoleConstants.eventOrganizerRoleId, "ORGANIZER ID");
+    // console.log(currentUser.role_id, "CURRENT USER  ID");
 
-      if (hasPendingUpdates) {
-        message.warning("This Event have already pending edit approval");
-        return;
-      }
-    }
-    dispatch(setEditItemId(id));
-    try {
-      const result = await dispatch(
-        checkEventEditAvailability({ event_id: id })
-      ).unwrap();
+    // if (currentUser.role_id === UserRoleConstants.eventOrganizerRoleId) {
+    //   const hasPendingUpdates = filteredEvents
+    //     .find((event) => event.id === id)
+    //     ?.updates?.some(
+    //       (update) =>
+    //         update.approval_status === "pending" ||
+    //         update.approval_status === "updates"
+    //     );
 
-      if (!result?.editable === true) {
-        navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
-      } else {
-        Modal.error({
-          content:
-            "Sorry, this event already has bookings in all time slots. You cannot edit this event.",
-        });
-      }
-    } catch (error) {
-      console.error("Error checking schedule edit:", error);
-      Modal.error({
-        content: "Something went wrong while checking the schedule.",
-      });
-    }
+    //   if (hasPendingUpdates) {
+    //     message.warning("This Event have already pending edit approval");
+    //     return;
+    //   }
+    // }
+    // dispatch(setEditItemId(id));
+    // try {
+    //   const result = await dispatch(
+    //     checkEventEditAvailability({ event_id: id })
+    //   ).unwrap();
+
+    //   if (result?.editable === true) {
+    //     navigate(`${APP_PREFIX_PATH}/event/edit/${id}`);
+    //   } else {
+    //     Modal.error({
+    //       content:
+    //         "Sorry, this event already has bookings in all time slots. You cannot edit this event.",
+    //     });
+    //   }
+    // } catch (error) {
+    //   console.error("Error checking schedule edit:", error);
+    //   Modal.error({
+    //     content: "Something went wrong while checking the schedule.",
+    //   });
+    // }
   };
 
   const handleUpdateStatus = (item) => {

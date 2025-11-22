@@ -61,7 +61,9 @@ const OrganizerOfferDetail = () => {
 
   useEffect(() => {
     if (eventId) {
-      dispatch(fetchOrganizerSingleEventUpdate({ organizer_event_id: eventId }));
+      dispatch(
+        fetchOrganizerSingleEventUpdate({ organizer_event_id: eventId })
+      );
     }
   }, [dispatch, eventId]);
 
@@ -72,7 +74,7 @@ const OrganizerOfferDetail = () => {
 
   const handleMakeChanges = () => {
     navigate(
-      `${APP_PREFIX_PATH}/event/edit/${eventId}/${type}?isMakeChange=${true}`
+      `${APP_PREFIX_PATH}/event/edit/${eventId}?isMakeChange=${true}`
     );
   };
 
@@ -112,7 +114,9 @@ const OrganizerOfferDetail = () => {
 
       if (submitOrganizerEventUpdate.fulfilled.match(resultAction)) {
         message.success(`Update ${actionType}ed successfully`);
-        dispatch(fetchOrganizerSingleEventUpdate({ organizer_event_id: eventId }));
+        dispatch(
+          fetchOrganizerSingleEventUpdate({ organizer_event_id: eventId })
+        );
         navigate(`${APP_PREFIX_PATH}/track/event/status/list`);
       }
     } catch (error) {
@@ -144,7 +148,9 @@ const OrganizerOfferDetail = () => {
                 avatar={<Avatar icon={<UserOutlined />} />}
                 title={<Text strong>{item.user?.username ?? "N/A"}</Text>}
                 description={
-                  <Paragraph style={{ marginBottom: 0 }}>{item.comment}</Paragraph>
+                  <Paragraph style={{ marginBottom: 0 }}>
+                    {item.comment}
+                  </Paragraph>
                 }
               />
             </List.Item>
@@ -202,7 +208,8 @@ const OrganizerOfferDetail = () => {
   };
 
   const renderActionButtons = () => {
-    const approvalStatus = singleOrganizerUpdate?.approval_status?.toLowerCase();
+    const approvalStatus =
+      singleOrganizerUpdate?.approval_status?.toLowerCase();
 
     if (
       approvalStatus === APPROVAL_STATUS.CHANGE_REQUEST &&
@@ -291,7 +298,9 @@ const OrganizerOfferDetail = () => {
               </Title>
               <Space wrap>
                 <Tag
-                  color={getStatusTagColor(singleOrganizerUpdate.approval_status)}
+                  color={getStatusTagColor(
+                    singleOrganizerUpdate.approval_status
+                  )}
                   icon={
                     singleOrganizerUpdate.approval_status === "approved" ? (
                       <CheckCircleOutlined />
@@ -305,10 +314,14 @@ const OrganizerOfferDetail = () => {
                   {singleOrganizerUpdate.approval_status
                     ?.charAt(0)
                     .toUpperCase() +
-                    singleOrganizerUpdate.approval_status?.slice(1).toLowerCase()}
+                    singleOrganizerUpdate.approval_status
+                      ?.slice(1)
+                      .toLowerCase()}
                 </Tag>
                 <Tag
-                  color={singleOrganizerUpdate.is_active ? "success" : "default"}
+                  color={
+                    singleOrganizerUpdate.is_active ? "success" : "default"
+                  }
                 >
                   {singleOrganizerUpdate.is_active ? "Active" : "Inactive"}
                 </Tag>
@@ -390,9 +403,7 @@ const OrganizerOfferDetail = () => {
               </Space>
             }
           >
-            <Text strong>
-              {singleOrganizerUpdate?.max_uses || "Unlimited"}
-            </Text>
+            <Text strong>{singleOrganizerUpdate?.max_uses || "Unlimited"}</Text>
           </Descriptions.Item>
 
           <Descriptions.Item
@@ -414,7 +425,9 @@ const OrganizerOfferDetail = () => {
               </Space>
             }
           >
-            <Tag color={singleOrganizerUpdate?.date_required ? "blue" : "default"}>
+            <Tag
+              color={singleOrganizerUpdate?.date_required ? "blue" : "default"}
+            >
               {singleOrganizerUpdate?.date_required ? "Yes" : "No"}
             </Tag>
           </Descriptions.Item>

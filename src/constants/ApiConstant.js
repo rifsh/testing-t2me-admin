@@ -65,6 +65,8 @@ export const ApiConstant = {
     "/api/v1/location/secured/venue/organizer/make_changes",
   ORGANIZER_TICKET_MAKE_CHANGES_URL:
     "/api/v1/event/tickets/secured/ticketstructure/organizer/make_changes",
+  ORGANIZER_EVENT_MAKE_CHANGES_URL:
+    "/api/v1/event/events/secured/events/organizer/make_changes",
   ORGANIZER_OFFER_STATUS_URL:
     "/api/v1/shared/offers/secured/offers_status/organizer",
   ORGANIZER_OFFER_APPROVAL_URL:

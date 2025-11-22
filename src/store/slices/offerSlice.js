@@ -239,7 +239,6 @@ const offerSlice = createSlice({
         }
         if (payload.status) {
           state.message = payload.status.message;
-          state.responseMessage = payload.status.message;
           state.responseImpactData = payload.status.data?.active_schedules;
           state.editable_status = payload.status?.editable_status;
           state.warningPagination = payload.status?.data?.active_schedules;
