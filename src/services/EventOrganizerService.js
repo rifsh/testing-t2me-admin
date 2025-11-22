@@ -100,6 +100,21 @@ EventOrganizerService.submitOrganizerOfferUpdate = function (
     },
   });
 };
+EventOrganizerService.submitOrganizerEventUpdate = function (
+  data,
+  action,
+  params
+) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_EVENT_APPROVAL_URL,
+    method: "put",
+    data: data,
+    params: {
+      action: handleAction(action),
+      ...Utils.filterParams(params),
+    },
+  });
+};
 EventOrganizerService.submitOrganizerTicketUpdate = function (
   data,
   action,
@@ -119,6 +134,13 @@ EventOrganizerService.submitOrganizerTicketUpdate = function (
 EventOrganizerService.fetchOrganizerSingleOfferUpdate = function (params) {
   return fetch({
     url: ApiConstant.ORGANIZER_OFFER_DETAIL_URL,
+    method: "get",
+    params: Utils.filterParams(params),
+  });
+};
+EventOrganizerService.fetchOrganizerSingleEventUpdate = function (params) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_EVENT_DETAIL_URL,
     method: "get",
     params: Utils.filterParams(params),
   });

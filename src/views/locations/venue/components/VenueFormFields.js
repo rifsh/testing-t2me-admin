@@ -290,82 +290,93 @@ const VenueFormFields = ({ mode, venue, isMakeChanges }) => {
   };
 
   const handleSubmit = async () => {
-  if (!comment || comment.trim().length === 0) {
-    message.error("Please add a comment!");
-    return;
-  }
-  
-  try {
-    const values = await form.validateFields();
-    const originalFiles = extractFileObjects(values);
-    dispatch(setOriginalFiles(originalFiles));
-    
-    const cleanedAddOnServices = Array.isArray(values.venue_add_on_services)
-      ? values.venue_add_on_services.map((item) => ({
-          title: item.title?.trim(),
-          services: Array.isArray(item.services) ? item.services : [],
-        }))
-      : [];
-      
-    const thumbnailData = values.thumbnail_image?.[0]
-      ? {
-          file_name:
-            values.thumbnail_image[0].name ||
-            values.thumbnail_image[0].file_name ||
-            null,
-          media_type: "image",
-        }
-      : null;
-      
-    const bannerImagesData =
-      values.banner_images?.map((media) => {
-        const mediaType = getMediaType(media);
-        return {
-          id: media.id || null,
-          file_name: media.name || media.file_name,
-          media_type: mediaType,
-        };
-      }) || [];
-      
-    const editData = {
-      ...values,
-      latitude: coordinates.lat || venue?.latitude || 0,
-      longitude: coordinates.lng || venue?.longitude || 0,
-      capacity: values.capacity || 0,
-      indoor: values.indoor !== undefined ? values.indoor : false,
-      address: values.address,
-      description: values.description,
-      venue_add_on_services: cleanedAddOnServices,
-      thumbnail_image: thumbnailData,
-      banner_images: bannerImagesData,
-      place_id: selectedPlace ?? venue.place?.id,
-      id: venue?.id,
-      comment,
-    };
-    
-    const pageData = { venue_id: venue.id };
-    
-    // ✅ Dispatch makeChangeVenue with ActionType.SUBMIT
-    const resultAction = await dispatch(
-      makeChangeVenue({ data: editData, action: ActionType.SUBMIT, pageData })
-    );
-    
-    // ✅ Check if the action was fulfilled using .match()
-    if (makeChangeVenue.fulfilled.match(resultAction)) {
-      dispatch(setComment(""));
-      dispatch(setCommentModalVisibility(false));
-      dispatch(setSelectedSubmitItem(editData));
-      message.success(`Update ${actionType}ed successfully`);
-    } else {
-      // ✅ Handle rejection case
-      message.error(`Failed to ${actionType} the update`);
+    if (comment.trim().length === 0) {
+      message.error("Please add a comment!");
+      return;
     }
-  } catch (error) {
-    console.error("Validation or submission error:", error);
-    message.error(`Failed to ${actionType} the update`);
-  }
-};
 
+    const values = await form.validateFields();
+
+    try {
+      // Extract original files
+      const originalFiles = extractFileObjects(values);
+      dispatch(setOriginalFiles(originalFiles));
+
+      const cleanedAddOnServices = Array.isArray(values.venue_add_on_services)
+        ? values.venue_add_on_services.map((item) => ({
+            title: item.title?.trim(),
+            services: Array.isArray(item.services) ? item.services : [],
+          }))
+        : [];
+
+      const thumbnailData = values.thumbnail_image?.[0]
+        ? {
+            file_name:
+              values.thumbnail_image[0].name ||
+              values.thumbnail_image[0].file_name ||
+              null,
+            media_type: "image",
+          }
+        : null;
+
+      const bannerImagesData =
+        values.banner_images?.map((media) => {
+          const mediaType = getMediaType(media);
+          return {
+            id: media.id || null,
+            file_name: media.name || media.file_name,
+            media_type: mediaType,
+          };
+        }) || [];
+
+      const editData = {
+        ...values,
+        latitude: coordinates.lat || venue?.latitude || 0,
+        longitude: coordinates.lng || venue?.longitude || 0,
+        capacity: values.capacity || 0,
+        indoor: values.indoor !== undefined ? values.indoor : false,
+        address: values.address,
+        description: values.description,
+        venue_add_on_services: cleanedAddOnServices,
+        thumbnail_image: thumbnailData,
+        banner_images: bannerImagesData,
+        place_id: selectedPlace ?? venue.place?.id,
+        id: venue?.id,
+        comment,
+      };
+
+      const pageData = { venue_id: venue.id };
+
+      console.log("Make Change Data:", editData);
+
+      // ✅ EXACTLY LIKE TICKET: Just dispatch and let SubmitAndConfirmModal handle it
+      const resultAction = await dispatch(
+        makeChangeVenue({
+          data: editData,
+          action: ActionType.SUBMIT,
+          pageData,
+        })
+      );
+
+      // ✅ EXACTLY LIKE TICKET: If successful, dispatch setSelectedSubmitItem
+      if (makeChangeVenue.fulfilled.match(resultAction)) {
+        dispatch(setComment(""));
+        dispatch(setCommentModalVisibility(false));
+        dispatch(setSelectedSubmitItem(editData)); // ← This triggers SubmitAndConfirmModal
+        message.success(`Update ${actionType}ed successfully`);
+      } else {
+        message.error("Failed to submit venue changes");
+        dispatch(setComment(""));
+        dispatch(setCommentModalVisibility(false));
+      }
+    } catch (error) {
+      console.error("Failed to submit change:", error);
+      message.error("Failed to submit venue changes");
+    }
+
+    dispatch(setComment(""));
+    dispatch(setCommentModalVisibility(false));
+  };
 
   const handleWarningPagination = (page, size) => {
     dispatch(
@@ -716,7 +727,7 @@ const VenueFormFields = ({ mode, venue, isMakeChanges }) => {
         addFunction={
           mode === "EDIT"
             ? isMakeChanges
-              ? makeChangeVenue
+              ? makeChangeVenue 
               : editVenue
             : addVenue
         }
