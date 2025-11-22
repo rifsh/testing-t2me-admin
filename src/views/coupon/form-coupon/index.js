@@ -15,6 +15,7 @@ import {
   setCouponModalLoading,
   setIsDateRequired,
   makeChangesCoupon,
+  setGeneratedCouponCode,
 } from "store/slices/couponSlice";
 import { SubmitAndConfirmModal } from "components/util-components/ModalItems/SubmitConfirmModal";
 import {
@@ -75,6 +76,7 @@ const CouponForm = ({ mode, coupon, type, isMakeChanges }) => {
   useEffect(() => {
     if (coupon && mode === "EDIT") {
       // Format key_words for the form if present
+      dispatch(setGeneratedCouponCode(coupon.key_words));
       let formattedKeyWords = {};
       if (coupon.key_words && Array.isArray(coupon.key_words)) {
         // Convert array of key_words to the expected object format

@@ -169,6 +169,12 @@ const couponSlice = createSlice({
     setCouponDialogVisible(state, action) {
       state.dialogVisible = action.payload;
     },
+    resetGeneratedCouponCode(state) {
+      state.generatedCouponCodes = [];
+    },
+    setGeneratedCouponCode(state, action) {
+      state.generatedCouponCodes = action.payload;
+    },
     setCouponModalLoading(state, action) {
       state.modalLoading = action.payload;
     },
@@ -185,6 +191,7 @@ const couponSlice = createSlice({
       .addCase(fetchCouponDetails.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.generatedCouponCodes = [];
       })
       .addCase(fetchCouponDetails.fulfilled, (state, action) => {
         state.loading = false;
@@ -324,6 +331,8 @@ const couponSlice = createSlice({
 export const {
   filterCoupons,
   setEditItemId,
+  setGeneratedCouponCode,
+  resetGeneratedCouponCode,
   setCouponDialogVisible,
   setCouponModalLoading,
   setIsDateRequired,

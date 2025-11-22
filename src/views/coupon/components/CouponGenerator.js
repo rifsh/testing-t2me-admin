@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Input, Button, Table, Tag, message } from 'antd';
+import { Input, Button, Table, Tag, message, Spin } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { generateCouponCodes } from 'store/slices/couponSlice';
@@ -10,7 +10,7 @@ const CouponGenerator = ({ form }) => {
     const [count, setCount] = useState(null);
     const [localCoupons, setLocalCoupons] = useState([]);
 
-    const { couponCodeLoading, generatedCouponCodes } = useSelector(
+    const { couponCodeLoading, loading, generatedCouponCodes } = useSelector(
         (state) => state.coupons
     );
 
@@ -134,7 +134,7 @@ const CouponGenerator = ({ form }) => {
                         type="primary"
                         className="w-full"
                         onClick={handleGenerate}
-                        loading={couponCodeLoading}
+                        loading={couponCodeLoading || loading}
                         disabled={!prefix || !count}
                     >
                         Generate Codes
@@ -159,26 +159,32 @@ const CouponGenerator = ({ form }) => {
                             Remove All
                         </Button>
                     </div>
-
-                    <Table
-                        columns={columns}
-                        dataSource={tableData}
-                        pagination={{
-                            pageSize: 10,
-                            showTotal: (total, range) =>
-                                `${range[0]}-${range[1]} of ${total} coupons`,
-                        }}
-                        rowKey="code"
-                        tableLayout="fixed"
-                    />
-
+                    {loading && couponCodeLoading ? (
+                        < div className='h-20 w-full flex items-center justify-center'>
+                            <Spin size='large' />
+                        </div>
+                    ) : (
+                        <Table
+                            columns={columns}
+                            dataSource={tableData}
+                            pagination={{
+                                pageSize: 10,
+                                showTotal: (total, range) =>
+                                    `${range[0]}-${range[1]} of ${total} coupons`,
+                            }}
+                            rowKey="code"
+                            tableLayout="fixed"
+                        />
+                    )
+                    }
                 </>
             ) : (
                 <div className="text-center py-10 border-2 border-dashed border-gray-300 rounded-lg">
                     <p className="text-gray-500">No coupon codes generated yet.</p>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 

@@ -228,7 +228,7 @@ const OffersCouponsTab = ({ eventDetails }) => {
                         >
                           {coupon.coupons.name}
                         </Title>
-                        {!coupon?.is_percentage ? (
+                        {coupon?.is_percentage ? (
                           <div
                             style={{
                               padding: "4px 12px",
