@@ -34,6 +34,7 @@ export const ApiConstant = {
   COUNTRY_DETAILS_URL: "/api/v1/location/secured/country/details",
   EVENT_URL: "/api/v1/event/events/secured/event",
   ORGANIZER_EVENT_URL: "/api/v1/event/events/secured/events/organizer",
+  ORGANIZER_SCHEUDLE_URL: "/api/v1/event/schedule/secured/schedules/organizer",
   LEAD_EVENT_URL: "/api/v1/event/events/secured/lead_event/creation",
   EVENT_VALIDATION_URL: "/api/v1/event/events/secured/validation_event",
   EVENT_DETAILS_URL: "/api/v1/event/events/secured/events/detail",
@@ -67,6 +68,8 @@ export const ApiConstant = {
     "/api/v1/event/tickets/secured/ticketstructure/organizer/make_changes",
   ORGANIZER_EVENT_MAKE_CHANGES_URL:
     "/api/v1/event/events/secured/events/organizer/make_changes",
+  ORGANIZER_SCHEDULE_MAKE_CHANGES_URL:
+    "/api/v1/event/schedule/secured/schedules/organizer/make_changes",
   ORGANIZER_OFFER_STATUS_URL:
     "/api/v1/shared/offers/secured/offers_status/organizer",
   ORGANIZER_OFFER_APPROVAL_URL:
@@ -77,6 +80,8 @@ export const ApiConstant = {
     "/api/v1/event/tickets/secured/ticketstructure/organizer/approval",
   ORGANIZER_OFFER_DETAIL_URL:
     "/api/v1/shared/offers/secured/offers/organizer/detail",
+  ORGANIZER_SCHEDULE_DETAIL_URL:
+    "/api/v1/event/schedule/secured/schedules/organizer/detail",
   ORGANIZER_EVENT_DETAIL_URL:
     "/api/v1/event/events/secured/events/organizer/detail",
   ORGANIZER_TICKET_DETAIL_URL:

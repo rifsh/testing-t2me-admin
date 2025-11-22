@@ -97,6 +97,22 @@ export const checkScheduleEdit = createAsyncThunk(
     }
   }
 );
+export const makeChangeSchedule = createAsyncThunk(
+  "offer/makeChangeSchedule",
+  async ({ data, action, pageData }, { rejectWithValue }) => {
+    try {
+      console.log(data, "DATA IN SERVICE");
+      const response = await ScheduleService.makeChangeSchedule(
+        data,
+        action,
+        pageData
+      );
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to edit event");
+    }
+  }
+);
 
 export const addSchedule = createAsyncThunk(
   "schedule/add",

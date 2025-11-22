@@ -9,8 +9,8 @@ import { EDIT } from "constants/AppConstants";
 const EditOffer = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-
   const isMakeChange = params.get("isMakeChange");
+  console.warn(isMakeChange)
   const dispatch = useDispatch();
   const { type, offerId } = useParams();
   const { offerDetails } = useSelector((state) => state.offers);

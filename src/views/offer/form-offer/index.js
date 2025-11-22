@@ -291,6 +291,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
     const editData = {
       ...values,
       id: offer.id,
+      offer_id: offer.id,
       thumbnail_image: {
         file_name:
           values.thumbnail_image?.[0]?.name ||
@@ -314,7 +315,7 @@ const OfferForm = ({ mode, offer, type, isMakeChange }) => {
 
       if (makeChangeOffer.fulfilled.match(resultAction)) {
         dispatch(setComment(""));
-        console.warn("first compelted")
+        console.warn("first compelted");
         // dispatch(setSelectedCoupon(editData));
         dispatch(setCommentModalVisibility(false));
         dispatch(setSelectedSubmitItem(editData));

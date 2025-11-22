@@ -138,6 +138,13 @@ EventOrganizerService.fetchOrganizerSingleOfferUpdate = function (params) {
     params: Utils.filterParams(params),
   });
 };
+EventOrganizerService.fetchOrganizerSingleScheduleUpdate = function (params) {
+  return fetch({
+    url: ApiConstant.ORGANIZER_SCHEDULE_DETAIL_URL,
+    method: "get",
+    params: Utils.filterParams(params),
+  });
+};
 EventOrganizerService.fetchOrganizerSingleEventUpdate = function (params) {
   return fetch({
     url: ApiConstant.ORGANIZER_EVENT_DETAIL_URL,
