@@ -2,7 +2,8 @@ module.exports = {
     testEnvironment: "jsdom",
     setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
     transformIgnorePatterns: [
-        "/node_modules/(?!(@firebase|firebase|uuid)/)"
+        "/node_modules/(?!(@firebase|firebase|uuid)/)",
+        "/node_modules/(?!(rc-pagination|antd)/)"
     ],
 
     moduleFileExtensions: ["js", "jsx"],

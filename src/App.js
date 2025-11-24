@@ -6,7 +6,7 @@ import store from "./store";
 import history from "./history";
 import Layouts from "./layouts";
 import { THEME_CONFIG } from "./configs/AppConfig";
-import "./lang";
+// import "./lang";
 import mockServer from "./mock";
 import { getCurrentUser } from "configs/UserAccessConfig";
 
