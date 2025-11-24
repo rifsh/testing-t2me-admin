@@ -139,6 +139,7 @@ const EventDetails = () => {
                         src={item.media_url}
                         alt={item.caption || `media image ${index + 1}`}
                         height={400}
+                        width={'100%'}
                         style={{ width: "100%", objectFit: "cover" }}
                       />
                     ) : (

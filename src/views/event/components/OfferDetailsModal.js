@@ -177,7 +177,7 @@ const OfferDetailsModal = ({ open, onClose, offer, type }) => {
                 {offer.key_words?.length > 0 && (
                     <Collapse
                         bordered={false}
-                        defaultActiveKey={['0']} // Set to empty array [] if you want it collapsed by default
+                        defaultActiveKey={['0']}
                         className="bg-gray-50 rounded-lg"
                     >
                         <Panel
