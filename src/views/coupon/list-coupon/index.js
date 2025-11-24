@@ -8,6 +8,7 @@ import {
   Modal,
   Descriptions,
   Dropdown,
+  Typography,
 } from "antd";
 import {
   EyeOutlined,
@@ -42,7 +43,7 @@ import usePermissions from "utils/hooks/usePermissions";
 import { PERMISSIONS } from "constants/RolesPermissionConstants";
 import CDNImage from "components/layout-components/Image/CDNImage";
 
-const { Option } = Select;
+const { Paragraph } = Typography;
 
 const CouponList = () => {
   const navigate = useNavigate();
@@ -393,12 +394,9 @@ const CouponList = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Keywords</h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedCoupon.key_words.map((keyword, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                    >
+                    <Paragraph copyable={true} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                       {keyword}
-                    </span>
+                    </Paragraph>
                   ))}
                 </div>
               </div>
