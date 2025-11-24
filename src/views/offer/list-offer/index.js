@@ -384,14 +384,12 @@ const OfferList = () => {
                         {selectedOffer.used_count}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">
-                        Remaining Uses
-                      </span>
+                    {/* <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">Remaining Uses</span>
                       <span className="text-sm font-semibold text-blue-600">
                         {selectedOffer.max_uses - selectedOffer.used_count}
                       </span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -403,14 +401,10 @@ const OfferList = () => {
                     Requirements
                   </h3>
                   <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">
-                        Min Purchase
-                      </span>
-                      <span className="text-sm text-gray-900">
-                        {selectedOffer.min_purchase_amount?.toFixed(2)}
-                      </span>
-                    </div>
+                    {selectedOffer.min_purchase_amount && <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">Min Purchase</span>
+                      <span className="text-sm text-gray-900">{selectedOffer.min_purchase_amount?.toFixed(2)}</span>
+                    </div>}
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-gray-600">
                         Date Required
@@ -427,11 +421,38 @@ const OfferList = () => {
                     </div>
                   </div>
                 </div>
-
+                {/* Timeline */}
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Offer Type
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Timeline</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">Created</span>
+                      <span className="text-sm text-gray-900">
+                        {new Date(selectedOffer.created_at).toLocaleString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">Last Updated</span>
+                      <span className="text-sm text-gray-900">
+                        {new Date(selectedOffer.updated_at).toLocaleString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                {/* <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Offer Type</h3>
                   <div className="grid grid-cols-2 gap-2">
                     <div
                       className={`text-center py-2 rounded ${
@@ -482,7 +503,7 @@ const OfferList = () => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -542,49 +563,6 @@ const OfferList = () => {
                 </div>
               </div>
             )}
-
-            {/* Timeline */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                Timeline
-              </h3>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">
-                    Created
-                  </span>
-                  <span className="text-sm text-gray-900">
-                    {new Date(selectedOffer.created_at).toLocaleString(
-                      "en-US",
-                      {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">
-                    Last Updated
-                  </span>
-                  <span className="text-sm text-gray-900">
-                    {new Date(selectedOffer.updated_at).toLocaleString(
-                      "en-US",
-                      {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </Modal>

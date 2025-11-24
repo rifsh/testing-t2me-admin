@@ -161,16 +161,18 @@ const PlaceDetails = () => {
               <Carousel autoplay>
                 {mediaItems.map((item, index) => (
                   <div key={index}>
-                    {item.media_type === "image" ? (
+                    {item.media_type?.toLowerCase() === "image" ? (
                       <CDNImage
                         src={item.media_url}
                         alt={item.caption || `media image ${index + 1}`}
                         height={400}
+                        width={'100%'}
                         style={{ width: "100%", objectFit: "cover" }}
                       />
                     ) : (
                       <video
                         controls
+                        autoPlay
                         style={{
                           width: "100%",
                           height: "400px",

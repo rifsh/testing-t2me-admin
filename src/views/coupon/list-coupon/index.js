@@ -26,6 +26,7 @@ import {
   setEditItemId,
   setCouponDialogVisible,
   setCouponModalLoading,
+  resetGeneratedCouponCode,
 } from "store/slices/couponSlice";
 import { APP_PREFIX_PATH } from "configs/AppConfig";
 import { setDialogVisible, setSelectedItem } from "store/slices/modalSlice";
@@ -216,7 +217,10 @@ const CouponList = () => {
         {hasPermission(PERMISSIONS.APPLICATIONS.SERVICES.GENERAL.COUPON.ADD_COUPONS) && <Button
           type="primary"
           icon={<FormOutlined />}
-          onClick={() => navigate(`${APP_PREFIX_PATH}/coupon/add?type=${type}`)}
+          onClick={() => {
+            dispatch(resetGeneratedCouponCode())
+            navigate(`${APP_PREFIX_PATH}/coupon/add?type=${type}`)
+          }}
         >
           Add {type?.charAt(0)?.toUpperCase() + type?.slice(1)} Coupon
         </Button>}
@@ -331,12 +335,12 @@ const CouponList = () => {
                       <span className="text-sm font-medium text-gray-600">Used Count</span>
                       <span className="text-sm text-gray-900">{selectedCoupon.used_count}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    {/* <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-gray-600">Remaining Uses</span>
                       <span className="text-sm font-semibold text-blue-600">
                         {selectedCoupon.max_uses - selectedCoupon.used_count}
                       </span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
